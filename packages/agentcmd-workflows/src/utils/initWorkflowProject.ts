@@ -83,7 +83,7 @@ async function appendGitignore(
   skipped: string[]
 ): Promise<void> {
   const gitignorePath = path.join(targetPath, ".gitignore");
-  const templatePath = path.join(templatesDir, ".gitignore");
+  const templatePath = path.join(templatesDir, "gitignore.template");
 
   // Read template patterns
   const patterns = await readFile(templatePath, "utf-8");
