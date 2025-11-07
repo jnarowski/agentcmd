@@ -7,15 +7,20 @@ import {
   MinusCircle,
 } from "lucide-react";
 import { AgentSessionModal } from "../AgentSessionModal";
+import { useIsMobile } from "@/client/hooks/use-mobile";
 import type { WorkflowRunStep } from "../../types";
+import type { WorkflowTab } from "../../hooks/useWorkflowDetailPanel";
 
 interface StepRowProps {
   step: WorkflowRunStep;
   projectId: string;
+  onSelectSession?: (sessionId: string) => void;
+  onSetActiveTab?: (tab: WorkflowTab) => void;
 }
 
-export function StepRow({ step, projectId }: StepRowProps) {
+export function StepRow({ step, projectId, onSelectSession, onSetActiveTab }: StepRowProps) {
   const [showSessionModal, setShowSessionModal] = useState(false);
+  const isMobile = useIsMobile();
 
   // Status icon
   const StatusIcon = {
@@ -67,7 +72,16 @@ export function StepRow({ step, projectId }: StepRowProps) {
           </span>
           {step.agent_session_id && (
             <button
-              onClick={() => setShowSessionModal(true)}
+              onClick={() => {
+                if (isMobile) {
+                  setShowSessionModal(true);
+                } else {
+                  if (step.agent_session_id) {
+                    onSelectSession?.(step.agent_session_id);
+                    onSetActiveTab?.("session");
+                  }
+                }
+              }}
               className="text-xs text-blue-500 hover:underline"
             >
               View Session

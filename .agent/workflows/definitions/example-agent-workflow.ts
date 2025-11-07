@@ -7,7 +7,6 @@ import { defineWorkflow } from "../../../packages/agentcmd-workflows/dist";
 export default defineWorkflow(
   {
     id: "agent-example-workflow",
-    trigger: "workflow/agent-example",
     name: "Agent Example Workflow",
     description: "Demonstrates Claude Code integration via step.agent",
     phases: [{ id: "implement", label: "Implement" }],

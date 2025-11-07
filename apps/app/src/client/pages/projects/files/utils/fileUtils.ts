@@ -114,17 +114,134 @@ export function getFileTypeInfo(extension: string): FileTypeInfo {
   const ext = extension.toLowerCase();
 
   switch (ext) {
+    // TypeScript
     case 'ts':
     case 'tsx':
-      return { label: 'TS', color: 'rgb(59, 130, 246)' }; // blue
+      return { label: 'TS', color: '#3b82f6' }; // blue-500
+
+    // JavaScript
     case 'js':
     case 'jsx':
-      return { label: 'JS', color: 'rgb(234, 179, 8)' }; // yellow
+    case 'mjs':
+    case 'cjs':
+      return { label: 'JS', color: '#eab308' }; // yellow-500
+
+    // Data formats
     case 'json':
-      return { label: 'JSON', color: 'rgb(107, 114, 128)' }; // gray
+    case 'jsonc':
+      return { label: 'JSON', color: '#6b7280' }; // gray-500
+    case 'yaml':
+    case 'yml':
+      return { label: 'YAML', color: '#ef4444' }; // red-500
+    case 'xml':
+      return { label: 'XML', color: '#f97316' }; // orange-500
+    case 'csv':
+      return { label: 'CSV', color: '#10b981' }; // emerald-500
+    case 'toml':
+      return { label: 'TOML', color: '#8b5cf6' }; // violet-500
+
+    // Markup & Documentation
     case 'md':
-      return { label: 'MD', color: 'rgb(34, 197, 94)' }; // green
+    case 'mdx':
+      return { label: 'MD', color: '#22c55e' }; // green-500
+    case 'html':
+    case 'htm':
+      return { label: 'HTML', color: '#f97316' }; // orange-500
+
+    // Styles
+    case 'css':
+      return { label: 'CSS', color: '#06b6d4' }; // cyan-500
+    case 'scss':
+    case 'sass':
+      return { label: 'SASS', color: '#ec4899' }; // pink-500
+    case 'less':
+      return { label: 'LESS', color: '#6366f1' }; // indigo-500
+
+    // Programming Languages
+    case 'py':
+      return { label: 'PY', color: '#3b82f6' }; // blue-500
+    case 'rb':
+      return { label: 'RUBY', color: '#ef4444' }; // red-500
+    case 'go':
+      return { label: 'GO', color: '#06b6d4' }; // cyan-500
+    case 'rs':
+      return { label: 'RUST', color: '#f97316' }; // orange-500
+    case 'java':
+      return { label: 'JAVA', color: '#ef4444' }; // red-500
+    case 'php':
+      return { label: 'PHP', color: '#8b5cf6' }; // violet-500
+    case 'c':
+      return { label: 'C', color: '#6b7280' }; // gray-500
+    case 'cpp':
+    case 'cc':
+    case 'cxx':
+      return { label: 'C++', color: '#6366f1' }; // indigo-500
+    case 'cs':
+      return { label: 'C#', color: '#8b5cf6' }; // violet-500
+    case 'swift':
+      return { label: 'SWIFT', color: '#f97316' }; // orange-500
+    case 'kt':
+    case 'kts':
+      return { label: 'KT', color: '#8b5cf6' }; // violet-500
+
+    // Shell & Config
+    case 'sh':
+    case 'bash':
+    case 'zsh':
+      return { label: 'SHELL', color: '#22c55e' }; // green-500
+    case 'env':
+      return { label: 'ENV', color: '#eab308' }; // yellow-500
+    case 'ini':
+    case 'conf':
+      return { label: 'CONF', color: '#6b7280' }; // gray-500
+
+    // Images
+    case 'png':
+    case 'jpg':
+    case 'jpeg':
+    case 'gif':
+    case 'webp':
+      return { label: 'IMG', color: '#8b5cf6' }; // violet-500
+    case 'svg':
+      return { label: 'SVG', color: '#ec4899' }; // pink-500
+    case 'ico':
+      return { label: 'ICO', color: '#a855f7' }; // purple-500
+
+    // Documents
+    case 'pdf':
+      return { label: 'PDF', color: '#ef4444' }; // red-500
+    case 'doc':
+    case 'docx':
+      return { label: 'DOC', color: '#3b82f6' }; // blue-500
+    case 'xls':
+    case 'xlsx':
+      return { label: 'XLS', color: '#10b981' }; // emerald-500
+    case 'ppt':
+    case 'pptx':
+      return { label: 'PPT', color: '#f97316' }; // orange-500
+
+    // Text
+    case 'txt':
+      return { label: 'TXT', color: '#6b7280' }; // gray-500
+    case 'log':
+      return { label: 'LOG', color: '#64748b' }; // slate-500
+
+    // Archives
+    case 'zip':
+    case 'tar':
+    case 'gz':
+    case 'rar':
+    case '7z':
+      return { label: 'ZIP', color: '#a855f7' }; // purple-500
+
+    // Misc
+    case 'sql':
+      return { label: 'SQL', color: '#f59e0b' }; // amber-500
+    case 'graphql':
+    case 'gql':
+      return { label: 'GQL', color: '#ec4899' }; // pink-500
+
     default:
-      return { label: 'FILE', color: 'rgb(156, 163, 175)' }; // light gray
+      return { label: 'FILE', color: '#9ca3af' }; // gray-400
   }
 }

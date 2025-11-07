@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { toast } from "sonner";
-import { api } from "@/client/utils/api-client";
+import { api } from "@/client/utils/api";
 
 /**
  * User interface matching the API response

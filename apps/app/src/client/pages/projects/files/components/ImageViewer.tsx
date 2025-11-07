@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/client/components/ui/button";
 import { X } from "lucide-react";
-import { api } from "@/client/utils/api-client";
+import { api } from "@/client/utils/api";
 
 interface ImageViewerProps {
   projectId: string;

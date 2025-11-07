@@ -7,7 +7,6 @@ import { defineWorkflow } from "../../../packages/agentcmd-workflows/dist";
 export default defineWorkflow(
   {
     id: "audit-workflow",
-    trigger: "workflow/audit",
     name: "Audit Slash Command",
     description: "Audits the codebase",
     phases: [{ id: "audit", label: "Audit" }],
@@ -23,8 +22,6 @@ export default defineWorkflow(
     } = event.data;
 
     const response = await step.phase("audit", async () => {
-      console.log("Audit phase", event.data);
-
       return await step.agent("Audit", {
         agent: "claude",
         prompt: `/audit`,
@@ -32,6 +29,6 @@ export default defineWorkflow(
       });
     });
 
-    return { success: true, response };
+    return { success: true, output: response.output };
   }
 );

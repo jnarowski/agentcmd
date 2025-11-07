@@ -288,41 +288,41 @@ describe('removeAllOccurrences', () => {
 describe('getFileTypeInfo', () => {
   it('should return correct info for .ts', () => {
     const result = getFileTypeInfo('ts');
-    expect(result).toEqual({ label: 'TS', color: 'rgb(59, 130, 246)' });
+    expect(result).toEqual({ label: 'TS', color: '#3b82f6' });
   });
 
   it('should return correct info for .tsx', () => {
     const result = getFileTypeInfo('tsx');
-    expect(result).toEqual({ label: 'TS', color: 'rgb(59, 130, 246)' });
+    expect(result).toEqual({ label: 'TS', color: '#3b82f6' });
   });
 
   it('should return correct info for ', () => {
     const result = getFileTypeInfo('js');
-    expect(result).toEqual({ label: 'JS', color: 'rgb(234, 179, 8)' });
+    expect(result).toEqual({ label: 'JS', color: '#eab308' });
   });
 
   it('should return correct info for .jsx', () => {
     const result = getFileTypeInfo('jsx');
-    expect(result).toEqual({ label: 'JS', color: 'rgb(234, 179, 8)' });
+    expect(result).toEqual({ label: 'JS', color: '#eab308' });
   });
 
   it('should return correct info for .json', () => {
     const result = getFileTypeInfo('json');
-    expect(result).toEqual({ label: 'JSON', color: 'rgb(107, 114, 128)' });
+    expect(result).toEqual({ label: 'JSON', color: '#6b7280' });
   });
 
   it('should return correct info for .md', () => {
     const result = getFileTypeInfo('md');
-    expect(result).toEqual({ label: 'MD', color: 'rgb(34, 197, 94)' });
+    expect(result).toEqual({ label: 'MD', color: '#22c55e' });
   });
 
   it('should return default for unknown extension', () => {
     const result = getFileTypeInfo('xyz');
-    expect(result).toEqual({ label: 'FILE', color: 'rgb(156, 163, 175)' });
+    expect(result).toEqual({ label: 'FILE', color: '#9ca3af' });
   });
 
   it('should handle uppercase extensions', () => {
     const result = getFileTypeInfo('TS');
-    expect(result).toEqual({ label: 'TS', color: 'rgb(59, 130, 246)' });
+    expect(result).toEqual({ label: 'TS', color: '#3b82f6' });
   });
 });

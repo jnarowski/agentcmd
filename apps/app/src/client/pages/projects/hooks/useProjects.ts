@@ -16,7 +16,7 @@ import type {
   ProjectResponse,
 } from "@/shared/types/project.types";
 import type { SyncProjectsResponse } from "@/shared/types/project-sync.types";
-import { api } from "@/client/utils/api-client";
+import { api } from "@/client/utils/api";
 
 // Query keys factory - centralized key management
 export const projectKeys = {

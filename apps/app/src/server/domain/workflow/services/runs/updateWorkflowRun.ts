@@ -31,6 +31,7 @@ export async function updateWorkflowRun({
     data: {
       run_id: run.id,
       project_id: run.project_id,
+      // @ts-ignore - Prisma WorkflowRunUpdateInput type incompatibility
       changes: data,
     },
   });

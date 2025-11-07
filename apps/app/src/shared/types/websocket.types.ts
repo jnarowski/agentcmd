@@ -306,6 +306,7 @@ export type ShellEvent =
 export const WorkflowWebSocketEventTypes = {
   RUN_UPDATED: "workflow:run:updated",
   STEP_UPDATED: "workflow:run:step:updated",
+  STEP_LOG_CHUNK: "workflow:run:step:log_chunk",
   EVENT_CREATED: "workflow:run:event:created",
   ARTIFACT_CREATED: "workflow:run:artifact:created",
 } as const;
@@ -350,6 +351,16 @@ export interface WorkflowStepUpdatedData {
     updated_at: Date | string;
     agent_session_id: string | null;
   }>;
+}
+
+/**
+ * Step log chunk event - real-time log streaming during step execution
+ */
+export interface WorkflowStepLogChunkData {
+  run_id: string;
+  step_id: string;
+  chunk: string;
+  timestamp: Date | string;
 }
 
 /**
@@ -404,6 +415,10 @@ export type WorkflowWebSocketEvent =
   | {
       type: typeof WorkflowWebSocketEventTypes.STEP_UPDATED;
       data: WorkflowStepUpdatedData;
+    }
+  | {
+      type: typeof WorkflowWebSocketEventTypes.STEP_LOG_CHUNK;
+      data: WorkflowStepLogChunkData;
     }
   | {
       type: typeof WorkflowWebSocketEventTypes.EVENT_CREATED;

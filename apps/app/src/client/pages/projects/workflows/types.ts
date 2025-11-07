@@ -51,6 +51,7 @@ export interface WorkflowRun {
   current_step: string | null;
   current_phase: string | null;
   error_message: string | null;
+  inngest_run_id: string | null;
   started_at: Date | null;
   completed_at: Date | null;
   created_at: Date;
@@ -210,6 +211,7 @@ export interface WorkflowRunDetail {
   current_step: string | null;
   current_phase: string | null;
   error_message: string | null;
+  inngest_run_id: string | null;
   started_at: Date | null;
   completed_at: Date | null;
   created_at: Date;
@@ -222,4 +224,22 @@ export interface WorkflowRunDetail {
     steps: number;
     events: number;
   };
+}
+
+// Inngest run status types (from Inngest Dev Server API)
+export interface InngestRunStatusData {
+  run_id: string;
+  run_started_at: string;
+  function_id: string;
+  function_version: number;
+  environment_id: string;
+  event_id: string;
+  status: string;
+  ended_at: string | null;
+}
+
+export interface InngestRunStatusResult {
+  success: boolean;
+  data?: InngestRunStatusData;
+  error?: string;
 }

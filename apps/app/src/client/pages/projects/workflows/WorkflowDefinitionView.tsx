@@ -79,13 +79,6 @@ export function WorkflowDefinitionView() {
       {/* Header */}
       <div className="border-b bg-background p-4">
         <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate(`/projects/${projectId}/workflows`)}
-            className="rounded-md p-2 hover:bg-muted"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-
           <div className="flex-1">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold">{definition?.name}</h1>
@@ -99,6 +92,13 @@ export function WorkflowDefinitionView() {
               {phases.length !== 1 ? "s" : ""}
             </p>
           </div>
+
+          <button
+            onClick={() => navigate(`/projects/${projectId}/workflows`)}
+            className="rounded-md p-2 hover:bg-muted"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
 
           <button
             onClick={() => setShowNewRunDialog(true)}

@@ -54,19 +54,19 @@ describe('FileBadge', () => {
   it('should apply correct color for TypeScript files', () => {
     const { container } = render(<FileBadge extension="ts" />);
     const badge = container.querySelector('span');
-    expect(badge?.style.color).toBe('rgb(59, 130, 246)');
+    expect(badge?.style.color).toBe('#3b82f6');
   });
 
   it('should apply correct color for JavaScript files', () => {
     const { container } = render(<FileBadge extension="js" />);
     const badge = container.querySelector('span');
-    expect(badge?.style.color).toBe('rgb(234, 179, 8)');
+    expect(badge?.style.color).toBe('#eab308');
   });
 
   it('should apply correct color for JSON files', () => {
     const { container } = render(<FileBadge extension="json" />);
     const badge = container.querySelector('span');
-    expect(badge?.style.color).toBe('rgb(107, 114, 128)');
+    expect(badge?.style.color).toBe('#6b7280');
   });
 
   it('should have consistent width for all types', () => {

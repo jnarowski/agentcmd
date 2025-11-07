@@ -7,7 +7,6 @@ import { defineWorkflow } from "../../../packages/agentcmd-workflows/dist";
 export default defineWorkflow(
   {
     id: "implmenent-review-workflow",
-    trigger: "workflow/implmenent-review",
     name: "Implmenent Review",
     description:
       "Accepts a plan, implements it and reviews it until it is accepted",

@@ -9,7 +9,7 @@ import type { PromptInputMessage } from "@/client/components/ai-elements/PromptI
 import { useWebSocket } from "@/client/hooks/useWebSocket";
 import { useSessionStore } from "@/client/pages/projects/sessions/stores/sessionStore";
 import { useActiveProject } from "@/client/hooks/navigation";
-import { api } from "@/client/utils/api-client";
+import { api } from "@/client/utils/api";
 import { sessionKeys } from "./hooks/useAgentSessions";
 import { projectKeys } from "@/client/pages/projects/hooks/useProjects";
 import { generateUUID } from "@/client/utils/cn";

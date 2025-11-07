@@ -57,5 +57,8 @@ yarn-error.log*
 .agent/logs/**
 .agent/workflows/runs/**
 
+# Git worktrees
+.worktrees/
+
 # Playwright
 .playwright-mcp/**

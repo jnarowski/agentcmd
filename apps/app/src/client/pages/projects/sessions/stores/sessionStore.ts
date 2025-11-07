@@ -6,7 +6,7 @@ import type {
   SessionResponse,
 } from "@/shared/types/agent-session.types";
 import type { AgentType } from "@/shared/types/agent.types";
-import { api } from "@/client/utils/api-client";
+import { api } from "@/client/utils/api";
 import type { ProjectWithSessions } from "@/shared/types/project.types";
 import { projectKeys } from "@/client/pages/projects/hooks/useProjects";
 import { isSystemMessage } from '@/shared/utils/message.utils';

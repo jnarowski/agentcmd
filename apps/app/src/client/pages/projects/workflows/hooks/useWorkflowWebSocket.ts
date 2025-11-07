@@ -7,6 +7,7 @@ import {
   type WorkflowWebSocketEvent,
   type WorkflowRunUpdatedData,
   type WorkflowStepUpdatedData,
+  type WorkflowStepLogChunkData,
   type WorkflowEventCreatedData,
   type WorkflowArtifactCreatedData,
 } from "@/shared/types/websocket.types";
@@ -229,6 +230,17 @@ export function useWorkflowWebSocket(projectId: string) {
     [queryClient, debouncedInvalidate]
   );
 
+  // Handler: workflow:run:step:log_chunk
+  const handleLogChunk = useCallback(
+    (data: WorkflowStepLogChunkData) => {
+      // Emit via event bus for LogsTab to subscribe
+      // LogsTab will handle buffering and display
+      const eventKey = `workflow:run:${data.run_id}:step:${data.step_id}:log_chunk`;
+      eventBus.emit(eventKey, { type: eventKey, data });
+    },
+    [eventBus]
+  );
+
   // Main event handler
   const handleWorkflowEvent = useCallback(
     (event: WorkflowWebSocketEvent) => {
@@ -238,6 +250,9 @@ export function useWorkflowWebSocket(projectId: string) {
           break;
         case WorkflowWebSocketEventTypes.STEP_UPDATED:
           handleStepUpdated(event.data);
+          break;
+        case WorkflowWebSocketEventTypes.STEP_LOG_CHUNK:
+          handleLogChunk(event.data);
           break;
         case WorkflowWebSocketEventTypes.EVENT_CREATED:
           handleEventCreated(event.data);
@@ -252,7 +267,7 @@ export function useWorkflowWebSocket(projectId: string) {
         }
       }
     },
-    [handleRunUpdated, handleStepUpdated, handleEventCreated, handleArtifactCreated]
+    [handleRunUpdated, handleStepUpdated, handleLogChunk, handleEventCreated, handleArtifactCreated]
   );
 
   useEffect(() => {

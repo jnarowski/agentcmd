@@ -1,17 +1,14 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Plus } from "lucide-react";
-import { WorkflowRunHeader } from "./components/WorkflowRunHeader";
+import { WorkflowStatusBadge } from "./components/WorkflowStatusBadge";
 import { PhaseTimeline } from "./components/timeline/PhaseTimeline";
+import { WorkflowDetailPanel } from "./components/detail-panel/WorkflowDetailPanel";
 import { NewRunDialog } from "./components/NewRunDialog";
 import { useWorkflowRun } from "./hooks/useWorkflowRun";
 import { useWorkflowDefinition } from "./hooks/useWorkflowDefinition";
 import { useWorkflowWebSocket } from "./hooks/useWorkflowWebSocket";
-import {
-  usePauseWorkflow,
-  useResumeWorkflow,
-  useCancelWorkflow,
-} from "./hooks/useWorkflowMutations";
+import { useWorkflowDetailPanel } from "./hooks/useWorkflowDetailPanel";
 
 export function WorkflowRunDetail() {
   const { projectId, definitionId, runId } = useParams<{
@@ -20,6 +17,9 @@ export function WorkflowRunDetail() {
     runId: string;
   }>();
   const navigate = useNavigate();
+
+  // Detail panel state
+  const { activeTab, setActiveTab, selectedSessionId, setSelectedSession, clearSelection } = useWorkflowDetailPanel();
 
   // Fetch data
   const {
@@ -32,6 +32,12 @@ export function WorkflowRunDetail() {
     isLoading: definitionLoading,
     isError: definitionError,
   } = useWorkflowDefinition(definitionId);
+
+  // Clear selected session when runId changes
+  useEffect(() => {
+    clearSelection();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [runId]);
 
   // Redirect if run or definition not found
   useEffect(() => {
@@ -62,11 +68,6 @@ export function WorkflowRunDetail() {
   // Subscribe to WebSocket updates
   useWorkflowWebSocket(projectId!);
 
-  // Mutations
-  const pauseWorkflow = usePauseWorkflow();
-  const resumeWorkflow = useResumeWorkflow();
-  const cancelWorkflow = useCancelWorkflow();
-
   // Dialog state
   const [showNewRunDialog, setShowNewRunDialog] = useState(false);
 
@@ -80,59 +81,66 @@ export function WorkflowRunDetail() {
     );
   }
 
-  const handlePause = async () => {
-    await pauseWorkflow.mutateAsync(runId!);
-  };
-
-  const handleResume = async () => {
-    await resumeWorkflow.mutateAsync(runId!);
-  };
-
-  const handleCancel = async () => {
-    await cancelWorkflow.mutateAsync(runId!);
-  };
-
   return (
     <div className="flex h-full flex-col">
-      {/* Breadcrumb navigation */}
+      {/* Header */}
       <div className="border-b bg-background px-6 py-3">
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() =>
-              navigate(`/projects/${projectId}/workflows/${definitionId}`)
-            }
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to {definition?.name || "Workflow"}
-          </button>
+        <div className="flex items-center justify-between gap-6">
+          {/* Run name and badge */}
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold">{run.name}</h1>
+            <WorkflowStatusBadge status={run.status} />
+          </div>
 
-          <button
-            onClick={() => setShowNewRunDialog(true)}
-            className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-          >
-            <Plus className="h-4 w-4" />
-            New Run
-          </button>
+          {/* Navigation buttons */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() =>
+                navigate(`/projects/${projectId}/workflows/${definitionId}`)
+              }
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </button>
+
+            <button
+              onClick={() => setShowNewRunDialog(true)}
+              className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              <Plus className="h-4 w-4" />
+              New Run
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Header */}
-      <WorkflowRunHeader
-        run={run}
-        onPause={handlePause}
-        onResume={handleResume}
-        onCancel={handleCancel}
-      />
+      {/* Content - Split Pane Layout */}
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-[2fr_3fr] overflow-hidden">
+        {/* Left Pane - Phase Timeline */}
+        <div className="flex flex-col overflow-hidden">
+          <div className="border-b px-6 py-4">
+            <h2 className="text-xl font-bold">Execution Timeline</h2>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <PhaseTimeline
+              run={run}
+              projectId={projectId!}
+              onSelectSession={setSelectedSession}
+              onSetActiveTab={setActiveTab}
+            />
+          </div>
+        </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-5xl mx-auto">
-          {/* Timeline section */}
-          <section>
-            <h2 className="text-xl font-bold mb-4">Execution Timeline</h2>
-            <PhaseTimeline run={run} projectId={projectId!} />
-          </section>
+        {/* Right Pane - Detail Panel (hidden on mobile) */}
+        <div className="hidden md:flex flex-col border-l overflow-hidden">
+          <WorkflowDetailPanel
+            run={run}
+            projectId={projectId!}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            selectedSessionId={selectedSessionId}
+          />
         </div>
       </div>
 

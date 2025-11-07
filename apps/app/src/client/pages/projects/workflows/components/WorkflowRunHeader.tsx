@@ -25,31 +25,30 @@ export function WorkflowRunHeader({
   const isActive = isRunning || isPaused;
 
   return (
-    <div className="border-b bg-background px-6 py-3">
-      <div className="flex items-center justify-between gap-6">
+    <div className="flex items-center gap-6">
         {/* Title and badge */}
-        <div className="flex items-center gap-3 min-w-0">
-          <h1 className="text-xl font-bold truncate">{run.name}</h1>
+        <div className="flex items-center gap-3 shrink-0">
+          <h1 className="text-lg font-bold whitespace-nowrap">{run.name}</h1>
           <WorkflowStatusBadge status={run.status} />
         </div>
 
         {/* Metadata - horizontal layout */}
-        <div className="flex items-center gap-6 text-sm flex-wrap">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4 text-sm min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 shrink-0">
             <span className="text-muted-foreground">Started:</span>
-            <span>{formatDate(run.started_at)}</span>
+            <span className="whitespace-nowrap">{formatDate(run.started_at)}</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
             <span className="text-muted-foreground">Completed:</span>
-            <span>{formatDate(run.completed_at)}</span>
+            <span className="whitespace-nowrap">{formatDate(run.completed_at)}</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
             <span className="text-muted-foreground">Current Phase:</span>
-            <span>{run.current_phase || 'N/A'}</span>
+            <span className="whitespace-nowrap">{run.current_phase || 'N/A'}</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
             <span className="text-muted-foreground">Current Step:</span>
-            <span>{run.current_step || 'N/A'}</span>
+            <span className="whitespace-nowrap">{run.current_step || 'N/A'}</span>
           </div>
         </div>
 
@@ -85,7 +84,6 @@ export function WorkflowRunHeader({
             </button>
           )}
         </div>
-      </div>
     </div>
   );
 }

@@ -22,9 +22,9 @@ import Fuse from "fuse.js";
 import {
   flattenFileTree,
   extractFileReferences,
-  type FileItem,
+  type FileItem as FileItemType,
 } from "@/client/pages/projects/files/utils/fileUtils";
-import { FileBadge } from "@/client/components/ui/file-badge";
+import { FileItem } from "@/client/components/FileItem";
 
 interface ChatPromptInputFilesProps {
   open: boolean;
@@ -141,7 +141,7 @@ export const ChatPromptInputFiles = ({
   const addedFileItems = useMemo(() => {
     return addedFiles
       .map((path) => flattenedFiles.find((f) => f.fullPath === path))
-      .filter((f): f is FileItem => f !== undefined);
+      .filter((f): f is FileItemType => f !== undefined);
   }, [addedFiles, flattenedFiles]);
 
   // Filter out already added files from search results
@@ -202,17 +202,11 @@ export const ChatPromptInputFiles = ({
                     key={file.fullPath}
                     onSelect={() => onFileRemove(file.fullPath)}
                   >
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <FileBadge extension={file.extension} />
-                      <div className="flex flex-col min-w-0 flex-1">
-                        <span className="font-medium text-sm truncate">
-                          {file.filename}
-                        </span>
-                        <span className="text-muted-foreground text-xs truncate">
-                          {getRelativeDirectory(file.fullPath, projectPath)}
-                        </span>
-                      </div>
-                    </div>
+                    <FileItem
+                      filename={file.filename}
+                      extension={file.extension}
+                      directory={getRelativeDirectory(file.fullPath, projectPath)}
+                    />
                     <CheckIcon className="h-4 w-4 ml-2 flex-shrink-0" />
                   </PromptInputCommandItem>
                 ))}
@@ -234,17 +228,11 @@ export const ChatPromptInputFiles = ({
                       onFileSelect(toRelativePath(file.fullPath, projectPath))
                     }
                   >
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <FileBadge extension={file.extension} />
-                      <div className="flex flex-col min-w-0 flex-1">
-                        <span className="font-medium text-sm truncate">
-                          {file.filename}
-                        </span>
-                        <span className="text-muted-foreground text-xs truncate">
-                          {getRelativeDirectory(file.fullPath, projectPath)}
-                        </span>
-                      </div>
-                    </div>
+                    <FileItem
+                      filename={file.filename}
+                      extension={file.extension}
+                      directory={getRelativeDirectory(file.fullPath, projectPath)}
+                    />
                   </PromptInputCommandItem>
                 ))}
               </PromptInputCommandGroup>

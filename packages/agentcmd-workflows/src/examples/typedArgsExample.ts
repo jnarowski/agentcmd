@@ -18,7 +18,6 @@ interface FeatureArgs {
 export const typedFeatureWorkflow = defineWorkflow(
   {
     id: 'typed-feature-workflow',
-    trigger: 'workflow/typed-feature',
     name: 'Feature Implementation with Typed Args',
     description: 'Demonstrates type-safe workflow arguments with runtime validation',
     // argsSchema enables runtime validation
@@ -81,7 +80,6 @@ Tags: ${tags?.join(', ') ?? 'None'}`
 export const untypedWorkflow = defineWorkflow(
   {
     id: 'untyped-workflow',
-    trigger: 'workflow/untyped',
     name: 'Workflow without Args Schema'
   },
   async ({ event }) => {

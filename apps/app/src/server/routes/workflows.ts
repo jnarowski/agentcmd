@@ -9,6 +9,8 @@ import {
   resumeWorkflow,
   cancelWorkflow,
   generateRunNames,
+  getStepLogs,
+  getInngestRunStatus,
 } from "@/server/domain/workflow/services";
 import { readFile } from "@/server/domain/file/services/readFile";
 import {
@@ -18,7 +20,7 @@ import {
 import { NotFoundError } from "@/server/errors";
 import { scanProjectWorkflows } from "@/server/domain/workflow/services/engine";
 import { prisma } from "@/shared/prisma";
-import '@/server/plugins/auth';
+import "@/server/plugins/auth";
 
 // Params schema
 const runIdSchema = z.object({
@@ -79,7 +81,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
         await executeWorkflow({
           runId: run.id,
           workflowClient,
-          logger: fastify.log
+          logger: fastify.log,
         });
 
         fastify.log.info(
@@ -158,10 +160,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
       const { id } = request.params;
       const userId = (request.user! as { id: string }).id;
 
-      fastify.log.info(
-        { userId, runId: id },
-        "Fetching workflow run"
-      );
+      fastify.log.info({ userId, runId: id }, "Fetching workflow run");
 
       const run = await getWorkflowRunById({ id });
 
@@ -198,10 +197,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
       const { id } = request.params;
       const userId = (request.user! as { id: string }).id;
 
-      fastify.log.info(
-        { userId, runId: id },
-        "Pausing workflow run"
-      );
+      fastify.log.info({ userId, runId: id }, "Pausing workflow run");
 
       const run = await getWorkflowRunById({ id });
 
@@ -221,7 +217,11 @@ export async function workflowRoutes(fastify: FastifyInstance) {
         });
       }
 
-      const updated = await pauseWorkflow({ runId: id, userId, logger: fastify.log });
+      const updated = await pauseWorkflow({
+        runId: id,
+        userId,
+        logger: fastify.log,
+      });
 
       return reply.send({ data: updated });
     }
@@ -245,10 +245,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
       const { id } = request.params;
       const userId = (request.user! as { id: string }).id;
 
-      fastify.log.info(
-        { userId, runId: id },
-        "Resuming workflow run"
-      );
+      fastify.log.info({ userId, runId: id }, "Resuming workflow run");
 
       const run = await getWorkflowRunById({ id });
 
@@ -268,7 +265,11 @@ export async function workflowRoutes(fastify: FastifyInstance) {
         });
       }
 
-      const updated = await resumeWorkflow({ runId: id, userId, logger: fastify.log });
+      const updated = await resumeWorkflow({
+        runId: id,
+        userId,
+        logger: fastify.log,
+      });
 
       return reply.send({ data: updated });
     }
@@ -292,10 +293,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
       const { id } = request.params;
       const userId = (request.user! as { id: string }).id;
 
-      fastify.log.info(
-        { userId, runId: id },
-        "Cancelling workflow run"
-      );
+      fastify.log.info({ userId, runId: id }, "Cancelling workflow run");
 
       const run = await getWorkflowRunById({ id });
 
@@ -309,7 +307,12 @@ export async function workflowRoutes(fastify: FastifyInstance) {
           .send({ error: { message: "Access denied", statusCode: 403 } });
       }
 
-      const updated = await cancelWorkflow({ runId: id, userId, reason: undefined, logger: fastify.log });
+      const updated = await cancelWorkflow({
+        runId: id,
+        userId,
+        reason: undefined,
+        logger: fastify.log,
+      });
 
       return reply.send({ data: updated });
     }
@@ -462,6 +465,68 @@ export async function workflowRoutes(fastify: FastifyInstance) {
       const names = await generateRunNames({ specContent });
 
       return reply.send({ data: names });
+    }
+  );
+
+  /**
+   * GET /api/workflow-runs/:runId/steps/:stepId/logs
+   * Get step execution logs from filesystem
+   */
+  fastify.get<{
+    Params: { runId: string; stepId: string };
+  }>(
+    "/api/workflow-runs/:runId/steps/:stepId/logs",
+    {
+      preHandler: fastify.authenticate,
+    },
+    async (request, reply) => {
+      const { runId, stepId } = request.params;
+
+      fastify.log.info({ runId, stepId }, "Fetching step logs");
+
+      const result = await getStepLogs(runId, stepId);
+
+      if (!result) {
+        throw new NotFoundError("Step logs not found");
+      }
+
+      return reply.send({ data: result });
+    }
+  );
+
+  /**
+   * GET /api/workflow-runs/:runId/inngest-status
+   * Get Inngest run status from Inngest dev server
+   */
+  fastify.get<{
+    Params: { runId: string };
+  }>(
+    "/api/workflow-runs/:runId/inngest-status",
+    {
+      preHandler: fastify.authenticate,
+    },
+    async (request, reply) => {
+      const { runId } = request.params;
+
+      fastify.log.info({ runId }, "Fetching Inngest run status");
+
+      // Get workflow run to fetch inngest_run_id
+      const run = await getWorkflowRunById({ id: runId });
+
+      if (!run) {
+        throw new NotFoundError("Workflow run not found");
+      }
+
+      if (!run.inngest_run_id) {
+        return reply.send({
+          success: false,
+          error: "No Inngest run ID associated with this workflow run",
+        });
+      }
+
+      const result = await getInngestRunStatus(run.inngest_run_id);
+
+      return reply.send(result);
     }
   );
 }

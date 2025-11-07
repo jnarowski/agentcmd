@@ -15,7 +15,7 @@ import { RadioGroup, RadioGroupItem } from "@/client/components/ui/radio-group";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/client/components/ui/tabs";
 import { Combobox } from "@/client/components/ui/combobox";
 import { useCreateWorkflow } from "../hooks/useWorkflowMutations";
-import { api } from "@/client/utils/api-client";
+import { api } from "@/client/utils/api";
 import type { WorkflowDefinition } from "../types";
 import { NewRunFormDialogArgSchemaFields } from "./NewRunFormDialogArgSchemaFields";
 

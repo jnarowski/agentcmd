@@ -17,6 +17,9 @@ export type {
   AnnotationStepConfig,
   AiStepConfig,
   AiStepResult,
+  SetupWorkspaceConfig,
+  WorkspaceResult,
+  CleanupWorkspaceConfig,
 } from "./steps";
 
 export type {

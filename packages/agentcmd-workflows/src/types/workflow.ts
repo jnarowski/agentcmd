@@ -26,8 +26,6 @@ export interface WorkflowConfig<
 > {
   /** Unique workflow identifier */
   id: string;
-  /** Inngest event trigger name (e.g., "workflow/implement-feature") */
-  trigger: string;
   /** Human-readable workflow name */
   name?: string;
   /** Workflow description */

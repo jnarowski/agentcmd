@@ -21,7 +21,10 @@ export function createAnnotationStep(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   inngestStep: GetStepTools<any>
 ) {
-  return async function annotation(idOrName: string, config: AnnotationStepConfig): Promise<void> {
+  return async function annotation(
+    idOrName: string,
+    config: AnnotationStepConfig
+  ): Promise<void> {
     const id = toId(idOrName);
     const name = toName(idOrName);
     const { runId, projectId, currentPhase, logger } = context;
@@ -31,7 +34,7 @@ export function createAnnotationStep(
     const inngestStepId = generateInngestStepId(context, id);
 
     // Wrap in Inngest step.run for memoization
-    return await inngestStep.run(inngestStepId, async () => {
+    return (await inngestStep.run(inngestStepId, async () => {
       // Create annotation event using domain service
       const event = await createWorkflowEvent({
         workflow_run_id: runId,
@@ -58,6 +61,6 @@ export function createAnnotationStep(
         { runId, name, message, phase: currentPhase },
         "Annotation added"
       );
-    }) as unknown as Promise<void>;
+    })) as unknown as Promise<void>;
   };
 }

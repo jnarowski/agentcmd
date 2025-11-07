@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/client/components/ui/dialog";
-import { api } from "@/client/utils/api-client";
+import { api } from "@/client/utils/api";
 import { useQuery } from "@tanstack/react-query";
 
 interface SessionFileViewerProps {

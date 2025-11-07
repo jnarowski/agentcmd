@@ -7,10 +7,13 @@ import type {
   WorkflowEvent,
   WorkflowArtifact,
 } from "../../types";
+import type { WorkflowTab } from "../../hooks/useWorkflowDetailPanel";
 
 interface PhaseTimelineProps {
   run: WorkflowRun;
   projectId: string;
+  onSelectSession?: (sessionId: string) => void;
+  onSetActiveTab?: (tab: WorkflowTab) => void;
 }
 
 interface PhaseGroup {
@@ -21,7 +24,7 @@ interface PhaseGroup {
   artifacts: WorkflowArtifact[];
 }
 
-export function PhaseTimeline({ run, projectId }: PhaseTimelineProps) {
+export function PhaseTimeline({ run, projectId, onSelectSession, onSetActiveTab }: PhaseTimelineProps) {
   // Group data by phase
   const phaseGroups = useMemo((): PhaseGroup[] => {
     const phases = run.workflow_definition?.phases || [];
@@ -98,7 +101,7 @@ export function PhaseTimeline({ run, projectId }: PhaseTimelineProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div>
       {phaseGroups.map((group) => (
         <PhaseCard
           key={group.phaseId}
@@ -109,6 +112,8 @@ export function PhaseTimeline({ run, projectId }: PhaseTimelineProps) {
           artifacts={group.artifacts}
           currentPhase={run.current_phase}
           projectId={projectId}
+          onSelectSession={onSelectSession}
+          onSetActiveTab={onSetActiveTab}
         />
       ))}
     </div>

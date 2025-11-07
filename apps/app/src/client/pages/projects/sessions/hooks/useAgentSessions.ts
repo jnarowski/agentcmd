@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { SessionResponse } from "@/shared/types";
-import { api } from "@/client/utils/api-client";
+import { api } from "@/client/utils/api";
 import { toast } from "sonner";
 import { projectKeys } from "@/client/pages/projects/hooks/useProjects";
 

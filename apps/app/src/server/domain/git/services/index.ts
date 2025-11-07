@@ -24,3 +24,6 @@ export * from './discardChanges';
 export * from './checkGhCliAvailable';
 export * from './createPullRequest';
 export * from './generateCommitMessage';
+export * from './createWorktree';
+export * from './removeWorktree';
+export * from './listWorktrees';

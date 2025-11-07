@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { prisma } from "@/shared/prisma";
-import type { AgentSession } from "@prisma/client";
 import { cleanTestDB } from "@/server/test-utils/db";
 import { createAgentStep } from "./createAgentStep";
 import type { RuntimeContext } from "../../../types/engine.types";
@@ -129,23 +128,6 @@ describe("createAgentStep", () => {
     const mockExecuteAgent = vi.mocked(executeAgentModule.executeAgent);
     const mockUpdateSession = vi.mocked(updateSessionModule.updateSession);
 
-    mockCreateSession.mockResolvedValue({
-      id: "session-123",
-      projectId: "project-456",
-      userId: "user-789",
-      agent: "claude",
-      name: "Agent Task",
-      state: "active",
-      cli_session_id: null,
-      session_path: null,
-      metadata: {},
-      error_message: null,
-      created_at: new Date(),
-      updated_at: new Date(),
-    } satisfies AgentSession);
-
-    mockExecuteAgent.mockRejectedValue(new Error("Agent crashed"));
-
     const user = await prisma.user.create({
       data: {
         email: "test@example.com",
@@ -156,13 +138,13 @@ describe("createAgentStep", () => {
       data: { name: "Test Project", path: "/tmp/test" },
     });
     const workflow = await prisma.workflowDefinition.create({
-      data: { 
+      data: {
         project_id: project.id,
-        name: "test-workflow", 
-        identifier: "test-workflow", 
-        type: "code", 
-        path: "/tmp/test.ts", 
-        phases: [] 
+        name: "test-workflow",
+        identifier: "test-workflow",
+        type: "code",
+        path: "/tmp/test.ts",
+        phases: []
       },
     });
     const execution = await prisma.workflowRun.create({
@@ -175,6 +157,22 @@ describe("createAgentStep", () => {
         status: "running",
       },
     });
+
+    // Create real agent session in DB to satisfy foreign key constraint
+    const realSession = await prisma.agentSession.create({
+      data: {
+        id: "session-123",
+        project: { connect: { id: project.id } },
+        user: { connect: { id: user.id } },
+        agent: "claude",
+        name: "Agent Task",
+        state: "idle",
+        metadata: {},
+      },
+    });
+
+    mockCreateSession.mockResolvedValue(realSession);
+    mockExecuteAgent.mockRejectedValue(new Error("Agent crashed"));
 
     const context: RuntimeContext = {
       runId: execution.id,

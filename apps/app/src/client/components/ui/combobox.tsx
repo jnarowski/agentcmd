@@ -167,6 +167,7 @@ export function Combobox<T extends string = string>({
                     value={option.label}
                     onSelect={() => handleSelect(option.value)}
                   >
+                    {/* @ts-ignore - React type version conflict */}
                     {renderOption ? (
                       renderOption(option, selected)
                     ) : (

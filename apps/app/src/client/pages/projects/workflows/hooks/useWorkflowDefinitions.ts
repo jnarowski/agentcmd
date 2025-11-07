@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/client/utils/api-client';
+import { api } from '@/client/utils/api';
 import type { WorkflowDefinition } from '../types';
 
 interface WorkflowDefinitionsResponse {

@@ -17,7 +17,6 @@ import {
 export default defineWorkflow(
   {
     id: "typed-build-workflow",
-    trigger: "workflow/typed-build",
     name: "Type-Safe Build Workflow",
     phases: [{ id: "validate", label: "Validate" }],
     argsSchema: defineSchema({

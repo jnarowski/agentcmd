@@ -73,6 +73,28 @@ export interface GitStepConfig {
 }
 
 /**
+ * Configuration for workspace setup step
+ */
+export interface SetupWorkspaceConfig {
+  /** Project directory path */
+  projectPath: string;
+  /** Target branch name (optional, stays on current if not provided) */
+  branch?: string;
+  /** Base branch for branching (default: main) */
+  baseBranch?: string;
+  /** Worktree name (if provided, creates worktree instead of switching branches) */
+  worktreeName?: string;
+}
+
+/**
+ * Configuration for workspace cleanup step
+ */
+export interface CleanupWorkspaceConfig {
+  /** Workspace result from setupWorkspace step */
+  workspaceResult: WorkspaceResult;
+}
+
+/**
  * Result from git operation
  */
 export interface GitStepResult {
@@ -92,6 +114,20 @@ export interface GitStepResult {
   alreadyOnBranch?: boolean;
   /** Success status */
   success: boolean;
+}
+
+/**
+ * Result from workspace setup operation
+ */
+export interface WorkspaceResult {
+  /** Working directory path (either project path or worktree path) */
+  workingDir: string;
+  /** Current branch name */
+  branch: string;
+  /** Mode used: worktree, branch, or stay */
+  mode: "worktree" | "branch" | "stay";
+  /** Absolute path to worktree (only if mode is worktree) */
+  worktreePath?: string;
 }
 
 /**
@@ -272,6 +308,30 @@ export interface WorkflowStep<TPhaseId extends string = string> extends InngestS
     config: GitStepConfig,
     options?: StepOptions
   ): Promise<GitStepResult>;
+
+  /**
+   * Set up workspace for workflow (worktree, branch switch, or stay)
+   * @param id - Step ID
+   * @param config - Workspace configuration
+   * @param options - Step options (timeout)
+   */
+  setupWorkspace(
+    id: string,
+    config: SetupWorkspaceConfig,
+    options?: StepOptions
+  ): Promise<WorkspaceResult>;
+
+  /**
+   * Clean up workspace (remove worktrees)
+   * @param id - Step ID
+   * @param config - Cleanup configuration
+   * @param options - Step options (timeout)
+   */
+  cleanupWorkspace(
+    id: string,
+    config: CleanupWorkspaceConfig,
+    options?: StepOptions
+  ): Promise<void>;
 
   /**
    * Execute a CLI command

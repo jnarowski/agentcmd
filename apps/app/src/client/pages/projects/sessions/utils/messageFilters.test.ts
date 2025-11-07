@@ -158,7 +158,7 @@ describe('shouldRenderMessage', () => {
       content: 'string content',
       timestamp: Date.now(),
       contentSummary: { blockCount: 0, blockTypes: [], isEmpty: true },
-    } as any;
+    } as UIMessage;
 
     expect(shouldRenderMessage(message)).toBe(false);
   });

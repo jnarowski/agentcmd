@@ -10,6 +10,8 @@ export { createArtifactStep } from "./createArtifactStep";
 export { createAnnotationStep } from "./createAnnotationStep";
 export { createRunStep } from "./createRunStep";
 export { createAiStep } from "./createAiStep";
+export { createSetupWorkspaceStep } from "./createSetupWorkspaceStep";
+export { createCleanupWorkspaceStep } from "./createCleanupWorkspaceStep";
 export { executeStep } from "./utils/executeStep";
 export { findOrCreateStep } from "./utils/findOrCreateStep";
 export { updateStepStatus } from "./utils/updateStepStatus";

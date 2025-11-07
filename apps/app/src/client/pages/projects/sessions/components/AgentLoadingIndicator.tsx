@@ -48,18 +48,20 @@ export function AgentLoadingIndicator({
   if (!isStreaming) return null;
 
   return (
-    <div className="flex items-center gap-2 text-sm mt-4 mb-4">
-      <Loader2 className="h-4 w-4 animate-spin text-orange-500" />
-      <span className="relative text-orange-600 dark:text-orange-400 font-medium overflow-hidden">
-        <span className="relative inline-block">
-          {displayedText}
+    <div className="flex items-center gap-2 text-sm mt-4 mb-4 h-6">
+      <Loader2 className="h-4 w-4 flex-shrink-0 animate-spin text-orange-500" />
+      <div className="relative text-orange-600 dark:text-orange-400 font-medium h-6 flex items-center min-w-0">
+        <span className="relative whitespace-nowrap">
+          <span className="inline-block">{displayedText}</span>
           {displayedText.length < loadingPhrase.length && (
-            <span className="inline-block w-[2px] h-4 bg-orange-500 ml-0.5 animate-[blink_1s_step-end_infinite]" />
+            <span className="inline-block w-[2px] h-4 bg-orange-500 ml-0.5 align-middle animate-[blink_1s_step-end_infinite]" />
           )}
-          {displayedText.length === loadingPhrase.length && "..."}
+          {displayedText.length === loadingPhrase.length && (
+            <span className="inline-block ml-0">...</span>
+          )}
           {/* Flashlight shine effect - only visible on text in dark mode */}
           <span
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 dark:via-white/30 to-transparent pointer-events-none animate-[shine_2.5s_linear_infinite] dark:mix-blend-overlay"
+            className="absolute top-0 left-0 bottom-0 bg-gradient-to-r from-transparent via-white/40 dark:via-white/30 to-transparent pointer-events-none animate-[shine_2.5s_linear_infinite] dark:mix-blend-overlay"
             style={{
               width: "30%",
               transform: "skewX(-20deg)",
@@ -76,7 +78,7 @@ export function AgentLoadingIndicator({
             }
           }
         `}</style>
-      </span>
+      </div>
     </div>
   );
 }

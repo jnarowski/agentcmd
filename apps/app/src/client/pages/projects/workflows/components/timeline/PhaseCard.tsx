@@ -9,6 +9,7 @@ import type {
   WorkflowEvent,
   WorkflowArtifact,
 } from "../../types";
+import type { WorkflowTab } from "../../hooks/useWorkflowDetailPanel";
 
 interface PhaseCardProps {
   phaseId: string;
@@ -18,6 +19,8 @@ interface PhaseCardProps {
   artifacts: WorkflowArtifact[];
   currentPhase: string | null;
   projectId: string;
+  onSelectSession?: (sessionId: string) => void;
+  onSetActiveTab?: (tab: WorkflowTab) => void;
 }
 
 type PhaseStatus = "pending" | "running" | "completed" | "failed";
@@ -38,6 +41,8 @@ export function PhaseCard({
   artifacts,
   currentPhase,
   projectId,
+  onSelectSession,
+  onSetActiveTab,
 }: PhaseCardProps) {
   const [isExpanded, setIsExpanded] = useState(phaseId === currentPhase);
 
@@ -73,7 +78,8 @@ export function PhaseCard({
 
     // Check for phase completion/failure events
     const hasPhaseCompletedEvent = events.some(
-      (e) => e.event_type === "phase_completed" && e.event_data?.phase === phaseId
+      (e) =>
+        e.event_type === "phase_completed" && e.event_data?.phase === phaseId
     );
     const hasPhaseFailedEvent = events.some(
       (e) => e.event_type === "phase_failed" && e.event_data?.phase === phaseId
@@ -81,7 +87,11 @@ export function PhaseCard({
 
     if (hasPhaseFailedEvent || stepStatuses.some((s) => s === "failed")) {
       status = "failed";
-    } else if (hasPhaseCompletedEvent || (steps.length > 0 && stepStatuses.every((s) => s === "completed" || s === "skipped"))) {
+    } else if (
+      hasPhaseCompletedEvent ||
+      (steps.length > 0 &&
+        stepStatuses.every((s) => s === "completed" || s === "skipped"))
+    ) {
       status = "completed";
     } else if (
       stepStatuses.some((s) => s === "running") ||
@@ -188,11 +198,11 @@ export function PhaseCard({
   };
 
   return (
-    <div className="border rounded-lg bg-card">
+    <div className="border-b bg-card">
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-4 hover:bg-accent/50 transition-colors"
+        className="w-full flex items-center justify-between py-5 px-4 bg-background hover:bg-muted/80 transition-colors border-l-2 border-primary/20"
       >
         <div className="flex items-center gap-3">
           {isExpanded ? (
@@ -201,7 +211,7 @@ export function PhaseCard({
             <ChevronRight className="h-5 w-5 text-muted-foreground" />
           )}
 
-          <h3 className="text-lg font-semibold">{phaseName}</h3>
+          <h3 className="text-xl font-bold">{phaseName}</h3>
 
           <span
             className={`px-2 py-1 text-xs font-medium text-white rounded ${statusColor}`}
@@ -224,23 +234,17 @@ export function PhaseCard({
       {/* Body */}
       {isExpanded && (
         <div className="border-t">
-          {timelineItems.length === 0 ? (
-            <div className="p-4 text-center text-muted-foreground">
-              {phaseId === currentPhase ? (
-                <div className="flex items-center justify-center gap-2">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  <span>Processing...</span>
-                </div>
-              ) : (
-                "No activity yet"
-              )}
-            </div>
-          ) : (
+          {timelineItems.length > 0 && (
             <div className="divide-y">
               {timelineItems.map((item, index) => (
                 <div key={`${item.type}-${item.data.id}-${index}`}>
                   {item.type === "step" && (
-                    <StepRow step={item.data} projectId={projectId} />
+                    <StepRow
+                      step={item.data}
+                      projectId={projectId}
+                      onSelectSession={onSelectSession}
+                      onSetActiveTab={onSetActiveTab}
+                    />
                   )}
                   {item.type === "artifact" && (
                     <ArtifactRow artifact={item.data} />
@@ -251,8 +255,8 @@ export function PhaseCard({
             </div>
           )}
 
-          {/* Loading indicator at bottom when phase is actively running */}
-          {metadata.status === "running" && (
+          {/* Loading indicator at bottom when phase is actively running and has no steps yet */}
+          {metadata.status === "running" && steps.length === 0 && (
             <div className="px-4">
               <AgentLoadingIndicator isStreaming={true} />
             </div>

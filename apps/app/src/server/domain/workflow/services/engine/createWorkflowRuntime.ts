@@ -19,6 +19,8 @@ import {
   createAnnotationStep,
   createRunStep,
   createAiStep,
+  createSetupWorkspaceStep,
+  createCleanupWorkspaceStep,
 } from "./steps";
 
 /**
@@ -86,6 +88,8 @@ export function createWorkflowRuntime(
             artifact: createArtifactStep(context, inngestStep),
             annotation: createAnnotationStep(context, inngestStep),
             ai: createAiStep(context, inngestStep),
+            setupWorkspace: createSetupWorkspaceStep(context, inngestStep),
+            cleanupWorkspace: createCleanupWorkspaceStep(context, inngestStep),
           }) as WorkflowStep;
 
           try {

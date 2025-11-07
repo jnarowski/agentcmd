@@ -8,12 +8,14 @@ import type { UIMessage } from "@/shared/types/message.types";
 import { UserMessage } from './UserMessage';
 import { AssistantMessage } from './AssistantMessage';
 import { ChevronDown, ChevronRight, Copy, Check } from "lucide-react";
+import { useDebugMode } from "@/client/hooks/useDebugMode";
 
 interface MessageRendererProps {
   message: UIMessage;
 }
 
 export function MessageRenderer({ message }: MessageRendererProps) {
+  const isDebugMode = useDebugMode();
   const [isJsonExpanded, setIsJsonExpanded] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
@@ -58,49 +60,43 @@ export function MessageRenderer({ message }: MessageRendererProps) {
     'data-filtered-tool-results': filteredToolResultsCount,
   };
 
-  if (!import.meta.env.DEV) {
-    return (
-      <div {...dataAttributes}>
-        {messageContent}
-      </div>
-    );
-  }
-
   return (
     <div
-      className="relative group"
+      className={isDebugMode ? "relative group" : ""}
       {...dataAttributes}
     >
-      {/* Debug controls - top right icons */}
-      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-        <button
-          onClick={() => setIsJsonExpanded(!isJsonExpanded)}
-          className="p-1.5 rounded bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-          title="Toggle JSON viewer"
-        >
-          {isJsonExpanded ? (
-            <ChevronDown className="h-3.5 w-3.5" />
-          ) : (
-            <ChevronRight className="h-3.5 w-3.5" />
-          )}
-        </button>
-        <button
-          onClick={copyMessageJson}
-          className="p-1.5 rounded bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-          title="Copy message JSON"
-        >
-          {isCopied ? (
-            <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-          ) : (
-            <Copy className="h-3.5 w-3.5" />
-          )}
-        </button>
-      </div>
+      {/* Debug controls - top right icons - only when ?debug=true */}
+      {isDebugMode && (
+        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+          <button
+            onClick={() => setIsJsonExpanded(!isJsonExpanded)}
+            className="p-1.5 rounded bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            title="Toggle JSON viewer"
+          >
+            {isJsonExpanded ? (
+              <ChevronDown className="h-3.5 w-3.5" />
+            ) : (
+              <ChevronRight className="h-3.5 w-3.5" />
+            )}
+          </button>
+          <button
+            onClick={copyMessageJson}
+            className="p-1.5 rounded bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            title="Copy message JSON"
+          >
+            {isCopied ? (
+              <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+            ) : (
+              <Copy className="h-3.5 w-3.5" />
+            )}
+          </button>
+        </div>
+      )}
 
       {messageContent}
 
-      {/* Inline JSON viewer */}
-      {isJsonExpanded && (
+      {/* Inline JSON viewer - only when ?debug=true */}
+      {isDebugMode && isJsonExpanded && (
         <div className="mt-2 rounded border border-border bg-muted/30 overflow-hidden">
           <div className="px-3 py-1.5 text-xs font-mono text-muted-foreground border-b border-border bg-muted/50">
             Message JSON (ID: {message.id.substring(0, 8)})

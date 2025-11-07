@@ -1,5 +1,4 @@
 import { defineWorkflow } from "../../../packages/agentcmd-workflows/dist";
-import { jsonSchema } from "ai";
 
 /**
  * Example workflow demonstrating step.ai capabilities.
@@ -8,7 +7,6 @@ import { jsonSchema } from "ai";
 export default defineWorkflow(
   {
     id: "ai-example-workflow",
-    trigger: "workflow/ai-example",
     name: "AI Example Workflow",
     description: "Demonstrates step.ai with text and structured output",
     phases: [
@@ -17,8 +15,18 @@ export default defineWorkflow(
     ],
   },
   async ({ step }) => {
-    let haikuResponse: string;
-    let planResponse: any;
+    let haikuResponse: string | undefined;
+    let planResponse: { data: TaskBreakdown } | undefined;
+
+    // Type definition for structured output
+    interface TaskBreakdown {
+      title: string;
+      priority: "low" | "medium" | "high";
+      tasks: Array<{
+        name: string;
+        estimatedHours: number;
+      }>;
+    }
 
     // Phase 1: Simple text generation
     await step.phase("generate", async () => {
@@ -52,7 +60,7 @@ export default defineWorkflow(
         }>;
       }
 
-      const taskSchema = jsonSchema<TaskBreakdown>({
+      const taskSchema = {
         type: "object",
         properties: {
           title: { type: "string" },
@@ -70,7 +78,7 @@ export default defineWorkflow(
           },
         },
         required: ["title", "priority", "tasks"],
-      });
+      };
 
       planResponse = await step.ai<TaskBreakdown>("generate-plan", {
         provider: "anthropic",
