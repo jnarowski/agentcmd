@@ -8,7 +8,7 @@
 import { Command } from "commander";
 import { parseSlashCommands } from "../utils/parseSlashCommands";
 import { generateSlashCommandTypesCode } from "../utils/generateSlashCommandTypes";
-import { initWorkflowProject } from "../utils/initWorkflowProject";
+import { initProject } from "../utils/initProject";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 
@@ -31,7 +31,7 @@ program
   .option("-y, --yes", "Skip prompts and use defaults")
   .action(async (targetPath: string, options) => {
     try {
-      const result = await initWorkflowProject(targetPath, {
+      const result = await initProject(targetPath, {
         claude: options.claude,
         genTypes: options.genTypes,
         yes: options.yes,
