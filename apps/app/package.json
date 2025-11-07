@@ -1,6 +1,6 @@
 {
   "name": "agentcmd",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "type": "module",
   "main": "src/server/index.ts",
   "bin": {
@@ -32,7 +32,7 @@
     "prisma:seed": "tsx prisma/seed.ts",
     "prisma:seed:workflows": "tsx prisma/seed-workflows.ts",
     "prisma:studio": "prisma studio",
-    "ship": "pnpm build && npm version patch && (git commit -am \"bump version\" || true) && git push --follow-tags && npm publish",
+    "ship": "pnpm build && pnpm version patch && (git commit -am \"bump version\" || true) && git push --follow-tags && pnpm publish",
     "start": "pnpm build && tsx --env-file=.env src/server/index.ts",
     "test": "vitest run",
     "test:ui": "vitest --ui",
