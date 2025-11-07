@@ -1,6 +1,6 @@
 {
   "name": "agent-cli-sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "TypeScript SDK for orchestrating AI-powered CLI tools (Claude Code, OpenAI Codex) in development workflows",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -43,15 +43,6 @@
     "workflow",
     "orchestration"
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/jnarowski/agentcmd",
-    "directory": "packages/agent-cli-sdk"
-  },
-  "homepage": "https://github.com/jnarowski/agentcmd/tree/main/packages/agent-cli-sdk#readme",
-  "bugs": {
-    "url": "https://github.com/jnarowski/agentcmd/issues"
-  },
   "files": [
     "dist",
     "README.md"

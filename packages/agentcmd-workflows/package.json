@@ -44,15 +44,6 @@
   ],
   "author": "Sourceborn",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/jnarowski/agentcmd",
-    "directory": "packages/agentcmd-workflows"
-  },
-  "homepage": "https://github.com/jnarowski/agentcmd/tree/main/packages/agentcmd-workflows#readme",
-  "bugs": {
-    "url": "https://github.com/jnarowski/agentcmd/issues"
-  },
   "peerDependencies": {
     "inngest": "^3.0.0"
   },
