@@ -154,7 +154,13 @@ export async function initWorkflowProject(
 
         if (commands.length > 0) {
           const code = generateSlashCommandTypesCode(commands);
-          const typesPath = path.join(claudeDest, "types.ts");
+
+          // Write to .agent/generated/slash-commands.ts
+          const generatedDir = path.join(agentDest, "generated");
+          const typesPath = path.join(generatedDir, "slash-commands.ts");
+
+          // Ensure .agent/generated directory exists
+          await mkdir(generatedDir, { recursive: true });
 
           await writeFile(typesPath, code, "utf-8");
           created.push(typesPath);

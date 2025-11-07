@@ -38,9 +38,9 @@
       "problemMatcher": []
     },
     {
-      "label": "apps/web",
+      "label": "apps/agentcmd",
       "type": "shell",
-      "command": "zsh -i -c 'cd apps/web && exec zsh'",
+      "command": "zsh -i -c 'cd apps/app && exec zsh'",
       "icon": {
         "id": "code",
         "color": "terminal.ansiYellow"
