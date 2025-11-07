@@ -15,6 +15,9 @@ import { findOrCreateStep } from "./utils/findOrCreateStep";
 import { updateStepStatus } from "./utils/updateStepStatus";
 import { handleStepFailure } from "./utils/handleStepFailure";
 import { randomUUID } from "node:crypto";
+import { broadcast } from "@/server/websocket/infrastructure/subscriptions";
+import { Channels } from "@/shared/websocket/channels";
+import { SessionEventTypes } from "@/shared/types/websocket.types";
 
 const DEFAULT_AGENT_TIMEOUT = 1800000; // 30 minutes
 
@@ -89,6 +92,14 @@ export function createAgentStep(
               agent: config.agent as "claude" | "codex",
               prompt: config.prompt,
               workingDir: config.projectPath ?? context.projectPath,
+              onEvent: ({ message }) => {
+                if (message && typeof message === "object" && message !== null) {
+                  broadcast(Channels.session(session.id), {
+                    type: SessionEventTypes.STREAM_OUTPUT,
+                    data: { message, sessionId: session.id },
+                  });
+                }
+              },
             }),
             timeout,
             "Agent execution"

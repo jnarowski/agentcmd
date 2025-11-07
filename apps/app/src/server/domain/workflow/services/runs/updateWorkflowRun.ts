@@ -1,6 +1,7 @@
 import { prisma } from '@/shared/prisma';
 import type { WorkflowRun } from '@prisma/client';
 import type { UpdateWorkflowRunOptions } from '../../types/UpdateWorkflowRunOptions';
+import { broadcastWorkflowEvent } from '../events/broadcastWorkflowEvent';
 
 /**
  * Update workflow run fields
@@ -24,8 +25,15 @@ export async function updateWorkflowRun({
 
   logger?.debug({ runId }, 'Workflow run updated');
 
-  // TODO: Add WebSocket broadcasting when event bus is available
-  // eventBus.emit('workflow.run.updated', { runId, data });
+  // Broadcast status change to WebSocket clients
+  await broadcastWorkflowEvent(run.project_id, {
+    type: 'workflow:run:updated',
+    data: {
+      run_id: run.id,
+      project_id: run.project_id,
+      changes: data,
+    },
+  });
 
   return run;
 }
