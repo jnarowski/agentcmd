@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.server.json",
+  "compilerOptions": {
+    "types": ["node", "vitest/globals"],
+    "noEmit": true
+  },
+  "include": [
+    "src/server/**/*.test.ts",
+    "src/server/**/*.test.tsx",
+    "src/server/test-utils/**/*",
+    "src/shared/**/*.test.ts",
+    "src/shared/**/*.test.tsx",
+    "src/client/**/*.test.ts",
+    "src/client/**/*.test.tsx",
+    "vitest.setup.ts",
+    "vitest.global-setup.ts"
+  ],
+  "exclude": []
+}
