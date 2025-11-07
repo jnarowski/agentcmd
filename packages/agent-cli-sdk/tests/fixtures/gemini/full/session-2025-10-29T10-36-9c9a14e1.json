@@ -1,0 +1,83 @@
+{
+  "sessionId": "9c9a14e1-2b8f-443b-8cec-61516ff39741",
+  "projectHash": "cde655816f6d3e439a10953ef9e111dbe460d7de3bc212c414a03ede4bf0b307",
+  "startTime": "2025-10-29T10:36:24.689Z",
+  "lastUpdated": "2025-10-29T10:36:32.339Z",
+  "messages": [
+    {
+      "id": "7f4a95d5-284f-4321-bff2-ff46fab22ca1",
+      "timestamp": "2025-10-29T10:36:24.689Z",
+      "type": "user",
+      "content": "Read the file /tmp/gemini-test/sample.txt and tell me what it contains\n\n\n"
+    },
+    {
+      "id": "2fa2459f-7fe1-4810-9412-22a30f522eb4",
+      "timestamp": "2025-10-29T10:36:30.748Z",
+      "type": "gemini",
+      "content": "",
+      "toolCalls": [
+        {
+          "id": "read_file-1761734190726-4dfc76eb0c846",
+          "name": "read_file",
+          "args": {
+            "absolute_path": "/private/tmp/gemini-test/sample.txt"
+          },
+          "result": [
+            {
+              "functionResponse": {
+                "id": "read_file-1761734190726-4dfc76eb0c846",
+                "name": "read_file",
+                "response": {
+                  "output": "test content from gemini research\n"
+                }
+              }
+            }
+          ],
+          "status": "success",
+          "timestamp": "2025-10-29T10:36:30.748Z",
+          "resultDisplay": "",
+          "displayName": "ReadFile",
+          "description": "Reads and returns the content of a specified file. If the file is large, the content will be truncated. The tool's response will clearly indicate if truncation has occurred and will provide details on how to read more of the file using the 'offset' and 'limit' parameters. Handles text, images (PNG, JPG, GIF, WEBP, SVG, BMP), and PDF files. For text files, it can read specific line ranges.",
+          "renderOutputAsMarkdown": true
+        }
+      ],
+      "thoughts": [
+        {
+          "subject": "Reading the File",
+          "description": "I've determined that the `read_file` tool is the perfect fit. The user specified `/tmp/gemini-test/sample.txt`, so I'll feed this into `read_file`. It's a simple, straightforward request. No complications; all systems are go.",
+          "timestamp": "2025-10-29T10:36:27.644Z"
+        },
+        {
+          "subject": "Double-Checking the Path",
+          "description": "Okay, I'm now a bit concerned about the path. The user specified `/tmp/gemini-test/sample.txt`, but my current working directory is actually `/private/tmp/gemini-test`. I'll try the user's path first, but I'm prepared to adapt if it fails. I'm also preparing for the output phase now.",
+          "timestamp": "2025-10-29T10:36:30.719Z"
+        }
+      ],
+      "model": "gemini-2.5-pro",
+      "tokens": {
+        "input": 5361,
+        "output": 18,
+        "cached": 0,
+        "thoughts": 319,
+        "tool": 0,
+        "total": 5698
+      }
+    },
+    {
+      "id": "f0c56c55-a319-44d1-9b7a-e612fe0ea220",
+      "timestamp": "2025-10-29T10:36:32.339Z",
+      "type": "gemini",
+      "content": "The file /private/tmp/gemini-test/sample.txt contains the following:\ntest content from gemini research",
+      "thoughts": [],
+      "tokens": {
+        "input": 5707,
+        "output": 26,
+        "cached": 0,
+        "thoughts": 0,
+        "tool": 0,
+        "total": 5733
+      },
+      "model": "gemini-2.5-pro"
+    }
+  ]
+}

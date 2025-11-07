@@ -1,0 +1,21 @@
+{
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ],
+  "search.exclude": {
+    "**/.agent/specs/done": true
+  },
+  "terminal.integrated.profiles.windows": {
+    "Dev Server": {
+      "path": "cmd.exe",
+      "args": ["/k", "npm run dev"]
+    },
+    "Git Bash": {
+      "path": "C:\\Program Files\\Git\\bin\\bash.exe"
+    }
+  },
+  "terminal.integrated.defaultProfile.windows": "Dev Server",
+  "terminal.integrated.tabs.showActiveTerminal": "never"
+}

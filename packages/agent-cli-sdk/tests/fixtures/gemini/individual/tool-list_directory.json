@@ -1,0 +1,48 @@
+{
+  "id": "f7f9dcf5-759f-479d-864c-4969680ccb17",
+  "timestamp": "2025-10-27T19:56:04.625Z",
+  "type": "gemini",
+  "content": "",
+  "toolCalls": [
+    {
+      "id": "list_directory-1761594964607-802afbb1c1c44",
+      "name": "list_directory",
+      "args": {
+        "path": "/Users/jnarowski/Dev/playground/src/test-project/"
+      },
+      "result": [
+        {
+          "functionResponse": {
+            "id": "list_directory-1761594964607-802afbb1c1c44",
+            "name": "list_directory",
+            "response": {
+              "output": "Directory /Users/jnarowski/Dev/playground/src/test-project/ is empty."
+            }
+          }
+        }
+      ],
+      "status": "success",
+      "timestamp": "2025-10-27T19:56:04.625Z",
+      "resultDisplay": "Directory is empty.",
+      "displayName": "ReadFolder",
+      "description": "Lists the names of files and subdirectories directly within a specified directory path. Can optionally ignore entries matching provided glob patterns.",
+      "renderOutputAsMarkdown": true
+    }
+  ],
+  "thoughts": [
+    {
+      "subject": "Considering Project Structure",
+      "description": "I've started by listing the files in the current directory. This gives me a better lay of the land, allowing me to start the creation of a Python AI agent that can execute Python code with a solid understanding of the project's structure.",
+      "timestamp": "2025-10-27T19:56:04.598Z"
+    }
+  ],
+  "model": "gemini-2.5-pro",
+  "tokens": {
+    "input": 5377,
+    "output": 21,
+    "cached": 0,
+    "thoughts": 36,
+    "tool": 0,
+    "total": 5434
+  }
+}

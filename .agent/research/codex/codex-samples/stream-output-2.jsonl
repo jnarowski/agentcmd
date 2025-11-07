@@ -1,0 +1,7 @@
+{"type":"thread.started","thread_id":"019a2d7a-6455-7170-a661-c6d8b94c630a"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"reasoning","text":"**Preparing to list files with bash shell**"}}
+{"type":"item.started","item":{"id":"item_1","type":"command_execution","command":"bash -lc ls","aggregated_output":"","status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_1","type":"command_execution","command":"bash -lc ls","aggregated_output":"stream-output-1.jsonl\nstream-output-2.jsonl\ntest.js\n","exit_code":0,"status":"completed"}}
+{"type":"item.completed","item":{"id":"item_2","type":"agent_message","text":"Files here: `stream-output-1.jsonl`, `stream-output-2.jsonl`, `test.js`."}}
+{"type":"turn.completed","usage":{"input_tokens":6040,"cached_input_tokens":4992,"output_tokens":129}}

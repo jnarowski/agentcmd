@@ -1,0 +1,68 @@
+{
+  "sessionId": "a63242d9-4431-4eee-926d-beb795e7989d",
+  "projectHash": "cde655816f6d3e439a10953ef9e111dbe460d7de3bc212c414a03ede4bf0b307",
+  "startTime": "2025-10-29T10:39:45.313Z",
+  "lastUpdated": "2025-10-29T10:39:47.894Z",
+  "messages": [
+    {
+      "id": "2cb929b6-9d26-4071-860d-4c1e6d88f757",
+      "timestamp": "2025-10-29T10:39:45.313Z",
+      "type": "user",
+      "content": "Create a file test-default.txt with content 'test'\n\n\n"
+    },
+    {
+      "id": "4ee26c2c-4526-4c2e-9323-6d5c9f480687",
+      "timestamp": "2025-10-29T10:39:47.894Z",
+      "type": "gemini",
+      "content": "",
+      "toolCalls": [
+        {
+          "id": "write_file-1761734387890-c8c35a4b54873",
+          "name": "write_file",
+          "args": {
+            "content": "test",
+            "path": "/private/tmp/gemini-test/test-default.txt"
+          },
+          "result": [
+            {
+              "functionResponse": {
+                "id": "write_file-1761734387890-c8c35a4b54873",
+                "name": "write_file",
+                "response": {
+                  "error": "Tool \"write_file\" not found in registry. Tools must use the exact names that are registered. Did you mean one of: \"read_file\", \"web_fetch\", \"glob\"?"
+                }
+              }
+            }
+          ],
+          "status": "error",
+          "timestamp": "2025-10-29T10:39:47.894Z",
+          "resultDisplay": "Tool \"write_file\" not found in registry. Tools must use the exact names that are registered. Did you mean one of: \"read_file\", \"web_fetch\", \"glob\"?",
+          "displayName": "write_file",
+          "description": "",
+          "renderOutputAsMarkdown": false
+        }
+      ],
+      "thoughts": [
+        {
+          "subject": "Defining File Creation Parameters",
+          "description": "I'm zeroing in on the precise parameters for file creation. I see that I must use the `write_file` tool to create the target file. The file path needs to be absolute, and I've locked in the destination: `/private/tmp/gemini-test/test-default.txt`. The content is simple: `test`. Next step: execute.",
+          "timestamp": "2025-10-29T10:39:47.403Z"
+        },
+        {
+          "subject": "Crafting the Tool Call",
+          "description": "I've determined the ideal tool call structure. It seems the `write_file` tool is best. I am ensuring the path is correct: `/private/tmp/gemini-test/test-default.txt`. The content is `test`. The execution of the tool call is imminent.",
+          "timestamp": "2025-10-29T10:39:47.881Z"
+        }
+      ],
+      "model": "gemini-2.5-pro",
+      "tokens": {
+        "input": 4657,
+        "output": 20,
+        "cached": 0,
+        "thoughts": 131,
+        "tool": 0,
+        "total": 4808
+      }
+    }
+  ]
+}

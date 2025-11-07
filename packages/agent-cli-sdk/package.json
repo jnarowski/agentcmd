@@ -1,0 +1,92 @@
+{
+  "name": "@repo/agent-cli-sdk",
+  "version": "1.0.0",
+  "description": "TypeScript SDK for orchestrating AI-powered CLI tools (Claude Code, OpenAI Codex) in development workflows",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "bunchee",
+    "dev": "bunchee --watch",
+    "check": "vitest run && pnpm check-types && pnpm lint",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "test:e2e:claude": "vitest run --config vitest.e2e.config.ts tests/e2e/claude",
+    "test:e2e:codex": "vitest run --config vitest.e2e.config.ts tests/e2e/codex",
+    "test:e2e:gemini": "vitest run --config vitest.e2e.config.ts tests/e2e/gemini",
+    "extract-claude-fixtures": "tsx scripts/extract-claude-fixtures.ts",
+    "extract-gemini-fixtures": "node --import tsx scripts/extract-gemini-fixtures.ts"
+  },
+  "keywords": [
+    "ai",
+    "claude",
+    "codex",
+    "openai",
+    "cli",
+    "automation",
+    "development",
+    "sdk",
+    "typescript",
+    "adapter",
+    "workflow",
+    "orchestration"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sourceborn/agent-workflows-monorepo.git",
+    "directory": "packages/agent-cli-sdk"
+  },
+  "homepage": "https://github.com/sourceborn/agent-workflows-monorepo/tree/main/packages/agent-cli-sdk#readme",
+  "bugs": {
+    "url": "https://github.com/sourceborn/agent-workflows-monorepo/issues"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "author": "Sourceborn",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "boxen": "^8.0.1",
+    "chalk": "^5.3.0",
+    "cross-spawn": "^7.0.6",
+    "glob": "^11.0.3"
+  },
+  "peerDependencies": {
+    "zod": "^4.0.0 || ^3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "zod": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/cross-spawn": "^6.0.6",
+    "@types/node": "^22.0.0",
+    "@types/uuid": "^11.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.1",
+    "@typescript-eslint/parser": "^8.46.1",
+    "bunchee": "^6.6.2",
+    "eslint": "^8.57.0",
+    "prettier": "^3.3.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.5.0",
+    "uuid": "^13.0.0",
+    "vitest": "^2.0.0",
+    "zod": "^4.0.0"
+  },
+  "packageManager": "pnpm@10.19.0"
+}
