@@ -1,7 +1,7 @@
 {
-  "name": "@repo/workflow-sdk",
+  "name": "agentcmd-workflows",
   "version": "1.0.0",
-  "description": "Type-safe workflow SDK for Sourceborn workflow engine",
+  "description": "Type-safe workflow SDK for agentcmd workflow engine",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -17,7 +17,7 @@
     }
   },
   "bin": {
-    "workflow-sdk": "./bin/workflow-sdk.js"
+    "agentcmd-workflows": "./bin/workflow-sdk.js"
   },
   "files": [
     "dist",
@@ -31,7 +31,9 @@
     "check-types": "tsc --noEmit",
     "gen-slash-types": "node dist/cli.js generate-slash-types",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepublishOnly": "pnpm build && pnpm test",
+    "ship": "pnpm build && pnpm test && npm version patch && (git commit -am \"bump version\" || true) && git push --follow-tags && npm publish"
   },
   "keywords": [
     "workflow",
@@ -42,6 +44,15 @@
   ],
   "author": "Sourceborn",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jnarowski/agentcmd",
+    "directory": "packages/workflow-sdk"
+  },
+  "homepage": "https://github.com/jnarowski/agentcmd/tree/main/packages/workflow-sdk#readme",
+  "bugs": {
+    "url": "https://github.com/jnarowski/agentcmd/issues"
+  },
   "peerDependencies": {
     "inngest": "^3.0.0"
   },

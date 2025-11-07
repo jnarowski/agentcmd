@@ -5,7 +5,7 @@
 import { ToolCollapsibleWrapper } from "@/client/pages/projects/sessions/components/session/claude/ToolCollapsibleWrapper";
 import { ImageBlock } from "@/client/pages/projects/sessions/components/session/claude/ImageBlock";
 import type { ReadToolInput } from "@/shared/types/tool.types";
-import type { UnifiedImageBlock } from "@repo/agent-cli-sdk";
+import type { UnifiedImageBlock } from "agent-cli-sdk";
 
 interface ReadToolBlockProps {
   input: ReadToolInput;

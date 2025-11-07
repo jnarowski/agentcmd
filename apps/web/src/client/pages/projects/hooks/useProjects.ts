@@ -28,7 +28,6 @@ export const projectKeys = {
   detail: (id: string) => [...projectKeys.details(), id] as const,
   readme: (id: string) => [...projectKeys.detail(id), "readme"] as const,
   sync: () => [...projectKeys.all, "sync"] as const,
-  workflowSdkCheck: (id: string) => [...projectKeys.detail(id), "workflow-sdk-check"] as const,
 };
 
 /**
@@ -403,72 +402,40 @@ export function useProjectReadme(projectId: string): UseQueryResult<{ content: s
 }
 
 /**
- * Workflow SDK check result type
- */
-export interface WorkflowSdkCheckResult {
-  hasPackageJson: boolean;
-  installed: boolean;
-  version?: string;
-}
-
-/**
  * Workflow SDK install result type
  */
-export interface WorkflowSdkInstallResult {
+export interface WorkflowPackageInstallResult {
   success: boolean;
   message: string;
   output?: string;
 }
 
 /**
- * Fetch workflow-sdk check status for a project
+ * Install agentcmd-workflows package in a project
  */
-async function fetchWorkflowSdkCheck(projectId: string): Promise<WorkflowSdkCheckResult> {
-  const data = await api.get<{ data: WorkflowSdkCheckResult }>(
-    `/api/projects/${projectId}/workflow-sdk/check`
+async function installWorkflowPackage(projectId: string): Promise<WorkflowPackageInstallResult> {
+  const data = await api.post<{ data: WorkflowPackageInstallResult }>(
+    `/api/projects/${projectId}/workflow-package/install`
   );
   return data.data;
 }
 
 /**
- * Install workflow-sdk in a project
+ * Hook to install agentcmd-workflows package
  */
-async function installWorkflowSdk(projectId: string): Promise<WorkflowSdkInstallResult> {
-  const data = await api.post<{ data: WorkflowSdkInstallResult }>(
-    `/api/projects/${projectId}/workflow-sdk/install`
-  );
-  return data.data;
-}
-
-/**
- * Hook to check workflow-sdk installation status
- */
-export function useWorkflowSdkCheck(projectId: string): UseQueryResult<WorkflowSdkCheckResult, Error> {
-  return useQuery({
-    queryKey: projectKeys.workflowSdkCheck(projectId),
-    queryFn: () => fetchWorkflowSdkCheck(projectId),
-    enabled: !!projectId,
-    staleTime: 30000, // 30 seconds
-    refetchOnWindowFocus: false,
-  });
-}
-
-/**
- * Hook to install workflow-sdk
- */
-export function useInstallWorkflowSdk(): UseMutationResult<
-  WorkflowSdkInstallResult,
+export function useInstallWorkflowPackage(): UseMutationResult<
+  WorkflowPackageInstallResult,
   Error,
   string
 > {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (projectId) => installWorkflowSdk(projectId),
+    mutationFn: (projectId) => installWorkflowPackage(projectId),
     onSuccess: (data, projectId) => {
-      // Invalidate check query to refetch status
+      // Invalidate project query to refetch capabilities
       queryClient.invalidateQueries({
-        queryKey: projectKeys.workflowSdkCheck(projectId),
+        queryKey: projectKeys.detail(projectId),
       });
 
       if (data.success) {
@@ -478,7 +445,7 @@ export function useInstallWorkflowSdk(): UseMutationResult<
       }
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to install workflow-sdk");
+      toast.error(error.message || "Failed to install agentcmd-workflows");
     },
   });
 }

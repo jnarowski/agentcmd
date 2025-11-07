@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { checkWorkflowSdk } from "./checkWorkflowSdk";
+import { checkWorkflowPackage } from "./checkWorkflowPackage";
 import * as fs from "node:fs/promises";
 
 vi.mock("node:fs/promises");
 
-describe("checkWorkflowSdk", () => {
+describe("checkWorkflowPackage", () => {
   const mockProjectPath = "/fake/project";
 
   beforeEach(() => {
@@ -17,14 +17,14 @@ describe("checkWorkflowSdk", () => {
       name: "test-project",
       version: "1.0.0",
       devDependencies: {
-        "@repo/workflow-sdk": "^1.2.3",
+        "agentcmd-workflows": "^1.2.3",
       },
     };
 
     vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(packageJson));
 
-    // When: checkWorkflowSdk()
-    const result = await checkWorkflowSdk({ projectPath: mockProjectPath });
+    // When: checkWorkflowPackage()
+    const result = await checkWorkflowPackage({ projectPath: mockProjectPath });
 
     // Then: SDK is detected with correct version
     expect(result).toEqual({
@@ -49,8 +49,8 @@ describe("checkWorkflowSdk", () => {
 
     vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(packageJson));
 
-    // When: checkWorkflowSdk()
-    const result = await checkWorkflowSdk({ projectPath: mockProjectPath });
+    // When: checkWorkflowPackage()
+    const result = await checkWorkflowPackage({ projectPath: mockProjectPath });
 
     // Then: SDK is not installed
     expect(result).toEqual({
@@ -68,8 +68,8 @@ describe("checkWorkflowSdk", () => {
       })
     );
 
-    // When: checkWorkflowSdk()
-    const result = await checkWorkflowSdk({ projectPath: mockProjectPath });
+    // When: checkWorkflowPackage()
+    const result = await checkWorkflowPackage({ projectPath: mockProjectPath });
 
     // Then: package.json doesn't exist
     expect(result).toEqual({

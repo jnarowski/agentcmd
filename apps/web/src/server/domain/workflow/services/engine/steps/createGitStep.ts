@@ -1,6 +1,6 @@
 import type { GetStepTools } from "inngest";
 import type { RuntimeContext } from "../../../types/engine.types";
-import type { GitStepConfig, GitStepResult } from "@repo/workflow-sdk";
+import type { GitStepConfig, GitStepResult } from "agentcmd-workflows";
 import type { GitStepOptions } from "../../../types/event.types";
 import { commitChanges } from "@/server/domain/git/services/commitChanges";
 import { createAndSwitchBranch } from "@/server/domain/git/services/createAndSwitchBranch";

@@ -4,7 +4,7 @@ This document describes the command-line interface (CLI) tool for Agent Workflow
 
 ## Overview
 
-The `agent-workflows-ui` CLI tool simplifies setup and deployment by automating database initialization, directory creation, and configuration file generation.
+The `agentcmd-ui` CLI tool simplifies setup and deployment by automating database initialization, directory creation, and configuration file generation.
 
 ## Installation
 
@@ -15,10 +15,10 @@ The `agent-workflows-ui` CLI tool simplifies setup and deployment by automating 
 npm install -g @repo/web
 
 # Run the install command to set up database and config
-agent-workflows-ui install
+agentcmd-ui install
 
 # (Optional) Edit configuration
-vim ~/.agents/agent-workflows-ui-config.json
+vim ~/.agents/agentcmd-ui-config.json
 ```
 
 ### Run from dist (without installing)
@@ -47,7 +47,7 @@ node dist/cli.js install
 Initialize the database and create configuration files.
 
 ```bash
-agent-workflows-ui install [--force]
+agentcmd-ui install [--force]
 ```
 
 **Options:**
@@ -60,7 +60,7 @@ agent-workflows-ui install [--force]
 2. Creates `~/.agents/` directory (for config)
 3. Creates SQLite database at `~/.agent/database.db`
 4. Applies all Prisma migrations
-5. Creates config at `~/.agents/agent-workflows-ui-config.json`
+5. Creates config at `~/.agents/agentcmd-ui-config.json`
 
 **Output:**
 
@@ -68,11 +68,11 @@ agent-workflows-ui install [--force]
 ✓ Created ~/.agent/ directory
 ✓ Created database at ~/.agent/database.db
 ✓ Applied database migrations
-✓ Created config at ~/.agents/agent-workflows-ui-config.json
+✓ Created config at ~/.agents/agentcmd-ui-config.json
 
 Next steps:
-  1. (Optional) Edit ~/.agents/agent-workflows-ui-config.json to customize ports
-  2. Run: agent-workflows-ui start
+  1. (Optional) Edit ~/.agents/agentcmd-ui-config.json to customize ports
+  2. Run: agentcmd-ui start
 
 Default configuration:
   UI Port:     5173
@@ -85,7 +85,7 @@ Default configuration:
 Start the application server.
 
 ```bash
-agent-workflows-ui start
+agentcmd-ui start
 ```
 
 This command is planned for future implementation. Currently, use the manual start method described below.
@@ -95,7 +95,7 @@ This command is planned for future implementation. Currently, use the manual sta
 Display the CLI version.
 
 ```bash
-agent-workflows-ui --version
+agentcmd-ui --version
 ```
 
 ### `--help`
@@ -103,12 +103,12 @@ agent-workflows-ui --version
 Display help information.
 
 ```bash
-agent-workflows-ui --help
+agentcmd-ui --help
 ```
 
 ## Configuration
 
-The CLI creates a configuration file at `~/.agents/agent-workflows-ui-config.json`.
+The CLI creates a configuration file at `~/.agents/agentcmd-ui-config.json`.
 
 ### Configuration File Structure
 
@@ -134,10 +134,10 @@ The CLI creates a configuration file at `~/.agents/agent-workflows-ui-config.jso
 
 ```bash
 # Edit with your preferred editor
-vim ~/.agents/agent-workflows-ui-config.json
+vim ~/.agents/agentcmd-ui-config.json
 
 # Or
-nano ~/.agents/agent-workflows-ui-config.json
+nano ~/.agents/agentcmd-ui-config.json
 
 # Example: Change ports
 {
@@ -158,11 +158,11 @@ nano ~/.agents/agent-workflows-ui-config.json
 ### Configuration Directory
 
 - **Location**: `~/.agents/`
-- **Contents**: `agent-workflows-ui-config.json` (configuration file)
+- **Contents**: `agentcmd-ui-config.json` (configuration file)
 
 ## Manual Start (Until `start` Command Implemented)
 
-After running `agent-workflows-ui install`, start the application manually:
+After running `agentcmd-ui install`, start the application manually:
 
 ### Development Mode
 
@@ -194,17 +194,17 @@ The server will:
 
 ### Database Already Exists Error
 
-**Problem**: Running `agent-workflows-ui install` shows error about existing database.
+**Problem**: Running `agentcmd-ui install` shows error about existing database.
 
 **Solution**: Use the `--force` flag to overwrite:
 
 ```bash
-agent-workflows-ui install --force
+agentcmd-ui install --force
 ```
 
 ### Command Not Found
 
-**Problem**: `agent-workflows-ui: command not found`
+**Problem**: `agentcmd-ui: command not found`
 
 **Solution**: Ensure the package is installed globally:
 
@@ -242,12 +242,12 @@ chmod 755 ~/.agent ~/.agents
 
 ```bash
 rm -rf ~/.agent ~/.agents
-agent-workflows-ui install
+agentcmd-ui install
 ```
 
 ### CLI Version Shows 0.0.0
 
-**Problem**: Running `agent-workflows-ui --version` shows `0.0.0`.
+**Problem**: Running `agentcmd-ui --version` shows `0.0.0`.
 
 **Solution**: This is expected if `package.json` has version `0.0.0`. Update the version in `apps/web/package.json` before building.
 
@@ -274,7 +274,7 @@ The default database location (`~/.agent/database.db`) is in the user's home dir
 
 ### Configuration File
 
-The config file (`~/.agents/agent-workflows-ui-config.json`) contains:
+The config file (`~/.agents/agentcmd-ui-config.json`) contains:
 - ✅ Safe: Port numbers, log levels, file paths
 - ❌ No secrets: Does not contain API keys, passwords, or tokens
 

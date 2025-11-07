@@ -96,7 +96,7 @@ export default function ProjectDetailLayout() {
         projectId={id!}
         projectName={project.name}
         projectPath={project.path}
-        currentBranch={project.current_branch}
+        gitCapabilities={project.capabilities.git}
         currentSession={currentSession}
       />
 

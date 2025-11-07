@@ -1,4 +1,4 @@
-import type { WorkflowDefinition } from "@repo/workflow-sdk";
+import type { WorkflowDefinition } from "agentcmd-workflows";
 
 /**
  * Check if an object is a workflow definition

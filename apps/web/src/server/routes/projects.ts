@@ -12,8 +12,7 @@ import {
   syncFromClaudeProjects,
   listSpecFiles,
 } from "@/server/domain/project/services";
-import { checkWorkflowSdk } from "@/server/domain/project/services/checkWorkflowSdk";
-import { installWorkflowSdk } from "@/server/domain/project/services/installWorkflowSdk";
+import { installWorkflowPackage } from "@/server/domain/project/services/installWorkflowPackage";
 import { getBranches } from "@/server/domain/git/services";
 import { getFileTree, readFile, writeFile } from "@/server/domain/file/services/index";
 import {
@@ -26,7 +25,6 @@ import {
   starProjectSchema,
   projectResponseSchema,
   projectSyncResponseSchema,
-  workflowSdkCheckResponseSchema,
   workflowSdkInstallResponseSchema,
 } from "@/server/domain/project/schemas";
 import {
@@ -598,46 +596,13 @@ export async function projectRoutes(fastify: FastifyInstance) {
   );
 
   /**
-   * GET /api/projects/:id/workflow-sdk/check
-   * Check if workflow-sdk is installed in project
-   */
-  fastify.get<{
-    Params: { id: string };
-  }>(
-    "/api/projects/:id/workflow-sdk/check",
-    {
-      preHandler: fastify.authenticate,
-      schema: {
-        params: projectIdSchema,
-        response: {
-          200: workflowSdkCheckResponseSchema,
-          404: errorResponse,
-        },
-      },
-    },
-    async (request, reply) => {
-      const project = await getProjectById({ id: request.params.id });
-
-      if (!project) {
-        return reply
-          .code(404)
-          .send(buildErrorResponse(404, "Project not found"));
-      }
-
-      const checkResult = await checkWorkflowSdk({ projectPath: project.path });
-
-      return reply.send({ data: checkResult });
-    }
-  );
-
-  /**
-   * POST /api/projects/:id/workflow-sdk/install
-   * Install workflow-sdk in project
+   * POST /api/projects/:id/workflow-package/install
+   * Install agentcmd-workflows package in project
    */
   fastify.post<{
     Params: { id: string };
   }>(
-    "/api/projects/:id/workflow-sdk/install",
+    "/api/projects/:id/workflow-package/install",
     {
       preHandler: fastify.authenticate,
       schema: {
@@ -659,10 +624,10 @@ export async function projectRoutes(fastify: FastifyInstance) {
 
       fastify.log.info(
         { projectId: project.id, projectPath: project.path },
-        "Installing workflow-sdk"
+        "Installing agentcmd-workflows package"
       );
 
-      const installResult = await installWorkflowSdk({ projectPath: project.path });
+      const installResult = await installWorkflowPackage({ projectPath: project.path });
 
       if (!installResult.success) {
         fastify.log.error(

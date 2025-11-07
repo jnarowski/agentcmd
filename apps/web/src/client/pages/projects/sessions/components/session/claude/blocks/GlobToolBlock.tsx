@@ -7,7 +7,7 @@ import { ToolCollapsibleWrapper } from "@/client/pages/projects/sessions/compone
 import { useCodeBlockTheme } from "@/client/utils/codeBlockTheme";
 import { ExpandButton } from "@/client/pages/projects/sessions/components/session/claude/blocks/ExpandButton";
 import type { GlobToolInput } from "@/shared/types/tool.types";
-import type { UnifiedImageBlock } from '@repo/agent-cli-sdk';
+import type { UnifiedImageBlock } from 'agent-cli-sdk';
 
 interface GlobToolBlockProps {
   input: GlobToolInput;

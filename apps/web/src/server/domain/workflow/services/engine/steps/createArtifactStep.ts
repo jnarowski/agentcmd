@@ -5,7 +5,7 @@ import type { RuntimeContext } from "../../../types/engine.types";
 import type {
   ArtifactStepConfig,
   ArtifactStepResult,
-} from "@repo/workflow-sdk";
+} from "agentcmd-workflows";
 import { findOrCreateStep } from "./utils/findOrCreateStep";
 import { createWorkflowArtifact } from "../../artifacts/createWorkflowArtifact";
 import { generateInngestStepId } from "./utils/generateInngestStepId";

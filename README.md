@@ -1,4 +1,4 @@
-# Agent Workflows Monorepo
+# agentcmd
 
 > A full-stack web application and TypeScript SDKs for orchestrating AI agent workflows with chat, file editing, and terminal capabilities.
 
@@ -34,12 +34,12 @@ This monorepo includes the following packages and apps:
 
 ### Packages
 
-- **`@repo/agent-cli-sdk`** - SDK for AI CLI tools (Claude Code, Codex)
+- **`agent-cli-sdk`** - SDK for AI CLI tools (Claude Code, Codex)
   - Execute agents programmatically with streaming callbacks
   - Load and parse session histories (JSONL)
   - Unified message format across agents
 
-- **`@repo/agent-workflows`** - Workflow orchestration library
+- **`agentcmd-workflows`** - Workflow orchestration library
   - Multi-step workflows with automatic state persistence
   - Git branch management and error handling
   - Pluggable storage adapters (FileStorage)
@@ -61,8 +61,8 @@ This monorepo includes the following packages and apps:
 
 ```bash
 # Clone the repository
-git clone https://github.com/sourceborn/agent-workflows-monorepo.git
-cd agent-workflows-monorepo
+git clone https://github.com/jnarowski/agentcmd.git
+cd agentcmd
 
 # Install dependencies
 pnpm install
@@ -102,9 +102,9 @@ The web app can be distributed as a standalone CLI tool with built-in server and
 
 ```bash
 # First-time setup
-npx agent-workflows-ui install
+npx agentcmd install
 
-# Creates ~/.agent-workflows/ with:
+# Creates ~/.agentcmd/ with:
 # - config.json (settings, API keys, secrets)
 # - database.db (SQLite database)
 # - logs/app.log (application logs)
@@ -114,28 +114,28 @@ npx agent-workflows-ui install
 
 ```bash
 # Start server (uses config.json defaults)
-npx agent-workflows-ui start
+npx agentcmd start
 
 # Access at:
 # - Server: http://localhost:3456
 # - Inngest UI: http://localhost:8288
 
 # Start with custom ports
-npx agent-workflows-ui start --port 8080 --inngest-port 9000
+npx agentcmd start --port 8080 --inngest-port 9000
 
 # Allow remote access
-npx agent-workflows-ui start --host 0.0.0.0
+npx agentcmd start --host 0.0.0.0
 
 # Manage configuration
-npx agent-workflows-ui config --show           # View config
-npx agent-workflows-ui config --edit           # Edit in $EDITOR
-npx agent-workflows-ui config --get port       # Get value
-npx agent-workflows-ui config --set port=7000  # Set value
+npx agentcmd config --show           # View config
+npx agentcmd config --edit           # Edit in $EDITOR
+npx agentcmd config --get port       # Get value
+npx agentcmd config --set port=7000  # Set value
 ```
 
 ### Configuration
 
-Config stored in `~/.agent-workflows/config.json`:
+Config stored in `~/.agentcmd/config.json`:
 
 ```json
 {
@@ -156,7 +156,7 @@ Config stored in `~/.agent-workflows/config.json`:
 To rebrand the CLI tool, edit `apps/web/src/cli/utils/constants.ts`:
 
 ```typescript
-export const CLI_NAME = 'your-tool-name';  // Changes ~/.agent-workflows/ to ~/.your-tool-name/
+export const CLI_NAME = 'your-tool-name';  // Changes ~/.agentcmd/ to ~/.your-tool-name/
 ```
 
 ## Development Workflow
@@ -180,7 +180,7 @@ pnpm build
 ```bash
 # Build just one workspace package
 pnpm --filter @repo/agent-cli-sdk build
-pnpm --filter @repo/agent-workflows build
+pnpm --filter agentcmd-workflows build
 ```
 
 **Clean Build (from scratch):**
@@ -253,7 +253,7 @@ This monorepo uses Turborepo for fast, cached builds:
 │
 ├── packages/
 │   ├── agent-cli-sdk/          # SDK for AI CLI tools
-│   ├── agent-workflows/        # Workflow orchestration
+│   ├── workflow-sdk/           # Workflow orchestration (agentcmd-workflows)
 │   ├── ui/                     # Shared UI components
 │   ├── eslint-config/          # ESLint configs
 │   └── typescript-config/      # TypeScript configs
@@ -483,7 +483,7 @@ For more permanent remote access, consider:
 - **[CLAUDE.md](./CLAUDE.md)** - Monorepo development guide and conventions
 - **[apps/web/CLAUDE.md](./apps/web/CLAUDE.md)** - Web app architecture and patterns
 - **[packages/agent-cli-sdk/](./packages/agent-cli-sdk/)** - SDK docs (CLAUDE.md + README.md)
-- **[packages/agent-workflows/](./packages/agent-workflows/)** - Workflow library docs
+- **[packages/workflow-sdk/](./packages/workflow-sdk/)** - Workflow library docs (agentcmd-workflows)
 
 ### Architecture Deep Dives
 
@@ -506,9 +506,9 @@ const result = await execute('claude', {
 });
 ```
 
-**agent-workflows:**
+**agentcmd-workflows:**
 ```typescript
-import { Workflow, FileStorage, generateWorkflowId } from '@repo/agent-workflows';
+import { Workflow, FileStorage, generateWorkflowId } from 'agentcmd-workflows';
 
 const workflow = new Workflow({
   storage: new FileStorage({ workflowId: generateWorkflowId('Feature') })
@@ -544,7 +544,7 @@ See `CLAUDE.md` and `apps/web/CLAUDE.md` for detailed development guidelines.
 
 ```bash
 # Fork and clone your fork
-git clone https://github.com/your-username/agent-workflows-monorepo-v2.git
+git clone https://github.com/jnarowski/agentcmd.git
 
 # Create feature branch
 git checkout -b feature/your-feature-name

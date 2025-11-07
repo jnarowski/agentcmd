@@ -1,6 +1,6 @@
 import { prisma } from "@/shared/prisma";
 import { loadProjectWorkflows } from "./loadProjectWorkflows";
-import type { WorkflowRuntime } from "@repo/workflow-sdk";
+import type { WorkflowRuntime } from "agentcmd-workflows";
 import type { FastifyBaseLogger } from "fastify";
 
 /**

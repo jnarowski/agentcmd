@@ -1,5 +1,5 @@
 import type { FastifyBaseLogger } from "fastify";
-import type { WorkflowConfig, PhaseDefinition } from "@repo/workflow-sdk";
+import type { WorkflowConfig, PhaseDefinition } from "agentcmd-workflows";
 
 /**
  * Runtime context passed to all workflow step implementations

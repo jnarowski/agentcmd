@@ -1,6 +1,6 @@
 ---
 description: Review implementation against spec and document findings for fixes
-argument-hint: [specNumberOrNameOrPath, format]
+argument-hint: [specIdOrNameOrPath, format]
 ---
 
 # Review Spec Implementation
@@ -9,7 +9,7 @@ Reviews a previous agent's implementation work by comparing the provided spec fi
 
 ## Variables
 
-- $specNumberOrNameOrPath: $1 (required) - Either a spec number (e.g., `24`), feature name (e.g., `kill-claude-process`), or full path (e.g., `.agent/specs/todo/24-kill-claude-process-spec.md`)
+- $specIdOrNameOrPath: $1 (required) - Either a spec ID (e.g., `ef3`), feature name (e.g., `kill-claude-process`), or full path (e.g., `.agent/specs/todo/ef3-kill-claude-process-spec.md`)
 - $format: $2 (optional) - Output format: "text" or "json" (defaults to "text" if not provided)
 - $max-reviews: 3 - This is a constant (maximum review iterations allowed)
 
@@ -81,22 +81,20 @@ Use these guidelines to determine what issues to document:
 
 1. **Validate Inputs**
 
-   - **Parse and resolve $specNumberOrNameOrPath:**
+   - **Parse and resolve $specIdOrNameOrPath:**
      - If it's a full file path (contains `/` or starts with `.`):
        - Use the path as-is
-     - If it's a number (e.g., `24`):
+     - If it's an ID (e.g., `ef3`, `a7b`):
        - Search in this order:
-         1. `.agent/specs/doing/{number}-*-spec.md`
-         2. `.agent/specs/todo/{number}-*-spec.md`
-         3. `.agent/specs/done/{number}-*-spec.md`
-         4. `.agent/specs/{number}-*-spec.md` (legacy flat structure)
+         1. `.agent/specs/doing/{id}-*-spec.md`
+         2. `.agent/specs/todo/{id}-*-spec.md`
+         3. `.agent/specs/done/{id}-*-spec.md`
        - Use the first matching file
      - If it's a feature name (e.g., `kill-claude-process`):
        - Search in this order:
          1. `.agent/specs/doing/*-{feature-name}-spec.md`
          2. `.agent/specs/todo/*-{feature-name}-spec.md`
          3. `.agent/specs/done/*-{feature-name}-spec.md`
-         4. `.agent/specs/{feature-name}-spec.md` (legacy flat structure)
        - Use the first matching file
    - Verify spec file exists at resolved path (exit with error if not found)
    - Set `$specFilePath` to the resolved full path for use in subsequent steps
@@ -162,7 +160,7 @@ Use these guidelines to determine what issues to document:
 
    - Summary: iteration X of 3, files reviewed, issue counts by priority
    - Next step:
-     - If issues found: `/implement-spec $specFilePath` then `/review-spec-implementation $specFilePath`
+     - If issues found: `/implement-spec $specIdOrNameOrPath` then `/review-spec-implementation $specIdOrNameOrPath`
      - If no issues found: Implementation is complete
 
 ## Review Findings Template
@@ -387,10 +385,10 @@ Otherwise, provide this human-readable information to the user:
 
    ```bash
    # First, fix the issues
-   /implement-spec $specNumberOrNameOrPath
+   /implement-spec $specIdOrNameOrPath
 
    # Then, review again (iteration will auto-increment)
-   /review-spec-implementation $specNumberOrNameOrPath
+   /review-spec-implementation $specIdOrNameOrPath
    ```
 
    If NO issues were found:

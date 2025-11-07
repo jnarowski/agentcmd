@@ -1,4 +1,4 @@
-import type { PhaseDefinition } from '@repo/workflow-sdk';
+import type { PhaseDefinition } from 'agentcmd-workflows';
 
 /**
  * Extract phase ID from PhaseDefinition

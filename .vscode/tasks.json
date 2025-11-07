@@ -20,24 +20,6 @@
       "problemMatcher": []
     },
     {
-      "label": "prisma studio",
-      "type": "shell",
-      "command": "zsh -i -c 'cd apps/web && pnpm prisma:studio'",
-      "icon": {
-        "id": "server",
-        "color": "terminal.ansiGreen"
-      },
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      },
-      "runOptions": {
-        "runOn": "folderOpen"
-      },
-      "isBackground": true,
-      "problemMatcher": []
-    },
-    {
       "label": "root",
       "type": "shell",
       "command": "zsh",
@@ -77,24 +59,6 @@
       "label": "packages/agent-cli-sdk",
       "type": "shell",
       "command": "zsh -i -c 'cd packages/agent-cli-sdk && exec zsh'",
-      "icon": {
-        "id": "code",
-        "color": "terminal.ansiYellow"
-      },
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      },
-      "runOptions": {
-        "runOn": "folderOpen"
-      },
-      "isBackground": true,
-      "problemMatcher": []
-    },
-    {
-      "label": "packages/agent-workflows",
-      "type": "shell",
-      "command": "zsh -i -c 'cd packages/agent-workflows && exec zsh'",
       "icon": {
         "id": "code",
         "color": "terminal.ansiYellow"

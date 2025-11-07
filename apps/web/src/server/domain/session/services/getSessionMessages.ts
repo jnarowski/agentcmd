@@ -1,6 +1,6 @@
 import { prisma } from '@/shared/prisma';
-import { loadMessages } from '@repo/agent-cli-sdk';
-import type { UnifiedMessage } from '@repo/agent-cli-sdk';
+import { loadMessages } from 'agent-cli-sdk';
+import type { UnifiedMessage } from 'agent-cli-sdk';
 import type { GetSessionMessagesOptions } from '../types/GetSessionMessagesOptions';
 
 /**

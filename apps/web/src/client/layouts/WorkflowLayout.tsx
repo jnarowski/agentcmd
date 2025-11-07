@@ -70,7 +70,7 @@ export default function WorkflowLayout() {
             projectId={projectId!}
             projectName={project.name}
             projectPath={project.path}
-            currentBranch={project.current_branch}
+            gitCapabilities={project.capabilities.git}
             showSidebarTrigger={true}
             sidebarTriggerAlwaysVisible={true}
           />

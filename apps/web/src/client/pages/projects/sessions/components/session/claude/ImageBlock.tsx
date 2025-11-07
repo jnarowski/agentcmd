@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { UnifiedImageBlock } from '@repo/agent-cli-sdk';
+import type { UnifiedImageBlock } from 'agent-cli-sdk';
 
 export interface ImageBlockProps {
   /** Image block data with base64 source */

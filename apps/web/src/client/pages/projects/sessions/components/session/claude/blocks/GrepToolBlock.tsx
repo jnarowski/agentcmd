@@ -7,7 +7,7 @@ import { ToolCollapsibleWrapper } from "@/client/pages/projects/sessions/compone
 import { useCodeBlockTheme } from "@/client/utils/codeBlockTheme";
 import { ExpandButton } from "@/client/pages/projects/sessions/components/session/claude/blocks/ExpandButton";
 import type { GrepToolInput } from "@/shared/types/tool.types";
-import type { UnifiedImageBlock } from '@repo/agent-cli-sdk';
+import type { UnifiedImageBlock } from 'agent-cli-sdk';
 
 interface GrepToolBlockProps {
   input: GrepToolInput;

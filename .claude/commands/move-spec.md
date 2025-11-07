@@ -1,6 +1,6 @@
 ---
 description: Move a spec file between workflow folders (todo/done)
-argument-hint: [specNumberOrNameOrPath, targetFolder]
+argument-hint: [specIdOrNameOrPath, targetFolder]
 ---
 
 # Move Spec
@@ -9,7 +9,7 @@ Move a spec file between workflow folders (todo/done) and optionally update its 
 
 ## Variables
 
-- $specNumberOrNameOrPath: $1 (required) - Either a spec number (e.g., `24`), feature name (e.g., `kill-claude-process`), or full path (e.g., `.agent/specs/todo/24-kill-claude-process-spec.md`)
+- $specIdOrNameOrPath: $1 (required) - Either a spec ID (e.g., `ef3`), feature name (e.g., `kill-claude-process`), or full path (e.g., `.agent/specs/todo/ef3-kill-claude-process-spec.md`)
 - $targetFolder: $2 (required) - Target workflow folder: "todo", "doing", or "done"
 
 ## Instructions
@@ -23,22 +23,20 @@ Move a spec file between workflow folders (todo/done) and optionally update its 
 
 1. **Find the Spec File**
 
-   - **Parse and resolve $specNumberOrNameOrPath:**
+   - **Parse and resolve $specIdOrNameOrPath:**
      - If it's a full file path (contains `/` or starts with `.`):
        - Use the path as-is
-     - If it's a number (e.g., `24`):
+     - If it's an ID (e.g., `ef3`, `a7b`):
        - Search in this order:
-         1. `.agent/specs/doing/{number}-*-spec.md`
-         2. `.agent/specs/todo/{number}-*-spec.md`
-         3. `.agent/specs/done/{number}-*-spec.md`
-         4. `.agent/specs/{number}-*-spec.md` (legacy flat structure)
+         1. `.agent/specs/doing/{id}-*-spec.md`
+         2. `.agent/specs/todo/{id}-*-spec.md`
+         3. `.agent/specs/done/{id}-*-spec.md`
        - Use the first matching file
      - If it's a feature name (e.g., `kill-claude-process`):
        - Search in this order:
          1. `.agent/specs/doing/*-{feature-name}-spec.md`
          2. `.agent/specs/todo/*-{feature-name}-spec.md`
          3. `.agent/specs/done/*-{feature-name}-spec.md`
-         4. `.agent/specs/{feature-name}-spec.md` (legacy flat structure)
        - Use the first matching file
    - If multiple matches found, list them and ask user to specify
    - If no matches found, report error and exit
@@ -77,17 +75,17 @@ Move a spec file between workflow folders (todo/done) and optionally update its 
 
 ## Examples
 
-**Example 1: Move by spec number**
+**Example 1: Move by spec ID**
 ```bash
-/move-spec 17 done
+/move-spec ef3 done
 ```
-Finds `17-*-spec.md` in any folder and moves it to `done/`
+Finds `ef3-*-spec.md` in any folder and moves it to `done/`
 
 **Example 2: Move to doing folder**
 ```bash
-/move-spec 37 doing
+/move-spec a7b doing
 ```
-Finds `37-*-spec.md` and moves it to `doing/` (indicating work in progress)
+Finds `a7b-*-spec.md` and moves it to `doing/` (indicating work in progress)
 
 **Example 3: Move by feature name**
 ```bash
@@ -97,7 +95,7 @@ Finds `*auth-improvements*-spec.md` and moves it to `todo/`
 
 **Example 4: Move by full path**
 ```bash
-/move-spec .agent/specs/todo/17-auth-improvements-spec.md done
+/move-spec .agent/specs/todo/ef3-auth-improvements-spec.md done
 ```
 Moves the specified file to `done/`
 
@@ -108,8 +106,8 @@ After successfully moving the spec:
 ```text
 ✓ Moved spec file
 
-From: .agent/specs/todo/17-auth-improvements-spec.md
-To:   .agent/specs/done/17-auth-improvements-spec.md
+From: .agent/specs/todo/ef3-auth-improvements-spec.md
+To:   .agent/specs/done/ef3-auth-improvements-spec.md
 
 Status updated: ready → completed
 ```
@@ -119,8 +117,8 @@ If no status update:
 ```text
 ✓ Moved spec file
 
-From: .agent/specs/todo/17-auth-improvements-spec.md
-To:   .agent/specs/done/17-auth-improvements-spec.md
+From: .agent/specs/todo/ef3-auth-improvements-spec.md
+To:   .agent/specs/done/ef3-auth-improvements-spec.md
 
 Status field: No changes (not present in spec)
 ```
@@ -145,17 +143,17 @@ Please check the spec name and try again.
 ✗ Error: Multiple specs match "auth"
 
 Found:
-1. .agent/specs/todo/15-auth-improvements-spec.md
-2. .agent/specs/done/10-auth-refactor-spec.md
+1. .agent/specs/todo/ef3-auth-improvements-spec.md
+2. .agent/specs/done/a7b-auth-refactor-spec.md
 
-Please specify the full spec number or feature name.
+Please specify the full spec ID or feature name.
 ```
 
 **Target conflict:**
 ```text
 ✗ Error: File already exists at target location
 
-Target: .agent/specs/done/17-auth-improvements-spec.md
+Target: .agent/specs/done/ef3-auth-improvements-spec.md
 
 Please resolve the conflict manually or use a different target folder.
 ```

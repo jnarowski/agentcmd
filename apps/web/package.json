@@ -1,15 +1,13 @@
 {
-  "name": "@repo/web",
-  "private": true,
+  "name": "agentcmd",
   "version": "1.0.5",
   "type": "module",
   "main": "src/server/index.ts",
   "bin": {
-    "agent-workflows-ui": "./dist/cli.js"
+    "agentcmd": "./dist/cli.js"
   },
   "files": [
-    "dist/",
-    ".agent-workflows.config.example"
+    "dist/"
   ],
   "preferGlobal": true,
   "scripts": {
@@ -26,6 +24,7 @@
     "inngest": "npx inngest-cli@latest dev -u http://localhost:3456/api/workflows/inngest",
     "lint": "eslint .",
     "postinstall": "prisma generate",
+    "prepublishOnly": "pnpm build",
     "preview": "vite preview",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
@@ -33,6 +32,7 @@
     "prisma:seed": "tsx prisma/seed.ts",
     "prisma:seed:workflows": "tsx prisma/seed-workflows.ts",
     "prisma:studio": "prisma studio",
+    "ship": "pnpm build && npm version patch && (git commit -am \"bump version\" || true) && git push --follow-tags && npm publish",
     "start": "pnpm build && tsx --env-file=.env src/server/index.ts",
     "test": "vitest run",
     "test:ui": "vitest --ui",
@@ -85,8 +85,8 @@
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@radix-ui/react-use-controllable-state": "^1.2.2",
-    "@repo/agent-cli-sdk": "workspace:*",
-    "@repo/workflow-sdk": "workspace:*",
+    "agent-cli-sdk": "workspace:*",
+    "agentcmd-workflows": "workspace:*",
     "@tailwindcss/vite": "^4.0.6",
     "@tanstack/react-query": "^5.90.5",
     "@tanstack/react-query-devtools": "^5.90.2",

@@ -18,7 +18,7 @@ List all spec files in the `.agent/specs/` directory, organized by workflow fold
 - Parse each spec file to extract metadata (Status field)
 - Filter by folder if specified
 - Filter by status if specified
-- Display results organized by folder with spec number, feature name, and status
+- Display results organized by folder with spec ID, feature name, and status
 
 ## Workflow
 
@@ -26,12 +26,12 @@ List all spec files in the `.agent/specs/` directory, organized by workflow fold
 
    - Search for `*-spec.md` in:
      - `.agent/specs/todo/`
+     - `.agent/specs/doing/`
      - `.agent/specs/done/`
-     - `.agent/specs/` (root, legacy specs)
    - For each file found, extract:
      - Full path
-     - Spec number (from filename)
-     - Feature name (from filename)
+     - Spec ID (from filename, first part before first hyphen)
+     - Feature name (from filename, part between ID and "-spec")
      - Status field (from file content, if present)
 
 2. **Apply Filters**
@@ -48,10 +48,10 @@ List all spec files in the `.agent/specs/` directory, organized by workflow fold
 
 3. **Display Results**
 
-   - Group specs by folder (todo, done, root)
-   - Within each folder, sort by spec number (ascending)
+   - Group specs by folder (todo, doing, done)
+   - Within each folder, sort by spec ID (lexicographic order)
    - For each spec, display:
-     - Spec number
+     - Spec ID
      - Feature name
      - Status (or "unknown" if not present)
      - Full path (for reference)
@@ -65,27 +65,27 @@ Spec Files
 
 📋 TODO (3 specs)
 ────────────────────────────────────────────────────────────
-  15  gemini-integration                  [draft]
-      .agent/specs/todo/15-gemini-integration-spec.md
+  ef3  gemini-integration                  [draft]
+       .agent/specs/todo/ef3-gemini-integration-spec.md
 
-  16  scroll-to-bottom-button             [in-progress]
-      .agent/specs/todo/16-scroll-to-bottom-button-spec.md
+  a7b  scroll-to-bottom-button             [in-progress]
+       .agent/specs/todo/a7b-scroll-to-bottom-button-spec.md
 
-  17  agent-cli-sdk-1.0-refactor          [ready]
-      .agent/specs/todo/17-agent-cli-sdk-1.0-refactor-spec.md
+  x9z  agent-cli-sdk-1.0-refactor          [ready]
+       .agent/specs/todo/x9z-agent-cli-sdk-1.0-refactor-spec.md
 
 ✅ DONE (14 specs)
 ────────────────────────────────────────────────────────────
-  1   diff-refactor                       [completed]
-      .agent/specs/done/1-diff-refactor-spec.md
+  2a1  diff-refactor                       [completed]
+       .agent/specs/done/2a1-diff-refactor-spec.md
 
-  2   cli-install                         [completed]
-      .agent/specs/done/2-cli-install-spec.md
+  5bc  cli-install                         [completed]
+       .agent/specs/done/5bc-cli-install-spec.md
 
   ...
 
-  14  codex-parser-both-formats           [completed]
-      .agent/specs/done/14-codex-parser-both-formats-spec.md
+  w4k  codex-parser-both-formats           [completed]
+       .agent/specs/done/w4k-codex-parser-both-formats-spec.md
 
 ────────────────────────────────────────────────────────────
 Total: 17 specs
@@ -103,9 +103,9 @@ Spec Files (todo only)
 
 📋 TODO (3 specs)
 ────────────────────────────────────────────────────────────
-  15  gemini-integration                  [draft]
-  16  scroll-to-bottom-button             [in-progress]
-  17  agent-cli-sdk-1.0-refactor          [ready]
+  ef3  gemini-integration                  [draft]
+  a7b  scroll-to-bottom-button             [in-progress]
+  x9z  agent-cli-sdk-1.0-refactor          [ready]
 ```
 
 **Filter by status:**
@@ -118,8 +118,8 @@ Spec Files (status: in-progress)
 
 📋 TODO (1 spec)
 ────────────────────────────────────────────────────────────
-  16  scroll-to-bottom-button             [in-progress]
-      .agent/specs/todo/16-scroll-to-bottom-button-spec.md
+  a7b  scroll-to-bottom-button             [in-progress]
+       .agent/specs/todo/a7b-scroll-to-bottom-button-spec.md
 
 Total: 1 spec
 ```
@@ -134,10 +134,10 @@ Spec Files (done, status: completed)
 
 ✅ DONE (14 specs)
 ────────────────────────────────────────────────────────────
-  1   diff-refactor                       [completed]
-  2   cli-install                         [completed]
+  2a1  diff-refactor                       [completed]
+  5bc  cli-install                         [completed]
   ...
-  14  codex-parser-both-formats           [completed]
+  w4k  codex-parser-both-formats           [completed]
 
 Total: 14 specs
 ```

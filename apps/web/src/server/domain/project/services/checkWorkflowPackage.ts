@@ -1,33 +1,33 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { CheckWorkflowSdkOptions } from "@/server/domain/project/types/CheckWorkflowSdkOptions";
+import type { CheckWorkflowPackageOptions } from "@/server/domain/project/types/CheckWorkflowPackageOptions";
 
 /**
- * Result of workflow-sdk check
+ * Result of agentcmd-workflows package check
  */
-export interface WorkflowSdkCheckResult {
+export interface WorkflowPackageCheckResult {
   hasPackageJson: boolean;
   installed: boolean;
   version?: string;
 }
 
 /**
- * Check if workflow-sdk is installed in a project
+ * Check if agentcmd-workflows is installed in a project
  * @param options - Options object with projectPath
  * @returns Check result with installation status
  */
-export async function checkWorkflowSdk({ projectPath }: CheckWorkflowSdkOptions): Promise<WorkflowSdkCheckResult> {
+export async function checkWorkflowPackage({ projectPath }: CheckWorkflowPackageOptions): Promise<WorkflowPackageCheckResult> {
   try {
     // Check for package.json
     const packageJsonPath = join(projectPath, "package.json");
     const packageJsonContent = await readFile(packageJsonPath, "utf-8");
     const packageJson = JSON.parse(packageJsonContent);
 
-    // Check for @repo/workflow-sdk in dependencies or devDependencies
+    // Check for agentcmd-workflows in dependencies or devDependencies
     const deps = packageJson.dependencies || {};
     const devDeps = packageJson.devDependencies || {};
 
-    const version = deps["@repo/workflow-sdk"] || devDeps["@repo/workflow-sdk"];
+    const version = deps["agentcmd-workflows"] || devDeps["agentcmd-workflows"];
 
     return {
       hasPackageJson: true,

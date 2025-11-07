@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { UnifiedMessage, UnifiedContent, UnifiedImageBlock, PermissionMode } from '@repo/agent-cli-sdk';
+import type { UnifiedMessage, UnifiedContent, UnifiedImageBlock, PermissionMode } from 'agent-cli-sdk';
 import type { UIMessage } from '@/shared/types/message.types';
 import type {
   AgentSessionMetadata,

@@ -5,7 +5,7 @@
 
 import { CheckCircle2, Circle } from "lucide-react";
 import type { AskUserQuestionToolInput } from "@/shared/types/tool.types";
-import type { UnifiedImageBlock } from "@repo/agent-cli-sdk";
+import type { UnifiedImageBlock } from "agent-cli-sdk";
 
 interface AskUserQuestionToolRendererProps {
   input: AskUserQuestionToolInput;

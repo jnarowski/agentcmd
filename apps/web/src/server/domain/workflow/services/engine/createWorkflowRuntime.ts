@@ -4,7 +4,7 @@ import type {
   WorkflowConfig,
   WorkflowFunction,
   WorkflowStep,
-} from "@repo/workflow-sdk";
+} from "agentcmd-workflows";
 import type { RuntimeContext } from "../../types/engine.types";
 import type { FastifyBaseLogger } from "fastify";
 import { prisma } from "@/shared/prisma";
@@ -34,7 +34,7 @@ export function createWorkflowRuntime(
   logger: FastifyBaseLogger
 ): WorkflowRuntime {
   return {
-    createInngestFunction<TPhases extends readonly import("@repo/workflow-sdk").PhaseDefinition[] | undefined>(
+    createInngestFunction<TPhases extends readonly import("agentcmd-workflows").PhaseDefinition[] | undefined>(
       config: WorkflowConfig<TPhases>,
       fn: WorkflowFunction<TPhases>
     ): InngestFunction<

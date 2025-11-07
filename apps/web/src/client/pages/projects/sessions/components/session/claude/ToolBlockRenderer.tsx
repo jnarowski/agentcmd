@@ -28,7 +28,7 @@ import type {
   TaskToolInput,
   AskUserQuestionToolInput,
 } from '@/shared/types/tool.types';
-import type { UnifiedImageBlock } from '@repo/agent-cli-sdk';
+import type { UnifiedImageBlock } from 'agent-cli-sdk';
 
 interface ToolBlockRendererProps {
   toolName: string;

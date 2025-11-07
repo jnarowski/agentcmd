@@ -14,10 +14,10 @@ export type {
   UnifiedToolUseBlock,
   UnifiedToolResultBlock,
   UnifiedSlashCommandBlock
-} from '@repo/agent-cli-sdk';
+} from 'agent-cli-sdk';
 
 // Single UI extension for streaming state
-import type { UnifiedMessage, UnifiedToolUseBlock } from '@repo/agent-cli-sdk';
+import type { UnifiedMessage, UnifiedToolUseBlock } from 'agent-cli-sdk';
 
 export type UIMessage = Omit<UnifiedMessage, 'tool'> & {
   tool?: UnifiedMessage['tool']; // Make tool optional for UI messages

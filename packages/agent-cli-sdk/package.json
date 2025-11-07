@@ -1,5 +1,5 @@
 {
-  "name": "@repo/agent-cli-sdk",
+  "name": "agent-cli-sdk",
   "version": "1.0.0",
   "description": "TypeScript SDK for orchestrating AI-powered CLI tools (Claude Code, OpenAI Codex) in development workflows",
   "main": "dist/index.js",
@@ -25,7 +25,9 @@
     "test:e2e:codex": "vitest run --config vitest.e2e.config.ts tests/e2e/codex",
     "test:e2e:gemini": "vitest run --config vitest.e2e.config.ts tests/e2e/gemini",
     "extract-claude-fixtures": "tsx scripts/extract-claude-fixtures.ts",
-    "extract-gemini-fixtures": "node --import tsx scripts/extract-gemini-fixtures.ts"
+    "extract-gemini-fixtures": "node --import tsx scripts/extract-gemini-fixtures.ts",
+    "prepublishOnly": "pnpm build && pnpm test",
+    "ship": "pnpm build && pnpm test && npm version patch && (git commit -am \"bump version\" || true) && git push --follow-tags && npm publish"
   },
   "keywords": [
     "ai",
@@ -43,12 +45,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/sourceborn/agent-workflows-monorepo.git",
+    "url": "https://github.com/jnarowski/agentcmd",
     "directory": "packages/agent-cli-sdk"
   },
-  "homepage": "https://github.com/sourceborn/agent-workflows-monorepo/tree/main/packages/agent-cli-sdk#readme",
+  "homepage": "https://github.com/jnarowski/agentcmd/tree/main/packages/agent-cli-sdk#readme",
   "bugs": {
-    "url": "https://github.com/sourceborn/agent-workflows-monorepo/issues"
+    "url": "https://github.com/jnarowski/agentcmd/issues"
   },
   "files": [
     "dist",

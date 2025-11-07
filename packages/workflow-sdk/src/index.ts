@@ -1,12 +1,12 @@
 /**
- * @repo/workflow-sdk - Type-safe workflow SDK for Sourceborn workflow engine
+ * agentcmd-workflows - Type-safe workflow SDK for agentcmd workflow engine
  *
  * This SDK provides TypeScript interfaces and builder functions for defining workflows.
- * The actual implementations are provided by the Sourceborn web app at runtime.
+ * The actual implementations are provided by the agentcmd web app at runtime.
  *
  * @example
  * ```typescript
- * import { defineWorkflow } from '@repo/workflow-sdk';
+ * import { defineWorkflow } from 'agentcmd-workflows';
  *
  * export default defineWorkflow({
  *   id: 'my-workflow',

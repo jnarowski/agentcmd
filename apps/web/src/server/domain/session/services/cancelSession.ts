@@ -3,7 +3,7 @@ import { activeSessions } from "@/server/websocket/infrastructure/active-session
 import { broadcast } from "@/server/websocket/infrastructure/subscriptions";
 import { SessionEventTypes } from "@/shared/types/websocket.types";
 import { Channels } from "@/shared/websocket";
-import { killProcess } from "@repo/agent-cli-sdk";
+import { killProcess } from "agent-cli-sdk";
 import { updateSessionState } from "./updateSessionState";
 import type { CancelSessionOptions } from '../types/CancelSessionOptions';
 

@@ -123,6 +123,7 @@ export function AppInnerSidebar({
       is_starred: project.is_starred,
       created_at: project.created_at,
       updated_at: project.updated_at,
+      capabilities: project.capabilities,
       sessionCount: project.sessions?.length || 0,
     }));
 

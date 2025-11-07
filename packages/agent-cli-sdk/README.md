@@ -1,4 +1,4 @@
-# @repo/agent-cli-sdk
+# agent-cli-sdk
 
 TypeScript SDK for orchestrating AI-powered CLI tools (Claude Code, OpenAI Codex) in development workflows.
 
@@ -15,13 +15,13 @@ TypeScript SDK for orchestrating AI-powered CLI tools (Claude Code, OpenAI Codex
 
 ```bash
 # Using pnpm (recommended for monorepos)
-pnpm add @repo/agent-cli-sdk
+pnpm add agent-cli-sdk
 
 # Using npm
-npm install @repo/agent-cli-sdk
+npm install agent-cli-sdk
 
 # Using yarn
-yarn add @repo/agent-cli-sdk
+yarn add agent-cli-sdk
 ```
 
 ## Requirements
@@ -39,7 +39,7 @@ yarn add @repo/agent-cli-sdk
 The SDK provides a unified interface that works with both Claude and Codex:
 
 ```typescript
-import { execute } from '@repo/agent-cli-sdk';
+import { execute } from 'agent-cli-sdk';
 
 // Using Claude
 const claudeResult = await execute({
@@ -71,7 +71,7 @@ console.log('Final output:', claudeResult.data);
 Load message history from either Claude or Codex sessions:
 
 ```typescript
-import { loadMessages } from '@repo/agent-cli-sdk';
+import { loadMessages } from 'agent-cli-sdk';
 
 // Load Claude session
 const claudeMessages = await loadMessages({
@@ -98,7 +98,7 @@ claudeMessages.forEach(msg => {
 Both Claude and Codex support automatic JSON extraction:
 
 ```typescript
-import { execute } from '@repo/agent-cli-sdk';
+import { execute } from 'agent-cli-sdk';
 
 interface PackageInfo {
   name: string;
@@ -209,7 +209,7 @@ Detect the path to AI CLI executables.
 **Example:**
 
 ```typescript
-import { detectClaudeCli, detectCodexCli } from '@repo/agent-cli-sdk';
+import { detectClaudeCli, detectCodexCli } from 'agent-cli-sdk';
 
 const claudePath = detectClaudeCli();
 if (claudePath) {
@@ -248,7 +248,7 @@ function extractJSON<T = unknown>(
 **Example:**
 
 ```typescript
-import { extractJSON } from '@repo/agent-cli-sdk';
+import { extractJSON } from 'agent-cli-sdk';
 import { z } from 'zod';
 
 const text = 'Here is the data: {"name": "John", "age": 30}';
@@ -360,7 +360,7 @@ The main `index.ts` routes to tool-specific implementations based on the `tool` 
 Control how the CLI handles permission requests. Both Claude and Codex support permission modes with similar semantics:
 
 ```typescript
-import { execute } from '@repo/agent-cli-sdk';
+import { execute } from 'agent-cli-sdk';
 
 // Claude permission modes
 const claudeResult = await execute({

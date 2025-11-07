@@ -1,6 +1,6 @@
 /**
- * WorkflowSdkInstallDialog Component
- * Dialog for installing workflow-sdk in a project
+ * WorkflowPackageInstallDialog Component
+ * Dialog for installing agentcmd-workflows package in a project
  */
 
 import { useState } from 'react';
@@ -15,30 +15,28 @@ import {
 import { Button } from '@/client/components/ui/button';
 import { Alert, AlertDescription } from '@/client/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/client/components/ui/tabs';
-import {
-  useWorkflowSdkCheck,
-  useInstallWorkflowSdk,
-} from '@/client/pages/projects/hooks/useProjects';
+import { useInstallWorkflowPackage } from '@/client/pages/projects/hooks/useProjects';
+import type { WorkflowPackageCapabilities } from '@/shared/types/project.types';
 
-interface WorkflowSdkInstallDialogProps {
+interface WorkflowPackageInstallDialogProps {
   projectId: string;
+  sdkStatus: WorkflowPackageCapabilities;
   isOpen: boolean;
   onClose: () => void;
 }
 
-export function WorkflowSdkInstallDialog({
+export function WorkflowPackageInstallDialog({
   projectId,
+  sdkStatus,
   isOpen,
   onClose,
-}: WorkflowSdkInstallDialogProps) {
-  const { data: checkResult, refetch } = useWorkflowSdkCheck(projectId);
-  const installMutation = useInstallWorkflowSdk();
+}: WorkflowPackageInstallDialogProps) {
+  const installMutation = useInstallWorkflowPackage();
   const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState<string>('npm');
 
   const handleInstall = async () => {
     await installMutation.mutateAsync(projectId);
-    await refetch();
     onClose();
   };
 
@@ -49,29 +47,29 @@ export function WorkflowSdkInstallDialog({
   };
 
   const commands = {
-    npm: 'npm install --save-dev @repo/workflow-sdk && npx workflow-sdk init --yes',
-    pnpm: 'pnpm add -D @repo/workflow-sdk && pnpm workflow-sdk init --yes',
-    yarn: 'yarn add -D @repo/workflow-sdk && yarn workflow-sdk init --yes',
+    npm: 'npm install --save-dev agentcmd-workflows && npx agentcmd-workflows init --yes',
+    pnpm: 'pnpm add -D agentcmd-workflows && pnpm agentcmd-workflows init --yes',
+    yarn: 'yarn add -D agentcmd-workflows && yarn agentcmd-workflows init --yes',
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Install Workflow SDK</DialogTitle>
+          <DialogTitle>Install Workflow Package</DialogTitle>
           <DialogDescription>
-            {!checkResult?.hasPackageJson
+            {!sdkStatus.has_package_json
               ? 'No package.json found. The installation will create one for you.'
-              : 'Install workflow-sdk to enable workflow run in this project.'}
+              : 'Install agentcmd-workflows to enable workflow execution in this project.'}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          {!checkResult?.hasPackageJson && (
+          {!sdkStatus.has_package_json && (
             <Alert>
               <AlertDescription>
                 No package.json found. Click "Install Now" to create a package.json
-                and install workflow-sdk automatically.
+                and install agentcmd-workflows automatically.
               </AlertDescription>
             </Alert>
           )}
@@ -127,13 +125,6 @@ export function WorkflowSdkInstallDialog({
               ) : (
                 'Install Now'
               )}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => refetch()}
-              disabled={installMutation.isPending}
-            >
-              Re-check
             </Button>
             <Button
               variant="ghost"

@@ -50,7 +50,7 @@ export const SessionEventTypes = {
 /**
  * Data interfaces for session events
  */
-import type { UnifiedMessage } from '@repo/agent-cli-sdk';
+import type { UnifiedMessage } from 'agent-cli-sdk';
 
 export interface StreamOutputData {
   message: UnifiedMessage;

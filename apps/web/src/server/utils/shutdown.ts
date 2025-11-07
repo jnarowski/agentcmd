@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { prisma } from '@/shared/prisma';
 import type { ActiveSessionsManager } from '@/server/websocket/infrastructure/active-sessions';
 import type { ReconnectionManager } from '@/server/websocket/infrastructure/reconnection';
-import { killProcess } from '@repo/agent-cli-sdk';
+import { killProcess } from 'agent-cli-sdk';
 
 /**
  * Setup graceful shutdown handlers for SIGINT and SIGTERM signals.

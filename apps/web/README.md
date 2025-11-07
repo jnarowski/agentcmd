@@ -83,7 +83,7 @@ apps/web/
 
    ```bash
    git clone <repository-url>
-   cd agent-workflows-monorepo-v2
+   cd agentcmd-monorepo-v2
    ```
 
 2. **Install dependencies**
@@ -191,19 +191,19 @@ pnpm pack
 npm install -g ./repo-web-*.tgz
 
 # 4. Run the install command to set up database and config
-agent-workflows-ui install
+agentcmd-ui install
 
 # 5. (Optional) Edit configuration
-vim ~/.agents/agent-workflows-ui-config.json
+vim ~/.agents/agentcmd-ui-config.json
 
 # 6. Start the application
-agent-workflows-ui start
+agentcmd-ui start
 ```
 
 This creates:
 
 - Database at `~/.agent/database.db`
-- Config at `~/.agents/agent-workflows-ui-config.json`
+- Config at `~/.agents/agentcmd-ui-config.json`
 
 #### Production Environment Variables
 
@@ -217,7 +217,7 @@ export NODE_ENV="production"
 # Optional overrides
 export PORT=3456
 export HOST=0.0.0.0  # To allow external connections
-export DATABASE_URL="file:/var/lib/agent-workflows/database.db"
+export DATABASE_URL="file:/var/lib/agentcmd/database.db"
 export LOG_LEVEL=warn
 export ALLOWED_ORIGINS="https://your-domain.com"
 ```
@@ -253,14 +253,14 @@ pnpm prisma:studio
 
 ## CLI Tool
 
-The package includes a CLI tool (`agent-workflows-ui`) for easy installation and management.
+The package includes a CLI tool (`agentcmd-ui`) for easy installation and management.
 
 ### Quick Start
 
 ```bash
 # Install globally from npm
 npm install -g @repo/web
-agent-workflows-ui install
+agentcmd-ui install
 
 # Or run directly from dist without installing
 pnpm build
@@ -270,7 +270,7 @@ node apps/web/dist/cli.js install
 ### What It Does
 
 - Creates database at `~/.agent/database.db`
-- Creates config at `~/.agents/agent-workflows-ui-config.json`
+- Creates config at `~/.agents/agentcmd-ui-config.json`
 - Runs all database migrations
 - One command to set everything up
 

@@ -2,6 +2,23 @@
 
 import type { SessionResponse } from './agent-session.types';
 
+export interface GitCapabilities {
+  initialized: boolean;
+  error: string | null;
+  branch: string | null;
+}
+
+export interface WorkflowPackageCapabilities {
+  has_package_json: boolean;
+  installed: boolean;
+  version: string | null;
+}
+
+export interface ProjectCapabilities {
+  git: GitCapabilities;
+  workflow_sdk: WorkflowPackageCapabilities;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -10,7 +27,7 @@ export interface Project {
   is_starred: boolean;
   created_at: Date;
   updated_at: Date;
-  current_branch?: string;
+  capabilities: ProjectCapabilities;
 }
 
 export interface ProjectWithSessions extends Project {

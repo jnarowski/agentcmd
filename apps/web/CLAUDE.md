@@ -506,7 +506,7 @@ apps/
   web/              # This app - full-stack workflow UI
   claudecodeui/     # Separate UI app
 packages/
-  agent-workflows/  # Core workflow utilities (@sourceborn/agent-workflows)
+  workflow-sdk/  # Core workflow utilities (agentcmd-workflows)
   agent-cli-sdk/    # CLI SDK for AI tools (@repo/agent-cli-sdk)
   ui/               # Shared UI components
   eslint-config/    # Shared ESLint configuration
@@ -1018,7 +1018,7 @@ import { ChatPromptInput } from "./ChatPromptInput";
 
 The web app depends on workspace packages:
 - `@repo/agent-cli-sdk` - SDK for orchestrating AI CLI tools
-- `@repo/agent-workflows` - Agent workflow utilities
+- `agentcmd-workflows` - Agent workflow utilities
 
 Use `workspace:*` protocol in package.json for workspace dependencies.
 
@@ -1177,7 +1177,7 @@ claude --version
 # Look for "session.{id}.send_message" and "session.{id}.stream_output" in logs
 
 # 4. Verify temp image directory is writable
-ls -la /tmp/agent-workflows-*
+ls -la /tmp/agentcmd-*
 ```
 
 **Common Fixes:**
@@ -2108,7 +2108,7 @@ Use a process manager like PM2 for production:
 npm install -g pm2
 
 # Start application
-pm2 start dist/server/index.js --name "agent-workflows"
+pm2 start dist/server/index.js --name "agentcmd"
 
 # Save process list
 pm2 save

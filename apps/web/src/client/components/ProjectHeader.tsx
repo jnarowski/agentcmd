@@ -10,6 +10,7 @@ import {
   GitBranch,
   ChevronRight,
   Workflow,
+  AlertCircle,
 } from "lucide-react";
 import { Separator } from "@/client/components/ui/separator";
 import { SidebarTrigger } from "@/client/components/ui/sidebar";
@@ -19,8 +20,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/client/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/client/components/ui/tooltip";
 import { Badge } from "@/client/components/ui/badge";
 import type { SessionResponse } from "@/shared/types";
+import type { GitCapabilities } from "@/shared/types/project.types";
 import { SessionHeader } from "@/client/components/SessionHeader";
 import { GitOperationsModal } from "@/client/components/GitOperationsModal";
 import { useWorkflowRuns } from "@/client/pages/projects/workflows/hooks/useWorkflowRuns";
@@ -29,13 +37,13 @@ interface ProjectHeaderProps {
   projectId: string;
   projectName: string;
   projectPath: string;
-  currentBranch?: string;
+  gitCapabilities: GitCapabilities;
   currentSession?: SessionResponse | null;
   showSidebarTrigger?: boolean;
   sidebarTriggerAlwaysVisible?: boolean; // When true, shows on all screen sizes
 }
 
-export function ProjectHeader({ projectId, projectName, projectPath, currentBranch, currentSession, showSidebarTrigger = true, sidebarTriggerAlwaysVisible = false }: ProjectHeaderProps) {
+export function ProjectHeader({ projectId, projectName, projectPath, gitCapabilities, currentSession, showSidebarTrigger = true, sidebarTriggerAlwaysVisible = false }: ProjectHeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [gitModalOpen, setGitModalOpen] = useState(false);
@@ -63,6 +71,7 @@ export function ProjectHeader({ projectId, projectName, projectPath, currentBran
         to: `/projects/${projectId}/source-control`,
         label: "Git",
         icon: GitBranch,
+        disabled: !gitCapabilities.initialized,
       },
       {
         to: `/projects/${projectId}/workflows`,
@@ -71,7 +80,7 @@ export function ProjectHeader({ projectId, projectName, projectPath, currentBran
         badge: runningCount,
       },
     ],
-    [projectId, runningCount]
+    [projectId, runningCount, gitCapabilities.initialized]
   );
 
   // Get current active nav item
@@ -97,18 +106,38 @@ export function ProjectHeader({ projectId, projectName, projectPath, currentBran
             </>
           )}
           <div className="flex flex-col gap-1 min-w-0">
-            <div className="text-base font-medium truncate">{projectName}</div>
-            {currentBranch && (
+            <button
+              onClick={() => navigate(`/projects/${projectId}`)}
+              className="text-base font-medium truncate hover:text-primary transition-colors text-left"
+            >
+              {projectName}
+            </button>
+            {gitCapabilities.initialized ? (
               <button
                 onClick={() => setGitModalOpen(true)}
-                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                title="Git operations"
+                disabled={!gitCapabilities.initialized}
+                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                title={gitCapabilities.error || "Git operations"}
               >
                 <GitBranch className="h-3 w-3" />
-                <span className="truncate">{currentBranch}</span>
+                <span className="truncate">{gitCapabilities.branch || 'Unknown branch'}</span>
                 <ChevronRight className="h-3.5 w-3.5" />
               </button>
-            )}
+            ) : gitCapabilities.error ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-not-allowed opacity-50">
+                      <AlertCircle className="h-3 w-3" />
+                      <span className="truncate">Not a git repository</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{gitCapabilities.error}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : null}
           </div>
         </div>
 
@@ -119,11 +148,18 @@ export function ProjectHeader({ projectId, projectName, projectPath, currentBran
               key={item.to}
               to={item.to}
               end={item.end}
+              onClick={(e) => {
+                if (item.disabled) {
+                  e.preventDefault();
+                }
+              }}
               className={({ isActive }) =>
                 `flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-secondary text-secondary-foreground"
-                    : "text-muted-foreground hover:bg-secondary/50"
+                  item.disabled
+                    ? "opacity-50 cursor-not-allowed text-muted-foreground"
+                    : isActive
+                      ? "bg-secondary text-secondary-foreground"
+                      : "text-muted-foreground hover:bg-secondary/50"
                 }`
               }
             >
@@ -153,8 +189,9 @@ export function ProjectHeader({ projectId, projectName, projectPath, currentBran
               return (
                 <DropdownMenuItem
                   key={item.to}
-                  onClick={() => navigate(item.to)}
-                  className={isActive ? "bg-secondary" : ""}
+                  onClick={() => !item.disabled && navigate(item.to)}
+                  className={`${isActive ? "bg-secondary" : ""} ${item.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                  disabled={item.disabled}
                 >
                   <Icon className="h-4 w-4 mr-2" />
                   {item.label}
@@ -178,7 +215,7 @@ export function ProjectHeader({ projectId, projectName, projectPath, currentBran
         open={gitModalOpen}
         onOpenChange={setGitModalOpen}
         projectPath={projectPath}
-        currentBranch={currentBranch}
+        currentBranch={gitCapabilities.branch || undefined}
       />
     </>
   );

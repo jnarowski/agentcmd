@@ -1,6 +1,6 @@
 ---
 description: Implements a feature based on provided context or spec file
-argument-hint: [specNumberOrNameOrPath, format]
+argument-hint: [specIdOrNameOrPath, format]
 ---
 
 # Implement
@@ -9,27 +9,25 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 
 ## Variables
 
-- $specNumberOrNameOrPath: $1 (required) - Either a spec number (e.g., `24`), feature name (e.g., `kill-claude-process`), or full path (e.g., `.agent/specs/todo/24-kill-claude-process-spec.md`)
+- $specIdOrNameOrPath: $1 (required) - Either a spec ID (e.g., `ef3`), feature name (e.g., `kill-claude-process`), or full path (e.g., `.agent/specs/todo/ef3-kill-claude-process-spec.md`)
 - $format: $2 (optional) - Output format: "text" or "json" (defaults to "text" if not provided)
 
 ## Instructions
 
-**Parse and resolve $specNumberOrNameOrPath:**
+**Parse and resolve $specIdOrNameOrPath:**
 - If it's a full file path (contains `/` or starts with `.`):
   - Use the path as-is and set $spec_path to it
-- If it's a number (e.g., `24`):
+- If it's an ID (e.g., `ef3`, `a7b`):
   - Search in this order:
-    1. `.agent/specs/doing/{number}-*-spec.md`
-    2. `.agent/specs/todo/{number}-*-spec.md`
-    3. `.agent/specs/done/{number}-*-spec.md`
-    4. `.agent/specs/{number}-*-spec.md` (legacy flat structure)
+    1. `.agent/specs/doing/{id}-*-spec.md`
+    2. `.agent/specs/todo/{id}-*-spec.md`
+    3. `.agent/specs/done/{id}-*-spec.md`
   - Use the first matching file and set $spec_path to it
 - If it's a feature name (e.g., `kill-claude-process`):
   - Search in this order:
     1. `.agent/specs/doing/*-{feature-name}-spec.md`
     2. `.agent/specs/todo/*-{feature-name}-spec.md`
     3. `.agent/specs/done/*-{feature-name}-spec.md`
-    4. `.agent/specs/{feature-name}-spec.md` (legacy flat structure)
   - Use the first matching file and set $spec_path to it
 - If $spec_path file is not found after searching all locations, stop IMMEDIATELY and let the user know that the file wasn't found and you cannot continue
 
@@ -150,5 +148,5 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 
 Otherwise, provide this human-readable information to the user:
 
-- Summarize the work you've just done in a concise bullet point list.
+- Summarize the work you've just done in a concise bullet point list
 - Report the files and total lines changed with `git diff --stat`

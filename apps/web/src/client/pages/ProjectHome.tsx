@@ -96,7 +96,7 @@ export default function ProjectHome() {
       </div>
 
       {/* Project Setup */}
-      <ProjectOnboardingSuggestions projectId={id!} />
+      <ProjectOnboardingSuggestions project={project} />
 
       <Card className="border-border/50 py-2">
         <CardContent className="p-0">

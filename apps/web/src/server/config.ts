@@ -3,7 +3,7 @@
  * Centralized access to environment variables
  */
 
-const config = {
+export const config = {
   workflow: {
     /** Enable workflow engine */
     enabled: process.env.WORKFLOW_ENGINE_ENABLED !== "false",

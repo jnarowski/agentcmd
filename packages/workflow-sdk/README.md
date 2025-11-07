@@ -1,15 +1,15 @@
-# @repo/workflow-sdk
+# agentcmd-workflows
 
 Type-safe workflow SDK for Sourceborn workflow engine powered by Inngest.
 
 ## Installation
 
 ```bash
-npm install @repo/workflow-sdk inngest
+npm install agentcmd-workflows inngest
 # or
-pnpm add @repo/workflow-sdk inngest
+pnpm add agentcmd-workflows inngest
 # or
-yarn add @repo/workflow-sdk inngest
+yarn add agentcmd-workflows inngest
 ```
 
 ## Quick Start
@@ -18,7 +18,7 @@ Create a workflow in your project's `.workflows/` directory:
 
 ```typescript
 // .workflows/implement-feature.ts
-import { defineWorkflow } from "@repo/workflow-sdk";
+import { defineWorkflow } from "agentcmd-workflows";
 
 export default defineWorkflow(
   {

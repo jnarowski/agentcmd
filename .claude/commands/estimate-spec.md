@@ -1,6 +1,6 @@
 ---
 description: Add complexity estimates to existing spec file
-argument-hint: [spec-number-or-path-or-name]
+argument-hint: [spec-id-or-path-or-name]
 ---
 
 # Estimate Spec Complexity
@@ -10,8 +10,8 @@ Analyze an existing spec file and add/update complexity estimates for all tasks 
 ## Variables
 
 - $specIdentifier: $1 (required) - One of:
-  - Spec number (e.g., `18`)
-  - Full path (e.g., `.agent/specs/todo/18-auth-improvements-spec.md`)
+  - Spec ID (e.g., `ef3`)
+  - Full path (e.g., `.agent/specs/todo/ef3-auth-improvements-spec.md`)
   - Feature name (e.g., `auth-improvements`)
 
 ## Instructions
@@ -42,11 +42,13 @@ Assign complexity based on **context window usage and cognitive load**, not time
 1. **Locate Spec File**:
    - If $specIdentifier is a full path:
      - Use that path directly
-   - If $specIdentifier is a number (e.g., `18`):
-     - Search `.agent/specs/todo/` for files matching `18-*-spec.{md,json}`
+   - If $specIdentifier is an ID (e.g., `ef3`, `a7b`):
+     - Search `.agent/specs/todo/` for files matching `{id}-*-spec.{md,json}`
+     - If not found, search `.agent/specs/doing/`
      - If not found, search `.agent/specs/done/`
    - If $specIdentifier is a feature name (e.g., `auth-improvements`):
      - Search `.agent/specs/todo/` for files matching `*-auth-improvements-spec.{md,json}`
+     - If not found, search `.agent/specs/doing/`
      - If not found, search `.agent/specs/done/`
    - If file not found, report error
 
@@ -153,11 +155,11 @@ Add these fields to the spec metadata section:
 
 ## Examples
 
-**Example 1: Estimate by spec number**
+**Example 1: Estimate by spec ID**
 ```bash
-/estimate-spec 18
+/estimate-spec ef3
 ```
-Finds spec #18, analyzes tasks, adds complexity scores
+Finds spec with ID ef3, analyzes tasks, adds complexity scores
 
 **Example 2: Estimate by feature name**
 ```bash
@@ -167,13 +169,13 @@ Finds spec with "auth-improvements" in filename, adds complexity
 
 **Example 3: Estimate by full path**
 ```bash
-/estimate-spec .agent/specs/todo/18-auth-improvements-spec.md
+/estimate-spec .agent/specs/todo/ef3-auth-improvements-spec.md
 ```
 Directly estimates the specified file
 
 **Example 4: Re-estimate existing complexity**
 ```bash
-/estimate-spec 18
+/estimate-spec ef3
 ```
 If complexity already exists, re-analyzes and updates scores
 
@@ -198,7 +200,7 @@ If complexity already exists, re-analyzes and updates scores
 After updating the spec, provide this summary:
 
 ```text
-✓ Added complexity estimates to: .agent/specs/todo/[number]-[feature]-spec.md
+✓ Added complexity estimates to: .agent/specs/todo/[id]-[feature]-spec.md
 
 ## Complexity Summary
 Total: [X] points (avg [X.X]/10)

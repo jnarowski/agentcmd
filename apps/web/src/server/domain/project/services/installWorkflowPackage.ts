@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { access, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { InstallWorkflowSdkOptions } from "@/server/domain/project/types/InstallWorkflowSdkOptions";
+import type { InstallWorkflowPackageOptions } from "@/server/domain/project/types/InstallWorkflowPackageOptions";
 
 /**
  * Detect which package manager to use based on lock files
@@ -99,16 +99,16 @@ async function ensurePackageJson(projectPath: string): Promise<void> {
 }
 
 /**
- * Install workflow-sdk in a project
+ * Install agentcmd-workflows package in a project
  * - Creates package.json if it doesn't exist
  * - Detects package manager (pnpm, yarn, npm)
- * - Installs @repo/workflow-sdk as devDependency
- * - Runs workflow-sdk init --yes
+ * - Installs agentcmd-workflows as devDependency
+ * - Runs agentcmd-workflows init --yes
  *
  * @param options - Options object with projectPath
  * @returns Success status and output messages
  */
-export async function installWorkflowSdk({ projectPath }: InstallWorkflowSdkOptions): Promise<{
+export async function installWorkflowPackage({ projectPath }: InstallWorkflowPackageOptions): Promise<{
   success: boolean;
   message: string;
   output?: string;
@@ -120,11 +120,11 @@ export async function installWorkflowSdk({ projectPath }: InstallWorkflowSdkOpti
     // Step 2: Detect package manager
     const packageManager = await detectPackageManager(projectPath);
 
-    // Step 3: Install workflow-sdk
+    // Step 3: Install agentcmd-workflows
     const installArgs: Record<string, string[]> = {
-      pnpm: ["add", "-D", "@repo/workflow-sdk"],
-      yarn: ["add", "-D", "@repo/workflow-sdk"],
-      npm: ["install", "--save-dev", "@repo/workflow-sdk"],
+      pnpm: ["add", "-D", "agentcmd-workflows"],
+      yarn: ["add", "-D", "agentcmd-workflows"],
+      npm: ["install", "--save-dev", "agentcmd-workflows"],
     };
 
     const { stdout: installOutput } = await runCommand(
@@ -133,7 +133,7 @@ export async function installWorkflowSdk({ projectPath }: InstallWorkflowSdkOpti
       projectPath
     );
 
-    // Step 4: Run workflow-sdk init with --yes flag
+    // Step 4: Run agentcmd-workflows init with --yes flag
     try {
       const initCommand =
         packageManager === "pnpm"
@@ -144,8 +144,8 @@ export async function installWorkflowSdk({ projectPath }: InstallWorkflowSdkOpti
 
       const initArgs =
         packageManager === "npm"
-          ? ["workflow-sdk", "init", "--yes"]
-          : ["workflow-sdk", "init", "--yes"];
+          ? ["agentcmd-workflows", "init", "--yes"]
+          : ["agentcmd-workflows", "init", "--yes"];
 
       const { stdout: initOutput } = await runCommand(
         initCommand,
@@ -155,7 +155,7 @@ export async function installWorkflowSdk({ projectPath }: InstallWorkflowSdkOpti
 
       return {
         success: true,
-        message: "Workflow SDK installed and initialized successfully",
+        message: "Workflow package installed and initialized successfully",
         output: `${installOutput}\n${initOutput}`,
       };
     } catch (initError) {
@@ -163,7 +163,7 @@ export async function installWorkflowSdk({ projectPath }: InstallWorkflowSdkOpti
       return {
         success: true,
         message:
-          "Workflow SDK installed, but initialization failed. You may need to run 'workflow-sdk init' manually.",
+          "Workflow package installed, but initialization failed. You may need to run 'agentcmd-workflows init' manually.",
         output: `${installOutput}\n${initError instanceof Error ? initError.message : String(initError)}`,
       };
     }
@@ -171,7 +171,7 @@ export async function installWorkflowSdk({ projectPath }: InstallWorkflowSdkOpti
     return {
       success: false,
       message:
-        error instanceof Error ? error.message : "Failed to install workflow-sdk",
+        error instanceof Error ? error.message : "Failed to install agentcmd-workflows",
       output: error instanceof Error ? error.stack : String(error),
     };
   }

@@ -1,7 +1,7 @@
 import { Channels } from "@/shared/websocket/channels";
 import { broadcast } from "@/server/websocket/infrastructure/subscriptions";
 import type { RuntimeContext } from "../../../types/engine.types";
-import type { PhaseDefinition } from "@repo/workflow-sdk";
+import type { PhaseDefinition } from "agentcmd-workflows";
 import { updateWorkflowRun } from "../../runs/updateWorkflowRun";
 import { findOrCreateWorkflowEvent } from "../../events/findOrCreateWorkflowEvent";
 import { toId } from "./utils/toId";

@@ -3,7 +3,7 @@ import type {
   StepStatus,
   WorkflowEventType,
 } from "@/shared/schemas/workflow.schemas";
-import type { PhaseDefinition } from "@repo/workflow-sdk";
+import type { PhaseDefinition } from "agentcmd-workflows";
 
 // Re-export types only
 export type { WorkflowStatus, StepStatus, WorkflowEventType, PhaseDefinition };

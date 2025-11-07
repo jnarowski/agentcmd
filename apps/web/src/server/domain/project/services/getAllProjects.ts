@@ -3,9 +3,11 @@ import { prisma } from "@/shared/prisma";
 import type {
   Project,
   ProjectWithSessions,
+  ProjectCapabilities,
 } from "@/shared/types/project.types";
 import type { SessionResponse } from "@/shared/types/agent-session.types";
-import { getCurrentBranch } from "@/server/domain/git/services/getCurrentBranch";
+import { isGitRepository } from "@/server/domain/git/services/isGitRepository";
+import { checkWorkflowPackage } from "@/server/domain/project/services/checkWorkflowPackage";
 import type { GetAllProjectsOptions } from "../types/GetAllProjectsOptions";
 
 /**
@@ -32,13 +34,48 @@ function transformSession(prismaSession: any): SessionResponse {
 }
 
 /**
+ * Build capabilities object for a project
+ * @param projectPath - Path to the project
+ * @returns Capabilities object with git and workflow SDK status
+ */
+async function buildCapabilities(projectPath: string): Promise<ProjectCapabilities> {
+  // Run both checks in parallel
+  const [gitStatus, sdkStatus] = await Promise.all([
+    (async () => {
+      try {
+        return await isGitRepository(projectPath);
+      } catch (error) {
+        return { initialized: false, error: error instanceof Error ? error.message : "Unknown error", branch: null };
+      }
+    })(),
+    (async () => {
+      try {
+        const result = await checkWorkflowPackage({ projectPath });
+        return {
+          has_package_json: result.hasPackageJson,
+          installed: result.installed,
+          version: result.version ?? null,
+        };
+      } catch (error) {
+        return { has_package_json: false, installed: false, version: null };
+      }
+    })(),
+  ]);
+
+  return {
+    git: gitStatus,
+    workflow_sdk: sdkStatus,
+  };
+}
+
+/**
  * Transform Prisma project to API project format
  * @param prismaProject - Raw project from Prisma
- * @param currentBranch - Optional git branch (fetched separately)
+ * @param capabilities - Project capabilities (git, workflow SDK)
  */
 function transformProject(
   prismaProject: any,
-  currentBranch?: string | null
+  capabilities: ProjectCapabilities
 ): Project {
   return {
     id: prismaProject.id,
@@ -48,21 +85,21 @@ function transformProject(
     is_starred: prismaProject.is_starred,
     created_at: prismaProject.created_at,
     updated_at: prismaProject.updated_at,
-    current_branch: currentBranch ?? undefined,
+    capabilities,
   };
 }
 
 /**
  * Transform Prisma project with sessions to API format
  * @param prismaProject - Raw project from Prisma with sessions
- * @param currentBranch - Optional git branch (fetched separately)
+ * @param capabilities - Project capabilities (git, workflow SDK)
  */
 function transformProjectWithSessions(
   prismaProject: any,
-  currentBranch?: string | null
+  capabilities: ProjectCapabilities
 ): ProjectWithSessions {
   return {
-    ...transformProject(prismaProject, currentBranch),
+    ...transformProject(prismaProject, capabilities),
     sessions: prismaProject.sessions
       ? prismaProject.sessions.map(transformSession)
       : [],
@@ -113,21 +150,21 @@ export async function getAllProjects(
     }),
   });
 
-  // Fetch current branch for each project
-  const projectsWithBranches = await Promise.all(
+  // Fetch capabilities for each project
+  const projectsWithCapabilities = await Promise.all(
     projects.map(async (project) => {
-      const currentBranch = await getCurrentBranch({ projectPath: project.path });
-      return { project, currentBranch };
+      const capabilities = await buildCapabilities(project.path);
+      return { project, capabilities };
     })
   );
 
   if (includeSessions) {
-    return projectsWithBranches.map(({ project, currentBranch }) =>
-      transformProjectWithSessions(project, currentBranch)
+    return projectsWithCapabilities.map(({ project, capabilities }) =>
+      transformProjectWithSessions(project, capabilities)
     );
   }
 
-  return projectsWithBranches.map(({ project, currentBranch }) =>
-    transformProject(project, currentBranch)
+  return projectsWithCapabilities.map(({ project, capabilities }) =>
+    transformProject(project, capabilities)
   );
 }

@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import type { UnifiedMessage, UnifiedImageBlock } from '@repo/agent-cli-sdk';
+import type { UnifiedMessage, UnifiedImageBlock } from 'agent-cli-sdk';
 import type { UIMessage } from '@/shared/types/message.types';
 
 // Import the private function for testing by accessing it through the store module

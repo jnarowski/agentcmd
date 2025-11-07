@@ -1,8 +1,24 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { buildSuccessResponse } from '@/server/utils/response';
+import { ValidationError } from '@/server/errors';
 import * as gitService from '@/server/domain/git/services';
 import * as gitSchemas from '@/server/domain/git/schemas';
+import fs from 'node:fs';
+
+/**
+ * Determine if git error is a user error (400) or server error (500)
+ */
+function isGitUserError(errorMessage: string): boolean {
+  const userErrorPatterns = [
+    /not a git repository/i,
+    /no such file or directory/i,
+    /permission denied/i,
+    /does not exist/i,
+    /invalid path/i,
+  ];
+  return userErrorPatterns.some(pattern => pattern.test(errorMessage));
+}
 
 export async function gitRoutes(fastify: FastifyInstance) {
   // POST /api/git/status - Get git status
@@ -19,8 +35,27 @@ export async function gitRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const { path } = request.body;
 
-      const status = await gitService.getGitStatus({ projectPath: path });
-      return reply.send(buildSuccessResponse(status));
+      try {
+        // Check if path exists
+        if (!fs.existsSync(path)) {
+          throw new ValidationError(`Path doesn't exist: ${path}`);
+        }
+
+        const status = await gitService.getGitStatus({ projectPath: path });
+        return reply.send(buildSuccessResponse(status));
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+
+        if (error instanceof ValidationError) {
+          throw error; // Already a ValidationError
+        }
+
+        if (isGitUserError(err.message)) {
+          throw new ValidationError(err.message);
+        }
+
+        throw err; // Re-throw server errors
+      }
     }
   );
 
@@ -40,6 +75,11 @@ export async function gitRoutes(fastify: FastifyInstance) {
       const userId = request.user?.id;
 
       try {
+        // Check if path exists
+        if (!fs.existsSync(path)) {
+          throw new ValidationError(`Path doesn't exist: ${path}`);
+        }
+
         fastify.log.debug({ userId, projectPath: path }, 'Getting branches');
         const branches = await gitService.getBranches({ projectPath: path });
         return reply.send(buildSuccessResponse(branches));
@@ -54,6 +94,15 @@ export async function gitRoutes(fastify: FastifyInstance) {
           },
           `Failed to get branches: ${err.message}`
         );
+
+        if (error instanceof ValidationError) {
+          throw error; // Already a ValidationError
+        }
+
+        if (isGitUserError(err.message)) {
+          throw new ValidationError(err.message);
+        }
+
         throw err; // Re-throw to be handled by global error handler
       }
     }

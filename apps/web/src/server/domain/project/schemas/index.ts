@@ -56,6 +56,32 @@ export const starProjectSchema = z.object({
 // ============================================================================
 
 /**
+ * Git capabilities schema
+ */
+export const gitCapabilitiesSchema = z.object({
+  initialized: z.boolean(),
+  error: z.string().nullable(),
+  branch: z.string().nullable(),
+});
+
+/**
+ * Workflow SDK capabilities schema
+ */
+export const workflowSdkCapabilitiesSchema = z.object({
+  has_package_json: z.boolean(),
+  installed: z.boolean(),
+  version: z.string().nullable(),
+});
+
+/**
+ * Project capabilities schema
+ */
+export const projectCapabilitiesSchema = z.object({
+  git: gitCapabilitiesSchema,
+  workflow_sdk: workflowSdkCapabilitiesSchema,
+});
+
+/**
  * Project schema
  *
  * Basic project information returned in responses
@@ -68,7 +94,7 @@ export const projectSchema = z.object({
   is_starred: z.boolean(),
   created_at: z.coerce.date(), // Coerce ISO strings to Date objects
   updated_at: z.coerce.date(), // Coerce ISO strings to Date objects
-  current_branch: z.string().optional(),
+  capabilities: projectCapabilitiesSchema,
 });
 
 /**
@@ -122,7 +148,7 @@ export const projectSyncResponseSchema = z.object({
 /**
  * Workflow SDK check result schema
  */
-export const workflowSdkCheckResultSchema = z.object({
+export const workflowPackageCheckResultSchema = z.object({
   hasPackageJson: z.boolean(),
   installed: z.boolean(),
   version: z.string().optional(),
@@ -132,13 +158,13 @@ export const workflowSdkCheckResultSchema = z.object({
  * Workflow SDK check response wrapper
  */
 export const workflowSdkCheckResponseSchema = z.object({
-  data: workflowSdkCheckResultSchema,
+  data: workflowPackageCheckResultSchema,
 });
 
 /**
  * Workflow SDK install result schema
  */
-export const workflowSdkInstallResultSchema = z.object({
+export const workflowPackageInstallResultSchema = z.object({
   success: z.boolean(),
   message: z.string(),
   output: z.string().optional(),
@@ -148,7 +174,7 @@ export const workflowSdkInstallResultSchema = z.object({
  * Workflow SDK install response wrapper
  */
 export const workflowSdkInstallResponseSchema = z.object({
-  data: workflowSdkInstallResultSchema,
+  data: workflowPackageInstallResultSchema,
 });
 
 // ============================================================================
@@ -163,5 +189,5 @@ export type FileContentQuery = z.infer<typeof fileContentQuerySchema>;
 export type FileContentBody = z.infer<typeof fileContentBodySchema>;
 export type HideProjectInput = z.infer<typeof hideProjectSchema>;
 export type StarProjectInput = z.infer<typeof starProjectSchema>;
-export type WorkflowSdkCheckResult = z.infer<typeof workflowSdkCheckResultSchema>;
-export type WorkflowSdkInstallResult = z.infer<typeof workflowSdkInstallResultSchema>;
+export type WorkflowPackageCheckResult = z.infer<typeof workflowPackageCheckResultSchema>;
+export type WorkflowPackageInstallResult = z.infer<typeof workflowPackageInstallResultSchema>;

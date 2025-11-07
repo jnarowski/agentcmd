@@ -1,6 +1,6 @@
 import type { GetStepTools } from "inngest";
 import type { RuntimeContext } from "../../../types/engine.types";
-import type { AgentStepConfig, AgentStepResult } from "@repo/workflow-sdk";
+import type { AgentStepConfig, AgentStepResult } from "agentcmd-workflows";
 import type { AgentStepOptions } from "../../../types/event.types";
 import { executeAgent } from "@/server/domain/session/services/executeAgent";
 import { createSession } from "@/server/domain/session/services/createSession";

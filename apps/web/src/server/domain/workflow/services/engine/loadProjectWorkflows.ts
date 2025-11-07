@@ -1,8 +1,8 @@
 import { stat } from "node:fs/promises";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import type { WorkflowDefinition } from "@repo/workflow-sdk";
-import type { WorkflowRuntime } from "@repo/workflow-sdk";
+import type { WorkflowDefinition } from "agentcmd-workflows";
+import type { WorkflowRuntime } from "agentcmd-workflows";
 import type { InngestFunction } from "inngest";
 import type { FastifyBaseLogger } from "fastify";
 import { findWorkflowFiles } from "./findWorkflowFiles";

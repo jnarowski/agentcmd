@@ -8,7 +8,7 @@ This is a **Turborepo monorepo** for AI agent workflow tools, featuring:
 
 - **`apps/web`**: Full-stack application (React + Vite frontend, Fastify backend) for managing and visualizing AI agent workflows with chat interface, file editor, and terminal
 - **`@repo/agent-cli-sdk`**: TypeScript SDK for orchestrating AI-powered CLI tools (Claude Code, OpenAI Codex, Gemini) programmatically
-- **`@repo/agent-workflows`**: Core workflow utilities library with automatic state persistence, logging, and error handling
+- **`agentcmd-workflows`**: Core workflow utilities library with automatic state persistence, logging, and error handling
 - **Shared packages**: UI components, ESLint configs, TypeScript configs
 
 ## Essential Commands
@@ -73,48 +73,48 @@ The web app can be distributed as a CLI tool with built-in server and database.
 
 ```bash
 # First-time installation
-npx agent-workflows-ui install
-# Creates ~/.agent-workflows/ directory with:
+npx agentcmd install
+# Creates ~/.agentcmd/ directory with:
 # - config.json (ports, API keys, secrets)
 # - database.db (SQLite database)
 # - logs/app.log (application logs)
 
 # Start server (uses config.json defaults)
-npx agent-workflows-ui start
+npx agentcmd start
 # Server: http://localhost:3456
 # Inngest UI: http://localhost:8288
 
 # Start with custom ports (CLI flags override config)
-npx agent-workflows-ui start --port 8080 --inngest-port 9000
+npx agentcmd start --port 8080 --inngest-port 9000
 
 # Allow remote access
-npx agent-workflows-ui start --host 0.0.0.0
+npx agentcmd start --host 0.0.0.0
 
 # View current configuration
-npx agent-workflows-ui config --show
+npx agentcmd config --show
 
 # Edit configuration in $EDITOR
-npx agent-workflows-ui config --edit
+npx agentcmd config --edit
 
 # Get specific config value
-npx agent-workflows-ui config --get port
+npx agentcmd config --get port
 
 # Set specific config value
-npx agent-workflows-ui config --set port=7000
+npx agentcmd config --set port=7000
 
 # Get config file path
-npx agent-workflows-ui config --path
+npx agentcmd config --path
 ```
 
 **Configuration Priority (POSIX standard):**
 1. CLI flags (highest priority)
-2. `~/.agent-workflows/config.json`
+2. `~/.agentcmd/config.json`
 3. Hardcoded defaults (lowest priority)
 
 **Rebranding:**
 To rebrand the CLI tool, change `CLI_NAME` in `apps/web/src/cli/utils/constants.ts`:
 ```typescript
-export const CLI_NAME = 'your-tool-name';  // Changes ~/.agent-workflows/ to ~/.your-tool-name/
+export const CLI_NAME = 'your-tool-name';  // Changes ~/.agentcmd/ to ~/.your-tool-name/
 ```
 
 ### Package Development
@@ -122,7 +122,7 @@ export const CLI_NAME = 'your-tool-name';  // Changes ~/.agent-workflows/ to ~/.
 ```bash
 # Build specific package
 pnpm --filter @repo/agent-cli-sdk build
-pnpm --filter @repo/agent-workflows build
+pnpm --filter agentcmd-workflows build
 
 # Run tests in specific package
 cd packages/agent-cli-sdk
@@ -136,8 +136,8 @@ pnpm test:e2e:gemini     # Gemini-specific E2E tests
 # Run single test file
 pnpm vitest run src/path/to/file.test.ts
 
-# agent-workflows package
-cd packages/agent-workflows
+# agentcmd-workflows package
+cd packages/workflow-sdk
 pnpm test                # Run all tests
 pnpm test:watch          # Watch mode
 pnpm check               # Run lint + type-check + tests
@@ -252,7 +252,7 @@ pnpm check               # Run lint + type-check + tests
 │   │   │       └── gemini/
 │   │   └── scripts/            # Fixture extraction scripts
 │   │
-│   ├── agent-workflows/        # Workflow orchestration library
+│   ├── workflow-sdk/           # Workflow orchestration library (agentcmd-workflows)
 │   │   ├── src/
 │   │   │   ├── cli/            # CLI tool for workflows
 │   │   │   ├── storage/        # Storage adapters (FileStorage)
@@ -322,13 +322,13 @@ The `.agent/generated/` directory contains auto-generated code that should **be 
 **After editing `.claude/commands/*.md` files, regenerate types:**
 
 ```bash
-pnpm --filter @repo/workflow-sdk gen-slash-types
+pnpm --filter agentcmd-workflows gen-slash-types
 ```
 
 **Or if using the package externally:**
 
 ```bash
-npx workflow-sdk generate-slash-types
+npx agentcmd-workflows generate-slash-types
 ```
 
 **Import pattern:**
@@ -530,7 +530,7 @@ import { getProjectById } from "@/server/services/project.service";
 - Permission modes: `default` (safe), `plan` (read-only), `acceptEdits` (auto-accept), `bypassPermissions` (dangerous)
 - Supports Claude, Codex, and Gemini
 
-**agent-workflows:**
+**agentcmd-workflows:**
 
 - Config-based API (pass config objects, not individual params)
 - Result pattern for error handling: `Result<T, E>`
@@ -544,10 +544,10 @@ The web app includes a production-ready CLI tool for single-command deployment.
 
 ### Storage Location
 
-All user data stored in `~/.agent-workflows/` (configurable via `CLI_NAME` constant):
+All user data stored in `~/.agentcmd/` (configurable via `CLI_NAME` constant):
 
 ```
-~/.agent-workflows/
+~/.agentcmd/
 ├── config.json       # All settings (ports, API keys, JWT secret)
 ├── database.db       # SQLite database (shared across all projects)
 └── logs/
@@ -582,7 +582,7 @@ All user data stored in `~/.agent-workflows/` (configurable via `CLI_NAME` const
 ### CLI Commands
 
 **install** - Initialize database and configuration
-- Creates `~/.agent-workflows/` directory
+- Creates `~/.agentcmd/` directory
 - Generates JWT secret via `crypto.randomBytes(32)`
 - Runs Prisma migrations
 - Creates default config.json
@@ -609,7 +609,7 @@ All user data stored in `~/.agent-workflows/` (configurable via `CLI_NAME` const
 Single change point in `apps/web/src/cli/utils/constants.ts`:
 
 ```typescript
-export const CLI_NAME = 'agent-workflows';  // Change this
+export const CLI_NAME = 'agentcmd';  // Change this
 export const DEFAULT_PORT = 3456;
 export const DEFAULT_INNGEST_PORT = 8288;
 export const DEFAULT_HOST = '127.0.0.1';
@@ -617,7 +617,7 @@ export const DEFAULT_LOG_LEVEL = 'info';
 ```
 
 Changing `CLI_NAME` updates:
-- Home directory path (`~/.agent-workflows/` → `~/.your-name/`)
+- Home directory path (`~/.agentcmd/` → `~/.your-name/`)
 - All config/database/log paths
 - Success messages and help text
 
@@ -749,8 +749,8 @@ pnpm test:e2e:claude    # Claude E2E tests
 pnpm test:e2e:codex     # Codex E2E tests
 pnpm test:e2e:gemini    # Gemini E2E tests
 
-# agent-workflows tests
-cd packages/agent-workflows
+# agentcmd-workflows tests
+cd packages/workflow-sdk
 pnpm test               # Run all tests
 pnpm test:watch         # Watch mode
 
@@ -773,7 +773,7 @@ pnpm vitest run src/path/to/file.test.ts
 - **Turborepo**: Orchestrates builds with caching
 - **Vite**: Frontend bundling (web app)
 - **TSC**: Server-side TypeScript compilation (web app)
-- **Bunchee**: Package bundling (agent-cli-sdk, agent-workflows)
+- **Bunchee**: Package bundling (agent-cli-sdk, agentcmd-workflows)
 
 **Clean Build:**
 
@@ -875,19 +875,19 @@ pnpm vitest run path/to/test.test.ts
 ### Packages
 
 - **agent-cli-sdk**: TypeScript, cross-spawn, Vitest, boxen, chalk
-- **agent-workflows**: TypeScript, simple-git, gray-matter, Zod, Vitest
+- **agentcmd-workflows**: TypeScript, simple-git, gray-matter, Zod, Vitest
 - **Build Tools**: Turborepo, Bunchee, TSX, ESBuild
 
 ### Key Dependencies
 
-- **Node.js**: >= 22.0.0 (agent-cli-sdk, agent-workflows), >= 18.0.0 (monorepo)
+- **Node.js**: >= 22.0.0 (agent-cli-sdk, agentcmd-workflows), >= 18.0.0 (monorepo)
 - **pnpm**: 10.19.0 (package manager)
 - **TypeScript**: 5.9.x
 - **React**: 19.1.x
 - **Fastify**: 5.6.x
 - **Prisma**: 6.17.x
 - **Vite**: 7.1.x
-- **Vitest**: 4.0.x (web), 3.2.x (agent-workflows), 2.0.x (agent-cli-sdk)
+- **Vitest**: 4.0.x (web), 3.2.x (agentcmd-workflows), 2.0.x (agent-cli-sdk)
 
 ## Environment Variables
 
@@ -931,10 +931,10 @@ pnpm build
 npm publish
 ```
 
-### agent-workflows
+### agentcmd-workflows
 
 ```bash
-cd packages/agent-workflows
+cd packages/workflow-sdk
 pnpm ship
 # Runs: build → version patch → commit → tag → push → publish
 ```
@@ -948,7 +948,7 @@ pnpm ship
   - Agent-specific docs: `claude.md`, `codex.md`, `gemini.md`, `cursor-agent.md`
 - **Web App Guide**: See `apps/web/CLAUDE.md` for detailed web app architecture
 - **agent-cli-sdk Guide**: See `packages/agent-cli-sdk/CLAUDE.md` for SDK details
-- **agent-workflows Guide**: See `packages/agent-workflows/CLAUDE.md` for workflow utilities
+- **agentcmd-workflows Guide**: See `packages/workflow-sdk/CLAUDE.md` for workflow utilities
 - **README**: See `README.md` for getting started and project overview
 - **Turborepo Docs**: https://turborepo.com/docs
 
@@ -976,7 +976,7 @@ pnpm ship
 - Remove dependency: `pnpm remove <package>`
 - Update dependencies: `pnpm update`
 - Clear Turborepo cache: `rm -rf .turbo`
-- Regenerate slash command types: `pnpm --filter @repo/workflow-sdk gen-slash-types` (after editing `.claude/commands/*.md`)
+- Regenerate slash command types: `pnpm --filter agentcmd-workflows gen-slash-types` (after editing `.claude/commands/*.md`)
 
 ## Important
 

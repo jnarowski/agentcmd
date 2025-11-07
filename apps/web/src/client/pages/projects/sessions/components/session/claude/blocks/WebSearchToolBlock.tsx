@@ -5,7 +5,7 @@
 import { ToolCollapsibleWrapper } from "@/client/pages/projects/sessions/components/session/claude/ToolCollapsibleWrapper";
 import { ToolResultRenderer } from "@/client/pages/projects/sessions/components/session/claude/tools/ToolResultRenderer";
 import type { WebSearchToolInput } from "@/shared/types/tool.types";
-import type { UnifiedImageBlock } from '@repo/agent-cli-sdk';
+import type { UnifiedImageBlock } from 'agent-cli-sdk';
 
 interface WebSearchToolBlockProps {
   input: WebSearchToolInput;

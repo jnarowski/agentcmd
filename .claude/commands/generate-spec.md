@@ -1,23 +1,23 @@
 ---
-description: Generate implementation spec with complexity estimates and write to numbered spec file
-argument-hint: [number-or-feature-name, format]
+description: Generate implementation spec with complexity estimates and write to spec file with random ID
+argument-hint: [id-or-feature-name, format]
 ---
 
 # Generate Implementation Spec with Complexity
 
-Generate a well-structured implementation spec with complexity estimates and save it to `.agent/specs/[number]-[feature]-spec.md` (or `.json`) with automatic numbering.
+Generate a well-structured implementation spec with complexity estimates and save it to `.agent/specs/[id]-[feature]-spec.md` (or `.json`) with random 3-character ID.
 
 ## Variables
 
-- $numberOrFeatureName: $1 (required) - Either a spec number (e.g., `17`) OR a feature name (e.g., `auth-improvements`)
+- $idOrFeatureName: $1 (required) - Either a spec ID (e.g., `ef3`) OR a feature name (e.g., `auth-improvements`)
 - $format: $2 (optional) - Output format: `markdown` (default) or `json`
 
 ## Instructions
 
 - **IMPORTANT**: Use your reasoning model - THINK HARD about feature requirements, design, implementation approach, AND complexity
-- Auto-detect whether $1 is a number or feature name
-- If number: Scan `.agent/specs/todo/` and `.agent/specs/done/` to find next available number
-- If feature name: Auto-increment to next spec number
+- Auto-detect whether $1 is an ID or feature name
+- If ID: Use provided ID (e.g., `ef3`)
+- If feature name: Generate random 3-character lowercase alphanumeric ID
 - Normalize feature name (lowercase, hyphenated) for the filename
 - Replace ALL `<placeholders>` with specific details relevant to that section
 - **Create detailed step-by-step tasks** grouped logically (e.g., by phase, component, or feature area)
@@ -46,13 +46,15 @@ Assign complexity based on **context window usage and cognitive load**, not time
 ## Workflow
 
 1. **Parse Arguments**:
-   - If $numberOrFeatureName is a number (e.g., `17`, `18`):
-     - Use that exact number
+   - If $idOrFeatureName is a 3-character alphanumeric ID (e.g., `ef3`, `a7b`):
+     - Use that exact ID
      - Infer feature name from conversation context or ask user
-   - If $numberOrFeatureName is a feature name (e.g., `auth-improvements`):
-     - Scan `.agent/specs/todo/` and `.agent/specs/done/` directories
-     - Find highest numbered spec (e.g., `17-agent-cli-sdk-1.0-refactor-spec.md` → 17)
-     - Use next number (18)
+   - If $idOrFeatureName is a feature name (e.g., `auth-improvements`):
+     - Generate random 3-character lowercase alphanumeric ID
+     - Characters: `abcdefghijklmnopqrstuvwxyz0123456789`
+     - Check if `.agent/specs/*/{id}-*-spec.md` exists
+     - If collision, retry (max 10 attempts)
+     - If 10 collisions, error with message to try again
      - Use provided feature name
 
 2. **Research Phase**:
@@ -82,10 +84,10 @@ Assign complexity based on **context window usage and cognitive load**, not time
    - Skip sections only if truly not applicable
 
 5. **Write File**:
-   - If $format is "json": Write to `.agent/specs/todo/[number]-${featureName}-spec.json`
-   - Otherwise: Write to `.agent/specs/todo/[number]-${featureName}-spec.md`
-   - Example (markdown): `.agent/specs/todo/18-auth-improvements-spec.md`
-   - Example (json): `.agent/specs/todo/18-auth-improvements-spec.json`
+   - If $format is "json": Write to `.agent/specs/todo/[id]-${featureName}-spec.json`
+   - Otherwise: Write to `.agent/specs/todo/[id]-${featureName}-spec.md`
+   - Example (markdown): `.agent/specs/todo/ef3-auth-improvements-spec.md`
+   - Example (json): `.agent/specs/todo/ef3-auth-improvements-spec.json`
 
 ## Template
 
@@ -436,18 +438,18 @@ When $format is "json", generate a JSON file with this structure (output raw JSO
 
 ## Examples
 
-**Example 1: Using spec number**
+**Example 1: Using spec ID**
 ```
-/generate-spec 18
+/generate-spec ef3
 ```
-Uses number 18, asks user for feature name or infers from context
+Uses ID ef3, asks user for feature name or infers from context
 
-**Example 2: Using feature name (auto-increment)**
+**Example 2: Using feature name (random ID)**
 ```bash
 /generate-spec auth-improvements
 ```
 
-Scans todo/ and done/ directories, finds highest number is 17, creates: `.agent/specs/todo/18-auth-improvements-spec.md`
+Generates random ID (e.g., `a7b`), creates: `.agent/specs/todo/a7b-auth-improvements-spec.md`
 
 **Example 3: Using feature name with hyphens**
 
@@ -455,7 +457,7 @@ Scans todo/ and done/ directories, finds highest number is 17, creates: `.agent/
 /generate-spec websocket-reconnect-improvements
 ```
 
-Auto-increments number, creates: `.agent/specs/todo/18-websocket-reconnect-improvements-spec.md`
+Generates random ID (e.g., `x9z`), creates: `.agent/specs/todo/x9z-websocket-reconnect-improvements-spec.md`
 
 **Example 4: Using JSON format**
 
@@ -463,24 +465,23 @@ Auto-increments number, creates: `.agent/specs/todo/18-websocket-reconnect-impro
 /generate-spec auth-improvements json
 ```
 
-Creates: `.agent/specs/todo/18-auth-improvements-spec.json`
+Creates: `.agent/specs/todo/{random-id}-auth-improvements-spec.json`
 
-**Example 5: Using spec number with JSON format**
+**Example 5: Using spec ID with JSON format**
 
 ```bash
-/generate-spec 18 json
+/generate-spec ef3 json
 ```
 
-Uses number 18, creates JSON spec file
+Uses ID ef3, creates JSON spec file
 
 ## Common Pitfalls
 
 - **Wrong directory**: Always write to `.agent/specs/todo/`, not `.agent/specs/` or `.agents/specs/`
-- **Number collisions**: Check existing files in both todo/ and done/ before writing to avoid overwriting
+- **ID collisions**: Retry generation if collision detected (handled automatically, max 10 retries)
 - **Generic placeholders**: Replace all `<placeholders>` with actual content
 - **Missing complexity scores**: EVERY task must have a `[X/10]` complexity score
 - **Including hours**: Do NOT include hour estimates - use complexity points only
-- **Ambiguous input**: If input could be either number or feature name, prefer treating it as feature name (e.g., "17" is a number, "v17-migration" is a feature name)
 - **Status field**: Use lowercase status values: `draft`, `ready`, `in-progress`, `review`, `completed`
 - **Complexity calculations**: Ensure phase totals and averages are accurate
 
@@ -493,8 +494,8 @@ Uses number 18, creates JSON spec file
 ```json
 {
   "success": true,
-  "spec_path": ".agent/specs/todo/[number]-[feature]-spec.json",
-  "spec_number": "[number]",
+  "spec_path": ".agent/specs/todo/[id]-[feature]-spec.json",
+  "spec_id": "[id]",
   "feature_name": "[feature-name]",
   "format": "json",
   "complexity": {
@@ -503,7 +504,7 @@ Uses number 18, creates JSON spec file
   },
   "files_to_create": ["[filepath1]", "[filepath2]"],
   "files_to_modify": ["[filepath3]", "[filepath4]"],
-  "next_command": "/implement-spec [number]"
+  "next_command": "/implement-spec [id]"
 }
 ```
 
@@ -511,7 +512,7 @@ Uses number 18, creates JSON spec file
 
 - `success`: Always true if spec generation completed
 - `spec_path`: Path to the generated spec file
-- `spec_number`: The spec number used
+- `spec_id`: The spec ID used (3-character alphanumeric)
 - `feature_name`: Normalized feature name (lowercase, hyphenated)
 - `format`: Output format used ("json" or "markdown")
 - `complexity`: Total and average complexity scores
@@ -524,16 +525,16 @@ Uses number 18, creates JSON spec file
 Otherwise, provide this human-readable information:
 
 1. Report the full path to the created file
-2. Display the spec number used
+2. Display the spec ID used
 3. Show complexity summary
 4. Suggest next steps
 
 **Format:**
 
 ```text
-✓ Created spec file: .agent/specs/todo/[number]-[feature]-spec.md
+✓ Created spec file: .agent/specs/todo/[id]-[feature]-spec.md
 
 Complexity: [X] points (avg [X.X]/10) across [N] tasks in [N] phases
 
-Next: /implement-spec [number]
+Next: /implement-spec [id]
 ```

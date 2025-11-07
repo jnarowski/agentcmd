@@ -7,7 +7,7 @@ import type {
   AiStepConfig,
   AiStepResult,
   StepOptions,
-} from "@repo/workflow-sdk";
+} from "agentcmd-workflows";
 import { executeStep } from "./utils/executeStep";
 import { withTimeout } from "./utils/withTimeout";
 import { toId } from "./utils/toId";

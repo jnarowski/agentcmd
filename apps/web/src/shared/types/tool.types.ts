@@ -18,7 +18,7 @@ export type {
   TaskToolInput,
   AskUserQuestionToolInput,
   ExitPlanModeToolInput,
-} from '@repo/agent-cli-sdk';
+} from 'agent-cli-sdk';
 
 // Re-export type guards
 export {
@@ -28,4 +28,4 @@ export {
   isEditTool,
   isGlobTool,
   isGrepTool,
-} from '@repo/agent-cli-sdk';
+} from 'agent-cli-sdk';

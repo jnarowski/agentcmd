@@ -1,4 +1,4 @@
-import type { PermissionMode } from "@repo/agent-cli-sdk";
+import type { PermissionMode } from "agent-cli-sdk";
 
 /**
  * Permission modes configuration for Claude Code sessions

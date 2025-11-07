@@ -5,7 +5,7 @@
 import { ToolCollapsibleWrapper } from "@/client/pages/projects/sessions/components/session/claude/ToolCollapsibleWrapper";
 import { TodoWriteToolRenderer } from "@/client/pages/projects/sessions/components/session/claude/tools/TodoWriteToolRenderer";
 import type { TodoWriteToolInput } from "@/shared/types/tool.types";
-import type { UnifiedImageBlock } from '@repo/agent-cli-sdk';
+import type { UnifiedImageBlock } from 'agent-cli-sdk';
 
 interface TodoWriteToolBlockProps {
   input: TodoWriteToolInput;

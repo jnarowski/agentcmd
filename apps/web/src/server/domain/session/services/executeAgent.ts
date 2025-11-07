@@ -1,4 +1,4 @@
-import { execute, type PermissionMode } from "@repo/agent-cli-sdk";
+import { execute, type PermissionMode } from "agent-cli-sdk";
 import { activeSessions } from "@/server/websocket/infrastructure/active-sessions";
 import type { ChildProcess } from "node:child_process";
 

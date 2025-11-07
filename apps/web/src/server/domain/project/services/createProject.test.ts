@@ -8,11 +8,17 @@ import {
 import { prisma } from "@/shared/prisma";
 import { cleanTestDB } from "@/server/test-utils/db";
 import { createProject } from "./createProject";
-import * as getCurrentBranchModule from "@/server/domain/git/services/getCurrentBranch";
+import * as isGitRepositoryModule from "@/server/domain/git/services/isGitRepository";
+import * as checkWorkflowPackageModule from "@/server/domain/project/services/checkWorkflowPackage";
 
-// Mock getCurrentBranch to avoid filesystem dependencies
-vi.mock("@/server/domain/git/services/getCurrentBranch", () => ({
-  getCurrentBranch: vi.fn(),
+// Mock isGitRepository to avoid filesystem dependencies
+vi.mock("@/server/domain/git/services/isGitRepository", () => ({
+  isGitRepository: vi.fn(),
+}));
+
+// Mock checkWorkflowPackage to avoid filesystem dependencies
+vi.mock("@/server/domain/project/services/checkWorkflowPackage", () => ({
+  checkWorkflowPackage: vi.fn(),
 }));
 
 describe("createProject", () => {
@@ -23,11 +29,20 @@ describe("createProject", () => {
 
   describe("success cases", () => {
     it("creates project with git branch detection", async () => {
-    // Arrange: Mock git branch detection
-    const mockGetCurrentBranch = vi.mocked(
-      getCurrentBranchModule.getCurrentBranch
-    );
-    mockGetCurrentBranch.mockResolvedValue("main");
+    // Arrange: Mock capability detection
+    const mockIsGitRepository = vi.mocked(isGitRepositoryModule.isGitRepository);
+    mockIsGitRepository.mockResolvedValue({
+      initialized: true,
+      error: null,
+      branch: "main",
+    });
+
+    const mockCheckWorkflowPackage = vi.mocked(checkWorkflowPackageModule.checkWorkflowPackage);
+    mockCheckWorkflowPackage.mockResolvedValue({
+      hasPackageJson: true,
+      installed: true,
+      version: "1.0.0",
+    });
 
     const input = {
       name: "Test Project",
@@ -44,12 +59,14 @@ describe("createProject", () => {
     expect(project.path).toBe("/tmp/test-project");
     expect(project.is_hidden).toBe(false);
     expect(project.is_starred).toBe(false);
-    expect(project.current_branch).toBe("main");
+    expect(project.capabilities.git.initialized).toBe(true);
+    expect(project.capabilities.git.branch).toBe("main");
+    expect(project.capabilities.workflow_sdk.installed).toBe(true);
     expect(project.created_at).toBeInstanceOf(Date);
     expect(project.updated_at).toBeInstanceOf(Date);
 
-    expect(mockGetCurrentBranch).toHaveBeenCalledWith({ projectPath: "/tmp/test-project" });
-    expect(mockGetCurrentBranch).toHaveBeenCalledTimes(1);
+    expect(mockIsGitRepository).toHaveBeenCalledWith("/tmp/test-project");
+    expect(mockCheckWorkflowPackage).toHaveBeenCalledWith({ projectPath: "/tmp/test-project" });
 
     const dbProject = await prisma.project.findUnique({
       where: { id: project.id },
@@ -61,10 +78,19 @@ describe("createProject", () => {
 
     it("creates multiple projects concurrently", async () => {
       // Arrange
-      const mockGetCurrentBranch = vi.mocked(
-        getCurrentBranchModule.getCurrentBranch
-      );
-      mockGetCurrentBranch.mockResolvedValue("main");
+      const mockIsGitRepository = vi.mocked(isGitRepositoryModule.isGitRepository);
+      mockIsGitRepository.mockResolvedValue({
+        initialized: true,
+        error: null,
+        branch: "main",
+      });
+
+      const mockCheckWorkflowPackage = vi.mocked(checkWorkflowPackageModule.checkWorkflowPackage);
+      mockCheckWorkflowPackage.mockResolvedValue({
+        hasPackageJson: true,
+        installed: true,
+        version: "1.0.0",
+      });
 
       // Act
       const [project1, project2, project3] = await Promise.all([
@@ -91,15 +117,15 @@ describe("createProject", () => {
       // Assert
       expect(project1.name).toBe("Project 1");
       expect(project1.path).toBe("/tmp/project-1");
-      expect(project1.current_branch).toBe("main");
+      expect(project1.capabilities.git.branch).toBe("main");
 
       expect(project2.name).toBe("Project 2");
       expect(project2.path).toBe("/tmp/project-2");
-      expect(project2.current_branch).toBe("main");
+      expect(project2.capabilities.git.branch).toBe("main");
 
       expect(project3.name).toBe("Project 3");
       expect(project3.path).toBe("/tmp/project-3");
-      expect(project3.current_branch).toBe("main");
+      expect(project3.capabilities.git.branch).toBe("main");
 
       const projects = await prisma.project.findMany({
         orderBy: { name: "asc" },
@@ -109,10 +135,19 @@ describe("createProject", () => {
 
     it("sets timestamps correctly on creation", async () => {
       // Arrange
-      const mockGetCurrentBranch = vi.mocked(
-        getCurrentBranchModule.getCurrentBranch
-      );
-      mockGetCurrentBranch.mockResolvedValue("main");
+      const mockIsGitRepository = vi.mocked(isGitRepositoryModule.isGitRepository);
+      mockIsGitRepository.mockResolvedValue({
+        initialized: true,
+        error: null,
+        branch: "main",
+      });
+
+      const mockCheckWorkflowPackage = vi.mocked(checkWorkflowPackageModule.checkWorkflowPackage);
+      mockCheckWorkflowPackage.mockResolvedValue({
+        hasPackageJson: false,
+        installed: false,
+        version: null,
+      });
 
       // Act
       const project = await createProject({
@@ -135,12 +170,21 @@ describe("createProject", () => {
   });
 
   describe("git integration", () => {
-    it("sets current_branch undefined when no git repo", async () => {
-    // Arrange: Mock getCurrentBranch returning null (no git repo)
-    const mockGetCurrentBranch = vi.mocked(
-      getCurrentBranchModule.getCurrentBranch
-    );
-    mockGetCurrentBranch.mockResolvedValue(null);
+    it("sets git capabilities when no git repo", async () => {
+    // Arrange: Mock isGitRepository returning not initialized
+    const mockIsGitRepository = vi.mocked(isGitRepositoryModule.isGitRepository);
+    mockIsGitRepository.mockResolvedValue({
+      initialized: false,
+      error: null,
+      branch: null,
+    });
+
+    const mockCheckWorkflowPackage = vi.mocked(checkWorkflowPackageModule.checkWorkflowPackage);
+    mockCheckWorkflowPackage.mockResolvedValue({
+      hasPackageJson: false,
+      installed: false,
+      version: null,
+    });
 
     const input = {
       name: "Non-Git Project",
@@ -154,38 +198,56 @@ describe("createProject", () => {
     expect(project).toBeDefined();
     expect(project.name).toBe("Non-Git Project");
     expect(project.path).toBe("/tmp/non-git-project");
-    expect(project.current_branch).toBeUndefined();
+    expect(project.capabilities.git.initialized).toBe(false);
+    expect(project.capabilities.git.branch).toBeNull();
 
-    expect(mockGetCurrentBranch).toHaveBeenCalledWith({ projectPath: "/tmp/non-git-project" });
+    expect(mockIsGitRepository).toHaveBeenCalledWith("/tmp/non-git-project");
     });
 
-    it("propagates error when getCurrentBranch fails", async () => {
+    it("handles errors gracefully and doesn't fail project creation", async () => {
       // Arrange
-      const mockGetCurrentBranch = vi.mocked(
-        getCurrentBranchModule.getCurrentBranch
-      );
-      mockGetCurrentBranch.mockRejectedValue(new Error("Git command failed"));
+      const mockIsGitRepository = vi.mocked(isGitRepositoryModule.isGitRepository);
+      mockIsGitRepository.mockRejectedValue(new Error("Git command failed"));
+
+      const mockCheckWorkflowPackage = vi.mocked(checkWorkflowPackageModule.checkWorkflowPackage);
+      mockCheckWorkflowPackage.mockResolvedValue({
+        hasPackageJson: false,
+        installed: false,
+        version: null,
+      });
 
       const input = {
         name: "Test Project",
         path: "/tmp/test-project",
       };
 
-      // Act & Assert
-      await expect(createProject({ data: input })).rejects.toThrow("Git command failed");
+      // Act
+      const project = await createProject({ data: input });
 
-      // Note: In production, consider catching this error and setting
-      // current_branch to null instead of failing the entire operation
+      // Assert: Project still created with error capabilities
+      expect(project).toBeDefined();
+      expect(project.capabilities.git.initialized).toBe(false);
+      expect(project.capabilities.git.error).toBe("Git command failed");
+      expect(project.capabilities.git.branch).toBeNull();
     });
   });
 
   describe("validation & constraints", () => {
     it("rejects duplicate path", async () => {
     // Arrange: Create first project
-    const mockGetCurrentBranch = vi.mocked(
-      getCurrentBranchModule.getCurrentBranch
-    );
-    mockGetCurrentBranch.mockResolvedValue("main");
+    const mockIsGitRepository = vi.mocked(isGitRepositoryModule.isGitRepository);
+    mockIsGitRepository.mockResolvedValue({
+      initialized: true,
+      error: null,
+      branch: "main",
+    });
+
+    const mockCheckWorkflowPackage = vi.mocked(checkWorkflowPackageModule.checkWorkflowPackage);
+    mockCheckWorkflowPackage.mockResolvedValue({
+      hasPackageJson: false,
+      installed: false,
+      version: null,
+    });
 
     await createProject({
       data: {
@@ -212,11 +274,20 @@ describe("createProject", () => {
     });
 
     it("allows empty name (validation happens at route layer)", async () => {
-    // Arrange: Mock git branch detection
-    const mockGetCurrentBranch = vi.mocked(
-      getCurrentBranchModule.getCurrentBranch
-    );
-    mockGetCurrentBranch.mockResolvedValue("main");
+    // Arrange: Mock capability detection
+    const mockIsGitRepository = vi.mocked(isGitRepositoryModule.isGitRepository);
+    mockIsGitRepository.mockResolvedValue({
+      initialized: true,
+      error: null,
+      branch: "main",
+    });
+
+    const mockCheckWorkflowPackage = vi.mocked(checkWorkflowPackageModule.checkWorkflowPackage);
+    mockCheckWorkflowPackage.mockResolvedValue({
+      hasPackageJson: false,
+      installed: false,
+      version: null,
+    });
 
     const input = {
       name: "",
@@ -233,11 +304,20 @@ describe("createProject", () => {
     });
 
     it("allows empty path (validation happens at route layer)", async () => {
-    // Arrange: Mock git branch detection
-    const mockGetCurrentBranch = vi.mocked(
-      getCurrentBranchModule.getCurrentBranch
-    );
-    mockGetCurrentBranch.mockResolvedValue("main");
+    // Arrange: Mock capability detection
+    const mockIsGitRepository = vi.mocked(isGitRepositoryModule.isGitRepository);
+    mockIsGitRepository.mockResolvedValue({
+      initialized: false,
+      error: null,
+      branch: null,
+    });
+
+    const mockCheckWorkflowPackage = vi.mocked(checkWorkflowPackageModule.checkWorkflowPackage);
+    mockCheckWorkflowPackage.mockResolvedValue({
+      hasPackageJson: false,
+      installed: false,
+      version: null,
+    });
 
     const input = {
       name: "Test Project",

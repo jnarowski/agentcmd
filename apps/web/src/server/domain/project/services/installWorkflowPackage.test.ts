@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { installWorkflowSdk } from "./installWorkflowSdk";
+import { installWorkflowPackage } from "./installWorkflowPackage";
 import * as fs from "node:fs/promises";
 import * as child_process from "node:child_process";
 import type { ChildProcess } from "node:child_process";
@@ -8,7 +8,7 @@ import { EventEmitter } from "node:events";
 vi.mock("node:fs/promises");
 vi.mock("node:child_process");
 
-describe("installWorkflowSdk", () => {
+describe("installWorkflowPackage", () => {
   const mockProjectPath = "/fake/project";
 
   beforeEach(() => {
@@ -46,20 +46,20 @@ describe("installWorkflowSdk", () => {
     // Mock successful install command
     const installProcess = createMockProcess(
       0,
-      "Installing @repo/workflow-sdk...\nSuccess!"
+      "Installing agentcmd-workflows...\nSuccess!"
     );
     // Mock successful init command
     const initProcess = createMockProcess(
       0,
-      "Initializing workflow-sdk...\nCreated .agent/workflows/"
+      "Initializing agentcmd-workflows...\nCreated .agent/workflows/"
     );
 
     vi.mocked(child_process.spawn)
-      .mockReturnValueOnce(installProcess) // pnpm add -D @repo/workflow-sdk
-      .mockReturnValueOnce(initProcess); // pnpm workflow-sdk init --yes
+      .mockReturnValueOnce(installProcess) // pnpm add -D agentcmd-workflows
+      .mockReturnValueOnce(initProcess); // pnpm agentcmd-workflows init --yes
 
-    // When: installWorkflowSdk()
-    const result = await installWorkflowSdk({ projectPath: mockProjectPath });
+    // When: installWorkflowPackage()
+    const result = await installWorkflowPackage({ projectPath: mockProjectPath });
 
     // Then: Creates package.json, installs SDK, runs init
     expect(fs.writeFile).toHaveBeenCalledWith(
@@ -70,20 +70,20 @@ describe("installWorkflowSdk", () => {
 
     expect(child_process.spawn).toHaveBeenCalledWith(
       "pnpm",
-      ["add", "-D", "@repo/workflow-sdk"],
+      ["add", "-D", "agentcmd-workflows"],
       expect.objectContaining({ cwd: mockProjectPath })
     );
 
     expect(child_process.spawn).toHaveBeenCalledWith(
       "pnpm",
-      ["workflow-sdk", "init", "--yes"],
+      ["agentcmd-workflows", "init", "--yes"],
       expect.objectContaining({ cwd: mockProjectPath })
     );
 
     expect(result).toEqual({
       success: true,
-      message: "Workflow SDK installed and initialized successfully",
-      output: expect.stringContaining("Installing @repo/workflow-sdk"),
+      message: "Workflow package installed and initialized successfully",
+      output: expect.stringContaining("Installing agentcmd-workflows"),
     });
   });
 
@@ -100,15 +100,15 @@ describe("installWorkflowSdk", () => {
     const initProcess = createMockProcess(
       1,
       "",
-      "Error: workflow-sdk command not found"
+      "Error: agentcmd-workflows command not found"
     );
 
     vi.mocked(child_process.spawn)
       .mockReturnValueOnce(installProcess)
       .mockReturnValueOnce(initProcess);
 
-    // When: installWorkflowSdk()
-    const result = await installWorkflowSdk({ projectPath: mockProjectPath });
+    // When: installWorkflowPackage()
+    const result = await installWorkflowPackage({ projectPath: mockProjectPath });
 
     // Then: Returns success=true with warning message
     expect(result.success).toBe(true);
@@ -132,8 +132,8 @@ describe("installWorkflowSdk", () => {
 
     vi.mocked(child_process.spawn).mockReturnValueOnce(installProcess);
 
-    // When: installWorkflowSdk()
-    const result = await installWorkflowSdk({ projectPath: mockProjectPath });
+    // When: installWorkflowPackage()
+    const result = await installWorkflowPackage({ projectPath: mockProjectPath });
 
     // Then: Returns success=false with error message
     expect(result.success).toBe(false);

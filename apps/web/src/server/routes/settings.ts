@@ -8,7 +8,7 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import { z } from "zod";
 import { buildSuccessResponse } from "@/server/utils/response";
-import { getCapabilities } from "@repo/agent-cli-sdk";
+import { getCapabilities } from "agent-cli-sdk";
 import { config } from "@/server/config/Configuration";
 import { prisma } from "@/shared/prisma";
 import '@/server/plugins/auth';

@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { AlertCircle, CheckCircle2, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from "@/client/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/client/components/ui/collapsible";
-import type { UnifiedImageBlock } from '@repo/agent-cli-sdk';
+import type { UnifiedImageBlock } from 'agent-cli-sdk';
 
 interface ToolResultRendererProps {
   result: string | UnifiedImageBlock;

@@ -2,7 +2,7 @@ import { useEffect, useCallback, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSessionStore } from "@/client/pages/projects/sessions/stores/sessionStore";
 import { useWebSocket } from "@/client/hooks/useWebSocket";
-import type { UnifiedContent, PermissionMode, AgentType } from "@repo/agent-cli-sdk";
+import type { UnifiedContent, PermissionMode, AgentType } from "agent-cli-sdk";
 import {
   SessionEventTypes,
   type SessionEvent,
