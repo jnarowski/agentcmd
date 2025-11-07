@@ -1,0 +1,55 @@
+{
+  "id": "70c0913d-2ece-4158-a156-4118988540ec",
+  "timestamp": "2025-10-29T10:37:08.914Z",
+  "type": "gemini",
+  "content": "",
+  "toolCalls": [
+    {
+      "id": "replace-1761734228885-7a63ed9561c45",
+      "name": "replace",
+      "args": {
+        "file_path": "/private/tmp/gemini-test/created.txt",
+        "instruction": "Change \"Hello\" to \"Goodbye\"",
+        "new_string": "Goodbye from Gemini CLI",
+        "old_string": "Hello from Gemini CLI"
+      },
+      "result": [
+        {
+          "functionResponse": {
+            "id": "replace-1761734228885-7a63ed9561c45",
+            "name": "replace",
+            "response": {
+              "output": "Successfully modified file: /private/tmp/gemini-test/created.txt (1 replacements)."
+            }
+          }
+        }
+      ],
+      "status": "success",
+      "timestamp": "2025-10-29T10:37:08.914Z",
+      "displayName": "Edit",
+      "description": "Replaces text within a file. Replaces a single occurrence. This tool requires providing significant context around the change to ensure precise targeting. Always use the read_file tool to examine the file's current content before attempting a text replacement.\n      \n      The user has the ability to modify the `new_string` content. If modified, this will be stated in the response.\n      \n      Expectation for required parameters:\n      1. `file_path` MUST be an absolute path; otherwise an error will be thrown.\n      2. `old_string` MUST be the exact literal text to replace (including all whitespace, indentation, newlines, and surrounding code etc.).\n      3. `new_string` MUST be the exact literal text to replace `old_string` with (also including all whitespace, indentation, newlines, and surrounding code etc.). Ensure the resulting code is correct and idiomatic and that `old_string` and `new_string` are different.\n      4. `instruction` is the detailed instruction of what needs to be changed. It is important to Make it specific and detailed so developers or large language models can understand what needs to be changed and perform the changes on their own if necessary. \n      5. NEVER escape `old_string` or `new_string`, that would break the exact literal text requirement.\n      **Important:** If ANY of the above are not satisfied, the tool will fail. CRITICAL for `old_string`: Must uniquely identify the single instance to change. Include at least 3 lines of context BEFORE and AFTER the target text, matching whitespace and indentation precisely. If this string matches multiple locations, or does not match exactly, the tool will fail.\n      6. Prefer to break down complex and long changes into multiple smaller atomic calls to this tool. Always check the content of the file after changes or not finding a string to match.\n      **Multiple replacements:** If there are multiple and ambiguous occurences of the `old_string` in the file, the tool will also fail.",
+      "renderOutputAsMarkdown": true
+    }
+  ],
+  "thoughts": [
+    {
+      "subject": "Processing the Replacement Task",
+      "description": "I've successfully read the file. I've noted the content that needs to be modified. My next step is to execute the `replace` tool, substituting \"Hello\" with \"Goodbye\" as the instructions dictate. I am confident in my planned action.",
+      "timestamp": "2025-10-29T10:37:08.007Z"
+    },
+    {
+      "subject": "Planning the Execution",
+      "description": "I've got the necessary parameters to proceed. The file path, the target string, and the replacement string are all set. Time to invoke the `replace` tool now, using the parameters I've just defined. After that, I will evaluate the outcome.",
+      "timestamp": "2025-10-29T10:37:08.871Z"
+    }
+  ],
+  "model": "gemini-2.5-pro",
+  "tokens": {
+    "input": 5393,
+    "output": 39,
+    "cached": 4029,
+    "thoughts": 151,
+    "tool": 0,
+    "total": 5583
+  }
+}

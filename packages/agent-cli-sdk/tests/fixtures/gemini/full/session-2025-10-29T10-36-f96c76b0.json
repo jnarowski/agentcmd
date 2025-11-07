@@ -1,0 +1,83 @@
+{
+  "sessionId": "f96c76b0-f4ed-448c-833c-16856e3585c7",
+  "projectHash": "cde655816f6d3e439a10953ef9e111dbe460d7de3bc212c414a03ede4bf0b307",
+  "startTime": "2025-10-29T10:36:42.868Z",
+  "lastUpdated": "2025-10-29T10:36:48.240Z",
+  "messages": [
+    {
+      "id": "f29d1670-7aee-4adf-8f1d-2791472f847c",
+      "timestamp": "2025-10-29T10:36:42.868Z",
+      "type": "user",
+      "content": "Create a new file at /tmp/gemini-test/created.txt with the content 'Hello from Gemini CLI'\n\n\n"
+    },
+    {
+      "id": "b69c1d35-d34e-4ae2-8a9b-98da5ca45d78",
+      "timestamp": "2025-10-29T10:36:46.304Z",
+      "type": "gemini",
+      "content": "",
+      "toolCalls": [
+        {
+          "id": "write_file-1761734206262-8f3d4cee1f321",
+          "name": "write_file",
+          "args": {
+            "file_path": "/tmp/gemini-test/created.txt",
+            "content": "Hello from Gemini CLI"
+          },
+          "result": [
+            {
+              "functionResponse": {
+                "id": "write_file-1761734206262-8f3d4cee1f321",
+                "name": "write_file",
+                "response": {
+                  "output": "Successfully created and wrote to new file: /tmp/gemini-test/created.txt."
+                }
+              }
+            }
+          ],
+          "status": "success",
+          "timestamp": "2025-10-29T10:36:46.304Z",
+          "displayName": "WriteFile",
+          "description": "Writes content to a specified file in the local filesystem.\n\n      The user has the ability to modify `content`. If modified, this will be stated in the response.",
+          "renderOutputAsMarkdown": true
+        }
+      ],
+      "thoughts": [
+        {
+          "subject": "Evaluating File Creation Method",
+          "description": "I'm zeroing in on the file creation. Considering the user's requirements, the `write_file` tool seems like the perfect fit. I've got the path and content locked and loaded. The next step is to execute the tool call!",
+          "timestamp": "2025-10-29T10:36:45.125Z"
+        },
+        {
+          "subject": "Finalizing Tool Parameters",
+          "description": "I'm ready to move forward. The file path and content are set. I've confirmed that the `write_file` tool is ideal and have prepped the arguments. I'm confident that the file, containing \"Hello from Gemini CLI\", will be created at `/tmp/gemini-test/created.txt`. I'm ready for the call.",
+          "timestamp": "2025-10-29T10:36:46.257Z"
+        }
+      ],
+      "model": "gemini-2.5-pro",
+      "tokens": {
+        "input": 5366,
+        "output": 21,
+        "cached": 0,
+        "thoughts": 128,
+        "tool": 0,
+        "total": 5515
+      }
+    },
+    {
+      "id": "1119e177-a37f-4be0-9dc1-6080c1c58c16",
+      "timestamp": "2025-10-29T10:36:48.240Z",
+      "type": "gemini",
+      "content": "Done.",
+      "thoughts": [],
+      "tokens": {
+        "input": 5536,
+        "output": 3,
+        "cached": 1362,
+        "thoughts": 0,
+        "tool": 0,
+        "total": 5539
+      },
+      "model": "gemini-2.5-pro"
+    }
+  ]
+}

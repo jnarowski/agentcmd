@@ -1,0 +1,62 @@
+{
+  "name": "@repo/workflow-sdk",
+  "version": "1.0.0",
+  "description": "Type-safe workflow SDK for Sourceborn workflow engine",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./cli": {
+      "types": "./dist/cli.d.ts",
+      "import": "./dist/cli.js"
+    }
+  },
+  "bin": {
+    "workflow-sdk": "./bin/workflow-sdk.js"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "templates"
+  ],
+  "scripts": {
+    "build": "bunchee",
+    "dev": "bunchee --watch",
+    "clean": "rm -rf dist",
+    "check-types": "tsc --noEmit",
+    "gen-slash-types": "node dist/cli.js generate-slash-types",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "workflow",
+    "orchestration",
+    "inngest",
+    "typescript",
+    "sourceborn"
+  ],
+  "author": "Sourceborn",
+  "license": "MIT",
+  "peerDependencies": {
+    "inngest": "^3.0.0"
+  },
+  "dependencies": {
+    "commander": "^14.0.2",
+    "gray-matter": "^4.0.3"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/commander": "^2.12.5",
+    "@types/json-schema": "^7.0.15",
+    "@types/node": "^22.0.0",
+    "bunchee": "^6.6.2",
+    "inngest": "^3.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^4.0.0"
+  }
+}

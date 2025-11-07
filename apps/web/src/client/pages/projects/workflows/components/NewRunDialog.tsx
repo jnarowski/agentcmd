@@ -1,0 +1,603 @@
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { BaseDialog } from "@/client/components/BaseDialog";
+import {
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/client/components/ui/dialog";
+import { Button } from "@/client/components/ui/button";
+import { Input } from "@/client/components/ui/input";
+import { Label } from "@/client/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/client/components/ui/radio-group";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/client/components/ui/tabs";
+import { Combobox } from "@/client/components/ui/combobox";
+import { useCreateWorkflow } from "../hooks/useWorkflowMutations";
+import { api } from "@/client/utils/api-client";
+import type { WorkflowDefinition } from "../types";
+import { NewRunFormDialogArgSchemaFields } from "./NewRunFormDialogArgSchemaFields";
+
+interface NewRunDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  projectId: string;
+  definitionId: string;
+  definition?: WorkflowDefinition;
+  definitions?: WorkflowDefinition[];
+}
+
+export function NewRunDialog({
+  open,
+  onOpenChange,
+  projectId,
+  definitionId,
+  definition,
+  definitions,
+}: NewRunDialogProps) {
+  const navigate = useNavigate();
+  const createWorkflow = useCreateWorkflow();
+
+  const [selectedDefinitionId, setSelectedDefinitionId] = useState(
+    definitionId || ""
+  );
+  const [specInputType, setSpecInputType] = useState<"file" | "content">("file");
+  const [specFile, setSpecFile] = useState<string>("");
+  const [specContent, setSpecContent] = useState<string>("");
+  const [name, setName] = useState("");
+  const [args, setArgs] = useState<Record<string, unknown>>({});
+  const [branchFrom, setBranchFrom] = useState("main");
+  const [gitMode, setGitMode] = useState<"branch" | "worktree" | "current">(
+    "branch"
+  );
+  const [branchName, setBranchName] = useState("");
+  const [worktreeName, setWorktreeName] = useState("");
+  const [isGeneratingNames, setIsGeneratingNames] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Derive actual definition from selectedDefinitionId or prop
+  const actualDefinition = definition || definitions?.find((d) => d.id === selectedDefinitionId);
+
+  // Auto-select first definition when dialog opens with definitions prop
+  useEffect(() => {
+    if (open && !definitionId && definitions && definitions.length > 0 && !selectedDefinitionId) {
+      setSelectedDefinitionId(definitions[0].id);
+    }
+  }, [open, definitionId, definitions, selectedDefinitionId]);
+
+  // Reset dependent state when definition changes
+  useEffect(() => {
+    if (selectedDefinitionId && selectedDefinitionId !== definitionId) {
+      setSpecFile("");
+      setName("");
+      setArgs({});
+    }
+  }, [selectedDefinitionId, definitionId]);
+
+  // Fetch available spec files
+  const { data: specFiles } = useQuery({
+    queryKey: ["projects", projectId, "specs"],
+    queryFn: async () => {
+      const response = await api.get<{ data: string[] }>(
+        `/api/projects/${projectId}/specs`
+      );
+      return response.data;
+    },
+    enabled: open,
+  });
+
+  // Fetch available branches
+  const { data: branches } = useQuery({
+    queryKey: ["projects", projectId, "branches"],
+    queryFn: async () => {
+      const response = await api.get<{
+        data: Array<{ name: string; current: boolean }>;
+      }>(`/api/projects/${projectId}/branches`);
+      return response.data;
+    },
+    enabled: open,
+  });
+
+  // Transform branches to combobox options
+  const branchOptions = useMemo(() => {
+    if (!branches) return [];
+    return branches.map((branch) => ({
+      value: branch.name,
+      label: branch.name,
+      badge: branch.current ? "(current)" : undefined,
+    }));
+  }, [branches]);
+
+  // Transform spec files to combobox options
+  const specFileOptions = useMemo(() => {
+    if (!specFiles) return [];
+    return specFiles.map((file) => ({
+      value: file,
+      label: file,
+    }));
+  }, [specFiles]);
+
+  // Transform definitions to combobox options
+  const definitionOptions = useMemo(() => {
+    if (!definitions) return [];
+    return definitions.map((def) => ({
+      value: def.id,
+      label: def.name,
+      description: def.description || undefined,
+    }));
+  }, [definitions]);
+
+  // Auto-generate names from spec file using AI
+  useEffect(() => {
+    if (!specFile || !projectId) return;
+
+    const generateNames = async () => {
+      setIsGeneratingNames(true);
+      try {
+        const response = await api.post<{
+          data: { runName: string; branchName: string } | null;
+        }>("/api/workflows/generate-names-from-spec", {
+          projectId,
+          specFile,
+        });
+
+        const names = response.data;
+        if (names) {
+          setName(names.runName);
+          setBranchName(names.branchName);
+          setWorktreeName(names.branchName);
+        }
+      } catch {
+        // Silent failure - user can still manually enter names
+      } finally {
+        setIsGeneratingNames(false);
+      }
+    };
+
+    generateNames();
+  }, [specFile, projectId]);
+
+  // Auto-generate branch/worktree name from run name
+  useEffect(() => {
+    if (name && gitMode !== "current") {
+      const slug = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+
+      if (gitMode === "branch") {
+        setBranchName(slug);
+      } else {
+        setWorktreeName(slug);
+      }
+    }
+  }, [name, gitMode]);
+
+  const handleCreate = async () => {
+    setError(null);
+
+    // Validate workflow definition (only when definitions prop is provided)
+    if (!definitionId && definitions && definitions.length > 0 && !selectedDefinitionId) {
+      setError("Workflow definition is required");
+      return;
+    }
+
+    // Validate name
+    if (!name.trim()) {
+      setError("Execution name is required");
+      return;
+    }
+
+    // Validate spec input
+    if (specInputType === "file" && !specFile) {
+      setError("Spec file is required");
+      return;
+    }
+    if (specInputType === "content" && !specContent.trim()) {
+      setError("Spec content is required");
+      return;
+    }
+
+    // Validate git mode (skip validation for 'current' mode)
+    if (gitMode === "branch" && !branchName.trim()) {
+      setError("Branch name is required");
+      return;
+    }
+    if (gitMode === "worktree" && !worktreeName.trim()) {
+      setError("Worktree name is required");
+      return;
+    }
+
+    try {
+      const run = await createWorkflow.mutateAsync({
+        projectId,
+        definitionId: selectedDefinitionId || definitionId,
+        name: name.trim(),
+        args,
+        spec_file: specInputType === "file" ? specFile : undefined,
+        spec_content: specInputType === "content" ? specContent : undefined,
+        branch_from: branchFrom || undefined,
+        branch_name: gitMode === "branch" ? branchName : undefined,
+        worktree_name: gitMode === "worktree" ? worktreeName : undefined,
+        // When gitMode is 'current', both branch_name and worktree_name are undefined
+      });
+
+      // Navigate to new run
+      navigate(
+        `/projects/${projectId}/workflows/${selectedDefinitionId || definitionId}/runs/${run.id}`
+      );
+
+      // Reset form and close dialog
+      setSpecInputType("file");
+      setSpecFile("");
+      setSpecContent("");
+      setName("");
+      setArgs({});
+      setBranchFrom("main");
+      setBranchName("");
+      setWorktreeName("");
+      setIsGeneratingNames(false);
+      setError(null);
+      onOpenChange(false);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to create run"
+      );
+    }
+  };
+
+  const handleCancel = () => {
+    setSpecInputType("file");
+    setSpecFile("");
+    setSpecContent("");
+    setName("");
+    setArgs({});
+    setBranchFrom("main");
+    setBranchName("");
+    setWorktreeName("");
+    setIsGeneratingNames(false);
+    setError(null);
+    onOpenChange(false);
+  };
+
+  return (
+    <BaseDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      contentProps={{ className: "sm:max-w-[650px]", noPadding: true }}
+    >
+      <DialogHeader className="px-6 pt-6 pb-4 border-b">
+        <DialogTitle className="text-2xl">New Workflow Run</DialogTitle>
+        <DialogDescription className="text-base">
+          {actualDefinition
+            ? `Create a new run of "${actualDefinition.name}"`
+            : "Create a new workflow run"}
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="space-y-4 px-6 py-4 max-h-[60vh] overflow-y-auto [&>div]:space-y-2">
+        {/* Workflow definition selection - only show when no definitionId provided */}
+        {!definitionId && definitions && definitions.length > 0 && (
+          <div>
+            <Label>Workflow Definition</Label>
+            <Combobox
+              value={selectedDefinitionId}
+              onValueChange={setSelectedDefinitionId}
+              options={definitionOptions}
+              placeholder="Select workflow definition..."
+              searchPlaceholder="Search definitions..."
+              emptyMessage="No workflow definitions found"
+              disabled={createWorkflow.isPending}
+            />
+            <p className="text-xs text-muted-foreground">
+              Choose the workflow template to run
+            </p>
+          </div>
+        )}
+
+        {/* Spec input type selection */}
+        <div>
+          <Label className="mb-2 block">Spec Input</Label>
+          <Tabs
+            value={specInputType}
+            onValueChange={(v) => setSpecInputType(v as "file" | "content")}
+          >
+            <TabsList>
+              <TabsTrigger value="file">Select from file</TabsTrigger>
+              <TabsTrigger value="content">Paste content</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="file" className="space-y-2 mt-3">
+              <Combobox
+                value={specFile}
+                onValueChange={setSpecFile}
+                options={specFileOptions}
+                placeholder="Select spec file..."
+                searchPlaceholder="Search spec files..."
+                emptyMessage="No spec files found"
+                disabled={createWorkflow.isPending}
+              />
+              <p className="text-xs text-muted-foreground">
+                Select from .agent/specs/todo/
+              </p>
+            </TabsContent>
+
+            <TabsContent value="content" className="space-y-2 mt-3">
+              <textarea
+                value={specContent}
+                onChange={(e) => setSpecContent(e.target.value)}
+                placeholder="Paste your spec content here..."
+                disabled={createWorkflow.isPending}
+                className="w-full min-h-[150px] rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-vertical"
+              />
+              <p className="text-xs text-muted-foreground">
+                Paste the spec content directly
+              </p>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Name input */}
+        <div>
+          <Label htmlFor="run-name">Run Name</Label>
+          <div className="relative">
+            <Input
+              id="run-name"
+              placeholder="e.g., Feature Implementation - API v2"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              disabled={createWorkflow.isPending || isGeneratingNames}
+            />
+            {isGeneratingNames && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <svg
+                  className="animate-spin h-4 w-4 text-muted-foreground"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+              </div>
+            )}
+          </div>
+          {isGeneratingNames && (
+            <p className="text-xs text-muted-foreground">
+              Generating names from spec...
+            </p>
+          )}
+        </div>
+
+        {/* Git mode: branch or worktree or current */}
+        <div className="space-y-3">
+          <Label>Git Mode</Label>
+          <RadioGroup
+            value={gitMode}
+            onValueChange={(v) =>
+              setGitMode(v as "branch" | "worktree" | "current")
+            }
+          >
+            {/* Branch option */}
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="branch" id="mode-branch" />
+                <Label
+                  htmlFor="mode-branch"
+                  className="font-normal cursor-pointer"
+                >
+                  Branch
+                </Label>
+              </div>
+              {gitMode === "branch" && (
+                <div className="ml-2 space-y-3 border-l-2 border-muted pl-3.5 py-3 [&>div]:space-y-2">
+                  {/* Branch Name */}
+                  <div>
+                    <Label htmlFor="branch-name">Branch Name</Label>
+                    <Input
+                      id="branch-name"
+                      placeholder="Auto-generated from run name"
+                      value={branchName}
+                      onChange={(e) => setBranchName(e.target.value)}
+                      disabled={createWorkflow.isPending}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Auto-generated, but you can edit
+                    </p>
+                  </div>
+                  {/* Branch From (optional) */}
+                  <div>
+                    <Label htmlFor="branch-from">Branch From (optional)</Label>
+                    <Combobox
+                      value={branchFrom}
+                      onValueChange={setBranchFrom}
+                      options={branchOptions}
+                      placeholder="Select branch (defaults to main)..."
+                      searchPlaceholder="Search branches..."
+                      emptyMessage="No branches found"
+                      disabled={createWorkflow.isPending}
+                      renderOption={(option, selected) => (
+                        <div className="flex items-center gap-2 flex-1">
+                          {selected && (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="size-4 shrink-0"
+                            >
+                              <path d="M20 6 9 17l-5-5" />
+                            </svg>
+                          )}
+                          <span className="flex-1">{option.label}</span>
+                          {option.badge && (
+                            <span className="text-xs text-muted-foreground">
+                              {option.badge}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Defaults to main if not specified
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Worktree option */}
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="worktree" id="mode-worktree" />
+                <Label
+                  htmlFor="mode-worktree"
+                  className="font-normal cursor-pointer"
+                >
+                  Worktree
+                </Label>
+              </div>
+              {gitMode === "worktree" && (
+                <div className="ml-2 space-y-3 border-l-2 border-muted pl-3.5 py-3 [&>div]:space-y-2">
+                  {/* Worktree Name */}
+                  <div>
+                    <Label htmlFor="worktree-name">Worktree Name</Label>
+                    <Input
+                      id="worktree-name"
+                      placeholder="Auto-generated from run name"
+                      value={worktreeName}
+                      onChange={(e) => setWorktreeName(e.target.value)}
+                      disabled={createWorkflow.isPending}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Auto-generated, but you can edit
+                    </p>
+                  </div>
+                  {/* Branch From (optional) */}
+                  <div>
+                    <Label htmlFor="worktree-branch-from">
+                      Branch From (optional)
+                    </Label>
+                    <Combobox
+                      value={branchFrom}
+                      onValueChange={setBranchFrom}
+                      options={branchOptions}
+                      placeholder="Select branch (defaults to main)..."
+                      searchPlaceholder="Search branches..."
+                      emptyMessage="No branches found"
+                      disabled={createWorkflow.isPending}
+                      renderOption={(option, selected) => (
+                        <div className="flex items-center gap-2 flex-1">
+                          {selected && (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="size-4 shrink-0"
+                            >
+                              <path d="M20 6 9 17l-5-5" />
+                            </svg>
+                          )}
+                          <span className="flex-1">{option.label}</span>
+                          {option.badge && (
+                            <span className="text-xs text-muted-foreground">
+                              {option.badge}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Defaults to main if not specified
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Current Branch option */}
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="current" id="mode-current" />
+              <Label
+                htmlFor="mode-current"
+                className="font-normal cursor-pointer"
+              >
+                Current Branch
+              </Label>
+            </div>
+          </RadioGroup>
+        </div>
+
+        {/* Args input - only show if workflow has args_schema with properties */}
+        {actualDefinition?.args_schema?.properties &&
+          Object.keys(actualDefinition.args_schema.properties).length > 0 && (
+            <div>
+              <Label htmlFor="run-args" className="text-base pb-2 pt-3">
+                Arguments
+              </Label>
+              <NewRunFormDialogArgSchemaFields
+                argsSchema={actualDefinition.args_schema}
+                values={args}
+                onChange={setArgs}
+                disabled={createWorkflow.isPending}
+              />
+              {actualDefinition?.description && (
+                <p className="text-xs text-muted-foreground">
+                  {actualDefinition.description}
+                </p>
+              )}
+            </div>
+          )}
+
+        {/* Error message */}
+        {error && (
+          <div className="rounded-md bg-red-50 dark:bg-red-950 p-3 text-sm text-red-600 dark:text-red-400">
+            {error}
+          </div>
+        )}
+      </div>
+
+      <DialogFooter className="px-6 pb-6 pt-4">
+        <Button
+          variant="outline"
+          onClick={handleCancel}
+          disabled={createWorkflow.isPending}
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={handleCreate}
+          disabled={
+            createWorkflow.isPending ||
+            (!definitionId && definitions && definitions.length > 0 && !selectedDefinitionId)
+          }
+        >
+          {createWorkflow.isPending ? "Creating..." : "Create Execution"}
+        </Button>
+      </DialogFooter>
+    </BaseDialog>
+  );
+}

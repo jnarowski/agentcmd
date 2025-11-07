@@ -1,0 +1,42 @@
+{
+  "id": "e50fb411-5b4b-4361-8b75-8230596732aa",
+  "timestamp": "2025-10-27T20:22:40.623Z",
+  "type": "gemini",
+  "content": "Okay, just `main.py`. I'll read its contents.",
+  "thoughts": [],
+  "tokens": {
+    "input": 5870,
+    "output": 41,
+    "cached": 5420,
+    "thoughts": 28,
+    "tool": 0,
+    "total": 5939
+  },
+  "model": "gemini-2.5-pro",
+  "toolCalls": [
+    {
+      "id": "read_file-1761596560623-cacaf894f3dbf",
+      "name": "read_file",
+      "args": {
+        "absolute_path": "/Users/jnarowski/Dev/playground/src/test-project/main.py"
+      },
+      "result": [
+        {
+          "functionResponse": {
+            "id": "read_file-1761596560623-cacaf894f3dbf",
+            "name": "read_file",
+            "response": {
+              "output": "def main():\n    \"\"\"\n    A simple AI agent that executes Python code.\n    \"\"\"\n    while True:\n        try:\n            code = input(\">>> \")\n            if code.lower() == 'exit':\n                break\n            exec(code)\n        except Exception as e:\n            print(f\"Error: {e}\")\n\nif __name__ == \"__main__\":\n    main()\n"
+            }
+          }
+        }
+      ],
+      "status": "success",
+      "timestamp": "2025-10-27T20:22:40.639Z",
+      "resultDisplay": "",
+      "displayName": "ReadFile",
+      "description": "Reads and returns the content of a specified file. If the file is large, the content will be truncated. The tool's response will clearly indicate if truncation has occurred and will provide details on how to read more of the file using the 'offset' and 'limit' parameters. Handles text, images (PNG, JPG, GIF, WEBP, SVG, BMP), and PDF files. For text files, it can read specific line ranges.",
+      "renderOutputAsMarkdown": true
+    }
+  ]
+}

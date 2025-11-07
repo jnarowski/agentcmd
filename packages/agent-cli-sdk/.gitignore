@@ -1,0 +1,18 @@
+# Build outputs
+dist/
+*.tsbuildinfo
+
+# Test outputs
+test-output/
+*.log
+
+# Temporary test files
+test-*.mjs
+
+# Dependencies
+node_modules/
+
+# Editor
+.DS_Store
+.vscode/
+.idea/

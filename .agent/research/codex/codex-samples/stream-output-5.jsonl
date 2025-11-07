@@ -1,0 +1,8 @@
+{"type":"thread.started","thread_id":"019a2d7b-7fb8-78e1-8cfa-5bdbe274a3aa"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"reasoning","text":"**Listing files in directory**"}}
+{"type":"item.started","item":{"id":"item_1","type":"command_execution","command":"zsh -lc ls","aggregated_output":"","status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_1","type":"command_execution","command":"zsh -lc ls","aggregated_output":"/opt/homebrew/Library/Homebrew/cmd/shellenv.sh: line 18: /bin/ps: Operation not permitted\nhello.txt\nstream-output-1.jsonl\nstream-output-2.jsonl\nstream-output-3.jsonl\nstream-output-4.jsonl\nstream-output-5.jsonl\ntest.js\n","exit_code":0,"status":"completed"}}
+{"type":"item.completed","item":{"id":"item_2","type":"reasoning","text":"**Preparing summary with caution**"}}
+{"type":"item.completed","item":{"id":"item_3","type":"agent_message","text":"Found 1 text file `hello.txt`, 5 JSONL logs `stream-output-{1..5}.jsonl`, and `test.js`. There was also a harmless `ps` permission warning from Homebrew’s shellenv script while listing."}}
+{"type":"turn.completed","usage":{"input_tokens":6086,"cached_input_tokens":2944,"output_tokens":223}}

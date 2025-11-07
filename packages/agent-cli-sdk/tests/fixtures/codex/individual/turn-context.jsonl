@@ -1,0 +1,1 @@
+{"timestamp":"2025-09-25T01:22:20.084Z","type":"turn_context","payload":{"cwd":"/Users/jnarowski/Dev/spectora/src/spectora-labs-monorepo-v2","approval_policy":"on-request","sandbox_policy":{"mode":"read-only"},"model":"gpt-5-codex","effort":"high","summary":"auto"}}

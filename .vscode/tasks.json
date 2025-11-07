@@ -1,0 +1,185 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "pnpm dev",
+      "type": "shell",
+      "command": "pnpm dev; exec zsh",
+      "icon": {
+        "id": "server",
+        "color": "terminal.ansiGreen"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "prisma studio",
+      "type": "shell",
+      "command": "zsh -i -c 'cd apps/web && pnpm prisma:studio'",
+      "icon": {
+        "id": "server",
+        "color": "terminal.ansiGreen"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "root",
+      "type": "shell",
+      "command": "zsh",
+      "icon": {
+        "id": "code",
+        "color": "terminal.ansiYellow"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "apps/web",
+      "type": "shell",
+      "command": "zsh -i -c 'cd apps/web && exec zsh'",
+      "icon": {
+        "id": "code",
+        "color": "terminal.ansiYellow"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "packages/agent-cli-sdk",
+      "type": "shell",
+      "command": "zsh -i -c 'cd packages/agent-cli-sdk && exec zsh'",
+      "icon": {
+        "id": "code",
+        "color": "terminal.ansiYellow"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "packages/agent-workflows",
+      "type": "shell",
+      "command": "zsh -i -c 'cd packages/agent-workflows && exec zsh'",
+      "icon": {
+        "id": "code",
+        "color": "terminal.ansiYellow"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "claude - worker",
+      "type": "shell",
+      "command": "zsh -i -c 'claude --dangerously-skip-permissions; exec zsh'",
+      "icon": {
+        "id": "rocket",
+        "color": "terminal.ansiBlue"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "claude - worker 2",
+      "type": "shell",
+      "command": "zsh -i -c 'claude --dangerously-skip-permissions; exec zsh'",
+      "icon": {
+        "id": "rocket",
+        "color": "terminal.ansiBlue"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "claude - research",
+      "type": "shell",
+      "command": "zsh -i -c 'claude --dangerously-skip-permissions'; exec zsh",
+      "icon": {
+        "id": "globe",
+        "color": "terminal.ansiBlue"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "claude - playwright",
+      "type": "shell",
+      "command": "zsh -i -c 'c --mcp-config .mcp.json.playwright'; exec zsh",
+      "icon": {
+        "id": "globe",
+        "color": "terminal.ansiBlue"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    }
+  ]
+}

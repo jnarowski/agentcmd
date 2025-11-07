@@ -1,0 +1,78 @@
+import { createWorkflowEvent } from "@/server/domain/workflow/services";
+import { broadcastWorkflowEvent } from "../../../events/broadcastWorkflowEvent";
+import type { RuntimeContext } from "../../../../types/engine.types";
+import { updateWorkflowStep } from "../../../steps/updateWorkflowStep";
+
+/**
+ * Update workflow execution step status and create event
+ *
+ * @param context - Runtime context
+ * @param stepId - Step ID
+ * @param status - New status
+ * @param result - Optional result data
+ * @param error - Optional error message
+ */
+export async function updateStepStatus(
+  context: RuntimeContext,
+  stepId: string,
+  status: "pending" | "running" | "completed" | "failed",
+  _result?: Record<string, unknown>,
+  error?: string
+): Promise<void> {
+  const { runId, projectId, logger } = context;
+
+  // Update step using domain service
+  const step = await updateWorkflowStep({
+    stepId,
+    status,
+    errorMessage: error,
+    startedAt: status === "running" ? new Date() : undefined,
+    completedAt:
+      status === "completed" || status === "failed" ? new Date() : undefined,
+    logger,
+  });
+
+  // Create event only for failed steps (skip step_started and step_completed)
+  if (status === "failed") {
+    const eventData = {
+      title: `Step Failed: ${step.name}`,
+      body: `Step "${step.name}" failed${error ? `: ${error}` : ""}`,
+      stepId,
+      error,
+    };
+
+    await createWorkflowEvent({
+      workflow_run_id: runId,
+      event_type: "step_failed",
+      event_data: eventData,
+      phase: step.phase,
+      logger,
+    });
+  }
+
+  // Emit step:updated WebSocket event
+  const changes: Record<string, unknown> = { status };
+  if (status === "running" && step.started_at) {
+    changes.started_at = step.started_at;
+  }
+  if ((status === "completed" || status === "failed") && step.completed_at) {
+    changes.completed_at = step.completed_at;
+  }
+  if (status === "failed" && error) {
+    changes.error_message = error;
+  }
+
+  broadcastWorkflowEvent(projectId, {
+    type: "workflow:run:step:updated",
+    data: {
+      run_id: runId,
+      step_id: stepId,
+      changes,
+    },
+  });
+
+  logger.info(
+    { runId, stepId, stepName: step.name, status, phase: step.phase },
+    `Step ${status}`
+  );
+}
