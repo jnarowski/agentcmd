@@ -64,7 +64,7 @@ export function StepRow({ step, projectId }: StepRowProps) {
           </span>
           {step.agent_session_id && (
             <Link
-              to={`/projects/${projectId}/sessions/${step.agent_session_id}`}
+              to={`/projects/${projectId}/session/${step.agent_session_id}`}
               className="text-xs text-blue-500 hover:underline"
             >
               View Session
