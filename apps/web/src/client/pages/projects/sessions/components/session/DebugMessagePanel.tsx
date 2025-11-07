@@ -8,11 +8,78 @@
 
 import { useState } from "react";
 import { Copy, Check } from "lucide-react";
-import type { UIMessage } from "@/shared/types/message.types";
+import type { UIMessage, UnifiedContent } from "@/shared/types/message.types";
 import { useDebugMode } from "@/client/hooks/useDebugMode";
 
 interface DebugMessagePanelProps {
   messages: UIMessage[];
+}
+
+function ContentBlocks({ content }: { content: UnifiedContent[] }) {
+  if (!Array.isArray(content) || content.length === 0) return null;
+
+  return (
+    <div>
+      <div className="text-gray-400 mb-1 font-medium">Content Blocks:</div>
+      <div className="space-y-1 ml-2">
+        {content.map((block, blockIndex) => {
+          const isEmptyText = block.type === 'text' && (!block.text || block.text.trim() === '');
+
+          return (
+            <div
+              key={blockIndex}
+              className={`p-1.5 rounded ${
+                isEmptyText ? 'bg-orange-900/50 border border-orange-700' : 'bg-gray-900'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-cyan-400 font-mono">[{blockIndex}]</span>
+                <span className="text-purple-400">{block.type}</span>
+                {isEmptyText && (
+                  <span className="text-orange-400 font-medium">⚠️ EMPTY</span>
+                )}
+              </div>
+
+              {/* Block-specific details */}
+              {block.type === 'text' && (
+                <div className="ml-8 mt-1">
+                  <span className="text-gray-400">Length:</span>{' '}
+                  <span className="text-gray-300">{block.text?.length || 0}</span>
+                  {block.text && block.text.length > 0 && (
+                    <div className="mt-1 text-gray-400 break-words max-h-20 overflow-y-auto">
+                      "{block.text.substring(0, 200)}{block.text.length > 200 ? '...' : ''}"
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {block.type === 'tool_use' && (
+                <div className="ml-8 mt-1">
+                  <div>
+                    <span className="text-gray-400">Name:</span>{' '}
+                    <span className="text-green-400">{block.name}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Has Result:</span>{' '}
+                    <span className={'result' in block && block.result ? 'text-green-400' : 'text-red-400'}>
+                      {'result' in block && block.result ? 'Yes' : 'No'}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {block.type === 'thinking' && (
+                <div className="ml-8 mt-1">
+                  <span className="text-gray-400">Length:</span>{' '}
+                  <span className="text-gray-300">{block.thinking?.length || 0}</span>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 export function DebugMessagePanel({ messages }: DebugMessagePanelProps) {
@@ -100,6 +167,8 @@ export function DebugMessagePanel({ messages }: DebugMessagePanelProps) {
                 block => block.type === 'text' && (!block.text || block.text.trim() === '')
               );
               const isSelected = selectedMessageIndex === index;
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const contentBlocksEl = Array.isArray(msg.content) ? <ContentBlocks content={msg.content as any} /> : null;
 
               return (
                 <div key={msg.id || index}>
@@ -180,68 +249,8 @@ export function DebugMessagePanel({ messages }: DebugMessagePanelProps) {
                       </div>
 
                       {/* Content blocks */}
-                      {Array.isArray(msg.content) && msg.content.length > 0 && (
-                        <div>
-                          <div className="text-gray-400 mb-1 font-medium">Content Blocks:</div>
-                          <div className="space-y-1 ml-2">
-                            {msg.content.map((block, blockIndex) => {
-                              const isEmptyText = block.type === 'text' && (!block.text || block.text.trim() === '');
-
-                              return (
-                                <div
-                                  key={blockIndex}
-                                  className={`p-1.5 rounded ${
-                                    isEmptyText ? 'bg-orange-900/50 border border-orange-700' : 'bg-gray-900'
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-cyan-400 font-mono">[{blockIndex}]</span>
-                                    <span className="text-purple-400">{block.type}</span>
-                                    {isEmptyText && (
-                                      <span className="text-orange-400 font-medium">⚠️ EMPTY</span>
-                                    )}
-                                  </div>
-
-                                  {/* Block-specific details */}
-                                  {block.type === 'text' && (
-                                    <div className="ml-8 mt-1">
-                                      <span className="text-gray-400">Length:</span>{' '}
-                                      <span className="text-gray-300">{block.text?.length || 0}</span>
-                                      {block.text && block.text.length > 0 && (
-                                        <div className="mt-1 text-gray-400 break-words max-h-20 overflow-y-auto">
-                                          "{block.text.substring(0, 200)}{block.text.length > 200 ? '...' : ''}"
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-
-                                  {block.type === 'tool_use' && (
-                                    <div className="ml-8 mt-1">
-                                      <div>
-                                        <span className="text-gray-400">Name:</span>{' '}
-                                        <span className="text-green-400">{block.name}</span>
-                                      </div>
-                                      <div>
-                                        <span className="text-gray-400">Has Result:</span>{' '}
-                                        <span className={'result' in block && block.result ? 'text-green-400' : 'text-red-400'}>
-                                          {'result' in block && block.result ? 'Yes' : 'No'}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {block.type === 'thinking' && (
-                                    <div className="ml-8 mt-1">
-                                      <span className="text-gray-400">Length:</span>{' '}
-                                      <span className="text-gray-300">{block.thinking?.length || 0}</span>
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
+                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                      {contentBlocksEl as any}
 
                       {/* Original message (before enrichment) */}
                       {msg._original && (
@@ -251,11 +260,11 @@ export function DebugMessagePanel({ messages }: DebugMessagePanelProps) {
                           </summary>
                           <div className="mt-1 p-2 bg-black rounded text-[10px]">
                             <div className="mb-2 text-gray-400">
-                              Original content blocks: {Array.isArray(msg._original.content) ? msg._original.content.length : 'N/A'}
+                              Original content blocks: {Array.isArray((msg._original as Record<string, unknown>)?.content) ? ((msg._original as Record<string, unknown>).content as unknown[]).length : 'N/A'}
                             </div>
-                            {Array.isArray(msg._original.content) && (
+                            {Array.isArray((msg._original as Record<string, unknown>)?.content) && (
                               <div className="mb-2 text-gray-400">
-                                Block types: {msg._original.content.map(b => b.type).join(', ')}
+                                Block types: {((msg._original as Record<string, unknown>).content as Array<{ type?: string }>).map((b: { type?: string }) => b.type).join(', ')}
                               </div>
                             )}
                             <pre className="overflow-x-auto max-h-40 overflow-y-auto">

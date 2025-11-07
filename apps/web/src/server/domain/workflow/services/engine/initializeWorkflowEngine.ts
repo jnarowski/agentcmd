@@ -156,7 +156,7 @@ export async function initializeWorkflowEngine(
 // Type augmentation for Fastify decorators
 declare module "fastify" {
   interface FastifyInstance {
-    workflowClient: ReturnType<typeof createWorkflowClient>;
-    workflowRuntime: ReturnType<typeof createWorkflowRuntime>;
+    workflowClient?: ReturnType<typeof createWorkflowClient>;
+    workflowRuntime?: ReturnType<typeof createWorkflowRuntime>;
   }
 }

@@ -102,7 +102,8 @@ export function AssistantMessage({ message }: AssistantMessageProps) {
 
   // Don't render if no content after filtering - show debug box instead
   if (renderableContent.length === 0) {
-    console.warn('[AssistantMessage] Message has no renderable content (all empty):', message.id);
+    const blockTypes = content.map(b => typeof b === 'string' ? 'string' : b.type);
+    console.log(`[RENDER] Message ${message.id} renders blank - role: assistant, content.length: ${content.length}, blocks: ${blockTypes.join(', ')}, parentId: ${message.parentId || 'none'}`);
 
     // Show debug box for empty messages
     return (

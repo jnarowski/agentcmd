@@ -1,4 +1,4 @@
-import { defineWorkflow } from "../../../packages/workflow-sdk/dist";
+import { defineWorkflow } from "../../../packages/agentcmd-workflows/dist";
 import { jsonSchema } from "ai";
 
 /**

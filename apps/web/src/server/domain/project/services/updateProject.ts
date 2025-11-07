@@ -29,7 +29,7 @@ async function buildCapabilities(projectPath: string): Promise<ProjectCapabiliti
           installed: result.installed,
           version: result.version ?? null,
         };
-      } catch (error) {
+      } catch  {
         return { has_package_json: false, installed: false, version: null };
       }
     })(),

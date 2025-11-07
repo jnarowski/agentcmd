@@ -1,4 +1,4 @@
-import { defineWorkflow } from "../../../packages/workflow-sdk/dist";
+import { defineWorkflow } from "../../../packages/agentcmd-workflows/dist";
 
 /**
  * Example workflow that demonstrates basic text output functionality.

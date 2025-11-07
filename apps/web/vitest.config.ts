@@ -74,6 +74,19 @@ export default defineConfig({
         },
         resolve: resolveConfig,
       },
+      {
+        test: {
+          name: "cli",
+          environment: "node",
+          setupFiles: ["./vitest.setup.ts"],
+          include: [
+            "src/cli/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}",
+          ],
+          pool: "forks", // Use forks for filesystem operations
+          fileParallelism: false,
+        },
+        resolve: resolveConfig,
+      },
     ],
   },
 });

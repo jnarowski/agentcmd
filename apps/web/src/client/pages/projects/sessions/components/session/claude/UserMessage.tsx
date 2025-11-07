@@ -14,7 +14,8 @@ export function UserMessage({ message }: UserMessageProps) {
   // Handle string content
   if (typeof message.content === 'string') {
     if (!message.content.trim()) {
-      console.warn('[UserMessage] Message has empty string content:', message.id);
+      const blockTypes = ['string (empty)'];
+      console.log(`[RENDER] Message ${message.id} renders blank - role: user, content.length: 0, blocks: ${blockTypes.join(', ')}, parentId: ${message.parentId || 'none'}`);
       return null;
     }
     return (
@@ -56,7 +57,11 @@ export function UserMessage({ message }: UserMessageProps) {
 
   // If message has no renderable content, don't render
   if (renderableBlocks.length === 0) {
-    console.warn('[UserMessage] Message has no renderable content (all empty):', message.id);
+    const blockTypes = Array.isArray(message.content)
+      ? message.content.map(b => typeof b === 'string' ? 'string' : b.type)
+      : [];
+    const contentLength = Array.isArray(message.content) ? message.content.length : 0;
+    console.log(`[RENDER] Message ${message.id} renders blank - role: user, content.length: ${contentLength}, blocks: ${blockTypes.join(', ')}, parentId: ${message.parentId || 'none'}`);
     return null;
   }
 

@@ -137,7 +137,7 @@ pnpm test:e2e:gemini     # Gemini-specific E2E tests
 pnpm vitest run src/path/to/file.test.ts
 
 # agentcmd-workflows package
-cd packages/workflow-sdk
+cd packages/agentcmd-workflows
 pnpm test                # Run all tests
 pnpm test:watch          # Watch mode
 pnpm check               # Run lint + type-check + tests
@@ -750,7 +750,7 @@ pnpm test:e2e:codex     # Codex E2E tests
 pnpm test:e2e:gemini    # Gemini E2E tests
 
 # agentcmd-workflows tests
-cd packages/workflow-sdk
+cd packages/agentcmd-workflows
 pnpm test               # Run all tests
 pnpm test:watch         # Watch mode
 
@@ -934,7 +934,7 @@ npm publish
 ### agentcmd-workflows
 
 ```bash
-cd packages/workflow-sdk
+cd packages/agentcmd-workflows
 pnpm ship
 # Runs: build → version patch → commit → tag → push → publish
 ```
@@ -948,7 +948,7 @@ pnpm ship
   - Agent-specific docs: `claude.md`, `codex.md`, `gemini.md`, `cursor-agent.md`
 - **Web App Guide**: See `apps/web/CLAUDE.md` for detailed web app architecture
 - **agent-cli-sdk Guide**: See `packages/agent-cli-sdk/CLAUDE.md` for SDK details
-- **agentcmd-workflows Guide**: See `packages/workflow-sdk/CLAUDE.md` for workflow utilities
+- **agentcmd-workflows Guide**: See `packages/agentcmd-workflows/CLAUDE.md` for workflow utilities
 - **README**: See `README.md` for getting started and project overview
 - **Turborepo Docs**: https://turborepo.com/docs
 

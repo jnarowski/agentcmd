@@ -301,7 +301,7 @@ export async function createServer() {
         stack: error.stack,
         url: request.url,
         method: request.method,
-        userId: (request as any).user?.id,
+        userId: request.user?.id,
         reqId: request.id,
         body: statusCode === 500 ? request.body : undefined, // Only log body for 500s
         params: request.params,
@@ -312,7 +312,7 @@ export async function createServer() {
 
     // Build response based on environment
     const isDevelopment = config.get("server").nodeEnv === "development";
-    const errorResponse: any = {
+    const errorResponse: { error: { message: string; statusCode: number; code?: string; stack?: string; details?: unknown } } = {
       error: {
         message:
           statusCode === 500

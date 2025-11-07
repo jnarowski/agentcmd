@@ -8,14 +8,12 @@ import type { UIMessage } from "@/shared/types/message.types";
 import { UserMessage } from './UserMessage';
 import { AssistantMessage } from './AssistantMessage';
 import { ChevronDown, ChevronRight, Copy, Check } from "lucide-react";
-import { useDebugMode } from "@/client/hooks/useDebugMode";
 
 interface MessageRendererProps {
   message: UIMessage;
 }
 
 export function MessageRenderer({ message }: MessageRendererProps) {
-  const debugMode = useDebugMode();
   const [isJsonExpanded, setIsJsonExpanded] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
@@ -43,14 +41,26 @@ export function MessageRenderer({ message }: MessageRendererProps) {
     }
   })();
 
-  if (!debugMode) {
+  // Calculate filtered tool results count
+  const filteredToolResultsCount = Array.isArray(message.content)
+    ? message.content.filter(block => typeof block !== 'string' && block.type === 'tool_result').length
+    : 0;
+
+  // Data attributes for debugging
+  const dataAttributes = {
+    'data-message-id': message.id,
+    'data-message-role': message.role,
+    'data-is-streaming': message.isStreaming,
+    'data-content-length': Array.isArray(message.content) ? message.content.length : 0,
+    'data-has-empty-content': Array.isArray(message.content) && message.content.length === 0,
+    'data-parent-id': message.parentId || 'none',
+    'data-session-id': message.sessionId || 'none',
+    'data-filtered-tool-results': filteredToolResultsCount,
+  };
+
+  if (!import.meta.env.DEV) {
     return (
-      <div
-        data-message-id={message.id}
-        data-message-role={message.role}
-        data-is-streaming={message.isStreaming}
-        data-content-length={Array.isArray(message.content) ? message.content.length : 0}
-      >
+      <div {...dataAttributes}>
         {messageContent}
       </div>
     );
@@ -58,50 +68,50 @@ export function MessageRenderer({ message }: MessageRendererProps) {
 
   return (
     <div
-      className="space-y-2"
-      data-message-id={message.id}
-      data-message-role={message.role}
-      data-is-streaming={message.isStreaming}
-      data-content-length={Array.isArray(message.content) ? message.content.length : 0}
+      className="relative group"
+      {...dataAttributes}
     >
+      {/* Debug controls - top right icons */}
+      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+        <button
+          onClick={() => setIsJsonExpanded(!isJsonExpanded)}
+          className="p-1.5 rounded bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+          title="Toggle JSON viewer"
+        >
+          {isJsonExpanded ? (
+            <ChevronDown className="h-3.5 w-3.5" />
+          ) : (
+            <ChevronRight className="h-3.5 w-3.5" />
+          )}
+        </button>
+        <button
+          onClick={copyMessageJson}
+          className="p-1.5 rounded bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+          title="Copy message JSON"
+        >
+          {isCopied ? (
+            <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+          ) : (
+            <Copy className="h-3.5 w-3.5" />
+          )}
+        </button>
+      </div>
+
       {messageContent}
 
-      {/* Debug JSON viewer */}
-      <div className="border border-orange-300 dark:border-orange-700 rounded-lg overflow-hidden bg-orange-50 dark:bg-orange-950/20">
-        <div className="flex items-center">
-          <button
-            onClick={() => setIsJsonExpanded(!isJsonExpanded)}
-            className="flex-1 px-3 py-2 flex items-center gap-2 text-sm font-medium text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors"
-          >
-            {isJsonExpanded ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
-            <span>Message JSON ({message.role})</span>
-            <span className="text-xs opacity-70 ml-auto">ID: {message.id.substring(0, 8)}</span>
-          </button>
-          <button
-            onClick={copyMessageJson}
-            className="px-3 py-2 text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors"
-            title="Copy message JSON"
-          >
-            {isCopied ? (
-              <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
-            ) : (
-              <Copy className="h-4 w-4" />
-            )}
-          </button>
-        </div>
-
-        {isJsonExpanded && (
-          <pre className="px-3 py-2 text-xs overflow-x-auto bg-white dark:bg-gray-950 border-t border-orange-200 dark:border-orange-800">
-            <code className="text-gray-800 dark:text-gray-200">
+      {/* Inline JSON viewer */}
+      {isJsonExpanded && (
+        <div className="mt-2 rounded border border-border bg-muted/30 overflow-hidden">
+          <div className="px-3 py-1.5 text-xs font-mono text-muted-foreground border-b border-border bg-muted/50">
+            Message JSON (ID: {message.id.substring(0, 8)})
+          </div>
+          <pre className="px-3 py-2 text-xs overflow-x-auto">
+            <code className="text-foreground/90">
               {JSON.stringify(message, null, 2)}
             </code>
           </pre>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

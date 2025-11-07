@@ -483,7 +483,7 @@ For more permanent remote access, consider:
 - **[CLAUDE.md](./CLAUDE.md)** - Monorepo development guide and conventions
 - **[apps/web/CLAUDE.md](./apps/web/CLAUDE.md)** - Web app architecture and patterns
 - **[packages/agent-cli-sdk/](./packages/agent-cli-sdk/)** - SDK docs (CLAUDE.md + README.md)
-- **[packages/workflow-sdk/](./packages/workflow-sdk/)** - Workflow library docs (agentcmd-workflows)
+- **[packages/agentcmd-workflows/](./packages/agentcmd-workflows/)** - Workflow library docs (agentcmd-workflows)
 
 ### Architecture Deep Dives
 

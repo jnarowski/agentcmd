@@ -133,6 +133,8 @@ function tryParseImageContent(content: unknown): string | UnifiedImageBlock {
  * ]
  */
 function enrichMessagesWithToolResults(messages: (UnifiedMessage | UIMessage)[]): UIMessage[] {
+  const initialCount = messages.length;
+
   // Step 1: Filter out messages with only system content
   const filteredMessages = messages.filter((msg) => {
     const content = msg.content;
@@ -140,6 +142,9 @@ function enrichMessagesWithToolResults(messages: (UnifiedMessage | UIMessage)[])
     // If content is a string, check if it's a system message
     if (typeof content === 'string') {
       const isSystem = isSystemMessage(content);
+      if (isSystem) {
+        console.log(`[ENRICH] Message ${msg.id} filtered - system content only (string)`);
+      }
       return !isSystem;
     }
 
@@ -154,6 +159,9 @@ function enrichMessagesWithToolResults(messages: (UnifiedMessage | UIMessage)[])
 
       // Filter out messages where ALL text blocks are system messages
       const allSystemMessages = textBlocks.every(c => isSystemMessage(c.text));
+      if (allSystemMessages) {
+        console.log(`[ENRICH] Message ${msg.id} filtered - all text blocks are system messages`);
+      }
       return !allSystemMessages;
     }
 
@@ -163,11 +171,27 @@ function enrichMessagesWithToolResults(messages: (UnifiedMessage | UIMessage)[])
 
   // Step 2: Build lookup map of tool results
   const resultMap = new Map<string, { content: string | UnifiedImageBlock; is_error?: boolean }>();
+  const allToolUseIds = new Set<string>();
 
+  // First pass: collect all tool_use IDs
+  for (const message of filteredMessages) {
+    if (Array.isArray(message.content)) {
+      for (const block of message.content) {
+        if (block.type === 'tool_use') {
+          allToolUseIds.add(block.id);
+        }
+      }
+    }
+  }
+
+  // Second pass: build result map and log orphaned results
   for (const message of filteredMessages) {
     if (Array.isArray(message.content)) {
       for (const block of message.content) {
         if (block.type === 'tool_result') {
+          if (!allToolUseIds.has(block.tool_use_id)) {
+            console.log(`[ENRICH] Tool_result ${block.tool_use_id} - no matching tool_use`);
+          }
           resultMap.set(block.tool_use_id, {
             content: tryParseImageContent(block.content),
             is_error: block.is_error
@@ -179,16 +203,22 @@ function enrichMessagesWithToolResults(messages: (UnifiedMessage | UIMessage)[])
 
   // Step 3: Enrich tool_use blocks and filter out tool_result blocks
   const enrichedMessages = filteredMessages.map((msg) => {
-    // Capture original message for debugging (deep clone)
-    const _original: UnifiedMessage | undefined = import.meta.env.DEV
-      ? JSON.parse(JSON.stringify(msg))
+    // Direct pass-through of _original from SDK (not nested UnifiedMessage)
+    const _original = import.meta.env.DEV ? msg : undefined;
+
+    // Extract flattened fields from _original
+    const parentId = '_original' in msg && msg._original && typeof msg._original === 'object' && 'parentUuid' in msg._original
+      ? (msg._original.parentUuid as string | null)
+      : undefined;
+    const sessionId = '_original' in msg && msg._original && typeof msg._original === 'object' && 'sessionId' in msg._original
+      ? (msg._original.sessionId as string)
       : undefined;
 
     // Check if msg has isStreaming property (UIMessage) or default to false
     const isStreaming = ('isStreaming' in msg && typeof msg.isStreaming === 'boolean') ? msg.isStreaming : false;
 
     if (!Array.isArray(msg.content)) {
-      return { ...msg, isStreaming, _original };
+      return { ...msg, isStreaming, _original, parentId, sessionId };
     }
 
     const enrichedContent = msg.content
@@ -208,11 +238,28 @@ function enrichMessagesWithToolResults(messages: (UnifiedMessage | UIMessage)[])
         return true;
       });
 
+    // Log empty content blocks
+    if (Array.isArray(msg.content)) {
+      const emptyBlocks = msg.content.filter((block) => {
+        if (typeof block === 'string') return (block as string).trim() === '';
+        if (typeof block === 'object' && block !== null && 'type' in block && block.type === 'text' && 'text' in block) {
+          const textBlock = block as { text: string };
+          return !textBlock.text || textBlock.text.trim() === '';
+        }
+        return false;
+      });
+      if (emptyBlocks.length > 0) {
+        console.log(`[ENRICH] Message ${msg.id} has ${msg.content.length} blocks, ${emptyBlocks.length} empty`);
+      }
+    }
+
     return {
       ...msg,
       content: enrichedContent,
       isStreaming,
-      _original
+      _original,
+      parentId,
+      sessionId
     } as UIMessage;
   });
 
@@ -223,11 +270,16 @@ function enrichMessagesWithToolResults(messages: (UnifiedMessage | UIMessage)[])
 
     // Filter out empty content arrays (user messages with only tool_result blocks)
     if (msg.content.length === 0) {
+      console.log(`[ENRICH] Message ${msg.id} filtered - empty content array after enrichment (only tool_result)`);
       return false;
     }
 
     return true;
   });
+
+  // Log enrichment summary
+  const filteredCount = initialCount - finalMessages.length;
+  console.log(`[ENRICH] ${initialCount} messages → ${finalMessages.length} after enrichment (${filteredCount} filtered)`);
 
   return finalMessages;
 }
@@ -450,9 +502,9 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
 
       if (shouldUpdateLastMessage) {
         // Update existing streaming message with same ID immutably
-        // Capture _original on first update (if not already set)
-        const _original: UnifiedMessage | undefined = import.meta.env.DEV
-          ? (lastMessage._original || JSON.parse(JSON.stringify(lastMessage)))
+        // Preserve _original from when message was first created
+        const _original = import.meta.env.DEV
+          ? (lastMessage._original || { ...lastMessage })
           : undefined;
 
         updatedMessages = [
@@ -461,6 +513,7 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
             ...lastMessage,
             content: contentBlocks,
             _original,
+            // parentId and sessionId remain unchanged from initial message
           },
         ];
       } else {
@@ -472,12 +525,15 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
           timestamp: Date.now(),
           tool: 'claude' as const, // Default tool for new streaming messages
           isStreaming: true,
-          _original: undefined, // Set undefined initially
+          _original: undefined, // Will be set if needed for debugging
+          parentId: undefined, // Streaming messages don't have parent relationships yet
+          sessionId: undefined, // Streaming messages don't have session IDs yet
         };
 
         // Capture _original for new streaming messages (dev only)
+        // Store the message itself as _original for debugging
         if (import.meta.env.DEV) {
-          newMessage._original = JSON.parse(JSON.stringify(newMessage));
+          newMessage._original = { ...newMessage };
         }
 
         updatedMessages = [

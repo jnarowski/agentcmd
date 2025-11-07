@@ -228,16 +228,18 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
 
           if (import.meta.env.DEV) {
             if (type === "stream_output") {
+              const streamData = data as Record<string, unknown>;
+              const message = streamData.message as Record<string, unknown> | undefined;
               console.log("[WebSocket] Stream output:", {
-                messageId: data.message?.id,
-                role: data.message?.role,
-                contentLength: Array.isArray(data.message?.content) ? data.message.content.length : 0,
-                contentTypes: Array.isArray(data.message?.content)
-                  ? data.message.content.map((b: any) => b.type).join(', ')
+                messageId: message?.id,
+                role: message?.role,
+                contentLength: Array.isArray(message?.content) ? message.content.length : 0,
+                contentTypes: Array.isArray(message?.content)
+                  ? message.content.map((b: { type?: string }) => b.type).join(', ')
                   : 'N/A',
-                isStreaming: data.message?.isStreaming,
-                sessionId: data.sessionId,
-                fullData: data  // Expandable full object
+                isStreaming: message?.isStreaming,
+                sessionId: streamData.sessionId,
+                fullData: streamData  // Expandable full object
               });
             }
           }

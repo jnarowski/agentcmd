@@ -1,8 +1,11 @@
 import { spawn, type ChildProcess } from "child_process";
 import { spawnSync } from "child_process";
+import { existsSync } from "node:fs";
+import type { FastifyInstance } from "fastify";
 import { loadConfig, mergeWithFlags } from "../utils/config.js";
 import { ensurePortAvailable } from "../utils/portCheck.js";
 import { getDbPath, getConfigPath, getLogFilePath } from "../utils/paths.js";
+import { checkPendingMigrations, createBackup, cleanupOldBackups } from "../utils/backup.js";
 
 interface StartOptions {
   port?: number;
@@ -10,7 +13,7 @@ interface StartOptions {
   host?: string;
 }
 
-let fastifyServer: any = null;
+let fastifyServer: FastifyInstance | null = null;
 let inngestProcess: ChildProcess | null = null;
 
 export async function startCommand(options: StartOptions): Promise<void> {
@@ -45,7 +48,32 @@ export async function startCommand(options: StartOptions): Promise<void> {
       process.env.ANTHROPIC_API_KEY = mergedConfig.anthropicApiKey;
     }
 
-    // 4. Run Prisma migrations
+    // 4. Check for pending migrations and create backup if needed
+    const schemaPath = "./dist/prisma/schema.prisma";
+    if (existsSync(dbPath)) {
+      console.log("Checking for pending migrations...");
+      const pendingMigrations = checkPendingMigrations(schemaPath);
+
+      if (pendingMigrations.length > 0) {
+        console.log(`Found ${pendingMigrations.length} pending migration(s)`);
+        console.log("Creating database backup...");
+
+        try {
+          const backupPath = createBackup(dbPath);
+          console.log(`✓ Backup created: ${backupPath}`);
+
+          // Clean up old backups (keep last 3)
+          cleanupOldBackups(dbPath, 3);
+        } catch (error) {
+          console.error("Warning: Failed to create backup:", error instanceof Error ? error.message : error);
+          console.log("Continuing with migrations anyway...");
+        }
+      } else {
+        console.log("No pending migrations found");
+      }
+    }
+
+    // 5. Run Prisma migrations
     console.log("Running database migrations...");
     const migrateResult = spawnSync(
       "npx",
@@ -68,12 +96,12 @@ export async function startCommand(options: StartOptions): Promise<void> {
       );
     }
 
-    // 5. Import and start Fastify server
+    // 6. Import and start Fastify server
     console.log("Starting Fastify server...");
     const { startServer } = await import("../../server/index.js");
     fastifyServer = await startServer({ port, host });
 
-    // 6. Spawn Inngest dev UI
+    // 7. Spawn Inngest dev UI
     console.log("Starting Inngest dev UI...");
     inngestProcess = spawn(
       "npx",
@@ -101,7 +129,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
       }
     });
 
-    // 7. Log startup URLs
+    // 8. Log startup URLs
     console.log("");
     console.log("✓ Server running at http://localhost:" + port);
     console.log("✓ Inngest Dev UI at http://localhost:" + inngestPort);
@@ -111,7 +139,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
     console.log("");
     console.log("Press Ctrl+C to stop");
 
-    // 8. Setup graceful shutdown
+    // 9. Setup graceful shutdown
     setupGracefulShutdown();
   } catch (error) {
     console.error(

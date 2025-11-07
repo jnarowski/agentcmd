@@ -11,7 +11,7 @@ const VERSION = typeof __CLI_VERSION__ !== 'undefined' ? __CLI_VERSION__ : '0.0.
 const program = new Command();
 
 program
-  .name("agent-workflows-ui")
+  .name("agentcmd")
   .description("Visual UI for agent workflows")
   .version(VERSION);
 

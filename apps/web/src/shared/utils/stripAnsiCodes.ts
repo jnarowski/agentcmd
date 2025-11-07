@@ -17,5 +17,6 @@ export function stripAnsiCodes(str: string): string {
   // [[()#;?]* - Match optional parameters
   // (?:[0-9]{1,4}(?:;[0-9]{0,4})*)? - Match optional numeric parameters with semicolons
   // [0-9A-ORZcf-nqry=><] - Match final command character
+  // eslint-disable-next-line no-control-regex
   return str.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
 }
