@@ -15,7 +15,7 @@ const ajv = new Ajv();
  */
 export async function executeWorkflow({
   runId,
-  fastify: fastifyOrWorkflowClient,
+  workflowClient,
   logger,
 }: ExecuteWorkflowOptions): Promise<void> {
   // Get execution details
@@ -41,15 +41,6 @@ export async function executeWorkflow({
     },
     logger,
   });
-
-  // Get workflow client
-  const workflowClient = fastifyOrWorkflowClient.workflowClient;
-
-  if (!workflowClient) {
-    throw new Error(
-      "Workflow client not initialized. Please initialize workflow engine first."
-    );
-  }
 
   // Build and send workflow event
   const eventName = `workflow/${execution.workflow_definition.identifier}`;

@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ShellProvider } from "@/client/pages/projects/shell/contexts/ShellContext";
 import { WebSocketProvider } from "@/client/providers/WebSocketProvider";
-import { WebSocketDevTools } from "@/client/components/WebSocketDevTools";
+import { DebugPanel } from "@/client/components/debug/DebugPanel";
 import ProtectedLayout from "@/client/layouts/ProtectedLayout";
 import AuthLayout from "@/client/layouts/AuthLayout";
 import ProjectDetailLayout from "@/client/layouts/ProjectDetailLayout";
@@ -65,7 +65,7 @@ function AppContent() {
           </Route>
         </Routes>
       </ShellProvider>
-      <WebSocketDevTools />
+      <DebugPanel />
     </>
   );
 }

@@ -68,7 +68,19 @@ export async function workflowRoutes(fastify: FastifyInstance) {
 
       // Start run via Inngest
       try {
-        await executeWorkflow({ runId: run.id, fastify, logger: fastify.log });
+        const { workflowClient } = fastify;
+
+        if (!workflowClient) {
+          throw new Error(
+            "Workflow engine not initialized. Please enable workflow engine in configuration."
+          );
+        }
+
+        await executeWorkflow({
+          runId: run.id,
+          workflowClient,
+          logger: fastify.log
+        });
 
         fastify.log.info(
           { runId: run.id, userId },

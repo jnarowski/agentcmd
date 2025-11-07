@@ -1,9 +1,10 @@
 import { z } from 'zod'
-import type { FastifyInstance, FastifyBaseLogger } from 'fastify'
+import type { FastifyBaseLogger } from 'fastify'
+import type { Inngest } from 'inngest'
 
 export const executeWorkflowOptionsSchema = z.object({
   runId: z.string().min(1, 'Run ID required'),
-  fastify: z.custom<FastifyInstance>(),
+  workflowClient: z.custom<Inngest>(),
   logger: z.custom<FastifyBaseLogger>().optional()
 })
 
