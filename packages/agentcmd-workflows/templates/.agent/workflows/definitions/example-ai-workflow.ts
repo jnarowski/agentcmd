@@ -1,4 +1,4 @@
-import { defineWorkflow } from '@repo/workflow-sdk';
+import { defineWorkflow } from "agentcmd-workflows";
 
 /**
  * AI-powered workflow example demonstrating agent integration
@@ -9,19 +9,20 @@ import { defineWorkflow } from '@repo/workflow-sdk';
  * - Automated decision making
  */
 export const aiWorkflow = defineWorkflow({
-  name: 'ai-workflow',
-  description: 'Workflow with AI-powered steps',
+  name: "ai-workflow",
+  description: "Workflow with AI-powered steps",
 
   async execute({ step, logger, config, ai }) {
     // Step 1: Analyze requirements
     const analysis = await step({
-      name: 'analyze-requirements',
+      name: "analyze-requirements",
       execute: async () => {
-        logger.info('Analyzing requirements with AI');
+        logger.info("Analyzing requirements with AI");
 
         // Use AI step for analysis
         const result = await ai({
-          prompt: 'Analyze the project requirements and suggest implementation approach',
+          prompt:
+            "Analyze the project requirements and suggest implementation approach",
           context: {
             projectPath: config.projectPath,
           },
@@ -33,9 +34,9 @@ export const aiWorkflow = defineWorkflow({
 
     // Step 2: Generate code
     await step({
-      name: 'generate-code',
+      name: "generate-code",
       execute: async () => {
-        logger.info('Generating code based on analysis');
+        logger.info("Generating code based on analysis");
 
         const result = await ai({
           prompt: `Generate implementation based on: ${analysis.summary}`,
@@ -50,9 +51,9 @@ export const aiWorkflow = defineWorkflow({
 
     // Step 3: Review and validate
     await step({
-      name: 'review',
+      name: "review",
       execute: async () => {
-        logger.info('Reviewing generated code');
+        logger.info("Reviewing generated code");
 
         // Add validation logic
         return { validated: true };

@@ -12,7 +12,7 @@ import type { InferSchemaType } from "../types/schema";
  */
 export interface WorkflowDefinition<
   TPhases extends readonly PhaseDefinition[] | undefined = undefined,
-  TArgsSchema extends Record<string, unknown> = Record<string, unknown>
+  TArgsSchema extends Record<string, unknown> = Record<string, unknown>,
 > {
   __type: "workflow";
   config: WorkflowConfig<TPhases, TArgsSchema>;
@@ -36,7 +36,7 @@ export interface WorkflowDefinition<
  *
  * @example
  * ```typescript
- * import { defineWorkflow, defineSchema } from '@repo/workflow-sdk';
+ * import { defineWorkflow, defineSchema } from 'agentcmd-workflows';
  *
  * const argsSchema = defineSchema({
  *   type: 'object',
@@ -60,7 +60,7 @@ export interface WorkflowDefinition<
  */
 export function defineWorkflow<
   const TPhases extends readonly PhaseDefinition[] | undefined = undefined,
-  const TArgsSchema extends Record<string, unknown> = Record<string, unknown>
+  const TArgsSchema extends Record<string, unknown> = Record<string, unknown>,
 >(
   config: WorkflowConfig<TPhases, TArgsSchema>,
   fn: WorkflowFunction<TPhases, InferSchemaType<TArgsSchema>>
