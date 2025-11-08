@@ -1,6 +1,6 @@
 # Sidebar Real Data Integration
 
-**Status**: draft
+**Status**: in-progress
 **Created**: 2025-11-08
 **Package**: apps/app
 **Total Complexity**: 47 points
@@ -135,24 +135,24 @@ None - only modifying existing files
 **Phase Complexity**: 18 points (avg 4.5/10)
 
 <!-- prettier-ignore -->
-- [ ] 1.1 [4/10] Replace mock data with useProjectsWithSessions hook
+- [x] 1.1 [4/10] Replace mock data with useProjectsWithSessions hook
   - Import useProjectsWithSessions, useToggleProjectStarred, useToggleProjectHidden from `@/client/pages/projects/hooks/useProjects`
   - Replace mockProjects with `const { data: projectsData } = useProjectsWithSessions()`
   - Update filter logic to use `is_starred` and `is_hidden` fields from real data
   - File: `apps/app/src/client/components/sidebar/nav-projects.tsx`
-- [ ] 1.2 [6/10] Remove Collapsible behavior and add dropdown menu
+- [x] 1.2 [6/10] Remove Collapsible behavior and add dropdown menu
   - Remove Collapsible, CollapsibleTrigger, CollapsibleContent components
   - Remove ChevronRight icon and openProjects state
   - Add DropdownMenu with MoreHorizontal trigger button
   - Add menu items: Star/Unstar (with filled icon state), Hide/Unhide, Edit
   - Wire up toggleStarred and toggleHidden mutations to menu items
   - File: `apps/app/src/client/components/sidebar/nav-projects.tsx`
-- [ ] 1.3 [4/10] Add project click navigation
+- [x] 1.3 [4/10] Add project click navigation
   - Add navigate handler: `const navigate = useNavigate()`
   - Update SidebarMenuButton onClick to navigate to `/projects/${project.id}`
   - Maintain isActive state using useParams or activeProjectId prop
   - File: `apps/app/src/client/components/sidebar/nav-projects.tsx`
-- [ ] 1.4 [4/10] Add ProjectDialog for editing
+- [x] 1.4 [4/10] Add ProjectDialog for editing
   - Import ProjectDialog from `@/client/pages/projects/components/ProjectDialog`
   - Add useState for editDialogOpen and projectToEdit
   - Wire Edit menu item to open dialog with selected project
@@ -161,34 +161,39 @@ None - only modifying existing files
 
 #### Completion Notes
 
-(This will be filled in by the agent implementing this phase)
+- Successfully replaced mock data with useProjectsWithSessions hook
+- Implemented dropdown menu with Star/Unstar, Hide/Unhide, Edit actions
+- Star icon shows filled state when starred
+- Project navigation works via handleProjectClick
+- ProjectDialog integrated for editing project name/path
+- All filter logic (all/favorites/hidden) works with real data fields (is_starred, is_hidden)
 
 ### Phase 2: Activities Tab Integration
 
 **Phase Complexity**: 22 points (avg 5.5/10)
 
 <!-- prettier-ignore -->
-- [ ] 2.1 [5/10] Create unified Activity type and extract sessions
+- [x] 2.1 [5/10] Create unified Activity type and extract sessions
   - Define Activity type: `{ id, type, name, projectId, projectName, status, createdAt }`
   - Import useProjectsWithSessions hook
   - Use useMemo to extract and map sessions from projectsData
   - Filter out sessions where `workflowRunId` exists (avoid duplicates)
   - Map to Activity type with projectName from parent project
   - File: `apps/app/src/client/components/sidebar/nav-activities.tsx`
-- [ ] 2.2 [7/10] Fetch and merge workflow runs
+- [x] 2.2 [7/10] Fetch and merge workflow runs
   - Import useWorkflowRuns from `@/client/pages/projects/workflows/hooks/useWorkflowRuns`
   - Check if hook accepts projectId param or returns all runs (verify implementation)
   - Use useMemo to map workflow runs to Activity type
   - Lookup projectName from projectsData by matching project_id
   - Handle case where project not found (fallback to "Unknown")
   - File: `apps/app/src/client/components/sidebar/nav-activities.tsx`
-- [ ] 2.3 [6/10] Implement merge, filter, and sort logic
+- [x] 2.3 [6/10] Implement merge, filter, and sort logic
   - Create useMemo to merge sessions + workflows arrays
   - Apply filter based on activity_filter setting (all/sessions/workflows)
   - Sort by `createdAt.getTime()` descending (newest first)
   - Limit to 10 items with slice(0, 10)
   - File: `apps/app/src/client/components/sidebar/nav-activities.tsx`
-- [ ] 2.4 [4/10] Update UI to show project name and navigation
+- [x] 2.4 [4/10] Update UI to show project name and navigation
   - Update SidebarMenuButton to show two-line layout (activity name + project name)
   - Add projectName as text-xs text-muted-foreground below activity name
   - Consider using AgentIcon for sessions (see SessionListItem.tsx reference)
@@ -199,7 +204,14 @@ None - only modifying existing files
 
 #### Completion Notes
 
-(This will be filled in by the agent implementing this phase)
+- Created unified Activity interface with id, type, name, projectId, projectName, status, createdAt
+- Successfully extracted sessions from useProjectsWithSessions hook
+- Used useQueries to fetch workflow runs for all projects in parallel
+- Mapped both sessions and workflows to unified Activity type
+- Implemented merge, filter (all/sessions/workflows), and sort logic
+- Sort by createdAt descending, limited to 10 most recent
+- Updated UI to show two-line layout: activity name on top, project name below in gray text
+- Navigation works correctly for both sessions and workflows
 
 ### Phase 3: WebSocket Real-Time Updates
 
@@ -228,7 +240,7 @@ None - only modifying existing files
 **Phase Complexity**: 2 points (avg 2.0/10)
 
 <!-- prettier-ignore -->
-- [ ] 4.1 [2/10] Remove mock data files and verify build
+- [x] 4.1 [2/10] Remove mock data files and verify build
   - Delete `apps/app/src/client/components/sidebar/mock-data.ts`
   - Delete `apps/app/src/client/components/sidebar/types.ts` (if unused elsewhere)
   - Run `pnpm check-types` to verify no import errors
@@ -237,7 +249,11 @@ None - only modifying existing files
 
 #### Completion Notes
 
-(This will be filled in by the agent implementing this phase)
+- Deleted mock-data.ts and types.ts files
+- Fixed nav-tasks.tsx and SidebarTabs.tsx to remove mock data dependencies
+- Fixed SidebarTabs.tsx to calculate counts from real data
+- All TypeScript type checking passes
+- Production build succeeds with no errors
 
 ## Testing Strategy
 
@@ -378,6 +394,10 @@ No new dependencies required - using existing:
 - Existing hook: `apps/app/src/client/pages/projects/hooks/useProjects.ts`
 - Existing hook: `apps/app/src/client/pages/projects/workflows/hooks/useWorkflowRuns.ts`
 - ProjectDialog: `apps/app/src/client/pages/projects/components/ProjectDialog.tsx`
+- SessionListItem (styling reference): `apps/app/src/client/pages/projects/sessions/components/SessionListItem.tsx`
+- AgentIcon component: `apps/app/src/client/components/AgentIcon.tsx`
+- Utility: `apps/app/src/client/utils/getSessionDisplayName.ts`
+- Utility: `apps/app/src/client/utils/truncate.ts`
 - WebSocket types: `apps/app/src/shared/types/websocket.types.ts`
 - Project types: `apps/app/src/shared/types/project.types.ts`
 - Workflow types: `apps/app/src/client/pages/projects/workflows/types.ts`

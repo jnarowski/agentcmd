@@ -42,7 +42,7 @@ export function AppSidebar({
     >
       <AppSidebarHeader />
       <NewButton />
-      <SidebarContent className="flex-1 flex flex-col overflow-hidden">
+      <SidebarContent className="flex-1 flex flex-col min-h-0">
         <SidebarTabs />
       </SidebarContent>
       <SidebarFooter>

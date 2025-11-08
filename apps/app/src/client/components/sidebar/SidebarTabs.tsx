@@ -1,20 +1,42 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/client/components/ui/tabs";
 import { useSettings, useUpdateSettings } from "@/client/hooks/useSettings";
+import { useProjectsWithSessions } from "@/client/pages/projects/hooks/useProjects";
 import { NavTasks } from "./nav-tasks";
 import { NavActivities } from "./nav-activities";
 import { NavProjects } from "./nav-projects";
-import { mockTasks, mockActivities } from "./mock-data";
 
 export function SidebarTabs() {
   const { data: settings } = useSettings();
   const updateSettings = useUpdateSettings();
+  const { data: projectsData } = useProjectsWithSessions();
 
   const activeTab = settings?.userPreferences?.sidebar_active_tab || "activities";
+  const view = settings?.userPreferences?.projects_view || "all";
 
-  // Calculate counts
-  const tasksCount = mockTasks.length;
-  const activitiesCount = mockActivities.filter((a) => !a.workflowRunId).length;
-  const projectsCount = 3; // From mock data
+  // Calculate counts based on real data
+  const tasksCount = 0; // TODO: Replace with real task count
+
+  // Count sessions and workflows for activities
+  let sessionCount = 0;
+  let workflowCount = 0;
+  if (projectsData) {
+    for (const project of projectsData) {
+      sessionCount += project.sessions.length;
+    }
+  }
+  const activitiesCount = Math.min(sessionCount + workflowCount, 10); // Limited to 10
+
+  // Count projects based on current view
+  let projectsCount = 0;
+  if (projectsData) {
+    if (view === "favorites") {
+      projectsCount = projectsData.filter((p) => p.is_starred && !p.is_hidden).length;
+    } else if (view === "hidden") {
+      projectsCount = projectsData.filter((p) => p.is_hidden).length;
+    } else {
+      projectsCount = projectsData.filter((p) => !p.is_hidden).length;
+    }
+  }
 
   const handleTabChange = (value: string) => {
     updateSettings.mutate({

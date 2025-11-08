@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Folder, ChevronRight } from "lucide-react";
+import { Folder, MoreHorizontal, Star, EyeOff, Eye, Pencil } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   SidebarMenu,
@@ -7,55 +7,61 @@ import {
   SidebarMenuButton,
 } from "@/client/components/ui/sidebar";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/client/components/ui/collapsible";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/client/components/ui/dropdown-menu";
 import { ToggleGroup, ToggleGroupItem } from "@/client/components/ui/toggle-group";
-import type { ProjectsView } from "./types";
 import { useSettings, useUpdateSettings } from "@/client/hooks/useSettings";
+import { useProjectsWithSessions, useToggleProjectStarred, useToggleProjectHidden } from "@/client/pages/projects/hooks/useProjects";
+import { ProjectDialog } from "@/client/pages/projects/components/ProjectDialog";
+import type { Project } from "@/shared/types/project.types";
 
-// Mock project data
-const mockProjects = [
-  { id: "project-1", name: "agentcmd", isFavorite: true, isHidden: false },
-  { id: "project-2", name: "My Website", isFavorite: false, isHidden: false },
-  { id: "project-3", name: "API Server", isFavorite: true, isHidden: false },
-  { id: "project-4", name: "Old Project", isFavorite: false, isHidden: true },
-];
+type ProjectsView = "all" | "favorites" | "hidden";
 
 export function NavProjects() {
   const navigate = useNavigate();
   const { projectId: activeProjectId } = useParams();
   const { data: settings } = useSettings();
   const updateSettings = useUpdateSettings();
+  const { data: projectsData } = useProjectsWithSessions();
+  const toggleStarred = useToggleProjectStarred();
+  const toggleHidden = useToggleProjectHidden();
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [projectToEdit, setProjectToEdit] = useState<Project | undefined>(undefined);
 
   const view: ProjectsView = settings?.userPreferences?.projects_view || "all";
-  const [openProjects, setOpenProjects] = useState<string[]>(
-    activeProjectId ? [activeProjectId] : []
-  );
 
   // Filter projects based on view
-  let filteredProjects = mockProjects;
+  let filteredProjects = projectsData || [];
   if (view === "favorites") {
-    filteredProjects = mockProjects.filter((p) => p.isFavorite && !p.isHidden);
+    filteredProjects = filteredProjects.filter((p) => p.is_starred && !p.is_hidden);
   } else if (view === "hidden") {
-    filteredProjects = mockProjects.filter((p) => p.isHidden);
+    filteredProjects = filteredProjects.filter((p) => p.is_hidden);
   } else {
     // "all" - show non-hidden projects
-    filteredProjects = mockProjects.filter((p) => !p.isHidden);
+    filteredProjects = filteredProjects.filter((p) => !p.is_hidden);
   }
 
-  const toggleProject = (projectId: string) => {
-    setOpenProjects((prev) =>
-      prev.includes(projectId)
-        ? prev.filter((id) => id !== projectId)
-        : [...prev, projectId]
-    );
+  const handleProjectClick = (projectId: string) => {
+    navigate(`/projects/${projectId}`);
   };
 
-  const handleProjectClick = (projectId: string) => {
-    toggleProject(projectId);
-    navigate(`/projects/${projectId}`);
+  const handleToggleStar = (projectId: string, isStarred: boolean, e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleStarred.mutate({ id: projectId, is_starred: !isStarred });
+  };
+
+  const handleToggleHidden = (projectId: string, isHidden: boolean, e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleHidden.mutate({ id: projectId, is_hidden: !isHidden });
+  };
+
+  const handleEditProject = (project: Project, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setProjectToEdit(project);
+    setEditDialogOpen(true);
   };
 
   return (
@@ -101,38 +107,70 @@ export function NavProjects() {
       ) : (
         <SidebarMenu>
           {filteredProjects.map((project) => {
-            const isOpen = openProjects.includes(project.id);
             const isActive = project.id === activeProjectId;
 
             return (
-              <Collapsible
-                key={project.id}
-                open={isOpen}
-                onOpenChange={() => handleProjectClick(project.id)}
-              >
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive}>
-                    <CollapsibleTrigger className="w-full flex items-center gap-2 h-7 px-2">
-                      <Folder className="size-4" />
-                      <span className="flex-1 truncate text-sm">
-                        {project.name}
-                      </span>
-                      {!isOpen && (
-                        <ChevronRight className="size-4 transition-transform" />
-                      )}
-                    </CollapsibleTrigger>
+              <SidebarMenuItem key={project.id}>
+                <div className="flex items-center gap-1">
+                  <SidebarMenuButton
+                    onClick={() => handleProjectClick(project.id)}
+                    isActive={isActive}
+                    className="flex-1 h-7 px-2"
+                  >
+                    <Folder className="size-4" />
+                    <span className="flex-1 truncate text-sm">
+                      {project.name}
+                    </span>
                   </SidebarMenuButton>
-                  <CollapsibleContent>
-                    <div className="ml-6 px-2 py-1 text-xs text-muted-foreground">
-                      Project details (sessions will appear here)
-                    </div>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      onClick={(e) => e.stopPropagation()}
+                      className="h-7 w-7 p-0 hover:bg-accent rounded-sm flex items-center justify-center"
+                    >
+                      <MoreHorizontal className="size-4" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={(e) => handleToggleStar(project.id, project.is_starred, e)}
+                      >
+                        <Star
+                          className="size-4 mr-2"
+                          fill={project.is_starred ? "currentColor" : "none"}
+                        />
+                        {project.is_starred ? "Unstar" : "Star"}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => handleToggleHidden(project.id, project.is_hidden, e)}
+                      >
+                        {project.is_hidden ? (
+                          <>
+                            <Eye className="size-4 mr-2" />
+                            Unhide
+                          </>
+                        ) : (
+                          <>
+                            <EyeOff className="size-4 mr-2" />
+                            Hide
+                          </>
+                        )}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={(e) => handleEditProject(project, e)}>
+                        <Pencil className="size-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </SidebarMenuItem>
             );
           })}
         </SidebarMenu>
       )}
+      <ProjectDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        project={projectToEdit}
+      />
     </div>
   );
 }

@@ -4,7 +4,9 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/client/components/ui/sidebar";
-import { mockTasks } from "./mock-data";
+
+// TODO: Replace with real task data
+const mockTasks: { id: string; title: string; specPath: string }[] = [];
 
 export function NavTasks() {
   // Show all tasks from all projects (global sidebar), increased to 10 for tab view

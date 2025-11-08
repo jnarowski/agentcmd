@@ -1,5 +1,5 @@
 {
-  "lastId": 5,
+  "lastId": 6,
   "specs": {
     "1": {
       "folder": "1-log-streaming",
@@ -24,6 +24,11 @@
     "5": {
       "folder": "5-permission-approval",
       "created": "2025-01-08T00:00:00.000Z",
+      "location": "todo"
+    },
+    "6": {
+      "folder": "6-sidebar-data",
+      "created": "2025-11-08T17:45:00.000Z",
       "location": "todo"
     }
   }
