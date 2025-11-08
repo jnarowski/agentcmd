@@ -30,6 +30,8 @@ export function NavProjects() {
   const toggleHidden = useToggleProjectHidden();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [projectToEdit, setProjectToEdit] = useState<Project | undefined>(undefined);
+  const [hoveredProjectId, setHoveredProjectId] = useState<string | null>(null);
+  const [menuOpenProjectId, setMenuOpenProjectId] = useState<string | null>(null);
 
   const view: ProjectsView = settings?.userPreferences?.projects_view || "all";
 
@@ -65,8 +67,8 @@ export function NavProjects() {
   };
 
   return (
-    <div className="px-2 py-2">
-      <div className="pb-2">
+    <div className="flex flex-col h-full overflow-hidden">
+      <div className="px-2 py-2 pb-2 shrink-0">
         <ToggleGroup
           type="single"
           value={view}
@@ -100,32 +102,38 @@ export function NavProjects() {
           </ToggleGroupItem>
         </ToggleGroup>
       </div>
-      {filteredProjects.length === 0 ? (
-        <div className="py-4 text-center text-sm text-muted-foreground">
-          No projects
-        </div>
-      ) : (
-        <SidebarMenu>
+      <div className="flex-1 overflow-y-auto px-2">
+        {filteredProjects.length === 0 ? (
+          <div className="py-4 text-center text-sm text-muted-foreground">
+            No projects
+          </div>
+        ) : (
+          <SidebarMenu>
           {filteredProjects.map((project) => {
             const isActive = project.id === activeProjectId;
 
             return (
-              <SidebarMenuItem key={project.id}>
-                <div className="flex items-center gap-1">
-                  <SidebarMenuButton
-                    onClick={() => handleProjectClick(project.id)}
-                    isActive={isActive}
-                    className="flex-1 h-7 px-2"
-                  >
-                    <Folder className="size-4" />
-                    <span className="flex-1 truncate text-sm">
-                      {project.name}
-                    </span>
-                  </SidebarMenuButton>
-                  <DropdownMenu>
+              <SidebarMenuItem
+                key={project.id}
+                onMouseEnter={() => setHoveredProjectId(project.id)}
+                onMouseLeave={() => setHoveredProjectId(null)}
+                className="relative"
+              >
+                <SidebarMenuButton
+                  onClick={() => handleProjectClick(project.id)}
+                  isActive={isActive}
+                  className="h-7 px-2"
+                >
+                  <Folder className="size-4 shrink-0" />
+                  <span className="flex-1 truncate text-sm">
+                    {project.name}
+                  </span>
+                </SidebarMenuButton>
+                {(hoveredProjectId === project.id || menuOpenProjectId === project.id) && (
+                  <DropdownMenu onOpenChange={(open) => setMenuOpenProjectId(open ? project.id : null)}>
                     <DropdownMenuTrigger
                       onClick={(e) => e.stopPropagation()}
-                      className="h-7 w-7 p-0 hover:bg-accent rounded-sm flex items-center justify-center"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-accent rounded-sm flex items-center justify-center data-[state=open]:bg-accent"
                     >
                       <MoreHorizontal className="size-4" />
                     </DropdownMenuTrigger>
@@ -160,12 +168,13 @@ export function NavProjects() {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                </div>
+                )}
               </SidebarMenuItem>
             );
           })}
         </SidebarMenu>
-      )}
+        )}
+      </div>
       <ProjectDialog
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}

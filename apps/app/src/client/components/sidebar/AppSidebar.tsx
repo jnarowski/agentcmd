@@ -2,7 +2,6 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarRail,
 } from "@/client/components/ui/sidebar";
 import { AppSidebarHeader } from "./SidebarHeader";
 import { NewButton } from "./NewButton";
@@ -48,7 +47,6 @@ export function AppSidebar({
       <SidebarFooter>
         <NavUser user={userData} onLogout={logout} />
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
   );
 }
