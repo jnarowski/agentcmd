@@ -77,7 +77,7 @@ export interface WorkflowEventData<TArgs = Record<string, unknown>> {
   /** Spec file content */
   specContent?: string;
   /** Git branch to create worktree from */
-  branchFrom?: string;
+  baseBranch?: string;
   /** New branch name for worktree */
   branchName?: string;
   /** Worktree directory name */

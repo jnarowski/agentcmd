@@ -19,7 +19,7 @@ export default defineWorkflow(
     const {
       specFile,
       specContent,
-      branchFrom,
+      baseBranch,
       branchName,
       worktreeName,
       projectPath,
@@ -30,7 +30,7 @@ export default defineWorkflow(
       return await step.setupWorkspace("setup-workspace", {
         projectPath,
         branch: branchName,
-        baseBranch: branchFrom,
+        baseBranch,
         worktreeName,
       });
     });
