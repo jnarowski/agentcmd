@@ -3,3 +3,4 @@
  */
 
 export * from './stepLogsSchema';
+export * from './workflowDefinition';

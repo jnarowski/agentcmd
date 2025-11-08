@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { Plus, Search } from "lucide-react";
+import { useNavigate, useParams, Link } from "react-router-dom";
+import { Plus, Search, Settings } from "lucide-react";
+import { Button } from "@/client/components/ui/button";
 import { WorkflowStatusValues } from "@/shared/schemas/workflow.schemas";
 import type { WorkflowStatus } from "@/shared/schemas/workflow.schemas";
 import { WorkflowKanbanColumn } from "./components/WorkflowKanbanColumn";
@@ -112,13 +113,21 @@ export function ProjectWorkflowsView({
       <div className="border-b bg-background p-4">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl font-bold">Workflows</h1>
-          <button
-            onClick={handleNewRunClick}
-            className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-          >
-            <Plus className="h-4 w-4" />
-            New Run
-          </button>
+          <div className="flex items-center gap-2">
+            <Link to={`/projects/${projectId}/workflows/manage`}>
+              <Button variant="outline" size="sm">
+                <Settings className="h-4 w-4 mr-2" />
+                Manage Workflows
+              </Button>
+            </Link>
+            <button
+              onClick={handleNewRunClick}
+              className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              <Plus className="h-4 w-4" />
+              New Run
+            </button>
+          </div>
         </div>
 
         {/* Filters */}

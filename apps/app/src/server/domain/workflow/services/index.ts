@@ -17,3 +17,6 @@ export * from "./events/createWorkflowEvent";
 export * from "./events/findOrCreateWorkflowEvent";
 export * from "./generateRunNames";
 export * from "./engine/getInngestRunStatus";
+export * from "./definitions/archiveWorkflowDefinition";
+export * from "./definitions/unarchiveWorkflowDefinition";
+export * from "./definitions/getWorkflowDefinitions";

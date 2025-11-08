@@ -14,6 +14,7 @@ import ProjectShell from "@/client/pages/projects/shell/ProjectShell";
 import ProjectFiles from "@/client/pages/projects/files/ProjectFiles";
 import ProjectSourceControl from "@/client/pages/projects/git/ProjectSourceControl";
 import { ProjectWorkflowsView } from "@/client/pages/projects/workflows/ProjectWorkflowsView";
+import { ProjectWorkflowsManage } from "@/client/pages/projects/workflows/ProjectWorkflowsManage";
 import { WorkflowDefinitionView } from "@/client/pages/projects/workflows/WorkflowDefinitionView";
 import { WorkflowRunDetail } from "@/client/pages/projects/workflows/WorkflowRunDetail";
 import Login from "@/client/pages/auth/Login";
@@ -60,6 +61,7 @@ function AppContent() {
           {/* Workflow routes with dedicated layout (no sidebar) */}
           <Route path="/projects/:projectId" element={<WorkflowLayout />}>
             <Route path="workflows" element={<ProjectWorkflowsView />} />
+            <Route path="workflows/manage" element={<ProjectWorkflowsManage />} />
             <Route path="workflows/:definitionId" element={<WorkflowDefinitionView />} />
             <Route path="workflows/:definitionId/runs/:runId" element={<WorkflowRunDetail />} />
           </Route>

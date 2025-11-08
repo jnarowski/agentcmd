@@ -11,14 +11,19 @@ export type { WorkflowStatus, StepStatus, WorkflowEventType, PhaseDefinition };
 export interface WorkflowDefinition {
   id: string;
   scope: 'project' | 'global';
+  project_id: string | null;
   name: string;
   description: string | null;
   phases: PhaseDefinition[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   args_schema: Record<string, any> | null;
+  status: 'active' | 'archived';
   load_error: string | null;
   created_at: Date;
   updated_at: Date;
+  _count?: {
+    runs: number;
+  };
 }
 
 /**
