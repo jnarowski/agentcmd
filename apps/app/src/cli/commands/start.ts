@@ -15,6 +15,7 @@ interface StartOptions {
 
 let fastifyServer: FastifyInstance | null = null;
 let inngestProcess: ChildProcess | null = null;
+let serverStartTime: Date | null = null;
 
 export async function startCommand(options: StartOptions): Promise<void> {
   try {
@@ -100,6 +101,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
     console.log("Starting Fastify server...");
     const { startServer } = await import("../../server/index.js");
     fastifyServer = await startServer({ port, host });
+    serverStartTime = new Date();
 
     // 7. Spawn Inngest dev UI
     console.log("Starting Inngest dev UI...");
@@ -180,4 +182,15 @@ async function cleanup(): Promise<void> {
     }
     fastifyServer = null;
   }
+}
+
+/**
+ * Get current server health status
+ * Used by /api/health endpoint
+ */
+export function getServerHealth() {
+  return {
+    inngestProcess,
+    serverStartTime,
+  };
 }
