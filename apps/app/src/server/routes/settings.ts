@@ -21,6 +21,9 @@ const userPreferencesSchema = z.object({
   default_theme: z.enum(["light", "dark", "system"]),
   default_agent: z.enum(["claude", "codex", "cursor", "gemini"]),
   onboarding_dismissed: z.boolean().optional(),
+  activity_filter: z.enum(["all", "sessions", "workflows"]).optional(),
+  projects_view: z.enum(["all", "favorites", "hidden"]).optional(),
+  sidebar_active_tab: z.enum(["projects", "activities", "tasks"]).optional(),
 });
 
 // Zod schema for updating user preferences (all fields optional)

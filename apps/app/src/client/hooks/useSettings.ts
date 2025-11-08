@@ -26,6 +26,9 @@ interface UserPreferences {
   default_theme: 'light' | 'dark' | 'system';
   default_agent: AgentType;
   onboarding_dismissed?: boolean;
+  activity_filter?: 'all' | 'sessions' | 'workflows';
+  projects_view?: 'all' | 'favorites' | 'hidden';
+  sidebar_active_tab?: 'projects' | 'activities' | 'tasks';
 }
 
 interface Settings {

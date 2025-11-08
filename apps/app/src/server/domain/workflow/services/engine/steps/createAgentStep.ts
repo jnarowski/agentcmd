@@ -85,13 +85,14 @@ export function createAgentStep(
             prompt: config.prompt,
             workingDir: config.projectPath ?? context.projectPath,
           });
-          // Execute agent with timeout
+          // Execute agent with timeout (bypass permissions for workflow context)
           const result = await withTimeout(
             executeAgent({
               sessionId: session.id,
               agent: config.agent as "claude" | "codex",
               prompt: config.prompt,
               workingDir: config.projectPath ?? context.projectPath,
+              permissionMode: "bypassPermissions", // Hardcoded to bypass permissions in workflows
               onEvent: ({ message }) => {
                 if (message && typeof message === "object" && message !== null) {
                   broadcast(Channels.session(session.id), {
