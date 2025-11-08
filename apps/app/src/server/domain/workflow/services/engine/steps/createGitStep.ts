@@ -7,6 +7,7 @@ import { createAndSwitchBranch } from "@/server/domain/git/services/createAndSwi
 import { createPullRequest } from "@/server/domain/git/services/createPullRequest";
 import { getCurrentBranch } from "@/server/domain/git/services/getCurrentBranch";
 import { getGitStatus } from "@/server/domain/git/services/getGitStatus";
+import { createWorkflowEventCommand } from "./utils/createWorkflowEventCommand";
 import { generateInngestStepId } from "./utils/generateInngestStepId";
 import { withTimeout } from "./utils/withTimeout";
 import { toId } from "./utils/toId";
@@ -37,7 +38,7 @@ export function createGitStep(
       const { projectPath } = context;
 
       const operation = await withTimeout(
-        executeGitOperation(projectPath, config),
+        executeGitOperation(projectPath, config, context),
         timeout,
         "Git operation"
       );
@@ -49,7 +50,8 @@ export function createGitStep(
 
 async function executeGitOperation(
   projectPath: string,
-  config: GitStepConfig
+  config: GitStepConfig,
+  context: RuntimeContext
 ): Promise<GitStepResult> {
   switch (config.operation) {
     case "commit": {
@@ -58,11 +60,21 @@ async function executeGitOperation(
       }
       // commitChanges expects object with projectPath, message, files[]
       // files defaults to ['.'] to stage all changes
+      const startTime = Date.now();
       const commitSha = await commitChanges({
         projectPath,
         message: config.message,
         files: ["."],
       });
+      const duration = Date.now() - startTime;
+
+      await createWorkflowEventCommand(
+        context,
+        "git",
+        ["commit", "-m", config.message],
+        duration
+      );
+
       return {
         operation: "commit",
         commitSha,
@@ -75,11 +87,21 @@ async function executeGitOperation(
         throw new Error("Branch name is required for branch operation");
       }
       // createAndSwitchBranch expects object with projectPath, branchName, from?
+      const startTime = Date.now();
       await createAndSwitchBranch({
         projectPath,
         branchName: config.branch,
         from: config.baseBranch,
       });
+      const duration = Date.now() - startTime;
+
+      await createWorkflowEventCommand(
+        context,
+        "git",
+        ["checkout", "-b", config.branch],
+        duration
+      );
+
       return {
         operation: "branch",
         branch: config.branch,
@@ -92,12 +114,22 @@ async function executeGitOperation(
         throw new Error("PR title is required for pr operation");
       }
       // createPullRequest expects object with projectPath, title, description, baseBranch
+      const startTime = Date.now();
       const result = await createPullRequest({
         projectPath,
         title: config.title,
         description: config.body ?? "",
         baseBranch: config.baseBranch ?? "main",
       });
+      const duration = Date.now() - startTime;
+
+      await createWorkflowEventCommand(
+        context,
+        "gh",
+        ["pr", "create", "--title", config.title, "--base", config.baseBranch ?? "main"],
+        duration
+      );
+
       return {
         operation: "pr",
         prUrl: result.prUrl,
@@ -122,11 +154,20 @@ async function executeGitOperation(
         let commitSha: string | undefined;
         if (hasUncommittedChanges) {
           const commitMessage = config.commitMessage ?? "WIP: Auto-commit";
+          const commitStartTime = Date.now();
           commitSha = await commitChanges({
             projectPath,
             message: commitMessage,
             files: ["."],
           });
+          const commitDuration = Date.now() - commitStartTime;
+
+          await createWorkflowEventCommand(
+            context,
+            "git",
+            ["commit", "-m", commitMessage],
+            commitDuration
+          );
         }
 
         return {
@@ -148,19 +189,37 @@ async function executeGitOperation(
       // If uncommitted changes exist, commit them
       if (hasUncommittedChanges) {
         const commitMessage = config.commitMessage ?? "WIP: Auto-commit before branching";
+        const commitStartTime = Date.now();
         commitSha = await commitChanges({
           projectPath,
           message: commitMessage,
           files: ["."],
         });
+        const commitDuration = Date.now() - commitStartTime;
+
+        await createWorkflowEventCommand(
+          context,
+          "git",
+          ["commit", "-m", commitMessage],
+          commitDuration
+        );
       }
 
       // Create and switch to new branch
+      const branchStartTime = Date.now();
       await createAndSwitchBranch({
         projectPath,
         branchName: config.branch,
         from: config.baseBranch,
       });
+      const branchDuration = Date.now() - branchStartTime;
+
+      await createWorkflowEventCommand(
+        context,
+        "git",
+        ["checkout", "-b", config.branch],
+        branchDuration
+      );
 
       return {
         operation: "commit-and-branch",

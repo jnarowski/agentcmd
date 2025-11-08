@@ -106,6 +106,7 @@ export const workflowEventTypeSchema = z.enum([
   'step_running',
   'step_completed',
   'step_failed',
+  'command_executed',
 ]);
 
 /**

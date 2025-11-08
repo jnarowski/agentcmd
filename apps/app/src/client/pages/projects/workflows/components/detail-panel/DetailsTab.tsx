@@ -1,6 +1,8 @@
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Copy, Check } from "lucide-react";
+import { useState } from "react";
 import type { WorkflowRun } from "../../types";
 import { useInngestRunStatus } from "../../hooks/useInngestRunStatus";
+import { Button } from "@/client/components/ui/button";
 
 interface DetailsTabProps {
   run: WorkflowRun;
@@ -9,6 +11,13 @@ interface DetailsTabProps {
 export function DetailsTab({ run }: DetailsTabProps) {
   const hasArgs = run.args && Object.keys(run.args).length > 0;
   const { data: inngestStatus, isLoading: inngestLoading } = useInngestRunStatus(run.id);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyRunId = async () => {
+    await navigator.clipboard.writeText(run.id);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className="space-y-4">
@@ -26,7 +35,22 @@ export function DetailsTab({ run }: DetailsTabProps) {
         <dl className="divide-y text-sm">
           <div className="grid grid-cols-2 gap-2 py-2">
             <dt className="text-muted-foreground">Run ID:</dt>
-            <dd className="font-mono text-xs">{run.id}</dd>
+            <dd className="font-mono text-xs flex items-center gap-2">
+              <span className="flex-1">{run.id}</span>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={handleCopyRunId}
+                className="shrink-0"
+                title="Copy Run ID"
+              >
+                {copied ? (
+                  <Check className="h-3 w-3 text-green-500" />
+                ) : (
+                  <Copy className="h-3 w-3" />
+                )}
+              </Button>
+            </dd>
           </div>
 
           <div className="grid grid-cols-2 gap-2 py-2">
