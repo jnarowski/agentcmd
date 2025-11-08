@@ -105,7 +105,7 @@ export function ProjectWorkflowsManage() {
         open={archiveDialogOpen}
         onOpenChange={setArchiveDialogOpen}
         workflowName={selectedDefinition?.name || ''}
-        runCount={selectedDefinition?._count?.runs || 0}
+        runCount={selectedDefinition?._count?.activeRuns || 0}
         onConfirm={handleArchiveConfirm}
         isPending={archiveMutation.isPending}
       />

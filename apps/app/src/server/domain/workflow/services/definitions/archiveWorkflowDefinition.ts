@@ -18,7 +18,7 @@ export async function archiveWorkflowDefinition(
     });
 
     return definition;
-  } catch (error) {
+  } catch {
     // If definition not found, return null (routes will handle 404)
     return null;
   }

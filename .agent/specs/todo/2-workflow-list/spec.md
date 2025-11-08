@@ -607,3 +607,77 @@ onError: (err, variables, context) => {
 5. Test full flow end-to-end
 6. Add E2E tests for critical paths
 7. Update documentation if needed
+
+## Review Findings
+
+**Review Date:** 2025-01-08
+**Reviewed By:** Claude Code
+**Review Iteration:** 1 of 3
+**Branch:** feat/workflow-lists
+**Commits Reviewed:** 0 (new implementation on current branch)
+
+### Summary
+
+✅ **Implementation is complete.** All 19 tasks across 4 phases have been implemented correctly according to the spec. The code follows project patterns, includes proper error handling, and type checking passes. One MEDIUM priority issue identified related to the archive dialog warning message accuracy.
+
+### Phase 1: Backend Services
+
+**Status:** ✅ Complete - All service functions implemented correctly
+
+All backend service functions are properly implemented:
+- `archiveWorkflowDefinition.ts` - Correctly updates status and archived_at
+- `unarchiveWorkflowDefinition.ts` - Correctly resets status and clears archived_at
+- `getWorkflowDefinitions.ts` - Properly queries with status filter and includes run counts
+
+### Phase 2: Backend Routes
+
+**Status:** ✅ Complete - All routes implemented correctly
+
+All API routes are properly implemented:
+- GET route supports optional status query parameter
+- PATCH /archive and /unarchive routes properly call service functions
+- All routes use authentication and return appropriate status codes
+
+### Phase 3: Frontend Hooks
+
+**Status:** ✅ Complete - All hooks implemented correctly
+
+All frontend hooks are properly implemented:
+- `useArchiveWorkflowDefinition` and `useUnarchiveWorkflowDefinition` follow TanStack Query patterns
+- Query invalidation works correctly
+- Toast notifications are implemented
+- `useWorkflowDefinitions` supports status filtering
+
+### Phase 4: Frontend UI
+
+**Status:** ✅ Complete - Issue resolved
+
+#### MEDIUM Priority
+
+- [x] **Archive dialog warning message inaccuracy** - RESOLVED
+  - **File:** `apps/app/src/client/pages/projects/workflows/components/ArchiveWorkflowDialog.tsx:38`
+  - **Spec Reference:** "Show warning if definition has active/pending runs" and "Display run count: 'This workflow has X active run(s)'"
+  - **Expected:** Warning should only show for active or pending runs (not all runs)
+  - **Actual:** Dialog shows warning for total run count from `_count.runs`, which includes completed, failed, and cancelled runs
+  - **Fix Applied:** Updated backend service to include `activeRuns` count (filtering by 'pending', 'running', 'paused' statuses) and updated dialog to use this value
+
+### Positive Findings
+
+- Excellent adherence to project coding standards and patterns
+- All components follow proper naming conventions (PascalCase for components, kebab-case for shadcn/ui)
+- Service functions are pure and follow one-function-per-file pattern
+- Routes are thin and properly delegate to services
+- Type safety maintained throughout with proper TypeScript usage
+- Error handling implemented correctly with try-catch and null returns
+- Proper use of AlertDialog for confirmations
+- Table components properly separated into Row and Table
+- Global workflows are correctly identified and disabled from archiving/unarchiving
+- Navigation properly implemented with back button and breadcrumb
+- Loading states and empty states properly handled
+- Query invalidation strategy is sound
+
+### Review Completion Checklist
+
+- [x] All spec requirements reviewed
+- [x] Code quality checked
+- [x] All findings addressed and tested

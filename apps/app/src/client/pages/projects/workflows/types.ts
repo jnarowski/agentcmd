@@ -23,6 +23,7 @@ export interface WorkflowDefinition {
   updated_at: Date;
   _count?: {
     runs: number;
+    activeRuns: number;
   };
 }
 

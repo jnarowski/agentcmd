@@ -1,5 +1,5 @@
 {
-  "lastId": 2,
+  "lastId": 3,
   "specs": {
     "1": {
       "folder": "1-log-streaming",
@@ -8,6 +8,11 @@
     },
     "2": {
       "folder": "2-workflow-list",
+      "created": "2025-11-08T00:00:00.000Z",
+      "location": "todo"
+    },
+    "3": {
+      "folder": "3-implement-sidebar-redesign",
       "created": "2025-11-08T00:00:00.000Z",
       "location": "todo"
     }

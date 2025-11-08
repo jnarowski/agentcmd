@@ -18,7 +18,7 @@ export async function unarchiveWorkflowDefinition(
     });
 
     return definition;
-  } catch (error) {
+  } catch {
     // If definition not found, return null (routes will handle 404)
     return null;
   }

@@ -218,9 +218,8 @@ model User {
 
         const result = checkPendingMigrations(invalidSchema);
         expect(Array.isArray(result)).toBe(true);
-      },
-      10000
-    ); // 10s timeout for Prisma CLI
+      }
+    ); // Removed timeout - this is synchronous
   });
 
   describe("integration: backup workflow", () => {

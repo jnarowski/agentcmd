@@ -36,7 +36,7 @@ export function ArchiveWorkflowDialog({
             {runCount > 0 && (
               <span className="block mt-2 text-amber-600 dark:text-amber-400 font-medium">
                 Warning: This workflow has {runCount} active or pending run{runCount > 1 ? 's' : ''}.
-                Archiving will not affect existing runs, but you won't be able to create new runs until it's unarchived.
+                Archiving will not affect these runs, but you won't be able to create new runs until it's unarchived.
               </span>
             )}
           </AlertDialogDescription>
