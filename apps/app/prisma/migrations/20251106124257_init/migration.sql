@@ -25,7 +25,7 @@ CREATE TABLE "workflow_runs" (
     "args" JSONB NOT NULL,
     "spec_file" TEXT,
     "spec_content" TEXT,
-    "branch_from" TEXT,
+    "base_branch" TEXT,
     "branch_name" TEXT,
     "worktree_name" TEXT,
     "current_phase" TEXT,

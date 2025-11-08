@@ -10,6 +10,7 @@ import { commitChanges } from "@/server/domain/git/services/commitChanges";
 import { createAndSwitchBranch } from "@/server/domain/git/services/createAndSwitchBranch";
 import { createWorktree } from "@/server/domain/git/services/createWorktree";
 import { getGitStatus } from "@/server/domain/git/services/getGitStatus";
+import { createWorkflowEventCommand } from "./utils/createWorkflowEventCommand";
 import { generateInngestStepId } from "./utils/generateInngestStepId";
 import { withTimeout } from "./utils/withTimeout";
 import { toId } from "./utils/toId";
@@ -27,18 +28,26 @@ export function createSetupWorkspaceStep(
 ) {
   return async function setupWorkspace(
     idOrName: string,
-    config: SetupWorkspaceConfig,
+    eventData: Record<string, unknown>,
     options?: StepOptions
   ): Promise<WorkspaceResult> {
     const id = toId(idOrName);
     const timeout = options?.timeout ?? DEFAULT_SETUP_WORKSPACE_TIMEOUT;
+
+    // Extract config from event.data (spread by caller)
+    const config: SetupWorkspaceConfig = {
+      projectPath: (eventData.projectPath as string) || context.projectPath,
+      branch: eventData.branchName as string | undefined,
+      baseBranch: (eventData.baseBranch as string) || 'main',
+      worktreeName: eventData.worktreeName as string | undefined,
+    };
 
     // Generate phase-prefixed Inngest step ID
     const inngestStepId = generateInngestStepId(context, id);
 
     return await inngestStep.run(inngestStepId, async () => {
       return await withTimeout(
-        executeSetupWorkspace(config),
+        executeSetupWorkspace(config, context),
         timeout,
         "Setup workspace"
       );
@@ -47,7 +56,8 @@ export function createSetupWorkspaceStep(
 }
 
 async function executeSetupWorkspace(
-  config: SetupWorkspaceConfig
+  config: SetupWorkspaceConfig,
+  context: RuntimeContext
 ): Promise<WorkspaceResult> {
   const { projectPath, branch, baseBranch, worktreeName } = config;
 
@@ -61,10 +71,19 @@ async function executeSetupWorkspace(
   // Mode 1: Worktree
   if (worktreeName) {
     const targetBranch = branch ?? currentBranch ?? "main";
+
+    const startTime = Date.now();
     const worktreePath = await createWorktree({
       projectPath,
       branch: targetBranch,
     });
+    const duration = Date.now() - startTime;
+    await createWorkflowEventCommand(
+      context,
+      "git",
+      ["worktree", "add", worktreePath, targetBranch],
+      duration
+    );
 
     return {
       workingDir: worktreePath,
@@ -80,19 +99,35 @@ async function executeSetupWorkspace(
     const status = await getGitStatus({ projectPath });
     if (status.files.length > 0) {
       // Auto-commit uncommitted changes before branching
+      const commitStartTime = Date.now();
       await commitChanges({
         projectPath,
         message: "WIP: Auto-commit before branching",
         files: ["."],
       });
+      const commitDuration = Date.now() - commitStartTime;
+      await createWorkflowEventCommand(
+        context,
+        "git",
+        ["commit", "-m", "WIP: Auto-commit before branching"],
+        commitDuration
+      );
     }
 
     // Create and switch to branch
+    const checkoutStartTime = Date.now();
     await createAndSwitchBranch({
       projectPath,
       branchName: branch,
       from: baseBranch,
     });
+    const checkoutDuration = Date.now() - checkoutStartTime;
+    await createWorkflowEventCommand(
+      context,
+      "git",
+      ["checkout", "-b", branch],
+      checkoutDuration
+    );
 
     return {
       workingDir: projectPath,

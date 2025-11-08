@@ -62,6 +62,12 @@ export interface EventDataMap {
     stepId: string;
     error?: string;
   };
+  command_executed: BaseEventData & {
+    command: string;
+    args?: string[];
+    exitCode?: number;
+    duration?: number;
+  };
 }
 
 // Export WorkflowEvent type from Prisma

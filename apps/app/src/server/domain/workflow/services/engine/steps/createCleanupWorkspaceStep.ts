@@ -5,6 +5,7 @@ import type {
   StepOptions,
 } from "agentcmd-workflows";
 import { removeWorktree } from "@/server/domain/git/services/removeWorktree";
+import { createWorkflowEventCommand } from "./utils/createWorkflowEventCommand";
 import { generateInngestStepId } from "./utils/generateInngestStepId";
 import { withTimeout } from "./utils/withTimeout";
 import { toId } from "./utils/toId";
@@ -33,7 +34,7 @@ export function createCleanupWorkspaceStep(
 
     await inngestStep.run(inngestStepId, async () => {
       await withTimeout(
-        executeCleanupWorkspace(config),
+        executeCleanupWorkspace(config, context),
         timeout,
         "Cleanup workspace"
       );
@@ -42,7 +43,8 @@ export function createCleanupWorkspaceStep(
 }
 
 async function executeCleanupWorkspace(
-  config: CleanupWorkspaceConfig
+  config: CleanupWorkspaceConfig,
+  context: RuntimeContext
 ): Promise<void> {
   const { workspaceResult } = config;
 
@@ -54,10 +56,19 @@ async function executeCleanupWorkspace(
     const worktreePath = workspaceResult.worktreePath;
     const projectPath = worktreePath.replace(/\/\.worktrees\/[^/]+$/, "");
 
+    const startTime = Date.now();
     await removeWorktree({
       projectPath,
       worktreePath,
     });
+    const duration = Date.now() - startTime;
+
+    await createWorkflowEventCommand(
+      context,
+      "git",
+      ["worktree", "remove", worktreePath],
+      duration
+    );
   }
 
   // For "branch" or "stay" modes, no cleanup needed

@@ -171,21 +171,18 @@ export function Combobox<T extends string = string>({
                     {renderOption ? (
                       renderOption(option, selected)
                     ) : (
-                      <div className="flex items-center gap-2 flex-1">
-                        {selected && <CheckIcon className="size-4 shrink-0" />}
-                        <div className="flex flex-col flex-1">
-                          <span>{option.label}</span>
-                          {option.description && (
-                            <span className="text-xs text-muted-foreground">
-                              {option.description}
-                            </span>
-                          )}
-                          {option.badge && (
-                            <span className="text-xs text-muted-foreground">
-                              {option.badge}
-                            </span>
-                          )}
-                        </div>
+                      <div className="flex flex-col flex-1">
+                        <span>{option.label}</span>
+                        {option.description && (
+                          <span className="text-xs text-muted-foreground">
+                            {option.description}
+                          </span>
+                        )}
+                        {option.badge && (
+                          <span className="text-xs text-muted-foreground">
+                            {option.badge}
+                          </span>
+                        )}
                       </div>
                     )}
                   </CommandItem>

@@ -15,7 +15,7 @@ export default defineWorkflow(
     const {
       specFile,
       specContent,
-      branchFrom,
+      baseBranch,
       branchName,
       worktreeName,
       projectPath,

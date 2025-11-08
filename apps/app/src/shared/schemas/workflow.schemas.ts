@@ -106,6 +106,7 @@ export const workflowEventTypeSchema = z.enum([
   'step_running',
   'step_completed',
   'step_failed',
+  'command_executed',
 ]);
 
 /**
@@ -132,7 +133,7 @@ export const createWorkflowRunSchema = z
     args: z.record(z.string(), z.unknown()).default({}),
     spec_file: z.string().optional(),
     spec_content: z.string().optional(),
-    branch_from: z.string().optional(),
+    base_branch: z.string().optional(),
     branch_name: z.string().optional(),
     worktree_name: z.string().optional(),
     inngest_run_id: z.string().optional(),
@@ -296,7 +297,7 @@ export const workflowRunResponseSchema = z.object({
   args: z.record(z.string(), z.unknown()),
   spec_file: z.string().nullable(),
   spec_content: z.string().nullable(),
-  branch_from: z.string().nullable(),
+  base_branch: z.string().nullable(),
   branch_name: z.string().nullable(),
   worktree_name: z.string().nullable(),
   current_phase: z.string().nullable(),

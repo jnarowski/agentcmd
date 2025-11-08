@@ -15,7 +15,7 @@ export default defineWorkflow(
     const {
       specFile,
       specContent,
-      branchFrom,
+      baseBranch,
       branchName,
       worktreeName,
       projectPath,
@@ -27,7 +27,7 @@ export default defineWorkflow(
         prompt: `
           Project: ${projectPath}
           Spec: ${specFile}
-          Branch from: ${branchFrom} → ${branchName}
+          Base Branch: ${baseBranch} → ${branchName}
           Worktree: ${worktreeName}
 
           ${specContent}
