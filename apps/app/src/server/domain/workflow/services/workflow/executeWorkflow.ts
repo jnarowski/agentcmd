@@ -51,8 +51,8 @@ export async function executeWorkflow({
 
   // Build and send workflow event
   const { eventName } = buildWorkflowIdentifiers(
-    execution.project_id,
-    execution.workflow_definition.identifier
+    execution.workflow_definition.identifier,
+    execution.project_id
   );
   const eventData = buildWorkflowEventData(execution);
 

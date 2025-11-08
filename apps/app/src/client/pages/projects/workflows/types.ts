@@ -10,6 +10,7 @@ export type { WorkflowStatus, StepStatus, WorkflowEventType, PhaseDefinition };
 
 export interface WorkflowDefinition {
   id: string;
+  scope: 'project' | 'global';
   name: string;
   description: string | null;
   phases: PhaseDefinition[];

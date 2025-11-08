@@ -73,6 +73,7 @@ export interface ComboboxOption<T extends string = string> {
   label: string;
   description?: string;
   badge?: string;
+  disabled?: boolean;
 }
 
 export interface ComboboxProps<T extends string = string> {
@@ -165,7 +166,8 @@ export function Combobox<T extends string = string>({
                   <CommandItem
                     key={String(option.value)}
                     value={option.label}
-                    onSelect={() => handleSelect(option.value)}
+                    onSelect={() => !option.disabled && handleSelect(option.value)}
+                    disabled={option.disabled}
                   >
                     {/* @ts-ignore - React type version conflict */}
                     {renderOption ? (

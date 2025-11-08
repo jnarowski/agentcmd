@@ -34,7 +34,7 @@ export async function registerWorkflowDefinitionRoutes(
 ): Promise<void> {
   /**
    * GET /api/projects/:projectId/workflow-definitions
-   * List workflow templates for a specific project
+   * List workflow templates for a specific project (includes global workflows)
    */
   fastify.get<{
     Params: { projectId: string };
@@ -60,18 +60,31 @@ export async function registerWorkflowDefinitionRoutes(
 
       fastify.log.info({ userId, projectId }, 'Fetching workflow definitions for project');
 
+      // Fetch both project-specific and global workflows
       const definitions = await prisma.workflowDefinition.findMany({
         where: {
           is_template: true,
-          project_id: projectId,
+          OR: [
+            { project_id: projectId, scope: 'project' },
+            { scope: 'global' },
+          ],
         },
-        orderBy: {
-          name: 'asc',
-        },
+        orderBy: [
+          { scope: 'asc' }, // global comes after project alphabetically, so reverse needed
+          { name: 'asc' },
+        ],
+      });
+
+      // Sort: project-specific first, then global
+      const sortedDefinitions = definitions.sort((a, b) => {
+        if (a.scope !== b.scope) {
+          return a.scope === 'project' ? -1 : 1; // project before global
+        }
+        return a.name.localeCompare(b.name);
       });
 
       // Parse JSON fields (Prisma stores JSON as strings in SQLite)
-      const parsedDefinitions = definitions.map((def) => ({
+      const parsedDefinitions = sortedDefinitions.map((def) => ({
         ...def,
         phases: typeof def.phases === 'string' ? JSON.parse(def.phases) : def.phases,
         args_schema: def.args_schema && typeof def.args_schema === 'string'

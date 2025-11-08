@@ -92,8 +92,13 @@ export async function setupGracefulShutdown(
       await prisma.$disconnect();
       fastify.log.info('Prisma disconnected');
 
-      fastify.log.info('Graceful shutdown complete');
-      process.exit(0);
+      fastify.log.info('Graceful shutdown complete - process will exit naturally');
+
+      // Set timeout fallback in case something keeps event loop alive
+      setTimeout(() => {
+        fastify.log.warn('Force exiting after 2s timeout');
+        process.exit(0);
+      }, 2000).unref(); // unref() so it doesn't prevent exit
     } catch (error) {
       fastify.log.error({ error }, 'Error during graceful shutdown');
       process.exit(1);

@@ -29,13 +29,13 @@ import {
  * This provides real implementations of all step methods
  *
  * @param inngest - Inngest client instance
- * @param projectId - Project ID for event scoping
+ * @param projectId - Project ID for event scoping (null for global workflows)
  * @param logger - Fastify logger
  * @returns WorkflowRuntime implementation
  */
 export function createWorkflowRuntime(
   inngest: Inngest,
-  projectId: string,
+  projectId: string | null,
   logger: FastifyBaseLogger
 ): WorkflowRuntime {
   return {
@@ -50,7 +50,7 @@ export function createWorkflowRuntime(
     > {
       // Create Inngest function with custom step implementations
       // Using project-scoped function IDs and dot-notation event names (Inngest standard)
-      const { functionId, eventName } = buildWorkflowIdentifiers(projectId, config.id);
+      const { functionId, eventName } = buildWorkflowIdentifiers(config.id, projectId);
 
       return inngest.createFunction(
         {

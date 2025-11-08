@@ -3,7 +3,9 @@ import type { FastifyInstance } from "fastify";
 import { createWorkflowClient } from "./createWorkflowClient";
 import { createWorkflowRuntime } from "./createWorkflowRuntime";
 import { loadProjectWorkflows } from "./loadProjectWorkflows";
+import { loadGlobalWorkflows } from "./loadGlobalWorkflows";
 import { scanAllProjectWorkflows } from "./scanAllProjectWorkflows";
+import { scanGlobalWorkflows } from "./scanGlobalWorkflows";
 import { prisma } from "@/shared/prisma";
 import config from "@/server/config";
 
@@ -43,6 +45,20 @@ export async function initializeWorkflowEngine(
   // Store Inngest client on fastify instance for later access
   fastify.decorate("workflowClient", inngestClient);
 
+  // Scan global workflows first (no project dependency)
+  logger.info("Scanning global workflows...");
+  const globalRuntime = createWorkflowRuntime(inngestClient, null, logger);
+  const globalWorkflowsCount = await scanGlobalWorkflows(globalRuntime, logger);
+
+  if (globalWorkflowsCount > 0) {
+    logger.info(
+      { workflowsDiscovered: globalWorkflowsCount },
+      `Discovered ${globalWorkflowsCount} global workflow(s)`
+    );
+  } else {
+    logger.info("No global workflows found");
+  }
+
   // Scan all projects for workflows BEFORE loading from database
   // This ensures database is populated with workflow definitions
   logger.info("Scanning projects for workflows...");
@@ -78,6 +94,7 @@ export async function initializeWorkflowEngine(
       identifier: true,
       name: true,
       path: true,
+      scope: true,
       project_id: true,
     },
   });
@@ -90,39 +107,63 @@ export async function initializeWorkflowEngine(
   // Load each workflow from filesystem
   for (const definition of definitions) {
     try {
-      // Get project path
-      const project = await prisma.project.findUnique({
-        where: { id: definition.project_id },
-        select: { path: true },
-      });
+      if (definition.scope === "global") {
+        // Load global workflow
+        const runtime = createWorkflowRuntime(inngestClient, null, logger);
+        const { workflows } = await loadGlobalWorkflows(runtime, logger);
 
-      if (!project) {
-        logger.warn({ definitionId: definition.id }, "Project not found for workflow definition");
-        continue;
-      }
-
-      // Create project-scoped runtime
-      const runtime = createWorkflowRuntime(inngestClient, definition.project_id, logger);
-
-      // Load workflows from project (will reload from stored path)
-      const { workflows } = await loadProjectWorkflows(project.path, runtime, logger);
-
-      // Find matching workflow
-      const workflow = workflows.find(
-        (w) => w.definition.config.id === definition.identifier
-      );
-
-      if (workflow) {
-        inngestFunctions.push(workflow.inngestFunction);
-        logger.info(
-          { workflowId: definition.identifier, name: definition.name, path: definition.path },
-          "Registered workflow"
+        // Find matching workflow
+        const workflow = workflows.find(
+          (w) => w.definition.config.id === definition.identifier
         );
+
+        if (workflow) {
+          inngestFunctions.push(workflow.inngestFunction);
+          logger.info(
+            { workflowId: definition.identifier, name: definition.name, path: definition.path, scope: "global" },
+            "Registered global workflow"
+          );
+        } else {
+          logger.warn(
+            { definitionId: definition.id, identifier: definition.identifier, path: definition.path },
+            "Global workflow file no longer exports matching definition"
+          );
+        }
       } else {
-        logger.warn(
-          { definitionId: definition.id, identifier: definition.identifier, path: definition.path },
-          "Workflow file no longer exports matching definition"
+        // Load project workflow
+        const project = await prisma.project.findUnique({
+          where: { id: definition.project_id! },
+          select: { path: true },
+        });
+
+        if (!project) {
+          logger.warn({ definitionId: definition.id }, "Project not found for workflow definition");
+          continue;
+        }
+
+        // Create project-scoped runtime
+        const runtime = createWorkflowRuntime(inngestClient, definition.project_id!, logger);
+
+        // Load workflows from project (will reload from stored path)
+        const { workflows } = await loadProjectWorkflows(project.path, runtime, logger);
+
+        // Find matching workflow
+        const workflow = workflows.find(
+          (w) => w.definition.config.id === definition.identifier
         );
+
+        if (workflow) {
+          inngestFunctions.push(workflow.inngestFunction);
+          logger.info(
+            { workflowId: definition.identifier, name: definition.name, path: definition.path, scope: "project" },
+            "Registered project workflow"
+          );
+        } else {
+          logger.warn(
+            { definitionId: definition.id, identifier: definition.identifier, path: definition.path },
+            "Workflow file no longer exports matching definition"
+          );
+        }
       }
     } catch (error) {
       logger.error(

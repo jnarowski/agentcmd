@@ -1,14 +1,21 @@
-import { existsSync, unlinkSync } from "fs";
+import { existsSync, unlinkSync, copyFileSync, readdirSync } from "fs";
 import { spawnSync } from "child_process";
 import { randomBytes } from "crypto";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 import {
   getDbPath,
   getHomeDir,
   getConfigPath,
   getLogsDir,
+  getGlobalWorkflowsDir,
   ensureDirectoryExists,
 } from "../utils/paths.js";
 import { getDefaultConfig, saveConfig } from "../utils/config.js";
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 interface InstallOptions {
   force?: boolean;
@@ -67,12 +74,35 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     };
     saveConfig(configWithSecret);
 
-    // 6. Success messaging
+    // 6. Copy global workflow templates
+    const workflowsDir = getGlobalWorkflowsDir();
+    ensureDirectoryExists(workflowsDir);
+
+    // Templates are bundled in dist/cli/templates/workflows/
+    const templatesDir = join(__dirname, "../templates/workflows");
+    let templatesCopied = 0;
+
+    if (existsSync(templatesDir)) {
+      const templateFiles = readdirSync(templatesDir);
+      for (const file of templateFiles) {
+        if (file.endsWith(".ts")) {
+          const sourcePath = join(templatesDir, file);
+          const destPath = join(workflowsDir, file);
+          copyFileSync(sourcePath, destPath);
+          templatesCopied++;
+        }
+      }
+    }
+
+    // 7. Success messaging
     console.log(`✓ Created ${homeDir}/`);
     console.log(`✓ Created database at ${dbPath}`);
     console.log(`✓ Applied database migrations`);
     console.log(`✓ Created config at ${configPath}`);
     console.log(`✓ Generated JWT secret`);
+    if (templatesCopied > 0) {
+      console.log(`✓ Installed ${templatesCopied} global workflow template(s)`);
+    }
     console.log("");
     console.log("Next steps:");
     console.log(`  1. (Optional) Edit ${configPath} to customize settings`);
