@@ -9,9 +9,22 @@ Reviews a previous agent's implementation work by comparing the provided spec fi
 
 ## Variables
 
-- $specIdOrNameOrPath: $1 (required) - Either a spec ID (e.g., `ef3`), feature name (e.g., `kill-claude-process`), or full path (e.g., `.agent/specs/todo/ef3-kill-claude-process-spec.md`)
+- $specIdOrNameOrPath: $1 (required) - Either a spec ID (e.g., `1`, `ef3`), feature name (e.g., `workflow-safety`), or full path
 - $format: $2 (optional) - Output format: "text" or "json" (defaults to "text" if not provided)
 - $max-reviews: 3 - This is a constant (maximum review iterations allowed)
+
+## Spec File Resolution
+
+**Parse and resolve $specIdOrNameOrPath:**
+- If it's a numeric ID (e.g., `1`, `2`):
+  - Check index.json for spec location
+  - Read from `{location}/{folder}/spec.md`
+- If it's a 3-char alphanumeric ID (e.g., `ef3`) - legacy:
+  - Search for `{id}-*-spec.md` or `{id}-*/spec.md` in todo/done
+- If it's a feature name:
+  - Search for `*-{feature}/spec.md` or `*-{feature}-spec.md` in todo/done
+- If it's a full path: use as-is
+- If not found: stop and report error
 
 ## Instructions
 

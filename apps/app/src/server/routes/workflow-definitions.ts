@@ -21,6 +21,7 @@ const WorkflowDefinitionResponseSchema = z.object({
   phases: z.any(), // JSON
   args_schema: z.any().nullable(), // JSON
   is_template: z.boolean(),
+  load_error: z.string().nullable(),
   created_at: z.date(),
   updated_at: z.date(),
 });
@@ -32,8 +33,59 @@ export async function registerWorkflowDefinitionRoutes(
   fastify: FastifyInstance
 ): Promise<void> {
   /**
+   * GET /api/projects/:projectId/workflow-definitions
+   * List workflow templates for a specific project
+   */
+  fastify.get<{
+    Params: { projectId: string };
+    Reply: { data: unknown };
+  }>(
+    '/api/projects/:projectId/workflow-definitions',
+    {
+      schema: {
+        params: z.object({
+          projectId: z.string().cuid(),
+        }),
+        response: {
+          200: z.object({
+            data: z.array(WorkflowDefinitionResponseSchema),
+          }),
+        },
+      },
+      preHandler: fastify.authenticate,
+    },
+    async (request, reply) => {
+      const userId = (request.user! as { id: string }).id;
+      const { projectId } = request.params;
+
+      fastify.log.info({ userId, projectId }, 'Fetching workflow definitions for project');
+
+      const definitions = await prisma.workflowDefinition.findMany({
+        where: {
+          is_template: true,
+          project_id: projectId,
+        },
+        orderBy: {
+          name: 'asc',
+        },
+      });
+
+      // Parse JSON fields (Prisma stores JSON as strings in SQLite)
+      const parsedDefinitions = definitions.map((def) => ({
+        ...def,
+        phases: typeof def.phases === 'string' ? JSON.parse(def.phases) : def.phases,
+        args_schema: def.args_schema && typeof def.args_schema === 'string'
+          ? JSON.parse(def.args_schema)
+          : def.args_schema,
+      }));
+
+      return reply.send(buildSuccessResponse(parsedDefinitions));
+    }
+  );
+
+  /**
    * GET /api/workflow-definitions
-   * List all workflow templates
+   * List all workflow templates (global - kept for backwards compatibility)
    */
   fastify.get<{
     Reply: { data: unknown };

@@ -6,9 +6,11 @@ import { WorkflowStatusValues } from "@/shared/schemas/workflow.schemas";
 import type { WorkflowStatus } from "@/shared/schemas/workflow.schemas";
 import { WorkflowKanbanColumn } from "./components/WorkflowKanbanColumn";
 import { NewRunDialog } from "./components/NewRunDialog";
+import { WorkflowOnboardingDialog } from "./components/WorkflowOnboardingDialog";
 import { useWorkflowRuns } from "./hooks/useWorkflowRuns";
 import { useWorkflowDefinitions } from "./hooks/useWorkflowDefinitions";
 import { useWorkflowWebSocket } from "./hooks/useWorkflowWebSocket";
+import { useProject } from "@/client/pages/projects/hooks/useProjects";
 import { Combobox } from "@/client/components/ui/combobox";
 import type { ComboboxOption } from "@/client/components/ui/combobox";
 
@@ -24,12 +26,14 @@ export function ProjectWorkflowsView({
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [showNewRunDialog, setShowNewRunDialog] = useState(false);
+  const [showOnboardingDialog, setShowOnboardingDialog] = useState(false);
 
   // Hooks
   const { data: runs, isLoading } = useWorkflowRuns(projectId, {
     search,
   });
-  const { data: definitions } = useWorkflowDefinitions();
+  const { data: definitions } = useWorkflowDefinitions(projectId);
+  const { data: project } = useProject(projectId);
   useWorkflowWebSocket(projectId);
 
   // TODO: Wire up workflow control mutations
@@ -51,14 +55,35 @@ export function ProjectWorkflowsView({
     definitions?.map((def) => ({
       value: def.id,
       label: def.name,
-      description: def.description || undefined,
-      badge: `${def.phases?.length || 0} phases`,
+      description: def.load_error || def.description || undefined,
+      badge: def.load_error ? 'ERROR' : `${def.phases?.length || 0} phases`,
     })) || [];
 
   const handleWorkflowSelect = (value: string) => {
     if (value) {
       navigate(`/projects/${projectId}/workflows/${value}`);
     }
+  };
+
+  const handleNewRunClick = () => {
+    // Check if onboarding is needed
+    const isPackageInstalled = project?.capabilities?.workflow_sdk?.installed ?? false;
+    const hasDefinitions = definitions && definitions.length > 0;
+
+    if (!isPackageInstalled || !hasDefinitions) {
+      // Show onboarding dialog
+      setShowOnboardingDialog(true);
+    } else {
+      // Show new run dialog
+      setShowNewRunDialog(true);
+    }
+  };
+
+  const handleOnboardingComplete = () => {
+    // Close onboarding dialog
+    setShowOnboardingDialog(false);
+    // Open new run dialog
+    setShowNewRunDialog(true);
   };
 
   // Group runs by status
@@ -88,7 +113,7 @@ export function ProjectWorkflowsView({
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl font-bold">Workflows</h1>
           <button
-            onClick={() => setShowNewRunDialog(true)}
+            onClick={handleNewRunClick}
             className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
             <Plus className="h-4 w-4" />
@@ -139,6 +164,14 @@ export function ProjectWorkflowsView({
           ))}
         </div>
       </div>
+
+      {/* Onboarding Dialog */}
+      <WorkflowOnboardingDialog
+        open={showOnboardingDialog}
+        onOpenChange={setShowOnboardingDialog}
+        projectId={projectId}
+        onComplete={handleOnboardingComplete}
+      />
 
       {/* New Run Dialog */}
       <NewRunDialog

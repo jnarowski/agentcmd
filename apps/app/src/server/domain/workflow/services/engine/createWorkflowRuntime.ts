@@ -10,6 +10,7 @@ import type { FastifyBaseLogger } from "fastify";
 import { prisma } from "@/shared/prisma";
 import { createWorkflowEvent } from "@/server/domain/workflow/services";
 import { broadcastWorkflowEvent } from "../events/broadcastWorkflowEvent";
+import { buildWorkflowIdentifiers } from "../../utils/buildWorkflowIdentifiers";
 import {
   createPhaseStep,
   createAgentStep,
@@ -28,11 +29,13 @@ import {
  * This provides real implementations of all step methods
  *
  * @param inngest - Inngest client instance
+ * @param projectId - Project ID for event scoping
  * @param logger - Fastify logger
  * @returns WorkflowRuntime implementation
  */
 export function createWorkflowRuntime(
   inngest: Inngest,
+  projectId: string,
   logger: FastifyBaseLogger
 ): WorkflowRuntime {
   return {
@@ -46,10 +49,12 @@ export function createWorkflowRuntime(
       Record<string, unknown>
     > {
       // Create Inngest function with custom step implementations
-      // Using workflow/${id} convention to match event sender (Inngest convention)
+      // Using project-scoped function IDs and dot-notation event names (Inngest standard)
+      const { functionId, eventName } = buildWorkflowIdentifiers(projectId, config.id);
+
       return inngest.createFunction(
         {
-          id: config.id,
+          id: functionId,
           name: config.name ?? config.id,
           ...(config.timeout && {
             timeouts: {
@@ -57,7 +62,7 @@ export function createWorkflowRuntime(
             }
           }),
         },
-        { event: `workflow/${config.id}` },
+        { event: eventName },
         async ({ event, step: inngestStep, runId: inngestRunId }) => {
           // Extract runtime context from event data
           const { runId, projectId, userId, projectPath } = event.data;

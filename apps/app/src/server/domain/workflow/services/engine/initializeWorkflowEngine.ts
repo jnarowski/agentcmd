@@ -40,12 +40,8 @@ export async function initializeWorkflowEngine(
     memoizationDbPath: config.workflow.memoizationDbPath,
   });
 
-  // Create workflow runtime adapter
-  const runtime = createWorkflowRuntime(inngestClient, logger);
-
-  // Store client and runtime on fastify instance for later access
+  // Store Inngest client on fastify instance for later access
   fastify.decorate("workflowClient", inngestClient);
-  fastify.decorate("workflowRuntime", runtime);
 
   // Scan all projects for workflows BEFORE loading from database
   // This ensures database is populated with workflow definitions
@@ -105,8 +101,11 @@ export async function initializeWorkflowEngine(
         continue;
       }
 
+      // Create project-scoped runtime
+      const runtime = createWorkflowRuntime(inngestClient, definition.project_id, logger);
+
       // Load workflows from project (will reload from stored path)
-      const workflows = await loadProjectWorkflows(project.path, runtime, logger);
+      const { workflows } = await loadProjectWorkflows(project.path, runtime, logger);
 
       // Find matching workflow
       const workflow = workflows.find(
@@ -157,6 +156,5 @@ export async function initializeWorkflowEngine(
 declare module "fastify" {
   interface FastifyInstance {
     workflowClient?: ReturnType<typeof createWorkflowClient>;
-    workflowRuntime?: ReturnType<typeof createWorkflowRuntime>;
   }
 }

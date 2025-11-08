@@ -1,5 +1,6 @@
 import { prisma } from "@/shared/prisma";
 import { scanProjectWorkflows } from "./scanProjectWorkflows";
+import { createWorkflowRuntime } from "./createWorkflowRuntime";
 import type { ScanResult } from "@/server/domain/workflow/types";
 import type { FastifyInstance } from "fastify";
 
@@ -13,10 +14,10 @@ export async function scanAllProjectWorkflows(
   fastify: FastifyInstance
 ): Promise<ScanResult> {
   const logger = fastify.log;
-  const runtime = fastify.workflowRuntime;
+  const workflowClient = fastify.workflowClient;
 
-  if (!runtime) {
-    throw new Error("Workflow runtime not initialized");
+  if (!workflowClient) {
+    throw new Error("Workflow client not initialized");
   }
 
   logger.info("Scanning all projects for workflows");
@@ -39,6 +40,9 @@ export async function scanAllProjectWorkflows(
   // Scan each project
   for (const project of projects) {
     try {
+      // Create project-scoped runtime for scanning
+      const runtime = createWorkflowRuntime(workflowClient, project.id, logger);
+
       const count = await scanProjectWorkflows(
         project.id,
         project.path,

@@ -65,6 +65,27 @@ export const StepStatusValues = {
 export type StepStatus = z.infer<typeof stepStatusSchema>;
 
 /**
+ * Workflow Definition Status Schema
+ *
+ * Represents the status of a workflow definition:
+ * - "active": Definition is active and can be executed
+ * - "archived": Definition has been archived (file deleted or marked inactive)
+ *
+ * Zod schema for validation - produces string union type
+ */
+export const workflowDefinitionStatusSchema = z.enum(['active', 'archived']);
+
+/**
+ * Workflow Definition Status Type
+ *
+ * String union type derived from workflowDefinitionStatusSchema.
+ * Use this for type annotations in components and services.
+ */
+export type WorkflowDefinitionStatus = z.infer<
+  typeof workflowDefinitionStatusSchema
+>;
+
+/**
  * Artifact Type Enum Schema
  *
  * Represents the type of a workflow artifact file.
@@ -279,6 +300,9 @@ export const workflowDefinitionResponseSchema = z.object({
   phases: z.array(phaseDefinitionSchema),
   args_schema: z.record(z.string(), z.unknown()).nullable(),
   is_template: z.boolean(),
+  status: workflowDefinitionStatusSchema,
+  file_exists: z.boolean(),
+  archived_at: z.string().nullable(),
   created_at: z.string(),
   updated_at: z.string(),
 });

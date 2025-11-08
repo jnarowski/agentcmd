@@ -9,33 +9,38 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 
 ## Variables
 
-- $specIdOrNameOrPath: $1 (required) - Either a spec ID (e.g., `ef3`), feature name (e.g., `kill-claude-process`), or full path (e.g., `.agent/specs/todo/ef3-kill-claude-process-spec.md`)
+- $specIdOrNameOrPath: $1 (required) - Either a spec ID (e.g., `1`, `ef3`), feature name (e.g., `workflow-safety`), or full path
 - $format: $2 (optional) - Output format: "text" or "json" (defaults to "text" if not provided)
 
 ## Instructions
 
 **Parse and resolve $specIdOrNameOrPath:**
-- If it's a full file path (contains `/` or starts with `.`):
-  - Use the path as-is and set $spec_path to it
-- If it's an ID (e.g., `ef3`, `a7b`):
-  - Search in this order:
-    1. `.agent/specs/doing/{id}-*-spec.md`
-    2. `.agent/specs/todo/{id}-*-spec.md`
-    3. `.agent/specs/done/{id}-*-spec.md`
-  - Use the first matching file and set $spec_path to it
-- If it's a feature name (e.g., `kill-claude-process`):
-  - Search in this order:
-    1. `.agent/specs/doing/*-{feature-name}-spec.md`
-    2. `.agent/specs/todo/*-{feature-name}-spec.md`
-    3. `.agent/specs/done/*-{feature-name}-spec.md`
-  - Use the first matching file and set $spec_path to it
-- If $spec_path file is not found after searching all locations, stop IMMEDIATELY and let the user know that the file wasn't found and you cannot continue
+- If it's a numeric ID (e.g., `1`, `2`):
+  - Check index.json for spec location
+  - If in index: read from `{location}/{folder}/spec.md`
+  - If not in index: search filesystem for `{id}-*/spec.md` in todo/done
+- If it's a 3-char alphanumeric ID (e.g., `ef3`, `a7b`) - legacy:
+  - Search filesystem:
+    1. `.agent/specs/todo/{id}-*-spec.md` (legacy single file)
+    2. `.agent/specs/done/{id}-*-spec.md` (legacy single file)
+    3. `.agent/specs/todo/{id}-*/spec.md` (folder)
+    4. `.agent/specs/done/{id}-*/spec.md` (folder)
+  - Use the first match
+- If it's a feature name (e.g., `workflow-safety`):
+  - Search filesystem:
+    1. `.agent/specs/todo/*-{feature-name}/spec.md`
+    2. `.agent/specs/done/*-{feature-name}/spec.md`
+    3. `.agent/specs/todo/*-{feature-name}-spec.md` (legacy)
+    4. `.agent/specs/done/*-{feature-name}-spec.md` (legacy)
+  - Use the first match
+- If it's a full path: use as-is
+- If not found: stop and report error
 
-**Move spec to doing folder:**
-- Before starting implementation, move the spec file to `.agent/specs/doing/` folder if it's not already there
-- Use `mv` command to move the file: `mv "$spec_path" ".agent/specs/doing/[filename]"`
-- Update $spec_path to the new location: `.agent/specs/doing/[filename]`
-- This indicates the spec is actively being worked on
+**Note on "doing" folder:**
+- The "doing" folder is deprecated in the new system
+- Specs remain in "todo" during implementation
+- Status field in spec.md tracks progress (draft → in-progress)
+- When complete, use `/move-spec {id} done` to mark finished
 
 ## Task Tracking Requirements
 

@@ -51,7 +51,7 @@
  */
 
 import { useState, useMemo, type ReactNode } from "react";
-import { CheckIcon, ChevronsUpDownIcon } from "lucide-react";
+import { ChevronsUpDownIcon } from "lucide-react";
 import { cn } from "@/client/utils/cn";
 import { Button } from "@/client/components/ui/button";
 import {

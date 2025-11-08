@@ -1,24 +1,21 @@
 ---
-description: Generate implementation spec and write to spec file with random ID
-argument-hint: [id-or-feature-name, format]
+description: Generate implementation spec and write to spec folder with sequential ID
+argument-hint: [feature-name, format]
 ---
 
 # Generate Simple Implementation Spec
 
-Generate a well-structured implementation spec and save it to `.agent/specs/[id]-[feature]-spec.md` (or `.json`) with random 3-character ID.
+Generate a well-structured implementation spec and save it to `.agent/specs/todo/[id]-[feature]/spec.md` (or `spec.json`) with sequential numeric ID.
 
 ## Variables
 
-- $idOrFeatureName: $1 (required) - Either a spec ID (e.g., `ef3`) OR a feature name (e.g., `auth-improvements`)
+- $featureName: $1 (required) - Feature name (e.g., `auth-improvements`)
 - $format: $2 (optional) - Output format: `markdown` (default) or `json`
 
 ## Instructions
 
 - **IMPORTANT**: Use your reasoning model - THINK HARD about feature requirements, design, and implementation approach
-- Auto-detect whether $1 is an ID or feature name
-- If ID: Use provided ID (e.g., `ef3`)
-- If feature name: Generate random 3-character lowercase alphanumeric ID
-- Normalize feature name (lowercase, hyphenated) for the filename
+- Normalize feature name to kebab-case for the folder name
 - Replace ALL `<placeholders>` with specific details relevant to that section
 - **Create detailed step-by-step tasks** grouped logically (e.g., by phase, component, or feature area)
 - Order tasks by dependencies (foundation → core → integration)
@@ -31,24 +28,25 @@ Generate a well-structured implementation spec and save it to `.agent/specs/[id]
 
 ## Workflow
 
-1. **Parse Arguments**:
-   - If $idOrFeatureName is a 3-character alphanumeric ID (e.g., `ef3`, `a7b`):
-     - Use that exact ID
-     - Infer feature name from conversation context or ask user
-   - If $idOrFeatureName is a feature name (e.g., `auth-improvements`):
-     - Generate random 3-character lowercase alphanumeric ID
-     - Characters: `abcdefghijklmnopqrstuvwxyz0123456789`
-     - Check if `.agent/specs/*/{id}-*-spec.md` exists
-     - If collision, retry (max 10 attempts)
-     - If 10 collisions, error with message to try again
-     - Use provided feature name
+1. **Get Next ID from Index**:
+   - Read `.agent/specs/index.json`
+   - If missing or corrupt, auto-heal:
+     - Scan `.agent/specs/**/*` for numeric IDs in folder names
+     - Extract all numeric IDs from folders matching pattern `[0-9]+-*`
+     - Set `lastId = max(numeric IDs) || 0`
+     - Rebuild index with found specs
+   - Calculate `newId = lastId + 1`
 
-2. **Research Phase**:
-   - Read `.agent/specs/${featureName}-prd.md` if it exists (skip if not found)
+2. **Normalize Feature Name**:
+   - Convert to kebab-case (lowercase, hyphens)
+   - Example: "Auth Improvements" → "auth-improvements"
+
+3. **Research Phase**:
+   - Read `.agent/specs/todo/${featureName}/prd.md` if it exists (skip if not found)
    - Research codebase for existing patterns relevant to the feature
    - Gather context about architecture, file structure, and conventions
 
-3. **Clarification** (if needed):
+4. **Clarification** (if needed):
    - If unclear about implementation approach, ask questions ONE AT A TIME
    - Don't use the Question tool
    - Use this template:
@@ -62,16 +60,33 @@ Generate a well-structured implementation spec and save it to `.agent/specs/[id]
      3. Other - user specifies
      ```
 
-4. **Generate Spec**:
+5. **Generate Spec**:
    - Once you have sufficient context, generate the spec following the Template below
    - Be concise but comprehensive
    - Skip sections only if truly not applicable
 
-5. **Write File**:
-   - If $format is "json": Write to `.agent/specs/todo/[id]-${featureName}-spec.json`
-   - Otherwise: Write to `.agent/specs/todo/[id]-${featureName}-spec.md`
-   - Example (markdown): `.agent/specs/todo/ef3-auth-improvements-spec.md`
-   - Example (json): `.agent/specs/todo/ef3-auth-improvements-spec.json`
+6. **Write Spec Folder and File**:
+   - Create folder: `.agent/specs/todo/{newId}-{featureName-kebab}/`
+   - If $format is "json": Write to `spec.json` in folder
+   - Otherwise: Write to `spec.md` in folder
+   - Example (markdown): `.agent/specs/todo/1-auth-improvements/spec.md`
+   - Example (json): `.agent/specs/todo/1-auth-improvements/spec.json`
+
+7. **Update Index**:
+   - Add entry to index.json:
+     ```json
+     {
+       "lastId": newId,
+       "specs": {
+         "{newId}": {
+           "folder": "{newId}-{featureName-kebab}",
+           "created": "{ISO 8601 datetime}",
+           "location": "todo"
+         }
+       }
+     }
+     ```
+   - Write updated index back to `.agent/specs/index.json`
 
 ## Template
 
@@ -397,49 +412,45 @@ When $format is "json", generate a JSON file with this structure (output raw JSO
 
 ## Examples
 
-**Example 1: Using spec ID**
-```
-/generate-spec-simple ef3
-```
-Uses ID ef3, asks user for feature name or infers from context
-
-**Example 2: Using feature name (random ID)**
+**Example 1: Basic usage**
 ```bash
 /generate-spec-simple auth-improvements
 ```
 
-Generates random ID (e.g., `a7b`), creates: `.agent/specs/todo/a7b-auth-improvements-spec.md`
+Gets next ID (e.g., 1), creates folder: `.agent/specs/todo/1-auth-improvements/spec.md`
 
-**Example 3: Using feature name with hyphens**
+**Example 2: Feature name with spaces**
 
 ```bash
-/generate-spec-simple websocket-reconnect-improvements
+/generate-spec-simple "Workflow Safety"
 ```
 
-Generates random ID (e.g., `x9z`), creates: `.agent/specs/todo/x9z-websocket-reconnect-improvements-spec.md`
+Converts to kebab-case, creates: `.agent/specs/todo/2-workflow-safety/spec.md`
 
-**Example 4: Using JSON format**
+**Example 3: Using JSON format**
 
 ```bash
 /generate-spec-simple auth-improvements json
 ```
 
-Creates: `.agent/specs/todo/{random-id}-auth-improvements-spec.json`
+Creates: `.agent/specs/todo/1-auth-improvements/spec.json`
 
-**Example 5: Using spec ID with JSON format**
+**Example 4: Complex feature name**
 
 ```bash
-/generate-spec-simple ef3 json
+/generate-spec-simple websocket-reconnect-improvements
 ```
 
-Uses ID ef3, creates JSON spec file
+Creates: `.agent/specs/todo/3-websocket-reconnect-improvements/spec.md`
 
 ## Common Pitfalls
 
-- **Wrong directory**: Always write to `.agent/specs/todo/`, not `.agent/specs/` or `.agents/specs/`
-- **ID collisions**: Retry generation if collision detected (handled automatically, max 10 retries)
+- **Wrong directory**: Always create folder in `.agent/specs/todo/`, not `.agent/specs/` or `.agents/specs/`
+- **Folder structure**: Must create folder `{id}-{feature}/` with `spec.md` or `spec.json` inside
+- **Index not updated**: Always update index.json after creating spec
 - **Generic placeholders**: Replace all `<placeholders>` with actual content
 - **Status field**: Use lowercase status values: `draft`, `ready`, `in-progress`, `review`, `completed`
+- **Kebab-case**: Always convert feature name to kebab-case for folder name
 
 ## Report
 
@@ -450,8 +461,9 @@ Uses ID ef3, creates JSON spec file
 ```json
 {
   "success": true,
-  "spec_path": ".agent/specs/todo/[id]-[feature]-spec.json",
-  "spec_id": "[id]",
+  "spec_folder": ".agent/specs/todo/[id]-[feature]",
+  "spec_file": ".agent/specs/todo/[id]-[feature]/spec.json",
+  "spec_id": [id],
   "feature_name": "[feature-name]",
   "format": "json",
   "files_to_create": ["[filepath1]", "[filepath2]"],
@@ -463,9 +475,10 @@ Uses ID ef3, creates JSON spec file
 **JSON Field Descriptions:**
 
 - `success`: Always true if spec generation completed
-- `spec_path`: Path to the generated spec file
-- `spec_id`: The spec ID used (3-character alphanumeric)
-- `feature_name`: Normalized feature name (lowercase, hyphenated)
+- `spec_folder`: Path to the created spec folder
+- `spec_file`: Full path to the spec file (spec.json or spec.md)
+- `spec_id`: The spec ID used (numeric)
+- `feature_name`: Normalized feature name (kebab-case)
 - `format`: Output format used ("json" or "markdown")
 - `files_to_create`: Array of new files to be created
 - `files_to_modify`: Array of existing files to be modified
@@ -475,14 +488,15 @@ Uses ID ef3, creates JSON spec file
 
 Otherwise, provide this human-readable information:
 
-1. Report the full path to the created file
+1. Report the spec folder and file paths
 2. Display the spec ID used
 3. Suggest next steps
 
 **Format:**
 
 ```text
-✓ Created spec file: .agent/specs/todo/[id]-[feature]-spec.md
+✓ Created spec: .agent/specs/todo/[id]-[feature]/spec.md
+  ID: [id]
 
 Next: /implement-spec [id]
 ```

@@ -183,6 +183,12 @@ export function NewRunDialog({
       return;
     }
 
+    // Check if selected workflow has a load error
+    if (actualDefinition?.load_error) {
+      setError(`Cannot run workflow: ${actualDefinition.load_error}`);
+      return;
+    }
+
     // Validate name
     if (!name.trim()) {
       setError("Execution name is required");
@@ -277,8 +283,19 @@ export function NewRunDialog({
       </DialogHeader>
 
       <div className="space-y-4 px-6 py-4 max-h-[60vh] overflow-y-auto [&>div]:space-y-2">
-        {/* Workflow definition selection - only show when no definitionId provided */}
-        {!definitionId && definitions && definitions.length > 0 && (
+        {/* Show error alert if selected workflow has load error */}
+        {actualDefinition?.load_error && (
+              <div className="rounded-lg border border-destructive bg-destructive/10 p-3">
+                <p className="text-sm font-medium text-destructive">Workflow Load Error</p>
+                <p className="text-xs text-destructive/80 mt-1">{actualDefinition.load_error}</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Fix the error in the workflow file before creating a run.
+                </p>
+              </div>
+            )}
+
+            {/* Workflow definition selection - only show when no definitionId provided */}
+            {!definitionId && definitions && definitions.length > 0 && (
           <div>
             <Label>Workflow Definition</Label>
             <Combobox

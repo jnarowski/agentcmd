@@ -21,13 +21,22 @@ export async function withTimeout<T>(
   timeoutMs: number,
   stepType: string
 ): Promise<T> {
-  return await Promise.race([
-    operation,
-    new Promise<never>((_, reject) =>
-      setTimeout(
-        () => reject(new Error(`${stepType} timed out after ${timeoutMs}ms`)),
-        timeoutMs
-      )
-    ),
-  ]);
+  let timeoutId: NodeJS.Timeout | undefined;
+
+  try {
+    return await Promise.race([
+      operation,
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(
+          () => reject(new Error(`${stepType} timed out after ${timeoutMs}ms`)),
+          timeoutMs
+        );
+      }),
+    ]);
+  } finally {
+    // Always clear timeout to prevent event loop from hanging
+    if (timeoutId !== undefined) {
+      clearTimeout(timeoutId);
+    }
+  }
 }

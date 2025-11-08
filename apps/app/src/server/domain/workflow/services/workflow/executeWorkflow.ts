@@ -1,10 +1,14 @@
 import Ajv from "ajv";
+import { access } from "node:fs/promises";
+import { constants } from "node:fs";
 import type { ExecuteWorkflowOptions } from "@/server/domain/workflow/types/ExecuteWorkflowOptions";
 import type { WorkflowRun, WorkflowDefinition, Project } from "@prisma/client";
 import type { FastifyBaseLogger } from "fastify";
 import { getWorkflowRunForExecution } from "../runs/getWorkflowRunForExecution";
 import { updateWorkflowRun } from "../runs/updateWorkflowRun";
+import { buildWorkflowIdentifiers } from "../../utils/buildWorkflowIdentifiers";
 import type { Inngest } from "inngest";
+import { prisma } from "@/shared/prisma";
 
 // Create Ajv instance for JSON Schema validation
 const ajv = new Ajv();
@@ -29,6 +33,9 @@ export async function executeWorkflow({
     throw new Error(`Workflow definition not found for execution ${runId}`);
   }
 
+  // Validate workflow definition status and file existence
+  await validateWorkflowDefinition(execution, runId, logger);
+
   // Validate args against schema
   await validateWorkflowArgs(execution, runId, logger);
 
@@ -43,7 +50,10 @@ export async function executeWorkflow({
   });
 
   // Build and send workflow event
-  const eventName = `workflow/${execution.workflow_definition.identifier}`;
+  const { eventName } = buildWorkflowIdentifiers(
+    execution.project_id,
+    execution.workflow_definition.identifier
+  );
   const eventData = buildWorkflowEventData(execution);
 
   await sendWorkflowEvent(workflowClient, eventName, eventData, runId, logger);
@@ -52,6 +62,133 @@ export async function executeWorkflow({
 // ============================================================================
 // Private Helper Functions
 // ============================================================================
+
+/**
+ * Check if a workflow definition file exists on disk.
+ *
+ * @private
+ */
+async function validateWorkflowFile(filePath: string): Promise<boolean> {
+  try {
+    await access(filePath, constants.R_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Validate workflow definition status and file existence before execution.
+ * Updates workflow run status to 'failed' if validation fails.
+ *
+ * @private
+ */
+async function validateWorkflowDefinition(
+  execution: WorkflowRun & {
+    workflow_definition: WorkflowDefinition | null;
+    project: Project;
+  },
+  runId: string,
+  logger?: FastifyBaseLogger
+): Promise<void> {
+  const definition = execution.workflow_definition!;
+
+  // Check if workflow definition is archived
+  if (definition.status === "archived") {
+    const errorMessage =
+      "Cannot execute archived workflow definition (file was deleted or marked inactive)";
+    logger?.error(
+      {
+        runId,
+        workflowDefinitionId: definition.id,
+        status: definition.status,
+      },
+      "Workflow definition is archived"
+    );
+
+    await updateWorkflowRun({
+      runId,
+      data: {
+        status: "failed",
+        error_message: errorMessage,
+        completed_at: new Date(),
+      },
+      logger,
+    });
+
+    throw new Error(errorMessage);
+  }
+
+  // Check if file_exists flag is false
+  if (definition.file_exists === false) {
+    const errorMessage = `Workflow definition file not found: ${definition.path}. The file may have been deleted or moved. Check if the file was deleted or if you switched git branches.`;
+    logger?.error(
+      {
+        runId,
+        workflowDefinitionId: definition.id,
+        filePath: definition.path,
+        file_exists: definition.file_exists,
+      },
+      "Workflow definition file marked as missing"
+    );
+
+    await updateWorkflowRun({
+      runId,
+      data: {
+        status: "failed",
+        error_message: errorMessage,
+        completed_at: new Date(),
+      },
+      logger,
+    });
+
+    throw new Error(errorMessage);
+  }
+
+  // Verify file actually exists on disk
+  const fileExists = await validateWorkflowFile(definition.path);
+  if (!fileExists) {
+    const errorMessage = `Workflow definition file not found: ${definition.path}. The file may have been deleted or moved. Check if the file was deleted or if you switched git branches.`;
+    logger?.error(
+      {
+        runId,
+        workflowDefinitionId: definition.id,
+        filePath: definition.path,
+      },
+      "Workflow definition file missing on disk"
+    );
+
+    // Update database to reflect file is missing
+    await prisma.workflowDefinition.update({
+      where: { id: definition.id },
+      data: {
+        file_exists: false,
+        archived_at: new Date(),
+      },
+    });
+
+    await updateWorkflowRun({
+      runId,
+      data: {
+        status: "failed",
+        error_message: errorMessage,
+        completed_at: new Date(),
+      },
+      logger,
+    });
+
+    throw new Error(errorMessage);
+  }
+
+  logger?.debug(
+    {
+      runId,
+      workflowDefinitionId: definition.id,
+      filePath: definition.path,
+    },
+    "Workflow definition validation passed"
+  );
+}
 
 /**
  * Validate workflow arguments against the JSON schema defined in workflow definition.

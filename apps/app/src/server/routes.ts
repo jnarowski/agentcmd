@@ -60,65 +60,20 @@ export async function registerRoutes(fastify: FastifyInstance) {
       databaseConnected = false;
     }
 
-    // Get Inngest process status
-    let inngestStatus: "running" | "stopped" | "not_started" = "not_started";
-    let inngestPid: number | undefined;
-    let inngestUptime: number | undefined;
-
-    try {
-      const { getServerHealth } = await import(
-        "../cli/commands/start.js"
-      );
-      const { inngestProcess, serverStartTime } = getServerHealth();
-
-      if (inngestProcess) {
-        if (inngestProcess.killed || inngestProcess.exitCode !== null) {
-          inngestStatus = "stopped";
-        } else {
-          inngestStatus = "running";
-          inngestPid = inngestProcess.pid;
-
-          if (serverStartTime) {
-            inngestUptime = Math.floor(
-              (Date.now() - serverStartTime.getTime()) / 1000
-            );
-          }
-        }
-      }
-    } catch (error) {
-      // Ignore error - health endpoint should not fail if CLI module unavailable
-      request.log.debug(
-        { err: error instanceof Error ? error : new Error(String(error)) },
-        "Could not get Inngest process status"
-      );
-    }
-
     return {
       status: databaseConnected ? "ok" : "degraded",
       timestamp: new Date().toISOString(),
       database: {
         connected: databaseConnected,
       },
-      inngest: {
-        status: inngestStatus,
-        pid: inngestPid,
-        uptime: inngestUptime,
-      },
       server: {
+        name: "@spectora/agent-workflows-ui",
+        version: "0.1.0",
         uptime: Math.floor(process.uptime()),
       },
       features: {
         aiEnabled: !!process.env.ANTHROPIC_API_KEY,
       },
-    };
-  });
-
-  // Server status endpoint
-  fastify.get("/api/status", async () => {
-    return {
-      name: "@spectora/agent-workflows-ui",
-      version: "0.1.0",
-      uptime: process.uptime(),
     };
   });
 }

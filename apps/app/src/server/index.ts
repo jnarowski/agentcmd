@@ -1,5 +1,20 @@
 #!/usr/bin/env tsx
 // Type augmentation loaded automatically via tsconfig
+
+// DEBUG: Log active handles on exit
+process.on('beforeExit', () => {
+  console.log('\n!!! beforeExit - process trying to exit !!!');
+  const proc = process as unknown as { _getActiveHandles?: () => unknown[] };
+  if (typeof proc._getActiveHandles === 'function') {
+    const handles = proc._getActiveHandles();
+    console.log('Active handles:', handles.length);
+    handles.forEach((h: unknown, i: number) => {
+      const handle = h as { constructor: { name: string } };
+      console.log(`  ${i + 1}. ${handle.constructor.name}`);
+    });
+  }
+});
+
 import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
 import fastifyWebsocket from "@fastify/websocket";

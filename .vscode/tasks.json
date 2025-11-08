@@ -4,7 +4,7 @@
     {
       "label": "pnpm dev",
       "type": "shell",
-      "command": "pnpm dev; exec zsh",
+      "command": "zsh",
       "icon": {
         "id": "server",
         "color": "terminal.ansiGreen"
@@ -38,7 +38,25 @@
       "problemMatcher": []
     },
     {
-      "label": "apps/agentcmd",
+      "label": "apps/app",
+      "type": "shell",
+      "command": "zsh -i -c 'cd apps/app && exec zsh'",
+      "icon": {
+        "id": "code",
+        "color": "terminal.ansiYellow"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "apps/website",
       "type": "shell",
       "command": "zsh -i -c 'cd apps/app && exec zsh'",
       "icon": {

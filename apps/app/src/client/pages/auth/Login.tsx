@@ -8,8 +8,9 @@ import type { FormEvent } from "react";
 
 function Login() {
   useDocumentTitle("Login | Agent Workflows");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  // TODO: Remove prefilled credentials before production
+  const [email, setEmail] = useState("admin@example.com");
+  const [password, setPassword] = useState("password");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const login = useAuthStore((state) => state.login);

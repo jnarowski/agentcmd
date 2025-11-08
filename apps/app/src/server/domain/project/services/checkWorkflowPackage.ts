@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { CheckWorkflowPackageOptions } from "@/server/domain/project/types/CheckWorkflowPackageOptions";
+import { isAgentcmdRepo } from "@/server/domain/project/utils/isAgentcmdRepo";
 
 /**
  * Result of agentcmd-workflows package check
@@ -17,6 +18,16 @@ export interface WorkflowPackageCheckResult {
  * @returns Check result with installation status
  */
 export async function checkWorkflowPackage({ projectPath }: CheckWorkflowPackageOptions): Promise<WorkflowPackageCheckResult> {
+  // Special case: If this is the agentcmd repo itself, treat as having SDK installed
+  const isAgentcmd = await isAgentcmdRepo(projectPath);
+  if (isAgentcmd) {
+    return {
+      hasPackageJson: true,
+      installed: true,
+      version: "dev",
+    };
+  }
+
   try {
     // Check for package.json
     const packageJsonPath = join(projectPath, "package.json");

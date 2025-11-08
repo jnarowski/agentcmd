@@ -28,18 +28,18 @@ export function createSetupWorkspaceStep(
 ) {
   return async function setupWorkspace(
     idOrName: string,
-    eventData: Record<string, unknown>,
+    config: SetupWorkspaceConfig,
     options?: StepOptions
   ): Promise<WorkspaceResult> {
     const id = toId(idOrName);
     const timeout = options?.timeout ?? DEFAULT_SETUP_WORKSPACE_TIMEOUT;
 
-    // Extract config from event.data (spread by caller)
-    const config: SetupWorkspaceConfig = {
-      projectPath: (eventData.projectPath as string) || context.projectPath,
-      branch: eventData.branchName as string | undefined,
-      baseBranch: (eventData.baseBranch as string) || 'main',
-      worktreeName: eventData.worktreeName as string | undefined,
+    // Use provided config with defaults
+    const finalConfig: SetupWorkspaceConfig = {
+      projectPath: config.projectPath || context.projectPath,
+      branch: config.branch,
+      baseBranch: config.baseBranch || 'main',
+      worktreeName: config.worktreeName,
     };
 
     // Generate phase-prefixed Inngest step ID
@@ -47,7 +47,7 @@ export function createSetupWorkspaceStep(
 
     return await inngestStep.run(inngestStepId, async () => {
       return await withTimeout(
-        executeSetupWorkspace(config, context),
+        executeSetupWorkspace(finalConfig, context),
         timeout,
         "Setup workspace"
       );

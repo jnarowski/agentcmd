@@ -26,6 +26,10 @@ vi.mock("@/server/domain/git/services/getGitStatus", () => ({
   getGitStatus: vi.fn(),
 }));
 
+vi.mock("./utils/createWorkflowEventCommand", () => ({
+  createWorkflowEventCommand: vi.fn(),
+}));
+
 // Import mocked functions
 import { getCurrentBranch } from "@/server/domain/git/services/getCurrentBranch";
 import { commitChanges } from "@/server/domain/git/services/commitChanges";

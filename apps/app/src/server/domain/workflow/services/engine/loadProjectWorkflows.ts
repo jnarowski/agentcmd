@@ -16,18 +16,24 @@ import { extractWorkflowDefinition } from "./extractWorkflowDefinition";
  * @param logger - Logger instance
  * @returns Array of Inngest functions
  */
+export interface WorkflowLoadError {
+  filePath: string;
+  error: string;
+}
+
 export async function loadProjectWorkflows(
   projectPath: string,
   runtime: WorkflowRuntime,
   logger: FastifyBaseLogger
-): Promise<
-  Array<{
+): Promise<{
+  workflows: Array<{
     definition: WorkflowDefinition;
     // @ts-ignore - inngest function type
     inngestFunction: InngestFunction<Record<string, unknown>, Record<string, unknown>>;
     filePath: string;
-  }>
-> {
+  }>;
+  errors: WorkflowLoadError[];
+}> {
   const workflowsDir = join(projectPath, ".agent/workflows/definitions");
   const results: Array<{
     definition: WorkflowDefinition;
@@ -35,6 +41,7 @@ export async function loadProjectWorkflows(
     inngestFunction: InngestFunction<Record<string, unknown>, Record<string, unknown>>;
     filePath: string;
   }> = [];
+  const errors: WorkflowLoadError[] = [];
 
   // Check if .agent/workflows/definitions directory exists
   try {
@@ -44,7 +51,7 @@ export async function loadProjectWorkflows(
         { projectPath },
         "No .agent/workflows/definitions directory found"
       );
-      return results;
+      return { workflows: results, errors };
     }
   } catch {
     // Directory doesn't exist
@@ -52,7 +59,7 @@ export async function loadProjectWorkflows(
       { projectPath },
       "No .agent/workflows/definitions directory found"
     );
-    return results;
+    return { workflows: results, errors };
   }
 
   // Find all workflow files
@@ -93,12 +100,17 @@ export async function loadProjectWorkflows(
         );
       }
     } catch (error) {
+      const errorMessage = (error as Error).message;
       logger.error(
-        { file, error: (error as Error).message },
+        { file, error: errorMessage },
         "Failed to load workflow file"
       );
+      errors.push({
+        filePath: file,
+        error: errorMessage,
+      });
     }
   }
 
-  return results;
+  return { workflows: results, errors };
 }

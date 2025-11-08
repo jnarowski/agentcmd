@@ -15,6 +15,7 @@ export interface WorkflowDefinition {
   phases: PhaseDefinition[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   args_schema: Record<string, any> | null;
+  load_error: string | null;
   created_at: Date;
   updated_at: Date;
 }
