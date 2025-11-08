@@ -33,7 +33,7 @@ export async function createWorkflowRun(
       args: data.args,
       spec_file: data.spec_file,
       spec_content: data.spec_content,
-      branch_from: data.branch_from,
+      base_branch: data.base_branch,
       branch_name: data.branch_name,
       worktree_name: data.worktree_name,
       current_phase: firstPhaseId,

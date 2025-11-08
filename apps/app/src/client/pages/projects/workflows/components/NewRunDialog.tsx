@@ -47,7 +47,7 @@ export function NewRunDialog({
   const [specContent, setSpecContent] = useState<string>("");
   const [name, setName] = useState("");
   const [args, setArgs] = useState<Record<string, unknown>>({});
-  const [branchFrom, setBranchFrom] = useState("main");
+  const [baseBranch, setBaseBranch] = useState("main");
   const [gitMode, setGitMode] = useState<"branch" | "worktree" | "current">(
     "branch"
   );
@@ -217,7 +217,7 @@ export function NewRunDialog({
         args,
         spec_file: specInputType === "file" ? specFile : undefined,
         spec_content: specInputType === "content" ? specContent : undefined,
-        branch_from: branchFrom || undefined,
+        base_branch: baseBranch || undefined,
         branch_name: gitMode === "branch" ? branchName : undefined,
         worktree_name: gitMode === "worktree" ? worktreeName : undefined,
         // When gitMode is 'current', both branch_name and worktree_name are undefined
@@ -234,7 +234,7 @@ export function NewRunDialog({
       setSpecContent("");
       setName("");
       setArgs({});
-      setBranchFrom("main");
+      setBaseBranch("main");
       setBranchName("");
       setWorktreeName("");
       setIsGeneratingNames(false);
@@ -253,7 +253,7 @@ export function NewRunDialog({
     setSpecContent("");
     setName("");
     setArgs({});
-    setBranchFrom("main");
+    setBaseBranch("main");
     setBranchName("");
     setWorktreeName("");
     setIsGeneratingNames(false);
@@ -421,8 +421,8 @@ export function NewRunDialog({
                   <div>
                     <Label htmlFor="branch-from">Branch From (optional)</Label>
                     <Combobox
-                      value={branchFrom}
-                      onValueChange={setBranchFrom}
+                      value={baseBranch}
+                      onValueChange={setBaseBranch}
                       options={branchOptions}
                       placeholder="Select branch (defaults to main)..."
                       searchPlaceholder="Search branches..."
@@ -496,8 +496,8 @@ export function NewRunDialog({
                       Branch From (optional)
                     </Label>
                     <Combobox
-                      value={branchFrom}
-                      onValueChange={setBranchFrom}
+                      value={baseBranch}
+                      onValueChange={setBaseBranch}
                       options={branchOptions}
                       placeholder="Select branch (defaults to main)..."
                       searchPlaceholder="Search branches..."

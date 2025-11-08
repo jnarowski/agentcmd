@@ -154,7 +154,7 @@ function buildWorkflowEventData(
     userId: execution.user_id,
     specFile: execution.spec_file ?? undefined,
     specContent: execution.spec_content ?? undefined,
-    branchFrom: execution.branch_from ?? undefined,
+    baseBranch: execution.base_branch ?? undefined,
     branchName: execution.branch_name ?? undefined,
     worktreeName: execution.worktree_name ?? undefined,
     args: execution.args,

@@ -45,7 +45,7 @@ export interface WorkflowRun {
   args: Record<string, any> | null;
   spec_file: string | null;
   spec_content: string | null;
-  branch_from: string | null;
+  base_branch: string | null;
   branch_name: string | null;
   worktree_name: string | null;
   current_step: string | null;
@@ -205,7 +205,7 @@ export interface WorkflowRunDetail {
   args: Record<string, any> | null;
   spec_file: string | null;
   spec_content: string | null;
-  branch_from: string | null;
+  base_branch: string | null;
   branch_name: string | null;
   worktree_name: string | null;
   current_step: string | null;

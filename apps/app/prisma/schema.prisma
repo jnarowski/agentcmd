@@ -208,6 +208,7 @@ enum WorkflowEventType {
   step_started
   step_completed
   step_failed
+  command_executed
 }
 
 enum StepStatus {
