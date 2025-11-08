@@ -41,7 +41,7 @@ model WorkflowRun {
   args                   Json           // Workflow arguments
   spec_file              String?        // Relative path to spec file (from .agent/specs/todo/)
   spec_content           String?        // Inline spec content (alternative to spec_file)
-  branch_from            String?        // Branch to create new branch from
+  base_branch            String?        // Branch to create new branch from
   branch_name            String?        // New branch name for execution
   worktree_name          String?        // Worktree name (alternative to branch_name)
   current_phase          String?        // Current phase name
