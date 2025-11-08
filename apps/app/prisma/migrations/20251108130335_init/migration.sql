@@ -130,6 +130,8 @@ CREATE TABLE "agent_sessions" (
     "metadata" JSONB NOT NULL,
     "state" TEXT NOT NULL DEFAULT 'idle',
     "error_message" TEXT,
+    "is_archived" BOOLEAN NOT NULL DEFAULT false,
+    "archived_at" DATETIME,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" DATETIME NOT NULL,
     CONSTRAINT "agent_sessions_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "projects" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
