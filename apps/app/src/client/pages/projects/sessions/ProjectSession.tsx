@@ -15,7 +15,7 @@ import { useActiveProject } from "@/client/hooks/navigation";
 import { useNavigationStore } from "@/client/stores/index";
 import { generateUUID } from "@/client/utils/cn";
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
-import { useProjectsWithSessions } from "@/client/pages/projects/hooks/useProjects";
+import { useProject } from "@/client/pages/projects/hooks/useProjects";
 
 export default function ProjectSession() {
   const navigate = useNavigate();
@@ -24,8 +24,7 @@ export default function ProjectSession() {
   const { projectId } = useActiveProject();
 
   // Get project and session names for title
-  const { data: projects } = useProjectsWithSessions();
-  const project = projects?.find((p) => p.id === projectId);
+  const { data: project } = useProject(projectId!);
   const currentSession = useSessionStore((s) => s.session);
 
   useDocumentTitle(

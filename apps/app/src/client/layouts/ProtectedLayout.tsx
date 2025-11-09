@@ -10,6 +10,7 @@ import { useWebSocket } from "@/client/hooks/useWebSocket";
 import { AppSidebar } from "@/client/components/AppSidebar";
 import { SidebarInset, SidebarProvider } from "@/client/components/ui/sidebar";
 import { ConnectionStatusBanner } from "@/client/components/ConnectionStatusBanner";
+import { api } from "@/client/utils/api";
 
 function ProtectedLayout() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -17,6 +18,15 @@ function ProtectedLayout() {
   const initializeFromSettings = useSessionStore((s) => s.initializeFromSettings);
   const { setTheme } = useTheme();
   const { readyState, reconnectAttempt, reconnect } = useWebSocket();
+
+  // Prefetch settings on mount to prevent race condition where multiple components
+  // call useSettings() before first request completes, triggering duplicate fetches
+  useEffect(() => {
+    queryClient.prefetchQuery({
+      queryKey: ["settings"],
+      queryFn: () => api.get<{ data: unknown }>("/api/settings").then(res => res.data),
+    });
+  }, [queryClient]);
 
   // Load settings early so they're available for all protected routes
   // Settings are cached by TanStack Query (5-minute stale time)

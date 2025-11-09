@@ -165,7 +165,8 @@ const ChatPromptInputInner = forwardRef<
             permissionMode === "acceptEdits" &&
               "border-purple-500 md:has-[[data-slot=input-group-control]:focus-visible]:border-purple-500",
             permissionMode === "bypassPermissions" &&
-              "border-red-500 md:has-[[data-slot=input-group-control]:focus-visible]:border-red-500"
+              "border-red-500 md:has-[[data-slot=input-group-control]:focus-visible]:border-red-500",
+            externalIsStreaming && "opacity-50"
           )}
         >
           <PromptInputBody>
@@ -176,6 +177,7 @@ const ChatPromptInputInner = forwardRef<
               onChange={handleTextChange}
               onKeyDown={handleKeyDown}
               ref={textareaRef as React.RefObject<HTMLTextAreaElement>}
+              disabled={externalIsStreaming}
             />
           </PromptInputBody>
           <PromptInputFooter>
@@ -188,6 +190,7 @@ const ChatPromptInputInner = forwardRef<
                 onFileSelect={handleFileSelect}
                 onFileRemove={handleFileRemove}
                 textareaValue={text}
+                disabled={externalIsStreaming}
               />
               {/* Slash commands - only for agents that support them */}
               {capabilities.supportsSlashCommands && (
@@ -196,30 +199,40 @@ const ChatPromptInputInner = forwardRef<
                   onOpenChange={setIsSlashMenuOpen}
                   projectId={activeProjectId ?? undefined}
                   onCommandSelect={handleCommandSelect}
+                  disabled={externalIsStreaming}
                 />
               )}
               <PromptInputSpeechButton
                 onTranscriptionChange={controller.textInput.setInput}
                 textareaRef={textareaRef}
+                disabled={externalIsStreaming}
               />
               {/* Model selector - only for agents that support model selection */}
               <ModelSelector
                 currentModel={currentModel}
                 models={capabilities.models}
                 onModelChange={setModel}
+                disabled={externalIsStreaming}
               />
               <PermissionModeSelector
                 permissionMode={permissionMode}
                 onPermissionModeChange={setPermissionMode}
+                disabled={externalIsStreaming}
               />
             </PromptInputTools>
             <div className="flex items-center gap-2">
-              {/* Token count display - circular badge */}
-              {totalTokens !== undefined && (
-                <TokenUsageCircle
-                  totalTokens={totalTokens}
-                  currentMessageTokens={currentMessageTokens}
-                />
+              {/* Show interrupt message when streaming, otherwise show token count */}
+              {externalIsStreaming ? (
+                <span className="text-xs text-gray-500">
+                  Hit Esc to interrupt
+                </span>
+              ) : (
+                totalTokens !== undefined && (
+                  <TokenUsageCircle
+                    totalTokens={totalTokens}
+                    currentMessageTokens={currentMessageTokens}
+                  />
+                )
               )}
               <Tooltip>
                 <TooltipTrigger asChild>

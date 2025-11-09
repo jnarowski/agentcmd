@@ -1,5 +1,5 @@
 {
-  "lastId": 8,
+  "lastId": 10,
   "specs": {
     "1": {
       "folder": "1-log-streaming",
@@ -40,6 +40,16 @@
       "folder": "8-refactor-session-loading",
       "created": "2025-11-09T14:20:00.000Z",
       "location": "doing"
+    },
+    "9": {
+      "folder": "9-query-keys",
+      "created": "2025-11-09T16:45:00.000Z",
+      "location": "todo"
+    },
+    "10": {
+      "folder": "10-message-queue",
+      "created": "2025-11-09T00:00:00.000Z",
+      "location": "todo"
     }
   }
 }
