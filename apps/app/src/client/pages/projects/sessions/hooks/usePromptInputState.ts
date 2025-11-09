@@ -30,7 +30,9 @@ export interface UsePromptInputStateParams {
   onPermissionModeChange: (mode: PermissionMode) => void;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   disabled?: boolean;
+  isStreaming?: boolean;
   onSubmit?: (message: PromptInputMessage) => void | Promise<void>;
+  onKill?: () => void;
 }
 
 export interface UsePromptInputStateReturn {
@@ -112,7 +114,9 @@ export function usePromptInputState({
   onPermissionModeChange,
   textareaRef,
   disabled = false,
+  isStreaming = false,
   onSubmit,
+  onKill,
 }: UsePromptInputStateParams): UsePromptInputStateReturn {
   // State
   const [status, setStatus] = useState<"submitted" | "streaming" | "ready" | "error">("ready");
@@ -278,8 +282,14 @@ export function usePromptInputState({
   // Handle submit
   const handleSubmit = useCallback(
     async (message: PromptInputMessage) => {
-      // If currently streaming or submitted, stop instead of submitting
-      if (status === "streaming" || status === "submitted") {
+      // If currently streaming, call onKill to interrupt
+      if (isStreaming) {
+        onKill?.();
+        return;
+      }
+
+      // If submitted but not externally streaming, just reset local status
+      if (status === "submitted") {
         stop();
         return;
       }
@@ -318,7 +328,7 @@ export function usePromptInputState({
         }, STREAMING_TIMEOUT);
       }
     },
-    [status, disabled, onSubmit, stop]
+    [isStreaming, status, disabled, onSubmit, onKill, stop]
   );
 
   return {

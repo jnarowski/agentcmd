@@ -131,7 +131,9 @@ const ChatPromptInputInner = forwardRef<
       onPermissionModeChange: setPermissionMode,
       textareaRef,
       disabled,
+      isStreaming: externalIsStreaming,
       onSubmit,
+      onKill,
     });
 
     // Expose focus method to parent components
@@ -176,6 +178,11 @@ const ChatPromptInputInner = forwardRef<
               onKeyDown={handleKeyDown}
               ref={textareaRef as React.RefObject<HTMLTextAreaElement>}
               disabled={externalIsStreaming}
+              placeholder={
+                externalIsStreaming
+                  ? "Working. Hit escape to interrupt"
+                  : "What would you like to know?"
+              }
             />
           </PromptInputBody>
           <PromptInputFooter>
