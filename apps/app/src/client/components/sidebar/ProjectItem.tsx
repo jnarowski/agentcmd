@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import {
   SidebarMenuItem,
   SidebarMenuButton,
+  useSidebar,
 } from "@/client/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -40,12 +41,16 @@ export function ProjectItem({
   onToggleHidden,
 }: ProjectItemProps) {
   const navigate = useNavigate();
+  const { isMobile, setOpenMobile } = useSidebar();
   const [hoveredProjectId, setHoveredProjectId] = useState<string | null>(null);
   const [menuOpenProjectId, setMenuOpenProjectId] = useState<string | null>(
     null
   );
 
   const handleProjectClick = (projectId: string) => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
     navigate(`/projects/${projectId}`);
   };
 

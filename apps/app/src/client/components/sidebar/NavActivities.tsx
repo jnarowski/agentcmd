@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useQueries, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { RefreshCw } from "lucide-react";
 import { SidebarMenu } from "@/client/components/ui/sidebar";
 import {
@@ -12,11 +12,10 @@ import { useProjects, useSyncProjectsMutation } from "@/client/pages/projects/ho
 import { useSessions } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
 import { sessionKeys } from "@/client/pages/projects/sessions/hooks/queryKeys";
 import { workflowKeys } from "@/client/pages/projects/workflows/hooks/queryKeys";
+import { useAllWorkflowRuns } from "@/client/pages/projects/workflows/hooks/useAllWorkflowRuns";
 import { getSessionDisplayName } from "@/client/utils/getSessionDisplayName";
-import { api } from "@/client/utils/api";
 import { SessionItem } from "@/client/components/sidebar/SessionItem";
 import { WorkflowItem } from "@/client/components/sidebar/WorkflowItem";
-import type { WorkflowRunListItem } from "@/client/pages/projects/workflows/types";
 import type { AgentType } from "@/shared/types/agent.types";
 import type { SessionResponse } from "@/shared/types";
 
@@ -39,6 +38,8 @@ export function NavActivities() {
   const updateSettings = useUpdateSettings();
   const { data: projects } = useProjects();
   const { data: sessions } = useSessions({ limit: 20, orderBy: 'updated_at', order: 'desc' });
+  // Fetch only active/in-progress runs from backend
+  const { data: allWorkflowRuns } = useAllWorkflowRuns(['pending', 'running', 'failed']);
   const queryClient = useQueryClient();
   const syncProjectsMutation = useSyncProjectsMutation();
 
@@ -76,48 +77,30 @@ export function NavActivities() {
     return activities;
   }, [sessions, projects]);
 
-  // Fetch workflow runs for all projects using useQueries
-  const workflowQueries = useQueries({
-    queries: (projects || []).map((project) => ({
-      queryKey: workflowKeys.runsList(project.id),
-      queryFn: async () => {
-        const params = new URLSearchParams();
-        params.append("project_id", project.id);
-        const response = await api.get<{ data: WorkflowRunListItem[] }>(
-          `/api/workflow-runs?${params.toString()}`
-        );
-        return response.data;
-      },
-      enabled: !!project.id,
-    })),
-  });
-
-  // Map workflow runs to Activity type
+  // Map workflow runs to Activity type (client-side join with projects)
   const workflowActivities = useMemo(() => {
-    if (!projects) return [];
+    if (!allWorkflowRuns || !projects) return [];
 
     const activities: Activity[] = [];
-    workflowQueries.forEach((query, index) => {
-      if (!query.data) return;
+    for (const run of allWorkflowRuns) {
+      const project = projects.find(p => p.id === run.project_id);
+      if (!project) continue;
 
-      const project = projects[index];
-      for (const run of query.data) {
-        activities.push({
-          id: run.id,
-          type: "workflow",
-          name: run.name.length > 50 ? run.name.slice(0, 50) + "..." : run.name,
-          projectId: project.id,
-          projectName:
-            project.name.length > 30
-              ? project.name.slice(0, 30) + "..."
-              : project.name,
-          status: run.status,
-          createdAt: new Date(run.created_at),
-        });
-      }
-    });
+      activities.push({
+        id: run.id,
+        type: "workflow",
+        name: run.name.length > 50 ? run.name.slice(0, 50) + "..." : run.name,
+        projectId: project.id,
+        projectName:
+          project.name.length > 30
+            ? project.name.slice(0, 30) + "..."
+            : project.name,
+        status: run.status,
+        createdAt: new Date(run.created_at),
+      });
+    }
     return activities;
-  }, [projects, workflowQueries]);
+  }, [allWorkflowRuns, projects]);
 
   // Merge, filter, and sort activities
   let filteredActivities = [...sessionActivities, ...workflowActivities];
@@ -142,10 +125,8 @@ export function NavActivities() {
         // Invalidate sessions lists
         queryClient.invalidateQueries({ queryKey: sessionKeys.lists() });
 
-        // Invalidate workflow runs for all projects
-        projects?.forEach((p) => {
-          queryClient.invalidateQueries({ queryKey: workflowKeys.runsList(p.id) });
-        });
+        // Invalidate all workflow runs
+        queryClient.invalidateQueries({ queryKey: workflowKeys.allRuns() });
       },
     });
   };

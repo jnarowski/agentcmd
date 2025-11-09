@@ -4,6 +4,7 @@ import {
   createWorkflowRun,
   getWorkflowRunById,
   getWorkflowRuns,
+  getAllWorkflowRuns,
   executeWorkflow,
   pauseWorkflow,
   resumeWorkflow,
@@ -12,6 +13,7 @@ import {
   getStepLogs,
   getInngestRunStatus,
 } from "@/server/domain/workflow/services";
+import type { WorkflowStatus } from "@/server/domain/workflow/types/workflow.types";
 import { readFile } from "@/server/domain/file/services/readFile";
 import {
   createWorkflowRunSchema,
@@ -105,7 +107,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
 
   /**
    * GET /api/workflow-runs
-   * List workflow runs for a project
+   * List workflow runs (project-specific or user-wide)
    */
   fastify.get<{
     Querystring: z.infer<typeof workflowRunFiltersSchema>;
@@ -121,21 +123,30 @@ export async function workflowRoutes(fastify: FastifyInstance) {
       const userId = (request.user! as { id: string }).id;
       const { project_id, status } = request.query;
 
+      // Parse status - can be single value or comma-separated array
+      const parsedStatus = Array.isArray(status)
+        ? (status as unknown as WorkflowStatus[])
+        : status;
+
+      // If no project_id, fetch all runs for user
       if (!project_id) {
-        return reply.code(400).send({
-          error: { message: "project_id is required", statusCode: 400 },
-        });
+        fastify.log.info({ userId, status: parsedStatus }, "Fetching all workflow runs for user");
+
+        const runs = await getAllWorkflowRuns({ userId, status: parsedStatus });
+
+        return reply.send({ data: runs });
       }
 
+      // Project-specific runs
       fastify.log.info(
-        { userId, projectId: project_id, status },
-        "Fetching workflow runs"
+        { userId, projectId: project_id, status: parsedStatus },
+        "Fetching workflow runs for project"
       );
 
       const runs = await getWorkflowRuns({
         project_id,
         user_id: userId,
-        status,
+        status: parsedStatus,
       });
 
       return reply.send({ data: runs });

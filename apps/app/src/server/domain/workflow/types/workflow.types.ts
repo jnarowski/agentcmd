@@ -29,5 +29,5 @@ export interface CreateWorkflowRunInput {
 export interface WorkflowRunFilters {
   project_id?: string;
   user_id?: string;
-  status?: WorkflowStatus;
+  status?: WorkflowStatus | WorkflowStatus[];
 }

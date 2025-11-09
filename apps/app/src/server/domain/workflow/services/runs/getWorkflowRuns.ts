@@ -20,7 +20,11 @@ export async function getWorkflowRuns(
     where: {
       ...(filters.project_id && { project_id: filters.project_id }),
       ...(filters.user_id && { user_id: filters.user_id }),
-      ...(filters.status && { status: filters.status }),
+      ...(filters.status && {
+        status: Array.isArray(filters.status)
+          ? { in: filters.status }
+          : filters.status
+      }),
     },
     select: {
       id: true,
@@ -28,6 +32,7 @@ export async function getWorkflowRuns(
       status: true,
       current_phase: true,
       workflow_definition_id: true,
+      project_id: true,
       started_at: true,
       created_at: true,
       workflow_definition: {

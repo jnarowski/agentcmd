@@ -18,6 +18,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/client/components/ui/dropdown-menu";
 import {
   Tooltip,
@@ -167,6 +168,15 @@ export function ProjectHeader({ projectId, projectName, projectPath, gitCapabili
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={() => navigate(`/projects/${projectId}/sessions/new`)}>
+              <MessageSquare className="h-4 w-4 mr-2" />
+              New Session
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate(`/projects/${projectId}/workflows`)}>
+              <Workflow className="h-4 w-4 mr-2" />
+              New Workflow
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = item === activeNavItem;

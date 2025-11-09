@@ -13,6 +13,7 @@ export const workflowKeys = {
 
   // Workflow Runs
   runs: () => [...workflowKeys.all, "runs"] as const,
+  allRuns: () => [...workflowKeys.runs(), "all"] as const,
   runsList: (
     projectId: string,
     status?: string,
@@ -22,4 +23,8 @@ export const workflowKeys = {
   run: (id: string) => [...workflowKeys.runs(), id] as const,
   inngestStatus: (runId: string) =>
     [...workflowKeys.runs(), "inngest-status", runId] as const,
+
+  // Workflow Definitions - user-wide
+  allDefinitions: (status?: string) =>
+    [...workflowKeys.definitions(), "all", status] as const,
 };

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   SidebarMenuItem,
   SidebarMenuButton,
+  useSidebar,
 } from "@/client/components/ui/sidebar";
 import { Badge } from "@/client/components/ui/badge";
 import { AgentIcon } from "@/client/components/AgentIcon";
@@ -30,6 +31,7 @@ export function SessionItem({
   session,
 }: SessionItemProps) {
   const navigate = useNavigate();
+  const { isMobile, setOpenMobile } = useSidebar();
   const [hoveredActivityId, setHoveredActivityId] = useState<string | null>(
     null
   );
@@ -38,6 +40,9 @@ export function SessionItem({
   );
 
   const handleActivityClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
     navigate(`/projects/${projectId}/sessions/${id}`);
   };
 
@@ -65,9 +70,9 @@ export function SessionItem({
         onClick={handleActivityClick}
         className="h-auto min-h-[28px] px-2 py-1"
       >
-        {agent && <AgentIcon agent={agent} className="size-4 shrink-0" />}
+        {agent && <AgentIcon agent={agent} className="size-4 shrink-0 mr-1" />}
         <div className="flex flex-1 flex-col gap-0.5 min-w-0">
-          <span className="text-sm min-w-0">{name}</span>
+          <span className="text-sm min-w-0 truncate">{name}</span>
           <div className="flex items-center gap-1.5 mt-0.5">
             <Badge
               variant="secondary"

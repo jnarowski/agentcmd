@@ -2,6 +2,7 @@
 export * from "./runs/createWorkflowRun";
 export * from "./runs/getWorkflowRunById";
 export * from "./runs/getWorkflowRuns";
+export * from "./runs/getAllWorkflowRuns";
 export * from "./steps/getWorkflowStepById";
 export * from "./steps/getStepLogs";
 export * from "./workflow/executeWorkflow";
@@ -20,3 +21,4 @@ export * from "./engine/getInngestRunStatus";
 export * from "./definitions/archiveWorkflowDefinition";
 export * from "./definitions/unarchiveWorkflowDefinition";
 export * from "./definitions/getWorkflowDefinitions";
+export * from "./definitions/getAllWorkflowDefinitions";

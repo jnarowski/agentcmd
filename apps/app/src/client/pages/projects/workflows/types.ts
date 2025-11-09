@@ -184,6 +184,7 @@ export interface WorkflowRunListItem {
   status: WorkflowStatus;
   current_phase: string | null;
   workflow_definition_id: string;
+  project_id: string;
   started_at: Date | null;
   created_at: Date;
   workflow_definition: {

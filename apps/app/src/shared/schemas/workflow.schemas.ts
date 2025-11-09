@@ -185,7 +185,10 @@ export const createWorkflowRunSchema = z
  */
 export const workflowRunFiltersSchema = z.object({
   project_id: z.string().cuid().optional(),
-  status: workflowStatusSchema.optional(),
+  status: z.union([
+    workflowStatusSchema,
+    z.string().transform((val) => val.split(',').map(s => s.trim()))
+  ]).optional(),
 });
 
 /**

@@ -1,5 +1,5 @@
 {
-  "lastId": 14,
+  "lastId": 15,
   "specs": {
     "1": {
       "folder": "1-log-streaming",
@@ -69,6 +69,11 @@
     "14": {
       "folder": "14-sidebar-refresh",
       "created": "2025-11-09T21:30:00.000Z",
+      "location": "doing"
+    },
+    "15": {
+      "folder": "15-n-1-queries",
+      "created": "2025-11-09T22:00:00.000Z",
       "location": "doing"
     }
   }
