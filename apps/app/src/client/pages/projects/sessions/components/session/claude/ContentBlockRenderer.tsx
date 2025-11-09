@@ -16,12 +16,14 @@ interface ContentBlockRendererProps {
   block: UnifiedContent;
   className?: string;
   onApprove?: (toolUseId: string) => void;
+  showDot?: boolean;
 }
 
 export function ContentBlockRenderer({
   block,
   className = "",
   onApprove,
+  showDot = true,
 }: ContentBlockRendererProps) {
   switch (block.type) {
     case "text": {
@@ -35,7 +37,7 @@ export function ContentBlockRenderer({
         return null;
       }
 
-      return <TextBlock text={block.text} className={className} />;
+      return <TextBlock text={block.text} className={className} showDot={showDot} />;
     }
 
     case "thinking":

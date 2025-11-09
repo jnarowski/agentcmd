@@ -1,6 +1,6 @@
 /**
  * User message component
- * Bordered box design for better scannability
+ * Right-aligned chat bubble design
  */
 
 import type { UIMessage } from "@/shared/types/message.types";
@@ -20,12 +20,12 @@ export function UserMessage({ message }: UserMessageProps) {
     }
     return (
       <div
-        className="max-w-full"
+        className="flex justify-end"
         data-message-id={message.id}
         data-message-role={message.role}
         data-content-type="string"
       >
-        <div className="rounded-lg border border-border bg-muted/30 px-4 py-3">
+        <div className="max-w-[85%] rounded-lg border border-border bg-muted/50 px-3 py-2">
           <div className="whitespace-pre-wrap break-words">{message.content}</div>
         </div>
       </div>
@@ -67,15 +67,15 @@ export function UserMessage({ message }: UserMessageProps) {
 
   return (
     <div
-      className="max-w-full"
+      className="flex justify-end"
       data-message-id={message.id}
       data-message-role={message.role}
       data-content-blocks={renderableBlocks.length}
     >
-      <div className="rounded-lg border border-border bg-muted/30 px-4 py-3">
+      <div className="max-w-[85%] rounded-lg border border-border bg-muted/50 px-3 py-2">
         {/* Render all content blocks (text, slash_command, etc.) */}
         {renderableBlocks.map((block, index) => (
-          <ContentBlockRenderer key={index} block={block} />
+          <ContentBlockRenderer key={index} block={block} showDot={false} />
         ))}
       </div>
     </div>
