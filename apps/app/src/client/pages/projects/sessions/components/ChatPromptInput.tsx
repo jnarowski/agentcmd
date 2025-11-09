@@ -250,7 +250,7 @@ const ChatPromptInputInner = forwardRef<
                           "bg-gray-500 hover:bg-gray-600 text-white"
                       )}
                       status={status}
-                      disabled={disabled || !isConnected}
+                      disabled={disabled || !isConnected || externalIsStreaming}
                     />
                   </span>
                 </TooltipTrigger>
