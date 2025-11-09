@@ -19,11 +19,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/client/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/client/components/ui/tooltip";
 import type { SessionResponse } from "@/shared/types";
 import type { GitCapabilities } from "@/shared/types/project.types";
 import { SessionHeader } from "@/client/components/SessionHeader";
 import { GitOperationsModal } from "@/client/components/GitOperationsModal";
 import { NewButton } from "@/client/components/sidebar/NewButton";
+import { truncate } from "@/client/utils/truncate";
 
 interface ProjectHeaderProps {
   projectId: string;
@@ -98,16 +105,25 @@ export function ProjectHeader({ projectId, projectName, projectPath, gitCapabili
               {projectName}
             </button>
             {gitCapabilities.initialized ? (
-              <button
-                onClick={() => setGitModalOpen(true)}
-                disabled={!gitCapabilities.initialized}
-                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-                title={gitCapabilities.error || "Git operations"}
-              >
-                <GitBranch className="h-3 w-3" />
-                <span className="truncate">{gitCapabilities.branch || 'No branch'}</span>
-                <ChevronRight className="h-3.5 w-3.5" />
-              </button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => setGitModalOpen(true)}
+                      disabled={!gitCapabilities.initialized}
+                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                      title={gitCapabilities.error || "Git operations"}
+                    >
+                      <GitBranch className="h-3 w-3" />
+                      <span>{truncate(gitCapabilities.branch || 'No branch', 30)}</span>
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="font-mono text-xs">{gitCapabilities.branch || 'No branch'}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             ) : (
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground opacity-50">
                 <GitBranch className="h-3 w-3" />

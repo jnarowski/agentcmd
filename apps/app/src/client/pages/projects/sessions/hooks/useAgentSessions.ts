@@ -3,33 +3,16 @@ import type { SessionResponse } from "@/shared/types";
 import type { UnifiedMessage } from "agent-cli-sdk";
 import { api } from "@/client/utils/api";
 import { toast } from "sonner";
-import { projectKeys } from "@/client/pages/projects/hooks/useProjects";
+import { projectKeys } from "@/client/pages/projects/hooks/queryKeys";
+import { sessionKeys } from "./queryKeys";
 
-interface GetSessionsFilters {
+export interface GetSessionsFilters {
   projectId?: string;
   limit?: number;
   includeArchived?: boolean;
   orderBy?: 'created_at' | 'updated_at';
   order?: 'asc' | 'desc';
 }
-
-export const sessionKeys = {
-  all: ["agentSessions"] as const,
-
-  // List queries - generic and project-scoped
-  lists: () => [...sessionKeys.all, "list"] as const,
-  list: (filters?: GetSessionsFilters) => [...sessionKeys.lists(), filters] as const,
-
-  // Project-scoped (backward compatible)
-  byProject: (projectId: string) => [...sessionKeys.all, "byProject", projectId] as const,
-
-  // Detail queries - single session
-  details: () => [...sessionKeys.all, "detail"] as const,
-  detail: (sessionId: string, projectId: string) => [...sessionKeys.details(), sessionId, projectId] as const,
-
-  // Message queries - session messages
-  messages: (sessionId: string, projectId: string) => [...sessionKeys.all, "messages", sessionId, projectId] as const,
-};
 
 /**
  * Generic sessions query with optional filters
@@ -53,7 +36,6 @@ export function useSessions(filters?: GetSessionsFilters) {
       );
       return result.data;
     },
-    staleTime: 30_000, // 30s - Lists change less frequently
   });
 }
 
@@ -73,7 +55,6 @@ export function useSession(sessionId: string | undefined, projectId: string | un
       return result.data;
     },
     enabled: !!sessionId && !!projectId,
-    staleTime: 10_000, // 10s - Backup if WebSocket disconnected
   });
 }
 
@@ -93,7 +74,6 @@ export function useSessionMessages(sessionId: string | undefined, projectId: str
       return result.data;
     },
     enabled: !!sessionId && !!projectId,
-    staleTime: 60_000, // 60s backup - WebSocket handles real-time updates via setQueryData
     retry: (failureCount, error) => {
       // Don't retry on 404 - new sessions have no messages yet
       if (error instanceof Error && error.message.includes('404')) {

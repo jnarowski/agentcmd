@@ -228,7 +228,7 @@ export function GitOperationsModal({
       <BaseDialog
         open={open}
         onOpenChange={onOpenChange}
-        contentProps={{ className: "sm:max-w-md" }}
+        contentProps={{ className: "sm:max-w-xl" }}
       >
         <DialogHeader>
           <DialogTitle>Git Operations</DialogTitle>
@@ -334,6 +334,7 @@ export function GitOperationsModal({
                   </div>
                   <ButtonGroup className="w-full">
                     <LoadingButton
+                      variant="default"
                       onClick={handleCommit}
                       disabled={
                         !commitMessage.trim() ||

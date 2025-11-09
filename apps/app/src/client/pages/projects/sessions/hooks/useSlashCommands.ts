@@ -2,14 +2,7 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import type { SlashCommand } from '@/shared/types/slash-command.types';
 import { DEFAULT_SLASH_COMMANDS } from '@/client/pages/projects/sessions/utils/lib/slashCommandUtils';
 import { api } from '@/client/utils/api';
-
-// Query keys factory
-export const slashCommandKeys = {
-  all: ['slash-commands'] as const,
-  projects: () => [...slashCommandKeys.all, 'project'] as const,
-  project: (projectId: string) =>
-    [...slashCommandKeys.projects(), projectId] as const,
-};
+import { slashCommandKeys } from './queryKeys';
 
 /**
  * Fetch custom slash commands for a project
@@ -52,6 +45,5 @@ export function useSlashCommands(
       }
     },
     enabled: true, // Always enabled - will return defaults even without projectId
-    staleTime: 5 * 60 * 1000, // Consider data stale after 5 minutes
   });
 }

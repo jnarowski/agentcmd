@@ -5,6 +5,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/client/utils/api';
+import { settingsKeys } from './queryKeys';
 
 type AgentType = 'claude' | 'codex' | 'gemini' | 'cursor';
 
@@ -47,14 +48,11 @@ interface Settings {
  */
 export function useSettings() {
   return useQuery({
-    queryKey: ['settings'],
+    queryKey: settingsKeys.all,
     queryFn: async () => {
       const response = await api.get<{ data: Settings }>('/api/settings');
       return response.data;
     },
-    staleTime: 5 * 60 * 1000, // Consider settings fresh for 5 minutes
-    refetchOnMount: false, // Don't refetch on every mount
-    refetchOnWindowFocus: false, // Don't refetch on window focus
   });
 }
 
@@ -95,7 +93,7 @@ export function useUpdateSettings() {
     },
     onSuccess: (data) => {
       // Update settings cache with new data
-      queryClient.setQueryData(['settings'], data);
+      queryClient.setQueryData(settingsKeys.all, data);
     },
   });
 }

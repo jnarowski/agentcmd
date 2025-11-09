@@ -8,6 +8,7 @@ import {
 import { Button } from "@/client/components/ui/button";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
 import { WorkflowPackageInstallDialog } from "@/client/pages/projects/components/WorkflowPackageInstallDialog";
+import { workflowKeys } from "../hooks/queryKeys";
 import { useState } from "react";
 
 interface WorkflowOnboardingDialogProps {
@@ -28,7 +29,7 @@ export function WorkflowOnboardingDialog({
   const [showInstallDialog, setShowInstallDialog] = useState(false);
 
   const handleRefreshDefinitions = () => {
-    queryClient.invalidateQueries({ queryKey: ['workflow-definitions', projectId] });
+    queryClient.invalidateQueries({ queryKey: workflowKeys.definitionsList(projectId) });
   };
 
   const handleCloseInstallDialog = () => {

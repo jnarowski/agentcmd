@@ -17,18 +17,7 @@ import type {
 } from "@/shared/types/project.types";
 import type { SyncProjectsResponse } from "@/shared/types/project-sync.types";
 import { api } from "@/client/utils/api";
-
-// Query keys factory - centralized key management
-export const projectKeys = {
-  all: ["projects"] as const,
-  lists: () => [...projectKeys.all, "list"] as const,
-  list: () => [...projectKeys.lists()] as const,
-  withSessions: () => [...projectKeys.all, "with-sessions"] as const,
-  details: () => [...projectKeys.all, "detail"] as const,
-  detail: (id: string) => [...projectKeys.details(), id] as const,
-  readme: (id: string) => [...projectKeys.detail(id), "readme"] as const,
-  sync: () => [...projectKeys.all, "sync"] as const,
-};
+import { projectKeys } from "./queryKeys";
 
 /**
  * Fetch all projects
@@ -126,8 +115,6 @@ export function useProjectsWithSessions(): UseQueryResult<ProjectWithSessions[],
   return useQuery({
     queryKey: projectKeys.withSessions(),
     queryFn: () => fetchProjectsWithSessions(),
-    staleTime: 30000, // 30 seconds
-    refetchOnWindowFocus: false,
   });
 }
 
@@ -259,10 +246,8 @@ export function useSyncProjects(): UseQueryResult<SyncProjectsResponse, Error> {
   return useQuery({
     queryKey: projectKeys.sync(),
     queryFn: () => syncProjects(),
-    staleTime: 5 * 60 * 1000, // 5 minutes - won't refetch within this window
     gcTime: 10 * 60 * 1000,    // 10 minutes - keep in cache
     refetchOnMount: false,      // Don't auto-refetch on component mount
-    refetchOnWindowFocus: false, // Don't refetch on window focus
     retry: 1,                   // Only retry once on failure
   });
 }

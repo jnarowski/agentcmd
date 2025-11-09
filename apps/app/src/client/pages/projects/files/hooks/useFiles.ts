@@ -4,13 +4,7 @@ import type {
   FilesResponse,
 } from "@/shared/types/file.types";
 import { api } from "@/client/utils/api";
-
-// Query keys factory - centralized key management
-export const fileKeys = {
-  all: ["files"] as const,
-  projects: () => [...fileKeys.all, "project"] as const,
-  project: (projectId: string) => [...fileKeys.projects(), projectId] as const,
-};
+import { fileKeys } from "./queryKeys";
 
 /**
  * Fetch file tree for a project

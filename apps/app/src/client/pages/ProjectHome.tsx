@@ -105,9 +105,6 @@ export default function ProjectHome() {
             <MessageSquare className="h-5 w-5 shrink-0" />
             <span className="truncate">Sessions</span>
           </CardTitle>
-          <CardDescription className="mt-1.5 text-xs md:text-sm">
-            Manage and filter your chat sessions
-          </CardDescription>
         </CardHeader>
         <CardContent className="pt-0">
           <ProjectHomeSessions sessions={sessions} projectId={id!} />

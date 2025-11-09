@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/client/utils/api';
 import type { WorkflowRunListItem, WorkflowFilter } from '../types';
+import { workflowKeys } from './queryKeys';
 
 interface WorkflowRunsResponse {
   data: WorkflowRunListItem[];
@@ -34,9 +35,8 @@ export function useWorkflowRuns(
   filter?: WorkflowFilter
 ) {
   return useQuery({
-    queryKey: ['workflow-runs', projectId, filter],
+    queryKey: workflowKeys.runsList(projectId, filter?.status, filter?.search, filter?.definitionId),
     queryFn: () => fetchWorkflowRuns(projectId, filter),
-    refetchInterval: 10000, // 10 seconds as fallback if WebSocket disconnects
     enabled: !!projectId,
   });
 }

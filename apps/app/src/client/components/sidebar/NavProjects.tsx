@@ -1,16 +1,18 @@
 import { useState } from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, RefreshCw } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { SidebarMenu } from "@/client/components/ui/sidebar";
 import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@/client/components/ui/toggle-group";
+import { Button } from "@/client/components/ui/button";
 import { useSettings, useUpdateSettings } from "@/client/hooks/useSettings";
 import {
   useProjects,
   useToggleProjectStarred,
   useToggleProjectHidden,
+  useSyncProjectsMutation,
 } from "@/client/pages/projects/hooks/useProjects";
 import { ProjectDialog } from "@/client/pages/projects/components/ProjectDialog";
 import { ProjectItem } from "@/client/components/sidebar/ProjectItem";
@@ -26,6 +28,7 @@ export function NavProjects() {
   const { data: projectsData } = useProjects();
   const toggleStarred = useToggleProjectStarred();
   const toggleHidden = useToggleProjectHidden();
+  const syncProjectsMutation = useSyncProjectsMutation();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [projectToEdit, setProjectToEdit] = useState<Project | undefined>(
     undefined
@@ -65,9 +68,13 @@ export function NavProjects() {
     setEditDialogOpen(true);
   };
 
+  const handleRefresh = () => {
+    syncProjectsMutation.mutate();
+  };
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <div className="px-2 pb-2 shrink-0">
+      <div className="px-2 pb-2 shrink-0 flex items-center gap-1">
         <ToggleGroup
           type="single"
           value={view}
@@ -93,6 +100,16 @@ export function NavProjects() {
             Favorites
           </ToggleGroupItem>
         </ToggleGroup>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={handleRefresh}
+          disabled={syncProjectsMutation.isPending}
+          className="ml-auto h-6 w-6 p-0"
+          aria-label="Refresh projects"
+        >
+          <RefreshCw className={`size-3.5 ${syncProjectsMutation.isPending ? "animate-spin" : ""}`} />
+        </Button>
       </div>
       <div className="flex-1 overflow-y-auto px-2">
         {filteredProjects.length === 0 ? (

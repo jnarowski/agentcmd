@@ -17,23 +17,8 @@ import type {
   GitMergeResult,
 } from '@/shared/types/git.types';
 import { toast } from 'sonner';
-import { projectKeys } from '@/client/pages/projects/hooks/useProjects';
-
-// Query keys factory - centralized key management
-export const gitKeys = {
-  all: ['git'] as const,
-  status: (path: string) => [...gitKeys.all, 'status', path] as const,
-  branches: (path: string) => [...gitKeys.all, 'branches', path] as const,
-  diff: (path: string, filepath: string | null) =>
-    [...gitKeys.all, 'diff', path, filepath] as const,
-  history: (path: string, limit: number, offset: number) =>
-    [...gitKeys.all, 'history', path, limit, offset] as const,
-  commit: (path: string, commitHash: string | null) =>
-    [...gitKeys.all, 'commit', path, commitHash] as const,
-  prData: (path: string, baseBranch: string) =>
-    [...gitKeys.all, 'pr-data', path, baseBranch] as const,
-  stashList: (path: string) => [...gitKeys.all, 'stash', 'list', path] as const,
-};
+import { projectKeys } from '@/client/pages/projects/hooks/queryKeys';
+import { gitKeys } from './queryKeys';
 
 // Query hooks
 
@@ -52,7 +37,6 @@ export function useGitStatus(path: string | undefined) {
       return response.data;
     },
     enabled: !!path,
-    refetchInterval: 30000, // Auto-refresh every 30 seconds
   });
 }
 

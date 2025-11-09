@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/client/utils/api';
 import type { WorkflowDefinition } from '../types';
+import { workflowKeys } from './queryKeys';
 
 interface WorkflowDefinitionsResponse {
   data: WorkflowDefinition[];
@@ -22,8 +23,7 @@ async function fetchWorkflowDefinitions(
 
 export function useWorkflowDefinitions(projectId: string, status?: 'active' | 'archived') {
   return useQuery({
-    queryKey: ['workflow-definitions', projectId, status],
+    queryKey: workflowKeys.definitionsList(projectId, status),
     queryFn: () => fetchWorkflowDefinitions(projectId, status),
-    staleTime: 5 * 60 * 1000, // 5 minutes - templates don't change often
   });
 }

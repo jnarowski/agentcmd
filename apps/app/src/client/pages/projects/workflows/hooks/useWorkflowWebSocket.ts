@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useMemo } from "react";
+import { useEffect, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useWebSocket } from "@/client/hooks/useWebSocket";
 import { Channels } from "@/shared/websocket";
@@ -12,32 +12,16 @@ import {
   type WorkflowArtifactCreatedData,
 } from "@/shared/types/websocket.types";
 import { toast } from "sonner";
-import { debounce } from "@/client/lib/debounce";
 import type {
-  WorkflowRunListItem,
   WorkflowRunDetail,
   WorkflowEvent,
   WorkflowArtifact,
 } from "../types";
+import { workflowKeys } from "./queryKeys";
 
 export function useWorkflowWebSocket(projectId: string) {
   const { eventBus, sendMessage, isConnected } = useWebSocket();
   const queryClient = useQueryClient();
-
-  // Create debounced invalidation function (5s delay, resets on new events)
-  // This provides a safety net if WebSocket drops events or optimistic update is incorrect
-  const debouncedInvalidate = useMemo(
-    () =>
-      debounce((runId: string) => {
-        queryClient.invalidateQueries({
-          queryKey: ["workflow-run", runId],
-        });
-        queryClient.invalidateQueries({
-          queryKey: ["workflow-runs", projectId],
-        });
-      }, 5000),
-    [queryClient, projectId]
-  );
 
   // Handler: workflow:run:updated
   const handleRunUpdated = useCallback(
@@ -56,7 +40,7 @@ export function useWorkflowWebSocket(projectId: string) {
 
       // Optimistic update: Update detail view (if cached)
       queryClient.setQueryData<WorkflowRunDetail>(
-        ["workflow-run", run_id],
+        workflowKeys.run(run_id),
         (old) => {
           if (!old) return old;
           return {
@@ -66,21 +50,10 @@ export function useWorkflowWebSocket(projectId: string) {
         }
       );
 
-      // Optimistic update: Update list view (if cached)
-      queryClient.setQueriesData<WorkflowRunListItem[]>(
-        { queryKey: ["workflow-runs", projectId] },
-        (old) => {
-          if (!old) return old;
-          return old.map((exec) =>
-            exec.id === run_id
-              ? {
-                  ...exec,
-                  ...normalizedChanges,
-                }
-              : exec
-          );
-        }
-      );
+      // Invalidate list queries to refetch
+      queryClient.invalidateQueries({
+        queryKey: workflowKeys.runs(),
+      });
 
       // Show toast for terminal states
       if (changes.status === "completed") {
@@ -90,11 +63,8 @@ export function useWorkflowWebSocket(projectId: string) {
       } else if (changes.status === "cancelled") {
         toast.info("Workflow cancelled");
       }
-
-      // Schedule background refetch (debounced)
-      debouncedInvalidate(run_id);
     },
-    [queryClient, projectId, debouncedInvalidate]
+    [queryClient]
   );
 
   // Handler: workflow:run:step:updated
@@ -120,7 +90,7 @@ export function useWorkflowWebSocket(projectId: string) {
 
       // Optimistic update: Update detail view (if cached)
       queryClient.setQueryData<WorkflowRunDetail>(
-        ["workflow-run", run_id],
+        workflowKeys.run(run_id),
         (old) => {
           if (!old || !old.steps) return old;
           return {
@@ -141,11 +111,8 @@ export function useWorkflowWebSocket(projectId: string) {
       if (changes.status === "failed") {
         toast.error(`Step failed: ${changes.error_message || "Unknown error"}`);
       }
-
-      // Schedule background refetch (debounced)
-      debouncedInvalidate(run_id);
     },
-    [queryClient, debouncedInvalidate]
+    [queryClient]
   );
 
   // Handler: workflow:run:event:created
@@ -163,7 +130,7 @@ export function useWorkflowWebSocket(projectId: string) {
 
       // Optimistic update: Add event to detail view (if cached)
       queryClient.setQueryData<WorkflowRunDetail>(
-        ["workflow-run", run_id],
+        workflowKeys.run(run_id),
         (old) => {
           if (!old) return old;
           return {
@@ -172,11 +139,8 @@ export function useWorkflowWebSocket(projectId: string) {
           };
         }
       );
-
-      // Schedule background refetch (debounced)
-      debouncedInvalidate(run_id);
     },
-    [queryClient, debouncedInvalidate]
+    [queryClient]
   );
 
   // Handler: workflow:run:artifact:created
@@ -193,7 +157,7 @@ export function useWorkflowWebSocket(projectId: string) {
 
       // Optimistic update: Add artifact to detail view (if cached)
       queryClient.setQueryData<WorkflowRunDetail>(
-        ["workflow-run", run_id],
+        workflowKeys.run(run_id),
         (old) => {
           if (!old) return old;
 
@@ -223,11 +187,8 @@ export function useWorkflowWebSocket(projectId: string) {
           };
         }
       );
-
-      // Schedule background refetch (debounced)
-      debouncedInvalidate(run_id);
     },
-    [queryClient, debouncedInvalidate]
+    [queryClient]
   );
 
   // Handler: workflow:run:step:log_chunk

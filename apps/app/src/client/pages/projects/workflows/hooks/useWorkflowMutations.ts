@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/client/utils/api';
 import { toast } from 'sonner';
 import type { WorkflowRun, WorkflowEvent, WorkflowArtifact } from '../types';
+import { workflowKeys } from './queryKeys';
 
 // Create workflow
 interface CreateWorkflowInput {
@@ -43,9 +44,9 @@ export function useCreateWorkflow() {
 
   return useMutation({
     mutationFn: createWorkflow,
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['workflow-runs', data.project_id],
+        queryKey: workflowKeys.runs(),
       });
       toast.success('Workflow created successfully');
     },
@@ -67,7 +68,7 @@ export function usePauseWorkflow() {
     mutationFn: pauseWorkflow,
     onSuccess: (_data, runId) => {
       queryClient.invalidateQueries({
-        queryKey: ['workflow-run', runId],
+        queryKey: workflowKeys.run(runId),
       });
       toast.success('Workflow paused');
     },
@@ -89,7 +90,7 @@ export function useResumeWorkflow() {
     mutationFn: resumeWorkflow,
     onSuccess: (_data, runId) => {
       queryClient.invalidateQueries({
-        queryKey: ['workflow-run', runId],
+        queryKey: workflowKeys.run(runId),
       });
       toast.success('Workflow resumed');
     },
@@ -111,7 +112,7 @@ export function useCancelWorkflow() {
     mutationFn: cancelWorkflow,
     onSuccess: (_data, runId) => {
       queryClient.invalidateQueries({
-        queryKey: ['workflow-run', runId],
+        queryKey: workflowKeys.run(runId),
       });
       toast.success('Workflow cancelled');
     },
@@ -151,7 +152,7 @@ export function useCreateAnnotation() {
     mutationFn: createAnnotation,
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ['workflow-run', variables.runId],
+        queryKey: workflowKeys.run(variables.runId),
       });
       toast.success('Annotation added');
     },
@@ -193,7 +194,7 @@ export function useUploadArtifact() {
     mutationFn: uploadArtifact,
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ['workflow-run', variables.runId],
+        queryKey: workflowKeys.run(variables.runId),
       });
       toast.success('Artifact uploaded');
     },

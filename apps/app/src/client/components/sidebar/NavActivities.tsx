@@ -1,13 +1,17 @@
 import { useMemo } from "react";
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, useQueryClient } from "@tanstack/react-query";
+import { RefreshCw } from "lucide-react";
 import { SidebarMenu } from "@/client/components/ui/sidebar";
 import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@/client/components/ui/toggle-group";
+import { Button } from "@/client/components/ui/button";
 import { useSettings, useUpdateSettings } from "@/client/hooks/useSettings";
-import { useProjects } from "@/client/pages/projects/hooks/useProjects";
+import { useProjects, useSyncProjectsMutation } from "@/client/pages/projects/hooks/useProjects";
 import { useSessions } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
+import { sessionKeys } from "@/client/pages/projects/sessions/hooks/queryKeys";
+import { workflowKeys } from "@/client/pages/projects/workflows/hooks/queryKeys";
 import { getSessionDisplayName } from "@/client/utils/getSessionDisplayName";
 import { api } from "@/client/utils/api";
 import { SessionItem } from "@/client/components/sidebar/SessionItem";
@@ -35,6 +39,8 @@ export function NavActivities() {
   const updateSettings = useUpdateSettings();
   const { data: projects } = useProjects();
   const { data: sessions } = useSessions({ limit: 20, orderBy: 'updated_at', order: 'desc' });
+  const queryClient = useQueryClient();
+  const syncProjectsMutation = useSyncProjectsMutation();
 
   const filter: ActivityFilter =
     settings?.userPreferences?.activity_filter || "all";
@@ -73,7 +79,7 @@ export function NavActivities() {
   // Fetch workflow runs for all projects using useQueries
   const workflowQueries = useQueries({
     queries: (projects || []).map((project) => ({
-      queryKey: ["workflow-runs", project.id],
+      queryKey: workflowKeys.runsList(project.id),
       queryFn: async () => {
         const params = new URLSearchParams();
         params.append("project_id", project.id);
@@ -130,9 +136,23 @@ export function NavActivities() {
   );
   filteredActivities = filteredActivities.slice(0, 10);
 
+  const handleRefresh = () => {
+    syncProjectsMutation.mutate(undefined, {
+      onSuccess: () => {
+        // Invalidate sessions lists
+        queryClient.invalidateQueries({ queryKey: sessionKeys.lists() });
+
+        // Invalidate workflow runs for all projects
+        projects?.forEach((p) => {
+          queryClient.invalidateQueries({ queryKey: workflowKeys.runsList(p.id) });
+        });
+      },
+    });
+  };
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <div className="px-2 pb-2 shrink-0">
+      <div className="px-2 pb-2 shrink-0 flex items-center gap-1">
         <ToggleGroup
           type="single"
           value={filter}
@@ -167,6 +187,16 @@ export function NavActivities() {
             Workflows
           </ToggleGroupItem>
         </ToggleGroup>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={handleRefresh}
+          disabled={syncProjectsMutation.isPending}
+          className="ml-auto h-6 w-6 p-0"
+          aria-label="Refresh activities"
+        >
+          <RefreshCw className={`size-3.5 ${syncProjectsMutation.isPending ? "animate-spin" : ""}`} />
+        </Button>
       </div>
       <div className="flex-1 overflow-y-auto px-2">
         {filteredActivities.length === 0 ? (

@@ -8,9 +8,9 @@ import {
   type SessionEvent,
 } from "@/shared/types/websocket.types";
 import { Channels } from "@/shared/websocket";
-import { sessionKeys } from "./useAgentSessions";
+import { sessionKeys } from "./queryKeys";
 import { generateUUID } from "@/client/utils/cn";
-import { projectKeys } from "@/client/pages/projects/hooks/useProjects";
+import { projectKeys } from "@/client/pages/projects/hooks/queryKeys";
 import type { ProjectWithSessions } from "@/shared/types/project.types";
 
 interface UseSessionWebSocketOptions {

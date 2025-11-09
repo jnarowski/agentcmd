@@ -7,18 +7,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/client/components/ui/dialog";
-import { api } from "@/client/utils/api";
-import { useQuery } from "@tanstack/react-query";
+import { useSessionFile } from "../hooks/useSessionFile";
 
 interface SessionFileViewerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   sessionId: string;
-}
-
-interface SessionFileData {
-  content: string;
-  path: string;
 }
 
 /**
@@ -33,16 +27,7 @@ export function SessionFileViewer({
   const [copied, setCopied] = useState(false);
 
   // Fetch session file content
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["sessionFile", sessionId],
-    queryFn: async () => {
-      const response = await api.get<{ data: SessionFileData }>(
-        `/api/sessions/${sessionId}/file`
-      );
-      return response.data;
-    },
-    enabled: open, // Only fetch when modal is open
-  });
+  const { data, isLoading, error } = useSessionFile(sessionId, open);
 
   const handleCopy = async () => {
     if (!data?.content) return;

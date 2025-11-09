@@ -1,8 +1,6 @@
 import { useState, useMemo } from "react";
 import { SessionListItem } from "@/client/pages/projects/sessions/components/SessionListItem";
 import { Input } from "@/client/components/ui/input";
-import { Checkbox } from "@/client/components/ui/checkbox";
-import { Label } from "@/client/components/ui/label";
 import { Badge } from "@/client/components/ui/badge";
 import {
   Select,
@@ -11,7 +9,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/client/components/ui/select";
-import { Search, Filter } from "lucide-react";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+} from "@/client/components/ui/empty";
+import { Button } from "@/client/components/ui/button";
+import { Search, X } from "lucide-react";
+import { truncate } from "@/client/utils/truncate";
 import type { SessionResponse } from "@/shared/types";
 
 interface ProjectHomeSessionsProps {
@@ -26,7 +32,7 @@ export function ProjectHomeSessions({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedState, setSelectedState] = useState<string>("all");
   const [selectedAgent, setSelectedAgent] = useState<string>("all");
-  const [showArchived, setShowArchived] = useState(false);
+  const [archivedFilter, setArchivedFilter] = useState<string>("active");
 
   const stateOptions: { value: string; label: string }[] = [
     { value: "all", label: "All States" },
@@ -43,12 +49,19 @@ export function ProjectHomeSessions({
     { value: "cursor", label: "Cursor" },
   ];
 
+  const archivedOptions: { value: string; label: string }[] = [
+    { value: "active", label: "Active" },
+    { value: "archived", label: "Archived" },
+  ];
+
   const filteredSessions = useMemo(() => {
     let result = [...sessions];
 
-    // Filter out archived sessions unless showArchived is true
-    if (!showArchived) {
+    // Archive filter
+    if (archivedFilter === "active") {
       result = result.filter((s) => !s.is_archived);
+    } else if (archivedFilter === "archived") {
+      result = result.filter((s) => s.is_archived);
     }
 
     // Text search filter
@@ -79,38 +92,38 @@ export function ProjectHomeSessions({
     );
 
     return result;
-  }, [sessions, searchTerm, selectedState, selectedAgent, showArchived]);
+  }, [sessions, searchTerm, selectedState, selectedAgent, archivedFilter]);
 
   const activeFilterCount =
     (searchTerm.trim() ? 1 : 0) +
     (selectedState !== "all" ? 1 : 0) +
     (selectedAgent !== "all" ? 1 : 0) +
-    (showArchived ? 1 : 0);
+    (archivedFilter !== "active" ? 1 : 0);
+
+  const clearAllFilters = () => {
+    setSearchTerm("");
+    setSelectedState("all");
+    setSelectedAgent("all");
+    setArchivedFilter("active");
+  };
 
   if (!sessions || sessions.length === 0) {
     return (
-      <div className="py-8 text-center">
-        <p className="text-sm text-muted-foreground">
-          No sessions yet. Start a new chat to see it here.
-        </p>
-      </div>
+      <Empty>
+        <EmptyHeader>
+          <EmptyTitle>No sessions yet</EmptyTitle>
+          <EmptyDescription>
+            Start a new chat to see it here.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
   }
 
   return (
     <div className="space-y-4">
       {/* Filter Controls */}
-      <div className="space-y-3 p-4 border border-border/50 rounded-lg bg-background/50">
-        <div className="flex items-center gap-2 mb-3">
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          <h3 className="text-sm font-medium">Filters</h3>
-          {activeFilterCount > 0 && (
-            <Badge variant="secondary" className="text-xs">
-              {activeFilterCount} active
-            </Badge>
-          )}
-        </div>
-
+      <div className="space-y-3">
         {/* Filter Row */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           {/* Search Input */}
@@ -157,22 +170,105 @@ export function ProjectHomeSessions({
             </Select>
           </div>
 
-          {/* Show Archived Checkbox */}
-          <div className="md:col-span-1 flex items-center space-x-2 px-3 border border-border/50 rounded-md bg-background">
-            <Checkbox
-              id="show-archived"
-              checked={showArchived}
-              onCheckedChange={(checked) => setShowArchived(checked === true)}
-            />
-            <Label
-              htmlFor="show-archived"
-              className="text-sm font-normal cursor-pointer"
-            >
-              Show archived
-            </Label>
+          {/* Archived Filter */}
+          <div className="md:col-span-1">
+            <Select value={archivedFilter} onValueChange={setArchivedFilter}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                {archivedOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
+
+      {/* Active Filters Bar */}
+      {activeFilterCount > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-muted-foreground">Active filters:</span>
+
+          {searchTerm.trim() && (
+            <Badge variant="secondary" className="text-xs gap-1">
+              Search: {truncate(searchTerm, 20)}
+              <button
+                onClick={() => setSearchTerm("")}
+                className="ml-1 hover:bg-muted-foreground/20 rounded-sm"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+
+          {selectedState !== "all" && (
+            <Badge variant="secondary" className="text-xs gap-1">
+              State: {stateOptions.find((o) => o.value === selectedState)?.label}
+              <button
+                onClick={() => setSelectedState("all")}
+                className="ml-1 hover:bg-muted-foreground/20 rounded-sm"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+
+          {selectedAgent !== "all" && (
+            <Badge variant="secondary" className="text-xs gap-1">
+              Agent: {agentOptions.find((o) => o.value === selectedAgent)?.label}
+              <button
+                onClick={() => setSelectedAgent("all")}
+                className="ml-1 hover:bg-muted-foreground/20 rounded-sm"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+
+          {archivedFilter !== "active" && (
+            <Badge variant="secondary" className="text-xs gap-1">
+              Status: {archivedOptions.find((o) => o.value === archivedFilter)?.label}
+              <button
+                onClick={() => setArchivedFilter("active")}
+                className="ml-1 hover:bg-muted-foreground/20 rounded-sm"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearAllFilters}
+            className="h-6 text-xs"
+          >
+            Clear all
+          </Button>
+        </div>
+      )}
+
+      {/* Session List */}
+      {filteredSessions.length === 0 ? (
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>No sessions found</EmptyTitle>
+            <EmptyDescription>
+              No sessions match your filters. Try adjusting the filters above.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      ) : (
+        <div className="space-y-0 -mx-2">
+          {filteredSessions.map((session) => (
+            <SessionListItem key={session.id} session={session} projectId={projectId} />
+          ))}
+        </div>
+      )}
 
       {/* Session Count */}
       <div className="flex items-center justify-between text-sm text-muted-foreground">
@@ -180,31 +276,6 @@ export function ProjectHomeSessions({
           Showing {filteredSessions.length} of {sessions.length} sessions
         </span>
       </div>
-
-      {/* Session List */}
-      {filteredSessions.length === 0 ? (
-        <div className="py-8 text-center">
-          <p className="text-sm text-muted-foreground">
-            No sessions match your filters. Try adjusting the filters above.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-0 -mx-2">
-          {filteredSessions.map((session) => (
-            <div key={session.id} className="relative">
-              <SessionListItem session={session} projectId={projectId} />
-              {session.is_archived && showArchived && (
-                <Badge
-                  variant="outline"
-                  className="absolute top-2 right-2 text-xs"
-                >
-                  Archived
-                </Badge>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

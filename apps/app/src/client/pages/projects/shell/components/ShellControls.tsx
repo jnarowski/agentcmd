@@ -3,15 +3,11 @@ import type { ConnectionStatus } from "@/client/pages/projects/shell/contexts/Sh
 
 interface ShellControlsProps {
   status: ConnectionStatus;
-  onConnect?: () => void;
-  onDisconnect?: () => void;
   onRestart?: () => void;
 }
 
 export function ShellControls({
   status,
-  onConnect,
-  onDisconnect,
   onRestart,
 }: ShellControlsProps) {
   const getStatusColor = () => {
@@ -56,26 +52,6 @@ export function ShellControls({
 
       {/* Action buttons */}
       <div className="flex items-center gap-2">
-        {status === 'disconnected' || status === 'error' ? (
-          <Button
-            size="sm"
-            variant="default"
-            onClick={onConnect}
-            disabled={!onConnect}
-          >
-            Connect
-          </Button>
-        ) : (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={onDisconnect}
-            disabled={!onDisconnect}
-          >
-            Disconnect
-          </Button>
-        )}
-
         <Button
           size="sm"
           variant="outline"

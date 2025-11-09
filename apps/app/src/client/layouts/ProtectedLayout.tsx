@@ -2,7 +2,9 @@ import { useEffect } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/client/stores/index";
-import { useSyncProjects, projectKeys } from "@/client/pages/projects/hooks/useProjects";
+import { useSyncProjects } from "@/client/pages/projects/hooks/useProjects";
+import { projectKeys } from "@/client/pages/projects/hooks/queryKeys";
+import { settingsKeys } from "@/client/hooks/queryKeys";
 import { useSettings } from "@/client/hooks/useSettings";
 import { useSessionStore } from "@/client/pages/projects/sessions/stores/sessionStore";
 import { useTheme } from "next-themes";
@@ -23,7 +25,7 @@ function ProtectedLayout() {
   // call useSettings() before first request completes, triggering duplicate fetches
   useEffect(() => {
     queryClient.prefetchQuery({
-      queryKey: ["settings"],
+      queryKey: settingsKeys.all,
       queryFn: () => api.get<{ data: unknown }>("/api/settings").then(res => res.data),
     });
   }, [queryClient]);

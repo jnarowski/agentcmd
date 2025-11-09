@@ -24,6 +24,7 @@ import {
   usePush,
   useFetch,
 } from "./hooks/useGitOperations";
+import { gitKeys } from "./hooks/queryKeys";
 import { useProject } from "../hooks/useProjects";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -150,7 +151,9 @@ export default function ProjectSourceControl() {
   };
 
   const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ["git", "status", projectPath] });
+    if (projectPath) {
+      queryClient.invalidateQueries({ queryKey: gitKeys.status(projectPath) });
+    }
     toast.success("Refreshed git status");
   };
 

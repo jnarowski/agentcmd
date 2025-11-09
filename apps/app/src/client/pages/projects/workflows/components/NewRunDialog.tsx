@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { BaseDialog } from "@/client/components/BaseDialog";
 import {
   DialogDescription,
@@ -15,6 +14,8 @@ import { RadioGroup, RadioGroupItem } from "@/client/components/ui/radio-group";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/client/components/ui/tabs";
 import { Combobox } from "@/client/components/ui/combobox";
 import { useCreateWorkflow } from "../hooks/useWorkflowMutations";
+import { useProjectSpecs } from "@/client/pages/projects/hooks/useProjectSpecs";
+import { useProjectBranches } from "@/client/pages/projects/hooks/useProjectBranches";
 import { api } from "@/client/utils/api";
 import type { WorkflowDefinition } from "../types";
 import { NewRunFormDialogArgSchemaFields } from "./NewRunFormDialogArgSchemaFields";
@@ -76,28 +77,10 @@ export function NewRunDialog({
   }, [selectedDefinitionId, definitionId]);
 
   // Fetch available spec files
-  const { data: specFiles } = useQuery({
-    queryKey: ["projects", projectId, "specs"],
-    queryFn: async () => {
-      const response = await api.get<{ data: string[] }>(
-        `/api/projects/${projectId}/specs`
-      );
-      return response.data;
-    },
-    enabled: open,
-  });
+  const { data: specFiles } = useProjectSpecs(projectId, open);
 
   // Fetch available branches
-  const { data: branches } = useQuery({
-    queryKey: ["projects", projectId, "branches"],
-    queryFn: async () => {
-      const response = await api.get<{
-        data: Array<{ name: string; current: boolean }>;
-      }>(`/api/projects/${projectId}/branches`);
-      return response.data;
-    },
-    enabled: open,
-  });
+  const { data: branches } = useProjectBranches(projectId, open);
 
   // Transform branches to combobox options
   const branchOptions = useMemo(() => {
