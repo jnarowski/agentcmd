@@ -8,6 +8,7 @@ import {
 } from "@/client/components/ui/toggle-group";
 import { Button } from "@/client/components/ui/button";
 import { useSettings, useUpdateSettings } from "@/client/hooks/useSettings";
+import { useNavigationStore } from "@/client/stores";
 import { useProjects, useSyncProjectsMutation } from "@/client/pages/projects/hooks/useProjects";
 import { useSessions } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
 import { sessionKeys } from "@/client/pages/projects/sessions/hooks/queryKeys";
@@ -34,6 +35,7 @@ interface Activity {
 }
 
 export function NavActivities() {
+  const activeSessionId = useNavigationStore((s) => s.activeSessionId);
   const { data: settings } = useSettings();
   const updateSettings = useUpdateSettings();
   const { data: projects } = useProjects();
@@ -198,6 +200,7 @@ export function NavActivities() {
                     status={activity.status}
                     agent={activity.agent}
                     session={activity.session}
+                    isActive={activity.id === activeSessionId}
                   />
                 );
               } else if (activity.type === "workflow") {

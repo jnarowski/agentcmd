@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { useSessionStore, selectTotalTokens } from "./sessionStore";
-import type { UIMessage } from "@/shared/types/message.types";
 
 // Mock the agents module
 vi.mock("@/client/utils/agents");

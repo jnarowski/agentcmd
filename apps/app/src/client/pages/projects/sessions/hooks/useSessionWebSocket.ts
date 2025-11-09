@@ -12,6 +12,7 @@ import { sessionKeys } from "./queryKeys";
 import { generateUUID } from "@/client/utils/cn";
 import { projectKeys } from "@/client/pages/projects/hooks/queryKeys";
 import type { ProjectWithSessions } from "@/shared/types/project.types";
+import type { SessionResponse } from "@/shared/types";
 
 interface UseSessionWebSocketOptions {
   sessionId: string;
@@ -175,17 +176,19 @@ export function useSessionWebSocket({
           console.log("[useSessionWebSocket] session.updated received:", data);
 
           // Update session detail cache directly (optimistic update)
-          queryClient.setQueryData(
+          queryClient.setQueryData<{ data: SessionResponse }>(
             sessionKeys.detail(sessionIdRef.current, projectIdRef.current),
-            (old: any) => {
+            (old) => {
               if (!old) return old;
               return {
                 ...old,
-                state: data.state ?? old.state,
-                error_message: data.error_message ?? old.error_message,
-                metadata: data.metadata ?? old.metadata,
-                name: data.name ?? old.name,
-                updated_at: data.updated_at ? new Date(data.updated_at) : old.updated_at,
+                data: {
+                  ...old.data,
+                  ...(data.state && { state: data.state }),
+                  ...(data.error_message !== undefined && { error_message: data.error_message || undefined }),
+                  ...(data.name && { name: data.name }),
+                  ...(data.updated_at && { updated_at: new Date(data.updated_at) }),
+                },
               };
             }
           );

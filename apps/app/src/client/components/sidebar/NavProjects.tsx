@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { ChevronRight, RefreshCw } from "lucide-react";
-import { useParams } from "react-router-dom";
 import { SidebarMenu } from "@/client/components/ui/sidebar";
 import {
   ToggleGroup,
@@ -8,6 +7,7 @@ import {
 } from "@/client/components/ui/toggle-group";
 import { Button } from "@/client/components/ui/button";
 import { useSettings, useUpdateSettings } from "@/client/hooks/useSettings";
+import { useNavigationStore } from "@/client/stores";
 import {
   useProjects,
   useToggleProjectStarred,
@@ -21,8 +21,7 @@ import type { Project } from "@/shared/types/project.types";
 type ProjectsView = "all" | "favorites" | "hidden";
 
 export function NavProjects() {
-  const { projectId, id } = useParams();
-  const activeProjectId = projectId || id;
+  const activeProjectId = useNavigationStore((s) => s.activeProjectId);
   const { data: settings } = useSettings();
   const updateSettings = useUpdateSettings();
   const { data: projectsData } = useProjects();

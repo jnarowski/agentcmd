@@ -19,6 +19,7 @@ interface SessionItemProps {
   status: string;
   agent?: AgentType;
   session: SessionResponse;
+  isActive?: boolean;
 }
 
 export function SessionItem({
@@ -29,6 +30,7 @@ export function SessionItem({
   status,
   agent,
   session,
+  isActive = false,
 }: SessionItemProps) {
   const navigate = useNavigate();
   const { isMobile, setOpenMobile } = useSidebar();
@@ -68,6 +70,7 @@ export function SessionItem({
     >
       <SidebarMenuButton
         onClick={handleActivityClick}
+        isActive={isActive}
         className="h-auto min-h-[28px] px-2 py-1"
       >
         {agent && <AgentIcon agent={agent} className="size-4 shrink-0 mr-1" />}

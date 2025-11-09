@@ -1,0 +1,261 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Workflow orchestration models
+model WorkflowDefinition {
+  id          String         @id @default(cuid())
+  scope       WorkflowScope  @default(project) // 'project' or 'global'
+  project_id  String?        // Nullable for global workflows
+  identifier  String         // Workflow identifier from code definition (e.g., "example-text-workflow")
+  name        String         // Display name (e.g., "Example Text Workflow")
+  description String?
+  type        String         // 'code' or 'yaml'
+  path        String         // Filesystem path to template
+  phases      Json           // Array of phase names: ["research", "implement", "test"]
+  args_schema Json?          // JSON schema for workflow arguments
+  is_template Boolean        @default(true)
+  status      String         @default("active") // "active" | "archived" - User-initiated archiving
+  file_exists Boolean        @default(true)     // System-detected file presence on disk
+  load_error  String?        // Error message if workflow failed to load
+  archived_at DateTime?      // Timestamp when definition was archived
+  created_at  DateTime       @default(now())
+  updated_at  DateTime       @updatedAt
+
+  project Project?           @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  runs    WorkflowRun[]
+
+  @@unique([scope, identifier], name: "scope_identifier")
+  @@unique([project_id, identifier], name: "project_id_identifier")
+  @@index([type])
+  @@index([is_template])
+  @@index([project_id])
+  @@index([status])
+  @@index([scope])
+  @@index([project_id, status])
+  @@map("workflow_definitions")
+}
+
+model WorkflowRun {
+  id                     String         @id @default(cuid())
+  project_id             String
+  user_id                String
+  workflow_definition_id String
+  name                   String         // User-provided name for this execution
+  args                   Json           // Workflow arguments
+  spec_file              String?        // Relative path to spec file (from .agent/specs/todo/)
+  spec_content           String?        // Inline spec content (alternative to spec_file)
+  base_branch            String?        // Branch to create new branch from
+  branch_name            String?        // New branch name for execution
+  worktree_name          String?        // Worktree name (alternative to branch_name)
+  current_phase          String?        // Current phase name
+  current_step_index     Int            @default(0)
+  status                 WorkflowStatus @default(pending)
+  error_message          String?
+  inngest_run_id         String?        // Inngest workflow run ID for status tracking
+  started_at             DateTime?
+  completed_at           DateTime?
+  paused_at              DateTime?
+  cancelled_at           DateTime?
+  created_at             DateTime       @default(now())
+  updated_at             DateTime       @updatedAt
+
+  project             Project                 @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  user                User                    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  workflow_definition WorkflowDefinition      @relation(fields: [workflow_definition_id], references: [id], onDelete: Cascade)
+  steps               WorkflowRunStep[]
+  events              WorkflowEvent[]
+  artifacts           WorkflowArtifact[]
+
+  @@index([project_id, status])
+  @@index([user_id, status])
+  @@index([workflow_definition_id])
+  @@index([status])
+  @@index([inngest_run_id])
+  @@map("workflow_runs")
+}
+
+model WorkflowRunStep {
+  id                    String     @id @default(cuid())
+  workflow_run_id String
+  inngest_step_id       String     // Auto-generated: "${phase}-${userStepId}" for Inngest memoization
+  name                  String     // Display name
+  phase                 String     // Phase this step belongs to
+  status                StepStatus @default(pending)
+  log_directory_path    String?    // Path to logs directory on filesystem
+  agent_session_id      String?    // Link to AgentSession (nullable - only for agent steps)
+  error_message         String?
+  started_at            DateTime?
+  completed_at          DateTime?
+  created_at            DateTime   @default(now())
+  updated_at            DateTime   @updatedAt
+
+  workflow_run WorkflowRun @relation(fields: [workflow_run_id], references: [id], onDelete: Cascade)
+  session            AgentSession?     @relation(fields: [agent_session_id], references: [id], onDelete: Cascade)
+
+  @@index([workflow_run_id, status])
+  @@index([agent_session_id])
+  @@index([status])
+  @@map("workflow_run_steps")
+}
+
+model WorkflowEvent {
+  id                    String            @id @default(cuid())
+  workflow_run_id String
+  event_type            WorkflowEventType
+  event_data            Json              // Event-specific data (comment text, phase name, step info, etc.)
+  phase                 String?           // Phase this event belongs to
+  inngest_step_id       String?           // Optional reference to step that triggered this event
+  created_by_user_id    String?           // Nullable - only for user-generated events
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+
+  workflow_run WorkflowRun @relation(fields: [workflow_run_id], references: [id], onDelete: Cascade)
+  created_by_user    User?             @relation(fields: [created_by_user_id], references: [id], onDelete: Cascade)
+  artifacts          WorkflowArtifact[]
+
+  @@index([workflow_run_id, created_at])
+  @@index([event_type])
+  @@index([phase])
+  @@map("workflow_events")
+}
+
+model WorkflowArtifact {
+  id                    String    @id @default(cuid())
+  workflow_run_id String    // Direct reference to run
+  workflow_event_id     String?   // Nullable - can attach artifact to event
+  name                  String
+  file_path             String    // Relative to project root
+  file_type             String    // 'image', 'video', 'document', 'code', 'other'
+  mime_type             String
+  size_bytes            Int
+  phase                 String?   // Phase this artifact belongs to
+  inngest_step_id       String?   // Optional reference to step that created this artifact
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
+
+  workflow_run WorkflowRun @relation(fields: [workflow_run_id], references: [id], onDelete: Cascade)
+  event              WorkflowEvent?    @relation(fields: [workflow_event_id], references: [id], onDelete: SetNull)
+
+  @@index([workflow_run_id])
+  @@index([workflow_run_id, phase])
+  @@index([workflow_event_id])
+  @@index([phase])
+  @@map("workflow_artifacts")
+}
+
+model Project {
+  id                   String                @id @default(cuid())
+  name                 String
+  path                 String                @unique
+  is_hidden            Boolean               @default(false)
+  is_starred           Boolean               @default(false)
+  created_at           DateTime              @default(now())
+  updated_at           DateTime              @updatedAt
+  sessions             AgentSession[]
+  workflow_definitions WorkflowDefinition[]
+  workflow_runs  WorkflowRun[]
+
+  @@map("projects")
+}
+
+model User {
+  id                  String              @id @default(uuid())
+  email               String              @unique
+  password_hash       String
+  created_at          DateTime            @default(now())
+  last_login          DateTime?
+  is_active           Boolean             @default(true)
+  settings            Json?
+  sessions            AgentSession[]
+  workflow_runs WorkflowRun[]
+  workflow_events     WorkflowEvent[]
+
+  @@map("users")
+}
+
+enum AgentType {
+  claude
+  codex
+  cursor
+  gemini
+}
+
+enum SessionState {
+  idle      // Ready for new messages
+  working   // Agent actively processing
+  error     // Last execution failed
+}
+
+enum WorkflowScope {
+  project   // Project-specific workflow
+  global    // Global workflow (shared across all projects)
+}
+
+enum WorkflowStatus {
+  pending
+  running
+  paused
+  completed
+  failed
+  cancelled
+}
+
+enum WorkflowEventType {
+  annotation_added
+  workflow_created
+  workflow_started
+  workflow_completed
+  workflow_failed
+  workflow_paused
+  workflow_resumed
+  workflow_cancelled
+  phase_started
+  phase_completed
+  phase_retry
+  phase_failed
+  step_started
+  step_completed
+  step_failed
+  command_executed
+}
+
+enum StepStatus {
+  pending
+  running
+  completed
+  failed
+  skipped
+}
+
+model AgentSession {
+  id             String                  @id @default(uuid())
+  projectId      String
+  userId         String
+  name           String? // AI-generated session name (nullable for legacy sessions)
+  agent          AgentType               @default(claude)
+  cli_session_id String? // Session ID from CLI tool (Claude/Codex) - needed for loading/resuming sessions
+  session_path   String? // Full absolute path to session JSONL file (nullable during migration)
+  metadata       Json // { totalTokens, messageCount, lastMessageAt, firstMessagePreview }
+  state          SessionState            @default(idle)
+  error_message  String? // Error details when state is error
+  is_archived    Boolean                 @default(false)
+  archived_at    DateTime?
+  created_at     DateTime                @default(now())
+  updated_at     DateTime                @updatedAt
+
+  project       Project                 @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user          User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workflowSteps WorkflowRunStep[]
+
+  @@index([projectId, updated_at])
+  @@index([userId, updated_at])
+  @@index([cli_session_id])
+  @@index([session_path])
+  @@map("agent_sessions")
+}
