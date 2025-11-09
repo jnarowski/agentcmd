@@ -33,9 +33,6 @@ export interface AgentSessionViewerProps {
   /** Optional: Custom className for container */
   className?: string;
 
-  /** Optional: Auto-load session on mount (default: true) */
-  autoLoad?: boolean;
-
   /** Optional: Callback when session loads */
   onSessionLoad?: (session: SessionData) => void;
 
@@ -60,20 +57,23 @@ export function AgentSessionViewer({
   sessionId,
   height = "100%",
   className,
-  autoLoad = true,
   onSessionLoad,
   onError,
   clearOnUnmount = false,
   onApprove,
 }: AgentSessionViewerProps) {
+  // Check if store already has messages (skip fetch for optimistic case)
+  const hasMessages = useSessionStore((s) => (s.session?.messages.length ?? 0) > 0);
+
   // Fetch session data via React Query (parallel fetching)
+  // Skip if store already has messages (optimistic loading case)
   const { data: sessionData, isLoading: isLoadingSession, error: sessionError } = useSession(
-    autoLoad ? sessionId : undefined,
-    autoLoad ? projectId : undefined
+    hasMessages ? undefined : sessionId,
+    hasMessages ? undefined : projectId
   );
   const { data: messagesData, isLoading: isLoadingMessages, error: messagesError } = useSessionMessages(
-    autoLoad ? sessionId : undefined,
-    autoLoad ? projectId : undefined
+    hasMessages ? undefined : sessionId,
+    hasMessages ? undefined : projectId
   );
 
   // Subscribe to current session from store
@@ -81,8 +81,9 @@ export function AgentSessionViewer({
   const clearSession = useSessionStore((s) => s.clearSession);
 
   // Sync React Query data → Zustand store (one-way flow)
+  // Skip if store already has messages (optimistic case)
   useEffect(() => {
-    if (!autoLoad || !sessionData) return;
+    if (hasMessages || !sessionData) return;
 
     const enrichedMessages = messagesData ? enrichMessagesWithToolResults(messagesData) : [];
 
@@ -114,7 +115,7 @@ export function AgentSessionViewer({
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionData, messagesData, isLoadingMessages, autoLoad]);
+  }, [sessionData, messagesData, isLoadingMessages, hasMessages]);
 
   // Handle errors from React Query
   useEffect(() => {

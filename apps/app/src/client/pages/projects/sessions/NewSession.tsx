@@ -1,5 +1,5 @@
 import { useRef, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ChatPromptInput,
@@ -19,7 +19,6 @@ import { Channels } from "@/shared/websocket";
 
 export default function NewSession() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { projectId } = useActiveProject();
   const queryClient = useQueryClient();
   const chatInputRef = useRef<ChatPromptInputHandle>(null);
@@ -81,7 +80,29 @@ export default function NewSession() {
       const getPermissionMode = useSessionStore.getState().getPermissionMode;
       const permissionMode = getPermissionMode();
 
-      // Immediately send message via app-wide WebSocket (before navigation)
+      // Initialize session in store with optimistic message
+      // This prevents AgentSessionViewer from fetching when it mounts
+      useSessionStore.setState({
+        sessionId: newSession.id,
+        session: {
+          id: newSession.id,
+          name: undefined,
+          agent,
+          messages: [{
+            id: generateUUID(),
+            role: "user",
+            content: [{ type: "text", text: message }],
+            timestamp: Date.now(),
+            _original: undefined,
+          }],
+          isStreaming: true, // Show loading indicator immediately
+          metadata: null,
+          loadingState: "loaded",
+          error: null,
+        },
+      });
+
+      // Immediately send message via app-wide WebSocket (after store setup)
       // This starts the assistant processing right away
       // New session = resume: false (no prior messages)
       globalSendMessage(Channels.session(newSession.id), {
@@ -97,13 +118,9 @@ export default function NewSession() {
         },
       });
 
-      // Navigate to the new session preserving all query parameters
-      // Query param signals: message already sent, just display it
-      const currentParams = new URLSearchParams(location.search);
-      currentParams.set('query', message);
-
+      // Navigate to the new session without query param
       navigate(
-        `/projects/${projectId}/sessions/${newSession.id}?${currentParams.toString()}`,
+        `/projects/${projectId}/sessions/${newSession.id}`,
         {
           replace: true,
         }

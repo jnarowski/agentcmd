@@ -155,12 +155,15 @@ export function useSessionWebSocket({
             store.updateMetadata(data.metadata);
           }
 
-          // Invalidate session metadata query to refetch updated token counts
-          queryClient.invalidateQueries({
-            queryKey: sessionKeys.detail(sessionIdRef.current, projectIdRef.current),
-          });
+          // NOTE: Commented out to prevent duplicate fetches when streaming completes.
+          // Store is already updated via finalizeMessage(). Uncomment if server-side
+          // metadata (e.g., AI-generated session name, computed stats) needs to sync
+          // after streaming.
+          // queryClient.invalidateQueries({
+          //   queryKey: sessionKeys.detail(sessionIdRef.current, projectIdRef.current),
+          // });
 
-          // Also invalidate sessions lists to update sidebar
+          // Invalidate sessions lists to update sidebar
           queryClient.invalidateQueries({
             queryKey: sessionKeys.byProject(projectIdRef.current),
           });

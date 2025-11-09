@@ -36,7 +36,6 @@ export function SessionTab({ projectId, selectedSessionId }: SessionTabProps) {
       sessionId={selectedSessionId}
       height="100%"
       className="h-full"
-      autoLoad={true}
       clearOnUnmount={true}
     />
   );

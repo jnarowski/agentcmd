@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { AgentSessionViewer } from "@/client/components/AgentSessionViewer";
 import { ChatPromptInput } from "./components/ChatPromptInput";
 import type { PromptInputMessage } from "@/client/components/ai-elements/PromptInput";
@@ -19,7 +19,6 @@ import { useProject } from "@/client/pages/projects/hooks/useProjects";
 
 export default function ProjectSession() {
   const navigate = useNavigate();
-  const location = useLocation();
   const params = useParams<{ sessionId: string }>();
   const { projectId } = useActiveProject();
 
@@ -35,7 +34,6 @@ export default function ProjectSession() {
       : undefined
   );
   const setActiveSession = useNavigationStore((s) => s.setActiveSession);
-  const initialMessageSentRef = useRef(false);
 
   // Get sessionId from URL params (required for this route)
   const sessionId = params.sessionId;
@@ -76,54 +74,6 @@ export default function ProjectSession() {
   useEffect(() => {
     clearHandledPermissions();
   }, [sessionId, clearHandledPermissions]);
-
-  // Reset initialMessageSentRef when navigating to a different session
-  useEffect(() => {
-    initialMessageSentRef.current = false;
-  }, [sessionId]);
-
-  // Handle initial message from query parameter
-  useEffect(() => {
-    if (!sessionId || initialMessageSentRef.current) {
-      return;
-    }
-
-    const searchParams = new URLSearchParams(location.search);
-    const queryParam = searchParams.get("query");
-
-    if (queryParam) {
-      initialMessageSentRef.current = true;
-
-      try {
-        const decodedMessage = decodeURIComponent(queryParam);
-
-        // Add the user message to the store for UI display
-        // (Message was already sent via WebSocket during session creation)
-        addMessage({
-          id: generateUUID(),
-          role: "user",
-          content: [{ type: "text", text: decodedMessage }],
-          timestamp: Date.now(),
-          _original: undefined,
-        });
-
-        // Set streaming state to show loading indicator
-        setStreaming(true);
-
-        // Remove only the query parameter, preserve others like debug
-        const searchParams = new URLSearchParams(location.search);
-        searchParams.delete('query');
-        const newSearch = searchParams.toString();
-        navigate(`${location.pathname}${newSearch ? `?${newSearch}` : ''}`, { replace: true });
-      } catch (error) {
-        console.error(
-          "[ProjectSession] Error processing query parameter:",
-          error
-        );
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, location.search]);
 
   const handleSubmit = async (
     { text, files }: PromptInputMessage,
@@ -224,10 +174,6 @@ export default function ProjectSession() {
     handleSubmit({ text: 'yes, proceed' }, 'acceptEdits');
   };
 
-  // Only auto-load if no query parameter (AgentSessionViewer handles loading)
-  const searchParams = new URLSearchParams(location.search);
-  const hasQueryParam = searchParams.has("query");
-
   return (
     <div className="absolute inset-0 flex flex-col overflow-hidden">
       {/* Chat Messages Container - takes up remaining space */}
@@ -235,7 +181,6 @@ export default function ProjectSession() {
         <AgentSessionViewer
           projectId={projectId!}
           sessionId={sessionId!}
-          autoLoad={!hasQueryParam} // Don't auto-load if query param present
           onApprove={handlePermissionApproval}
         />
       </div>
