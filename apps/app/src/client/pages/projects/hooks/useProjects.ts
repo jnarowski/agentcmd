@@ -19,6 +19,9 @@ import type { SyncProjectsResponse } from "@/shared/types/project-sync.types";
 import { api } from "@/client/utils/api";
 import { projectKeys } from "./queryKeys";
 
+// Re-export projectKeys for backward compatibility
+export { projectKeys };
+
 /**
  * Fetch all projects
  */

@@ -4,32 +4,21 @@ import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useActiveSession } from "./useActiveSession";
 import { useNavigationStore } from "@/client/stores/index";
-import { useProjectsWithSessions } from "@/client/pages/projects/hooks/useProjects";
+import { useSession } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
 
 // Mock the stores and hooks
 vi.mock("@/client/stores/index", () => ({
   useNavigationStore: vi.fn(),
 }));
 
-vi.mock("@/client/pages/projects/hooks/useProjects", () => ({
-  useProjectsWithSessions: vi.fn(),
+vi.mock("@/client/pages/projects/sessions/hooks/useAgentSessions", () => ({
+  useSession: vi.fn(),
 }));
 
 describe("useActiveSession", () => {
   let queryClient: QueryClient;
 
-  const mockSessions = [
-    { id: "session-1", name: "Session 1" },
-    { id: "session-2", name: "Session 2" },
-  ];
-
-  const mockProjectsWithSessions = [
-    {
-      id: "project-1",
-      name: "Project 1",
-      sessions: mockSessions,
-    },
-  ];
+  const mockSession1 = { id: "session-1", name: "Session 1", projectId: "project-1" };
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     React.createElement(QueryClientProvider, { client: queryClient }, children)
@@ -50,11 +39,11 @@ describe("useActiveSession", () => {
     vi.mocked(useNavigationStore).mockImplementation((selector: (state: Record<string, unknown>) => unknown) =>
       selector({ activeProjectId: "project-1", activeSessionId: null })
     );
-    vi.mocked(useProjectsWithSessions).mockReturnValue({
-      data: mockProjectsWithSessions,
+    vi.mocked(useSession).mockReturnValue({
+      data: undefined,
       isLoading: false,
       error: null,
-    });
+    } as never);
 
     const { result } = renderHook(() => useActiveSession(), { wrapper });
 
@@ -67,15 +56,15 @@ describe("useActiveSession", () => {
     vi.mocked(useNavigationStore).mockImplementation((selector: (state: Record<string, unknown>) => unknown) =>
       selector({ activeProjectId: "project-1", activeSessionId: "session-1" })
     );
-    vi.mocked(useProjectsWithSessions).mockReturnValue({
-      data: mockProjectsWithSessions,
+    vi.mocked(useSession).mockReturnValue({
+      data: mockSession1,
       isLoading: false,
       error: null,
-    });
+    } as never);
 
     const { result } = renderHook(() => useActiveSession(), { wrapper });
 
-    expect(result.current.session).toEqual(mockSessions[0]);
+    expect(result.current.session).toEqual(mockSession1);
     expect(result.current.sessionId).toBe("session-1");
     expect(result.current.isLoading).toBe(false);
   });
@@ -87,11 +76,11 @@ describe("useActiveSession", () => {
         activeSessionId: "nonexistent-id",
       })
     );
-    vi.mocked(useProjectsWithSessions).mockReturnValue({
-      data: mockProjectsWithSessions,
+    vi.mocked(useSession).mockReturnValue({
+      data: undefined,
       isLoading: false,
       error: null,
-    });
+    } as never);
 
     const { result } = renderHook(() => useActiveSession(), { wrapper });
 
@@ -103,11 +92,11 @@ describe("useActiveSession", () => {
     vi.mocked(useNavigationStore).mockImplementation((selector: (state: Record<string, unknown>) => unknown) =>
       selector({ activeProjectId: "project-1", activeSessionId: "session-1" })
     );
-    vi.mocked(useProjectsWithSessions).mockReturnValue({
+    vi.mocked(useSession).mockReturnValue({
       data: undefined,
       isLoading: true,
       error: null,
-    });
+    } as never);
 
     const { result } = renderHook(() => useActiveSession(), { wrapper });
 
@@ -120,11 +109,11 @@ describe("useActiveSession", () => {
     vi.mocked(useNavigationStore).mockImplementation((selector: (state: Record<string, unknown>) => unknown) =>
       selector({ activeProjectId: "project-1", activeSessionId: "session-1" })
     );
-    vi.mocked(useProjectsWithSessions).mockReturnValue({
+    vi.mocked(useSession).mockReturnValue({
       data: undefined,
       isLoading: false,
       error: mockError,
-    });
+    } as never);
 
     const { result } = renderHook(() => useActiveSession(), { wrapper });
 
@@ -136,11 +125,11 @@ describe("useActiveSession", () => {
     vi.mocked(useNavigationStore).mockImplementation((selector: (state: Record<string, unknown>) => unknown) =>
       selector({ activeProjectId: null, activeSessionId: "session-1" })
     );
-    vi.mocked(useProjectsWithSessions).mockReturnValue({
-      data: mockProjectsWithSessions,
+    vi.mocked(useSession).mockReturnValue({
+      data: undefined,
       isLoading: false,
       error: null,
-    });
+    } as never);
 
     const { result } = renderHook(() => useActiveSession(), { wrapper });
 
