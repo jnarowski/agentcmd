@@ -8,14 +8,16 @@ import type { WebSearchToolInput } from "@/shared/types/tool.types";
 import type { UnifiedImageBlock } from 'agent-cli-sdk';
 
 interface WebSearchToolBlockProps {
+  toolUseId: string;
   input: WebSearchToolInput;
   result?: {
     content: string | UnifiedImageBlock;
     is_error?: boolean;
   };
+  onApprove?: (toolUseId: string) => void;
 }
 
-export function WebSearchToolBlock({ input, result }: WebSearchToolBlockProps) {
+export function WebSearchToolBlock({ toolUseId, input, result, onApprove }: WebSearchToolBlockProps) {
   // For now, use a placeholder for result count
   // In a real implementation, we would parse the result to count search results
   const description = result && !result.is_error ? "Search results" : null;
@@ -29,8 +31,12 @@ export function WebSearchToolBlock({ input, result }: WebSearchToolBlockProps) {
     >
       <div className="border border-border rounded-md p-2 bg-background/50">
         <ToolResultRenderer
+          toolUseId={toolUseId}
+          toolName="WebSearch"
+          input={input as unknown as Record<string, unknown>}
           result={result?.content || ""}
           isError={result?.is_error}
+          onApprove={onApprove}
         />
       </div>
     </ToolCollapsibleWrapper>

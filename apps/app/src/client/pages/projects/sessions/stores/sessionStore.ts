@@ -323,6 +323,7 @@ export interface SessionStore {
   sessionId: string | null;
   session: SessionData | null;
   form: FormState;
+  handledPermissions: Set<string>;
 
   // Session lifecycle actions
   loadSession: (sessionId: string, projectId: string, queryClient?: { getQueryData: (key: unknown) => unknown }) => Promise<void>;
@@ -351,6 +352,10 @@ export interface SessionStore {
   setModel: (model: string) => void;
   getModel: () => string;
 
+  // Permission approval actions
+  markPermissionHandled: (toolUseId: string) => void;
+  clearHandledPermissions: () => void;
+
   // Initialize defaults from user settings
   initializeFromSettings: (settings: { permissionMode?: PermissionMode; agent?: AgentType }) => void;
 }
@@ -367,6 +372,7 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
     agent: "claude",
     model: "",
   },
+  handledPermissions: new Set<string>(),
 
   // Load session from server
   loadSession: async (sessionId: string, projectId: string, queryClient?: { getQueryData: (key: unknown) => unknown }) => {
@@ -684,6 +690,20 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
   getModel: () => {
     const state = get();
     return state.form.model;
+  },
+
+  // Mark permission as handled to prevent duplicate approvals
+  markPermissionHandled: (toolUseId: string) => {
+    set((state) => {
+      const newSet = new Set(state.handledPermissions);
+      newSet.add(toolUseId);
+      return { handledPermissions: newSet };
+    });
+  },
+
+  // Clear handled permissions when switching sessions
+  clearHandledPermissions: () => {
+    set({ handledPermissions: new Set<string>() });
   },
 
   // Initialize defaults from user settings

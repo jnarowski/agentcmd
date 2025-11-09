@@ -4,7 +4,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
 } from "@/client/components/ui/sidebar";
-import { NewButton } from "./NewButton";
 
 export function AppSidebarHeader() {
   return (
@@ -14,7 +13,6 @@ export function AppSidebarHeader() {
           <Command className="size-5" />
           <span className="text-lg font-semibold">agentcmd</span>
         </div>
-        <NewButton />
       </div>
     </SidebarHeader>
   );

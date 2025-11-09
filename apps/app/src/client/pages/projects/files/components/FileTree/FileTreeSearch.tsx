@@ -27,7 +27,7 @@ export function FileTreeSearch({
   onClearSearch,
 }: FileTreeSearchProps) {
   return (
-    <div className="flex items-center gap-2 p-4 border-b">
+    <div className="flex items-center gap-2 px-4 py-3 border-b">
       <div className="flex items-center gap-2 flex-1 relative">
         <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
         <Input

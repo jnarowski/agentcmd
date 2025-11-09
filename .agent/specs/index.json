@@ -1,5 +1,5 @@
 {
-  "lastId": 6,
+  "lastId": 7,
   "specs": {
     "1": {
       "folder": "1-log-streaming",
@@ -29,6 +29,11 @@
     "6": {
       "folder": "6-sidebar-data",
       "created": "2025-11-08T17:45:00.000Z",
+      "location": "todo"
+    },
+    "7": {
+      "folder": "7-redesign-websockets",
+      "created": "2025-11-09T13:15:00.000Z",
       "location": "todo"
     }
   }

@@ -32,14 +32,16 @@ import type { UnifiedImageBlock } from 'agent-cli-sdk';
 
 interface ToolBlockRendererProps {
   toolName: string;
+  toolUseId: string;
   input: Record<string, unknown>;
   result?: {
     content: string | UnifiedImageBlock;
     is_error?: boolean;
   };
+  onApprove?: (toolUseId: string) => void;
 }
 
-export function ToolBlockRenderer({ toolName, input, result }: ToolBlockRendererProps) {
+export function ToolBlockRenderer({ toolName, toolUseId, input, result, onApprove }: ToolBlockRendererProps) {
   switch (toolName) {
     case 'Read':
       return <ReadToolBlock input={input as unknown as ReadToolInput} result={result} />;
@@ -57,7 +59,7 @@ export function ToolBlockRenderer({ toolName, input, result }: ToolBlockRenderer
       return <TodoWriteToolBlock input={input as unknown as TodoWriteToolInput} result={result} />;
 
     case 'WebSearch':
-      return <WebSearchToolBlock input={input as unknown as WebSearchToolInput} result={result} />;
+      return <WebSearchToolBlock toolUseId={toolUseId} input={input as unknown as WebSearchToolInput} result={result} onApprove={onApprove} />;
 
     case 'Glob':
       return <GlobToolBlock input={input as unknown as GlobToolInput} result={result} />;
@@ -73,6 +75,6 @@ export function ToolBlockRenderer({ toolName, input, result }: ToolBlockRenderer
 
     default:
       // Fallback to default block for unknown tools
-      return <DefaultToolBlock toolName={toolName} input={input} result={result} />;
+      return <DefaultToolBlock toolName={toolName} toolUseId={toolUseId} input={input} result={result} onApprove={onApprove} />;
   }
 }

@@ -9,17 +9,21 @@ import type { UnifiedImageBlock } from 'agent-cli-sdk';
 
 interface DefaultToolBlockProps {
   toolName: string;
+  toolUseId: string;
   input: Record<string, unknown>;
   result?: {
     content: string | UnifiedImageBlock;
     is_error?: boolean;
   };
+  onApprove?: (toolUseId: string) => void;
 }
 
 export function DefaultToolBlock({
   toolName,
+  toolUseId,
   input,
   result,
+  onApprove,
 }: DefaultToolBlockProps) {
   return (
     <ToolCollapsibleWrapper
@@ -52,8 +56,12 @@ export function DefaultToolBlock({
             </div>
             <div className="border border-border rounded-md p-2 bg-background/50">
               <ToolResultRenderer
+                toolUseId={toolUseId}
+                toolName={toolName}
+                input={input}
                 result={result.content}
                 isError={result.is_error}
+                onApprove={onApprove}
               />
             </div>
           </div>

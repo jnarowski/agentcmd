@@ -9,9 +9,10 @@ import { ContentBlockRenderer } from "./ContentBlockRenderer";
 
 interface AssistantMessageProps {
   message: UIMessage;
+  onApprove?: (toolUseId: string) => void;
 }
 
-export function AssistantMessage({ message }: AssistantMessageProps) {
+export function AssistantMessage({ message, onApprove }: AssistantMessageProps) {
   const content = message.content;
 
   // Strip ANSI color codes from text
@@ -168,7 +169,7 @@ export function AssistantMessage({ message }: AssistantMessageProps) {
     >
       {/* Content blocks */}
       {renderableContent.map((block, index) => (
-        <ContentBlockRenderer key={index} block={block} />
+        <ContentBlockRenderer key={index} block={block} onApprove={onApprove} />
       ))}
     </div>
   );

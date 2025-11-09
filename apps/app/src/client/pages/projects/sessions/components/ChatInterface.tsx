@@ -25,6 +25,7 @@ interface ChatInterfaceProps {
   error?: Error | null;
   isStreaming?: boolean;
   isLoadingHistory?: boolean;
+  onApprove?: (toolUseId: string) => void;
 }
 
 /**
@@ -39,6 +40,7 @@ export function ChatInterface({
   error = null,
   isStreaming = false,
   isLoadingHistory = false,
+  onApprove,
 }: ChatInterfaceProps) {
   // Loading state
   if (isLoading) {
@@ -88,7 +90,7 @@ export function ChatInterface({
     >
       <ConversationContent>
         <div className="chat-container max-w-4xl mx-auto">
-          <MessageList messages={messages} />
+          <MessageList messages={messages} onApprove={onApprove} />
           <AgentLoadingIndicator isStreaming={isStreaming} />
         </div>
       </ConversationContent>

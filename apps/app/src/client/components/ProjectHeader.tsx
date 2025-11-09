@@ -5,12 +5,11 @@ import {
   Home,
   MessageSquare,
   Terminal as TerminalIcon,
-  FileText,
+  FolderGit,
   ChevronDown,
   GitBranch,
   ChevronRight,
   Workflow,
-  AlertCircle,
 } from "lucide-react";
 import { Separator } from "@/client/components/ui/separator";
 import { SidebarTrigger } from "@/client/components/ui/sidebar";
@@ -20,18 +19,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/client/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/client/components/ui/tooltip";
-import { Badge } from "@/client/components/ui/badge";
 import type { SessionResponse } from "@/shared/types";
 import type { GitCapabilities } from "@/shared/types/project.types";
 import { SessionHeader } from "@/client/components/SessionHeader";
 import { GitOperationsModal } from "@/client/components/GitOperationsModal";
-import { useWorkflowRuns } from "@/client/pages/projects/workflows/hooks/useWorkflowRuns";
+import { NewButton } from "@/client/components/sidebar/NewButton";
 
 interface ProjectHeaderProps {
   projectId: string;
@@ -48,10 +40,6 @@ export function ProjectHeader({ projectId, projectName, projectPath, gitCapabili
   const location = useLocation();
   const [gitModalOpen, setGitModalOpen] = useState(false);
 
-  // Fetch running workflow count for badge
-  const { data: runs } = useWorkflowRuns(projectId, { status: 'running' });
-  const runningCount = runs?.length || 0;
-
   // Define navigation items
   const navItems = useMemo(
     () => [
@@ -62,25 +50,22 @@ export function ProjectHeader({ projectId, projectName, projectPath, gitCapabili
         icon: MessageSquare,
       },
       {
+        to: `/projects/${projectId}/workflows`,
+        label: "Workflows",
+        icon: Workflow,
+      },
+      {
+        to: `/projects/${projectId}/source/files`,
+        label: "Source",
+        icon: FolderGit,
+      },
+      {
         to: `/projects/${projectId}/shell`,
         label: "Shell",
         icon: TerminalIcon,
       },
-      { to: `/projects/${projectId}/files`, label: "Files", icon: FileText },
-      {
-        to: `/projects/${projectId}/source-control`,
-        label: "Git",
-        icon: GitBranch,
-        disabled: !gitCapabilities.initialized,
-      },
-      {
-        to: `/projects/${projectId}/workflows`,
-        label: "Workflows",
-        icon: Workflow,
-        badge: runningCount,
-      },
     ],
-    [projectId, runningCount, gitCapabilities.initialized]
+    [projectId]
   );
 
   // Get current active nav item
@@ -133,37 +118,28 @@ export function ProjectHeader({ projectId, projectName, projectPath, gitCapabili
         </div>
 
         {/* Desktop navigation - tabs */}
-        <nav className="hidden md:flex gap-2">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              onClick={(e) => {
-                if (item.disabled) {
-                  e.preventDefault();
-                }
-              }}
-              className={({ isActive }) =>
-                `flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  item.disabled
-                    ? "opacity-50 cursor-not-allowed text-muted-foreground"
-                    : isActive
+        <div className="hidden md:flex items-center gap-2">
+          <nav className="flex gap-2">
+            {navItems.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                className={({ isActive }) =>
+                  `flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive
                       ? "bg-secondary text-secondary-foreground"
                       : "text-muted-foreground hover:bg-secondary/50"
-                }`
-              }
-            >
-              <item.icon className="h-4 w-4" />
-              {item.label}
-              {item.badge && item.badge > 0 && (
-                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
-                  {item.badge}
-                </Badge>
-              )}
-            </NavLink>
-          ))}
-        </nav>
+                  }`
+                }
+              >
+                <item.icon className="h-4 w-4" />
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+          <NewButton />
+        </div>
 
         {/* Mobile navigation - dropdown */}
         <DropdownMenu>
@@ -180,17 +156,11 @@ export function ProjectHeader({ projectId, projectName, projectPath, gitCapabili
               return (
                 <DropdownMenuItem
                   key={item.to}
-                  onClick={() => !item.disabled && navigate(item.to)}
-                  className={`${isActive ? "bg-secondary" : ""} ${item.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
-                  disabled={item.disabled}
+                  onClick={() => navigate(item.to)}
+                  className={isActive ? "bg-secondary" : ""}
                 >
                   <Icon className="h-4 w-4 mr-2" />
                   {item.label}
-                  {item.badge && item.badge > 0 && (
-                    <Badge variant="secondary" className="ml-auto h-5 px-1.5 text-xs">
-                      {item.badge}
-                    </Badge>
-                  )}
                 </DropdownMenuItem>
               );
             })}

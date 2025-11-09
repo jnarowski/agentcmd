@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   Folder,
+  FolderOpen,
   MoreHorizontal,
   Star,
   EyeOff,
@@ -40,7 +41,8 @@ type ProjectsView = "all" | "favorites" | "hidden";
 
 export function NavProjects() {
   const navigate = useNavigate();
-  const { projectId: activeProjectId } = useParams();
+  const { projectId, id } = useParams();
+  const activeProjectId = projectId || id;
   const { data: settings } = useSettings();
   const updateSettings = useUpdateSettings();
   const { data: projectsData } = useProjectsWithSessions();
@@ -165,7 +167,11 @@ export function NavProjects() {
                     isActive={isActive}
                     className="h-7 px-2"
                   >
-                    <Folder className="size-4 shrink-0" />
+                    {isActive ? (
+                      <FolderOpen className="size-4 shrink-0" />
+                    ) : (
+                      <Folder className="size-4 shrink-0" />
+                    )}
                     <span className="truncate text-sm">
                       {project.name}
                     </span>
@@ -272,7 +278,11 @@ export function NavProjects() {
                         isActive={isActive}
                         className="h-7 px-2"
                       >
-                        <Folder className="size-4 shrink-0" />
+                        {isActive ? (
+                          <FolderOpen className="size-4 shrink-0" />
+                        ) : (
+                          <Folder className="size-4 shrink-0" />
+                        )}
                         <span className="truncate text-sm">
                           {project.name}
                         </span>

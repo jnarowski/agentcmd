@@ -18,29 +18,27 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 - If it's a numeric ID (e.g., `1`, `2`):
   - Check index.json for spec location
   - If in index: read from `{location}/{folder}/spec.md`
-  - If not in index: search filesystem for `{id}-*/spec.md` in todo/done
+  - If not in index: search filesystem for `{id}-*/spec.md` in todo/doing/done
 - If it's a 3-char alphanumeric ID (e.g., `ef3`, `a7b`) - legacy:
   - Search filesystem:
     1. `.agent/specs/todo/{id}-*-spec.md` (legacy single file)
-    2. `.agent/specs/done/{id}-*-spec.md` (legacy single file)
-    3. `.agent/specs/todo/{id}-*/spec.md` (folder)
-    4. `.agent/specs/done/{id}-*/spec.md` (folder)
+    2. `.agent/specs/doing/{id}-*-spec.md` (legacy single file)
+    3. `.agent/specs/done/{id}-*-spec.md` (legacy single file)
+    4. `.agent/specs/todo/{id}-*/spec.md` (folder)
+    5. `.agent/specs/doing/{id}-*/spec.md` (folder)
+    6. `.agent/specs/done/{id}-*/spec.md` (folder)
   - Use the first match
 - If it's a feature name (e.g., `workflow-safety`):
   - Search filesystem:
     1. `.agent/specs/todo/*-{feature-name}/spec.md`
-    2. `.agent/specs/done/*-{feature-name}/spec.md`
-    3. `.agent/specs/todo/*-{feature-name}-spec.md` (legacy)
-    4. `.agent/specs/done/*-{feature-name}-spec.md` (legacy)
+    2. `.agent/specs/doing/*-{feature-name}/spec.md`
+    3. `.agent/specs/done/*-{feature-name}/spec.md`
+    4. `.agent/specs/todo/*-{feature-name}-spec.md` (legacy)
+    5. `.agent/specs/doing/*-{feature-name}-spec.md` (legacy)
+    6. `.agent/specs/done/*-{feature-name}-spec.md` (legacy)
   - Use the first match
 - If it's a full path: use as-is
 - If not found: stop and report error
-
-**Note on "doing" folder:**
-- The "doing" folder is deprecated in the new system
-- Specs remain in "todo" during implementation
-- Status field in spec.md tracks progress (draft → in-progress)
-- When complete, use `/move-spec {id} done` to mark finished
 
 ## Task Tracking Requirements
 
@@ -100,7 +98,11 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 ## Workflow
 
 1. Parse and resolve the spec file path according to the instructions above
-2. Move the spec file to `.agent/specs/doing/` folder if not already there
+2. **Auto-move spec to doing/ folder:**
+   - If spec is in `todo/` folder, automatically move it to `doing/`
+   - Use `/move-spec {id} doing` to perform the move
+   - This updates both the folder location and Status field to "in-progress"
+   - If already in `doing/` or `done/`, skip this step
 3. Read $spec_path file, think hard about the plan
 4. Implement the plan, one phase at a time:
    - Work through tasks in order, top to bottom
@@ -110,6 +112,7 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
    - **Fill in the "Completion Notes" section** with implementation context
    - Include any deviations, decisions, or important notes for reviewers
 6. Continue until all tasks are checked off and all completion notes are filled
+7. When complete, remind user to run `/move-spec {id} done` to mark finished
 
 ## Report
 

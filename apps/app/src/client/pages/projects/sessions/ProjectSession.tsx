@@ -4,6 +4,7 @@ import { AgentSessionViewer } from "@/client/components/AgentSessionViewer";
 import { ChatPromptInput } from "./components/ChatPromptInput";
 import type { PromptInputMessage } from "@/client/components/ai-elements/PromptInput";
 import type { FileUIPart } from "ai";
+import type { PermissionMode } from "agent-cli-sdk";
 import { useSessionWebSocket } from "./hooks/useSessionWebSocket";
 import { useWebSocket } from "@/client/hooks/useWebSocket";
 import {
@@ -54,6 +55,7 @@ export default function ProjectSession() {
   const addMessage = useSessionStore((s) => s.addMessage);
   const setStreaming = useSessionStore((s) => s.setStreaming);
   const totalTokens = useSessionStore(selectTotalTokens);
+  const clearHandledPermissions = useSessionStore((s) => s.clearHandledPermissions);
 
   // App-wide WebSocket hook for connection status
   const { isConnected: globalIsConnected } = useWebSocket();
@@ -70,6 +72,11 @@ export default function ProjectSession() {
       setActiveSession(sessionId);
     }
   }, [sessionId, setActiveSession]);
+
+  // Clear handled permissions when session changes
+  useEffect(() => {
+    clearHandledPermissions();
+  }, [sessionId, clearHandledPermissions]);
 
   // Handle query parameter for initial message
   useEffect(() => {
@@ -153,7 +160,10 @@ export default function ProjectSession() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, location.search]);
 
-  const handleSubmit = async ({ text, files }: PromptInputMessage) => {
+  const handleSubmit = async (
+    { text, files }: PromptInputMessage,
+    permissionModeOverride?: PermissionMode
+  ) => {
     if (!projectId || !sessionId) {
       console.error("[ProjectSession] No projectId or sessionId available");
       return;
@@ -182,9 +192,9 @@ export default function ProjectSession() {
       session?.messages.filter((m) => m.role === "assistant").length || 0;
     const resume = assistantMessageCount > 0;
 
-    // Get permission mode from form
+    // Get permission mode - use override if provided, otherwise use form value
     const getPermissionMode = useSessionStore.getState().getPermissionMode;
-    const permissionMode = getPermissionMode();
+    const permissionMode = permissionModeOverride || getPermissionMode();
 
     const config = {
       resume,
@@ -235,6 +245,13 @@ export default function ProjectSession() {
     !globalIsConnected || // Disable if global WebSocket not connected
     Boolean(waitingForFirstResponse); // Block until first assistant response
 
+  // Permission approval handler
+  const handlePermissionApproval = (toolUseId: string) => {
+    console.log('[ProjectSession] Permission approved:', toolUseId);
+    // Send follow-up message with acceptEdits permission mode to retry the operation
+    handleSubmit({ text: 'yes, proceed' }, 'acceptEdits');
+  };
+
   // Only auto-load if no query parameter (AgentSessionViewer handles loading)
   const searchParams = new URLSearchParams(location.search);
   const hasQueryParam = searchParams.has("query");
@@ -247,6 +264,7 @@ export default function ProjectSession() {
           projectId={projectId!}
           sessionId={sessionId!}
           autoLoad={!hasQueryParam} // Don't auto-load if query param present
+          onApprove={handlePermissionApproval}
         />
       </div>
 

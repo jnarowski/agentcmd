@@ -15,11 +15,13 @@ import { SlashCommandBlock } from "./blocks/SlashCommandBlock";
 interface ContentBlockRendererProps {
   block: UnifiedContent;
   className?: string;
+  onApprove?: (toolUseId: string) => void;
 }
 
 export function ContentBlockRenderer({
   block,
   className = "",
+  onApprove,
 }: ContentBlockRendererProps) {
   switch (block.type) {
     case "text": {
@@ -46,8 +48,10 @@ export function ContentBlockRenderer({
       return (
         <ToolBlockRenderer
           toolName={block.name}
+          toolUseId={block.id}
           input={block.input}
           result={enrichedBlock.result}
+          onApprove={onApprove}
         />
       );
     }

@@ -87,6 +87,7 @@ Assign complexity based on **context window usage and cognitive load**, not time
    - Otherwise: Write to `spec.md` in folder
    - Example (markdown): `.agent/specs/todo/1-auth-improvements/spec.md`
    - Example (json): `.agent/specs/todo/1-auth-improvements/spec.json`
+   - **Note**: Specs always start in `todo/` folder with Status "draft"
 
 7. **Update Index**:
    - Add entry to index.json:
@@ -103,6 +104,15 @@ Assign complexity based on **context window usage and cognitive load**, not time
      }
      ```
    - Write updated index back to `.agent/specs/index.json`
+
+## Workflow Folder Progression
+
+Specs follow this workflow:
+
+1. **Created in `todo/`** (Status: "draft") - Use `/generate-spec`
+2. **Auto-moved to `doing/`** (Status: "in-progress") - When running `/implement-spec`
+3. **Moved to `done/`** (Status: "completed") - After review passes, use `/move-spec {id} done`
+4. **Optionally archived** - Use `/prune-specs` to move old specs from `done/` → `archived/`
 
 ## Template
 

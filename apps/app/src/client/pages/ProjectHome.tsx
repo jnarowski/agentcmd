@@ -23,13 +23,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/client/components/ui/tooltip";
-import {
-  FolderOpen,
-  Calendar,
-  MessageSquare,
-  FileText,
-  Pencil,
-} from "lucide-react";
+import { MessageSquare, FileText, Pencil, FolderOpen } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
@@ -72,9 +66,11 @@ export default function ProjectHome() {
     <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       <div>
         <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-          <h1 className="text-xl md:text-2xl font-semibold leading-tight break-words flex-1 min-w-0">
-            {project.name}
-          </h1>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl md:text-2xl font-semibold leading-tight break-words">
+              {project.name}
+            </h1>
+          </div>
           <div className="flex items-stretch gap-1 shrink-0">
             <NewSessionButton
               projectId={id!}
@@ -96,51 +92,9 @@ export default function ProjectHome() {
       </div>
 
       {/* Project Setup */}
-      <ProjectOnboardingSuggestions project={project} />
-
-      <Card className="border-border/50 py-2">
-        <CardContent className="p-0">
-          <div className="divide-y divide-border/50">
-            <div className="grid grid-cols-[200px_1fr] items-center px-6 py-2">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <FolderOpen className="h-4 w-4" />
-                Project Path
-              </div>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="text-sm cursor-help truncate">
-                      {truncatePath(
-                        project.path,
-                        typeof window !== "undefined" && window.innerWidth < 768
-                          ? 30
-                          : 60
-                      )}
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="max-w-md break-all">
-                    <p className="text-xs">{project.path}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-
-            <div className="grid grid-cols-[200px_1fr] items-center px-6 py-2">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <Calendar className="h-4 w-4" />
-                Created
-              </div>
-              <div className="text-sm">
-                {new Date(project.created_at).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {!project.capabilities.workflow_sdk.installed && (
+        <ProjectOnboardingSuggestions project={project} />
+      )}
 
       {/* Sessions Section */}
       <Card>

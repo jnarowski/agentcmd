@@ -43,6 +43,9 @@ export interface AgentSessionViewerProps {
 
   /** Optional: Clear session data on unmount (default: false) */
   clearOnUnmount?: boolean;
+
+  /** Optional: Callback for permission approval */
+  onApprove?: (toolUseId: string) => void;
 }
 
 /**
@@ -58,6 +61,7 @@ export function AgentSessionViewer({
   onSessionLoad,
   onError,
   clearOnUnmount = false,
+  onApprove,
 }: AgentSessionViewerProps) {
   const queryClient = useQueryClient();
   const sessionIdRef = useRef(sessionId);
@@ -131,6 +135,7 @@ export function AgentSessionViewer({
         error={session?.error ? new Error(session.error) : null}
         isStreaming={session?.isStreaming || false}
         isLoadingHistory={session?.loadingState === "loading"}
+        onApprove={onApprove}
       />
     </div>
   );

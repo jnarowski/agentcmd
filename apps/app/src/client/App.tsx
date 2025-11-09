@@ -11,8 +11,7 @@ import ProjectHome from "@/client/pages/ProjectHome";
 import NewSession from "@/client/pages/projects/sessions/NewSession";
 import ProjectSession from "@/client/pages/projects/sessions/ProjectSession";
 import ProjectShell from "@/client/pages/projects/shell/ProjectShell";
-import ProjectFiles from "@/client/pages/projects/files/ProjectFiles";
-import ProjectSourceControl from "@/client/pages/projects/git/ProjectSourceControl";
+import ProjectSource from "@/client/pages/projects/source/ProjectSource";
 import { ProjectWorkflowsView } from "@/client/pages/projects/workflows/ProjectWorkflowsView";
 import { ProjectWorkflowsManage } from "@/client/pages/projects/workflows/ProjectWorkflowsManage";
 import { WorkflowDefinitionView } from "@/client/pages/projects/workflows/WorkflowDefinitionView";
@@ -53,8 +52,9 @@ function AppContent() {
               <Route path="sessions/new" element={<NewSession />} />
               <Route path="sessions/:sessionId" element={<ProjectSession />} />
               <Route path="shell" element={<ProjectShell />} />
-              <Route path="files" element={<ProjectFiles />} />
-              <Route path="source-control" element={<ProjectSourceControl />} />
+              <Route path="source" element={<Navigate to="source/files" replace />} />
+              <Route path="source/files" element={<ProjectSource />} />
+              <Route path="source/git" element={<ProjectSource />} />
             </Route>
           </Route>
 

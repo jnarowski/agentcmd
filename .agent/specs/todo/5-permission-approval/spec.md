@@ -1,6 +1,6 @@
 # Permission Approval via Resume Pattern
 
-**Status**: draft
+**Status**: in-progress
 **Created**: 2025-01-08
 **Package**: apps/app (frontend only)
 **Total Complexity**: 23 points
@@ -132,14 +132,14 @@ On approve:
 **Phase Complexity**: 8 points (avg 2.7/10)
 
 <!-- prettier-ignore -->
-- [ ] perm-1.1 [2/10] Add handledPermissions state to sessionStore
+- [x] perm-1.1 [2/10] Add handledPermissions state to sessionStore
   - Add `handledPermissions: Set<string>` to SessionStore interface
   - Add `markPermissionHandled: (toolUseId: string) => void` action
   - Add `clearHandledPermissions: () => void` action
   - File: `apps/app/src/client/pages/projects/sessions/stores/sessionStore.ts`
   - Test: Verify actions update Set correctly
 
-- [ ] perm-1.2 [4/10] Add permission denial detection to ToolResultRenderer
+- [x] perm-1.2 [4/10] Add permission denial detection to ToolResultRenderer
   - Import tool_use types to access parent block
   - Add detection: `isError && content.includes('requested permissions')`
   - Extract permissionDetails from tool_use.input (file_path, old_string, new_string)
@@ -147,7 +147,7 @@ On approve:
   - File: `apps/app/src/client/pages/projects/sessions/components/session/claude/tools/ToolResultRenderer.tsx`
   - Test: Console log when permission denial detected
 
-- [ ] perm-1.3 [2/10] Pass onApprove callback to ToolResultRenderer
+- [x] perm-1.3 [2/10] Pass onApprove callback to ToolResultRenderer
   - Update ToolBlockRenderer to pass onApprove callback down
   - Thread callback from ProjectSession → AgentSessionViewer → MessageRenderer → ToolBlockRenderer → ToolResultRenderer
   - File: Multiple components in rendering chain
@@ -155,14 +155,18 @@ On approve:
 
 #### Completion Notes
 
-(This will be filled in by the agent implementing this phase)
+- Added handledPermissions Set to sessionStore with markPermissionHandled and clearHandledPermissions actions
+- Threaded toolUseId, toolName, and input through component chain (ContentBlockRenderer → ToolBlockRenderer → DefaultToolBlock → ToolResultRenderer)
+- Added permission denial detection in ToolResultRenderer (checks for is_error and 'requested permissions' in result content)
+- Threaded onApprove callback through full component chain (ProjectSession → AgentSessionViewer → ChatInterface → MessageList → MessageRenderer → AssistantMessage → ContentBlockRenderer → ToolBlockRenderer → DefaultToolBlock → ToolResultRenderer)
+- Created placeholder handlePermissionApproval in ProjectSession (to be implemented in Phase 3)
 
 ### Phase 2: UI Rendering
 
 **Phase Complexity**: 8 points (avg 2.7/10)
 
 <!-- prettier-ignore -->
-- [ ] perm-2.1 [4/10] Create PermissionDenialBlock component
+- [x] perm-2.1 [4/10] Create PermissionDenialBlock component
   - Accept props: toolName, filePath, operation (old_string, new_string), onApprove, onDeny, isPending
   - Render warning icon + "Permission required" header
   - Show file path in code tag
@@ -172,7 +176,7 @@ On approve:
   - File: `apps/app/src/client/pages/projects/sessions/components/session/claude/blocks/PermissionDenialBlock.tsx`
   - Test: Verify component renders with mock data
 
-- [ ] perm-2.2 [2/10] Integrate PermissionDenialBlock into ToolResultRenderer
+- [x] perm-2.2 [2/10] Integrate PermissionDenialBlock into ToolResultRenderer
   - Import PermissionDenialBlock
   - Render PermissionDenialBlock when permission denial detected
   - Pass extracted permission details as props
@@ -181,7 +185,7 @@ On approve:
   - File: `apps/app/src/client/pages/projects/sessions/components/session/claude/tools/ToolResultRenderer.tsx`
   - Test: Send message with default mode, verify UI appears
 
-- [ ] perm-2.3 [2/10] Style PermissionDenialBlock to match tool blocks
+- [x] perm-2.3 [2/10] Style PermissionDenialBlock to match tool blocks
   - Use existing tool block border/background classes
   - Match spacing with other tool results
   - Ensure mobile responsive (buttons stack on small screens)
@@ -191,28 +195,31 @@ On approve:
 
 #### Completion Notes
 
-(This will be filled in by the agent implementing this phase)
+- Created PermissionDenialBlock component with yellow warning styling, collapsible diff viewer, and approve/deny buttons
+- Integrated into ToolResultRenderer - detects permission denials and renders PermissionDenialBlock instead of regular error display
+- Uses handledPermissions from sessionStore to hide UI after approval/denial
+- Styled with existing UI components (Button, Collapsible) and matches tool block aesthetic with border/background/spacing
 
 ### Phase 3: Approval Flow
 
 **Phase Complexity**: 7 points (avg 2.3/10)
 
 <!-- prettier-ignore -->
-- [ ] perm-3.1 [3/10] Update handleSubmit to accept permissionModeOverride
+- [x] perm-3.1 [3/10] Update handleSubmit to accept permissionModeOverride
   - Add optional parameter to handleSubmit: `permissionModeOverride?: PermissionMode`
   - Use override if provided, otherwise use `getPermissionMode()`
   - Update config object with resolved permission mode
   - File: `apps/app/src/client/pages/projects/sessions/ProjectSession.tsx`
   - Test: Verify override takes precedence over selector
 
-- [ ] perm-3.2 [2/10] Implement approval handler in ProjectSession
+- [x] perm-3.2 [2/10] Implement approval handler in ProjectSession
   - Create `handlePermissionApproval(approved: boolean, toolUseId: string)`
   - On deny: call `markPermissionHandled(toolUseId)` and return
   - On approve: call `markPermissionHandled(toolUseId)` then `handleSubmit({ text: 'yes, proceed', permissionModeOverride: 'acceptEdits' })`
   - File: `apps/app/src/client/pages/projects/sessions/ProjectSession.tsx`
   - Test: Click approve, verify follow-up message sent with acceptEdits
 
-- [ ] perm-3.3 [2/10] Clear handledPermissions on session change
+- [x] perm-3.3 [2/10] Clear handledPermissions on session change
   - Call `clearHandledPermissions()` in session cleanup effect
   - Clear when sessionId changes or component unmounts
   - File: `apps/app/src/client/pages/projects/sessions/ProjectSession.tsx`
@@ -220,7 +227,10 @@ On approve:
 
 #### Completion Notes
 
-(This will be filled in by the agent implementing this phase)
+- Updated handleSubmit to accept optional permissionModeOverride parameter
+- Override takes precedence over form value when provided
+- Implemented handlePermissionApproval that sends 'yes, proceed' with acceptEdits mode
+- Added useEffect to clear handledPermissions when sessionId changes
 
 ## Testing Strategy
 

@@ -7,39 +7,25 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/client/components/ui/dropdown-menu";
-import { NewSessionButton } from "@/client/pages/projects/sessions/components/NewSessionButton";
-import { useState } from "react";
 
 export function NewButton() {
   const navigate = useNavigate();
-  const { projectId } = useParams();
-  const [showSessionButton, setShowSessionButton] = useState(false);
-
-  // If we need to show the NewSessionButton and we have a projectId, render it
-  if (showSessionButton && projectId) {
-    return (
-      <NewSessionButton
-        projectId={projectId}
-        variant="default"
-        size="sm"
-        className="h-6 text-xs"
-      />
-    );
-  }
+  const { projectId, id } = useParams();
+  const activeProjectId = projectId || id;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="default" size="sm" className="h-6 text-xs px-2">
-          <Plus className="size-3" />
+        <Button variant="default" size="sm">
+          <Plus className="size-4" />
           New
         </Button>
       </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-48">
           <DropdownMenuItem
             onClick={() => {
-              if (projectId) {
-                navigate(`/projects/${projectId}/workflows`);
+              if (activeProjectId) {
+                navigate(`/projects/${activeProjectId}/workflows`);
               } else {
                 // If no active project, navigate to projects page
                 navigate(`/projects`);
@@ -51,8 +37,8 @@ export function NewButton() {
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => {
-              if (projectId) {
-                setShowSessionButton(true);
+              if (activeProjectId) {
+                navigate(`/projects/${activeProjectId}/sessions/new`);
               } else {
                 // If no active project, navigate to projects page
                 navigate(`/projects`);

@@ -20,9 +20,9 @@ Reviews a previous agent's implementation work by comparing the provided spec fi
   - Check index.json for spec location
   - Read from `{location}/{folder}/spec.md`
 - If it's a 3-char alphanumeric ID (e.g., `ef3`) - legacy:
-  - Search for `{id}-*-spec.md` or `{id}-*/spec.md` in todo/done
+  - Search for `{id}-*-spec.md` or `{id}-*/spec.md` in todo/doing/done
 - If it's a feature name:
-  - Search for `*-{feature}/spec.md` or `*-{feature}-spec.md` in todo/done
+  - Search for `*-{feature}/spec.md` or `*-{feature}-spec.md` in todo/doing/done
 - If it's a full path: use as-is
 - If not found: stop and report error
 
@@ -168,13 +168,16 @@ Use these guidelines to determine what issues to document:
    - Group issues by phase first, then by priority within each phase
    - Include: file:line, quoted spec requirement, actual vs expected
    - **If no issues found at all:** Still add Review Findings section with "No issues found" message
+   - **Update spec Status field:**
+     - If issues found: Set Status to "review"
+     - If no issues found: Set Status to "completed" and suggest `/move-spec {id} done`
 
 5. **Report Results**
 
    - Summary: iteration X of 3, files reviewed, issue counts by priority
    - Next step:
      - If issues found: `/implement-spec $specIdOrNameOrPath` then `/review-spec-implementation $specIdOrNameOrPath`
-     - If no issues found: Implementation is complete
+     - If no issues found: `/move-spec {id} done` to mark complete
 
 ## Review Findings Template
 

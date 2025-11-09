@@ -1,23 +1,23 @@
 ---
-description: Move a spec folder between workflow folders (todo/done)
+description: Move a spec folder between workflow folders (todo/doing/done)
 argument-hint: [specIdOrNameOrPath, targetFolder]
 ---
 
 # Move Spec
 
-Move a spec folder between workflow folders (todo/done), update index.json, and optionally update status field.
+Move a spec folder between workflow folders (todo/doing/done), update index.json, and optionally update status field.
 
 ## Variables
 
 - $specIdOrNameOrPath: $1 (required) - Either a spec ID (e.g., `1`, `2`), feature name (e.g., `workflow-safety`), or full path (e.g., `.agent/specs/todo/1-workflow-safety/`)
-- $targetFolder: $2 (required) - Target workflow folder: "todo" or "done"
+- $targetFolder: $2 (required) - Target workflow folder: "todo", "doing", or "done"
 
 ## Instructions
 
-- Search for the spec folder in all locations (todo/, done/)
+- Search for the spec folder in all locations (todo/, doing/, done/)
 - Move the entire folder to the target folder
 - Update index.json with new location
-- Optionally update the Status field in spec.md front matter if appropriate
+- Update the Status field in spec.md front matter based on target folder
 - Support both old single-file specs and new folder-based specs
 - Report the old and new paths
 
@@ -30,21 +30,26 @@ Move a spec folder between workflow folders (todo/done), update index.json, and 
        - Check index.json for spec with that ID
        - If not in index, search filesystem:
          1. `.agent/specs/todo/{id}-*/`
-         2. `.agent/specs/done/{id}-*/`
+         2. `.agent/specs/doing/{id}-*/`
+         3. `.agent/specs/done/{id}-*/`
        - Use the first matching folder
      - If it's a 3-char alphanumeric ID (e.g., `ef3`, `a7b`) - legacy:
        - Search filesystem:
          1. `.agent/specs/todo/{id}-*-spec.md` (old single file)
-         2. `.agent/specs/done/{id}-*-spec.md` (old single file)
-         3. `.agent/specs/todo/{id}-*/` (folder)
-         4. `.agent/specs/done/{id}-*/` (folder)
+         2. `.agent/specs/doing/{id}-*-spec.md` (old single file)
+         3. `.agent/specs/done/{id}-*-spec.md` (old single file)
+         4. `.agent/specs/todo/{id}-*/` (folder)
+         5. `.agent/specs/doing/{id}-*/` (folder)
+         6. `.agent/specs/done/{id}-*/` (folder)
        - Use the first match
      - If it's a feature name (e.g., `workflow-safety`):
        - Search filesystem:
          1. `.agent/specs/todo/*-{feature-name}/`
-         2. `.agent/specs/done/*-{feature-name}/`
-         3. `.agent/specs/todo/*-{feature-name}-spec.md` (legacy)
-         4. `.agent/specs/done/*-{feature-name}-spec.md` (legacy)
+         2. `.agent/specs/doing/*-{feature-name}/`
+         3. `.agent/specs/done/*-{feature-name}/`
+         4. `.agent/specs/todo/*-{feature-name}-spec.md` (legacy)
+         5. `.agent/specs/doing/*-{feature-name}-spec.md` (legacy)
+         6. `.agent/specs/done/*-{feature-name}-spec.md` (legacy)
        - Use the first match
      - If it's a full path:
        - Use the path as-is
@@ -53,7 +58,7 @@ Move a spec folder between workflow folders (todo/done), update index.json, and 
 
 2. **Validate Target Folder**
 
-   - Ensure $targetFolder is one of: "todo" or "done"
+   - Ensure $targetFolder is one of: "todo", "doing", or "done"
    - If invalid, report error and exit
 
 3. **Check for Conflicts**
@@ -78,13 +83,13 @@ Move a spec folder between workflow folders (todo/done), update index.json, and 
      - Write updated index back to `.agent/specs/index.json`
    - If spec not in index (legacy 3-char ID), skip this step
 
-6. **Update Status Field (Optional)**
+6. **Update Status Field**
 
    - Read the spec file content (spec.md or {id}-{name}-spec.md)
-   - If moving to "done" folder:
-     - Update Status field to "completed" (if present)
-   - If moving to "todo" folder:
-     - Update Status field to "ready" or "draft" (if present and currently "completed")
+   - Update Status field based on target folder:
+     - Moving to "todo": Set to "draft"
+     - Moving to "doing": Set to "in-progress"
+     - Moving to "done": Set to "completed"
    - Only update if Status field exists in the file
 
 7. **Report Results**
@@ -187,7 +192,7 @@ Please resolve the conflict manually or use a different target folder.
 
 **Invalid target folder:**
 ```text
-✗ Error: Invalid target folder "doing"
+✗ Error: Invalid target folder "invalid"
 
-Valid options: "todo", "done"
+Valid options: "todo", "doing", "done"
 ```

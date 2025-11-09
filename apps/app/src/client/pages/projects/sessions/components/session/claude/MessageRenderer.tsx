@@ -12,9 +12,10 @@ import { useDebugMode } from "@/client/hooks/useDebugMode";
 
 interface MessageRendererProps {
   message: UIMessage;
+  onApprove?: (toolUseId: string) => void;
 }
 
-export function MessageRenderer({ message }: MessageRendererProps) {
+export function MessageRenderer({ message, onApprove }: MessageRendererProps) {
   const isDebugMode = useDebugMode();
   const [isJsonExpanded, setIsJsonExpanded] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -35,7 +36,7 @@ export function MessageRenderer({ message }: MessageRendererProps) {
         return <UserMessage message={message} />;
 
       case 'assistant':
-        return <AssistantMessage message={message} />;
+        return <AssistantMessage message={message} onApprove={onApprove} />;
 
       default:
         console.warn('Unknown message role:', message.role);
