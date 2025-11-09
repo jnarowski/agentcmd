@@ -4,7 +4,6 @@ import {
   useProjectsWithSessions,
   useProjectReadme,
 } from "@/client/pages/projects/hooks/useProjects";
-import { NewSessionButton } from "@/client/pages/projects/sessions/components/NewSessionButton";
 import { ProjectDialog } from "@/client/pages/projects/components/ProjectDialog";
 import { ProjectOnboardingSuggestions } from "@/client/pages/projects/components/ProjectOnboardingSuggestions";
 import { ProjectHomeSessions } from "@/client/pages/projects/components/ProjectHomeSessions";
@@ -23,7 +22,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/client/components/ui/tooltip";
-import { MessageSquare, FileText, Pencil, FolderOpen } from "lucide-react";
+import { MessageSquare, FileText, Pencil } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
@@ -72,21 +71,24 @@ export default function ProjectHome() {
             </h1>
           </div>
           <div className="flex items-stretch gap-1 shrink-0">
-            <NewSessionButton
-              projectId={id!}
-              variant="outline"
-              size="sm"
-              className="[&>button]:h-full [&]:h-auto"
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setEditDialogOpen(true)}
-              className="self-stretch"
-            >
-              <Pencil className="h-4 w-4 mr-2" />
-              Edit
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditDialogOpen(true)}
+                    className="self-stretch"
+                  >
+                    <Pencil className="h-4 w-4 lg:mr-2" />
+                    <span className="hidden lg:inline">Edit</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="lg:hidden">
+                  <p>Edit project</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
       </div>

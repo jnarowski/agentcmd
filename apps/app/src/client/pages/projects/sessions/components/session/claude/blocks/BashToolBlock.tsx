@@ -13,9 +13,11 @@ interface BashToolBlockProps {
     content: string | UnifiedImageBlock;
     is_error?: boolean;
   };
+  toolUseId: string;
+  onApprove?: (toolUseId: string) => void;
 }
 
-export function BashToolBlock({ input, result }: BashToolBlockProps) {
+export function BashToolBlock({ input, result, toolUseId, onApprove }: BashToolBlockProps) {
   // Use description as summary in header
   const description = input.description || null;
 
@@ -26,7 +28,7 @@ export function BashToolBlock({ input, result }: BashToolBlockProps) {
       description={description}
       hasError={result?.is_error}
     >
-      <BashToolRenderer input={input} result={result} />
+      <BashToolRenderer input={input} result={result} toolUseId={toolUseId} onApprove={onApprove} />
     </ToolCollapsibleWrapper>
   );
 }

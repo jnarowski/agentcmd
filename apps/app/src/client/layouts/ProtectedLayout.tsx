@@ -16,7 +16,7 @@ function ProtectedLayout() {
   const queryClient = useQueryClient();
   const initializeFromSettings = useSessionStore((s) => s.initializeFromSettings);
   const { setTheme } = useTheme();
-  const { readyState, connectionAttempts, reconnect } = useWebSocket();
+  const { readyState, reconnectAttempt, reconnect } = useWebSocket();
 
   // Load settings early so they're available for all protected routes
   // Settings are cached by TanStack Query (5-minute stale time)
@@ -71,7 +71,7 @@ function ProtectedLayout() {
     >
       <ConnectionStatusBanner
         readyState={readyState}
-        connectionAttempts={connectionAttempts}
+        reconnectAttempt={reconnectAttempt}
         onReconnect={reconnect}
       />
       <AppSidebar />

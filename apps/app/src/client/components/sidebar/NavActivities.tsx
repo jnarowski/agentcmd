@@ -1,22 +1,16 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
-import {
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-} from "@/client/components/ui/sidebar";
-import { Badge } from "@/client/components/ui/badge";
+import { SidebarMenu } from "@/client/components/ui/sidebar";
 import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@/client/components/ui/toggle-group";
 import { useSettings, useUpdateSettings } from "@/client/hooks/useSettings";
 import { useProjectsWithSessions } from "@/client/pages/projects/hooks/useProjects";
-import { AgentIcon } from "@/client/components/AgentIcon";
 import { getSessionDisplayName } from "@/client/utils/getSessionDisplayName";
 import { api } from "@/client/utils/api";
-import { SessionDropdownMenu } from "@/client/pages/projects/sessions/components/SessionDropdownMenu";
+import { SessionItem } from "@/client/components/sidebar/SessionItem";
+import { WorkflowItem } from "@/client/components/sidebar/WorkflowItem";
 import type { WorkflowRunListItem } from "@/client/pages/projects/workflows/types";
 import type { AgentType } from "@/shared/types/agent.types";
 import type { SessionResponse } from "@/shared/types";
@@ -36,16 +30,9 @@ interface Activity {
 }
 
 export function NavActivities() {
-  const navigate = useNavigate();
   const { data: settings } = useSettings();
   const updateSettings = useUpdateSettings();
   const { data: projectsData } = useProjectsWithSessions();
-  const [hoveredActivityId, setHoveredActivityId] = useState<string | null>(
-    null
-  );
-  const [menuOpenActivityId, setMenuOpenActivityId] = useState<string | null>(
-    null
-  );
 
   const filter: ActivityFilter =
     settings?.userPreferences?.activity_filter || "all";
@@ -140,27 +127,6 @@ export function NavActivities() {
   );
   filteredActivities = filteredActivities.slice(0, 10);
 
-  const handleActivityClick = (activity: Activity) => {
-    if (activity.type === "session") {
-      navigate(`/projects/${activity.projectId}/sessions/${activity.id}`);
-    } else {
-      navigate(`/projects/${activity.projectId}/workflows/${activity.id}`);
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "running":
-        return "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20";
-      case "completed":
-        return "bg-green-500/10 text-green-500 hover:bg-green-500/20";
-      case "failed":
-        return "bg-red-500/10 text-red-500 hover:bg-red-500/20";
-      default:
-        return "bg-gray-500/10 text-gray-500 hover:bg-gray-500/20";
-    }
-  };
-
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <div className="px-2 pb-2 shrink-0">
@@ -206,59 +172,34 @@ export function NavActivities() {
           </div>
         ) : (
           <SidebarMenu>
-            {filteredActivities.map((activity) => (
-              <SidebarMenuItem
-                key={activity.id}
-                onMouseEnter={() => setHoveredActivityId(activity.id)}
-                onMouseLeave={() => setHoveredActivityId(null)}
-                className="relative"
-              >
-                <SidebarMenuButton
-                  onClick={() => handleActivityClick(activity)}
-                  className="h-auto min-h-[28px] px-2 py-1"
-                >
-                  {activity.type === "session" && activity.agent && (
-                    <AgentIcon
-                      agent={activity.agent}
-                      className="size-4 shrink-0"
-                    />
-                  )}
-                  <div className="flex flex-1 flex-col gap-0.5 min-w-0">
-                    <span className="text-sm min-w-0">{activity.name}</span>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      {activity.type === "session" && (
-                        <Badge
-                          variant="secondary"
-                          className={`h-4 px-1.5 text-[10px] w-12 shrink-0 justify-center ${getStatusColor(activity.status)}`}
-                        >
-                          {activity.status}
-                        </Badge>
-                      )}
-                      <Badge
-                        variant="secondary"
-                        className="h-4 px-1.5 text-[10px] bg-muted/50 text-muted-foreground hover:bg-muted/50 truncate"
-                      >
-                        {activity.projectName}
-                      </Badge>
-                    </div>
-                  </div>
-                </SidebarMenuButton>
-                {activity.type === "session" &&
-                  activity.session &&
-                  (hoveredActivityId === activity.id ||
-                    menuOpenActivityId === activity.id) && (
-                    <div className="absolute right-2 top-2 z-50">
-                      <SessionDropdownMenu
-                        session={activity.session}
-                        onMenuOpenChange={(open) =>
-                          setMenuOpenActivityId(open ? activity.id : null)
-                        }
-                        triggerClassName="data-[state=open]:bg-accent"
-                      />
-                    </div>
-                  )}
-              </SidebarMenuItem>
-            ))}
+            {filteredActivities.map((activity) => {
+              if (activity.type === "session" && activity.session) {
+                return (
+                  <SessionItem
+                    key={activity.id}
+                    id={activity.id}
+                    name={activity.name}
+                    projectId={activity.projectId}
+                    projectName={activity.projectName}
+                    status={activity.status}
+                    agent={activity.agent}
+                    session={activity.session}
+                  />
+                );
+              } else if (activity.type === "workflow") {
+                return (
+                  <WorkflowItem
+                    key={activity.id}
+                    id={activity.id}
+                    name={activity.name}
+                    projectId={activity.projectId}
+                    projectName={activity.projectName}
+                    status={activity.status}
+                  />
+                );
+              }
+              return null;
+            })}
           </SidebarMenu>
         )}
       </div>

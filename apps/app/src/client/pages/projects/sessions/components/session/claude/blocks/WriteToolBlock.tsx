@@ -8,6 +8,7 @@ import { SyntaxHighlighter } from "@/client/utils/syntaxHighlighter";
 import { getLanguageFromPath } from "@/client/utils/getLanguageFromPath";
 import { useCodeBlockTheme } from "@/client/utils/codeBlockTheme";
 import { ExpandButton } from "@/client/pages/projects/sessions/components/session/claude/blocks/ExpandButton";
+import { ToolResultRenderer } from "@/client/pages/projects/sessions/components/session/claude/tools/ToolResultRenderer";
 import type { WriteToolInput } from "@/shared/types/tool.types";
 import type { UnifiedImageBlock } from 'agent-cli-sdk';
 
@@ -17,11 +18,13 @@ interface WriteToolBlockProps {
     content: string | UnifiedImageBlock;
     is_error?: boolean;
   };
+  toolUseId: string;
+  onApprove?: (toolUseId: string) => void;
 }
 
 const MAX_LINES_PREVIEW = 20;
 
-export function WriteToolBlock({ input, result }: WriteToolBlockProps) {
+export function WriteToolBlock({ input, result, toolUseId, onApprove }: WriteToolBlockProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { colors } = useCodeBlockTheme();
 
@@ -45,6 +48,11 @@ export function WriteToolBlock({ input, result }: WriteToolBlockProps) {
   const totalLines = input.content.split("\n").length;
   const shouldTruncate = totalLines > MAX_LINES_PREVIEW;
 
+  // Check if this is a permission denial
+  const isPermissionDenial = result?.is_error &&
+    typeof result.content === 'string' &&
+    result.content.includes('requested permissions');
+
   return (
     <ToolCollapsibleWrapper
       toolName="Write"
@@ -53,42 +61,56 @@ export function WriteToolBlock({ input, result }: WriteToolBlockProps) {
       hasError={result?.is_error}
       defaultOpen={true}
     >
-      {/* Content preview */}
-      <div
-        className={`relative rounded-lg border overflow-hidden ${
-          shouldTruncate && !isExpanded ? "max-h-40" : ""
-        }`}
-        style={{
-          borderColor: colors.border,
-          backgroundColor: colors.background,
-        }}
-      >
+      {/* Always render ToolResultRenderer - it returns null if not permission denial */}
+      {result && (
+        <ToolResultRenderer
+          toolUseId={toolUseId}
+          toolName="Write"
+          input={input as unknown as Record<string, unknown>}
+          result={result.content}
+          isError={result.is_error}
+          onApprove={onApprove}
+        />
+      )}
+
+      {/* Only show content preview if NOT a permission denial */}
+      {!isPermissionDenial && (
         <div
-          className="text-xs [&_pre]:!m-0 [&_pre]:!p-3 [&_code]:!block"
+          className={`relative rounded-lg border overflow-hidden ${
+            shouldTruncate && !isExpanded ? "max-h-40" : ""
+          }`}
           style={{
-            fontFamily: "ui-monospace, monospace",
+            borderColor: colors.border,
+            backgroundColor: colors.background,
           }}
         >
-          <SyntaxHighlighter
-            code={input.content}
-            language={language}
-            showLineNumbers={false}
-          />
-        </div>
-
-        {/* Fade gradient overlay */}
-        {shouldTruncate && !isExpanded && (
-          <>
-            <div
-              className="absolute inset-x-0 bottom-0 h-20 pointer-events-none"
-              style={{
-                background: `linear-gradient(to top, ${colors.background} 0%, transparent 100%)`,
-              }}
+          <div
+            className="text-xs [&_pre]:!m-0 [&_pre]:!p-3 [&_code]:!block"
+            style={{
+              fontFamily: "ui-monospace, monospace",
+            }}
+          >
+            <SyntaxHighlighter
+              code={input.content}
+              language={language}
+              showLineNumbers={false}
             />
-            <ExpandButton onClick={() => setIsExpanded(true)} />
-          </>
-        )}
-      </div>
+          </div>
+
+          {/* Fade gradient overlay */}
+          {shouldTruncate && !isExpanded && (
+            <>
+              <div
+                className="absolute inset-x-0 bottom-0 h-20 pointer-events-none"
+                style={{
+                  background: `linear-gradient(to top, ${colors.background} 0%, transparent 100%)`,
+                }}
+              />
+              <ExpandButton onClick={() => setIsExpanded(true)} />
+            </>
+          )}
+        </div>
+      )}
     </ToolCollapsibleWrapper>
   );
 }

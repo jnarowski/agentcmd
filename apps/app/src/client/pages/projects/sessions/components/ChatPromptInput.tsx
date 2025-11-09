@@ -33,6 +33,12 @@ import { useActiveProject } from "@/client/hooks/navigation/useActiveProject";
 import { cn } from "@/client/utils/cn";
 import { TokenUsageCircle } from "./TokenUsageCircle";
 import { usePromptInputState } from "../hooks/usePromptInputState";
+import { useWebSocket } from "@/client/hooks/useWebSocket";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/client/components/ui/tooltip";
 
 interface ChatPromptInputProps {
   onSubmit?: (message: PromptInputMessage) => void | Promise<void>;
@@ -67,6 +73,9 @@ const ChatPromptInputInner = forwardRef<
   ) => {
     const controller = usePromptInputController();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    // Get WebSocket connection status
+    const { isConnected } = useWebSocket();
 
     // Get active project and session IDs from navigation store
     const { activeProjectId } = useNavigationStore();
@@ -212,20 +221,32 @@ const ChatPromptInputInner = forwardRef<
                   currentMessageTokens={currentMessageTokens}
                 />
               )}
-              <PromptInputSubmit
-                className={cn(
-                  "h-10 w-16 md:!h-8 md:!w-8 transition-colors",
-                  permissionMode === "plan" &&
-                    "bg-green-500 hover:bg-green-600 text-white",
-                  permissionMode === "acceptEdits" &&
-                    "bg-purple-500 hover:bg-purple-600 text-white",
-                  permissionMode === "bypassPermissions" &&
-                    "bg-red-500 hover:bg-red-600 text-white",
-                  permissionMode === "default" &&
-                    "bg-gray-500 hover:bg-gray-600 text-white"
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex">
+                    <PromptInputSubmit
+                      className={cn(
+                        "h-10 w-16 md:!h-8 md:!w-8 transition-colors",
+                        permissionMode === "plan" &&
+                          "bg-green-500 hover:bg-green-600 text-white",
+                        permissionMode === "acceptEdits" &&
+                          "bg-purple-500 hover:bg-purple-600 text-white",
+                        permissionMode === "bypassPermissions" &&
+                          "bg-red-500 hover:bg-red-600 text-white",
+                        permissionMode === "default" &&
+                          "bg-gray-500 hover:bg-gray-600 text-white"
+                      )}
+                      status={status}
+                      disabled={disabled || !isConnected}
+                    />
+                  </span>
+                </TooltipTrigger>
+                {!isConnected && (
+                  <TooltipContent side="top">
+                    WebSocket disconnected. Try reloading the page
+                  </TooltipContent>
                 )}
-                status={status}
-              />
+              </Tooltip>
             </div>
           </PromptInputFooter>
         </PromptInput>

@@ -64,7 +64,7 @@ describe("useNavigation", () => {
     expect(mockSetActiveProject).toHaveBeenCalledWith("project-123");
     expect(mockSetActiveSession).toHaveBeenCalledWith("session-456");
     expect(mockNavigate).toHaveBeenCalledWith(
-      "/projects/project-123/chat/session-456"
+      "/projects/project-123/sessions/session-456"
     );
   });
 

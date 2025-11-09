@@ -56,6 +56,8 @@ export default function ProjectSession() {
   const setStreaming = useSessionStore((s) => s.setStreaming);
   const totalTokens = useSessionStore(selectTotalTokens);
   const clearHandledPermissions = useSessionStore((s) => s.clearHandledPermissions);
+  const clearToolResultError = useSessionStore((s) => s.clearToolResultError);
+  const markPermissionHandled = useSessionStore((s) => s.markPermissionHandled);
 
   // App-wide WebSocket hook for connection status
   const { isConnected: globalIsConnected } = useWebSocket();
@@ -248,6 +250,13 @@ export default function ProjectSession() {
   // Permission approval handler
   const handlePermissionApproval = (toolUseId: string) => {
     console.log('[ProjectSession] Permission approved:', toolUseId);
+
+    // Clear the error flag to hide the permission UI immediately
+    clearToolResultError(toolUseId);
+
+    // Mark as handled to prevent duplicate approvals
+    markPermissionHandled(toolUseId);
+
     // Send follow-up message with acceptEdits permission mode to retry the operation
     handleSubmit({ text: 'yes, proceed' }, 'acceptEdits');
   };

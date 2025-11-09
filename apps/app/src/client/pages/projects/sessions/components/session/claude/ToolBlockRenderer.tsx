@@ -47,13 +47,13 @@ export function ToolBlockRenderer({ toolName, toolUseId, input, result, onApprov
       return <ReadToolBlock input={input as unknown as ReadToolInput} result={result} />;
 
     case 'Write':
-      return <WriteToolBlock input={input as unknown as WriteToolInput} result={result} />;
+      return <WriteToolBlock input={input as unknown as WriteToolInput} result={result} toolUseId={toolUseId} onApprove={onApprove} />;
 
     case 'Edit':
-      return <EditToolBlock input={input as unknown as EditToolInput} result={result} />;
+      return <EditToolBlock input={input as unknown as EditToolInput} result={result} toolUseId={toolUseId} onApprove={onApprove} />;
 
     case 'Bash':
-      return <BashToolBlock input={input as unknown as BashToolInput} result={result} />;
+      return <BashToolBlock input={input as unknown as BashToolInput} result={result} toolUseId={toolUseId} onApprove={onApprove} />;
 
     case 'TodoWrite':
       return <TodoWriteToolBlock input={input as unknown as TodoWriteToolInput} result={result} />;

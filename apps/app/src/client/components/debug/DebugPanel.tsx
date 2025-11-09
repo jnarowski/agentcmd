@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Bug } from 'lucide-react';
 import { useDebugMode } from '@/client/hooks/useDebugMode';
+import { setDebugMode } from '@/client/utils/isDebugMode';
 import { WebSocketTab } from './tabs/WebSocketTab';
 import { MessagesTab } from './tabs/MessagesTab';
 import { StoreTab } from './tabs/StoreTab';
@@ -18,8 +21,10 @@ const tabs: Tab[] = [
  * Activated via ?debug=true query parameter and Ctrl+Shift+W keyboard shortcut.
  */
 export function DebugPanel() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const debugMode = useDebugMode();
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(true);
   const [activeTabId, setActiveTabId] = useState<TabId>(() => {
     const saved = sessionStorage.getItem(STORAGE_KEY);
     return (saved as TabId) || 'websocket';
@@ -55,9 +60,10 @@ export function DebugPanel() {
     return (
       <button
         onClick={() => setIsMinimized(false)}
-        className="fixed bottom-4 right-4 z-50 px-4 py-2 bg-gray-900 text-white rounded-lg shadow-lg hover:bg-gray-800 transition-colors border border-gray-700"
+        className="fixed bottom-4 right-4 z-50 px-3 py-2 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 transition-colors border border-blue-500 flex items-center gap-2"
       >
-        Debug Tools ({tabs.length})
+        <Bug className="w-4 h-4" />
+        <span className="text-base">Debug</span>
       </button>
     );
   }
@@ -69,6 +75,23 @@ export function DebugPanel() {
         <h2 className="text-lg font-semibold">Debug Panel</h2>
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-400">Ctrl+Shift+W</span>
+          <button
+            onClick={() => {
+              setDebugMode(false);
+              // Remove ?debug from URL
+              const newParams = new URLSearchParams(searchParams);
+              newParams.delete('debug');
+              const newSearch = newParams.toString();
+              navigate({
+                pathname: window.location.pathname,
+                search: newSearch ? `?${newSearch}` : '',
+              }, { replace: true });
+            }}
+            className="px-3 py-1 text-sm bg-red-700 hover:bg-red-600 rounded transition-colors"
+            title="Disable debug mode"
+          >
+            Disable Debug
+          </button>
           <button
             onClick={() => setIsMinimized(true)}
             className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 rounded transition-colors"

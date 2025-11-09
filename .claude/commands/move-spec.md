@@ -27,34 +27,14 @@ Move a spec folder between workflow folders (todo/doing/done), update index.json
 
    - **Parse and resolve $specIdOrNameOrPath:**
      - If it's a numeric ID (e.g., `1`, `2`):
-       - Check index.json for spec with that ID
-       - If not in index, search filesystem:
-         1. `.agent/specs/todo/{id}-*/`
-         2. `.agent/specs/doing/{id}-*/`
-         3. `.agent/specs/done/{id}-*/`
-       - Use the first matching folder
-     - If it's a 3-char alphanumeric ID (e.g., `ef3`, `a7b`) - legacy:
-       - Search filesystem:
-         1. `.agent/specs/todo/{id}-*-spec.md` (old single file)
-         2. `.agent/specs/doing/{id}-*-spec.md` (old single file)
-         3. `.agent/specs/done/{id}-*-spec.md` (old single file)
-         4. `.agent/specs/todo/{id}-*/` (folder)
-         5. `.agent/specs/doing/{id}-*/` (folder)
-         6. `.agent/specs/done/{id}-*/` (folder)
-       - Use the first match
+       - Check index.json for spec location and folder name
+       - Use `{location}/{folder}/`
      - If it's a feature name (e.g., `workflow-safety`):
-       - Search filesystem:
-         1. `.agent/specs/todo/*-{feature-name}/`
-         2. `.agent/specs/doing/*-{feature-name}/`
-         3. `.agent/specs/done/*-{feature-name}/`
-         4. `.agent/specs/todo/*-{feature-name}-spec.md` (legacy)
-         5. `.agent/specs/doing/*-{feature-name}-spec.md` (legacy)
-         6. `.agent/specs/done/*-{feature-name}-spec.md` (legacy)
-       - Use the first match
+       - Search in order: todo/, doing/, done/
+       - Pattern: `*-{feature-name}/`
      - If it's a full path:
        - Use the path as-is
-   - If multiple matches found, list them and ask user to specify
-   - If no matches found, report error and exit
+   - If not found, report error and exit
 
 2. **Validate Target Folder**
 
@@ -66,31 +46,24 @@ Move a spec folder between workflow folders (todo/doing/done), update index.json
    - Check if a folder/file with the same name already exists in target folder
    - If conflict exists, report error and exit
 
-4. **Move the Folder or File**
+4. **Move the Folder**
 
-   - If it's a folder:
-     - Move entire folder from current location to `.agent/specs/${targetFolder}/[foldername]`
-     - Preserve the original folder name
-   - If it's a legacy single file:
-     - Move file to `.agent/specs/${targetFolder}/[filename]`
-     - Do NOT update index (legacy specs not tracked)
+   - Move entire folder from current location to `.agent/specs/${targetFolder}/[foldername]`
+   - Preserve the original folder name
 
-5. **Update Index (for numeric ID specs only)**
+5. **Update Index**
 
-   - If spec has numeric ID and exists in index.json:
-     - Read index.json
-     - Update the spec's `location` field to match target folder
-     - Write updated index back to `.agent/specs/index.json`
-   - If spec not in index (legacy 3-char ID), skip this step
+   - Read index.json
+   - Update the spec's `location` field to match target folder
+   - Write updated index back to `.agent/specs/index.json`
 
 6. **Update Status Field**
 
-   - Read the spec file content (spec.md or {id}-{name}-spec.md)
+   - Read spec.md file content
    - Update Status field based on target folder:
      - Moving to "todo": Set to "draft"
      - Moving to "doing": Set to "in-progress"
      - Moving to "done": Set to "completed"
-   - Only update if Status field exists in the file
 
 7. **Report Results**
 
@@ -119,21 +92,13 @@ Finds `2-*/` folder and moves it to `todo/`
 ```
 Finds `*-workflow-safety/` folder and moves it to `done/`
 
-**Example 4: Move legacy spec (3-char ID)**
+**Example 4: Move to doing**
 ```bash
-/move-spec ef3 done
+/move-spec 1 doing
 ```
-Finds `ef3-*-spec.md` file and moves it to `done/` (no index update)
-
-**Example 5: Move by full path**
-```bash
-/move-spec .agent/specs/todo/1-workflow-safety done
-```
-Moves the specified folder to `done/`
+Moves spec to `doing/` and sets Status to "in-progress"
 
 ## Report
-
-After successfully moving a folder-based spec:
 
 ```text
 ✓ Moved spec folder
@@ -145,18 +110,6 @@ Status updated: draft → completed
 Index updated: location "todo" → "done"
 ```
 
-After moving a legacy single-file spec:
-
-```text
-✓ Moved spec file
-
-From: .agent/specs/todo/ef3-auth-improvements-spec.md
-To:   .agent/specs/done/ef3-auth-improvements-spec.md
-
-Status updated: ready → completed
-Index: Not tracked (legacy spec)
-```
-
 ## Error Handling
 
 **Spec not found:**
@@ -165,20 +118,10 @@ Index: Not tracked (legacy spec)
 
 Searched in:
 - .agent/specs/todo/
+- .agent/specs/doing/
 - .agent/specs/done/
 
 Please check the spec name/ID and try again.
-```
-
-**Multiple matches:**
-```text
-✗ Error: Multiple specs match "auth"
-
-Found:
-1. .agent/specs/todo/1-auth-improvements/
-2. .agent/specs/done/ef3-auth-refactor-spec.md (legacy)
-
-Please specify the full spec ID or feature name.
 ```
 
 **Target conflict:**

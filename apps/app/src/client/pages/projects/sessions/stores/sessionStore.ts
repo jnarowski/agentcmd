@@ -355,6 +355,7 @@ export interface SessionStore {
   // Permission approval actions
   markPermissionHandled: (toolUseId: string) => void;
   clearHandledPermissions: () => void;
+  clearToolResultError: (toolUseId: string) => void;
 
   // Initialize defaults from user settings
   initializeFromSettings: (settings: { permissionMode?: PermissionMode; agent?: AgentType }) => void;
@@ -704,6 +705,26 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
   // Clear handled permissions when switching sessions
   clearHandledPermissions: () => {
     set({ handledPermissions: new Set<string>() });
+  },
+
+  // Clear tool result error flag (used when user approves permission)
+  clearToolResultError: (toolUseId: string) => {
+    set((state) => ({
+      session: state.session ? {
+        ...state.session,
+        messages: state.session.messages.map((msg: UIMessage) => ({
+          ...msg,
+          content: Array.isArray(msg.content)
+            ? msg.content.map((block: UnifiedContent) => {
+                if (block.type === 'tool_use' && block.id === toolUseId && 'result' in block && block.result) {
+                  return { ...block, result: { ...(block.result as { is_error?: boolean }), is_error: false } };
+                }
+                return block;
+              })
+            : msg.content
+        }))
+      } : null
+    }));
   },
 
   // Initialize defaults from user settings

@@ -32,6 +32,7 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ChatPromptInput } from "./ChatPromptInput";
 import { useSessionStore } from "../stores/sessionStore";
+import { WebSocketProvider } from "@/client/providers/WebSocketProvider";
 
 // Mock navigation hooks (not needed for core behavior, but component imports them)
 vi.mock("@/client/stores/navigationStore", () => ({
@@ -62,7 +63,11 @@ function TestWrapper({ children }: { children: ReactNode }) {
   });
 
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <WebSocketProvider>
+        {children}
+      </WebSocketProvider>
+    </QueryClientProvider>
   );
 }
 

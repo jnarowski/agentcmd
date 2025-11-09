@@ -6,7 +6,7 @@ import {
   type ShellEvent,
 } from '@/shared/types/websocket.types';
 import { isShellEvent } from '@/shared/websocket';
-import { calculateReconnectDelay } from '@/client/utils/reconnectionStrategy';
+import { getReconnectDelay } from '@/client/utils/websocketHandlers';
 
 interface UseShellWebSocketOptions {
   sessionId: string;
@@ -221,8 +221,8 @@ export function useShellWebSocket({
           enabled &&
           reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS
         ) {
+          const delay = getReconnectDelay(reconnectAttemptsRef.current);
           reconnectAttemptsRef.current++;
-          const delay = calculateReconnectDelay(reconnectAttemptsRef.current);
           if (import.meta.env.DEV) {
             console.log(
               `[Shell] Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current}/${MAX_RECONNECT_ATTEMPTS})`

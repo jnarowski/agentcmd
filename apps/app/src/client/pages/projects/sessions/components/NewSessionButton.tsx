@@ -106,8 +106,8 @@ export function NewSessionButton({
         size={isMobile ? "lg" : size}
         className={className || "w-full"}
       >
-        <Plus className="h-4 w-4 mr-2" />
-        New Session
+        <Plus className="h-4 w-4 lg:mr-2" />
+        <span className="hidden lg:inline">New Session</span>
       </Button>
     );
   }
@@ -123,8 +123,8 @@ export function NewSessionButton({
         size={isMobile ? "lg" : size}
         className="flex-1 rounded-r-none"
       >
-        <Plus className="h-4 w-4 mr-2" />
-        New Session
+        <Plus className="h-4 w-4 lg:mr-2" />
+        <span className="hidden lg:inline">New Session</span>
       </Button>
 
       <ButtonGroupSeparator />

@@ -118,7 +118,7 @@ export function ProjectHeader({ projectId, projectName, projectPath, gitCapabili
         </div>
 
         {/* Desktop navigation - tabs */}
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden lg:flex items-center gap-2">
           <nav className="flex gap-2">
             {navItems.map((item) => (
               <NavLink
@@ -143,9 +143,10 @@ export function ProjectHeader({ projectId, projectName, projectPath, gitCapabili
 
         {/* Mobile navigation - dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild className="md:hidden">
+          <DropdownMenuTrigger asChild className="lg:hidden">
             <Button variant="outline" size="sm" className="gap-1">
               <activeNavItem.icon className="h-4 w-4" />
+              <span className="hidden md:inline">{activeNavItem.label}</span>
               <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>

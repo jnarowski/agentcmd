@@ -1,11 +1,19 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, useCallback, type ReactNode } from "react";
 import { toast } from "sonner";
 import { WebSocketEventBus } from "@/client/utils/WebSocketEventBus";
 import { wsMetrics } from "@/client/utils/WebSocketMetrics";
 import {
-  calculateReconnectDelay,
-  DEFAULT_MAX_RECONNECT_DELAY,
-} from "@/client/utils/reconnectionStrategy";
+  bindOpenHandler,
+  bindCloseHandler,
+  bindMessageHandler,
+  bindErrorHandler,
+  clearReconnectTimeout,
+  clearConnectionTimeout,
+} from "@/client/utils/websocketHandlers";
+import {
+  startHeartbeat as startHeartbeatMonitoring,
+  stopHeartbeat as stopHeartbeatMonitoring,
+} from "@/client/utils/websocketHeartbeat";
 import { ReadyState, GlobalEventTypes, type ChannelEvent, type GlobalEvent } from "@/shared/types/websocket.types";
 import { useAuthStore } from "@/client/stores/authStore";
 import {
@@ -31,22 +39,11 @@ export interface WebSocketProviderProps {
 const MAX_QUEUE_SIZE = 100;
 
 /**
- * Heartbeat ping interval (30 seconds)
- */
-const HEARTBEAT_INTERVAL = 30000;
-
-/**
- * Heartbeat pong timeout (5 seconds)
- * If no pong received within this time, reconnect
- */
-const HEARTBEAT_TIMEOUT = 5000;
-
-/**
  * WebSocketProvider
  *
  * Manages a single global WebSocket connection following Phoenix Channels pattern.
  * - Channel-based subscriptions via EventBus
- * - Heartbeat system (ping/pong every 30s)
+ * - Heartbeat system (interval-based checking, not ping/pong)
  * - Automatic reconnection with exponential backoff
  * - Queue limits and reconnection caps
  * - Error toasts and metrics tracking
@@ -68,64 +65,39 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
   // Connection state
   const [readyState, setReadyState] = useState<ReadyState>(ReadyState.CLOSED);
   const [isReady, setIsReady] = useState(false);
-  const [connectionAttempts, setConnectionAttempts] = useState(0);
 
-  // Reconnection state
-  const reconnectAttemptsRef = useRef(0);
+  // Reconnection state - single source of truth
+  const reconnectAttemptRef = useRef(0);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const intentionalCloseRef = useRef(false);
   const connectionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Heartbeat state
+  // Heartbeat state - interval-based checking
   const heartbeatIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const heartbeatTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastPingTimestampRef = useRef<number>(0);
+  const lastMessageTimeRef = useRef<number>(Date.now());
 
   const isConnected = readyState === ReadyState.OPEN && isReady;
 
   /**
-   * Start heartbeat system (ping every 30s, expect pong within 5s)
+   * Start heartbeat monitoring
    */
   const startHeartbeat = () => {
-    // Clear any existing heartbeat
-    stopHeartbeat();
+    stopHeartbeatMonitoring(heartbeatIntervalRef);
 
-    heartbeatIntervalRef.current = setInterval(() => {
-      if (socketRef.current?.readyState === WebSocket.OPEN && isReady) {
-        const timestamp = Date.now();
-        lastPingTimestampRef.current = timestamp;
-
-        sendMessage(Channels.global(), {
-          type: GlobalEventTypes.PING,
-          data: { timestamp },
-        });
-
-        // Set timeout for pong response
-        heartbeatTimeoutRef.current = setTimeout(() => {
-          console.warn(
-            "[WebSocket] Heartbeat timeout - no pong received, reconnecting"
-          );
-          // Reconnect if no pong received
-          if (socketRef.current) {
-            socketRef.current.close();
-          }
-        }, HEARTBEAT_TIMEOUT);
-      }
-    }, HEARTBEAT_INTERVAL);
+    if (socketRef.current) {
+      startHeartbeatMonitoring({
+        socket: socketRef.current,
+        lastMessageTimeRef,
+        heartbeatIntervalRef,
+      });
+    }
   };
 
   /**
-   * Stop heartbeat system
+   * Stop heartbeat monitoring
    */
   const stopHeartbeat = () => {
-    if (heartbeatIntervalRef.current) {
-      clearInterval(heartbeatIntervalRef.current);
-      heartbeatIntervalRef.current = null;
-    }
-    if (heartbeatTimeoutRef.current) {
-      clearTimeout(heartbeatTimeoutRef.current);
-      heartbeatTimeoutRef.current = null;
-    }
+    stopHeartbeatMonitoring(heartbeatIntervalRef);
   };
 
   /**
@@ -135,7 +107,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     console.log("[WebSocket] 🔌 connect() called", {
       hasToken: !!token,
       currentState: readyState,
-      reconnectAttempts: reconnectAttemptsRef.current,
+      reconnectAttempts: reconnectAttemptRef.current,
     });
 
     // Don't connect if no token (user not logged in)
@@ -148,6 +120,10 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     if (socketRef.current) {
       console.log("[WebSocket] 🔄 Closing existing connection before reconnect");
       intentionalCloseRef.current = true;
+
+      // Clear any pending reconnection timeout
+      clearReconnectTimeout(reconnectTimeoutRef);
+
       socketRef.current.close();
       socketRef.current = null;
     }
@@ -164,17 +140,13 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
         (isDev ? "localhost:3456" : window.location.host);
       const wsUrl = `${wsProtocol}//${wsHost}/ws?token=${token}`;
 
-      // Increment connection attempts
-      setConnectionAttempts((prev) => prev + 1);
-
       console.log("[WebSocket] 🌐 Creating new WebSocket connection:", {
         isDev,
         wsHost,
         protocol: wsProtocol,
         override: import.meta.env.VITE_WS_HOST,
         url: wsUrl.replace(token, "***"),
-        totalAttempts: connectionAttempts + 1,
-        reconnectAttempt: reconnectAttemptsRef.current,
+        reconnectAttempt: reconnectAttemptRef.current,
       });
 
       const socket = new WebSocket(wsUrl);
@@ -192,26 +164,36 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
         }
       }, 10000);
 
-      // Handle connection open
-      socket.onopen = () => {
-        // Clear connection timeout
-        if (connectionTimeoutRef.current) {
-          clearTimeout(connectionTimeoutRef.current);
-          connectionTimeoutRef.current = null;
-        }
-
-        if (import.meta.env.DEV) {
-          console.log("[WebSocket] ✓ Socket opened (readyState = OPEN)");
-          console.log(
-            "[WebSocket] ⏳ Waiting for global.connected message from server..."
-          );
-        }
-        setReadyState(ReadyState.OPEN);
-        // Note: We wait for 'global.connected' message before setting isReady
+      // Bind handlers using extracted functions
+      const handlerParams = {
+        socket,
+        eventBus: eventBusRef.current,
+        reconnectAttemptRef,
+        reconnectTimeoutRef,
+        connectionTimeoutRef,
+        lastMessageTimeRef,
+        intentionalCloseRef,
+        setReadyState,
+        setIsReady,
+        onStartHeartbeat: startHeartbeat,
+        onStopHeartbeat: stopHeartbeat,
+        onReconnect: connect,
+        onReconnectStop: () => {
+          // Called when max reconnection attempts reached
+          // No action needed - handler already emits error event
+        },
       };
 
+      socket.onopen = bindOpenHandler(handlerParams);
+      socket.onerror = bindErrorHandler(handlerParams);
+      socket.onclose = bindCloseHandler(handlerParams);
+
       // Handle incoming messages
+      const baseMessageHandler = bindMessageHandler(handlerParams);
       socket.onmessage = (event) => {
+        // Update last message time
+        baseMessageHandler();
+
         try {
           const rawMessage = JSON.parse(event.data);
 
@@ -258,9 +240,8 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
               );
             }
             setIsReady(true);
-            reconnectAttemptsRef.current = 0; // Reset reconnect attempts on successful connection
 
-            // Start heartbeat system
+            // Start heartbeat monitoring
             startHeartbeat();
 
             // Flush queued messages
@@ -279,142 +260,10 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
             });
           }
 
-          // Handle pong response
-          if (type === GlobalEventTypes.PONG && channel === "global") {
-            // Clear pong timeout
-            if (heartbeatTimeoutRef.current) {
-              clearTimeout(heartbeatTimeoutRef.current);
-              heartbeatTimeoutRef.current = null;
-            }
-
-            // Calculate and track latency
-            const latency = Date.now() - lastPingTimestampRef.current;
-            wsMetrics.trackLatency(latency);
-
-            if (import.meta.env.DEV) {
-              console.log("[WebSocket] Pong received, latency:", latency, "ms");
-            }
-          }
-
           // Emit event to EventBus (channel-based)
           eventBusRef.current.emit(channel, { type, data });
         } catch (error) {
           console.error("[WebSocket] Failed to parse message:", error);
-        }
-      };
-
-      // Handle errors
-      socket.onerror = (error) => {
-        console.error("[WebSocket] Error:", error);
-        eventBusRef.current.emit(Channels.global(), {
-          type: GlobalEventTypes.ERROR,
-          data: {
-            error: "WebSocket error occurred",
-            timestamp: Date.now(),
-          },
-        });
-      };
-
-      // Handle connection close
-      socket.onclose = (event) => {
-        // Stop heartbeat on close
-        stopHeartbeat();
-
-        console.log("[WebSocket] ❌ Connection closed", {
-          code: event.code,
-          reason: event.reason,
-          wasClean: event.wasClean,
-          intentionalClose: intentionalCloseRef.current,
-          reconnectAttempts: reconnectAttemptsRef.current,
-        });
-
-        setReadyState(ReadyState.CLOSED);
-        setIsReady(false);
-        socketRef.current = null;
-
-        // Handle specific close codes
-        if (event.code === 1008) {
-          // 1008 = Policy Violation (typically auth failure)
-          console.error("[WebSocket] Authentication failed");
-          eventBusRef.current.emit(Channels.global(), {
-            type: GlobalEventTypes.ERROR,
-            data: {
-              error: "Authentication failed",
-              message: "Invalid or expired token",
-              timestamp: Date.now(),
-            },
-          });
-
-          toast.error("Authentication failed", {
-            description: "Invalid or expired token. Please log in again.",
-          });
-          return; // Don't attempt to reconnect
-        }
-
-        console.log("[WebSocket] 🔍 Reconnection check:", {
-          intentionalClose: intentionalCloseRef.current,
-          currentAttempts: reconnectAttemptsRef.current,
-          willReconnect: !intentionalCloseRef.current && reconnectAttemptsRef.current < 5,
-        });
-
-        // Attempt reconnection if not intentional close
-        if (!intentionalCloseRef.current && reconnectAttemptsRef.current < 5) {
-          reconnectAttemptsRef.current++; // Increment BEFORE scheduling timeout
-          const attemptNumber = reconnectAttemptsRef.current;
-
-          const delay = calculateReconnectDelay(
-            attemptNumber - 1, // Use previous attempt count for delay calculation
-            undefined,
-            DEFAULT_MAX_RECONNECT_DELAY
-          );
-
-          console.log(
-            `[WebSocket] 🔄 Scheduling reconnect attempt ${attemptNumber}/5 in ${delay}ms`
-          );
-
-          reconnectTimeoutRef.current = setTimeout(() => {
-            wsMetrics.trackReconnection();
-
-            console.log(
-              `[WebSocket] ▶️ Executing reconnect attempt ${attemptNumber}/5`
-            );
-            connect();
-          }, delay);
-        } else if (
-          !intentionalCloseRef.current &&
-          reconnectAttemptsRef.current >= 5
-        ) {
-          console.error(
-            "[WebSocket] ⛔ Max reconnection attempts reached:",
-            reconnectAttemptsRef.current
-          );
-
-          const errorData = {
-            error: "Connection lost",
-            message: "Maximum reconnection attempts reached",
-            timestamp: Date.now(),
-          };
-
-          eventBusRef.current.emit(Channels.global(), {
-            type: GlobalEventTypes.ERROR,
-            data: errorData,
-          });
-
-          toast.error("Connection lost", {
-            description:
-              "Maximum reconnection attempts reached. Click to retry.",
-            action: {
-              label: "Retry",
-              onClick: () => reconnect(),
-            },
-          });
-
-          // Reset intentional close flag after all reconnection attempts exhausted
-          intentionalCloseRef.current = false;
-        } else if (intentionalCloseRef.current) {
-          console.log("[WebSocket] ⏸️ Intentional close, not reconnecting");
-          // Reset intentional close flag for next connection attempt
-          intentionalCloseRef.current = false;
         }
       };
     } catch (error) {
@@ -474,18 +323,16 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
   /**
    * Manually trigger reconnection (resets attempt counter)
    */
-  const reconnect = () => {
+  const reconnect = useCallback(() => {
     console.log("[WebSocket] 🔄 Manual reconnect triggered");
-    reconnectAttemptsRef.current = 0;
+    reconnectAttemptRef.current = 0;
 
     // Clear any pending reconnect timeout
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-      reconnectTimeoutRef.current = null;
-    }
+    clearReconnectTimeout(reconnectTimeoutRef);
 
     connect();
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // connect() is stable within component lifecycle
 
   /**
    * Subscribe to global errors and show toasts
@@ -498,7 +345,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
         const { error } = event.data;
 
         // Only show retry button if we haven't exhausted reconnection attempts
-        if (reconnectAttemptsRef.current < 5) {
+        if (reconnectAttemptRef.current < 5) {
           toast.error("WebSocket Error", {
             description:
               error || "An error occurred with the WebSocket connection",
@@ -544,14 +391,8 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
       stopHeartbeat();
 
       // Clear all timeouts
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-        reconnectTimeoutRef.current = null;
-      }
-      if (connectionTimeoutRef.current) {
-        clearTimeout(connectionTimeoutRef.current);
-        connectionTimeoutRef.current = null;
-      }
+      clearReconnectTimeout(reconnectTimeoutRef);
+      clearConnectionTimeout(connectionTimeoutRef);
 
       if (socketRef.current) {
         const socket = socketRef.current;
@@ -594,7 +435,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     readyState,
     isConnected,
     isReady,
-    connectionAttempts,
+    reconnectAttempt: reconnectAttemptRef.current,
     eventBus: eventBusRef.current,
     reconnect,
   };

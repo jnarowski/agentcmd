@@ -15,7 +15,7 @@ import { Skeleton } from "@/client/components/ui/skeleton";
  */
 export default function WorkflowLayout() {
   const { projectId } = useParams<{ projectId: string }>();
-  const { readyState, connectionAttempts, reconnect } = useWebSocket();
+  const { readyState, reconnectAttempt, reconnect } = useWebSocket();
   const { data: projects, isLoading } = useProjectsWithSessions();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
@@ -61,7 +61,7 @@ export default function WorkflowLayout() {
         <div className="flex flex-col h-screen overflow-hidden">
           <ConnectionStatusBanner
             readyState={readyState}
-            connectionAttempts={connectionAttempts}
+            reconnectAttempt={reconnectAttempt}
             onReconnect={reconnect}
           />
 

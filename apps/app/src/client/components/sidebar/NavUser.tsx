@@ -2,11 +2,6 @@ import { useState } from "react";
 import { ChevronsUpDown, LogOut, Settings } from "lucide-react";
 
 import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/client/components/ui/avatar";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -21,27 +16,8 @@ import {
   useSidebar,
 } from "@/client/components/ui/sidebar";
 import { SettingsDialog } from "@/client/components/SettingsDialog";
-import packageJson from "../../../../package.json";
-
-/**
- * Get the first two initials from a user's name or username
- * @param name - The user's full name or username
- * @returns Two uppercase initials (e.g., "JD" for "John Doe", "JN" for "jnarowski")
- */
-function getInitials(name: string): string {
-  const trimmed = name.trim();
-  if (!trimmed) return "??";
-
-  const parts = trimmed.split(/\s+/);
-
-  if (parts.length === 1) {
-    // Single name - take first two characters
-    return parts[0].slice(0, 2).toUpperCase();
-  }
-
-  // Multiple names - take first character of first two parts
-  return (parts[0][0] + parts[1][0]).toUpperCase();
-}
+import { useWebSocket } from "@/client/hooks/useWebSocket";
+import { ReadyState } from "@/shared/types/websocket.types";
 
 export function NavUser({
   user,
@@ -55,8 +31,22 @@ export function NavUser({
   onLogout?: () => void;
 }) {
   const { isMobile } = useSidebar();
-  const initials = getInitials(user.name);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { isConnected, readyState, reconnectAttempt } = useWebSocket();
+
+  const getStatusColor = () => {
+    if (isConnected) return "bg-green-500";
+    if (readyState === ReadyState.CONNECTING || reconnectAttempt > 0)
+      return "bg-yellow-500";
+    return "bg-red-500";
+  };
+
+  const getStatusText = () => {
+    if (isConnected) return "CONNECTED";
+    if (reconnectAttempt > 0) return `RECONNECTING... (${reconnectAttempt}/5)`;
+    if (readyState === ReadyState.CONNECTING) return "CONNECTING...";
+    return "DISCONNECTED";
+  };
 
   return (
     <>
@@ -68,15 +58,16 @@ export function NavUser({
                 size="lg"
                 className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
               >
-                <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.name}</span>
-                  <span className="truncate text-xs">{user.email}</span>
+                <div className="flex items-center gap-3 flex-1">
+                  <div
+                    className={`h-3 w-3 rounded-full ${getStatusColor()} transition-colors flex-shrink-0 ml-0.5`}
+                  />
+                  <div className="grid flex-1 text-left text-sm leading-tight min-w-0">
+                    <span className="truncate text-sm">{user.email}</span>
+                    <span className="truncate text-[10px] text-muted-foreground">
+                      {getStatusText()}
+                    </span>
+                  </div>
                 </div>
                 <ChevronsUpDown className="ml-auto size-4" />
               </SidebarMenuButton>
@@ -88,16 +79,15 @@ export function NavUser({
               sideOffset={4}
             >
               <DropdownMenuLabel className="p-0 font-normal">
-                <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                  <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarImage src={user.avatar} alt={user.name} />
-                    <AvatarFallback className="rounded-lg">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-medium">{user.name}</span>
-                    <span className="truncate text-xs">{user.email}</span>
+                <div className="flex items-center gap-3 px-1 py-1.5 text-left text-sm">
+                  <div
+                    className={`h-3 w-3 rounded-full ${getStatusColor()} transition-colors flex-shrink-0 ml-0.5`}
+                  />
+                  <div className="flex flex-col gap-1 flex-1 min-w-0">
+                    <span className="truncate text-sm">{user.email}</span>
+                    <span className="truncate text-[10px] text-muted-foreground">
+                      {getStatusText()}
+                    </span>
                   </div>
                 </div>
               </DropdownMenuLabel>
@@ -106,10 +96,6 @@ export function NavUser({
                 <Settings />
                 Settings
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <div className="px-2 py-1.5 text-xs text-muted-foreground">
-                v{packageJson.version}
-              </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onLogout}>
                 <LogOut />

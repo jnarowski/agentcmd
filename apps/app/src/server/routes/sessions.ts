@@ -3,6 +3,7 @@
 import type { FastifyInstance } from "fastify";
 import {
   getSessionsByProject,
+  getSessionById,
   getSessionMessages,
   createSession,
   syncProjectSessions,
@@ -58,6 +59,43 @@ export async function sessionRoutes(fastify: FastifyInstance) {
       });
 
       return reply.send({ data: sessions });
+    }
+  );
+
+  /**
+   * GET /api/projects/:id/sessions/:sessionId
+   * Get single session metadata
+   */
+  fastify.get<{
+    Params: { id: string; sessionId: string };
+  }>(
+    "/api/projects/:id/sessions/:sessionId",
+    {
+      preHandler: fastify.authenticate,
+    },
+    async (request, reply) => {
+      const userId = request.user?.id;
+      if (!userId) {
+        return reply.code(401).send(buildErrorResponse(401, "Unauthorized"));
+      }
+
+      request.log.info({
+        sessionId: request.params.sessionId,
+        projectId: request.params.id,
+        userId
+      }, 'Getting session by ID');
+
+      const session = await getSessionById({
+        sessionId: request.params.sessionId,
+        projectId: request.params.id,
+        userId,
+      });
+
+      if (!session) {
+        return reply.code(404).send(buildErrorResponse(404, "Session not found"));
+      }
+
+      return reply.send({ data: session });
     }
   );
 

@@ -93,9 +93,9 @@ describe('ProjectSyncService', () => {
       );
       await fs.mkdir(projectDir, { recursive: true });
 
-      // Create 1 JSONL file
+      // Create 1 JSONL file with valid content
       const sessionFile = path.join(projectDir, 'session-1.jsonl');
-      await fs.writeFile(sessionFile, JSON.stringify({ type: 'user', message: {} }));
+      await fs.writeFile(sessionFile, JSON.stringify({ type: 'user', message: { content: 'Hello' } }));
 
       const hasEnough = await hasEnoughSessions({ projectName });
 
@@ -112,10 +112,10 @@ describe('ProjectSyncService', () => {
       );
       await fs.mkdir(projectDir, { recursive: true });
 
-      // Create exactly 3 JSONL files
+      // Create exactly 3 JSONL files with valid content
       for (let i = 1; i <= 3; i++) {
         const sessionFile = path.join(projectDir, `session-${i}.jsonl`);
-        await fs.writeFile(sessionFile, JSON.stringify({ type: 'user', message: {} }));
+        await fs.writeFile(sessionFile, JSON.stringify({ type: 'user', message: { content: `Message ${i}` } }));
       }
 
       const hasEnough = await hasEnoughSessions({ projectName });
@@ -133,10 +133,10 @@ describe('ProjectSyncService', () => {
       );
       await fs.mkdir(projectDir, { recursive: true });
 
-      // Create 4 JSONL files
+      // Create 4 JSONL files with valid content
       for (let i = 1; i <= 4; i++) {
         const sessionFile = path.join(projectDir, `session-${i}.jsonl`);
-        await fs.writeFile(sessionFile, JSON.stringify({ type: 'user', message: {} }));
+        await fs.writeFile(sessionFile, JSON.stringify({ type: 'user', message: { content: `Message ${i}` } }));
       }
 
       const hasEnough = await hasEnoughSessions({ projectName });
@@ -154,10 +154,10 @@ describe('ProjectSyncService', () => {
       );
       await fs.mkdir(projectDir, { recursive: true });
 
-      // Create 10 JSONL files
+      // Create 10 JSONL files with valid content
       for (let i = 1; i <= 10; i++) {
         const sessionFile = path.join(projectDir, `session-${i}.jsonl`);
-        await fs.writeFile(sessionFile, JSON.stringify({ type: 'user', message: {} }));
+        await fs.writeFile(sessionFile, JSON.stringify({ type: 'user', message: { content: `Message ${i}` } }));
       }
 
       const hasEnough = await hasEnoughSessions({ projectName });
@@ -175,9 +175,9 @@ describe('ProjectSyncService', () => {
       );
       await fs.mkdir(projectDir, { recursive: true });
 
-      // Create 2 JSONL files
-      await fs.writeFile(path.join(projectDir, 'session-1.jsonl'), '{}');
-      await fs.writeFile(path.join(projectDir, 'session-2.jsonl'), '{}');
+      // Create 2 JSONL files with valid content
+      await fs.writeFile(path.join(projectDir, 'session-1.jsonl'), JSON.stringify({ type: 'user', message: { content: 'Test 1' } }));
+      await fs.writeFile(path.join(projectDir, 'session-2.jsonl'), JSON.stringify({ type: 'user', message: { content: 'Test 2' } }));
 
       // Create other files that should be ignored
       await fs.writeFile(path.join(projectDir, 'README.md'), 'test');
@@ -236,11 +236,11 @@ describe('ProjectSyncService', () => {
       );
       await fs.mkdir(projectDir, { recursive: true });
 
-      // Create 4 files with "agent" in middle/end (should be accepted)
-      await fs.writeFile(path.join(projectDir, 'my-agent-session.jsonl'), '{}');
-      await fs.writeFile(path.join(projectDir, 'session-agent.jsonl'), '{}');
-      await fs.writeFile(path.join(projectDir, 'agent.jsonl'), '{}'); // doesn't start with "agent-"
-      await fs.writeFile(path.join(projectDir, 'session-123.jsonl'), '{}');
+      // Create 4 files with "agent" in middle/end (should be accepted) with valid content
+      await fs.writeFile(path.join(projectDir, 'my-agent-session.jsonl'), JSON.stringify({ type: 'user', message: { content: 'Test 1' } }));
+      await fs.writeFile(path.join(projectDir, 'session-agent.jsonl'), JSON.stringify({ type: 'user', message: { content: 'Test 2' } }));
+      await fs.writeFile(path.join(projectDir, 'agent.jsonl'), JSON.stringify({ type: 'user', message: { content: 'Test 3' } })); // doesn't start with "agent-"
+      await fs.writeFile(path.join(projectDir, 'session-123.jsonl'), JSON.stringify({ type: 'user', message: { content: 'Test 4' } }));
 
       const hasEnough = await hasEnoughSessions({ projectName });
 
@@ -258,19 +258,119 @@ describe('ProjectSyncService', () => {
       );
       await fs.mkdir(projectDir, { recursive: true });
 
-      // Create 2 valid files
-      await fs.writeFile(path.join(projectDir, 'session-1.jsonl'), '{}');
-      await fs.writeFile(path.join(projectDir, 'session-2.jsonl'), '{}');
+      // Create 2 valid files with content
+      await fs.writeFile(path.join(projectDir, 'session-1.jsonl'), JSON.stringify({ type: 'user', message: { content: 'Test 1' } }));
+      await fs.writeFile(path.join(projectDir, 'session-2.jsonl'), JSON.stringify({ type: 'user', message: { content: 'Test 2' } }));
 
       // Create 10 agent- prefixed files (should all be ignored)
       for (let i = 1; i <= 10; i++) {
-        await fs.writeFile(path.join(projectDir, `agent-${i}.jsonl`), '{}');
+        await fs.writeFile(path.join(projectDir, `agent-${i}.jsonl`), JSON.stringify({ type: 'user', message: { content: `Agent ${i}` } }));
       }
 
       const hasEnough = await hasEnoughSessions({ projectName, minSessions: 3 });
 
       // Should be false because only 2 valid files (needs >3)
       expect(hasEnough).toBe(false);
+    });
+
+    it('should exclude sessions with only /clear command', async () => {
+      const projectName = '-Users-test-clear-only';
+      const projectDir = path.join(
+        testHomeDir,
+        '.claude',
+        'projects',
+        projectName
+      );
+      await fs.mkdir(projectDir, { recursive: true });
+
+      // Create 3 valid sessions
+      for (let i = 1; i <= 3; i++) {
+        const sessionFile = path.join(projectDir, `valid-session-${i}.jsonl`);
+        await fs.writeFile(sessionFile, JSON.stringify({ type: 'user', message: { content: `Message ${i}` } }));
+      }
+
+      // Create 2 /clear-only sessions (should be excluded)
+      const clearSession1 = path.join(projectDir, 'clear-session-1.jsonl');
+      await fs.writeFile(clearSession1, JSON.stringify({
+        type: 'user',
+        message: { content: '<command-name>/clear</command-name>\n<command-message>clear</command-message>\n<command-args></command-args>' }
+      }));
+
+      const clearSession2 = path.join(projectDir, 'clear-session-2.jsonl');
+      await fs.writeFile(clearSession2, JSON.stringify({
+        type: 'user',
+        message: { content: '<command-name>/clear</command-name>\n<command-message>clear</command-message>' }
+      }));
+
+      const hasEnough = await hasEnoughSessions({ projectName });
+
+      // Should be false because only 3 valid sessions (not >3)
+      // /clear sessions should be excluded from count
+      expect(hasEnough).toBe(false);
+    });
+
+    it('should exclude sessions with only system messages', async () => {
+      const projectName = '-Users-test-system-only';
+      const projectDir = path.join(
+        testHomeDir,
+        '.claude',
+        'projects',
+        projectName
+      );
+      await fs.mkdir(projectDir, { recursive: true });
+
+      // Create 4 valid sessions
+      for (let i = 1; i <= 4; i++) {
+        const sessionFile = path.join(projectDir, `valid-session-${i}.jsonl`);
+        await fs.writeFile(sessionFile, JSON.stringify({ type: 'user', message: { content: `Message ${i}` } }));
+      }
+
+      // Create sessions with only system messages (should be excluded)
+      const systemSession1 = path.join(projectDir, 'system-session-1.jsonl');
+      await fs.writeFile(systemSession1, JSON.stringify({
+        type: 'user',
+        message: { content: 'Caveat: The messages below were generated by the user...' }
+      }));
+
+      const systemSession2 = path.join(projectDir, 'system-session-2.jsonl');
+      await fs.writeFile(systemSession2, JSON.stringify({
+        type: 'user',
+        message: { content: '<local-command-stdout>output</local-command-stdout>' }
+      }));
+
+      const hasEnough = await hasEnoughSessions({ projectName });
+
+      // Should be true because 4 valid sessions (>3)
+      // System-only sessions should be excluded from count
+      expect(hasEnough).toBe(true);
+    });
+
+    it('should count sessions with real content plus /clear command', async () => {
+      const projectName = '-Users-test-mixed-clear';
+      const projectDir = path.join(
+        testHomeDir,
+        '.claude',
+        'projects',
+        projectName
+      );
+      await fs.mkdir(projectDir, { recursive: true });
+
+      // Create 4 sessions with real user messages AND /clear commands
+      for (let i = 1; i <= 4; i++) {
+        const sessionFile = path.join(projectDir, `session-${i}.jsonl`);
+        // Multiple lines in JSONL format
+        const line1 = JSON.stringify({ type: 'user', message: { content: `Real message ${i}` } });
+        const line2 = JSON.stringify({
+          type: 'user',
+          message: { content: '<command-name>/clear</command-name>' }
+        });
+        await fs.writeFile(sessionFile, `${line1}\n${line2}`);
+      }
+
+      const hasEnough = await hasEnoughSessions({ projectName });
+
+      // Should be true because 4 valid sessions with real content (>3)
+      expect(hasEnough).toBe(true);
     });
   });
 

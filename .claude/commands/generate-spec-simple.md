@@ -30,11 +30,7 @@ Generate a well-structured implementation spec and save it to `.agent/specs/todo
 
 1. **Get Next ID from Index**:
    - Read `.agent/specs/index.json`
-   - If missing or corrupt, auto-heal:
-     - Scan `.agent/specs/**/*` for numeric IDs in folder names
-     - Extract all numeric IDs from folders matching pattern `[0-9]+-*`
-     - Set `lastId = max(numeric IDs) || 0`
-     - Rebuild index with found specs
+   - Get `lastId` from index
    - Calculate `newId = lastId + 1`
 
 2. **Normalize Feature Name**:
@@ -96,7 +92,6 @@ Specs follow this workflow:
 1. **Created in `todo/`** (Status: "draft") - Use `/generate-spec-simple`
 2. **Auto-moved to `doing/`** (Status: "in-progress") - When running `/implement-spec`
 3. **Moved to `done/`** (Status: "completed") - After review passes, use `/move-spec {id} done`
-4. **Optionally archived** - Use `/prune-specs` to move old specs from `done/` → `archived/`
 
 ## Template
 

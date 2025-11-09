@@ -21,6 +21,8 @@ import { WebSearchToolRenderer } from "./WebSearchToolRenderer";
 interface ToolInputRendererProps {
   toolName: string;
   input: Record<string, unknown>;
+  toolUseId?: string;
+  onApprove?: (toolUseId: string) => void;
 }
 
 /**
@@ -38,7 +40,7 @@ interface ToolInputRendererProps {
  *   return <MyToolRenderer input={input as MyToolInput} />;
  * ```
  */
-export function ToolInputRenderer({ toolName, input }: ToolInputRendererProps) {
+export function ToolInputRenderer({ toolName, input, toolUseId, onApprove }: ToolInputRendererProps) {
   switch (toolName) {
     case "Edit":
       return <EditToolRenderer input={input as unknown as EditToolInput} />;
@@ -50,7 +52,9 @@ export function ToolInputRenderer({ toolName, input }: ToolInputRendererProps) {
       return <ReadToolRenderer input={input as unknown as ReadToolInput} />;
 
     case "Bash":
-      return <BashToolRenderer input={input as unknown as BashToolInput} />;
+      return toolUseId ? (
+        <BashToolRenderer input={input as unknown as BashToolInput} toolUseId={toolUseId} onApprove={onApprove} />
+      ) : null;
 
     case "TodoWrite":
       return <TodoWriteToolRenderer input={input as unknown as TodoWriteToolInput} />;

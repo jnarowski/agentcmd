@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import { getClaudeProjectsDir } from "@/server/utils/path";
 import type { HasEnoughSessionsOptions } from "@/server/domain/project/types/HasEnoughSessionsOptions";
+import { parseJSONLFile } from "@/server/domain/session/services/parseJSONLFile";
 
 /**
  * Check if a file is a valid session file
@@ -15,6 +16,7 @@ function isValidSessionFile(filename: string): boolean {
 
 /**
  * Check if a project directory has more than minSessions sessions
+ * Validates session content to exclude blank/system-only sessions
  * @param options - Options object with projectName and minSessions
  * @returns True if project has more than minSessions
  */
@@ -26,8 +28,20 @@ export async function hasEnoughSessions({ projectName, minSessions = 3 }: HasEno
     const files = await fs.readdir(projectDir);
     const jsonlFiles = files.filter(isValidSessionFile);
 
-    // Check if project has more than minSessions sessions
-    return jsonlFiles.length > minSessions;
+    // Validate session content - only count sessions that pass validation
+    let validSessionCount = 0;
+    for (const file of jsonlFiles) {
+      try {
+        const filePath = path.join(projectDir, file);
+        await parseJSONLFile({ filePath });
+        validSessionCount++;
+      } catch {
+        // Skip sessions that fail validation (blank/system-only)
+      }
+    }
+
+    // Check if project has more than minSessions valid sessions
+    return validSessionCount > minSessions;
   } catch {
     return false;
   }

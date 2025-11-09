@@ -3,7 +3,7 @@ import { ReadyState } from "@/shared/types/websocket.types";
 
 interface ConnectionStatusBannerProps {
   readyState: ReadyState;
-  connectionAttempts: number;
+  reconnectAttempt: number;
   onReconnect: () => void;
 }
 
@@ -16,7 +16,7 @@ interface ConnectionStatusBannerProps {
  */
 export function ConnectionStatusBanner({
   readyState,
-  connectionAttempts,
+  reconnectAttempt,
   onReconnect,
 }: ConnectionStatusBannerProps) {
   // Debounce showing "Disconnected" state to prevent flashing during hot reload
@@ -39,27 +39,17 @@ export function ConnectionStatusBanner({
     return () => clearTimeout(timer);
   }, [readyState]);
 
-  // Detect if auto-reconnection is in progress
-  const isReconnecting =
-    readyState === ReadyState.CONNECTING && connectionAttempts > 1;
-
   // Determine connection status message
   const getConnectionStatus = () => {
-    if (readyState === ReadyState.CONNECTING && isReconnecting) {
-      // Auto-reconnection in progress
-      const attemptNumber = connectionAttempts - 1;
-      const isFirstReconnect = attemptNumber === 1;
+    // Show "Reconnecting... (X/5)" when reconnectAttempt > 0 and connecting
+    if (reconnectAttempt > 0 && readyState === ReadyState.CONNECTING) {
       return {
-        message: isFirstReconnect
-          ? `Connecting (${attemptNumber}/5)`
-          : `Reconnecting... (${Math.min(attemptNumber, 5)}/5)`,
+        message: `Reconnecting... (${reconnectAttempt}/5)`,
         showReconnect: true,
       };
-    } else if (
-      (readyState === ReadyState.CLOSING || readyState === ReadyState.CLOSED) &&
-      showDisconnected
-    ) {
-      // Disconnected state (only shown after debounce)
+    }
+    // Show "Disconnected" when reconnectAttempt >= 5 and closed
+    if (reconnectAttempt >= 5 && readyState === ReadyState.CLOSED && showDisconnected) {
       return {
         message: "Disconnected",
         showReconnect: true,

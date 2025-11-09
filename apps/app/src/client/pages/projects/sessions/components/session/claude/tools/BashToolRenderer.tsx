@@ -3,6 +3,7 @@
  */
 
 import { useState } from "react";
+import { ToolResultRenderer } from "@/client/pages/projects/sessions/components/session/claude/tools/ToolResultRenderer";
 import type { BashToolInput } from "@/shared/types/tool.types";
 import type { UnifiedImageBlock } from 'agent-cli-sdk';
 
@@ -12,11 +13,13 @@ interface BashToolRendererProps {
     content: string | UnifiedImageBlock;
     is_error?: boolean;
   };
+  toolUseId: string;
+  onApprove?: (toolUseId: string) => void;
 }
 
 const MAX_LINES_PREVIEW = 3;
 
-export function BashToolRenderer({ input, result }: BashToolRendererProps) {
+export function BashToolRenderer({ input, result, toolUseId, onApprove }: BashToolRendererProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // For bash results, we only expect strings (not images)
@@ -28,6 +31,11 @@ export function BashToolRenderer({ input, result }: BashToolRendererProps) {
   const displayContent = shouldTruncate && !isExpanded
     ? outputLines.slice(0, MAX_LINES_PREVIEW).join("\n")
     : resultContent;
+
+  // Check if this is a permission denial
+  const isPermissionDenial = result?.is_error &&
+    typeof result.content === 'string' &&
+    result.content.includes('requested permissions');
 
   return (
     <div className="rounded-lg bg-muted/50 p-3 text-xs font-mono">
@@ -42,8 +50,20 @@ export function BashToolRenderer({ input, result }: BashToolRendererProps) {
       {/* Divider */}
       {result && <div className="border-t border-border my-2" />}
 
-      {/* OUT section - only show if result exists */}
+      {/* Always render ToolResultRenderer - it returns null if not permission denial */}
       {result && (
+        <ToolResultRenderer
+          toolUseId={toolUseId}
+          toolName="Bash"
+          input={input as unknown as Record<string, unknown>}
+          result={result.content}
+          isError={result.is_error}
+          onApprove={onApprove}
+        />
+      )}
+
+      {/* OUT section - only show if result exists AND not permission denial */}
+      {result && !isPermissionDenial && (
         <div className="flex gap-3 relative">
           <span className="text-muted-foreground font-semibold flex-shrink-0 w-8">
             OUT

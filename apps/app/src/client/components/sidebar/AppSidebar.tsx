@@ -5,7 +5,7 @@ import {
 } from "@/client/components/ui/sidebar";
 import { AppSidebarHeader } from "./SidebarHeader";
 import { SidebarTabs } from "./SidebarTabs";
-import { NavUser } from "./nav-user";
+import { NavUser } from "./NavUser";
 import { useAuthStore } from "@/client/stores/authStore";
 
 interface AppSidebarProps {

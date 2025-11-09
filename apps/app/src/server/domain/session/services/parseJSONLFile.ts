@@ -27,10 +27,12 @@ export async function parseJSONLFile({
         // Count messages (check both 'type' for Claude CLI format and 'role' for API format)
         // Filter out system messages to match frontend display
         const isMessage = entry.type === 'user' || entry.type === 'assistant' || entry.role === 'user' || entry.role === 'assistant';
+
+        // Check if this message contains only system content (declare early so it's in scope later)
+        let hasOnlySystemContent = false;
         if (isMessage) {
-          // Check if this message contains only system content
           const content = entry.message?.content ?? entry.content;
-          const hasOnlySystemContent = (() => {
+          hasOnlySystemContent = (() => {
             if (typeof content === 'string') {
               return isSystemMessage(content);
             }
@@ -51,7 +53,7 @@ export async function parseJSONLFile({
 
         // Extract first user message for preview (skip "Warmup" and system messages)
         const isUserMessage = entry.type === 'user' || entry.role === 'user';
-        if (isUserMessage) {
+        if (isUserMessage && !hasOnlySystemContent) {
           hasUserMessage = true;
         }
         if (isUserMessage && !firstMessagePreview) {
@@ -100,10 +102,12 @@ export async function parseJSONLFile({
       }
     }
 
-    // Validate that session has at least one user message
-    if (messageCount > 0 && !hasUserMessage) {
+    // Validate that session has at least one real user message
+    if (!hasUserMessage) {
       throw new Error(
-        `Session has ${messageCount} messages but no user message - skipping import`
+        messageCount === 0
+          ? 'Session has no messages (only system messages) - skipping import'
+          : `Session has ${messageCount} messages but no user message - skipping import`
       );
     }
 

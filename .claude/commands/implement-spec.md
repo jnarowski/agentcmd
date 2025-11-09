@@ -16,27 +16,11 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 
 **Parse and resolve $specIdOrNameOrPath:**
 - If it's a numeric ID (e.g., `1`, `2`):
-  - Check index.json for spec location
-  - If in index: read from `{location}/{folder}/spec.md`
-  - If not in index: search filesystem for `{id}-*/spec.md` in todo/doing/done
-- If it's a 3-char alphanumeric ID (e.g., `ef3`, `a7b`) - legacy:
-  - Search filesystem:
-    1. `.agent/specs/todo/{id}-*-spec.md` (legacy single file)
-    2. `.agent/specs/doing/{id}-*-spec.md` (legacy single file)
-    3. `.agent/specs/done/{id}-*-spec.md` (legacy single file)
-    4. `.agent/specs/todo/{id}-*/spec.md` (folder)
-    5. `.agent/specs/doing/{id}-*/spec.md` (folder)
-    6. `.agent/specs/done/{id}-*/spec.md` (folder)
-  - Use the first match
+  - Check index.json for spec location and folder name
+  - Read from `{location}/{folder}/spec.md`
 - If it's a feature name (e.g., `workflow-safety`):
-  - Search filesystem:
-    1. `.agent/specs/todo/*-{feature-name}/spec.md`
-    2. `.agent/specs/doing/*-{feature-name}/spec.md`
-    3. `.agent/specs/done/*-{feature-name}/spec.md`
-    4. `.agent/specs/todo/*-{feature-name}-spec.md` (legacy)
-    5. `.agent/specs/doing/*-{feature-name}-spec.md` (legacy)
-    6. `.agent/specs/done/*-{feature-name}-spec.md` (legacy)
-  - Use the first match
+  - Search in order: todo/, doing/, done/
+  - Pattern: `*-{feature-name}/spec.md`
 - If it's a full path: use as-is
 - If not found: stop and report error
 

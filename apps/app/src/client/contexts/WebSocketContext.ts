@@ -10,7 +10,7 @@ export interface WebSocketContextValue {
   readyState: ReadyState;
   isConnected: boolean;
   isReady: boolean;
-  connectionAttempts: number;
+  reconnectAttempt: number;
   eventBus: WebSocketEventBus;
   reconnect: () => void;
 }

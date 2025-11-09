@@ -1,8 +1,6 @@
 import { Command } from "lucide-react";
 import {
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
 } from "@/client/components/ui/sidebar";
 
 export function AppSidebarHeader() {

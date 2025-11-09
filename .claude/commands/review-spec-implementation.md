@@ -17,12 +17,11 @@ Reviews a previous agent's implementation work by comparing the provided spec fi
 
 **Parse and resolve $specIdOrNameOrPath:**
 - If it's a numeric ID (e.g., `1`, `2`):
-  - Check index.json for spec location
+  - Check index.json for spec location and folder name
   - Read from `{location}/{folder}/spec.md`
-- If it's a 3-char alphanumeric ID (e.g., `ef3`) - legacy:
-  - Search for `{id}-*-spec.md` or `{id}-*/spec.md` in todo/doing/done
 - If it's a feature name:
-  - Search for `*-{feature}/spec.md` or `*-{feature}-spec.md` in todo/doing/done
+  - Search in order: todo/, doing/, done/
+  - Pattern: `*-{feature}/spec.md`
 - If it's a full path: use as-is
 - If not found: stop and report error
 
