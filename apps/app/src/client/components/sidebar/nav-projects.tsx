@@ -6,6 +6,9 @@ import {
   EyeOff,
   Eye,
   Pencil,
+  MessageSquarePlus,
+  Workflow,
+  ChevronRight,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -17,6 +20,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/client/components/ui/dropdown-menu";
 import {
@@ -50,24 +54,25 @@ export function NavProjects() {
   const [menuOpenProjectId, setMenuOpenProjectId] = useState<string | null>(
     null
   );
+  const [hiddenExpanded, setHiddenExpanded] = useState(false);
 
   const view: ProjectsView = settings?.userPreferences?.projects_view || "all";
 
-  // Filter projects based on view
-  let filteredProjects = projectsData || [];
+  // Separate visible and hidden projects
+  const visibleProjects = (projectsData || []).filter((p) => !p.is_hidden);
+  const hiddenProjects = (projectsData || []).filter((p) => p.is_hidden);
+
+  // Filter visible projects based on view
+  let filteredProjects = visibleProjects;
   if (view === "favorites") {
-    filteredProjects = filteredProjects.filter(
-      (p) => p.is_starred && !p.is_hidden
-    );
-  } else if (view === "hidden") {
-    filteredProjects = filteredProjects.filter((p) => p.is_hidden);
-  } else {
-    // "all" - show non-hidden projects
-    filteredProjects = filteredProjects.filter((p) => !p.is_hidden);
+    filteredProjects = visibleProjects.filter((p) => p.is_starred);
   }
 
   // Sort alphabetically by name
   filteredProjects = filteredProjects.sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
+  const sortedHiddenProjects = hiddenProjects.sort((a, b) =>
     a.name.localeCompare(b.name)
   );
 
@@ -99,6 +104,16 @@ export function NavProjects() {
     setEditDialogOpen(true);
   };
 
+  const handleNewSession = (projectId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/projects/${projectId}/sessions/new`);
+  };
+
+  const handleNewWorkflow = (projectId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/projects/${projectId}/workflows/new`);
+  };
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <div className="px-2 pb-2 shrink-0">
@@ -126,13 +141,6 @@ export function NavProjects() {
           >
             Favorites
           </ToggleGroupItem>
-          <ToggleGroupItem
-            value="hidden"
-            aria-label="Show hidden projects"
-            className="h-6 px-2 text-xs"
-          >
-            Hidden
-          </ToggleGroupItem>
         </ToggleGroup>
       </div>
       <div className="flex-1 overflow-y-auto px-2">
@@ -158,9 +166,13 @@ export function NavProjects() {
                     className="h-7 px-2"
                   >
                     <Folder className="size-4 shrink-0" />
-                    <span className="flex-1 truncate text-sm">
+                    <span className="truncate text-sm">
                       {project.name}
                     </span>
+                    {project.is_starred && (
+                      <Star className="size-3 shrink-0 fill-current ml-1" />
+                    )}
+                    <span className="flex-1" />
                   </SidebarMenuButton>
                   {(hoveredProjectId === project.id ||
                     menuOpenProjectId === project.id) && (
@@ -185,7 +197,7 @@ export function NavProjects() {
                             className="size-4 mr-2"
                             fill={project.is_starred ? "currentColor" : "none"}
                           />
-                          {project.is_starred ? "Unstar" : "Star"}
+                          {project.is_starred ? "Unfavorite" : "Favorite"}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={(e) =>
@@ -210,6 +222,19 @@ export function NavProjects() {
                           <Pencil className="size-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={(e) => handleNewSession(project.id, e)}
+                        >
+                          <MessageSquarePlus className="size-4 mr-2" />
+                          New Session
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={(e) => handleNewWorkflow(project.id, e)}
+                        >
+                          <Workflow className="size-4 mr-2" />
+                          New Workflow
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}
@@ -217,6 +242,106 @@ export function NavProjects() {
               );
             })}
           </SidebarMenu>
+        )}
+
+        {sortedHiddenProjects.length > 0 && (
+          <div className="mt-4">
+            <button
+              onClick={() => setHiddenExpanded(!hiddenExpanded)}
+              className="flex items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground w-full"
+            >
+              <ChevronRight
+                className={`size-3.5 transition-transform ${hiddenExpanded ? "rotate-90" : ""}`}
+              />
+              Hidden ({sortedHiddenProjects.length})
+            </button>
+            {hiddenExpanded && (
+              <SidebarMenu>
+                {sortedHiddenProjects.map((project) => {
+                  const isActive = project.id === activeProjectId;
+
+                  return (
+                    <SidebarMenuItem
+                      key={project.id}
+                      onMouseEnter={() => setHoveredProjectId(project.id)}
+                      onMouseLeave={() => setHoveredProjectId(null)}
+                      className="relative"
+                    >
+                      <SidebarMenuButton
+                        onClick={() => handleProjectClick(project.id)}
+                        isActive={isActive}
+                        className="h-7 px-2"
+                      >
+                        <Folder className="size-4 shrink-0" />
+                        <span className="truncate text-sm">
+                          {project.name}
+                        </span>
+                        {project.is_starred && (
+                          <Star className="size-3 shrink-0 fill-current ml-1" />
+                        )}
+                        <span className="flex-1" />
+                      </SidebarMenuButton>
+                      {(hoveredProjectId === project.id ||
+                        menuOpenProjectId === project.id) && (
+                        <DropdownMenu
+                          onOpenChange={(open) =>
+                            setMenuOpenProjectId(open ? project.id : null)
+                          }
+                        >
+                          <DropdownMenuTrigger
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-accent rounded-sm flex items-center justify-center data-[state=open]:bg-accent"
+                          >
+                            <MoreHorizontal className="size-4" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={(e) =>
+                                handleToggleStar(project.id, project.is_starred, e)
+                              }
+                            >
+                              <Star
+                                className="size-4 mr-2"
+                                fill={project.is_starred ? "currentColor" : "none"}
+                              />
+                              {project.is_starred ? "Unfavorite" : "Favorite"}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={(e) =>
+                                handleToggleHidden(project.id, project.is_hidden, e)
+                              }
+                            >
+                              <Eye className="size-4 mr-2" />
+                              Unhide
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={(e) => handleEditProject(project, e)}
+                            >
+                              <Pencil className="size-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={(e) => handleNewSession(project.id, e)}
+                            >
+                              <MessageSquarePlus className="size-4 mr-2" />
+                              New Session
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={(e) => handleNewWorkflow(project.id, e)}
+                            >
+                              <Workflow className="size-4 mr-2" />
+                              New Workflow
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            )}
+          </div>
         )}
       </div>
       <ProjectDialog

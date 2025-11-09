@@ -120,24 +120,15 @@ export function ProjectHeader({ projectId, projectName, projectPath, gitCapabili
                 title={gitCapabilities.error || "Git operations"}
               >
                 <GitBranch className="h-3 w-3" />
-                <span className="truncate">{gitCapabilities.branch || 'Unknown branch'}</span>
+                <span className="truncate">{gitCapabilities.branch || 'No branch'}</span>
                 <ChevronRight className="h-3.5 w-3.5" />
               </button>
-            ) : gitCapabilities.error ? (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-not-allowed opacity-50">
-                      <AlertCircle className="h-3 w-3" />
-                      <span className="truncate">Not a git repository</span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{gitCapabilities.error}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : null}
+            ) : (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground opacity-50">
+                <GitBranch className="h-3 w-3" />
+                <span className="truncate">Not a git repo</span>
+              </div>
+            )}
           </div>
         </div>
 
