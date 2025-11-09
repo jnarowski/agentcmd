@@ -7,7 +7,8 @@ import {
   TabsTrigger,
 } from "@/client/components/ui/tabs";
 import { useSettings, useUpdateSettings } from "@/client/hooks/useSettings";
-import { useProjectsWithSessions } from "@/client/pages/projects/hooks/useProjects";
+import { useProjects } from "@/client/pages/projects/hooks/useProjects";
+import { useSessions } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
 import { useNavigationStore } from "@/client/stores/navigationStore";
 // import { NavTasks } from "./NavTasks";
 import { NavActivities } from "./NavActivities";
@@ -16,7 +17,8 @@ import { NavProjects } from "./NavProjects";
 export function SidebarTabs() {
   const { data: settings } = useSettings();
   const updateSettings = useUpdateSettings();
-  const { data: projectsData } = useProjectsWithSessions();
+  const { data: projects } = useProjects();
+  const { data: sessions } = useSessions();
   const { activeSessionId } = useNavigationStore();
   const { runId } = useParams();
 
@@ -34,26 +36,21 @@ export function SidebarTabs() {
   }, [activeSessionId, runId]);
 
   // Count sessions and workflows for activities
-  let sessionCount = 0;
+  const sessionCount = sessions?.length || 0;
   const workflowCount = 0;
-  if (projectsData) {
-    for (const project of projectsData) {
-      sessionCount += project.sessions.length;
-    }
-  }
   const activitiesCount = Math.min(sessionCount + workflowCount, 10); // Limited to 10
 
   // Count projects based on current view
   let projectsCount = 0;
-  if (projectsData) {
+  if (projects) {
     if (view === "favorites") {
-      projectsCount = projectsData.filter(
+      projectsCount = projects.filter(
         (p) => p.is_starred && !p.is_hidden
       ).length;
     } else if (view === "hidden") {
-      projectsCount = projectsData.filter((p) => p.is_hidden).length;
+      projectsCount = projects.filter((p) => p.is_hidden).length;
     } else {
-      projectsCount = projectsData.filter((p) => !p.is_hidden).length;
+      projectsCount = projects.filter((p) => !p.is_hidden).length;
     }
   }
 

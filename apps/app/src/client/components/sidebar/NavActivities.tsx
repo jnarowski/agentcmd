@@ -6,7 +6,8 @@ import {
   ToggleGroupItem,
 } from "@/client/components/ui/toggle-group";
 import { useSettings, useUpdateSettings } from "@/client/hooks/useSettings";
-import { useProjectsWithSessions } from "@/client/pages/projects/hooks/useProjects";
+import { useProjects } from "@/client/pages/projects/hooks/useProjects";
+import { useSessions } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
 import { getSessionDisplayName } from "@/client/utils/getSessionDisplayName";
 import { api } from "@/client/utils/api";
 import { SessionItem } from "@/client/components/sidebar/SessionItem";
@@ -32,44 +33,46 @@ interface Activity {
 export function NavActivities() {
   const { data: settings } = useSettings();
   const updateSettings = useUpdateSettings();
-  const { data: projectsData } = useProjectsWithSessions();
+  const { data: projects } = useProjects();
+  const { data: sessions } = useSessions({ limit: 20, orderBy: 'updated_at', order: 'desc' });
 
   const filter: ActivityFilter =
     settings?.userPreferences?.activity_filter || "all";
 
-  // Extract sessions from all projects and map to Activity type
+  // Map sessions to Activity type, join with project names
   const sessionActivities = useMemo(() => {
-    if (!projectsData) return [];
+    if (!sessions || !projects) return [];
 
     const activities: Activity[] = [];
-    for (const project of projectsData) {
-      for (const session of project.sessions) {
-        const displayName = getSessionDisplayName(session);
-        activities.push({
-          id: session.id,
-          type: "session",
-          name:
-            displayName.length > 37
-              ? displayName.slice(0, 37) + "..."
-              : displayName,
-          projectId: project.id,
-          projectName:
-            project.name.length > 30
-              ? project.name.slice(0, 30) + "..."
-              : project.name,
-          status: session.state,
-          createdAt: new Date(session.created_at),
-          agent: session.agent,
-          session: session,
-        });
-      }
+    for (const session of sessions) {
+      const project = projects.find(p => p.id === session.projectId);
+      if (!project) continue;
+
+      const displayName = getSessionDisplayName(session);
+      activities.push({
+        id: session.id,
+        type: "session",
+        name:
+          displayName.length > 37
+            ? displayName.slice(0, 37) + "..."
+            : displayName,
+        projectId: project.id,
+        projectName:
+          project.name.length > 30
+            ? project.name.slice(0, 30) + "..."
+            : project.name,
+        status: session.state,
+        createdAt: new Date(session.created_at),
+        agent: session.agent,
+        session: session,
+      });
     }
     return activities;
-  }, [projectsData]);
+  }, [sessions, projects]);
 
   // Fetch workflow runs for all projects using useQueries
   const workflowQueries = useQueries({
-    queries: (projectsData || []).map((project) => ({
+    queries: (projects || []).map((project) => ({
       queryKey: ["workflow-runs", project.id],
       queryFn: async () => {
         const params = new URLSearchParams();
@@ -85,13 +88,13 @@ export function NavActivities() {
 
   // Map workflow runs to Activity type
   const workflowActivities = useMemo(() => {
-    if (!projectsData) return [];
+    if (!projects) return [];
 
     const activities: Activity[] = [];
     workflowQueries.forEach((query, index) => {
       if (!query.data) return;
 
-      const project = projectsData[index];
+      const project = projects[index];
       for (const run of query.data) {
         activities.push({
           id: run.id,
@@ -108,7 +111,7 @@ export function NavActivities() {
       }
     });
     return activities;
-  }, [projectsData, workflowQueries]);
+  }, [projects, workflowQueries]);
 
   // Merge, filter, and sort activities
   let filteredActivities = [...sessionActivities, ...workflowActivities];

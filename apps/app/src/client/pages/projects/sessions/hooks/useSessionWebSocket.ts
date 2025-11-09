@@ -155,7 +155,12 @@ export function useSessionWebSocket({
             store.updateMetadata(data.metadata);
           }
 
-          // Invalidate sessions query to update sidebar with new metadata
+          // Invalidate session metadata query to refetch updated token counts
+          queryClient.invalidateQueries({
+            queryKey: sessionKeys.detail(sessionIdRef.current, projectIdRef.current),
+          });
+
+          // Also invalidate sessions lists to update sidebar
           queryClient.invalidateQueries({
             queryKey: sessionKeys.byProject(projectIdRef.current),
           });
@@ -166,7 +171,23 @@ export function useSessionWebSocket({
           const data = event.data;
           console.log("[useSessionWebSocket] session.updated received:", data);
 
-          // Update cached session data directly (no refetch)
+          // Update session detail cache directly (optimistic update)
+          queryClient.setQueryData(
+            sessionKeys.detail(sessionIdRef.current, projectIdRef.current),
+            (old: any) => {
+              if (!old) return old;
+              return {
+                ...old,
+                state: data.state ?? old.state,
+                error_message: data.error_message ?? old.error_message,
+                metadata: data.metadata ?? old.metadata,
+                name: data.name ?? old.name,
+                updated_at: data.updated_at ? new Date(data.updated_at) : old.updated_at,
+              };
+            }
+          );
+
+          // Also update project with sessions cache for backward compatibility
           queryClient.setQueryData<ProjectWithSessions[]>(
             projectKeys.withSessions(),
             (old) => {

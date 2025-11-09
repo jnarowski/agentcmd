@@ -19,10 +19,16 @@ export async function parseJSONLFile({
     let totalTokens = 0;
     let lastMessageAt = new Date().toISOString();
     let firstMessagePreview = '';
+    let createdAt: string | undefined;
 
     for (const line of lines) {
       try {
         const entry = JSON.parse(line);
+
+        // Capture first timestamp as session creation date
+        if (!createdAt && entry.timestamp) {
+          createdAt = entry.timestamp;
+        }
 
         // Count messages (check both 'type' for Claude CLI format and 'role' for API format)
         // Filter out system messages to match frontend display
@@ -116,6 +122,7 @@ export async function parseJSONLFile({
       totalTokens,
       lastMessageAt,
       firstMessagePreview: firstMessagePreview || 'Untitled Session',
+      createdAt,
     };
   } catch (error) {
     // Return default metadata if file can't be read

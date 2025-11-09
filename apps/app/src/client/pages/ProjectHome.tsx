@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import {
-  useProjectsWithSessions,
+  useProject,
   useProjectReadme,
 } from "@/client/pages/projects/hooks/useProjects";
+import { useSessions } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
 import { ProjectDialog } from "@/client/pages/projects/components/ProjectDialog";
 import { ProjectOnboardingSuggestions } from "@/client/pages/projects/components/ProjectOnboardingSuggestions";
 import { ProjectHomeSessions } from "@/client/pages/projects/components/ProjectHomeSessions";
@@ -30,14 +31,13 @@ import { truncatePath } from "@/client/utils/cn";
 
 export default function ProjectHome() {
   const { id } = useParams<{ id: string }>();
-  const { data: projectsData, isLoading } = useProjectsWithSessions();
-  const project = projectsData?.find((p) => p.id === id);
+  const { data: project, isLoading } = useProject(id!);
+  const { data: sessions = [] } = useSessions({ projectId: id });
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   useDocumentTitle(
     project?.name ? `${project.name} | Agent Workflows` : undefined
   );
-  const sessions = project?.sessions || [];
   const {
     data: readme,
     isLoading: isLoadingReadme,

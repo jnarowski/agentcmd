@@ -2,6 +2,7 @@
 /// <reference path="../types/fastify.d.ts" />
 import type { FastifyInstance } from "fastify";
 import {
+  getSessions,
   getSessionsByProject,
   getSessionById,
   getSessionMessages,
@@ -23,6 +24,60 @@ import { prisma } from "@/shared/prisma";
 import fs from "fs/promises";
 
 export async function sessionRoutes(fastify: FastifyInstance) {
+  /**
+   * GET /api/sessions
+   * Get sessions with optional filters (cross-project or project-scoped)
+   */
+  fastify.get<{
+    Querystring: {
+      projectId?: string;
+      limit?: string;
+      includeArchived?: string;
+      orderBy?: 'created_at' | 'updated_at';
+      order?: 'asc' | 'desc';
+    };
+  }>(
+    "/api/sessions",
+    {
+      preHandler: fastify.authenticate,
+    },
+    async (request, reply) => {
+      const userId = request.user?.id;
+
+      if (!userId) {
+        return reply.code(401).send(buildErrorResponse(401, "Unauthorized"));
+      }
+
+      const {
+        projectId,
+        limit,
+        includeArchived,
+        orderBy = 'created_at',
+        order = 'desc',
+      } = request.query;
+
+      request.log.info({
+        userId,
+        projectId,
+        limit,
+        includeArchived,
+        orderBy,
+        order,
+      }, 'Getting sessions with filters');
+
+      const sessions = await getSessions({
+        userId,
+        projectId,
+        limit: limit ? parseInt(limit, 10) : undefined,
+        includeArchived: includeArchived === 'true',
+        orderBy,
+        order,
+      });
+
+      return reply.send({ data: sessions });
+    }
+  );
+
   /**
    * GET /api/projects/:id/sessions
    * Get all sessions for a project

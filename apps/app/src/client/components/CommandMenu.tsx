@@ -20,7 +20,8 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/client/components/ui/command";
-import { useProjectsWithSessions } from "@/client/pages/projects/hooks/useProjects";
+import { useProjects } from "@/client/pages/projects/hooks/useProjects";
+import { useSessions } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
 import { Button } from "@/client/components/ui/button";
 import { Input } from "@/client/components/ui/input";
 import { ProjectDialog } from "@/client/pages/projects/components/ProjectDialog";
@@ -36,7 +37,8 @@ export function CommandMenu({ onSearchChange }: CommandMenuProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
   const navigate = useNavigate();
-  const { data: projects = [], isLoading: projectsLoading } = useProjectsWithSessions();
+  const { data: projects = [], isLoading: projectsLoading } = useProjects();
+  const { data: sessions = [] } = useSessions({ limit: 10, orderBy: 'updated_at', order: 'desc' });
   const { isMobile } = useSidebar();
 
   const handleProjectCreated = (projectId: string) => {
@@ -135,6 +137,7 @@ export function CommandMenu({ onSearchChange }: CommandMenuProps) {
                 <ProjectGroup
                   key={project.id}
                   project={project}
+                  sessions={sessions.filter(s => s.projectId === project.id)}
                   onNavigate={handleNavigate}
                 />
                 {index < sortedProjects.length - 1 && <CommandSeparator />}
@@ -157,20 +160,18 @@ interface ProjectGroupProps {
     id: string;
     name: string;
     path: string;
-    sessions?: Array<{
-      id: string;
-      metadata: {
-        lastMessageAt: string;
-        firstMessagePreview: string;
-      };
-    }>;
   };
+  sessions: Array<{
+    id: string;
+    metadata: {
+      lastMessageAt: string;
+      firstMessagePreview: string;
+    };
+  }>;
   onNavigate: (path: string) => void;
 }
 
-function ProjectGroup({ project, onNavigate }: ProjectGroupProps) {
-  const sessions = project.sessions || [];
-
+function ProjectGroup({ project, sessions, onNavigate }: ProjectGroupProps) {
   // Get the 3 most recent sessions, sorted by lastMessageAt
   const recentSessions = [...sessions]
     .sort((a, b) => {

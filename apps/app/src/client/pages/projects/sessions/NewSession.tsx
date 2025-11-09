@@ -11,11 +11,10 @@ import { useSessionStore } from "@/client/pages/projects/sessions/stores/session
 import { useActiveProject } from "@/client/hooks/navigation";
 import { api } from "@/client/utils/api";
 import { sessionKeys } from "./hooks/useAgentSessions";
-import { projectKeys } from "@/client/pages/projects/hooks/useProjects";
+import { projectKeys, useProject } from "@/client/pages/projects/hooks/useProjects";
 import { generateUUID } from "@/client/utils/cn";
 import { AgentSelector } from "@/client/components/AgentSelector";
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
-import { useProjectsWithSessions } from "@/client/pages/projects/hooks/useProjects";
 import { Channels } from "@/shared/websocket";
 
 export default function NewSession() {
@@ -26,8 +25,7 @@ export default function NewSession() {
   const chatInputRef = useRef<ChatPromptInputHandle>(null);
 
   // Get project name for title
-  const { data: projects } = useProjectsWithSessions();
-  const project = projects?.find((p) => p.id === projectId);
+  const { data: project } = useProject(projectId!);
   useDocumentTitle(project?.name ? `New Session - ${project.name} | Agent Workflows` : undefined);
 
   // Get agent from store

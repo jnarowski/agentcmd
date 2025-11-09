@@ -1,14 +1,8 @@
 import { create } from "zustand";
 import type { UnifiedMessage, UnifiedContent, UnifiedImageBlock, PermissionMode } from 'agent-cli-sdk';
 import type { UIMessage } from '@/shared/types/message.types';
-import type {
-  AgentSessionMetadata,
-  SessionResponse,
-} from "@/shared/types/agent-session.types";
+import type { AgentSessionMetadata } from "@/shared/types/agent-session.types";
 import type { AgentType } from "@/shared/types/agent.types";
-import { api } from "@/client/utils/api";
-import type { ProjectWithSessions } from "@/shared/types/project.types";
-import { projectKeys } from "@/client/pages/projects/hooks/useProjects";
 import { isSystemMessage } from '@/shared/utils/message.utils';
 
 /**
@@ -132,7 +126,7 @@ function tryParseImageContent(content: unknown): string | UnifiedImageBlock {
  *   // Note: Message '2' with standalone tool_result is now filtered out
  * ]
  */
-function enrichMessagesWithToolResults(messages: (UnifiedMessage | UIMessage)[]): UIMessage[] {
+export function enrichMessagesWithToolResults(messages: (UnifiedMessage | UIMessage)[]): UIMessage[] {
   const initialCount = messages.length;
 
   // Step 1: Filter out messages with only system content
@@ -326,7 +320,6 @@ export interface SessionStore {
   handledPermissions: Set<string>;
 
   // Session lifecycle actions
-  loadSession: (sessionId: string, projectId: string, queryClient?: { getQueryData: (key: unknown) => unknown }) => Promise<void>;
   clearSession: () => void;
 
   // Message actions
@@ -374,96 +367,6 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
     model: "",
   },
   handledPermissions: new Set<string>(),
-
-  // Load session from server
-  loadSession: async (sessionId: string, projectId: string, queryClient?: { getQueryData: (key: unknown) => unknown }) => {
-    try {
-      let session: SessionResponse | undefined;
-
-      // Try to get session from React Query cache first
-      if (queryClient) {
-        const cachedProjects = queryClient.getQueryData(projectKeys.withSessions()) as ProjectWithSessions[] | undefined;
-
-        if (cachedProjects) {
-          const project = cachedProjects.find((p) => p.id === projectId);
-          session = project?.sessions?.find((s) => s.id === sessionId);
-        }
-      }
-
-      // If not in cache, fetch session metadata directly from API
-      if (!session) {
-        try {
-          const data = await api.get<{ data: SessionResponse }>(
-            `/api/projects/${projectId}/sessions/${sessionId}`
-          );
-          session = data.data;
-        } catch (error) {
-          throw new Error(`Session not found: ${sessionId}. ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-      }
-
-      // Set loading state with agent type and metadata
-      set({
-        sessionId: sessionId,
-        session: {
-          id: sessionId,
-          agent: session.agent,
-          messages: [],
-          isStreaming: false,
-          metadata: session.metadata || null,
-          loadingState: "loading",
-          error: null,
-        },
-      });
-
-      // Now fetch messages
-      let rawMessages: UnifiedMessage[] = [];
-      try {
-        const data = await api.get<{ data: UnifiedMessage[] }>(
-          `/api/projects/${projectId}/sessions/${sessionId}/messages`
-        );
-        rawMessages = data.data || [];
-      } catch (error) {
-        // JSONL file doesn't exist yet - this is expected for new sessions
-        if (error && typeof error === 'object' && 'statusCode' in error && error.statusCode === 404) {
-          set((state) => ({
-            session: state.session
-              ? { ...state.session, loadingState: "loaded" }
-              : null,
-          }));
-          return;
-        }
-        throw error;
-      }
-
-      // Enrich messages with nested tool results
-      const messages = enrichMessagesWithToolResults(rawMessages);
-
-      set((state) => ({
-        session: state.session
-          ? {
-              ...state.session,
-              messages,
-              loadingState: "loaded",
-            }
-          : null,
-      }));
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to load session";
-      console.error(`[sessionStore] Error loading session:`, errorMessage);
-      set((state) => ({
-        session: state.session
-          ? {
-              ...state.session,
-              loadingState: "error",
-              error: errorMessage,
-            }
-          : null,
-      }));
-      throw error;
-    }
-  },
 
   // Clear current session
   clearSession: () => {

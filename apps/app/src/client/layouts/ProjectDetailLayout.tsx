@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Outlet, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { useProjectsWithSessions } from "@/client/pages/projects/hooks/useProjects";
+import { useProject } from "@/client/pages/projects/hooks/useProjects";
 import { useActiveSession } from "@/client/hooks/navigation/useActiveSession";
 import { Button } from "@/client/components/ui/button";
 import { Skeleton } from "@/client/components/ui/skeleton";
@@ -20,8 +20,7 @@ export default function ProjectDetailLayout() {
   const navigate = useNavigate();
   const setActiveProject = useNavigationStore((state) => state.setActiveProject);
   const clearNavigation = useNavigationStore((state) => state.clearNavigation);
-  const { data: projects, isLoading, error } = useProjectsWithSessions();
-  const project = projects?.find(p => p.id === id);
+  const { data: project, isLoading, error } = useProject(id!);
 
   // Only show session when on a session route
   const { sessionId: activeSessionId } = useParams<{ sessionId: string }>();

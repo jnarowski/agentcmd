@@ -1,5 +1,5 @@
 import { useNavigationStore } from "@/client/stores/index";
-import { useProjectsWithSessions } from "@/client/pages/projects/hooks/useProjects";
+import { useSession } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
 import type { SessionResponse } from "@/shared/types";
 
 /**
@@ -19,8 +19,8 @@ export interface UseActiveSessionReturn {
 /**
  * Hook to get the currently active session
  *
- * Combines the navigationStore's activeProjectId and activeSessionId with
- * React Query's sessions data to provide convenient access to the current session.
+ * Uses useSession hook directly with activeProjectId and activeSessionId from navigation store.
+ * This eliminates over-fetching by only loading the specific session needed.
  *
  * @example
  * ```typescript
@@ -36,20 +36,12 @@ export function useActiveSession(): UseActiveSessionReturn {
   const activeProjectId = useNavigationStore((state) => state.activeProjectId);
   const activeSessionId = useNavigationStore((state) => state.activeSessionId);
 
-  const projectsQuery = useProjectsWithSessions();
-
-  // Find the active project and get its sessions
-  const activeProject = projectsQuery.data?.find(
-    (p) => p.id === activeProjectId
-  );
-  const sessions = activeProject?.sessions || [];
-
-  const session = sessions.find((s) => s.id === activeSessionId) ?? null;
+  const sessionQuery = useSession(activeSessionId || undefined, activeProjectId || undefined);
 
   return {
-    session,
+    session: sessionQuery.data ?? null,
     sessionId: activeSessionId,
-    isLoading: projectsQuery.isLoading,
-    error: projectsQuery.error,
+    isLoading: sessionQuery.isLoading,
+    error: sessionQuery.error,
   };
 }

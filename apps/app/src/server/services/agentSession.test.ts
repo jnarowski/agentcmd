@@ -110,6 +110,7 @@ describe("AgentSessionService", () => {
       expect(metadata.totalTokens).toBe(33); // 10 + 15 + 5 + 3
       expect(metadata.firstMessagePreview).toBe("Hello Claude");
       expect(metadata.lastMessageAt).toBe("2025-01-01T10:00:10Z");
+      expect(metadata.createdAt).toBe("2025-01-01T10:00:00Z"); // First entry timestamp
     });
 
     it("should handle messages with array content", async () => {
@@ -165,15 +166,13 @@ describe("AgentSessionService", () => {
       expect(metadata.messageCount).toBe(2); // Should count only valid messages
     });
 
-    it("should handle empty files", async () => {
+    it("should reject empty files", async () => {
       const sessionFile = path.join(testDir, "empty.jsonl");
       await fs.writeFile(sessionFile, "");
 
-      const metadata = await parseJSONLFile({ filePath: sessionFile });
-
-      expect(metadata.messageCount).toBe(0);
-      expect(metadata.totalTokens).toBe(0);
-      expect(metadata.firstMessagePreview).toBe("Untitled Session");
+      await expect(parseJSONLFile({ filePath: sessionFile })).rejects.toThrow(
+        "Session has no messages (only system messages)"
+      );
     });
 
     it("should reject sessions with no user messages", async () => {
@@ -221,6 +220,48 @@ describe("AgentSessionService", () => {
       expect(metadata.firstMessagePreview).toHaveLength(100);
       expect(metadata.firstMessagePreview).toBe("a".repeat(100));
     });
+
+    it("should extract creation timestamp from first entry", async () => {
+      const sessionFile = path.join(testDir, "timestamped.jsonl");
+      const messages = [
+        JSON.stringify({
+          type: "user",
+          message: { content: "First message" },
+          timestamp: "2025-01-15T08:30:00Z",
+        }),
+        JSON.stringify({
+          type: "assistant",
+          message: { content: "Response" },
+          timestamp: "2025-01-15T08:30:05Z",
+        }),
+        JSON.stringify({
+          type: "user",
+          message: { content: "Second message" },
+          timestamp: "2025-01-15T08:30:10Z",
+        }),
+      ];
+      await fs.writeFile(sessionFile, messages.join("\n"));
+
+      const metadata = await parseJSONLFile({ filePath: sessionFile });
+
+      expect(metadata.createdAt).toBe("2025-01-15T08:30:00Z");
+      expect(metadata.lastMessageAt).toBe("2025-01-15T08:30:10Z");
+    });
+
+    it("should handle sessions without timestamps", async () => {
+      const sessionFile = path.join(testDir, "no-timestamp.jsonl");
+      const messages = [
+        JSON.stringify({
+          type: "user",
+          message: { content: "Message without timestamp" },
+        }),
+      ];
+      await fs.writeFile(sessionFile, messages.join("\n"));
+
+      const metadata = await parseJSONLFile({ filePath: sessionFile });
+
+      expect(metadata.createdAt).toBeUndefined();
+    });
   });
 
   describe("syncProjectSessions", () => {
@@ -236,17 +277,25 @@ describe("AgentSessionService", () => {
 
       await fs.mkdir(projectDir, { recursive: true });
 
-      // Create 2 session files
+      // Create 2 session files with timestamps
       const session1 = path.join(projectDir, "session-1.jsonl");
       const session2 = path.join(projectDir, "session-2.jsonl");
 
       await fs.writeFile(
         session1,
-        JSON.stringify({ type: "user", message: { content: "Session 1" } })
+        JSON.stringify({
+          type: "user",
+          message: { content: "Session 1" },
+          timestamp: "2025-01-10T12:00:00Z",
+        })
       );
       await fs.writeFile(
         session2,
-        JSON.stringify({ type: "user", message: { content: "Session 2" } })
+        JSON.stringify({
+          type: "user",
+          message: { content: "Session 2" },
+          timestamp: "2025-01-11T14:00:00Z",
+        })
       );
 
       // Mock project lookup
@@ -278,7 +327,10 @@ describe("AgentSessionService", () => {
       // Mock finding existing sessions
       vi.mocked(prisma.agentSession.findMany).mockResolvedValue([]);
 
-      const result = await syncProjectSessions(testProjectId, testUserId);
+      const result = await syncProjectSessions({
+        projectId: testProjectId,
+        userId: testUserId,
+      });
 
       expect(result.synced).toBe(2);
       expect(result.created).toBe(2);
@@ -286,9 +338,22 @@ describe("AgentSessionService", () => {
       expect(vi.mocked(prisma.agentSession.createMany)).toHaveBeenCalledTimes(
         1
       );
+
+      // Verify that created_at is set from metadata.createdAt
+      const createManyCall = vi.mocked(prisma.agentSession.createMany).mock
+        .calls[0][0];
+      const createdSessions = createManyCall.data as Array<{
+        created_at: Date;
+      }>;
+      expect(createdSessions[0].created_at).toEqual(
+        new Date("2025-01-10T12:00:00Z")
+      );
+      expect(createdSessions[1].created_at).toEqual(
+        new Date("2025-01-11T14:00:00Z")
+      );
     });
 
-    it("should update existing sessions", async () => {
+    it("should update existing sessions with correct created_at", async () => {
       const projectPath = "/Users/test/myproject";
       const encodedPath = "-Users-test-myproject";
       const projectDir = path.join(
@@ -301,9 +366,14 @@ describe("AgentSessionService", () => {
       await fs.mkdir(projectDir, { recursive: true });
 
       const sessionFile = path.join(projectDir, "existing-session.jsonl");
+      const actualCreatedAt = "2025-01-05T10:00:00Z";
       await fs.writeFile(
         sessionFile,
-        JSON.stringify({ type: "user", message: { content: "Updated" } })
+        JSON.stringify({
+          type: "user",
+          message: { content: "Updated" },
+          timestamp: actualCreatedAt,
+        })
       );
 
       vi.mocked(prisma.project.findUnique).mockResolvedValue({
@@ -316,49 +386,47 @@ describe("AgentSessionService", () => {
         updated_at: new Date(),
       });
 
-      // Mock existing session
-      vi.mocked(prisma.agentSession.findUnique).mockResolvedValue({
+      // Mock existing session with wrong created_at (import time instead of actual)
+      const wrongCreatedAt = new Date("2025-01-08T15:00:00Z");
+      const existingSession = {
         id: "existing-session",
         projectId: testProjectId,
         userId: testUserId,
         name: null,
         agent: "claude" as const,
+        cli_session_id: null,
+        session_path: null,
         metadata: {},
-        created_at: new Date(),
+        state: "idle" as const,
+        error_message: null,
+        is_archived: false,
+        archived_at: null,
+        created_at: wrongCreatedAt,
         updated_at: new Date(),
-      });
+      };
 
       vi.mocked(prisma.agentSession.update).mockResolvedValue({
-        id: "existing-session",
-        projectId: testProjectId,
-        userId: testUserId,
-        name: null,
-        agent: "claude" as const,
-        metadata: {},
-        created_at: new Date(),
-        updated_at: new Date(),
+        ...existingSession,
+        created_at: new Date(actualCreatedAt),
       });
 
-      vi.mocked(prisma.agentSession.findMany).mockResolvedValue([
-        {
-          id: "existing-session",
-          projectId: testProjectId,
-          userId: testUserId,
-          name: null,
-          agent: "claude" as const,
-          metadata: {},
-          created_at: new Date(),
-          updated_at: new Date(),
-        },
-      ]);
+      vi.mocked(prisma.agentSession.findMany)
+        .mockResolvedValueOnce([existingSession]) // Claude sessions
+        .mockResolvedValueOnce([{ id: "existing-session" }]); // All session IDs
 
-      const result = await syncProjectSessions(testProjectId, testUserId);
+      const result = await syncProjectSessions({
+        projectId: testProjectId,
+        userId: testUserId,
+      });
 
-      // Existing sessions are skipped to preserve created_at timestamp
+      // Existing session should be updated with correct created_at
       expect(result.synced).toBe(1);
       expect(result.created).toBe(0);
-      expect(result.updated).toBe(0);
-      expect(vi.mocked(prisma.agentSession.update)).toHaveBeenCalledTimes(0);
+      expect(result.updated).toBe(1);
+      expect(vi.mocked(prisma.agentSession.update)).toHaveBeenCalledWith({
+        where: { id: "existing-session" },
+        data: { created_at: new Date(actualCreatedAt) },
+      });
     });
 
     it("should delete orphaned sessions (sessions in DB but no JSONL file)", async () => {
@@ -445,7 +513,7 @@ describe("AgentSessionService", () => {
         count: 1,
       });
 
-      await syncProjectSessions(testProjectId, testUserId);
+      await syncProjectSessions({ projectId: testProjectId, userId: testUserId });
 
       // Should delete the orphaned session using deleteMany
       expect(vi.mocked(prisma.agentSession.deleteMany)).toHaveBeenCalledWith({
@@ -466,7 +534,10 @@ describe("AgentSessionService", () => {
         updated_at: new Date(),
       });
 
-      const result = await syncProjectSessions(testProjectId, testUserId);
+      const result = await syncProjectSessions({
+        projectId: testProjectId,
+        userId: testUserId,
+      });
 
       expect(result.synced).toBe(0);
       expect(result.created).toBe(0);
@@ -531,7 +602,10 @@ describe("AgentSessionService", () => {
       });
       vi.mocked(prisma.agentSession.findMany).mockResolvedValue([]);
 
-      const result = await syncProjectSessions(testProjectId, testUserId);
+      const result = await syncProjectSessions({
+        projectId: testProjectId,
+        userId: testUserId,
+      });
 
       // Should sync 1 session (with 1 valid message from the semi-corrupted file)
       expect(result.synced).toBe(1);

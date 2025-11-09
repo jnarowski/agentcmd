@@ -50,8 +50,6 @@ export default function ProjectSession() {
 
   // Get session from store
   const session = useSessionStore((s) => s.session);
-  const currentSessionId = useSessionStore((s) => s.sessionId);
-  const clearSession = useSessionStore((s) => s.clearSession);
   const addMessage = useSessionStore((s) => s.addMessage);
   const setStreaming = useSessionStore((s) => s.setStreaming);
   const totalTokens = useSessionStore(selectTotalTokens);
@@ -79,40 +77,6 @@ export default function ProjectSession() {
   useEffect(() => {
     clearHandledPermissions();
   }, [sessionId, clearHandledPermissions]);
-
-  // Handle query parameter for initial message
-  useEffect(() => {
-    if (!sessionId || !projectId) {
-      return;
-    }
-
-    // Check if we have a query parameter (indicates message already sent)
-    const searchParams = new URLSearchParams(location.search);
-    const queryParam = searchParams.get("query");
-
-    if (queryParam) {
-      // Initialize session in store without fetching from server (only if not already initialized)
-      if (currentSessionId !== sessionId) {
-        clearSession();
-        // Get current agent from store
-        const currentAgent = useSessionStore.getState().getAgent();
-        // Manually initialize the session store for this new session
-        useSessionStore.setState({
-          sessionId: sessionId,
-          session: {
-            id: sessionId,
-            agent: currentAgent, // Use agent from store
-            messages: [],
-            isStreaming: false,
-            metadata: null,
-            loadingState: "loaded",
-            error: null,
-          },
-        });
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, projectId, currentSessionId, location.search]);
 
   // Reset initialMessageSentRef when navigating to a different session
   useEffect(() => {

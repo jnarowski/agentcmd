@@ -5,18 +5,19 @@
  * Can be used in both full-page views and modal dialogs.
  *
  * Features:
- * - Loads session messages via sessionStore.loadSession()
+ * - Loads session data via React Query hooks (useSession + useSessionMessages)
+ * - Syncs React Query data to Zustand store for UI state
  * - Subscribes to WebSocket for real-time updates
  * - Uses existing ChatInterface component internally
  * - Handles loading/error/empty states
  * - Auto-scroll behavior via Conversation wrapper
  */
 
-import { useEffect, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { ChatInterface } from "@/client/pages/projects/sessions/components/ChatInterface";
 import { useSessionWebSocket } from "@/client/pages/projects/sessions/hooks/useSessionWebSocket";
-import { useSessionStore } from "@/client/pages/projects/sessions/stores/sessionStore";
+import { useSession, useSessionMessages } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
+import { useSessionStore, enrichMessagesWithToolResults } from "@/client/pages/projects/sessions/stores/sessionStore";
 import type { SessionData } from "@/client/pages/projects/sessions/stores/sessionStore";
 
 export interface AgentSessionViewerProps {
@@ -51,6 +52,8 @@ export interface AgentSessionViewerProps {
 /**
  * Self-contained session viewer that manages its own session loading and WebSocket subscription.
  * Renders the ChatInterface component with session data from the store.
+ *
+ * Data flow: React Query (source of truth) → Zustand (UI state only)
  */
 export function AgentSessionViewer({
   projectId,
@@ -63,52 +66,63 @@ export function AgentSessionViewer({
   clearOnUnmount = false,
   onApprove,
 }: AgentSessionViewerProps) {
-  const queryClient = useQueryClient();
-  const sessionIdRef = useRef(sessionId);
+  // Fetch session data via React Query (parallel fetching)
+  const { data: sessionData, isLoading: isLoadingSession, error: sessionError } = useSession(
+    autoLoad ? sessionId : undefined,
+    autoLoad ? projectId : undefined
+  );
+  const { data: messagesData, isLoading: isLoadingMessages, error: messagesError } = useSessionMessages(
+    autoLoad ? sessionId : undefined,
+    autoLoad ? projectId : undefined
+  );
 
   // Subscribe to current session from store
   const session = useSessionStore((s) => s.session);
-  const loadSession = useSessionStore((s) => s.loadSession);
   const clearSession = useSessionStore((s) => s.clearSession);
 
-  // Load session on mount or when sessionId changes
+  // Sync React Query data → Zustand store (one-way flow)
   useEffect(() => {
-    if (!autoLoad) return;
+    if (!autoLoad || !sessionData) return;
 
-    const loadSessionData = async () => {
-      try {
-        // Clear previous session if loading a different one
-        if (session && session.id !== sessionId) {
-          clearSession();
-        }
+    const enrichedMessages = messagesData ? enrichMessagesWithToolResults(messagesData) : [];
 
-        // Load new session
-        // @ts-expect-error - QueryClient type incompatibility between versions
-        await loadSession(sessionId, projectId, queryClient);
+    useSessionStore.setState({
+      sessionId: sessionData.id,
+      session: {
+        id: sessionData.id,
+        name: sessionData.name,
+        agent: sessionData.agent,
+        messages: enrichedMessages,
+        isStreaming: false,
+        metadata: sessionData.metadata,
+        loadingState: isLoadingMessages ? "loading" : "loaded",
+        error: null,
+      },
+    });
 
-        // Get loaded session and trigger callback
-        const loadedSession = useSessionStore.getState().session;
-        if (onSessionLoad && loadedSession) {
-          onSessionLoad(loadedSession);
-        }
-      } catch (error) {
-        console.error("[AgentSessionViewer] Error loading session:", error);
-        if (onError) {
-          onError(error as Error);
-        }
-      }
-    };
-
-    // Only load if sessionId changed
-    if (sessionIdRef.current !== sessionId) {
-      loadSessionData();
-      sessionIdRef.current = sessionId;
-    } else if (!session || session.id !== sessionId) {
-      // Load if session not in store yet
-      loadSessionData();
+    // Trigger onSessionLoad callback
+    if (onSessionLoad && !isLoadingMessages) {
+      onSessionLoad({
+        id: sessionData.id,
+        name: sessionData.name,
+        agent: sessionData.agent,
+        messages: enrichedMessages,
+        isStreaming: false,
+        metadata: sessionData.metadata,
+        loadingState: "loaded",
+        error: null,
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, projectId, autoLoad]);
+  }, [sessionData, messagesData, isLoadingMessages, autoLoad]);
+
+  // Handle errors from React Query
+  useEffect(() => {
+    const error = sessionError || messagesError;
+    if (error && onError) {
+      onError(error instanceof Error ? error : new Error(String(error)));
+    }
+  }, [sessionError, messagesError, onError]);
 
   // WebSocket subscription for real-time updates
   useSessionWebSocket({ sessionId, projectId });
@@ -123,6 +137,10 @@ export function AgentSessionViewer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clearOnUnmount]);
 
+  // Compute combined loading/error states
+  const isLoading = isLoadingSession || isLoadingMessages;
+  const error = sessionError || messagesError;
+
   // Render ChatInterface with session data
   return (
     <div className={className} style={{ height }}>
@@ -131,10 +149,10 @@ export function AgentSessionViewer({
         sessionId={session?.id}
         agent={session?.agent}
         messages={session?.messages || []}
-        isLoading={session?.loadingState === "loading"}
-        error={session?.error ? new Error(session.error) : null}
+        isLoading={isLoading}
+        error={error ? (error instanceof Error ? error : new Error(String(error))) : null}
         isStreaming={session?.isStreaming || false}
-        isLoadingHistory={session?.loadingState === "loading"}
+        isLoadingHistory={isLoading}
         onApprove={onApprove}
       />
     </div>

@@ -8,13 +8,12 @@ import { FileText, GitBranch } from "lucide-react";
 import { FileTree } from "@/client/pages/projects/files/components/FileTree";
 import ProjectSourceControl from "@/client/pages/projects/git/ProjectSourceControl";
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
-import { useProjectsWithSessions } from "@/client/pages/projects/hooks/useProjects";
+import { useProject } from "@/client/pages/projects/hooks/useProjects";
 import { useActiveProject } from "@/client/hooks/navigation";
 
 export default function ProjectSource() {
   const { projectId } = useActiveProject();
-  const { data: projects } = useProjectsWithSessions();
-  const project = projects?.find((p) => p.id === projectId);
+  const { data: project } = useProject(projectId!);
   const navigate = useNavigate();
   const location = useLocation();
 

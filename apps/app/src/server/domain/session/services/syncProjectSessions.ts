@@ -41,7 +41,7 @@ export async function syncProjectSessions({
 
   let synced = 0;
   let created = 0;
-  const updated = 0;
+  let updated = 0;
 
   try {
     // Check if directory exists
@@ -85,6 +85,11 @@ export async function syncProjectSessions({
       metadata: Prisma.JsonValue;
       state: 'idle';
       error_message: null;
+      created_at: Date;
+    }> = [];
+    const sessionsToUpdate: Array<{
+      id: string;
+      created_at: Date;
     }> = [];
 
     // Parse all JSONL files and prepare batch operations
@@ -98,8 +103,22 @@ export async function syncProjectSessions({
         const metadata = await parseJSONLFile({ filePath });
 
         if (existingClaudeSessionsMap.has(sessionId)) {
-          // Session already exists - skip to preserve created_at timestamp and avoid reordering
-          // Metadata updates happen via WebSocket during active sessions
+          // Session already exists - check if we need to update created_at with actual creation date
+          const existingSession = existingClaudeSessionsMap.get(sessionId)!;
+
+          // If metadata has createdAt and it's different from DB created_at, update it
+          if (metadata.createdAt) {
+            const metadataCreatedAt = new Date(metadata.createdAt);
+            const dbCreatedAt = new Date(existingSession.created_at);
+
+            // Update if timestamps differ by more than 1 second (to account for rounding)
+            if (Math.abs(metadataCreatedAt.getTime() - dbCreatedAt.getTime()) > 1000) {
+              sessionsToUpdate.push({
+                id: sessionId,
+                created_at: metadataCreatedAt,
+              });
+            }
+          }
         } else if (allExistingSessionIds.has(sessionId)) {
           // Session exists but as a different agent type - skip to avoid conflict
           // (This can happen if the same session ID is used across different agents)
@@ -115,6 +134,7 @@ export async function syncProjectSessions({
             metadata: JSON.parse(JSON.stringify(metadata)),
             state: 'idle',
             error_message: null,
+            created_at: metadata.createdAt ? new Date(metadata.createdAt) : new Date(),
           });
         }
 
@@ -131,6 +151,19 @@ export async function syncProjectSessions({
         data: sessionsToCreate,
       });
       created = sessionsToCreate.length;
+    }
+
+    // Batch update existing sessions with correct creation dates
+    if (sessionsToUpdate.length > 0) {
+      await Promise.all(
+        sessionsToUpdate.map((session) =>
+          prisma.agentSession.update({
+            where: { id: session.id },
+            data: { created_at: session.created_at },
+          })
+        )
+      );
+      updated = sessionsToUpdate.length;
     }
 
     // Batch delete orphaned Claude sessions (only)

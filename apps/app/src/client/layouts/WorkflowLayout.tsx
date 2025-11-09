@@ -4,7 +4,7 @@ import { ProjectHeader } from "@/client/components/ProjectHeader";
 import { AppSidebar } from "@/client/components/AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/client/components/ui/sidebar";
 import { useWebSocket } from "@/client/hooks/useWebSocket";
-import { useProjectsWithSessions } from "@/client/pages/projects/hooks/useProjects";
+import { useProject } from "@/client/pages/projects/hooks/useProjects";
 import { useAuthStore } from "@/client/stores/index";
 import { Skeleton } from "@/client/components/ui/skeleton";
 
@@ -16,15 +16,13 @@ import { Skeleton } from "@/client/components/ui/skeleton";
 export default function WorkflowLayout() {
   const { projectId } = useParams<{ projectId: string }>();
   const { readyState, reconnectAttempt, reconnect } = useWebSocket();
-  const { data: projects, isLoading } = useProjectsWithSessions();
+  const { data: project, isLoading } = useProject(projectId!);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-
-  const project = projects?.find(p => p.id === projectId);
 
   if (isLoading) {
     return (

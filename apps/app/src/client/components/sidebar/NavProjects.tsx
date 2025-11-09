@@ -8,7 +8,7 @@ import {
 } from "@/client/components/ui/toggle-group";
 import { useSettings, useUpdateSettings } from "@/client/hooks/useSettings";
 import {
-  useProjectsWithSessions,
+  useProjects,
   useToggleProjectStarred,
   useToggleProjectHidden,
 } from "@/client/pages/projects/hooks/useProjects";
@@ -23,7 +23,7 @@ export function NavProjects() {
   const activeProjectId = projectId || id;
   const { data: settings } = useSettings();
   const updateSettings = useUpdateSettings();
-  const { data: projectsData } = useProjectsWithSessions();
+  const { data: projectsData } = useProjects();
   const toggleStarred = useToggleProjectStarred();
   const toggleHidden = useToggleProjectHidden();
   const [editDialogOpen, setEditDialogOpen] = useState(false);

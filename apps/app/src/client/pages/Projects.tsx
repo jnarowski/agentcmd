@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useProjectsWithSessions, useSyncProjects } from "@/client/pages/projects/hooks/useProjects";
+import { useProjects, useSyncProjects } from "@/client/pages/projects/hooks/useProjects";
 import { Skeleton } from "@/client/components/ui/skeleton";
 import {
   Card,
@@ -33,7 +33,7 @@ import { truncatePath } from "@/client/utils/cn";
 export default function Projects() {
   useDocumentTitle("Projects | Agent Workflows");
   const navigate = useNavigate();
-  const { data: projects, isLoading } = useProjectsWithSessions();
+  const { data: projects, isLoading } = useProjects();
   const { isLoading: isSyncing } = useSyncProjects();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 

@@ -1,4 +1,5 @@
 // Session CRUD operations
+export { getSessions } from './getSessions';
 export { getSessionsByProject } from './getSessionsByProject';
 export { getSessionById } from './getSessionById';
 export { getSessionMessages } from './getSessionMessages';

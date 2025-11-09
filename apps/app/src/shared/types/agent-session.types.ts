@@ -13,6 +13,7 @@ export interface AgentSessionMetadata {
   messageCount: number;
   lastMessageAt: string; // ISO 8601 timestamp
   firstMessagePreview: string; // First user message preview (truncated)
+  createdAt?: string; // ISO 8601 timestamp from first JSONL entry
 }
 
 /**

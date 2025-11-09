@@ -1,7 +1,8 @@
 -- CreateTable
 CREATE TABLE "workflow_definitions" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    "project_id" TEXT NOT NULL,
+    "scope" TEXT NOT NULL DEFAULT 'project',
+    "project_id" TEXT,
     "identifier" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
@@ -155,7 +156,13 @@ CREATE INDEX "workflow_definitions_project_id_idx" ON "workflow_definitions"("pr
 CREATE INDEX "workflow_definitions_status_idx" ON "workflow_definitions"("status");
 
 -- CreateIndex
+CREATE INDEX "workflow_definitions_scope_idx" ON "workflow_definitions"("scope");
+
+-- CreateIndex
 CREATE INDEX "workflow_definitions_project_id_status_idx" ON "workflow_definitions"("project_id", "status");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "workflow_definitions_scope_identifier_key" ON "workflow_definitions"("scope", "identifier");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "workflow_definitions_project_id_identifier_key" ON "workflow_definitions"("project_id", "identifier");
