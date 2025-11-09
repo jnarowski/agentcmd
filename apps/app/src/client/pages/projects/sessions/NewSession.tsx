@@ -105,7 +105,7 @@ export default function NewSession() {
       currentParams.set('query', message);
 
       navigate(
-        `/projects/${projectId}/session/${newSession.id}?${currentParams.toString()}`,
+        `/projects/${projectId}/sessions/${newSession.id}?${currentParams.toString()}`,
         {
           replace: true,
         }

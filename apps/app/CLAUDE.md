@@ -86,7 +86,7 @@ apps/web/                      # This app
       domain/                  # Business logic by domain
         auth/services/         # Authentication functions
         project/services/      # Project CRUD
-        session/services/      # Agent sessions
+        sessions/services/      # Agent sessions
         file/services/         # File operations
         git/services/          # Git operations
         shell/services/        # Terminal

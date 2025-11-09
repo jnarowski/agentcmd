@@ -195,7 +195,7 @@ function ProjectGroup({ project, onNavigate }: ProjectGroupProps) {
             className="h-6 px-2"
             onClick={(e) => {
               e.stopPropagation();
-              onNavigate(`/projects/${project.id}/session/new`);
+              onNavigate(`/projects/${project.id}/sessions/new`);
             }}
           >
             <MessageSquare className="h-3 w-3" />
@@ -228,7 +228,7 @@ function ProjectGroup({ project, onNavigate }: ProjectGroupProps) {
         <CommandItem
           key={session.id}
           onSelect={() =>
-            onNavigate(`/projects/${project.id}/session/${session.id}`)
+            onNavigate(`/projects/${project.id}/sessions/${session.id}`)
           }
           className="pl-6"
           keywords={[session.metadata.firstMessagePreview || ""]}

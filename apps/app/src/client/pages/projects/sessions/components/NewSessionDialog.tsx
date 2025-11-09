@@ -30,7 +30,7 @@ export function NewSessionDialog({
     // Preserve current query parameters when navigating
     const currentParams = new URLSearchParams(window.location.search);
     const queryString = currentParams.toString();
-    const path = `/projects/${projectId}/session/new${queryString ? `?${queryString}` : ''}`;
+    const path = `/projects/${projectId}/sessions/new${queryString ? `?${queryString}` : ''}`;
 
     navigate(path);
     onOpenChange(false);

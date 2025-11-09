@@ -4,7 +4,6 @@ import {
   SidebarFooter,
 } from "@/client/components/ui/sidebar";
 import { AppSidebarHeader } from "./SidebarHeader";
-import { NewButton } from "./NewButton";
 import { SidebarTabs } from "./SidebarTabs";
 import { NavUser } from "./nav-user";
 import { useAuthStore } from "@/client/stores/authStore";
@@ -40,7 +39,6 @@ export function AppSidebar({
       className="flex flex-col"
     >
       <AppSidebarHeader />
-      <NewButton />
       <SidebarContent className="flex-1 flex flex-col min-h-0">
         <SidebarTabs />
       </SidebarContent>

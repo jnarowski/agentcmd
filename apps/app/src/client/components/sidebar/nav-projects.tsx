@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { Folder, MoreHorizontal, Star, EyeOff, Eye, Pencil } from "lucide-react";
+import {
+  Folder,
+  MoreHorizontal,
+  Star,
+  EyeOff,
+  Eye,
+  Pencil,
+} from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   SidebarMenu,
@@ -12,9 +19,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/client/components/ui/dropdown-menu";
-import { ToggleGroup, ToggleGroupItem } from "@/client/components/ui/toggle-group";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@/client/components/ui/toggle-group";
 import { useSettings, useUpdateSettings } from "@/client/hooks/useSettings";
-import { useProjectsWithSessions, useToggleProjectStarred, useToggleProjectHidden } from "@/client/pages/projects/hooks/useProjects";
+import {
+  useProjectsWithSessions,
+  useToggleProjectStarred,
+  useToggleProjectHidden,
+} from "@/client/pages/projects/hooks/useProjects";
 import { ProjectDialog } from "@/client/pages/projects/components/ProjectDialog";
 import type { Project } from "@/shared/types/project.types";
 
@@ -29,16 +43,22 @@ export function NavProjects() {
   const toggleStarred = useToggleProjectStarred();
   const toggleHidden = useToggleProjectHidden();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [projectToEdit, setProjectToEdit] = useState<Project | undefined>(undefined);
+  const [projectToEdit, setProjectToEdit] = useState<Project | undefined>(
+    undefined
+  );
   const [hoveredProjectId, setHoveredProjectId] = useState<string | null>(null);
-  const [menuOpenProjectId, setMenuOpenProjectId] = useState<string | null>(null);
+  const [menuOpenProjectId, setMenuOpenProjectId] = useState<string | null>(
+    null
+  );
 
   const view: ProjectsView = settings?.userPreferences?.projects_view || "all";
 
   // Filter projects based on view
   let filteredProjects = projectsData || [];
   if (view === "favorites") {
-    filteredProjects = filteredProjects.filter((p) => p.is_starred && !p.is_hidden);
+    filteredProjects = filteredProjects.filter(
+      (p) => p.is_starred && !p.is_hidden
+    );
   } else if (view === "hidden") {
     filteredProjects = filteredProjects.filter((p) => p.is_hidden);
   } else {
@@ -46,16 +66,29 @@ export function NavProjects() {
     filteredProjects = filteredProjects.filter((p) => !p.is_hidden);
   }
 
+  // Sort alphabetically by name
+  filteredProjects = filteredProjects.sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
+
   const handleProjectClick = (projectId: string) => {
     navigate(`/projects/${projectId}`);
   };
 
-  const handleToggleStar = (projectId: string, isStarred: boolean, e: React.MouseEvent) => {
+  const handleToggleStar = (
+    projectId: string,
+    isStarred: boolean,
+    e: React.MouseEvent
+  ) => {
     e.stopPropagation();
     toggleStarred.mutate({ id: projectId, is_starred: !isStarred });
   };
 
-  const handleToggleHidden = (projectId: string, isHidden: boolean, e: React.MouseEvent) => {
+  const handleToggleHidden = (
+    projectId: string,
+    isHidden: boolean,
+    e: React.MouseEvent
+  ) => {
     e.stopPropagation();
     toggleHidden.mutate({ id: projectId, is_hidden: !isHidden });
   };
@@ -68,7 +101,7 @@ export function NavProjects() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <div className="px-2 py-2 pb-2 shrink-0">
+      <div className="px-2 pb-2 shrink-0">
         <ToggleGroup
           type="single"
           value={view}
@@ -109,70 +142,81 @@ export function NavProjects() {
           </div>
         ) : (
           <SidebarMenu>
-          {filteredProjects.map((project) => {
-            const isActive = project.id === activeProjectId;
+            {filteredProjects.map((project) => {
+              const isActive = project.id === activeProjectId;
 
-            return (
-              <SidebarMenuItem
-                key={project.id}
-                onMouseEnter={() => setHoveredProjectId(project.id)}
-                onMouseLeave={() => setHoveredProjectId(null)}
-                className="relative"
-              >
-                <SidebarMenuButton
-                  onClick={() => handleProjectClick(project.id)}
-                  isActive={isActive}
-                  className="h-7 px-2"
+              return (
+                <SidebarMenuItem
+                  key={project.id}
+                  onMouseEnter={() => setHoveredProjectId(project.id)}
+                  onMouseLeave={() => setHoveredProjectId(null)}
+                  className="relative"
                 >
-                  <Folder className="size-4 shrink-0" />
-                  <span className="flex-1 truncate text-sm">
-                    {project.name}
-                  </span>
-                </SidebarMenuButton>
-                {(hoveredProjectId === project.id || menuOpenProjectId === project.id) && (
-                  <DropdownMenu onOpenChange={(open) => setMenuOpenProjectId(open ? project.id : null)}>
-                    <DropdownMenuTrigger
-                      onClick={(e) => e.stopPropagation()}
-                      className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-accent rounded-sm flex items-center justify-center data-[state=open]:bg-accent"
+                  <SidebarMenuButton
+                    onClick={() => handleProjectClick(project.id)}
+                    isActive={isActive}
+                    className="h-7 px-2"
+                  >
+                    <Folder className="size-4 shrink-0" />
+                    <span className="flex-1 truncate text-sm">
+                      {project.name}
+                    </span>
+                  </SidebarMenuButton>
+                  {(hoveredProjectId === project.id ||
+                    menuOpenProjectId === project.id) && (
+                    <DropdownMenu
+                      onOpenChange={(open) =>
+                        setMenuOpenProjectId(open ? project.id : null)
+                      }
                     >
-                      <MoreHorizontal className="size-4" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={(e) => handleToggleStar(project.id, project.is_starred, e)}
+                      <DropdownMenuTrigger
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-accent rounded-sm flex items-center justify-center data-[state=open]:bg-accent"
                       >
-                        <Star
-                          className="size-4 mr-2"
-                          fill={project.is_starred ? "currentColor" : "none"}
-                        />
-                        {project.is_starred ? "Unstar" : "Star"}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={(e) => handleToggleHidden(project.id, project.is_hidden, e)}
-                      >
-                        {project.is_hidden ? (
-                          <>
-                            <Eye className="size-4 mr-2" />
-                            Unhide
-                          </>
-                        ) : (
-                          <>
-                            <EyeOff className="size-4 mr-2" />
-                            Hide
-                          </>
-                        )}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={(e) => handleEditProject(project, e)}>
-                        <Pencil className="size-4 mr-2" />
-                        Edit
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
-              </SidebarMenuItem>
-            );
-          })}
-        </SidebarMenu>
+                        <MoreHorizontal className="size-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={(e) =>
+                            handleToggleStar(project.id, project.is_starred, e)
+                          }
+                        >
+                          <Star
+                            className="size-4 mr-2"
+                            fill={project.is_starred ? "currentColor" : "none"}
+                          />
+                          {project.is_starred ? "Unstar" : "Star"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={(e) =>
+                            handleToggleHidden(project.id, project.is_hidden, e)
+                          }
+                        >
+                          {project.is_hidden ? (
+                            <>
+                              <Eye className="size-4 mr-2" />
+                              Unhide
+                            </>
+                          ) : (
+                            <>
+                              <EyeOff className="size-4 mr-2" />
+                              Hide
+                            </>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={(e) => handleEditProject(project, e)}
+                        >
+                          <Pencil className="size-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </SidebarMenuItem>
+              );
+            })}
+          </SidebarMenu>
         )}
       </div>
       <ProjectDialog

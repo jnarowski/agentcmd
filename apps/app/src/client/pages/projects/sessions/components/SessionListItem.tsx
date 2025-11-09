@@ -51,7 +51,7 @@ export function SessionListItem({
       onMouseLeave={() => !isMobile && setIsHovered(false)}
     >
       <Link
-        to={`/projects/${projectId}/session/${id}`}
+        to={`/projects/${projectId}/sessions/${id}`}
         onClick={handleClick}
         className={cn(
           "block px-2.5 py-2 rounded-lg overflow-hidden relative border transition-all hover:bg-accent/50",

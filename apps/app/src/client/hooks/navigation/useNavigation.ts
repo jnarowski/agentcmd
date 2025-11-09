@@ -47,7 +47,7 @@ export function useNavigation(): UseNavigationReturn {
   const goToSession = (projectId: string, sessionId: string) => {
     setActiveProject(projectId);
     setActiveSession(sessionId);
-    navigate(`/projects/${projectId}/chat/${sessionId}`);
+    navigate(`/projects/${projectId}/sessions/${sessionId}`);
   };
 
   return {

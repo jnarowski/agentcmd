@@ -48,10 +48,10 @@ function AppContent() {
               <Route index element={<ProjectHome />} />
               <Route
                 path="chat"
-                element={<Navigate to="session/new" replace />}
+                element={<Navigate to="sessions/new" replace />}
               />
-              <Route path="session/new" element={<NewSession />} />
-              <Route path="session/:sessionId" element={<ProjectSession />} />
+              <Route path="sessions/new" element={<NewSession />} />
+              <Route path="sessions/:sessionId" element={<ProjectSession />} />
               <Route path="shell" element={<ProjectShell />} />
               <Route path="files" element={<ProjectFiles />} />
               <Route path="source-control" element={<ProjectSourceControl />} />

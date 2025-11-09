@@ -18,26 +18,23 @@ export function NewButton() {
   // If we need to show the NewSessionButton and we have a projectId, render it
   if (showSessionButton && projectId) {
     return (
-      <div className="px-2 py-1">
-        <NewSessionButton
-          projectId={projectId}
-          variant="default"
-          size="sm"
-          className="w-full h-7"
-        />
-      </div>
+      <NewSessionButton
+        projectId={projectId}
+        variant="default"
+        size="sm"
+        className="h-6 text-xs"
+      />
     );
   }
 
   return (
-    <div className="px-2 py-1">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="default" size="sm" className="w-full h-7">
-            <Plus className="size-4" />
-            New
-          </Button>
-        </DropdownMenuTrigger>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="default" size="sm" className="h-6 text-xs px-2">
+          <Plus className="size-3" />
+          New
+        </Button>
+      </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-48">
           <DropdownMenuItem
             onClick={() => {
@@ -67,6 +64,5 @@ export function NewButton() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-    </div>
   );
 }

@@ -46,16 +46,13 @@ export function SidebarTabs() {
 
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col min-h-0 overflow-hidden">
-      <div className="pl-2 pr-2 py-2 shrink-0">
-        <TabsList className="w-full grid grid-cols-3 h-7 p-0.5">
+      <div className="pl-2 pr-2 pt-3 pb-2 shrink-0">
+        <TabsList className="w-full grid grid-cols-2 h-7 p-0.5">
           <TabsTrigger value="projects" className="text-xs h-full px-1.5">
             Projects ({projectsCount})
           </TabsTrigger>
           <TabsTrigger value="activities" className="text-xs h-full px-1.5">
             Activities ({activitiesCount})
-          </TabsTrigger>
-          <TabsTrigger value="tasks" className="text-xs h-full px-1.5">
-            Tasks ({tasksCount})
           </TabsTrigger>
         </TabsList>
       </div>
@@ -66,10 +63,6 @@ export function SidebarTabs() {
 
       <TabsContent value="activities" className="flex-1 mt-0 overflow-hidden">
         <NavActivities />
-      </TabsContent>
-
-      <TabsContent value="tasks" className="flex-1 mt-0 overflow-hidden">
-        <NavTasks />
       </TabsContent>
     </Tabs>
   );

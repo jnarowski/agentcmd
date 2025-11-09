@@ -7,7 +7,10 @@ import {
   SidebarMenuButton,
 } from "@/client/components/ui/sidebar";
 import { Badge } from "@/client/components/ui/badge";
-import { ToggleGroup, ToggleGroupItem } from "@/client/components/ui/toggle-group";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@/client/components/ui/toggle-group";
 import { useSettings, useUpdateSettings } from "@/client/hooks/useSettings";
 import { useProjectsWithSessions } from "@/client/pages/projects/hooks/useProjects";
 import { AgentIcon } from "@/client/components/AgentIcon";
@@ -37,10 +40,15 @@ export function NavActivities() {
   const { data: settings } = useSettings();
   const updateSettings = useUpdateSettings();
   const { data: projectsData } = useProjectsWithSessions();
-  const [hoveredActivityId, setHoveredActivityId] = useState<string | null>(null);
-  const [menuOpenActivityId, setMenuOpenActivityId] = useState<string | null>(null);
+  const [hoveredActivityId, setHoveredActivityId] = useState<string | null>(
+    null
+  );
+  const [menuOpenActivityId, setMenuOpenActivityId] = useState<string | null>(
+    null
+  );
 
-  const filter: ActivityFilter = settings?.userPreferences?.activity_filter || "all";
+  const filter: ActivityFilter =
+    settings?.userPreferences?.activity_filter || "all";
 
   // Extract sessions from all projects and map to Activity type
   const sessionActivities = useMemo(() => {
@@ -53,9 +61,15 @@ export function NavActivities() {
         activities.push({
           id: session.id,
           type: "session",
-          name: displayName.length > 40 ? displayName.slice(0, 40) + "..." : displayName,
+          name:
+            displayName.length > 37
+              ? displayName.slice(0, 37) + "..."
+              : displayName,
           projectId: project.id,
-          projectName: project.name.length > 30 ? project.name.slice(0, 30) + "..." : project.name,
+          projectName:
+            project.name.length > 30
+              ? project.name.slice(0, 30) + "..."
+              : project.name,
           status: session.state,
           createdAt: new Date(session.created_at),
           agent: session.agent,
@@ -97,7 +111,10 @@ export function NavActivities() {
           type: "workflow",
           name: run.name.length > 50 ? run.name.slice(0, 50) + "..." : run.name,
           projectId: project.id,
-          projectName: project.name.length > 30 ? project.name.slice(0, 30) + "..." : project.name,
+          projectName:
+            project.name.length > 30
+              ? project.name.slice(0, 30) + "..."
+              : project.name,
           status: run.status,
           createdAt: new Date(run.created_at),
         });
@@ -112,11 +129,15 @@ export function NavActivities() {
   if (filter === "sessions") {
     filteredActivities = filteredActivities.filter((a) => a.type === "session");
   } else if (filter === "workflows") {
-    filteredActivities = filteredActivities.filter((a) => a.type === "workflow");
+    filteredActivities = filteredActivities.filter(
+      (a) => a.type === "workflow"
+    );
   }
 
   // Sort by created_at descending (newest first) and limit to 10
-  filteredActivities.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  filteredActivities.sort(
+    (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+  );
   filteredActivities = filteredActivities.slice(0, 10);
 
   const handleActivityClick = (activity: Activity) => {
@@ -142,13 +163,15 @@ export function NavActivities() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <div className="px-2 py-2 pb-2 shrink-0">
+      <div className="px-2 pb-2 shrink-0">
         <ToggleGroup
           type="single"
           value={filter}
           onValueChange={(value) => {
             if (value) {
-              updateSettings.mutate({ activity_filter: value as ActivityFilter });
+              updateSettings.mutate({
+                activity_filter: value as ActivityFilter,
+              });
             }
           }}
           className="justify-start gap-0.5"
@@ -183,54 +206,60 @@ export function NavActivities() {
           </div>
         ) : (
           <SidebarMenu>
-          {filteredActivities.map((activity) => (
-            <SidebarMenuItem
-              key={activity.id}
-              onMouseEnter={() => setHoveredActivityId(activity.id)}
-              onMouseLeave={() => setHoveredActivityId(null)}
-              className="relative"
-            >
-              <SidebarMenuButton
-                onClick={() => handleActivityClick(activity)}
-                className="h-auto min-h-[28px] px-2 py-1"
+            {filteredActivities.map((activity) => (
+              <SidebarMenuItem
+                key={activity.id}
+                onMouseEnter={() => setHoveredActivityId(activity.id)}
+                onMouseLeave={() => setHoveredActivityId(null)}
+                className="relative"
               >
-                {activity.type === "session" && activity.agent && (
-                  <AgentIcon agent={activity.agent} className="size-4 shrink-0" />
-                )}
-                <div className="flex flex-1 flex-col gap-0.5 min-w-0">
-                  <span className="text-sm min-w-0">
-                    {activity.name}
-                  </span>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    {activity.type === "session" && (
+                <SidebarMenuButton
+                  onClick={() => handleActivityClick(activity)}
+                  className="h-auto min-h-[28px] px-2 py-1"
+                >
+                  {activity.type === "session" && activity.agent && (
+                    <AgentIcon
+                      agent={activity.agent}
+                      className="size-4 shrink-0"
+                    />
+                  )}
+                  <div className="flex flex-1 flex-col gap-0.5 min-w-0">
+                    <span className="text-sm min-w-0">{activity.name}</span>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      {activity.type === "session" && (
+                        <Badge
+                          variant="secondary"
+                          className={`h-4 px-1.5 text-[10px] w-12 shrink-0 justify-center ${getStatusColor(activity.status)}`}
+                        >
+                          {activity.status}
+                        </Badge>
+                      )}
                       <Badge
                         variant="secondary"
-                        className={`h-4 px-1.5 text-[10px] w-12 shrink-0 justify-center ${getStatusColor(activity.status)}`}
+                        className="h-4 px-1.5 text-[10px] bg-muted/50 text-muted-foreground hover:bg-muted/50 truncate"
                       >
-                        {activity.status}
+                        {activity.projectName}
                       </Badge>
-                    )}
-                    <Badge
-                      variant="secondary"
-                      className="h-4 px-1.5 text-[10px] bg-muted/50 text-muted-foreground hover:bg-muted/50 truncate"
-                    >
-                      {activity.projectName}
-                    </Badge>
+                    </div>
                   </div>
-                </div>
-              </SidebarMenuButton>
-              {activity.type === "session" && activity.session && (hoveredActivityId === activity.id || menuOpenActivityId === activity.id) && (
-                <div className="absolute right-2 top-2 z-50">
-                  <SessionDropdownMenu
-                    session={activity.session}
-                    onMenuOpenChange={(open) => setMenuOpenActivityId(open ? activity.id : null)}
-                    triggerClassName="data-[state=open]:bg-accent"
-                  />
-                </div>
-              )}
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
+                </SidebarMenuButton>
+                {activity.type === "session" &&
+                  activity.session &&
+                  (hoveredActivityId === activity.id ||
+                    menuOpenActivityId === activity.id) && (
+                    <div className="absolute right-2 top-2 z-50">
+                      <SessionDropdownMenu
+                        session={activity.session}
+                        onMenuOpenChange={(open) =>
+                          setMenuOpenActivityId(open ? activity.id : null)
+                        }
+                        triggerClassName="data-[state=open]:bg-accent"
+                      />
+                    </div>
+                  )}
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
         )}
       </div>
     </div>

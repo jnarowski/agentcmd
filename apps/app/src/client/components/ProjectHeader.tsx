@@ -57,7 +57,7 @@ export function ProjectHeader({ projectId, projectName, projectPath, gitCapabili
     () => [
       { to: `/projects/${projectId}`, label: "Home", icon: Home, end: true },
       {
-        to: `/projects/${projectId}/session/new`,
+        to: `/projects/${projectId}/sessions/new`,
         label: "Session",
         icon: MessageSquare,
       },

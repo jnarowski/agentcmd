@@ -43,7 +43,7 @@ export default function ProjectSession() {
   // Redirect to new session if no sessionId (shouldn't happen with proper routing)
   useEffect(() => {
     if (!sessionId && projectId) {
-      navigate(`/projects/${projectId}/session/new`, { replace: true });
+      navigate(`/projects/${projectId}/sessions/new`, { replace: true });
     }
   }, [sessionId, projectId, navigate]);
 

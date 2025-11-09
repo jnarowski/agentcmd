@@ -1,17 +1,21 @@
 import { Command } from "lucide-react";
-import { SidebarHeader, SidebarMenu, SidebarMenuItem } from "@/client/components/ui/sidebar";
+import {
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+} from "@/client/components/ui/sidebar";
+import { NewButton } from "./NewButton";
 
 export function AppSidebarHeader() {
   return (
-    <SidebarHeader className="py-0">
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <div className="flex items-center gap-2 px-2 py-1.5">
-            <Command className="size-4" />
-            <span className="text-base font-semibold">agentcmd</span>
-          </div>
-        </SidebarMenuItem>
-      </SidebarMenu>
+    <SidebarHeader className="border-b h-[69px]">
+      <div className="flex items-center justify-between gap-2 px-2 h-full">
+        <div className="flex items-center gap-2">
+          <Command className="size-5" />
+          <span className="text-lg font-semibold">agentcmd</span>
+        </div>
+        <NewButton />
+      </div>
     </SidebarHeader>
   );
 }
