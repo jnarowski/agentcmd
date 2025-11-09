@@ -160,6 +160,19 @@ export default function ProjectSession() {
     !globalIsConnected || // Disable if global WebSocket not connected
     Boolean(waitingForFirstResponse); // Block until first assistant response
 
+  // Global Escape key handler for interrupting streaming
+  useEffect(() => {
+    const handleEscapeKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && session?.isStreaming) {
+        e.preventDefault();
+        killSession();
+      }
+    };
+
+    document.addEventListener("keydown", handleEscapeKey);
+    return () => document.removeEventListener("keydown", handleEscapeKey);
+  }, [session?.isStreaming, killSession]);
+
   // Permission approval handler
   const handlePermissionApproval = (toolUseId: string) => {
     console.log('[ProjectSession] Permission approved:', toolUseId);

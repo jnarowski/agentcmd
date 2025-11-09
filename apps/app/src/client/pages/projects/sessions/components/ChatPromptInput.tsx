@@ -132,7 +132,6 @@ const ChatPromptInputInner = forwardRef<
       textareaRef,
       disabled,
       onSubmit,
-      onKill,
     });
 
     // Expose focus method to parent components
@@ -165,8 +164,7 @@ const ChatPromptInputInner = forwardRef<
             permissionMode === "acceptEdits" &&
               "border-purple-500 md:has-[[data-slot=input-group-control]:focus-visible]:border-purple-500",
             permissionMode === "bypassPermissions" &&
-              "border-red-500 md:has-[[data-slot=input-group-control]:focus-visible]:border-red-500",
-            externalIsStreaming && "opacity-50"
+              "border-red-500 md:has-[[data-slot=input-group-control]:focus-visible]:border-red-500"
           )}
         >
           <PromptInputBody>
@@ -190,7 +188,6 @@ const ChatPromptInputInner = forwardRef<
                 onFileSelect={handleFileSelect}
                 onFileRemove={handleFileRemove}
                 textareaValue={text}
-                disabled={externalIsStreaming}
               />
               {/* Slash commands - only for agents that support them */}
               {capabilities.supportsSlashCommands && (
@@ -199,40 +196,29 @@ const ChatPromptInputInner = forwardRef<
                   onOpenChange={setIsSlashMenuOpen}
                   projectId={activeProjectId ?? undefined}
                   onCommandSelect={handleCommandSelect}
-                  disabled={externalIsStreaming}
                 />
               )}
               <PromptInputSpeechButton
                 onTranscriptionChange={controller.textInput.setInput}
                 textareaRef={textareaRef}
-                disabled={externalIsStreaming}
               />
               {/* Model selector - only for agents that support model selection */}
               <ModelSelector
                 currentModel={currentModel}
                 models={capabilities.models}
                 onModelChange={setModel}
-                disabled={externalIsStreaming}
               />
               <PermissionModeSelector
                 permissionMode={permissionMode}
                 onPermissionModeChange={setPermissionMode}
-                disabled={externalIsStreaming}
               />
             </PromptInputTools>
             <div className="flex items-center gap-2">
-              {/* Show interrupt message when streaming, otherwise show token count */}
-              {externalIsStreaming ? (
-                <span className="text-xs text-gray-500">
-                  Hit Esc to interrupt
-                </span>
-              ) : (
-                totalTokens !== undefined && (
-                  <TokenUsageCircle
-                    totalTokens={totalTokens}
-                    currentMessageTokens={currentMessageTokens}
-                  />
-                )
+              {totalTokens !== undefined && (
+                <TokenUsageCircle
+                  totalTokens={totalTokens}
+                  currentMessageTokens={currentMessageTokens}
+                />
               )}
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -250,7 +236,7 @@ const ChatPromptInputInner = forwardRef<
                           "bg-gray-500 hover:bg-gray-600 text-white"
                       )}
                       status={status}
-                      disabled={disabled || !isConnected || externalIsStreaming}
+                      disabled={disabled || !isConnected}
                     />
                   </span>
                 </TooltipTrigger>
