@@ -115,11 +115,11 @@ export function NavActivities() {
     );
   }
 
-  // Sort by created_at descending (newest first) and limit to 10
+  // Sort by created_at descending (newest first) and limit to 50
   filteredActivities.sort(
     (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
   );
-  filteredActivities = filteredActivities.slice(0, 10);
+  filteredActivities = filteredActivities.slice(0, 50);
 
   const handleRefresh = () => {
     syncProjectsMutation.mutate(undefined, {
