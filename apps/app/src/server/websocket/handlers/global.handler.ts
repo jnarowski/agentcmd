@@ -32,13 +32,6 @@ export async function handleGlobalEvent(
 
   // Handle subscription events
   if (type === "subscribe") {
-    // DIAGNOSTIC: Log subscribe event
-    console.log('[DIAGNOSTIC] handleGlobalEvent - subscribe:', {
-      channel,
-      data,
-      userId,
-    });
-
     // Support both formats:
     // 1. New format: {channel: "global", type: "subscribe", data: {channels: ["project:xxx"]}}
     // 2. Legacy format: {channel: "project:xxx", type: "subscribe"}
@@ -48,11 +41,6 @@ export async function handleGlobalEvent(
       // Legacy format: channel field contains the channel to subscribe to
       subscribeData = { channels: [channel] };
     }
-
-    console.log('[DIAGNOSTIC] handleGlobalEvent - calling handleSubscribe with:', {
-      subscribeData,
-      userId,
-    });
 
     await handleSubscribe(socket, subscribeData!, userId, fastify);
     return;
@@ -87,22 +75,9 @@ async function handleSubscribe(
   userId: string,
   fastify: FastifyInstance
 ): Promise<void> {
-  // DIAGNOSTIC: Log handleSubscribe entry
-  console.log('[DIAGNOSTIC] handleSubscribe called:', {
-    data,
-    userId,
-    hasChannels: 'channels' in data,
-    channelsValue: data?.channels,
-  });
-
   const { channels } = data;
 
   if (!Array.isArray(channels)) {
-    console.log('[DIAGNOSTIC] handleSubscribe - channels validation failed:', {
-      channels,
-      type: typeof channels,
-      isArray: Array.isArray(channels),
-    });
     sendMessage(socket, Channels.global(), {
       type: GlobalEventTypes.SUBSCRIPTION_ERROR,
       data: {
@@ -118,26 +93,11 @@ async function handleSubscribe(
 
   // Validate and subscribe to each channel
   for (const channelId of channels) {
-    console.log('[DIAGNOSTIC] handleSubscribe - processing channel:', {
-      channelId,
-      userId,
-    });
-
     const validation = await validateChannelAccess(channelId, userId);
-
-    console.log('[DIAGNOSTIC] handleSubscribe - validation result:', {
-      channelId,
-      allowed: validation.allowed,
-      reason: validation.reason,
-    });
 
     if (validation.allowed) {
       subscribe(channelId, socket);
       subscribedChannels.push(channelId);
-      console.log('[DIAGNOSTIC] handleSubscribe - subscribed successfully:', {
-        channelId,
-        userId,
-      });
       fastify.log.info(
         { userId, channelId },
         "[WebSocket] User subscribed to channel"

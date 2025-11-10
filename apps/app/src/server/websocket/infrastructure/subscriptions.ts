@@ -35,13 +35,6 @@ export function subscribe(channelId: string, socket: WebSocket): void {
   // Add socket to channel
   subscribers.add(socket);
 
-  // DIAGNOSTIC: Log subscription
-  console.log('[DIAGNOSTIC] subscribe() called:', {
-    channelId,
-    subscriberCount: subscribers.size,
-    socketReadyState: socket.readyState,
-  });
-
   // Track channel for this socket (for cleanup)
   let channels = socketChannels.get(socket);
   if (!channels) {
@@ -126,16 +119,7 @@ export function unsubscribeAll(socket: WebSocket): void {
 export function broadcast(channelId: string, event: ChannelEvent): void {
   const subscribers = subscriptions.get(channelId);
 
-  // DIAGNOSTIC: Log broadcast attempt
-  console.log('[DIAGNOSTIC] broadcast() called:', {
-    channelId,
-    eventType: event.type,
-    subscriberCount: subscribers?.size || 0,
-    hasSubscribers: !!subscribers && subscribers.size > 0,
-  });
-
   if (!subscribers || subscribers.size === 0) {
-    console.log('[DIAGNOSTIC] No subscribers for channel:', channelId);
     return;
   }
 
