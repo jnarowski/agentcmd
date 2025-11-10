@@ -250,7 +250,7 @@ export function useWorkflowWebSocket(projectId: string) {
       isConnected,
     });
 
-    sendMessage(channel, { type: "subscribe", data: {} });
+    sendMessage(channel, { type: "subscribe", data: { channels: [channel] } });
 
     // Register event handler
     eventBus.on(channel, handleWorkflowEvent);
