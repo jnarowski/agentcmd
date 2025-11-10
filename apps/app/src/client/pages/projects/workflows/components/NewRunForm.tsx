@@ -112,13 +112,8 @@ export function NewRunForm({
   const definitionOptions = useMemo(() => {
     if (!definitions) return [];
 
-    console.log("definitions", definitions);
-
     const projectDefs = definitions.filter((def) => def.scope === "project");
     const globalDefs = definitions.filter((def) => def.scope === "global");
-
-    console.log("projectDefs", projectDefs);
-    console.log("globalDefs", globalDefs);
 
     const options: Array<{
       value: string;
@@ -248,8 +243,8 @@ export function NewRunForm({
         spec_file: specInputType === "file" ? specFile : undefined,
         spec_content: specInputType === "content" ? specContent : undefined,
         mode: mode,
-        base_branch: mode !== "stay" ? (baseBranch || undefined) : undefined,
-        branch_name: mode !== "stay" ? (branchName || undefined) : undefined,
+        base_branch: mode !== "stay" ? baseBranch || undefined : undefined,
+        branch_name: mode !== "stay" ? branchName || undefined : undefined,
       });
 
       onSuccess(run);

@@ -97,6 +97,14 @@ export async function registerWebSocket(
               // Phoenix Channels format: {channel, type, data}
               const { channel, type, data } = parsed;
 
+              // DIAGNOSTIC: Log all incoming messages
+              console.log('[DIAGNOSTIC] WebSocket message received:', {
+                channel,
+                type,
+                userId,
+                hasData: !!data,
+              });
+
               fastify.log.info(
                 { channel, type, userId },
                 "[WebSocket] Received message"
