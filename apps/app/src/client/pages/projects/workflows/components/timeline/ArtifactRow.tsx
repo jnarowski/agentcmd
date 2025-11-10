@@ -1,4 +1,5 @@
 import { FileText, Download } from "lucide-react";
+import { useDebugMode } from "@/client/hooks/useDebugMode";
 import type { WorkflowArtifact } from "@/client/pages/projects/workflows/types";
 import { formatFileSize } from "@/client/pages/projects/workflows/utils/workflowFormatting";
 
@@ -7,6 +8,8 @@ interface ArtifactRowProps {
 }
 
 export function ArtifactRow({ artifact }: ArtifactRowProps) {
+  const debugMode = useDebugMode();
+
   const handleDownload = () => {
     window.open(`/api/artifacts/${artifact.id}/download`, "_blank");
   };
@@ -22,9 +25,11 @@ export function ArtifactRow({ artifact }: ArtifactRowProps) {
           <span className="font-medium truncate" title={artifact.name}>
             {artifact.name}
           </span>
-          <span className="text-xs text-muted-foreground font-mono">
-            [ARTIFACT: {artifact.id}]
-          </span>
+          {debugMode && (
+            <span className="text-xs text-muted-foreground font-mono">
+              [ARTIFACT: {artifact.id}]
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">

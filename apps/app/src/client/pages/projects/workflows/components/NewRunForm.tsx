@@ -376,9 +376,9 @@ export function NewRunForm({
         )}
       </div>
 
-      {/* Mode: stay, branch, or worktree */}
+      {/* Setup: stay, branch, or worktree */}
       <div className="space-y-3">
-        <Label>Mode</Label>
+        <Label>Setup</Label>
         <RadioGroup
           value={mode}
           onValueChange={(v) => setMode(v as "stay" | "branch" | "worktree")}
@@ -394,6 +394,9 @@ export function NewRunForm({
                 Branch
               </Label>
             </div>
+            <p className="text-xs text-muted-foreground ml-6">
+              Creates and checks out a new branch from base
+            </p>
             {mode === "branch" && (
               <div className="ml-2 space-y-3 border-l-2 border-muted pl-3.5 py-3 [&>div]:space-y-2">
                 {/* Branch Name */}
@@ -467,6 +470,9 @@ export function NewRunForm({
                 Worktree
               </Label>
             </div>
+            <p className="text-xs text-muted-foreground ml-6">
+              Creates a git worktree with a new branch for parallel work
+            </p>
             {mode === "worktree" && (
               <div className="ml-2 space-y-3 border-l-2 border-muted pl-3.5 py-3 [&>div]:space-y-2">
                 {/* Branch Name */}
@@ -531,12 +537,17 @@ export function NewRunForm({
             )}
           </div>
 
-          {/* Stay option */}
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="stay" id="mode-stay" />
-            <Label htmlFor="mode-stay" className="font-normal cursor-pointer">
-              Stay
-            </Label>
+          {/* Skip Setup option */}
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="stay" id="mode-stay" />
+              <Label htmlFor="mode-stay" className="font-normal cursor-pointer">
+                Skip Setup
+              </Label>
+            </div>
+            <p className="text-xs text-muted-foreground ml-6">
+              Runs in current branch without git operations
+            </p>
           </div>
         </RadioGroup>
       </div>

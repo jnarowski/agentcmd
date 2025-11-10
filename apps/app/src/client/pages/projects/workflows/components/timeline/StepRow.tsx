@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { AgentSessionModal } from "@/client/pages/projects/workflows/components/AgentSessionModal";
 import { useIsMobile } from "@/client/hooks/use-mobile";
+import { useDebugMode } from "@/client/hooks/useDebugMode";
 import type { WorkflowRunStep } from "@/client/pages/projects/workflows/types";
 import type { WorkflowTab } from "@/client/pages/projects/workflows/hooks/useWorkflowDetailPanel";
 
@@ -21,6 +22,7 @@ interface StepRowProps {
 export function StepRow({ step, projectId, onSelectSession, onSetActiveTab }: StepRowProps) {
   const [showSessionModal, setShowSessionModal] = useState(false);
   const isMobile = useIsMobile();
+  const debugMode = useDebugMode();
 
   // Status icon
   const StatusIcon = {
@@ -67,9 +69,11 @@ export function StepRow({ step, projectId, onSelectSession, onSetActiveTab }: St
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="font-medium">{step.name}</span>
-          <span className="text-xs text-muted-foreground font-mono">
-            [STEP: {step.id}]
-          </span>
+          {debugMode && (
+            <span className="text-xs text-muted-foreground font-mono">
+              [STEP: {step.id}]
+            </span>
+          )}
           {step.agent_session_id && (
             <button
               onClick={() => {
