@@ -1,5 +1,5 @@
 {
-  "lastId": 17,
+  "lastId": 18,
   "specs": {
     "1": {
       "folder": "1-log-streaming",
@@ -85,6 +85,11 @@
       "folder": "17-redesign-setup",
       "created": "2025-11-10T00:00:00.000Z",
       "location": "doing"
+    },
+    "18": {
+      "folder": "18-event-naming-revamp",
+      "created": "2025-11-10T12:00:00.000Z",
+      "location": "todo"
     }
   }
 }
