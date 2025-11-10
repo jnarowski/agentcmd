@@ -39,7 +39,7 @@ export function NavActivities() {
   const { data: settings } = useSettings();
   const updateSettings = useUpdateSettings();
   const { data: projects } = useProjects();
-  const { data: sessions } = useSessions({ limit: 20, orderBy: 'updated_at', order: 'desc' });
+  const { data: sessions } = useSessions({ limit: 20, orderBy: 'created_at', order: 'desc' });
   // Fetch only active/in-progress runs from backend
   const { data: allWorkflowRuns } = useAllWorkflowRuns(['pending', 'running', 'failed']);
   const queryClient = useQueryClient();
@@ -50,14 +50,14 @@ export function NavActivities() {
 
   // Map sessions to Activity type, join with project names
   const sessionActivities = useMemo(() => {
-    if (!sessions || !projects) return [];
+    if (!sessions) return [];
 
     const activities: Activity[] = [];
     for (const session of sessions) {
-      const project = projects.find(p => p.id === session.projectId);
-      if (!project) continue;
+      const project = projects?.find(p => p.id === session.projectId);
 
       const displayName = getSessionDisplayName(session);
+      const projectName = project?.name ?? session.projectId;
       activities.push({
         id: session.id,
         type: "session",
@@ -65,11 +65,11 @@ export function NavActivities() {
           displayName.length > 37
             ? displayName.slice(0, 37) + "..."
             : displayName,
-        projectId: project.id,
+        projectId: session.projectId,
         projectName:
-          project.name.length > 30
-            ? project.name.slice(0, 30) + "..."
-            : project.name,
+          projectName.length > 30
+            ? projectName.slice(0, 30) + "..."
+            : projectName,
         status: session.state,
         createdAt: new Date(session.created_at),
         agent: session.agent,
@@ -81,22 +81,22 @@ export function NavActivities() {
 
   // Map workflow runs to Activity type (client-side join with projects)
   const workflowActivities = useMemo(() => {
-    if (!allWorkflowRuns || !projects) return [];
+    if (!allWorkflowRuns) return [];
 
     const activities: Activity[] = [];
     for (const run of allWorkflowRuns) {
-      const project = projects.find(p => p.id === run.project_id);
-      if (!project) continue;
+      const project = projects?.find(p => p.id === run.project_id);
 
+      const projectName = project?.name ?? run.project_id;
       activities.push({
         id: run.id,
         type: "workflow",
         name: run.name.length > 50 ? run.name.slice(0, 50) + "..." : run.name,
-        projectId: project.id,
+        projectId: run.project_id,
         projectName:
-          project.name.length > 30
-            ? project.name.slice(0, 30) + "..."
-            : project.name,
+          projectName.length > 30
+            ? projectName.slice(0, 30) + "..."
+            : projectName,
         status: run.status,
         createdAt: new Date(run.created_at),
       });
