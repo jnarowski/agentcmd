@@ -39,36 +39,18 @@ import type {
 } from "@/shared/types/project.types";
 import { buildErrorResponse } from "@/server/errors";
 
-// Query schema for projects endpoint
-const ProjectsQuerySchema = z.object({
-  include: z.enum(['sessions']).optional(),
-  sessionLimit: z.coerce.number().min(1).max(100).default(20).optional(),
-});
-
 export async function projectRoutes(fastify: FastifyInstance) {
   /**
    * GET /api/projects
-   * Get all projects (optionally with sessions)
+   * Get all projects
    */
-  fastify.get<{
-    Querystring: z.infer<typeof ProjectsQuerySchema>;
-  }>(
+  fastify.get(
     "/api/projects",
     {
       preHandler: fastify.authenticate,
-      schema: {
-        querystring: ProjectsQuerySchema,
-        // Note: Response schema validation disabled to support dynamic response shape
-        // (with or without sessions based on query params)
-      },
     },
-    async (request, reply) => {
-      const { include, sessionLimit } = request.query;
-
-      const projects = await getAllProjects({
-        includeSessions: include === 'sessions',
-        sessionLimit,
-      });
+    async (_request, reply) => {
+      const projects = await getAllProjects();
 
       return reply.send({ data: projects });
     }

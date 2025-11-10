@@ -77,7 +77,6 @@ function ProtectedLayout() {
     if (isSuccess && syncResult) {
       // Invalidate projects list to show newly synced projects
       queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: projectKeys.withSessions() });
       queryClient.invalidateQueries({ queryKey: sessionKeys.lists() });
 
       if (import.meta.env.DEV) {

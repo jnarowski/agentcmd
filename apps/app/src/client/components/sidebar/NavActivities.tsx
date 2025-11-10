@@ -39,7 +39,7 @@ export function NavActivities() {
   const { data: settings } = useSettings();
   const updateSettings = useUpdateSettings();
   const { data: projects } = useProjects();
-  const { data: sessions } = useSessions({ limit: 20, orderBy: 'created_at', order: 'desc' });
+  const { data: sessions } = useSessions({ limit: 100, orderBy: 'created_at', order: 'desc' });
   // Fetch only active/in-progress runs from backend
   const { data: allWorkflowRuns } = useAllWorkflowRuns(['pending', 'running', 'failed']);
   const queryClient = useQueryClient();

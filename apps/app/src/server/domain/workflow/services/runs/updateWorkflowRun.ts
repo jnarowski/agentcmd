@@ -26,7 +26,7 @@ export async function updateWorkflowRun({
   logger?.debug({ runId }, 'Workflow run updated');
 
   // Broadcast status change to WebSocket clients
-  await broadcastWorkflowEvent(run.project_id, {
+  broadcastWorkflowEvent(run.project_id, {
     type: 'workflow:run:updated',
     data: {
       run_id: run.id,

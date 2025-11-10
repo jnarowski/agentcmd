@@ -2,36 +2,10 @@
 import { prisma } from "@/shared/prisma";
 import type {
   Project,
-  ProjectWithSessions,
   ProjectCapabilities,
 } from "@/shared/types/project.types";
-import type { SessionResponse } from "@/shared/types/agent-session.types";
 import { isGitRepository } from "@/server/domain/git/services/isGitRepository";
 import { checkWorkflowPackage } from "@/server/domain/project/services/checkWorkflowPackage";
-import type { GetAllProjectsOptions } from "../types/GetAllProjectsOptions";
-
-/**
- * Transform Prisma session to API session format
- * @param prismaSession - Raw session from Prisma
- */
-function transformSession(prismaSession: any): SessionResponse {
-  return {
-    id: prismaSession.id,
-    projectId: prismaSession.projectId,
-    userId: prismaSession.userId,
-    name: prismaSession.name,
-    agent: prismaSession.agent,
-    cli_session_id: prismaSession.cli_session_id,
-    session_path: prismaSession.session_path,
-    metadata: prismaSession.metadata,
-    state: prismaSession.state as 'idle' | 'working' | 'error',
-    error_message: prismaSession.error_message ?? undefined,
-    is_archived: prismaSession.is_archived,
-    archived_at: prismaSession.archived_at,
-    created_at: prismaSession.created_at,
-    updated_at: prismaSession.updated_at,
-  };
-}
 
 /**
  * Build capabilities object for a project
@@ -90,64 +64,15 @@ function transformProject(
 }
 
 /**
- * Transform Prisma project with sessions to API format
- * @param prismaProject - Raw project from Prisma with sessions
- * @param capabilities - Project capabilities (git, workflow SDK)
- */
-function transformProjectWithSessions(
-  prismaProject: any,
-  capabilities: ProjectCapabilities
-): ProjectWithSessions {
-  return {
-    ...transformProject(prismaProject, capabilities),
-    sessions: prismaProject.sessions
-      ? prismaProject.sessions.map(transformSession)
-      : [],
-  };
-}
-
-/**
- * Get all projects (with optional sessions)
- * @param options - Options for fetching projects
- * @param options.includeSessions - Whether to include sessions
- * @param options.sessionLimit - Maximum number of sessions per project (default: 20)
+ * Get all projects
  * @returns Array of all projects ordered by creation date (newest first)
  */
-export async function getAllProjects(
-  { includeSessions = false, sessionLimit = 20 }: GetAllProjectsOptions = {}
-): Promise<Project[] | ProjectWithSessions[]> {
-
+export async function getAllProjects(): Promise<Project[]> {
   const projects = await prisma.project.findMany({
     orderBy: {
       created_at: "desc",
     },
     take: 500,
-    ...(includeSessions && {
-      include: {
-        sessions: {
-          orderBy: {
-            created_at: "desc",
-          },
-          take: sessionLimit,
-          select: {
-            id: true,
-            projectId: true,
-            userId: true,
-            name: true,
-            agent: true,
-            cli_session_id: true,
-            session_path: true,
-            metadata: true,
-            state: true,
-            error_message: true,
-            is_archived: true,
-            archived_at: true,
-            created_at: true,
-            updated_at: true,
-          },
-        },
-      },
-    }),
   });
 
   // Fetch capabilities for each project
@@ -157,12 +82,6 @@ export async function getAllProjects(
       return { project, capabilities };
     })
   );
-
-  if (includeSessions) {
-    return projectsWithCapabilities.map(({ project, capabilities }) =>
-      transformProjectWithSessions(project, capabilities)
-    );
-  }
 
   return projectsWithCapabilities.map(({ project, capabilities }) =>
     transformProject(project, capabilities)

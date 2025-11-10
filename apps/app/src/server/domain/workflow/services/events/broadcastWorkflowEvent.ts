@@ -28,6 +28,14 @@ export function broadcastWorkflowEvent(
   projectId: string,
   event: WorkflowWebSocketEvent
 ): void {
+  // DIAGNOSTIC: Log all workflow events being broadcast
+  console.log('[DIAGNOSTIC] Broadcasting workflow event:', {
+    projectId,
+    channel: Channels.project(projectId),
+    eventType: event.type,
+    eventData: event.data,
+  });
+
   // Broadcast to project room channel via WebSocket
   // Connected clients in this room will receive the event in real-time
   broadcast(Channels.project(projectId), event);

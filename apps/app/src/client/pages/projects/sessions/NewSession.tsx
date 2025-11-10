@@ -69,11 +69,6 @@ export default function NewSession() {
         queryKey: sessionKeys.byProject(projectId),
       });
 
-      // Also invalidate projectsWithSessions which is used by the sidebar
-      queryClient.invalidateQueries({
-        queryKey: projectKeys.withSessions(),
-      });
-
       // No image upload for now - files parameter not used
       const imagePaths = undefined;
 

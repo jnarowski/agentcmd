@@ -193,38 +193,6 @@ export function useSessionWebSocket({
             }
           );
 
-          // Also update project with sessions cache for backward compatibility
-          queryClient.setQueryData<ProjectWithSessions[]>(
-            projectKeys.withSessions(),
-            (old) => {
-              if (!old) return old;
-
-              return old.map((project) => {
-                // Find project containing this session
-                if (project.id !== projectIdRef.current) return project;
-
-                // Update the matching session
-                return {
-                  ...project,
-                  sessions: project.sessions.map((session) =>
-                    session.id === sessionIdRef.current
-                      ? {
-                          ...session,
-                          state: data.state ?? session.state,
-                          error_message: data.error_message ?? session.error_message,
-                          metadata: (data.metadata as unknown as typeof session.metadata) ?? session.metadata,
-                          name: data.name ?? session.name,
-                          updated_at: data.updated_at
-                            ? new Date(data.updated_at)
-                            : session.updated_at,
-                        }
-                      : session
-                  ),
-                };
-              });
-            }
-          );
-
           // Sync sessionStore with database state
           if (data.state === "error") {
             // Session failed - stop streaming and show error

@@ -107,9 +107,6 @@ export function useUpdateSession() {
         }
       );
 
-      // Invalidate projects with sessions query (used by sidebar)
-      queryClient.invalidateQueries({ queryKey: projectKeys.withSessions() });
-
       toast.success("Session name updated successfully");
     },
     onError: (error) => {
@@ -141,9 +138,6 @@ export function useArchiveSession() {
         }
       );
 
-      // Invalidate projects with sessions query (used by sidebar)
-      queryClient.invalidateQueries({ queryKey: projectKeys.withSessions() });
-
       toast.success("Session archived successfully");
     },
     onError: (error) => {
@@ -174,9 +168,6 @@ export function useUnarchiveSession() {
           );
         }
       );
-
-      // Invalidate projects with sessions query (used by sidebar)
-      queryClient.invalidateQueries({ queryKey: projectKeys.withSessions() });
 
       toast.success("Session unarchived successfully");
     },

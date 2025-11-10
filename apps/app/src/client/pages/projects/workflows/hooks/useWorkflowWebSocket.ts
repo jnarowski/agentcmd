@@ -205,6 +205,12 @@ export function useWorkflowWebSocket(projectId: string) {
   // Main event handler
   const handleWorkflowEvent = useCallback(
     (event: WorkflowWebSocketEvent) => {
+      // DIAGNOSTIC: Log all received workflow events
+      console.log('[DIAGNOSTIC] Received workflow WebSocket event:', {
+        eventType: event.type,
+        eventData: event.data,
+      });
+
       switch (event.type) {
         case WorkflowWebSocketEventTypes.RUN_UPDATED:
           handleRunUpdated(event.data);
@@ -236,6 +242,14 @@ export function useWorkflowWebSocket(projectId: string) {
 
     // Subscribe to project channel
     const channel = Channels.project(projectId);
+
+    // DIAGNOSTIC: Log subscription
+    console.log('[DIAGNOSTIC] Subscribing to workflow channel:', {
+      projectId,
+      channel,
+      isConnected,
+    });
+
     sendMessage(channel, { type: "subscribe", data: {} });
 
     // Register event handler
@@ -243,6 +257,7 @@ export function useWorkflowWebSocket(projectId: string) {
 
     // Cleanup
     return () => {
+      console.log('[DIAGNOSTIC] Unsubscribing from workflow channel:', channel);
       eventBus.off(channel, handleWorkflowEvent);
     };
   }, [projectId, isConnected, eventBus, sendMessage, handleWorkflowEvent]);
