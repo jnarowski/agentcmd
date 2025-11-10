@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 import { prisma } from "@/shared/prisma";
 import { cleanTestDB } from "@/server/test-utils/db";
 import { createAgentStep } from "./createAgentStep";
-import type { RuntimeContext } from "../../../types/engine.types";
+import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 import * as executeAgentModule from "@/server/domain/session/services/executeAgent";
 import * as createSessionModule from "@/server/domain/session/services/createSession";
 import * as updateSessionModule from "@/server/domain/session/services/updateSession";

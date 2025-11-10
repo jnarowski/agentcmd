@@ -10,8 +10,8 @@ import {
   getLogsDir,
   getGlobalWorkflowsDir,
   ensureDirectoryExists,
-} from "../utils/paths.js";
-import { getDefaultConfig, saveConfig } from "../utils/config.js";
+} from "../utils/paths";
+import { getDefaultConfig, saveConfig } from "../utils/config";
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);

@@ -9,7 +9,7 @@ import type {
   WorkflowRun,
   WorkflowRunStep,
   WorkflowEvent,
-} from "../types";
+} from "@/client/pages/projects/workflows/types";
 import { WorkflowStatusValues, StepStatusValues } from "@/shared/schemas/workflow.schemas";
 
 // ============================================================================

@@ -3,7 +3,7 @@ import { prisma } from "@/shared/prisma";
 import type { Stats } from "node:fs";
 import { cleanTestDB } from "@/server/test-utils/db";
 import { createArtifactStep } from "./createArtifactStep";
-import type { RuntimeContext } from "../../../types/engine.types";
+import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 import * as fs from "node:fs/promises";
 
 vi.mock("node:fs/promises", () => ({

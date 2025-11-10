@@ -1,7 +1,7 @@
 import { ExternalLink, Copy, Check } from "lucide-react";
 import { useState } from "react";
-import type { WorkflowRun } from "../../types";
-import { useInngestRunStatus } from "../../hooks/useInngestRunStatus";
+import type { WorkflowRun } from "@/client/pages/projects/workflows/types";
+import { useInngestRunStatus } from "@/client/pages/projects/workflows/hooks/useInngestRunStatus";
 import { Button } from "@/client/components/ui/button";
 
 interface DetailsTabProps {

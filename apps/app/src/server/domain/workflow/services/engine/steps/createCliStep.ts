@@ -1,13 +1,13 @@
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
 import type { GetStepTools } from "inngest";
-import type { RuntimeContext } from "../../../types/engine.types";
+import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 import type { CliStepConfig, CliStepResult } from "agentcmd-workflows";
-import type { CliStepOptions } from "../../../types/event.types";
-import { executeStep } from "./utils/executeStep";
-import { withTimeout } from "./utils/withTimeout";
-import { toId } from "./utils/toId";
-import { toName } from "./utils/toName";
+import type { CliStepOptions } from "@/server/domain/workflow/types/event.types";
+import { executeStep } from "@/server/domain/workflow/services/engine/steps/utils/executeStep";
+import { withTimeout } from "@/server/domain/workflow/services/engine/steps/utils/withTimeout";
+import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
+import { toName } from "@/server/domain/workflow/services/engine/steps/utils/toName";
 
 const execAsync = promisify(exec);
 const DEFAULT_CLI_TIMEOUT = 300000; // 5 minutes

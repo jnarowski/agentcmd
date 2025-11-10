@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { emitArtifactCreatedEvent } from "./emitArtifactCreatedEvent";
 import type { WorkflowArtifact } from "@prisma/client";
-import * as broadcastWorkflowEventModule from "../../../events/broadcastWorkflowEvent";
+import * as broadcastWorkflowEventModule from "@/server/domain/workflow/services/events/broadcastWorkflowEvent";
 
 vi.mock("../../../events/broadcastWorkflowEvent", () => ({
   broadcastWorkflowEvent: vi.fn(),

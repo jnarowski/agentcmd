@@ -13,6 +13,7 @@ import { AppSidebar } from "@/client/components/AppSidebar";
 import { SidebarInset, SidebarProvider } from "@/client/components/ui/sidebar";
 import { ConnectionStatusBanner } from "@/client/components/ConnectionStatusBanner";
 import { api } from "@/client/utils/api";
+import { workflowKeys } from "@/client/pages/projects/workflows/hooks/queryKeys";
 
 function ProtectedLayout() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -21,12 +22,26 @@ function ProtectedLayout() {
   const { setTheme } = useTheme();
   const { readyState, reconnectAttempt, reconnect } = useWebSocket();
 
-  // Prefetch settings on mount to prevent race condition where multiple components
-  // call useSettings() before first request completes, triggering duplicate fetches
+  // Prefetch settings and workflow definitions on mount to prevent race conditions
+  // where multiple components call hooks before first request completes, triggering duplicate fetches
   useEffect(() => {
     queryClient.prefetchQuery({
       queryKey: settingsKeys.all,
       queryFn: () => api.get<{ data: unknown }>("/api/settings").then(res => res.data),
+    });
+
+    // Prefetch all workflow definitions (used in ProjectItem dropdown)
+    queryClient.prefetchQuery({
+      queryKey: workflowKeys.allDefinitions('active'),
+      queryFn: async () => {
+        const response = await api.get<{ data: unknown[] }>('/api/workflow-definitions?status=active');
+        // Parse JSON fields (matching useAllWorkflowDefinitions logic)
+        return response.data.map((def: any) => ({
+          ...def,
+          phases: typeof def.phases === 'string' ? JSON.parse(def.phases) : def.phases,
+          args_schema: typeof def.args_schema === 'string' ? JSON.parse(def.args_schema) : def.args_schema,
+        }));
+      },
     });
   }, [queryClient]);
 

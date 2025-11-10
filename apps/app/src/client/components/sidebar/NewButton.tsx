@@ -6,12 +6,26 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from "@/client/components/ui/dropdown-menu";
+import { useWorkflowDefinitions } from "@/client/pages/projects/workflows/hooks/useWorkflowDefinitions";
 
 export function NewButton() {
   const navigate = useNavigate();
   const { projectId, id } = useParams();
   const activeProjectId = projectId || id;
+
+  // Fetch workflow definitions for the active project
+  const { data: workflows } = useWorkflowDefinitions(
+    activeProjectId || "",
+    "active"
+  );
+
+  // Sort workflows alphabetically by name
+  const sortedWorkflows = workflows
+    ? [...workflows].sort((a, b) => a.name.localeCompare(b.name))
+    : [];
 
   return (
     <DropdownMenu>
@@ -21,34 +35,63 @@ export function NewButton() {
           New
         </Button>
       </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-48">
-          <DropdownMenuItem
-            onClick={() => {
-              if (activeProjectId) {
-                navigate(`/projects/${activeProjectId}/workflows`);
-              } else {
-                // If no active project, navigate to projects page
-                navigate(`/projects`);
-              }
-            }}
-          >
-            <Workflow className="size-4" />
-            New Workflow
+      <DropdownMenuContent align="end" className="w-72">
+        {/* Sessions Section */}
+        <DropdownMenuLabel className="text-[10px] uppercase text-muted-foreground font-semibold">
+          Sessions
+        </DropdownMenuLabel>
+        <DropdownMenuItem
+          onClick={() => {
+            if (activeProjectId) {
+              navigate(`/projects/${activeProjectId}/sessions/new`);
+            } else {
+              navigate(`/projects`);
+            }
+          }}
+        >
+          <MessageSquare className="size-4" />
+          New Session
+        </DropdownMenuItem>
+
+        {/* Divider */}
+        <DropdownMenuSeparator />
+
+        {/* Workflows Section */}
+        <DropdownMenuLabel className="text-[10px] uppercase text-muted-foreground font-semibold">
+          Workflows
+        </DropdownMenuLabel>
+
+        {/* List all workflow definitions */}
+        {sortedWorkflows.length > 0 ? (
+          sortedWorkflows.map((workflow) => (
+            <DropdownMenuItem
+              key={workflow.id}
+              onClick={() => {
+                if (activeProjectId) {
+                  navigate(
+                    `/projects/${activeProjectId}/workflows/${workflow.id}/new`
+                  );
+                }
+              }}
+              className="flex-col items-start gap-1 py-2"
+            >
+              <div className="flex items-center gap-2">
+                <Workflow className="size-4" />
+                <span>New {workflow.name}</span>
+              </div>
+              {workflow.description && (
+                <p className="text-xs text-muted-foreground pl-6 truncate w-full">
+                  {workflow.description}
+                </p>
+              )}
+            </DropdownMenuItem>
+          ))
+        ) : (
+          <DropdownMenuItem disabled className="text-muted-foreground">
+            No workflows defined
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => {
-              if (activeProjectId) {
-                navigate(`/projects/${activeProjectId}/sessions/new`);
-              } else {
-                // If no active project, navigate to projects page
-                navigate(`/projects`);
-              }
-            }}
-          >
-            <MessageSquare className="size-4" />
-            New Session
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

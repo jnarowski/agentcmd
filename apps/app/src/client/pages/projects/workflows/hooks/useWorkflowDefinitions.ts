@@ -25,5 +25,6 @@ export function useWorkflowDefinitions(projectId: string, status?: 'active' | 'a
   return useQuery({
     queryKey: workflowKeys.definitionsList(projectId, status),
     queryFn: () => fetchWorkflowDefinitions(projectId, status),
+    enabled: !!projectId,
   });
 }

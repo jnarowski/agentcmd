@@ -1,11 +1,11 @@
 import type { GetStepTools } from "inngest";
-import type { RuntimeContext } from "../../../types/engine.types";
-import { generateInngestStepId } from "./utils/generateInngestStepId";
-import { findOrCreateStep } from "./utils/findOrCreateStep";
-import { updateStepStatus } from "./utils/updateStepStatus";
-import { handleStepFailure } from "./utils/handleStepFailure";
-import { toId } from "./utils/toId";
-import { toName } from "./utils/toName";
+import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
+import { generateInngestStepId } from "@/server/domain/workflow/services/engine/steps/utils/generateInngestStepId";
+import { findOrCreateStep } from "@/server/domain/workflow/services/engine/steps/utils/findOrCreateStep";
+import { updateStepStatus } from "@/server/domain/workflow/services/engine/steps/utils/updateStepStatus";
+import { handleStepFailure } from "@/server/domain/workflow/services/engine/steps/utils/handleStepFailure";
+import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
+import { toName } from "@/server/domain/workflow/services/engine/steps/utils/toName";
 
 /**
  * Create generic run step factory function

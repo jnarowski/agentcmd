@@ -11,6 +11,7 @@ import { authRoutes } from "@/server/routes/auth";
 import { gitRoutes } from "@/server/routes/git";
 import { slashCommandsRoutes } from "@/server/routes/slash-commands";
 import { settingsRoutes } from "@/server/routes/settings";
+import { registerWorkflowDefinitionRoutes } from "@/server/routes/workflow-definitions";
 import { createAuthToken } from "./fixtures";
 
 /**
@@ -43,6 +44,7 @@ export async function createTestApp(): Promise<
   await app.register(gitRoutes);
   await app.register(slashCommandsRoutes);
   await app.register(settingsRoutes);
+  await app.register(registerWorkflowDefinitionRoutes);
 
   // Note: WebSocket routes are skipped in test app
 

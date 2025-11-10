@@ -3,7 +3,7 @@ import type { WorkflowStatus, StepStatus } from "@/shared/schemas/workflow.schem
 import {
   getWorkflowStatusConfig,
   getStepStatusConfig,
-} from "../utils/workflowStatus";
+} from "@/client/pages/projects/workflows/utils/workflowStatus";
 
 export interface WorkflowStatusBadgeProps {
   status: WorkflowStatus | StepStatus;

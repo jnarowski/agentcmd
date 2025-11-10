@@ -1,11 +1,11 @@
 import type { GetStepTools } from "inngest";
 import { Channels } from "@/shared/websocket/channels";
 import { broadcast } from "@/server/websocket/infrastructure/subscriptions";
-import type { RuntimeContext } from "../../../types/engine.types";
-import { createWorkflowEvent } from "../../events/createWorkflowEvent";
-import { generateInngestStepId } from "./utils/generateInngestStepId";
-import { toId } from "./utils/toId";
-import { toName } from "./utils/toName";
+import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
+import { createWorkflowEvent } from "@/server/domain/workflow/services/events/createWorkflowEvent";
+import { generateInngestStepId } from "@/server/domain/workflow/services/engine/steps/utils/generateInngestStepId";
+import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
+import { toName } from "@/server/domain/workflow/services/engine/steps/utils/toName";
 
 export interface AnnotationStepConfig {
   message: string;

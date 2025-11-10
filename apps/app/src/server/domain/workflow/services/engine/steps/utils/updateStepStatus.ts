@@ -1,7 +1,7 @@
 import { createWorkflowEvent } from "@/server/domain/workflow/services";
-import { broadcastWorkflowEvent } from "../../../events/broadcastWorkflowEvent";
-import type { RuntimeContext } from "../../../../types/engine.types";
-import { updateWorkflowStep } from "../../../steps/updateWorkflowStep";
+import { broadcastWorkflowEvent } from "@/server/domain/workflow/services/events/broadcastWorkflowEvent";
+import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
+import { updateWorkflowStep } from "@/server/domain/workflow/services/steps/updateWorkflowStep";
 
 /**
  * Update workflow execution step status and create event

@@ -5,12 +5,12 @@ import type {
   WorkflowFunction,
   WorkflowStep,
 } from "agentcmd-workflows";
-import type { RuntimeContext } from "../../types/engine.types";
+import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 import type { FastifyBaseLogger } from "fastify";
 import { prisma } from "@/shared/prisma";
 import { createWorkflowEvent } from "@/server/domain/workflow/services";
-import { broadcastWorkflowEvent } from "../events/broadcastWorkflowEvent";
-import { buildWorkflowIdentifiers } from "../../utils/buildWorkflowIdentifiers";
+import { broadcastWorkflowEvent } from "@/server/domain/workflow/services/events/broadcastWorkflowEvent";
+import { buildWorkflowIdentifiers } from "@/server/domain/workflow/utils/buildWorkflowIdentifiers";
 import {
   createPhaseStep,
   createAgentStep,

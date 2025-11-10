@@ -1,13 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { Plus, Search, Settings } from "lucide-react";
 import { Button } from "@/client/components/ui/button";
 import { WorkflowStatusValues } from "@/shared/schemas/workflow.schemas";
 import type { WorkflowStatus } from "@/shared/schemas/workflow.schemas";
 import { WorkflowKanbanColumn } from "./components/WorkflowKanbanColumn";
-import { NewRunDialog } from "./components/NewRunDialog";
-import { WorkflowOnboardingDialog } from "./components/WorkflowOnboardingDialog";
 import { useWorkflowRuns } from "./hooks/useWorkflowRuns";
 import { useWorkflowDefinitions } from "./hooks/useWorkflowDefinitions";
 import { useWorkflowWebSocket } from "./hooks/useWorkflowWebSocket";
@@ -26,8 +24,6 @@ export function ProjectWorkflowsView({
   const projectId = propProjectId || paramProjectId!;
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [showNewRunDialog, setShowNewRunDialog] = useState(false);
-  const [showOnboardingDialog, setShowOnboardingDialog] = useState(false);
 
   // Hooks
   const { data: runs, isLoading } = useWorkflowRuns(projectId, {
@@ -36,6 +32,19 @@ export function ProjectWorkflowsView({
   const { data: definitions } = useWorkflowDefinitions(projectId);
   const { data: project } = useProject(projectId);
   useWorkflowWebSocket(projectId);
+
+  // Redirect to onboarding if setup not complete
+  useEffect(() => {
+    if (project && definitions !== undefined) {
+      const isPackageInstalled = project.capabilities?.workflow_sdk?.installed ?? false;
+      const hasDefinitions = definitions && definitions.length > 0;
+
+      if (!isPackageInstalled || !hasDefinitions) {
+        navigate(`/projects/${projectId}/workflows/onboarding`, { replace: true });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project, definitions, projectId]);
 
   // TODO: Wire up workflow control mutations
   // const pauseWorkflow = usePauseWorkflow();
@@ -72,19 +81,12 @@ export function ProjectWorkflowsView({
     const hasDefinitions = definitions && definitions.length > 0;
 
     if (!isPackageInstalled || !hasDefinitions) {
-      // Show onboarding dialog
-      setShowOnboardingDialog(true);
+      // Navigate to onboarding page
+      navigate(`/projects/${projectId}/workflows/onboarding`);
     } else {
-      // Show new run dialog
-      setShowNewRunDialog(true);
+      // Navigate to new run page
+      navigate(`/projects/${projectId}/workflows/new`);
     }
-  };
-
-  const handleOnboardingComplete = () => {
-    // Close onboarding dialog
-    setShowOnboardingDialog(false);
-    // Open new run dialog
-    setShowNewRunDialog(true);
   };
 
   // Group runs by status
@@ -171,23 +173,6 @@ export function ProjectWorkflowsView({
           ))}
         </div>
       </div>
-
-      {/* Onboarding Dialog */}
-      <WorkflowOnboardingDialog
-        open={showOnboardingDialog}
-        onOpenChange={setShowOnboardingDialog}
-        projectId={projectId}
-        onComplete={handleOnboardingComplete}
-      />
-
-      {/* New Run Dialog */}
-      <NewRunDialog
-        open={showNewRunDialog}
-        onOpenChange={setShowNewRunDialog}
-        projectId={projectId}
-        definitionId=""
-        definitions={definitions}
-      />
     </div>
   );
 }

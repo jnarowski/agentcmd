@@ -1,4 +1,4 @@
-import type { WorkflowRun } from "../../types";
+import type { WorkflowRun } from "@/client/pages/projects/workflows/types";
 
 interface LogsTabProps {
   run: WorkflowRun;

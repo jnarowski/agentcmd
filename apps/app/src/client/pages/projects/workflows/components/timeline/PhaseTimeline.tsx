@@ -6,8 +6,8 @@ import type {
   WorkflowRunStep,
   WorkflowEvent,
   WorkflowArtifact,
-} from "../../types";
-import type { WorkflowTab } from "../../hooks/useWorkflowDetailPanel";
+} from "@/client/pages/projects/workflows/types";
+import type { WorkflowTab } from "@/client/pages/projects/workflows/hooks/useWorkflowDetailPanel";
 
 interface PhaseTimelineProps {
   run: WorkflowRun;

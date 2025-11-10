@@ -1,10 +1,9 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { ArrowLeft, Plus } from "lucide-react";
 import { WorkflowStatusBadge } from "./components/WorkflowStatusBadge";
 import { PhaseTimeline } from "./components/timeline/PhaseTimeline";
 import { WorkflowDetailPanel } from "./components/detail-panel/WorkflowDetailPanel";
-import { NewRunDialog } from "./components/NewRunDialog";
 import { useWorkflowRun } from "./hooks/useWorkflowRun";
 import { useWorkflowDefinition } from "./hooks/useWorkflowDefinition";
 import { useWorkflowWebSocket } from "./hooks/useWorkflowWebSocket";
@@ -68,9 +67,6 @@ export function WorkflowRunDetail() {
   // Subscribe to WebSocket updates
   useWorkflowWebSocket(projectId!);
 
-  // Dialog state
-  const [showNewRunDialog, setShowNewRunDialog] = useState(false);
-
   const isLoading = runLoading || definitionLoading;
 
   if (isLoading || !run || !definition) {
@@ -105,7 +101,7 @@ export function WorkflowRunDetail() {
             </button>
 
             <button
-              onClick={() => setShowNewRunDialog(true)}
+              onClick={() => navigate(`/projects/${projectId}/workflows/${definitionId}/new`)}
               className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
             >
               <Plus className="h-4 w-4" />
@@ -143,15 +139,6 @@ export function WorkflowRunDetail() {
           />
         </div>
       </div>
-
-      {/* New Run Dialog */}
-      <NewRunDialog
-        open={showNewRunDialog}
-        onOpenChange={setShowNewRunDialog}
-        projectId={projectId!}
-        definitionId={definitionId!}
-        definition={definition}
-      />
     </div>
   );
 }

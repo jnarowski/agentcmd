@@ -2,7 +2,7 @@ import { Button } from "@/client/components/ui/button";
 import { Badge } from "@/client/components/ui/badge";
 import { TableCell, TableRow } from "@/client/components/ui/table";
 import { Archive, ArchiveRestore, AlertCircle } from "lucide-react";
-import type { WorkflowDefinition } from "../types";
+import type { WorkflowDefinition } from "@/client/pages/projects/workflows/types";
 
 interface WorkflowDefinitionRowProps {
   definition: WorkflowDefinition;

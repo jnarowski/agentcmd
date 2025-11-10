@@ -1,5 +1,5 @@
 import type { GetStepTools } from "inngest";
-import type { RuntimeContext } from "../../../types/engine.types";
+import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 import type {
   SetupWorkspaceConfig,
   WorkspaceResult,
@@ -10,10 +10,10 @@ import { commitChanges } from "@/server/domain/git/services/commitChanges";
 import { createAndSwitchBranch } from "@/server/domain/git/services/createAndSwitchBranch";
 import { createWorktree } from "@/server/domain/git/services/createWorktree";
 import { getGitStatus } from "@/server/domain/git/services/getGitStatus";
-import { createWorkflowEventCommand } from "./utils/createWorkflowEventCommand";
-import { generateInngestStepId } from "./utils/generateInngestStepId";
-import { withTimeout } from "./utils/withTimeout";
-import { toId } from "./utils/toId";
+import { createWorkflowEventCommand } from "@/server/domain/workflow/services/engine/steps/utils/createWorkflowEventCommand";
+import { generateInngestStepId } from "@/server/domain/workflow/services/engine/steps/utils/generateInngestStepId";
+import { withTimeout } from "@/server/domain/workflow/services/engine/steps/utils/withTimeout";
+import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
 
 const DEFAULT_SETUP_WORKSPACE_TIMEOUT = 120000; // 2 minutes
 

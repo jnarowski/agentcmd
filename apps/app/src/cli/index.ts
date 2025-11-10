@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import { Command } from "commander";
-import { installCommand } from "./commands/install.js";
-import { startCommand } from "./commands/start.js";
-import { configCommand } from "./commands/config.js";
+import { installCommand } from "./commands/install";
+import { startCommand } from "./commands/start";
+import { configCommand } from "./commands/config";
 
 // Version is inlined at build time via esbuild define
 declare const __CLI_VERSION__: string;

@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { ArrowLeft, Plus } from "lucide-react";
 import { WorkflowPhaseKanbanColumn } from "./components/WorkflowPhaseKanbanColumn";
-import { NewRunDialog } from "./components/NewRunDialog";
 import { useWorkflowDefinition } from "./hooks/useWorkflowDefinition";
 import { useWorkflowRuns } from "./hooks/useWorkflowRuns";
 import { useWorkflowWebSocket } from "./hooks/useWorkflowWebSocket";
@@ -37,9 +36,6 @@ export function WorkflowDefinitionView() {
   );
 
   useWorkflowWebSocket(projectId!);
-
-  // Dialog state
-  const [showNewRunDialog, setShowNewRunDialog] = useState(false);
 
   const isLoading = definitionLoading || runsLoading || !definition;
 
@@ -101,7 +97,7 @@ export function WorkflowDefinitionView() {
           </button>
 
           <button
-            onClick={() => setShowNewRunDialog(true)}
+            onClick={() => navigate(`/projects/${projectId}/workflows/${definitionId}/new`)}
             className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
             <Plus className="h-4 w-4" />
@@ -142,15 +138,6 @@ export function WorkflowDefinitionView() {
           })}
         </div>
       </div>
-
-      {/* New Run Dialog */}
-      <NewRunDialog
-        open={showNewRunDialog}
-        onOpenChange={setShowNewRunDialog}
-        projectId={projectId!}
-        definitionId={definitionId!}
-        definition={definition}
-      />
     </div>
   );
 }

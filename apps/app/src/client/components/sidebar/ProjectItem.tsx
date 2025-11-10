@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/client/components/ui/dropdown-menu";
 import type { Project } from "@/shared/types/project.types";
+import { useAllWorkflowDefinitions } from "@/client/pages/projects/workflows/hooks/useAllWorkflowDefinitions";
 
 interface ProjectItemProps {
   project: Project;
@@ -46,6 +47,10 @@ export function ProjectItem({
   const [menuOpenProjectId, setMenuOpenProjectId] = useState<string | null>(
     null
   );
+
+  // Get all workflow definitions from cache and filter for this project
+  const { data: allWorkflows } = useAllWorkflowDefinitions("active");
+  const workflows = allWorkflows?.filter(def => def.project_id === project.id);
 
   const handleProjectClick = (projectId: string) => {
     if (isMobile) {
@@ -84,7 +89,20 @@ export function ProjectItem({
 
   const handleNewWorkflow = (projectId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/projects/${projectId}/workflows/new`);
+
+    // Sort workflows alphabetically and get the first one
+    const sortedWorkflows = workflows
+      ? [...workflows].sort((a, b) => a.name.localeCompare(b.name))
+      : [];
+    const firstDefinition = sortedWorkflows[0];
+
+    if (firstDefinition) {
+      // Navigate to first workflow definition's new form
+      navigate(`/projects/${projectId}/workflows/${firstDefinition.id}/new`);
+    } else {
+      // Navigate to onboarding page if no workflows exist
+      navigate(`/projects/${projectId}/workflows/onboarding`);
+    }
   };
 
   return (

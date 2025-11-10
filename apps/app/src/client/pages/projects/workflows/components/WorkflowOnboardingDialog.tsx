@@ -8,7 +8,7 @@ import {
 import { Button } from "@/client/components/ui/button";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
 import { WorkflowPackageInstallDialog } from "@/client/pages/projects/components/WorkflowPackageInstallDialog";
-import { workflowKeys } from "../hooks/queryKeys";
+import { workflowKeys } from "@/client/pages/projects/workflows/hooks/queryKeys";
 import { useState } from "react";
 
 interface WorkflowOnboardingDialogProps {

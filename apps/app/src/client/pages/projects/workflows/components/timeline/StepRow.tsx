@@ -6,10 +6,10 @@ import {
   XCircle,
   MinusCircle,
 } from "lucide-react";
-import { AgentSessionModal } from "../AgentSessionModal";
+import { AgentSessionModal } from "@/client/pages/projects/workflows/components/AgentSessionModal";
 import { useIsMobile } from "@/client/hooks/use-mobile";
-import type { WorkflowRunStep } from "../../types";
-import type { WorkflowTab } from "../../hooks/useWorkflowDetailPanel";
+import type { WorkflowRunStep } from "@/client/pages/projects/workflows/types";
+import type { WorkflowTab } from "@/client/pages/projects/workflows/hooks/useWorkflowDetailPanel";
 
 interface StepRowProps {
   step: WorkflowRunStep;

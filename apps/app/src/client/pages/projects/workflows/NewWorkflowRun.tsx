@@ -1,0 +1,70 @@
+import { useNavigate, useParams } from "react-router-dom";
+import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
+import { useProject } from "@/client/pages/projects/hooks/useProjects";
+import { useWorkflowDefinitions } from "./hooks/useWorkflowDefinitions";
+import { NewRunForm } from "./components/NewRunForm";
+import type { WorkflowRun } from "./types";
+
+export default function NewWorkflowRun() {
+  const navigate = useNavigate();
+  const { projectId, id, definitionId } = useParams();
+  const activeProjectId = projectId || id;
+
+  // Get project name for title
+  const { data: project } = useProject(activeProjectId!);
+  useDocumentTitle(
+    project?.name
+      ? `New Workflow Run - ${project.name} | Agent Workflows`
+      : undefined
+  );
+
+  // Fetch workflow definitions (active only) - same pattern as NewButton
+  const { data: definitions } = useWorkflowDefinitions(
+    activeProjectId || "",
+    "active"
+  );
+
+  // Find specific definition if definitionId provided
+  const definition = definitionId
+    ? definitions?.find((d) => d.id === definitionId)
+    : undefined;
+
+  const handleSuccess = (run: WorkflowRun) => {
+    // Navigate to run detail
+    navigate(
+      `/projects/${activeProjectId}/workflows/${run.workflow_definition_id}/runs/${run.id}`
+    );
+  };
+
+  const handleCancel = () => {
+    // Navigate back to workflows list
+    navigate(`/projects/${activeProjectId}/workflows/manage`);
+  };
+
+  return (
+    <div className="flex h-full flex-col">
+      {/* Header */}
+      <div className="border-b bg-background px-6 py-4">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-2xl font-semibold">New Workflow Run</h1>
+        </div>
+      </div>
+
+      {/* Form container */}
+      <div className="flex-1 overflow-auto p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="rounded-lg border bg-card p-6">
+            <NewRunForm
+              projectId={activeProjectId!}
+              definitionId={definitionId}
+              definition={definition}
+              definitions={definitions}
+              onSuccess={handleSuccess}
+              onCancel={handleCancel}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

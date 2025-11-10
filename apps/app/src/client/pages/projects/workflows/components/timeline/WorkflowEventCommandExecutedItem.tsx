@@ -1,5 +1,5 @@
 import { Terminal } from "lucide-react";
-import type { WorkflowEvent } from "../../types";
+import type { WorkflowEvent } from "@/client/pages/projects/workflows/types";
 
 interface WorkflowEventCommandExecutedItemProps {
   event: WorkflowEvent;

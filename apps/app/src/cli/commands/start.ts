@@ -2,10 +2,10 @@ import { spawn, type ChildProcess } from "child_process";
 import { spawnSync } from "child_process";
 import { existsSync } from "node:fs";
 import type { FastifyInstance } from "fastify";
-import { loadConfig, mergeWithFlags } from "../utils/config.js";
-import { ensurePortAvailable } from "../utils/portCheck.js";
-import { getDbPath, getConfigPath, getLogFilePath } from "../utils/paths.js";
-import { checkPendingMigrations, createBackup, cleanupOldBackups } from "../utils/backup.js";
+import { loadConfig, mergeWithFlags } from "../utils/config";
+import { ensurePortAvailable } from "../utils/portCheck";
+import { getDbPath, getConfigPath, getLogFilePath } from "../utils/paths";
+import { checkPendingMigrations, createBackup, cleanupOldBackups } from "../utils/backup";
 
 interface StartOptions {
   port?: number;

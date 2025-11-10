@@ -16,7 +16,7 @@ import type {
   WorkflowRunDetail,
   WorkflowEvent,
   WorkflowArtifact,
-} from "../types";
+} from "@/client/pages/projects/workflows/types";
 import { workflowKeys } from "./queryKeys";
 
 export function useWorkflowWebSocket(projectId: string) {

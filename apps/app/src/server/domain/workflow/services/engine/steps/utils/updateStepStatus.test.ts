@@ -2,8 +2,8 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 import { prisma } from "@/shared/prisma";
 import { cleanTestDB } from "@/server/test-utils/db";
 import { updateStepStatus } from "./updateStepStatus";
-import type { RuntimeContext } from "../../../../types/engine.types";
-import * as createWorkflowEventModule from "../../../events/createWorkflowEvent";
+import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
+import * as createWorkflowEventModule from "@/server/domain/workflow/services/events/createWorkflowEvent";
 
 vi.mock("../../../events/createWorkflowEvent");
 

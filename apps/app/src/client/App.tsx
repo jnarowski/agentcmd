@@ -14,8 +14,10 @@ import ProjectShell from "@/client/pages/projects/shell/ProjectShell";
 import ProjectSource from "@/client/pages/projects/source/ProjectSource";
 import { ProjectWorkflowsView } from "@/client/pages/projects/workflows/ProjectWorkflowsView";
 import { ProjectWorkflowsManage } from "@/client/pages/projects/workflows/ProjectWorkflowsManage";
+import { ProjectWorkflowsOnboarding } from "@/client/pages/projects/workflows/ProjectWorkflowsOnboarding";
 import { WorkflowDefinitionView } from "@/client/pages/projects/workflows/WorkflowDefinitionView";
 import { WorkflowRunDetail } from "@/client/pages/projects/workflows/WorkflowRunDetail";
+import NewWorkflowRun from "@/client/pages/projects/workflows/NewWorkflowRun";
 import Login from "@/client/pages/auth/Login";
 import Signup from "@/client/pages/auth/Signup";
 import Components from "@/client/pages/Components";
@@ -61,7 +63,10 @@ function AppContent() {
           {/* Workflow routes with dedicated layout (no sidebar) */}
           <Route path="/projects/:projectId" element={<WorkflowLayout />}>
             <Route path="workflows" element={<ProjectWorkflowsView />} />
+            <Route path="workflows/onboarding" element={<ProjectWorkflowsOnboarding />} />
             <Route path="workflows/manage" element={<ProjectWorkflowsManage />} />
+            <Route path="workflows/new" element={<NewWorkflowRun />} />
+            <Route path="workflows/:definitionId/new" element={<NewWorkflowRun />} />
             <Route path="workflows/:definitionId" element={<WorkflowDefinitionView />} />
             <Route path="workflows/:definitionId/runs/:runId" element={<WorkflowRunDetail />} />
           </Route>

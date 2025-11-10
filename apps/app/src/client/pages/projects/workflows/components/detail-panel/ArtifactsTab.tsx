@@ -7,7 +7,7 @@ import {
   EmptyDescription,
 } from "@/client/components/ui/empty";
 import { ArtifactCard } from "@/client/components/ArtifactCard";
-import type { WorkflowRun } from "../../types";
+import type { WorkflowRun } from "@/client/pages/projects/workflows/types";
 
 interface ArtifactsTabProps {
   run: WorkflowRun;

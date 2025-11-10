@@ -24,6 +24,7 @@ const WorkflowDefinitionIdSchema = z.object({
 
 const WorkflowDefinitionResponseSchema = z.object({
   id: z.string(),
+  scope: z.enum(['project', 'global']),
   name: z.string(),
   description: z.string().nullable(),
   type: z.string(),
@@ -31,6 +32,7 @@ const WorkflowDefinitionResponseSchema = z.object({
   phases: z.any(), // JSON
   args_schema: z.any().nullable(), // JSON
   is_template: z.boolean(),
+  status: z.string(),
   load_error: z.string().nullable(),
   created_at: z.date(),
   updated_at: z.date(),

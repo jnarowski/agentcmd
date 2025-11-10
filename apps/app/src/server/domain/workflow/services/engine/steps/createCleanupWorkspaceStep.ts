@@ -1,14 +1,14 @@
 import type { GetStepTools } from "inngest";
-import type { RuntimeContext } from "../../../types/engine.types";
+import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 import type {
   CleanupWorkspaceConfig,
   StepOptions,
 } from "agentcmd-workflows";
 import { removeWorktree } from "@/server/domain/git/services/removeWorktree";
-import { createWorkflowEventCommand } from "./utils/createWorkflowEventCommand";
-import { generateInngestStepId } from "./utils/generateInngestStepId";
-import { withTimeout } from "./utils/withTimeout";
-import { toId } from "./utils/toId";
+import { createWorkflowEventCommand } from "@/server/domain/workflow/services/engine/steps/utils/createWorkflowEventCommand";
+import { generateInngestStepId } from "@/server/domain/workflow/services/engine/steps/utils/generateInngestStepId";
+import { withTimeout } from "@/server/domain/workflow/services/engine/steps/utils/withTimeout";
+import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
 
 const DEFAULT_CLEANUP_WORKSPACE_TIMEOUT = 60000; // 1 minute
 

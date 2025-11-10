@@ -1,7 +1,7 @@
 import type { WorkflowStatus } from "@/shared/schemas/workflow.schemas";
-import type { WorkflowRun } from "../types";
+import type { WorkflowRun } from "@/client/pages/projects/workflows/types";
 import { WorkflowRunCard } from "./WorkflowRunCard";
-import { getWorkflowStatusConfig } from "../utils/workflowStatus";
+import { getWorkflowStatusConfig } from "@/client/pages/projects/workflows/utils/workflowStatus";
 
 export interface WorkflowKanbanColumnProps {
   status: WorkflowStatus;

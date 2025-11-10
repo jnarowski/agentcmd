@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 import { prisma } from "@/shared/prisma";
 import { cleanTestDB } from "@/server/test-utils/db";
 import { createAnnotationStep } from "./createAnnotationStep";
-import type { RuntimeContext } from "../../../types/engine.types";
+import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 
 vi.mock("@/server/websocket/infrastructure/subscriptions", () => ({
   broadcast: vi.fn(),

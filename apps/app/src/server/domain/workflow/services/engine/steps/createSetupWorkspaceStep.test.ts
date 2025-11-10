@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import { createSetupWorkspaceStep } from "./createSetupWorkspaceStep";
-import type { RuntimeContext } from "../../../types/engine.types";
+import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 import type {
   SetupWorkspaceConfig,
 } from "agentcmd-workflows";

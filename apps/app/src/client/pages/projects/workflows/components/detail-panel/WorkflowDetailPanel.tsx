@@ -1,9 +1,9 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/client/components/ui/tabs";
-import type { WorkflowTab } from "../../hooks/useWorkflowDetailPanel";
+import type { WorkflowTab } from "@/client/pages/projects/workflows/hooks/useWorkflowDetailPanel";
 import { DetailsTab } from "./DetailsTab";
 import { SessionTab } from "./SessionTab";
 import { ArtifactsTab } from "./ArtifactsTab";
-import type { WorkflowRun } from "../../types";
+import type { WorkflowRun } from "@/client/pages/projects/workflows/types";
 
 interface WorkflowDetailPanelProps {
   run: WorkflowRun;

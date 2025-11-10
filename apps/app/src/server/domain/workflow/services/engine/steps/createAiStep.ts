@@ -2,16 +2,16 @@ import { generateText, generateObject } from "ai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
 import type { GetStepTools } from "inngest";
-import type { RuntimeContext } from "../../../types/engine.types";
+import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 import type {
   AiStepConfig,
   AiStepResult,
   StepOptions,
 } from "agentcmd-workflows";
-import { executeStep } from "./utils/executeStep";
-import { withTimeout } from "./utils/withTimeout";
-import { toId } from "./utils/toId";
-import { toName } from "./utils/toName";
+import { executeStep } from "@/server/domain/workflow/services/engine/steps/utils/executeStep";
+import { withTimeout } from "@/server/domain/workflow/services/engine/steps/utils/withTimeout";
+import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
+import { toName } from "@/server/domain/workflow/services/engine/steps/utils/toName";
 import { Configuration } from "@/server/config/Configuration";
 
 const DEFAULT_AI_TIMEOUT = 60000; // 60 seconds

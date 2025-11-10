@@ -1,5 +1,5 @@
-import type { RuntimeContext } from "../../../../types/engine.types";
-import { createWorkflowEvent } from "../../../events/createWorkflowEvent";
+import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
+import { createWorkflowEvent } from "@/server/domain/workflow/services/events/createWorkflowEvent";
 
 /**
  * Create a workflow event for command execution

@@ -3,7 +3,7 @@ import { prisma } from "@/shared/prisma";
 import type { ChildProcess } from "node:child_process";
 import { cleanTestDB } from "@/server/test-utils/db";
 import { createCliStep } from "./createCliStep";
-import type { RuntimeContext } from "../../../types/engine.types";
+import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 import { exec } from "node:child_process";
 
 vi.mock("node:child_process", () => ({

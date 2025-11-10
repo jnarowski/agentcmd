@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdirSync, writeFileSync, readFileSync, rmSync, existsSync, utimesSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { createBackup, cleanupOldBackups, checkPendingMigrations } from "./backup.js";
+import { createBackup, cleanupOldBackups, checkPendingMigrations } from "./backup";
 
 describe("backup utilities", () => {
   let tempDir: string;

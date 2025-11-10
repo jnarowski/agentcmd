@@ -6,7 +6,7 @@ import {
   TableRow,
 } from "@/client/components/ui/table";
 import { WorkflowDefinitionRow } from "./WorkflowDefinitionRow";
-import type { WorkflowDefinition } from "../types";
+import type { WorkflowDefinition } from "@/client/pages/projects/workflows/types";
 
 interface WorkflowDefinitionsTableProps {
   definitions: WorkflowDefinition[];

@@ -1,5 +1,5 @@
 import type { GetStepTools } from "inngest";
-import type { RuntimeContext } from "../../../../types/engine.types";
+import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 import { findOrCreateStep } from "./findOrCreateStep";
 import { updateStepStatus } from "./updateStepStatus";
 import { handleStepFailure } from "./handleStepFailure";

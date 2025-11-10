@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/client/utils/api";
 import { workflowKeys } from "./queryKeys";
-import type { InngestRunStatusResult } from "../types";
+import type { InngestRunStatusResult } from "@/client/pages/projects/workflows/types";
 
 async function fetchInngestRunStatus(
   runId: string

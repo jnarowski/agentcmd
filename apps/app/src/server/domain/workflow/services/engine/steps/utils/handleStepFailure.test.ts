@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { handleStepFailure } from "./handleStepFailure";
-import type { RuntimeContext } from "../../../types/engine.types";
+import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 import * as updateStepStatusModule from "./updateStepStatus";
 
 vi.mock("./updateStepStatus", () => ({

@@ -1,7 +1,7 @@
 import { WorkflowEventAnnotationItem } from "./WorkflowEventAnnotationItem";
 import { WorkflowEventCommandExecutedItem } from "./WorkflowEventCommandExecutedItem";
 import { WorkflowEventDefaultItem } from "./WorkflowEventDefaultItem";
-import type { WorkflowEvent } from "../../types";
+import type { WorkflowEvent } from "@/client/pages/projects/workflows/types";
 
 interface EventRowProps {
   event: WorkflowEvent;

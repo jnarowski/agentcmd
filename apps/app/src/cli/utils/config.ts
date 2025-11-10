@@ -4,14 +4,14 @@ import {
   getConfigPath,
   getHomeDir,
   ensureDirectoryExists,
-} from "./paths.js";
+} from "./paths";
 import {
   DEFAULT_PORT,
   DEFAULT_INNGEST_PORT,
   DEFAULT_HOST,
   DEFAULT_LOG_LEVEL,
   DEFAULT_ALLOWED_ORIGINS,
-} from "./constants.js";
+} from "./constants";
 
 /**
  * Config schema - all settings including ports and secrets

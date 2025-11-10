@@ -1,17 +1,17 @@
 import { readdir, stat, writeFile, mkdir, copyFile } from "node:fs/promises";
 import { join, relative, extname, dirname } from "node:path";
 import type { GetStepTools } from "inngest";
-import type { RuntimeContext } from "../../../types/engine.types";
+import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 import type {
   ArtifactStepConfig,
   ArtifactStepResult,
 } from "agentcmd-workflows";
-import { findOrCreateStep } from "./utils/findOrCreateStep";
-import { createWorkflowArtifact } from "../../artifacts/createWorkflowArtifact";
-import { generateInngestStepId } from "./utils/generateInngestStepId";
-import { emitArtifactCreatedEvent } from "./utils/emitArtifactCreatedEvent";
-import { toId } from "./utils/toId";
-import { toName } from "./utils/toName";
+import { findOrCreateStep } from "@/server/domain/workflow/services/engine/steps/utils/findOrCreateStep";
+import { createWorkflowArtifact } from "@/server/domain/workflow/services/artifacts/createWorkflowArtifact";
+import { generateInngestStepId } from "@/server/domain/workflow/services/engine/steps/utils/generateInngestStepId";
+import { emitArtifactCreatedEvent } from "@/server/domain/workflow/services/engine/steps/utils/emitArtifactCreatedEvent";
+import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
+import { toName } from "@/server/domain/workflow/services/engine/steps/utils/toName";
 
 /**
  * Get MIME type from file extension

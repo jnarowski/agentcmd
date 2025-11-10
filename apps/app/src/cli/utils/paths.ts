@@ -1,7 +1,7 @@
 import { homedir } from "os";
 import { join, resolve } from "path";
 import { mkdirSync } from "fs";
-import { CLI_NAME } from "./constants.js";
+import { CLI_NAME } from "./constants";
 
 /**
  * Expands ~ to the user's home directory

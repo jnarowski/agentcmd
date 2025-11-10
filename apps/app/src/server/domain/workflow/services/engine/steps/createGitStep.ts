@@ -1,16 +1,16 @@
 import type { GetStepTools } from "inngest";
-import type { RuntimeContext } from "../../../types/engine.types";
+import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 import type { GitStepConfig, GitStepResult } from "agentcmd-workflows";
-import type { GitStepOptions } from "../../../types/event.types";
+import type { GitStepOptions } from "@/server/domain/workflow/types/event.types";
 import { commitChanges } from "@/server/domain/git/services/commitChanges";
 import { createAndSwitchBranch } from "@/server/domain/git/services/createAndSwitchBranch";
 import { createPullRequest } from "@/server/domain/git/services/createPullRequest";
 import { getCurrentBranch } from "@/server/domain/git/services/getCurrentBranch";
 import { getGitStatus } from "@/server/domain/git/services/getGitStatus";
-import { createWorkflowEventCommand } from "./utils/createWorkflowEventCommand";
-import { generateInngestStepId } from "./utils/generateInngestStepId";
-import { withTimeout } from "./utils/withTimeout";
-import { toId } from "./utils/toId";
+import { createWorkflowEventCommand } from "@/server/domain/workflow/services/engine/steps/utils/createWorkflowEventCommand";
+import { generateInngestStepId } from "@/server/domain/workflow/services/engine/steps/utils/generateInngestStepId";
+import { withTimeout } from "@/server/domain/workflow/services/engine/steps/utils/withTimeout";
+import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
 
 const DEFAULT_GIT_TIMEOUT = 120000; // 2 minutes
 

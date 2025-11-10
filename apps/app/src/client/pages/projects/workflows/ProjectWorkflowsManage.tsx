@@ -8,7 +8,7 @@ import { UnarchiveWorkflowDialog } from "./components/UnarchiveWorkflowDialog";
 import { useWorkflowDefinitions } from "./hooks/useWorkflowDefinitions";
 import { useArchiveWorkflowDefinition } from "./hooks/useArchiveWorkflowDefinition";
 import { useUnarchiveWorkflowDefinition } from "./hooks/useUnarchiveWorkflowDefinition";
-import type { WorkflowDefinition } from "./types";
+import type { WorkflowDefinition } from "@/client/pages/projects/workflows/types";
 
 export function ProjectWorkflowsManage() {
   const { projectId } = useParams<{ projectId: string }>();

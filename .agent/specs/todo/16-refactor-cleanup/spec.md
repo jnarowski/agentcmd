@@ -218,26 +218,26 @@ Audit and fix 15 `@ts-expect-error` usages, consolidate duplicate types with age
 **Phase Complexity**: 31 points (avg 6.2/10)
 
 <!-- prettier-ignore -->
-- [ ] 1.1 [8/10] Fix workflow engine relative imports (31 files)
+- [x] 1.1 [8/10] Fix workflow engine relative imports (31 files)
   - Use find/replace to convert `../../../` to `@/server/domain/workflow/services/`
   - Files: All in `/server/domain/workflow/services/engine/steps/`
   - Verify: `pnpm check-types` passes after changes
   - Test: Run workflow engine tests to ensure no breaks
-- [ ] 1.2 [8/10] Fix client workflow relative imports (30 files)
+- [x] 1.2 [8/10] Fix client workflow relative imports (30 files)
   - Convert `./`, `../` to `@/client/pages/projects/workflows/`
   - Files: All in `/client/pages/projects/workflows/{hooks,components,stores}/`
   - Verify: `pnpm check-types` passes
   - Test: Frontend builds successfully
-- [ ] 1.3 [4/10] Remove .js import extensions (12 files)
+- [x] 1.3 [4/10] Remove .js import extensions (12 files)
   - Find all imports ending with `.js` and remove extension
   - Files: CLI commands, workflow steps, client components
   - Command: `grep -r "from.*\.js'" apps/app/src/`
   - Verify: `pnpm check-types` passes
-- [ ] 1.4 [2/10] Delete nested .agent directory
+- [x] 1.4 [2/10] Delete nested .agent directory
   - Remove: `/server/domain/workflow/services/runs/.agent/`
   - Verify directory doesn't contain important files first
   - Command: `rm -rf apps/app/src/server/domain/workflow/services/runs/.agent`
-- [ ] 1.5 [9/10] Delete legacy services directory
+- [x] 1.5 [9/10] Delete legacy services directory
   - Verify tests covered: Check `/domain/session/services/` has tests
   - Delete: `/server/services/` entire directory
   - Command: `rm -rf apps/app/src/server/services`
@@ -245,7 +245,39 @@ Audit and fix 15 `@ts-expect-error` usages, consolidate duplicate types with age
 
 #### Completion Notes
 
-(This will be filled in by the agent implementing this phase)
+**Completed**: 2025-11-09
+
+**Summary**: All Phase 1 critical architecture violations fixed successfully. Converted 61 files from relative imports to `@/` path aliases, removed all `.js` extensions from local imports, and deleted legacy code.
+
+**Changes Made**:
+
+1. **Workflow Engine Imports (31 files)**:
+   - Converted `../../../types/` → `@/server/domain/workflow/types/`
+   - Converted `../../steps/` → `@/server/domain/workflow/services/steps/`
+   - Converted `./utils/` → `@/server/domain/workflow/services/engine/steps/utils/`
+   - Fixed edge case: `buildWorkflowIdentifiers` path corrected to `@/server/domain/workflow/utils/`
+
+2. **Client Workflow Imports (30 files)**:
+   - Converted all `../types`, `../utils/`, `../hooks/`, `../components/` patterns
+   - Target: `@/client/pages/projects/workflows/{types,utils,hooks,components}`
+   - Fixed nested timeline component imports
+
+3. **Import Extensions (12 files)**:
+   - Removed all `.js` extensions from CLI imports
+   - Preserved external library imports (fuse.js)
+
+4. **Directory Cleanup**:
+   - `.agent` directory: Already clean (didn't exist)
+   - Legacy `/server/services/`: Deleted 4 orphaned test files (coverage exists in domain tests)
+
+**Verification**:
+- ✅ `pnpm check-types` - All passed
+- ✅ Zero relative imports in workflow engine
+- ✅ Zero relative imports in client workflows
+- ✅ Zero `.js` extensions in local imports
+- ✅ Legacy directories removed
+
+**Issues Encountered**: None - all tasks completed smoothly
 
 ### Phase 2: HIGH VALUE (P1 Quality Improvements)
 

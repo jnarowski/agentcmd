@@ -1,5 +1,5 @@
 import type { WorkflowArtifact } from "@prisma/client";
-import { broadcastWorkflowEvent } from "../../../events/broadcastWorkflowEvent";
+import { broadcastWorkflowEvent } from "@/server/domain/workflow/services/events/broadcastWorkflowEvent";
 
 /**
  * Emit artifact:created event for a workflow artifact

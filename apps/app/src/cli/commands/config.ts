@@ -1,7 +1,7 @@
 import { existsSync } from "fs";
 import { spawn } from "child_process";
-import { getConfigPath } from "../utils/paths.js";
-import { loadConfig, saveConfig } from "../utils/config.js";
+import { getConfigPath } from "../utils/paths";
+import { loadConfig, saveConfig } from "../utils/config";
 
 interface ConfigOptions {
   show?: boolean;

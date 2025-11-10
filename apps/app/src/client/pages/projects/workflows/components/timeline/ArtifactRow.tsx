@@ -1,6 +1,6 @@
 import { FileText, Download } from "lucide-react";
-import type { WorkflowArtifact } from "../../types";
-import { formatFileSize } from "../../utils/workflowFormatting";
+import type { WorkflowArtifact } from "@/client/pages/projects/workflows/types";
+import { formatFileSize } from "@/client/pages/projects/workflows/utils/workflowFormatting";
 
 interface ArtifactRowProps {
   artifact: WorkflowArtifact;

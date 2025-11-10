@@ -1,6 +1,6 @@
-import type { RuntimeContext } from "../../../../types/engine.types";
+import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 import type { WorkflowRunStep } from "@prisma/client";
-import { findOrCreateWorkflowStep } from "../../../steps/findOrCreateWorkflowStep";
+import { findOrCreateWorkflowStep } from "@/server/domain/workflow/services/steps/findOrCreateWorkflowStep";
 
 /**
  * Find existing or create new workflow execution step

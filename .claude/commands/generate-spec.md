@@ -1,16 +1,16 @@
 ---
 description: Generate implementation spec with complexity estimates and write to spec folder with sequential ID
-argument-hint: [feature-name, format]
+argument-hint: [feature-name, context (optional)]
 ---
 
 # Generate Implementation Spec with Complexity
 
-Generate a well-structured implementation spec with complexity estimates and save it to `.agent/specs/todo/[id]-[feature]/spec.md` (or `spec.json`) with sequential numeric ID.
+Generate a well-structured implementation spec with complexity estimates and save it to `.agent/specs/todo/[id]-[feature]/spec.md` with sequential numeric ID.
 
 ## Variables
 
 - $featureName: $1 (required) - Feature name (e.g., `auth-improvements`)
-- $format: $2 (optional) - Output format: `markdown` (default) or `json`
+- $context: $2 (optional) - Additional context for autonomous spec generation (e.g., "Add OAuth support with Google and GitHub providers")
 
 ## Instructions
 
@@ -25,7 +25,6 @@ Generate a well-structured implementation spec with complexity estimates and sav
 - Include comprehensive verification covering build, tests, linting, and manual checks
 - Add E2E test tasks if feature has UI
 - Keep acceptance criteria measurable
-- If $format is not provided, default to "markdown"
 - **DO NOT include hour-based estimates anywhere** - use complexity points only
 
 ## Complexity Scale (Context-Focused)
@@ -56,19 +55,20 @@ Assign complexity based on **context window usage and cognitive load**, not time
    - Research codebase for existing patterns relevant to the feature
    - Gather context about architecture, file structure, and conventions
 
-4. **Clarification** (if needed):
-   - If unclear about implementation approach, ask questions ONE AT A TIME
-   - Don't use the Question tool
-   - Use this template:
+4. **Clarification** (conditional):
+   - **If $context provided ($2 given)**: Resolve ambiguities autonomously using recommended best practices. Do not ask questions.
+   - **If $context not provided**: Use session context and ask clarifying questions ONE AT A TIME if implementation approach is unclear:
+     - Don't use the Question tool
+     - Use this template:
 
-     ```md
-     **Question**: [Your question]
-     **Suggestions**:
+       ```md
+       **Question**: [Your question]
+       **Suggestions**:
 
-     1. [Option 1] (recommended - why)
-     2. [Option 2]
-     3. Other - user specifies
-     ```
+       1. [Option 1] (recommended - why)
+       2. [Option 2]
+       3. Other - user specifies
+       ```
 
 5. **Generate Spec with Complexity**:
    - Once you have sufficient context, generate the spec following the Template below
@@ -79,10 +79,8 @@ Assign complexity based on **context window usage and cognitive load**, not time
 
 6. **Write Spec Folder and File**:
    - Create folder: `.agent/specs/todo/{newId}-{featureName-kebab}/`
-   - If $format is "json": Write to `spec.json` in folder
-   - Otherwise: Write to `spec.md` in folder
-   - Example (markdown): `.agent/specs/todo/1-auth-improvements/spec.md`
-   - Example (json): `.agent/specs/todo/1-auth-improvements/spec.json`
+   - Always write to `spec.md` in folder (never `spec.json`)
+   - Example: `.agent/specs/todo/1-auth-improvements/spec.md`
    - **Note**: Specs always start in `todo/` folder with Status "draft"
 
 7. **Update Index**:
@@ -349,103 +347,6 @@ Execute these commands to verify the feature works correctly:
 
 ```
 
-### JSON Template
-
-When $format is "json", generate a JSON file with this structure (output raw JSON without markdown code fences):
-
-```json
-{
-  "featureName": "[feature-name]",
-  "specNumber": "[number]",
-  "status": "draft",
-  "created": "[YYYY-MM-DD]",
-  "package": "[package name or app name]",
-  "complexity": {
-    "total": "[X]",
-    "phases": "[N]",
-    "tasks": "[N]",
-    "overallAvg": "[X.X]"
-  },
-  "complexityBreakdown": [
-    {
-      "phase": "Phase 1: [Name]",
-      "tasks": "[N]",
-      "totalPoints": "[X]",
-      "avgComplexity": "[X.X]",
-      "maxTask": "[X]"
-    }
-  ],
-  "overview": "[2-3 sentences describing what this feature does and why it's valuable]",
-  "userStory": {
-    "asA": "[user type]",
-    "iWantTo": "[action/goal]",
-    "soThat": "[benefit/value]"
-  },
-  "technicalApproach": "[Brief description of implementation strategy]",
-  "keyDesignDecisions": [
-    { "decision": "[Decision 1]", "rationale": "[Rationale]" }
-  ],
-  "architecture": {
-    "fileStructure": "[relevant file/directory structure]",
-    "integrationPoints": [
-      {
-        "subsystem": "[Subsystem 1]",
-        "changes": [
-          { "file": "[file.ts]", "description": "[what changes]" }
-        ]
-      }
-    ]
-  },
-  "implementationDetails": [
-    {
-      "name": "[Component/Module Name]",
-      "description": "[Detailed description]",
-      "keyPoints": ["[Important detail 1]", "[Important detail 2]"]
-    }
-  ],
-  "files": {
-    "new": [{ "path": "[filepath]", "purpose": "[purpose]" }],
-    "modified": [{ "path": "[filepath]", "changes": "[what changes]" }]
-  },
-  "stepByStepTasks": [
-    {
-      "phaseName": "[Phase Name]",
-      "phaseComplexity": {
-        "total": "[X]",
-        "avg": "[X.X]"
-      },
-      "tasks": [
-        {
-          "id": "[task-id]",
-          "complexity": "[X]",
-          "description": "[Specific task description]",
-          "details": "[Implementation detail or note]",
-          "file": "[specific filepath]",
-          "commands": "[Any commands to run]",
-          "completed": false
-        }
-      ],
-      "completionNotes": ""
-    }
-  ],
-  "testingStrategy": {
-    "unitTests": [{ "file": "[test-file.test.ts]", "description": "[what it tests]" }],
-    "integrationTests": "[Description]",
-    "e2eTests": [{ "file": "[e2e-test.test.ts]", "description": "[what it tests]" }]
-  },
-  "successCriteria": ["[requirement 1]", "[requirement 2]"],
-  "validation": {
-    "automated": [{ "command": "[build command]", "expected": "[output]" }],
-    "manual": [{ "step": "Start application: `[command]`" }],
-    "featureSpecific": ["[Specific verification step]"]
-  },
-  "implementationNotes": [{ "title": "[Note Title]", "details": "[Details]" }],
-  "dependencies": ["[dependency 1]"],
-  "references": ["[Link to docs]"],
-  "nextSteps": ["[First step]", "[Second step]"]
-}
-```
-
 ## Formatting Rules
 
 1. **Dates**: Use ISO format (YYYY-MM-DD)
@@ -473,15 +374,7 @@ Gets next ID (e.g., 1), creates folder: `.agent/specs/todo/1-auth-improvements/s
 
 Converts to kebab-case, creates: `.agent/specs/todo/2-workflow-safety/spec.md`
 
-**Example 3: Using JSON format**
-
-```bash
-/generate-spec auth-improvements json
-```
-
-Creates: `.agent/specs/todo/1-auth-improvements/spec.json`
-
-**Example 4: Complex feature name**
+**Example 3: Complex feature name**
 
 ```bash
 /generate-spec websocket-reconnect-improvements
@@ -492,7 +385,7 @@ Creates: `.agent/specs/todo/3-websocket-reconnect-improvements/spec.md`
 ## Common Pitfalls
 
 - **Wrong directory**: Always create folder in `.agent/specs/todo/`, not `.agent/specs/` or `.agents/specs/`
-- **Folder structure**: Must create folder `{id}-{feature}/` with `spec.md` or `spec.json` inside
+- **Folder structure**: Must create folder `{id}-{feature}/` with `spec.md` inside
 - **Index not updated**: Always update index.json after creating spec
 - **Generic placeholders**: Replace all `<placeholders>` with actual content
 - **Missing complexity scores**: EVERY task must have a `[X/10]` complexity score
@@ -503,18 +396,15 @@ Creates: `.agent/specs/todo/3-websocket-reconnect-improvements/spec.md`
 
 ## Report
 
-### JSON Format
-
-**IMPORTANT**: If $format is "json", return raw JSON output (no ```json code fences, no markdown):
+**IMPORTANT**: Always return raw JSON output (no ```json code fences, no markdown):
 
 ```json
 {
   "success": true,
   "spec_folder": ".agent/specs/todo/[id]-[feature]",
-  "spec_file": ".agent/specs/todo/[id]-[feature]/spec.json",
+  "spec_file": ".agent/specs/todo/[id]-[feature]/spec.md",
   "spec_id": [id],
   "feature_name": "[feature-name]",
-  "format": "json",
   "complexity": {
     "total": "[X]",
     "avg": "[X.X]"
@@ -529,31 +419,10 @@ Creates: `.agent/specs/todo/3-websocket-reconnect-improvements/spec.md`
 
 - `success`: Always true if spec generation completed
 - `spec_folder`: Path to the created spec folder
-- `spec_file`: Full path to the spec file (spec.json or spec.md)
+- `spec_file`: Full path to the spec file (always spec.md)
 - `spec_id`: The spec ID used (numeric)
 - `feature_name`: Normalized feature name (kebab-case)
-- `format`: Output format used ("json" or "markdown")
 - `complexity`: Total and average complexity scores
 - `files_to_create`: Array of new files to be created
 - `files_to_modify`: Array of existing files to be modified
 - `next_command`: Suggested next command to run
-
-### Text Format
-
-Otherwise, provide this human-readable information:
-
-1. Report the spec folder and file paths
-2. Display the spec ID used
-3. Show complexity summary
-4. Suggest next steps
-
-**Format:**
-
-```text
-✓ Created spec: .agent/specs/todo/[id]-[feature]/spec.md
-  ID: [id]
-
-Complexity: [X] points (avg [X.X]/10) across [N] tasks in [N] phases
-
-Next: /implement-spec [id]
-```

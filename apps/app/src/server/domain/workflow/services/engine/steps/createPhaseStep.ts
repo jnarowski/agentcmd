@@ -1,11 +1,11 @@
 import { Channels } from "@/shared/websocket/channels";
 import { broadcast } from "@/server/websocket/infrastructure/subscriptions";
-import type { RuntimeContext } from "../../../types/engine.types";
+import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 import type { PhaseDefinition } from "agentcmd-workflows";
-import { updateWorkflowRun } from "../../runs/updateWorkflowRun";
-import { findOrCreateWorkflowEvent } from "../../events/findOrCreateWorkflowEvent";
-import { toId } from "./utils/toId";
-import { toName } from "./utils/toName";
+import { updateWorkflowRun } from "@/server/domain/workflow/services/runs/updateWorkflowRun";
+import { findOrCreateWorkflowEvent } from "@/server/domain/workflow/services/events/findOrCreateWorkflowEvent";
+import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
+import { toName } from "@/server/domain/workflow/services/engine/steps/utils/toName";
 
 /**
  * Create phase step factory function
