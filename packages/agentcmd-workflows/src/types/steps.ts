@@ -128,6 +128,8 @@ export interface WorkspaceResult {
   mode: "worktree" | "branch" | "stay";
   /** Absolute path to worktree (only if mode is worktree) */
   worktreePath?: string;
+  /** Original branch before workspace setup (for cleanup) */
+  originalBranch?: string;
 }
 
 /**
@@ -275,29 +277,6 @@ export interface WorkflowStep<TPhaseId extends string = string> extends InngestS
   ): Promise<AgentStepResult>;
 
   /**
-   * Execute a slash command via agent
-   * @param command - Slash command name
-   * @param args - Command arguments
-   * @param options - Step options (timeout)
-   *
-   * @example
-   * await step.slash('/generate-prd', {
-   *   featurename: 'auth',
-   *   context: 'Add OAuth',
-   *   format: 'md'
-   * });
-   *
-   * Note: For type-safe slash commands in your project, import generated types:
-   * import type { SlashCommandName, SlashCommandArgs } from '../generated/slash-commands';
-   * Then use: step.slash<SlashCommandName>(command, args)
-   */
-  slash<TArgs extends Record<string, unknown> = Record<string, never>>(
-    command: string,
-    args: TArgs,
-    options?: StepOptions
-  ): Promise<AgentStepResult>;
-
-  /**
    * Execute a git operation
    * @param id - Step ID
    * @param config - Git configuration (includes optional name field)
@@ -308,30 +287,6 @@ export interface WorkflowStep<TPhaseId extends string = string> extends InngestS
     config: GitStepConfig,
     options?: StepOptions
   ): Promise<GitStepResult>;
-
-  /**
-   * Set up workspace for workflow (worktree, branch switch, or stay)
-   * @param id - Step ID
-   * @param config - Workspace configuration
-   * @param options - Step options (timeout)
-   */
-  setupWorkspace(
-    id: string,
-    config: SetupWorkspaceConfig,
-    options?: StepOptions
-  ): Promise<WorkspaceResult>;
-
-  /**
-   * Clean up workspace (remove worktrees)
-   * @param id - Step ID
-   * @param config - Cleanup configuration
-   * @param options - Step options (timeout)
-   */
-  cleanupWorkspace(
-    id: string,
-    config: CleanupWorkspaceConfig,
-    options?: StepOptions
-  ): Promise<void>;
 
   /**
    * Execute a CLI command

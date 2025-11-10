@@ -32,7 +32,7 @@ describe('getCapabilities', () => {
 
       expect(caps.supportsSlashCommands).toBe(true);
       expect(caps.supportsModels).toBe(true);
-      expect(caps.models).toHaveLength(2);
+      expect(caps.models).toHaveLength(3);
       expect(caps.models[0]).toEqual({
         id: 'claude-sonnet-4-5-20250929',
         name: 'Sonnet 4.5',
@@ -40,6 +40,10 @@ describe('getCapabilities', () => {
       expect(caps.models[1]).toEqual({
         id: 'claude-opus-4-20250514',
         name: 'Opus 4.1',
+      });
+      expect(caps.models[2]).toEqual({
+        id: 'haiku',
+        name: 'Haiku 4.5',
       });
       expect(caps.installed).toBe(true);
       expect(caps.cliPath).toBe('/usr/local/bin/claude');

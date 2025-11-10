@@ -18,6 +18,13 @@ export function toId(idOrName: string): string {
   // Handle empty input
   if (!idOrName) return "";
 
+  // Special case: Preserve _system_ prefix for system phases
+  const isSystemPhase = idOrName.startsWith("_system_");
+  if (isSystemPhase) {
+    // Keep _system_ prefix intact, process the rest normally
+    return idOrName.slice(0, 64);
+  }
+
   // Check if already kebab-case (no spaces, no uppercase, no underscores)
   const isKebabCase = !/[A-Z\s_]/.test(idOrName);
 

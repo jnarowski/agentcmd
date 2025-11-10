@@ -291,9 +291,9 @@ function buildWorkflowEventData(
     userId: execution.user_id,
     specFile: execution.spec_file ?? undefined,
     specContent: execution.spec_content ?? undefined,
+    mode: execution.mode ?? undefined,
     baseBranch: execution.base_branch ?? undefined,
     branchName: execution.branch_name ?? undefined,
-    worktreeName: execution.worktree_name ?? undefined,
     args: execution.args,
   };
 }

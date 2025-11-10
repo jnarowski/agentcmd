@@ -24,6 +24,13 @@ Guidance for Claude Code when working with this repository.
 - ✅ `@/client/*`, `@/server/*`, `@/shared/*`
 - ❌ `../../../components/Foo`
 
+**NO inline imports - always import at top of file**:
+
+- ✅ `import type { PhaseDefinition } from "agentcmd-workflows"`
+- ❌ `<T extends import("agentcmd-workflows").PhaseDefinition>`
+- ✅ `import { getCurrentBranch } from "@/server/domain/git/services/getCurrentBranch"`
+- ❌ `const { getCurrentBranch } = await import("@/server/domain/git/services/getCurrentBranch")`
+
 ### React Best Practices
 
 **useEffect Dependencies - Only Primitives**:

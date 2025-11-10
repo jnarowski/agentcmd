@@ -35,13 +35,16 @@ export function createPhaseStep<TPhases extends readonly PhaseDefinition[] | und
 
     // Validate phase ID in development
     if (process.env.NODE_ENV !== "production" && config.phases) {
-      const validPhases = config.phases.map((p: string | { id: string }) =>
-        typeof p === "string" ? p : p.id
-      );
-      if (!validPhases.includes(id)) {
-        throw new Error(
-          `Invalid phase ID "${id}". Valid phases: ${validPhases.join(", ")}`
+      // System phases (_system_*) are exempt from validation
+      if (!id.startsWith("_system_")) {
+        const validPhases = config.phases.map((p: string | { id: string }) =>
+          typeof p === "string" ? p : p.id
         );
+        if (!validPhases.includes(id)) {
+          throw new Error(
+            `Invalid phase ID "${id}". Valid phases: ${validPhases.join(", ")}`
+          );
+        }
       }
     }
 

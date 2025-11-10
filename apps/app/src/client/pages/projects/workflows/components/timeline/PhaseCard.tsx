@@ -197,12 +197,19 @@ export function PhaseCard({
     }
   };
 
+  // Detect system phases
+  const isSystemPhase = phaseName.startsWith("_system_");
+
   return (
     <div className="border-b bg-card">
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between py-5 px-4 bg-background hover:bg-muted/80 transition-colors border-l-2 border-primary/20"
+        className={`w-full flex items-center justify-between py-5 px-4 transition-colors border-l-2 ${
+          isSystemPhase
+            ? "bg-muted/30 hover:bg-muted/50 border-muted-foreground/20"
+            : "bg-background hover:bg-muted/80 border-primary/20"
+        }`}
       >
         <div className="flex items-center gap-3">
           {isExpanded ? (
@@ -211,7 +218,19 @@ export function PhaseCard({
             <ChevronRight className="h-5 w-5 text-muted-foreground" />
           )}
 
-          <h3 className="text-xl font-bold">{phaseName}</h3>
+          <h3
+            className={`text-xl font-bold ${
+              isSystemPhase ? "text-muted-foreground" : ""
+            }`}
+          >
+            {phaseName}
+          </h3>
+
+          {isSystemPhase && (
+            <span className="px-2 py-1 text-xs font-medium bg-muted text-muted-foreground rounded border border-muted-foreground/30">
+              SYSTEM
+            </span>
+          )}
 
           <span
             className={`px-2 py-1 text-xs font-medium text-white rounded ${statusColor}`}

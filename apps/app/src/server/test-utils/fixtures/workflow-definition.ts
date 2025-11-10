@@ -1,4 +1,4 @@
-import { PrismaClient, WorkflowScope } from "@prisma/client";
+import { PrismaClient, WorkflowScope, Prisma } from "@prisma/client";
 
 /**
  * Creates a test workflow definition
@@ -16,8 +16,8 @@ export async function createTestWorkflowDefinition(
     description: string | null;
     type: string;
     path: string;
-    phases: any;
-    args_schema: any;
+    phases: unknown;
+    args_schema: unknown;
     is_template: boolean;
     status: string;
     file_exists: boolean;
@@ -50,7 +50,7 @@ export async function createTestWorkflowDefinition(
       type,
       path,
       phases,
-      args_schema,
+      args_schema: args_schema as Prisma.InputJsonValue,
       is_template,
       status,
       file_exists,
@@ -75,8 +75,8 @@ export async function createTestGlobalWorkflowDefinition(
     description: string | null;
     type: string;
     path: string;
-    phases: any;
-    args_schema: any;
+    phases: unknown;
+    args_schema: unknown;
     is_template: boolean;
     status: string;
     file_exists: boolean;

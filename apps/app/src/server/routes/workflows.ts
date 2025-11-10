@@ -61,9 +61,9 @@ export async function workflowRoutes(fastify: FastifyInstance) {
         args: body.args,
         spec_file: body.spec_file,
         spec_content: body.spec_content,
+        mode: body.mode,
         base_branch: body.base_branch,
         branch_name: body.branch_name,
-        worktree_name: body.worktree_name,
       });
 
       if (!run) {

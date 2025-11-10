@@ -12,6 +12,7 @@ import {
   GetWorkflowDefinitionsQuerySchema,
   ArchiveWorkflowDefinitionParamsSchema,
   UnarchiveWorkflowDefinitionParamsSchema,
+  WorkflowDefinitionResponseSchema,
 } from '@/server/domain/workflow/schemas';
 import '@/server/plugins/auth';
 
@@ -20,22 +21,6 @@ import '@/server/plugins/auth';
  */
 const WorkflowDefinitionIdSchema = z.object({
   id: z.string().cuid(),
-});
-
-const WorkflowDefinitionResponseSchema = z.object({
-  id: z.string(),
-  scope: z.enum(['project', 'global']),
-  name: z.string(),
-  description: z.string().nullable(),
-  type: z.string(),
-  path: z.string(),
-  phases: z.any(), // JSON
-  args_schema: z.any().nullable(), // JSON
-  is_template: z.boolean(),
-  status: z.string(),
-  load_error: z.string().nullable(),
-  created_at: z.date(),
-  updated_at: z.date(),
 });
 
 /**

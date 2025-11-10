@@ -11,7 +11,7 @@ export { createAnnotationStep } from "./createAnnotationStep";
 export { createRunStep } from "./createRunStep";
 export { createAiStep } from "./createAiStep";
 export { createSetupWorkspaceStep } from "./createSetupWorkspaceStep";
-export { createCleanupWorkspaceStep } from "./createCleanupWorkspaceStep";
+export { createFinalizeWorkspaceStep } from "./createFinalizeWorkspaceStep";
 export { executeStep } from "@/server/domain/workflow/services/engine/steps/utils/executeStep";
 export { findOrCreateStep } from "@/server/domain/workflow/services/engine/steps/utils/findOrCreateStep";
 export { updateStepStatus } from "@/server/domain/workflow/services/engine/steps/utils/updateStepStatus";

@@ -1,25 +1,16 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterEach,
-  afterAll,
-} from "vitest";
+import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import type { FastifyInstance } from "fastify";
-import { z } from "zod";
 import { prisma } from "@/shared/prisma";
 import { cleanTestDB } from "@/server/test-utils/db";
-import {
-  createTestApp,
-  closeTestApp,
-} from "@/server/test-utils/fastify";
+import { createTestApp, closeTestApp } from "@/server/test-utils/fastify";
 import {
   createAuthenticatedUser,
   createTestProject,
   createTestWorkflowDefinition,
   createTestGlobalWorkflowDefinition,
 } from "@/server/test-utils/fixtures";
+import { parseResponse } from "@/server/test-utils/requests";
+import { WorkflowDefinitionsResponseSchema } from "@/server/domain/workflow/schemas";
 
 describe("GET /api/projects/:projectId/workflow-definitions", () => {
   let app: FastifyInstance & { jwt: { sign: (payload: object) => string } };
@@ -64,16 +55,17 @@ describe("GET /api/projects/:projectId/workflow-definitions", () => {
     // Assert: Verify status and response structure
     expect(response.statusCode).toBe(200);
 
-    const body = JSON.parse(response.body);
-    expect(body).toHaveProperty("data");
-    expect(Array.isArray(body.data)).toBe(true);
+    const body = parseResponse({
+      response,
+      schema: WorkflowDefinitionsResponseSchema,
+    });
     expect(body.data.length).toBeGreaterThan(0);
 
     // Verify scope field is present
-    const workflow = body.data.find((w: any) => w.id === projectWorkflow.id);
+    const workflow = body.data.find((w) => w.id === projectWorkflow.id);
     expect(workflow).toBeDefined();
-    expect(workflow).toHaveProperty("scope", "project");
-    expect(workflow.name).toBe("Project Workflow");
+    expect(workflow!.scope).toBe("project");
+    expect(workflow!.name).toBe("Project Workflow");
   });
 
   it("should return both project and global workflows", async () => {
@@ -110,12 +102,15 @@ describe("GET /api/projects/:projectId/workflow-definitions", () => {
     // Assert: Verify both workflows are returned
     expect(response.statusCode).toBe(200);
 
-    const body = JSON.parse(response.body);
+    const body = parseResponse({
+      response,
+      schema: WorkflowDefinitionsResponseSchema,
+    });
     expect(body.data.length).toBe(2);
 
     // Find workflows by scope
-    const projectWorkflows = body.data.filter((w: any) => w.scope === "project");
-    const globalWorkflows = body.data.filter((w: any) => w.scope === "global");
+    const projectWorkflows = body.data.filter((w) => w.scope === "project");
+    const globalWorkflows = body.data.filter((w) => w.scope === "global");
 
     expect(projectWorkflows.length).toBe(1);
     expect(globalWorkflows.length).toBe(1);
@@ -159,7 +154,10 @@ describe("GET /api/projects/:projectId/workflow-definitions", () => {
 
     // Assert: Only active workflow returned
     expect(activeResponse.statusCode).toBe(200);
-    const activeBody = JSON.parse(activeResponse.body);
+    const activeBody = parseResponse({
+      response: activeResponse,
+      schema: WorkflowDefinitionsResponseSchema,
+    });
     expect(activeBody.data.length).toBe(1);
     expect(activeBody.data[0].id).toBe(activeWorkflow.id);
     expect(activeBody.data[0].status).toBe("active");
@@ -173,7 +171,10 @@ describe("GET /api/projects/:projectId/workflow-definitions", () => {
 
     // Assert: Only archived workflow returned
     expect(archivedResponse.statusCode).toBe(200);
-    const archivedBody = JSON.parse(archivedResponse.body);
+    const archivedBody = parseResponse({
+      response: archivedResponse,
+      schema: WorkflowDefinitionsResponseSchema,
+    });
     expect(archivedBody.data.length).toBe(1);
     expect(archivedBody.data[0].id).toBe(archivedWorkflow.id);
     expect(archivedBody.data[0].status).toBe("archived");
@@ -232,30 +233,21 @@ describe("GET /api/projects/:projectId/workflow-definitions", () => {
       headers,
     });
 
-    // Assert: Verify response matches schema
+    // Assert: Verify response matches schema (Zod validates all fields)
     expect(response.statusCode).toBe(200);
 
-    const body = JSON.parse(response.body);
+    const body = parseResponse({
+      response,
+      schema: WorkflowDefinitionsResponseSchema,
+    });
+
+    // If parseResponse succeeds, schema validation passed
     expect(body.data.length).toBeGreaterThan(0);
 
+    // Verify we can access typed fields
     const workflow = body.data[0];
-
-    // Verify all required fields are present
-    expect(workflow).toHaveProperty("id");
-    expect(workflow).toHaveProperty("scope");
-    expect(workflow).toHaveProperty("name");
-    expect(workflow).toHaveProperty("description");
-    expect(workflow).toHaveProperty("type");
-    expect(workflow).toHaveProperty("path");
-    expect(workflow).toHaveProperty("phases");
-    expect(workflow).toHaveProperty("args_schema");
-    expect(workflow).toHaveProperty("is_template");
-    expect(workflow).toHaveProperty("load_error");
-    expect(workflow).toHaveProperty("created_at");
-    expect(workflow).toHaveProperty("updated_at");
-
-    // Verify scope is valid enum
-    expect(["project", "global"]).toContain(workflow.scope);
+    expect(workflow.scope).toMatch(/^(project|global)$/);
+    expect(workflow.name).toBe("Complete Workflow");
   });
 
   it("should only return workflows for the specified project", async () => {
@@ -297,14 +289,17 @@ describe("GET /api/projects/:projectId/workflow-definitions", () => {
     // Assert: Only project 1 workflow returned (plus any global workflows)
     expect(response.statusCode).toBe(200);
 
-    const body = JSON.parse(response.body);
-    const projectWorkflows = body.data.filter((w: any) => w.scope === "project");
+    const body = parseResponse({
+      response,
+      schema: WorkflowDefinitionsResponseSchema,
+    });
+    const projectWorkflows = body.data.filter((w) => w.scope === "project");
 
     expect(projectWorkflows.length).toBe(1);
     expect(projectWorkflows[0].id).toBe(workflow1.id);
 
     // Project 2 workflow should NOT be in results
-    const hasProject2Workflow = body.data.some((w: any) => w.id === workflow2.id);
+    const hasProject2Workflow = body.data.some((w) => w.id === workflow2.id);
     expect(hasProject2Workflow).toBe(false);
   });
 });

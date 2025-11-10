@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/client/stores/index";
 import { useSyncProjects } from "@/client/pages/projects/hooks/useProjects";
 import { projectKeys } from "@/client/pages/projects/hooks/queryKeys";
+import { sessionKeys } from "@/client/pages/projects/sessions/hooks/queryKeys";
 import { settingsKeys } from "@/client/hooks/queryKeys";
 import { useSettings } from "@/client/hooks/useSettings";
 import { useSessionStore } from "@/client/pages/projects/sessions/stores/sessionStore";
@@ -36,11 +37,14 @@ function ProtectedLayout() {
       queryFn: async () => {
         const response = await api.get<{ data: unknown[] }>('/api/workflow-definitions?status=active');
         // Parse JSON fields (matching useAllWorkflowDefinitions logic)
-        return response.data.map((def: any) => ({
-          ...def,
-          phases: typeof def.phases === 'string' ? JSON.parse(def.phases) : def.phases,
-          args_schema: typeof def.args_schema === 'string' ? JSON.parse(def.args_schema) : def.args_schema,
-        }));
+        return response.data.map((def: unknown) => {
+          const item = def as Record<string, unknown>;
+          return {
+            ...item,
+            phases: typeof item.phases === 'string' ? JSON.parse(item.phases) : item.phases,
+            args_schema: typeof item.args_schema === 'string' ? JSON.parse(item.args_schema) : item.args_schema,
+          };
+        });
       },
     });
   }, [queryClient]);
@@ -74,6 +78,7 @@ function ProtectedLayout() {
       // Invalidate projects list to show newly synced projects
       queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
       queryClient.invalidateQueries({ queryKey: projectKeys.withSessions() });
+      queryClient.invalidateQueries({ queryKey: sessionKeys.lists() });
 
       if (import.meta.env.DEV) {
         console.log(

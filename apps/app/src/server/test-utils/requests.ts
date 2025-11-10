@@ -1,4 +1,29 @@
 import type { FastifyInstance } from "fastify";
+import type { Response as LightMyRequestResponse } from "light-my-request";
+import type { z } from "zod";
+
+/**
+ * Parse and validate inject response body with Zod schema
+ * Provides type-safe responses with runtime validation
+ *
+ * @param response - Response from app.inject()
+ * @param schema - Zod schema to validate against
+ * @returns Parsed and validated response body (fully typed)
+ *
+ * @example
+ * const response = await app.inject({ method: "GET", url: "/api/projects" });
+ * const body = parseResponse({ response, schema: projectsResponseSchema });
+ * body.data[0].name; // Fully typed!
+ */
+export function parseResponse<T>({
+  response,
+  schema,
+}: {
+  response: LightMyRequestResponse;
+  schema: z.ZodSchema<T>;
+}): T {
+  return schema.parse(JSON.parse(response.body));
+}
 
 /**
  * Make an authenticated HTTP request in tests

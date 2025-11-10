@@ -93,6 +93,7 @@ describe("createSetupWorkspaceStep", () => {
         branch: "feat/new",
         mode: "worktree",
         worktreePath: "/test/project/.worktrees/feat/new",
+        originalBranch: "main",
       });
     });
 
@@ -171,6 +172,7 @@ describe("createSetupWorkspaceStep", () => {
         workingDir: "/test/project",
         branch: "feat/new",
         mode: "branch",
+        originalBranch: "main",
       });
     });
 

@@ -17,6 +17,7 @@ import {
   createAuthenticatedUser,
   createTestProject,
 } from "@/server/test-utils/fixtures";
+import { parseResponse } from "@/server/test-utils/requests";
 import { projectResponseSchema } from "@/server/domain/project/schemas";
 
 describe("GET /api/projects/:id", () => {
@@ -59,8 +60,10 @@ describe("GET /api/projects/:id", () => {
     // Assert: Verify status and response structure
     expect(response.statusCode).toBe(200);
 
-    const body = JSON.parse(response.body);
-    expect(body).toHaveProperty("data");
+    const body = parseResponse({
+      response,
+      schema: projectResponseSchema,
+    });
     expect(body.data).toMatchObject({
       id: project.id,
       name: "Test Project",
@@ -68,10 +71,6 @@ describe("GET /api/projects/:id", () => {
       is_hidden: false,
       is_starred: false,
     });
-
-    // Validate response against Zod schema
-    const validationResult = projectResponseSchema.safeParse(body);
-    expect(validationResult.success).toBe(true);
   });
 
   it("should return 404 for non-existent project ID", async () => {
@@ -173,13 +172,13 @@ describe("GET /api/projects/:id", () => {
     // Assert: Verify response matches schema
     expect(response.statusCode).toBe(200);
 
-    const body = JSON.parse(response.body);
-
-    // Parse with Zod schema - should not throw
-    const parseResult = projectResponseSchema.parse(body);
+    const body = parseResponse({
+      response,
+      schema: projectResponseSchema,
+    });
 
     // Verify all fields are present and correct
-    expect(parseResult.data).toMatchObject({
+    expect(body.data).toMatchObject({
       id: project.id,
       name: "Full Test Project",
       path: "/tmp/full-test-project",
@@ -188,8 +187,8 @@ describe("GET /api/projects/:id", () => {
     });
 
     // Verify date fields are parsed correctly
-    expect(parseResult.data.created_at).toBeInstanceOf(Date);
-    expect(parseResult.data.updated_at).toBeInstanceOf(Date);
+    expect(body.data.created_at).toBeInstanceOf(Date);
+    expect(body.data.updated_at).toBeInstanceOf(Date);
   });
 
   it("should handle concurrent requests correctly", async () => {
@@ -226,8 +225,14 @@ describe("GET /api/projects/:id", () => {
     expect(response1.statusCode).toBe(200);
     expect(response2.statusCode).toBe(200);
 
-    const body1 = JSON.parse(response1.body);
-    const body2 = JSON.parse(response2.body);
+    const body1 = parseResponse({
+      response: response1,
+      schema: projectResponseSchema,
+    });
+    const body2 = parseResponse({
+      response: response2,
+      schema: projectResponseSchema,
+    });
 
     expect(body1.data.id).toBe(project1.id);
     expect(body1.data.name).toBe("Project 1");

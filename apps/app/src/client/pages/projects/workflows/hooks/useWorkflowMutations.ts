@@ -12,9 +12,9 @@ interface CreateWorkflowInput {
   args: Record<string, unknown>;
   spec_file?: string;
   spec_content?: string;
+  mode?: string;
   base_branch?: string;
   branch_name?: string;
-  worktree_name?: string;
 }
 
 interface CreateWorkflowResponse {
@@ -31,9 +31,9 @@ async function createWorkflow(input: CreateWorkflowInput): Promise<WorkflowRun> 
       args: input.args,
       spec_file: input.spec_file,
       spec_content: input.spec_content,
+      mode: input.mode,
       base_branch: input.base_branch,
       branch_name: input.branch_name,
-      worktree_name: input.worktree_name,
     }
   );
   return response.data;

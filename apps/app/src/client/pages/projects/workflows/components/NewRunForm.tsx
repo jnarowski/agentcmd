@@ -48,11 +48,8 @@ export function NewRunForm({
   const [name, setName] = useState("");
   const [args, setArgs] = useState<Record<string, unknown>>({});
   const [baseBranch, setBaseBranch] = useState("main");
-  const [gitMode, setGitMode] = useState<"branch" | "worktree" | "current">(
-    "branch"
-  );
+  const [mode, setMode] = useState<"stay" | "branch" | "worktree">("branch");
   const [branchName, setBranchName] = useState("");
-  const [worktreeName, setWorktreeName] = useState("");
   const [isGeneratingNames, setIsGeneratingNames] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -174,7 +171,6 @@ export function NewRunForm({
         if (names) {
           setName(names.runName);
           setBranchName(names.branchName);
-          setWorktreeName(names.branchName);
         }
       } catch {
         // Silent failure - user can still manually enter names
@@ -186,21 +182,17 @@ export function NewRunForm({
     generateNames();
   }, [specFile, projectId]);
 
-  // Auto-generate branch/worktree name from run name
+  // Auto-generate branch name from run name
   useEffect(() => {
-    if (name && gitMode !== "current") {
+    if (name && mode !== "stay") {
       const slug = name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "");
 
-      if (gitMode === "branch") {
-        setBranchName(slug);
-      } else {
-        setWorktreeName(slug);
-      }
+      setBranchName(slug);
     }
-  }, [name, gitMode]);
+  }, [name, mode]);
 
   const handleSubmit = async () => {
     setError(null);
@@ -238,13 +230,9 @@ export function NewRunForm({
       return;
     }
 
-    // Validate git mode (skip validation for 'current' mode)
-    if (gitMode === "branch" && !branchName.trim()) {
+    // Validate mode (skip validation for 'stay' mode)
+    if (mode !== "stay" && !branchName.trim()) {
       setError("Branch name is required");
-      return;
-    }
-    if (gitMode === "worktree" && !worktreeName.trim()) {
-      setError("Worktree name is required");
       return;
     }
 
@@ -259,10 +247,9 @@ export function NewRunForm({
         args,
         spec_file: specInputType === "file" ? specFile : undefined,
         spec_content: specInputType === "content" ? specContent : undefined,
-        base_branch: baseBranch || undefined,
-        branch_name: gitMode === "branch" ? branchName : undefined,
-        worktree_name: gitMode === "worktree" ? worktreeName : undefined,
-        // When gitMode is 'current', both branch_name and worktree_name are undefined
+        mode: mode,
+        base_branch: mode !== "stay" ? (baseBranch || undefined) : undefined,
+        branch_name: mode !== "stay" ? (branchName || undefined) : undefined,
       });
 
       onSuccess(run);
@@ -394,14 +381,12 @@ export function NewRunForm({
         )}
       </div>
 
-      {/* Git mode: branch or worktree or current */}
+      {/* Mode: stay, branch, or worktree */}
       <div className="space-y-3">
-        <Label>Git Mode</Label>
+        <Label>Mode</Label>
         <RadioGroup
-          value={gitMode}
-          onValueChange={(v) =>
-            setGitMode(v as "branch" | "worktree" | "current")
-          }
+          value={mode}
+          onValueChange={(v) => setMode(v as "stay" | "branch" | "worktree")}
         >
           {/* Branch option */}
           <div className="space-y-3">
@@ -414,7 +399,7 @@ export function NewRunForm({
                 Branch
               </Label>
             </div>
-            {gitMode === "branch" && (
+            {mode === "branch" && (
               <div className="ml-2 space-y-3 border-l-2 border-muted pl-3.5 py-3 [&>div]:space-y-2">
                 {/* Branch Name */}
                 <div>
@@ -487,16 +472,16 @@ export function NewRunForm({
                 Worktree
               </Label>
             </div>
-            {gitMode === "worktree" && (
+            {mode === "worktree" && (
               <div className="ml-2 space-y-3 border-l-2 border-muted pl-3.5 py-3 [&>div]:space-y-2">
-                {/* Worktree Name */}
+                {/* Branch Name */}
                 <div>
-                  <Label htmlFor="worktree-name">Worktree Name</Label>
+                  <Label htmlFor="worktree-branch-name">Branch Name</Label>
                   <Input
-                    id="worktree-name"
+                    id="worktree-branch-name"
                     placeholder="Auto-generated from run name"
-                    value={worktreeName}
-                    onChange={(e) => setWorktreeName(e.target.value)}
+                    value={branchName}
+                    onChange={(e) => setBranchName(e.target.value)}
                     disabled={createWorkflow.isPending}
                   />
                   <p className="text-xs text-muted-foreground">
@@ -551,14 +536,11 @@ export function NewRunForm({
             )}
           </div>
 
-          {/* Current Branch option */}
+          {/* Stay option */}
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="current" id="mode-current" />
-            <Label
-              htmlFor="mode-current"
-              className="font-normal cursor-pointer"
-            >
-              Current Branch
+            <RadioGroupItem value="stay" id="mode-stay" />
+            <Label htmlFor="mode-stay" className="font-normal cursor-pointer">
+              Stay
             </Label>
           </div>
         </RadioGroup>

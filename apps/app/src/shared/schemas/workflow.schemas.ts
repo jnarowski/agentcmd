@@ -154,9 +154,9 @@ export const createWorkflowRunSchema = z
     args: z.record(z.string(), z.unknown()).default({}),
     spec_file: z.string().optional(),
     spec_content: z.string().optional(),
+    mode: z.enum(['stay', 'branch', 'worktree']).optional(),
     base_branch: z.string().optional(),
     branch_name: z.string().optional(),
-    worktree_name: z.string().optional(),
     inngest_run_id: z.string().optional(),
   })
   .refine((data) => {
@@ -167,15 +167,6 @@ export const createWorkflowRunSchema = z
   }, {
     message: "Either spec_file or spec_content must be provided, but not both",
     path: ["spec_file", "spec_content"],
-  })
-  .refine((data) => {
-    // At most one of branch_name or worktree_name can be provided
-    const hasBranchName = !!data.branch_name;
-    const hasWorktreeName = !!data.worktree_name;
-    return !(hasBranchName && hasWorktreeName); // False when both are provided
-  }, {
-    message: "Cannot provide both branch_name and worktree_name",
-    path: ["branch_name", "worktree_name"],
   });
 
 /**

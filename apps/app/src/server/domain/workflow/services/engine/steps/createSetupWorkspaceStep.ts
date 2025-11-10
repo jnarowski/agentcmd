@@ -90,6 +90,7 @@ async function executeSetupWorkspace(
       branch: targetBranch,
       mode: "worktree",
       worktreePath,
+      originalBranch: currentBranch ?? "main",
     };
   }
 
@@ -133,6 +134,7 @@ async function executeSetupWorkspace(
       workingDir: projectPath,
       branch,
       mode: "branch",
+      originalBranch: currentBranch ?? "main",
     };
   }
 
