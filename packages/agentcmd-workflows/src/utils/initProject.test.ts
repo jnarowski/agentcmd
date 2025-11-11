@@ -119,72 +119,21 @@ describe("initProject", () => {
     await rm(tempDir, { recursive: true, force: true });
   });
 
-  it("should generate types at .agent/generated/slash-commands.ts", async () => {
-    const result = await initProject(tempDir, {
-      claude: true,
-      genTypes: true,
-      yes: true,
-    });
+  it("should create .agent structure", async () => {
+    await initProject(tempDir);
 
-    expect(result.typesGenerated).toBe(true);
-
-    // Verify file exists at correct path
-    const typesPath = path.join(tempDir, ".agent/generated/slash-commands.ts");
-    const fileExists = await exists(typesPath);
-    expect(fileExists).toBe(true);
-
-    // Verify it contains expected content
-    const content = await readFile(typesPath, "utf-8");
-    expect(content).toContain("export const SlashCommandArgOrder");
-    expect(content).toContain("export function buildSlashCommand");
-  });
-
-  it("should create .agent/generated directory", async () => {
-    await initProject(tempDir, {
-      claude: true,
-      genTypes: true,
-      yes: true,
-    });
-
-    const generatedDir = path.join(tempDir, ".agent/generated");
-    const dirExists = await exists(generatedDir);
+    const agentDir = path.join(tempDir, ".agent");
+    const dirExists = await exists(agentDir);
     expect(dirExists).toBe(true);
+
+    // Check subdirectories
+    const workflowsDir = path.join(agentDir, "workflows/definitions");
+    const workflowsDirExists = await exists(workflowsDir);
+    expect(workflowsDirExists).toBe(true);
   });
 
-  it("should not generate types when genTypes is false", async () => {
-    const result = await initProject(tempDir, {
-      claude: true,
-      genTypes: false,
-      yes: true,
-    });
-
-    expect(result.typesGenerated).toBe(false);
-
-    const typesPath = path.join(tempDir, ".agent/generated/slash-commands.ts");
-    const fileExists = await exists(typesPath);
-    expect(fileExists).toBe(false);
-  });
-
-  it("should not generate types when claude is false", async () => {
-    const result = await initProject(tempDir, {
-      claude: false,
-      genTypes: true,
-      yes: true,
-    });
-
-    expect(result.typesGenerated).toBe(false);
-
-    const typesPath = path.join(tempDir, ".agent/generated/slash-commands.ts");
-    const fileExists = await exists(typesPath);
-    expect(fileExists).toBe(false);
-  });
-
-  it("should copy .claude/commands when claude is true", async () => {
-    await initProject(tempDir, {
-      claude: true,
-      genTypes: false,
-      yes: true,
-    });
+  it("should copy .claude/commands", async () => {
+    await initProject(tempDir);
 
     const commandsDir = path.join(tempDir, ".claude/commands");
     const dirExists = await exists(commandsDir);
@@ -195,20 +144,39 @@ describe("initProject", () => {
     expect(fileExists).toBe(true);
   });
 
-  it("should copy .agent structure", async () => {
-    await initProject(tempDir, {
-      claude: false,
-      genTypes: false,
-      yes: true,
-    });
+  it("should generate types at .agent/generated/slash-commands.ts", async () => {
+    const result = await initProject(tempDir);
 
-    const agentDir = path.join(tempDir, ".agent");
-    const dirExists = await exists(agentDir);
+    // Verify file exists at correct path
+    const typesPath = path.join(tempDir, ".agent/generated/slash-commands.ts");
+    const fileExists = await exists(typesPath);
+    expect(fileExists).toBe(true);
+
+    // Verify it contains expected content
+    const content = await readFile(typesPath, "utf-8");
+    expect(content).toContain("export const SlashCommandArgOrder");
+    expect(content).toContain("export function buildSlashCommand");
+
+    // Verify types file was tracked in result
+    expect(result.created).toContain(typesPath);
+  });
+
+  it("should create .agent/generated directory", async () => {
+    await initProject(tempDir);
+
+    const generatedDir = path.join(tempDir, ".agent/generated");
+    const dirExists = await exists(generatedDir);
     expect(dirExists).toBe(true);
+  });
 
-    // Check subdirectories
-    const workflowsDir = path.join(agentDir, "workflows/definitions");
-    const workflowsDirExists = await exists(workflowsDir);
-    expect(workflowsDirExists).toBe(true);
+  it("should append gitignore patterns", async () => {
+    await initProject(tempDir);
+
+    const gitignorePath = path.join(tempDir, ".gitignore");
+    const fileExists = await exists(gitignorePath);
+    expect(fileExists).toBe(true);
+
+    const content = await readFile(gitignorePath, "utf-8");
+    expect(content).toContain("# Agent workflow artifacts");
   });
 });

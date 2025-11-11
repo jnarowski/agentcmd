@@ -10,16 +10,9 @@ function getCurrentDir(): string {
   return path.dirname(filename);
 }
 
-export interface InitOptions {
-  claude: boolean;
-  genTypes: boolean;
-  yes: boolean;
-}
-
 export interface InitResult {
   created: string[];
   skipped: string[];
-  typesGenerated: boolean;
 }
 
 /**
@@ -118,14 +111,11 @@ async function appendGitignore(
 
 /**
  * Initialize agentcmd project structure
+ * Always installs: .agent structure, Claude commands, and generates types
  */
-export async function initProject(
-  targetPath: string,
-  options: InitOptions
-): Promise<InitResult> {
+export async function initProject(targetPath: string): Promise<InitResult> {
   const created: string[] = [];
   const skipped: string[] = [];
-  let typesGenerated = false;
 
   // Resolve template directory
   // In development: packages/workflow-sdk/src/utils -> packages/workflow-sdk/templates (up 2 levels)
@@ -135,42 +125,37 @@ export async function initProject(
     ? path.resolve(currentDir, "../templates")
     : path.resolve(currentDir, "../../templates");
 
-  // Copy .agent structure
+  // Step 1: Copy .agent structure
   const agentSrc = path.join(templatesDir, ".agent");
   const agentDest = path.join(targetPath, ".agent");
   await copyDirectory(agentSrc, agentDest, created, skipped);
 
-  // Copy .claude structure if requested
-  if (options.claude) {
-    const claudeSrc = path.join(templatesDir, ".claude");
-    const claudeDest = path.join(targetPath, ".claude");
-    await copyDirectory(claudeSrc, claudeDest, created, skipped);
+  // Step 2: Copy .claude structure
+  const claudeSrc = path.join(templatesDir, ".claude");
+  const claudeDest = path.join(targetPath, ".claude");
+  await copyDirectory(claudeSrc, claudeDest, created, skipped);
 
-    // Generate slash command types if requested
-    if (options.genTypes) {
-      try {
-        const commandsDir = path.join(claudeDest, "commands");
-        const commands = await parseSlashCommands(commandsDir);
+  // Step 3: Generate slash command types
+  try {
+    const commandsDir = path.join(claudeDest, "commands");
+    const commands = await parseSlashCommands(commandsDir);
 
-        if (commands.length > 0) {
-          const code = generateSlashCommandTypesCode(commands);
+    if (commands.length > 0) {
+      const code = generateSlashCommandTypesCode(commands);
 
-          // Write to .agent/generated/slash-commands.ts
-          const generatedDir = path.join(agentDest, "generated");
-          const typesPath = path.join(generatedDir, "slash-commands.ts");
+      // Write to .agent/generated/slash-commands.ts
+      const generatedDir = path.join(agentDest, "generated");
+      const typesPath = path.join(generatedDir, "slash-commands.ts");
 
-          // Ensure .agent/generated directory exists
-          await mkdir(generatedDir, { recursive: true });
+      // Ensure .agent/generated directory exists
+      await mkdir(generatedDir, { recursive: true });
 
-          await writeFile(typesPath, code, "utf-8");
-          created.push(typesPath);
-          typesGenerated = true;
-        }
-      } catch (error) {
-        // Silently skip if slash commands can't be generated
-        console.warn("⚠️  Could not generate slash command types");
-      }
+      await writeFile(typesPath, code, "utf-8");
+      created.push(typesPath);
     }
+  } catch (error) {
+    // Silently skip if slash commands can't be generated
+    console.warn("⚠️  Could not generate slash command types");
   }
 
   // Append gitignore patterns
@@ -179,6 +164,5 @@ export async function initProject(
   return {
     created,
     skipped,
-    typesGenerated,
   };
 }

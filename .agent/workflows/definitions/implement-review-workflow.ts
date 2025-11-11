@@ -27,7 +27,7 @@ export default defineWorkflow(
     ],
   },
   async ({ event, step }) => {
-    const { specContent, workingDir } = event.data;
+    const { workingDir } = event.data;
     const ctx: ImplementReviewWorkflowContext = {};
 
     await step.phase("implement", async () => {

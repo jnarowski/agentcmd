@@ -22,39 +22,29 @@ program
 // Init command
 program
   .command("init")
-  .description("Initialize workflow project structure")
+  .description("Initialize agentcmd workflow project structure")
   .argument("[path]", "Target directory", process.cwd())
-  .option("--claude", "Install Claude slash commands (default: true)")
-  .option("--no-claude", "Skip Claude slash commands installation")
-  .option("--gen-types", "Generate slash command types (default: true)")
-  .option("--no-gen-types", "Skip slash command type generation")
-  .option("-y, --yes", "Skip prompts and use defaults")
-  .action(async (targetPath: string, options) => {
+  .action(async (targetPath: string) => {
     try {
-      const result = await initProject(targetPath, {
-        claude: options.claude,
-        genTypes: options.genTypes,
-        yes: options.yes,
-      });
+      const result = await initProject(targetPath);
 
       // Print summary
       console.log("\n✨ Initialization complete!");
-      console.log(`\n📁 Created ${result.created.length} file(s):`);
-      result.created.forEach((file) => console.log(`   ✓ ${file}`));
+      console.log("\n📦 Installed:");
+      console.log("   ✓ .agent/ folder structure (specs, workflows, logs)");
+      console.log("   ✓ Claude Code slash commands in .claude/commands/");
+      console.log("   ✓ Generated TypeScript types for slash commands");
+
+      console.log(`\n📁 Created ${result.created.length} file(s)`);
 
       if (result.skipped.length > 0) {
-        console.log(`\n⏭️  Skipped ${result.skipped.length} existing file(s):`);
-        result.skipped.forEach((file) => console.log(`   - ${file}`));
-      }
-
-      if (result.typesGenerated) {
-        console.log("\n🎯 Slash command types generated");
+        console.log(`\n⏭️  Skipped ${result.skipped.length} existing file(s)`);
       }
 
       console.log("\n🚀 Next steps:");
       console.log("   1. Review example workflows in .agent/workflows/definitions/");
-      console.log("   2. Create your own workflows");
-      console.log("   3. Run workflows with: workflow-sdk run <workflow-name>");
+      console.log("   2. Use slash commands: /cmd:generate-spec, /cmd:implement-spec, etc.");
+      console.log("   3. Create custom workflows and commands");
 
       process.exit(0);
     } catch (error) {

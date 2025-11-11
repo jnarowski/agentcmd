@@ -30,6 +30,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:reset": "rm -rf prisma/migrations/ && rm -f prisma/dev.db && prisma generate && prisma migrate dev --name init",
     "prisma:seed": "tsx prisma/seed.ts",
+    "prisma:seed:hide:projects": "tsx prisma/seed-hide-projects.ts",
     "prisma:seed:workflows": "tsx prisma/seed-workflows.ts",
     "prisma:studio": "prisma studio",
     "ship": "pnpm build && pnpm version patch && (git commit -am \"bump version\" || true) && git push --follow-tags && pnpm publish",
