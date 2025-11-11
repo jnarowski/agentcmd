@@ -1,6 +1,6 @@
 {
   "name": "agentcmd-workflows",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "Type-safe workflow SDK for agentcmd workflow engine",
   "type": "module",
   "main": "./dist/index.js",
@@ -33,7 +33,7 @@
     "gen-slash-types": "node dist/cli.js generate-slash-types",
     "generate:command:types": "tsx src/cli/generateTemplateCommandTypes.ts",
     "sync:commands": "cp -r ../../.claude/commands/cmd templates/.claude/commands/",
-    "sync:workflows": "cp ../../.agent/workflows/definitions/example-*.ts templates/.agent/workflows/definitions/",
+    "sync:workflows": "node scripts/sync-workflows.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "prepublishOnly": "pnpm sync:commands && pnpm sync:workflows && pnpm build && pnpm test",

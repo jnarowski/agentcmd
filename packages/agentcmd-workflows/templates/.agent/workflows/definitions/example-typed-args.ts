@@ -1,7 +1,7 @@
 import {
   defineWorkflow,
   defineSchema,
-} from "../../../packages/agentcmd-workflows/dist/index.js";
+} from "agentcmd-workflows";
 
 /**
  * Example: Type-safe workflow arguments with defineSchema

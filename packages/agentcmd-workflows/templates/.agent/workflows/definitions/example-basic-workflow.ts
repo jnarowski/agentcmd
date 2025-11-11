@@ -10,7 +10,7 @@
  * - Sleep delays to simulate processing
  */
 
-import { defineWorkflow } from "../../../packages/agentcmd-workflows/dist";
+import { defineWorkflow } from "agentcmd-workflows";
 
 export default defineWorkflow(
   {

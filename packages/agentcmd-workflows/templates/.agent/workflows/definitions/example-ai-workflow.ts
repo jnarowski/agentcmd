@@ -1,4 +1,4 @@
-import { defineWorkflow } from "../../../packages/agentcmd-workflows/dist";
+import { defineWorkflow } from "agentcmd-workflows";
 
 /**
  * Example workflow demonstrating step.ai capabilities.
