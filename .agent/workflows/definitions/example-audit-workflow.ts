@@ -24,7 +24,7 @@ export default defineWorkflow(
     const response = await step.phase("audit", async () => {
       return await step.agent("Audit", {
         agent: "claude",
-        prompt: `/audit`,
+        prompt: `/cmd:audit`,
         permissionMode: "plan",
       });
     });

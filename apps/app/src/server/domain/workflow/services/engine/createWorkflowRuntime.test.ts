@@ -143,9 +143,8 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         phases: [{ id: "implement", label: "Implement" }],
       };
 
-      const workflowFn: WorkflowFunction = async ({ workspace }) => {
-        expect(workspace).toBeDefined();
-        expect(workspace?.mode).toBe("branch");
+      const workflowFn: WorkflowFunction = async ({ event }) => {
+        expect(event.data.workingDir).toBeDefined();
         return { success: true };
       };
 
@@ -314,7 +313,7 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
       expect(updatedRun?.error_message).toBe("Workflow execution failed");
     });
 
-    it("injects workspace into execution context", async () => {
+    it("provides workspace when automatic setup enabled with non-null workspace mode", async () => {
       const run = await prisma.workflowRun.create({
         data: {
           project_id: project.id,
@@ -340,9 +339,9 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         phases: [{ id: "implement", label: "Implement" }],
       };
 
-      let capturedWorkspace: unknown = undefined;
-      const workflowFn: WorkflowFunction = async ({ workspace }) => {
-        capturedWorkspace = workspace;
+      let capturedWorkingDir: string | undefined = undefined;
+      const workflowFn: WorkflowFunction = async ({ event }) => {
+        capturedWorkingDir = event.data.workingDir;
         return { success: true };
       };
 
@@ -364,11 +363,8 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         runId: "inngest-run-123",
       } as never);
 
-      // Verify workspace was injected
-      expect(capturedWorkspace).toBeDefined();
-      expect(capturedWorkspace).toHaveProperty("mode");
-      expect(capturedWorkspace).toHaveProperty("workingDir");
-      expect(capturedWorkspace).toHaveProperty("branch");
+      // Verify workingDir was added to event.data
+      expect(capturedWorkingDir).toBeDefined();
     });
   });
 
@@ -398,16 +394,15 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
       };
 
       const phasesSeen: string[] = [];
-      const workflowFn: WorkflowFunction = async ({ step, workspace }) => {
+      const workflowFn: WorkflowFunction = async ({ step, event }) => {
         const originalPhase = step.phase;
         step.phase = async (name: string, fn: () => Promise<unknown>) => {
           phasesSeen.push(name);
           return await originalPhase(name, fn);
         };
 
-        // Workspace should still be provided but in stay mode
-        expect(workspace).toBeDefined();
-        expect(workspace?.mode).toBe("stay");
+        // workingDir should still be set in event.data
+        expect(event.data.workingDir).toBeDefined();
 
         return { success: true };
       };
@@ -468,9 +463,9 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         phases: [{ id: "implement", label: "Implement" }],
       };
 
-      let capturedWorkspace: unknown = undefined;
-      const workflowFn: WorkflowFunction = async ({ workspace }) => {
-        capturedWorkspace = workspace;
+      let capturedWorkingDir: string | undefined = undefined;
+      const workflowFn: WorkflowFunction = async ({ event }) => {
+        capturedWorkingDir = event.data.workingDir;
         return { success: true };
       };
 
@@ -492,11 +487,7 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         runId: "inngest-run-123",
       } as never);
 
-      expect(capturedWorkspace).toEqual({
-        mode: "stay",
-        workingDir: project.path,
-        branch: "develop",
-      });
+      expect(capturedWorkingDir).toBe(project.path);
     });
   });
 
@@ -608,9 +599,9 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         phases: [{ id: "implement", label: "Implement" }],
       };
 
-      let capturedWorkspace: unknown = undefined;
-      const workflowFn: WorkflowFunction = async ({ workspace }) => {
-        capturedWorkspace = workspace;
+      let capturedWorkingDir: string | undefined = undefined;
+      const workflowFn: WorkflowFunction = async ({ event }) => {
+        capturedWorkingDir = event.data.workingDir;
         return { success: true };
       };
 
@@ -632,11 +623,8 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         runId: "inngest-run-123",
       } as never);
 
-      // Verify workspace configuration was read from DB
-      expect(capturedWorkspace).toMatchObject({
-        mode: "worktree",
-        branch: "feat/custom-branch",
-      });
+      // Verify workspace was configured and workingDir was set
+      expect(capturedWorkingDir).toBeDefined();
     });
 
     it("auto-generates worktree name from runId and branchName", async () => {

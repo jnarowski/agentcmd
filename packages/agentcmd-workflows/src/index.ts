@@ -61,10 +61,20 @@ export type { WorkflowRuntime } from "./runtime";
 // Slash command type generation utilities
 export { parseSlashCommands, parseArgumentHint, parseJsonResponseSchema } from "./utils/parseSlashCommands";
 export { generateSlashCommandTypesCode, generateSlashCommandTypesFromDir } from "./utils/generateSlashCommandTypes";
-export { generateResponseTypeCode, commandNameToTypeName } from "./utils/generateCommandResponseTypes";
+export { generateResponseTypeCode, commandNameToTypeName, commandNameToArgsTypeName } from "./utils/generateCommandResponseTypes";
 
 // Internal types for slash command parsing
 export type { CommandDefinition, CommandArgument, ResponseSchema } from "./types/slash-commands-internal";
+
+// Generated types for built-in template slash commands
+export type {
+  CmdGenerateSpecArgs,
+  CmdGenerateSpecResponse,
+  CmdImplementSpecArgs,
+  CmdImplementSpecResponse,
+  CmdReviewSpecImplementationArgs,
+  CmdReviewSpecImplementationResponse,
+} from "./generated/slash-command-types";
 
 // Package version
 export const VERSION = "1.0.0";

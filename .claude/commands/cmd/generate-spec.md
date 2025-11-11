@@ -1,45 +1,56 @@
 ---
-description: Generate implementation spec and write to spec folder with sequential ID
-argument-hint: [context (optional), format (optional)]
+description: Generate implementation spec with complexity estimates and write to spec folder with sequential ID
+argument-hint: [context?]
 ---
 
-# Generate Simple Implementation Spec
+# Generate Implementation Spec with Complexity
 
-Generate a well-structured implementation spec and save it to `.agent/specs/todo/[id]-[feature]/spec.md` (or `spec.json`) with sequential numeric ID.
+Generate a well-structured implementation spec with complexity estimates and save it to `.agent/specs/todo/[id]-[feature]/spec.md` with timestamp-based ID.
 
 ## Variables
 
 - $context: $1 (optional) - Additional context for autonomous spec generation (e.g., "Add OAuth support with Google and GitHub providers")
-- $format: $2 (optional) - Output format: `markdown` (default) or `json`
 
 ## Instructions
 
-- **IMPORTANT**: Use your reasoning model - THINK HARD about feature requirements, design, and implementation approach
+- **IMPORTANT**: Use your reasoning model - THINK HARD about feature requirements, design, implementation approach, AND complexity
 - Normalize feature name to kebab-case for the folder name
 - Replace ALL `<placeholders>` with specific details relevant to that section
 - **Create detailed step-by-step tasks** grouped logically (e.g., by phase, component, or feature area)
+- **Assign complexity score (1-10) to EVERY task** based on context needs (see Complexity Scale below)
 - Order tasks by dependencies (foundation → core → integration)
 - Include specific file paths, not generic names
 - Make all commands copy-pasteable with expected outputs
 - Include comprehensive verification covering build, tests, linting, and manual checks
 - Add E2E test tasks if feature has UI
 - Keep acceptance criteria measurable
-- If $format is not provided, default to "markdown"
+- **DO NOT include hour-based estimates anywhere** - use complexity points only
+
+## Complexity Scale (Context-Focused)
+
+Assign complexity based on **context window usage and cognitive load**, not time:
+
+- **1-2/10**: Trivial - Single file, <50 lines changed, minimal context (config, doc, simple type)
+- **3-4/10**: Simple - Few files, straightforward logic, low context (single endpoint, basic component)
+- **5-6/10**: Moderate - Multiple related files, moderate context (DB field + migration + API update)
+- **7-8/10**: Complex - Cross-cutting change, high context, multiple domains (full-stack feature, state refactor)
+- **9-10/10**: Very complex - Architectural change, deep codebase knowledge required (major refactor, complex integration)
+
+**Key principle**: Higher complexity = more context the agent needs to load and understand
 
 ## Workflow
 
-1. **Get Next ID from Index**:
-   - Read `.agent/specs/index.json`
-   - Get `lastId` from index
-   - Calculate `newId = lastId + 1`
-   - Append 2 random lowercase letters to create full ID (e.g., `4` → `4is`)
-   - Full ID format: `{number}{2-lowercase-letters}` (e.g., `1ab`, `4is`, `10xz`)
+1. **Generate Timestamp ID**:
+   - Generate timestamp-based ID in format: `YYMMDDHHmmss`
+   - Example: October 24, 2025 at 12:01:01am → `251024120101`
+   - This ensures uniqueness without coordination and embeds creation time
+   - Read `.agent/specs/index.json` (will be updated in step 7)
 
 2. **Generate Feature Name**:
    - If `$context` provided: Use AI to generate concise kebab-case name from context (max 4 words, e.g., "Add OAuth support" → "oauth-support")
    - If no context: Analyze recent conversation history to infer feature name
    - Ensure name is descriptive, lowercase, uses hyphens
-   - Note: With random ID suffixes, folder conflicts are extremely unlikely (1 in 676 chance)
+   - Note: With timestamp IDs, folder conflicts are virtually impossible
 
 3. **Research Phase**:
    - Read `.agent/specs/todo/${featureName}/prd.md` if it exists (skip if not found)
@@ -47,7 +58,7 @@ Generate a well-structured implementation spec and save it to `.agent/specs/todo
    - Gather context about architecture, file structure, and conventions
 
 4. **Clarification** (conditional):
-   - **If $context provided ($1 given)**: Resolve ambiguities autonomously using recommended best practices. Do not ask questions.
+   - **If $context provided ($2 given)**: Resolve ambiguities autonomously using recommended best practices. Do not ask questions.
    - **If $context not provided**: Use session context and ask clarifying questions ONE AT A TIME if implementation approach is unclear:
      - Don't use the Question tool
      - Use this template:
@@ -61,41 +72,40 @@ Generate a well-structured implementation spec and save it to `.agent/specs/todo
        3. Other - user specifies
        ```
 
-5. **Generate Spec**:
+5. **Generate Spec with Complexity**:
    - Once you have sufficient context, generate the spec following the Template below
+   - Analyze each task and assign complexity score (1-10)
+   - Calculate phase totals and averages
    - Be concise but comprehensive
    - Skip sections only if truly not applicable
 
 6. **Write Spec Folder and File**:
-   - Create folder: `.agent/specs/todo/{fullId}-{featureName-kebab}/`
-   - If $format is "json": Write to `spec.json` in folder
-   - Otherwise: Write to `spec.md` in folder
-   - Example (markdown): `.agent/specs/todo/4is-auth-improvements/spec.md`
-   - Example (json): `.agent/specs/todo/4is-auth-improvements/spec.json`
+   - Create folder: `.agent/specs/todo/{timestampId}-{featureName-kebab}/`
+   - Always write to `spec.md` in folder (never `spec.json`)
+   - Example: `.agent/specs/todo/251024120101-auth-improvements/spec.md`
    - **Note**: Specs always start in `todo/` folder with Status "draft"
 
 7. **Update Index**:
-   - Add entry to index.json using full ID (with suffix) as key:
+   - Add entry to index.json using timestamp ID as key:
      ```json
      {
-       "lastId": 4,
        "specs": {
-         "4is": {
-           "folder": "4is-auth-improvements",
-           "created": "{ISO 8601 datetime}",
-           "location": "todo"
+         "251024120101": {
+           "path": "todo/251024120101-auth-improvements",
+           "status": "draft",
+           "created": "2025-10-24T00:01:01.000Z",
+           "updated": "2025-10-24T00:01:01.000Z"
          }
        }
      }
      ```
-   - Note: `lastId` stores the numeric part only (without suffix)
    - Write updated index back to `.agent/specs/index.json`
 
 ## Workflow Folder Progression
 
 Specs follow this workflow:
 
-1. **Created in `todo/`** (Status: "draft") - Use `/generate-spec-simple`
+1. **Created in `todo/`** (Status: "draft") - Use `/generate-spec`
 2. **Optional: Move to `backlog/`** - Use `/cmd:move-spec {id} backlog` for future ideas
 3. **Status updated to "in-progress"** - When running `/cmd:implement-spec` (stays in `todo/`)
 4. **Optional: Archive to `done/`** - Use `/cmd:move-spec {id} done` when complete
@@ -110,7 +120,18 @@ Specs follow this workflow:
 **Status**: draft
 **Created**: [YYYY-MM-DD]
 **Package**: [package name or app name]
-**Estimated Effort**: [X-Y hours]
+**Total Complexity**: [X] points
+**Phases**: [N]
+**Tasks**: [N]
+**Overall Avg Complexity**: [X.X]/10
+
+## Complexity Breakdown
+
+| Phase | Tasks | Total Points | Avg Complexity | Max Task |
+|-------|-------|--------------|----------------|----------|
+| Phase 1: [Name] | [N] | [X] | [X.X]/10 | [X]/10 |
+| Phase 2: [Name] | [N] | [X] | [X.X]/10 | [X]/10 |
+| **Total** | **[N]** | **[X]** | **[X.X]/10** | **[X]/10** |
 
 ## Overview
 
@@ -139,7 +160,7 @@ So that [benefit/value]
 
 [Show relevant file/directory structure]
 
-````
+```
 
 ### Integration Points
 
@@ -188,35 +209,39 @@ So that [benefit/value]
 
 **IMPORTANT: Execute every step in order, top to bottom**
 
-### Task Group 1: [Task Group Name]
+### Phase 1: [Phase Name]
+
+**Phase Complexity**: [X] points (avg [X.X]/10)
 
 <!-- prettier-ignore -->
-- [ ] [task-id] [Specific task description]
+- [ ] [task-id] [X/10] [Specific task description]
   - [Implementation detail or note]
   - File: `[specific filepath]`
   - [Any commands to run]
-- [ ] [task-id] [Next specific task]
+- [ ] [task-id] [X/10] [Next specific task]
   - [Implementation detail or note]
   - File: `[specific filepath]`
   - [Any commands to run]
 
 #### Completion Notes
 
-(This will be filled in by the agent implementing this task group)
+(This will be filled in by the agent implementing this phase)
 
-### Task Group 2: [Next Task Group Name]
+### Phase 2: [Next Phase Name]
+
+**Phase Complexity**: [X] points (avg [X.X]/10)
 
 <!-- prettier-ignore -->
-- [ ] [task-id] [Specific task description]
+- [ ] [task-id] [X/10] [Specific task description]
   - [Implementation detail or note]
   - File: `[specific filepath]`
   - [Any commands to run]
 
 #### Completion Notes
 
-(This will be filled in by the agent implementing this task group)
+(This will be filled in by the agent implementing this phase)
 
-[Continue with all task groups needed, grouped logically by phase or component]
+[Continue with all phases needed, grouped logically]
 
 ## Testing Strategy
 
@@ -226,7 +251,7 @@ So that [benefit/value]
 
 ```typescript
 [Example test structure or key test cases]
-````
+```
 
 ### Integration Tests
 
@@ -310,15 +335,6 @@ Execute these commands to verify the feature works correctly:
 - [Package or system dependency 2]
 - No new dependencies required (if true)
 
-## Timeline
-
-| Task           | Estimated Time |
-| -------------- | -------------- |
-| [Task group 1] | X hours        |
-| [Task group 2] | X hours        |
-| [Task group 3] | X hours        |
-| **Total**      | **X-Y hours**  |
-
 ## References
 
 - [Link to related docs]
@@ -334,85 +350,6 @@ Execute these commands to verify the feature works correctly:
 
 ```
 
-### JSON Template
-
-When $format is "json", generate a JSON file with this structure (output raw JSON without markdown code fences):
-
-```json
-{
-  "featureName": "[feature-name]",
-  "specNumber": "[number]",
-  "status": "draft",
-  "created": "[YYYY-MM-DD]",
-  "package": "[package name or app name]",
-  "estimatedEffort": "[X-Y hours]",
-  "overview": "[2-3 sentences describing what this feature does and why it's valuable]",
-  "userStory": {
-    "asA": "[user type]",
-    "iWantTo": "[action/goal]",
-    "soThat": "[benefit/value]"
-  },
-  "technicalApproach": "[Brief description of implementation strategy]",
-  "keyDesignDecisions": [
-    { "decision": "[Decision 1]", "rationale": "[Rationale]" }
-  ],
-  "architecture": {
-    "fileStructure": "[relevant file/directory structure]",
-    "integrationPoints": [
-      {
-        "subsystem": "[Subsystem 1]",
-        "changes": [
-          { "file": "[file.ts]", "description": "[what changes]" }
-        ]
-      }
-    ]
-  },
-  "implementationDetails": [
-    {
-      "name": "[Component/Module Name]",
-      "description": "[Detailed description]",
-      "keyPoints": ["[Important detail 1]", "[Important detail 2]"]
-    }
-  ],
-  "files": {
-    "new": [{ "path": "[filepath]", "purpose": "[purpose]" }],
-    "modified": [{ "path": "[filepath]", "changes": "[what changes]" }]
-  },
-  "stepByStepTasks": [
-    {
-      "groupName": "[Task Group Name]",
-      "tasks": [
-        {
-          "id": "[task-id]",
-          "description": "[Specific task description]",
-          "details": "[Implementation detail or note]",
-          "file": "[specific filepath]",
-          "commands": "[Any commands to run]",
-          "completed": false
-        }
-      ],
-      "completionNotes": ""
-    }
-  ],
-  "testingStrategy": {
-    "unitTests": [{ "file": "[test-file.test.ts]", "description": "[what it tests]" }],
-    "integrationTests": "[Description]",
-    "e2eTests": [{ "file": "[e2e-test.test.ts]", "description": "[what it tests]" }]
-  },
-  "successCriteria": ["[requirement 1]", "[requirement 2]"],
-  "validation": {
-    "automated": [{ "command": "[build command]", "expected": "[output]" }],
-    "manual": [{ "step": "Start application: `[command]`" }],
-    "featureSpecific": ["[Specific verification step]"]
-  },
-  "implementationNotes": [{ "title": "[Note Title]", "details": "[Details]" }],
-  "dependencies": ["[dependency 1]"],
-  "timeline": [{ "task": "[Task group 1]", "estimatedTime": "X hours" }],
-  "references": ["[Link to docs]"],
-  "nextSteps": ["[First step]", "[Second step]"]
-}
-```
-
 ## Formatting Rules
 
 1. **Dates**: Use ISO format (YYYY-MM-DD)
@@ -421,95 +358,67 @@ When $format is "json", generate a JSON file with this structure (output raw JSO
 4. **Sections**: Use `##` for major sections, `###` for subsections
 5. **Lists**: Use `-` for unordered, numbers for ordered
 6. **Emphasis**: Use `**bold**` for key terms, `_italics_` sparingly
+7. **Complexity**: Always show as `[X/10]` for individual tasks, `[X] points` for totals
 
 ## Examples
 
 **Example 1: With context**
 ```bash
-/generate-spec-simple "Add OAuth support with Google and GitHub providers"
+/generate-spec "Add OAuth support with Google and GitHub providers"
 ```
 
-Generates name `oauth-support`, ID `1ab`, creates: `.agent/specs/todo/1ab-oauth-support/spec.md`
+Generates name `oauth-support`, ID `251024120101`, creates: `.agent/specs/todo/251024120101-oauth-support/spec.md`
 
-**Example 2: With context and JSON format**
+**Example 2: From conversation**
 
 ```bash
-/generate-spec-simple "Add OAuth support" json
+/generate-spec
 ```
 
-Generates name `oauth-support`, ID `1ab`, creates: `.agent/specs/todo/1ab-oauth-support/spec.json`
-
-**Example 3: From conversation**
-
-```bash
-/generate-spec-simple
-```
-
-Analyzes conversation history, infers feature name, generates ID `2xz`, creates: `.agent/specs/todo/2xz-workflow-safety/spec.md`
-
-**Example 4: Team conflict prevention**
-
-Two developers on different branches both create spec #4:
-- Dev A: Gets `4is-feature-auth` (random suffix: `is`)
-- Dev B: Gets `4aw-feature-search` (random suffix: `aw`)
-- Both merge cleanly with no conflicts (1 in 676 collision chance)
+Analyzes conversation history, infers feature name, generates ID `251107093022`, creates: `.agent/specs/todo/251107093022-workflow-safety/spec.md`
 
 ## Common Pitfalls
 
 - **Wrong directory**: Always create folder in `.agent/specs/todo/`, not `.agent/specs/` or `.agents/specs/`
-- **Folder structure**: Must create folder `{fullId}-{feature}/` with `spec.md` or `spec.json` inside (e.g., `4is-oauth-support/`)
+- **Folder structure**: Must create folder `{timestampId}-{feature}/` with `spec.md` inside (e.g., `251024120101-oauth-support/`)
 - **Index not updated**: Always update index.json after creating spec
-- **ID format**: Full ID includes 2-letter suffix (e.g., `4is`, not `4`)
-- **Index lastId**: Store numeric part only in `lastId` field (e.g., `4`), but use full ID as key (e.g., `"4is"`)
+- **ID format**: Use 12-character timestamp format `YYMMDDHHmmss` (e.g., `251024120101`)
 - **Generic placeholders**: Replace all `<placeholders>` with actual content
+- **Missing complexity scores**: EVERY task must have a `[X/10]` complexity score
+- **Including hours**: Do NOT include hour estimates - use complexity points only
 - **Status field**: Use lowercase status values: `draft`, `ready`, `in-progress`, `review`, `completed`
+- **Complexity calculations**: Ensure phase totals and averages are accurate
 - **Kebab-case**: Always convert feature name to kebab-case for folder name
 
 ## Report
 
-### JSON Format
+**IMPORTANT**: Always return ONLY the JSON from the output tags below:
 
-**IMPORTANT**: If $format is "json", return raw JSON output (no ```json code fences, no markdown):
-
-```json
+<json_output>
 {
   "success": true,
   "spec_folder": ".agent/specs/todo/[fullId]-[feature]",
-  "spec_file": ".agent/specs/todo/[fullId]-[feature]/spec.json",
+  "spec_file": ".agent/specs/todo/[fullId]-[feature]/spec.md",
   "spec_id": "[fullId]",
   "feature_name": "[feature-name]",
-  "format": "json",
+  "complexity": {
+    "total": "[X]",
+    "avg": "[X.X]"
+  },
   "files_to_create": ["[filepath1]", "[filepath2]"],
   "files_to_modify": ["[filepath3]", "[filepath4]"],
   "next_command": "/cmd:implement-spec [fullId]"
 }
-```
+</json_output>
 
 **JSON Field Descriptions:**
 
 - `success`: Always true if spec generation completed
 - `spec_folder`: Path to the created spec folder
-- `spec_file`: Full path to the spec file (spec.json or spec.md)
-- `spec_id`: The full spec ID with 2-letter suffix (e.g., "4is")
+- `spec_file`: Full path to the spec file (always spec.md)
+- `spec_id`: The timestamp-based spec ID in YYMMDDHHmmss format (e.g., "251024120101")
 - `feature_name`: Normalized feature name (kebab-case)
-- `format`: Output format used ("json" or "markdown")
+- `complexity`: Total and average complexity scores
 - `files_to_create`: Array of new files to be created
 - `files_to_modify`: Array of existing files to be modified
 - `next_command`: Suggested next command to run
-
-### Text Format
-
-Otherwise, provide this human-readable information:
-
-1. Report the spec folder and file paths
-2. Display the spec ID used
-3. Suggest next steps
-
-**Format:**
-
-```text
-✓ Created spec: .agent/specs/todo/[fullId]-[feature]/spec.md
-  ID: [fullId]
-
-Next: /implement-spec [fullId]
-```

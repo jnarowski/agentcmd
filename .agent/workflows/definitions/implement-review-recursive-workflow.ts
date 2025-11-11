@@ -19,8 +19,9 @@ interface AgentGenerateSpecResult {
 export default defineWorkflow(
   {
     id: "agent-example-workflow",
-    name: "Implement Review Workflow",
-    description: "Implements a spec file and reviews the implementation",
+    name: "Implement Review Recursive Workflow",
+    description:
+      "Implements a spec file and reviews the implementation recursively until no issues are found",
     phases: [
       { id: "implement", label: "Implement" },
       { id: "review", label: "Review" },

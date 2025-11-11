@@ -58,8 +58,6 @@ export interface WorkflowContext<
       ? ExtractPhaseIds<TPhases>
       : string
   >;
-  /** Workspace configuration and result */
-  workspace?: WorkspaceResult;
 }
 
 /**

@@ -39,7 +39,7 @@ export default defineWorkflow(
 
     // Phase 2: Implementation
     await step.phase("implement", async () => {
-      await step.slash("/implement-spec", ["feature-name"]);
+      await step.slash("/cmd:implement-spec", ["feature-name"]);
 
       await step.cli("run-tests", "npm test", {
         cwd: event.data.projectPath,

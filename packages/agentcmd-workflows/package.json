@@ -31,9 +31,11 @@
     "clean": "rm -rf dist",
     "check-types": "tsc --noEmit",
     "gen-slash-types": "node dist/cli.js generate-slash-types",
+    "generate:command:types": "tsx src/cli/generateTemplateCommandTypes.ts",
+    "sync:commands": "cp -r ../../.claude/commands/cmd templates/.claude/commands/",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepublishOnly": "pnpm build && pnpm test",
+    "prepublishOnly": "pnpm sync:commands && pnpm build && pnpm test",
     "ship": "pnpm build && pnpm test && npm version patch && (git commit -am \"bump version\" || true) && git push --follow-tags && npm publish"
   },
   "keywords": [
@@ -59,6 +61,7 @@
     "@types/node": "^22.0.0",
     "bunchee": "^6.6.2",
     "inngest": "^3.0.0",
+    "tsx": "^4.0.0",
     "typescript": "^5.9.0",
     "vitest": "^4.0.0"
   }

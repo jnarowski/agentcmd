@@ -1,25 +1,27 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { Plus, Search, Settings, List } from "lucide-react";
+import { Plus, Search, Settings, LayoutGrid } from "lucide-react";
 import { Button } from "@/client/components/ui/button";
 import { WorkflowStatusValues } from "@/shared/schemas/workflow.schemas";
 import type { WorkflowStatus } from "@/shared/schemas/workflow.schemas";
-import { WorkflowKanbanColumn } from "./components/WorkflowKanbanColumn";
+import { WorkflowAccordionSection } from "./components/WorkflowAccordionSection";
+import { WorkflowRunCard } from "./components/WorkflowRunCard";
 import { useWorkflowRuns } from "./hooks/useWorkflowRuns";
 import { useWorkflowDefinitions } from "./hooks/useWorkflowDefinitions";
 import { useWorkflowWebSocket } from "./hooks/useWorkflowWebSocket";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
 import { Combobox } from "@/client/components/ui/combobox";
 import type { ComboboxOption } from "@/client/components/ui/combobox";
+import { getWorkflowStatusConfig } from "./utils/workflowStatus";
 
-export interface ProjectWorkflowsViewProps {
+export interface ProjectWorkflowsListViewProps {
   projectId?: string;
 }
 
-export function ProjectWorkflowsView({
+export function ProjectWorkflowsListView({
   projectId: propProjectId,
-}: ProjectWorkflowsViewProps) {
+}: ProjectWorkflowsListViewProps) {
   const { projectId: paramProjectId } = useParams<{ projectId: string }>();
   const projectId = propProjectId || paramProjectId!;
   const navigate = useNavigate();
@@ -45,11 +47,6 @@ export function ProjectWorkflowsView({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project, definitions, projectId]);
-
-  // TODO: Wire up workflow control mutations
-  // const pauseWorkflow = usePauseWorkflow();
-  // const resumeWorkflow = useResumeWorkflow();
-  // const cancelWorkflow = useCancelWorkflow();
 
   const handleExecutionClick = (run: any) => {
     // Navigate to run detail page
@@ -101,6 +98,10 @@ export function ProjectWorkflowsView({
     {} as Record<WorkflowStatus, any[]>
   );
 
+  // Limit completed to 20
+  const completedRuns = runsByStatus[WorkflowStatusValues.COMPLETED] || [];
+  const limitedCompletedRuns = completedRuns.slice(0, 20);
+
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -116,10 +117,10 @@ export function ProjectWorkflowsView({
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl font-bold">Workflows</h1>
           <div className="flex items-center gap-2">
-            <Link to={`/projects/${projectId}/workflows/list`}>
+            <Link to={`/projects/${projectId}/workflows`}>
               <Button variant="outline" size="sm">
-                <List className="h-4 w-4 mr-2" />
-                List View
+                <LayoutGrid className="h-4 w-4 mr-2" />
+                Kanban View
               </Button>
             </Link>
             <button
@@ -161,24 +162,113 @@ export function ProjectWorkflowsView({
         </div>
       </div>
 
-      {/* Kanban Board */}
-      <div className="flex-1 overflow-x-auto p-4">
-        <div className="flex gap-4 min-w-max">
-          {[
-            WorkflowStatusValues.PENDING,
-            WorkflowStatusValues.RUNNING,
-            WorkflowStatusValues.COMPLETED,
-            WorkflowStatusValues.FAILED,
-            WorkflowStatusValues.PAUSED,
-          ].map((status) => (
-            <div key={status} className="w-80">
-              <WorkflowKanbanColumn
-                status={status}
-                runs={runsByStatus[status] || []}
-                onExecutionClick={handleExecutionClick}
+      {/* Accordion Sections */}
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="max-w-5xl mx-auto space-y-4">
+          {/* Running */}
+          <WorkflowAccordionSection
+            title="Running"
+            count={runsByStatus[WorkflowStatusValues.RUNNING]?.length || 0}
+            defaultOpen={true}
+            hideIfEmpty={false}
+            icon={getWorkflowStatusConfig(WorkflowStatusValues.RUNNING).icon}
+            iconClassName={getWorkflowStatusConfig(WorkflowStatusValues.RUNNING).textColor}
+          >
+            {(runsByStatus[WorkflowStatusValues.RUNNING] || []).length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-4 text-center">
+                <p className="text-xs text-muted-foreground">
+                  No workflows currently running
+                </p>
+              </div>
+            ) : (
+              (runsByStatus[WorkflowStatusValues.RUNNING] || []).map((run) => (
+                <WorkflowRunCard
+                  key={run.id}
+                  run={run}
+                  onClick={() => handleExecutionClick(run)}
+                />
+              ))
+            )}
+          </WorkflowAccordionSection>
+
+          {/* Failed */}
+          <WorkflowAccordionSection
+            title="Failed"
+            count={runsByStatus[WorkflowStatusValues.FAILED]?.length || 0}
+            defaultOpen={true}
+            hideIfEmpty={false}
+            icon={getWorkflowStatusConfig(WorkflowStatusValues.FAILED).icon}
+            iconClassName={getWorkflowStatusConfig(WorkflowStatusValues.FAILED).textColor}
+          >
+            {(runsByStatus[WorkflowStatusValues.FAILED] || []).map((run) => (
+              <WorkflowRunCard
+                key={run.id}
+                run={run}
+                onClick={() => handleExecutionClick(run)}
               />
-            </div>
-          ))}
+            ))}
+          </WorkflowAccordionSection>
+
+          {/* Pending */}
+          <WorkflowAccordionSection
+            title="Pending"
+            count={runsByStatus[WorkflowStatusValues.PENDING]?.length || 0}
+            defaultOpen={false}
+            hideIfEmpty={true}
+            icon={getWorkflowStatusConfig(WorkflowStatusValues.PENDING).icon}
+            iconClassName={getWorkflowStatusConfig(WorkflowStatusValues.PENDING).textColor}
+          >
+            {(runsByStatus[WorkflowStatusValues.PENDING] || []).map((run) => (
+              <WorkflowRunCard
+                key={run.id}
+                run={run}
+                onClick={() => handleExecutionClick(run)}
+              />
+            ))}
+          </WorkflowAccordionSection>
+
+          {/* Completed */}
+          <WorkflowAccordionSection
+            title="Completed"
+            count={completedRuns.length}
+            defaultOpen={false}
+            hideIfEmpty={false}
+            icon={getWorkflowStatusConfig(WorkflowStatusValues.COMPLETED).icon}
+            iconClassName={getWorkflowStatusConfig(WorkflowStatusValues.COMPLETED).textColor}
+          >
+            {limitedCompletedRuns.map((run) => (
+              <WorkflowRunCard
+                key={run.id}
+                run={run}
+                onClick={() => handleExecutionClick(run)}
+              />
+            ))}
+            {completedRuns.length > 20 && (
+              <div className="text-center py-2">
+                <span className="text-sm text-muted-foreground">
+                  Showing 20 of {completedRuns.length} completed runs
+                </span>
+              </div>
+            )}
+          </WorkflowAccordionSection>
+
+          {/* Paused */}
+          <WorkflowAccordionSection
+            title="Paused"
+            count={runsByStatus[WorkflowStatusValues.PAUSED]?.length || 0}
+            defaultOpen={false}
+            hideIfEmpty={true}
+            icon={getWorkflowStatusConfig(WorkflowStatusValues.PAUSED).icon}
+            iconClassName={getWorkflowStatusConfig(WorkflowStatusValues.PAUSED).textColor}
+          >
+            {(runsByStatus[WorkflowStatusValues.PAUSED] || []).map((run) => (
+              <WorkflowRunCard
+                key={run.id}
+                run={run}
+                onClick={() => handleExecutionClick(run)}
+              />
+            ))}
+          </WorkflowAccordionSection>
         </div>
       </div>
     </div>

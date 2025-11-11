@@ -1,28 +1,68 @@
 import type { ResponseSchema } from "../types/slash-commands-internal";
 
 /**
- * Convert a command name to a PascalCase type name with "Result" suffix.
+ * Convert a command name to PascalCase base name
  *
- * @param commandName - Command name like "/review-spec-implementation"
- * @returns PascalCase type name like "ReviewSpecImplementationResult"
+ * @param commandName - Command name like "/cmd:generate-spec" or "/cmd:spec:estimate"
+ * @returns PascalCase base name like "CmdGenerateSpec" or "CmdSpecEstimate"
  *
  * @example
- * commandNameToTypeName("/review-spec-implementation")
- * // Returns: "ReviewSpecImplementationResult"
+ * commandNameToPascalCase("/cmd:generate-spec")
+ * // Returns: "CmdGenerateSpec"
+ *
+ * commandNameToPascalCase("/cmd:spec:estimate")
+ * // Returns: "CmdSpecEstimate"
  */
-export function commandNameToTypeName(commandName: string): string {
+function commandNameToPascalCase(commandName: string): string {
   // Remove leading slash
   const withoutSlash = commandName.startsWith("/")
     ? commandName.slice(1)
     : commandName;
 
-  // Split by hyphens and convert to PascalCase
-  const pascalCase = withoutSlash
-    .split("-")
+  // Split by colons (namespace separator) AND hyphens (word separator)
+  // Example: "cmd:generate-spec" → ["cmd", "generate", "spec"]
+  // Example: "cmd:spec:estimate" → ["cmd", "spec", "estimate"]
+  const parts = withoutSlash.split(/[:]/); // Split by colons first
+  const allWords = parts.flatMap((part) => part.split("-")); // Then split each part by hyphens
+
+  // Convert to PascalCase
+  return allWords
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join("");
+}
 
-  return `${pascalCase}Result`;
+/**
+ * Convert a command name to a PascalCase type name with "Args" suffix.
+ *
+ * @param commandName - Command name like "/cmd:generate-spec"
+ * @returns PascalCase type name like "CmdGenerateSpecArgs"
+ *
+ * @example
+ * commandNameToArgsTypeName("/cmd:generate-spec")
+ * // Returns: "CmdGenerateSpecArgs"
+ *
+ * commandNameToArgsTypeName("/cmd:spec:estimate")
+ * // Returns: "CmdSpecEstimateArgs"
+ */
+export function commandNameToArgsTypeName(commandName: string): string {
+  return `${commandNameToPascalCase(commandName)}Args`;
+}
+
+/**
+ * Convert a command name to a PascalCase type name with "Response" suffix.
+ *
+ * @param commandName - Command name like "/cmd:generate-spec"
+ * @returns PascalCase type name like "CmdGenerateSpecResponse"
+ *
+ * @example
+ * commandNameToTypeName("/cmd:generate-spec")
+ * // Returns: "CmdGenerateSpecResponse"
+ *
+ * commandNameToTypeName("/cmd:spec:estimate")
+ * // Returns: "CmdSpecEstimateResponse"
+ */
+export function commandNameToTypeName(commandName: string): string {
+  return `${commandNameToPascalCase(commandName)}Response`;
 }
 
 /**
@@ -98,14 +138,14 @@ function generateProperty(
 /**
  * Generate TypeScript interface code from a JSON response schema.
  *
- * @param commandName - Command name (e.g., "/review-spec-implementation")
+ * @param commandName - Command name (e.g., "/cmd:generate-spec")
  * @param schema - Response schema with example JSON and field descriptions
  * @returns Generated TypeScript interface as a string
  *
  * @example
- * const code = generateResponseTypeCode("/review-spec", schema);
+ * const code = generateResponseTypeCode("/cmd:generate-spec", schema);
  * // Returns:
- * // export interface ReviewSpecResult {
+ * // export interface CmdGenerateSpecResponse {
  * //   /** Operation status *\/
  * //   success: boolean;
  * //   count: number;

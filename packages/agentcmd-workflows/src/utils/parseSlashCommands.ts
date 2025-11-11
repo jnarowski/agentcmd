@@ -1,5 +1,5 @@
 import matter from "gray-matter";
-import { readdir, readFile } from "fs/promises";
+import { readdir, readFile, stat } from "fs/promises";
 import path from "path";
 import type { CommandDefinition, CommandArgument, ResponseSchema } from "../types/slash-commands-internal";
 
@@ -81,42 +81,26 @@ export function parseArgumentHint(argumentHint?: string | string[] | unknown): C
 
 /**
  * Parse JSON response schema from command documentation.
- * Looks for pattern: 'If $format is "json", return ONLY this JSON:'
- * followed by a ```json code block and field descriptions.
+ * Looks for JSON content within <json_output>...</json_output> XML tags.
  *
  * @param content - Markdown content from the command file
  * @returns ResponseSchema object or undefined if no JSON schema found
  */
 export function parseJsonResponseSchema(content: string): ResponseSchema | undefined {
-  // Step 1: Look for pattern: "If $format is \"json\", return ONLY this JSON"
-  // This pattern is flexible to handle variations like "(no other text):"
-  const jsonTriggerPattern = /If \$format is "json", return ONLY this JSON[^:]*:/i;
-  const triggerMatch = content.match(jsonTriggerPattern);
+  // Step 1: Extract JSON from <json_output> tags
+  const jsonOutputPattern = /<json_output>\s*\n?([\s\S]*?)\n?\s*<\/json_output>/i;
+  const jsonMatch = content.match(jsonOutputPattern);
 
-  if (!triggerMatch) {
+  if (!jsonMatch || !jsonMatch[1]) {
     return undefined;
   }
 
-  // Step 2: Extract the next code block (```json ... ```)
-  const triggerIndex = triggerMatch.index;
-  if (triggerIndex === undefined) {
-    return undefined;
-  }
-
-  const afterTrigger = content.slice(triggerIndex + triggerMatch[0].length);
-  const codeBlockPattern = /```json\s*\n([\s\S]*?)\n```/;
-  const codeBlockMatch = afterTrigger.match(codeBlockPattern);
-
-  if (!codeBlockMatch || !codeBlockMatch[1]) {
-    return undefined;
-  }
-
-  // Step 3: Parse JSON to get structure
+  // Step 2: Parse JSON to get structure
   let exampleJson: Record<string, unknown>;
   try {
-    exampleJson = JSON.parse(codeBlockMatch[1]);
+    exampleJson = JSON.parse(jsonMatch[1].trim());
   } catch (error) {
-    console.warn('⚠️  Failed to parse JSON from code block:', error);
+    console.warn('⚠️  Failed to parse JSON from <json_output> tags:', error);
     return undefined;
   }
 
@@ -152,9 +136,46 @@ export function parseJsonResponseSchema(content: string): ResponseSchema | undef
 }
 
 /**
+ * Recursively find all .md files in a directory
+ *
+ * @param dir - Directory to search
+ * @param baseDir - Base directory for calculating relative paths
+ * @returns Array of { filePath, relativePath } objects
+ */
+async function findMarkdownFiles(
+  dir: string,
+  baseDir: string = dir
+): Promise<Array<{ filePath: string; relativePath: string }>> {
+  const results: Array<{ filePath: string; relativePath: string }> = [];
+
+  try {
+    const entries = await readdir(dir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+
+      if (entry.isDirectory()) {
+        // Recursively search subdirectories
+        const subResults = await findMarkdownFiles(fullPath, baseDir);
+        results.push(...subResults);
+      } else if (entry.isFile() && entry.name.endsWith(".md")) {
+        // Calculate relative path from base directory
+        const relativePath = path.relative(baseDir, fullPath);
+        results.push({ filePath: fullPath, relativePath });
+      }
+    }
+  } catch (error) {
+    // Silently skip directories that can't be read
+    console.warn(`⚠️  Could not read directory ${dir}:`, error);
+  }
+
+  return results;
+}
+
+/**
  * Parse all slash command definitions from .md files in a directory
  *
- * @param commandsDir - Directory containing .claude/commands/*.md files
+ * @param commandsDir - Directory containing .claude/commands/*.md files (supports nested structure)
  * @returns Array of CommandDefinition objects
  * @throws Error if directory doesn't exist or can't be read
  */
@@ -162,9 +183,8 @@ export async function parseSlashCommands(
   commandsDir: string
 ): Promise<CommandDefinition[]> {
   try {
-    // Read all files in the directory
-    const files = await readdir(commandsDir);
-    const mdFiles = files.filter((file) => file.endsWith(".md"));
+    // Recursively find all .md files
+    const mdFiles = await findMarkdownFiles(commandsDir);
 
     if (mdFiles.length === 0) {
       console.warn(`⚠️  No .md files found in ${commandsDir}`);
@@ -173,15 +193,17 @@ export async function parseSlashCommands(
 
     // Parse each file
     const commands = await Promise.all(
-      mdFiles.map(async (file) => {
-        const filePath = path.join(commandsDir, file);
+      mdFiles.map(async ({ filePath, relativePath }) => {
         const content = await readFile(filePath, "utf-8");
 
         // Parse frontmatter with gray-matter
         const { data, content: markdownContent } = matter(content);
 
-        // Extract command name from filename (remove .md, prepend /)
-        const commandName = `/${path.basename(file, ".md")}`;
+        // Build command name from relative path
+        // Example: cmd/generate-spec.md → /cmd:generate-spec
+        // Example: cmd/spec/estimate.md → /cmd:spec:estimate
+        const pathWithoutExt = relativePath.replace(/\.md$/, "");
+        const commandName = `/${pathWithoutExt.replace(/\//g, ":")}`;
 
         // Parse arguments from argument-hint
         const args = parseArgumentHint(data["argument-hint"]);

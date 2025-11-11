@@ -1,7 +1,32 @@
 import type { CommandDefinition } from '../types/slash-commands-internal';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
-import { generateResponseTypeCode, commandNameToTypeName } from './generateCommandResponseTypes';
+import { generateResponseTypeCode, commandNameToTypeName, commandNameToArgsTypeName } from './generateCommandResponseTypes';
+
+/**
+ * Generate TypeScript Args interface for a command
+ *
+ * @param cmd - Command definition
+ * @returns Generated TypeScript interface as a string
+ */
+function generateArgsTypeCode(cmd: CommandDefinition): string {
+  const typeName = commandNameToArgsTypeName(cmd.name);
+
+  if (cmd.arguments.length === 0) {
+    return `/**\n * Args type for ${cmd.name} command (no arguments)\n */\nexport interface ${typeName} {}\n`;
+  }
+
+  let result = `/**\n * Args type for ${cmd.name} command\n */\n`;
+  result += `export interface ${typeName} {\n`;
+
+  for (const arg of cmd.arguments) {
+    const optional = arg.required ? '' : '?';
+    result += `  ${arg.name}${optional}: string;\n`;
+  }
+
+  result += '}\n';
+  return result;
+}
 
 /**
  * Generate TypeScript code from command definitions
@@ -88,6 +113,11 @@ export function buildSlashCommand<T extends SlashCommandName>(
   return parts.join(" ");
 }`;
 
+  // Generate individual Args type interfaces
+  const argsTypes = commands
+    .map((cmd) => generateArgsTypeCode(cmd))
+    .join('\n');
+
   // Generate response type interfaces
   const responseTypes = commands
     .filter((cmd) => cmd.responseSchema)
@@ -132,7 +162,10 @@ ${argOrderMapping}
 } as const;
 
 ${buildFunction}
-${responseTypes ? '\n' + responseTypes : ''}${responsesInterface ? '\n' + responsesInterface : ''}
+
+// Individual Args type interfaces
+${argsTypes}
+${responseTypes ? '// Response type interfaces\n' + responseTypes : ''}${responsesInterface ? '\n' + responsesInterface : ''}
 `;
 }
 

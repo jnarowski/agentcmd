@@ -85,16 +85,16 @@ describe("parseArgumentHint", () => {
 });
 
 describe("parseJsonResponseSchema", () => {
-  it("should parse JSON example and field descriptions", () => {
+  it("should parse JSON example from xml tags and field descriptions", () => {
     const markdown = `
-If $format is "json", return ONLY this JSON:
+**IMPORTANT**: If $format is "json", return ONLY the JSON from the output tags below:
 
-\`\`\`json
+<json_output>
 {
   "success": true,
   "count": 42
 }
-\`\`\`
+</json_output>
 
 **JSON Field Descriptions:**
 - \`success\`: Operation status
@@ -116,30 +116,28 @@ If $format is "json", return ONLY this JSON:
 
   it("should handle nested objects", () => {
     const markdown = `
-If $format is "json", return ONLY this JSON:
-
-\`\`\`json
+<json_output>
 {
   "data": {
     "nested": "value"
   }
 }
-\`\`\`
+</json_output>
     `;
 
     const schema = parseJsonResponseSchema(markdown);
     expect(schema?.exampleJson.data).toEqual({ nested: "value" });
   });
 
-  it("should handle pattern with parenthetical text", () => {
+  it("should handle whitespace around JSON in tags", () => {
     const markdown = `
-If $format is "json", return ONLY this JSON (no other text):
+<json_output>
 
-\`\`\`json
 {
   "success": true
 }
-\`\`\`
+
+</json_output>
     `;
 
     const schema = parseJsonResponseSchema(markdown);
@@ -149,13 +147,11 @@ If $format is "json", return ONLY this JSON (no other text):
 
   it("should work without field descriptions", () => {
     const markdown = `
-If $format is "json", return ONLY this JSON:
-
-\`\`\`json
+<json_output>
 {
   "result": "ok"
 }
-\`\`\`
+</json_output>
     `;
 
     const schema = parseJsonResponseSchema(markdown);
@@ -166,13 +162,11 @@ If $format is "json", return ONLY this JSON:
 
   it("should handle arrays in JSON", () => {
     const markdown = `
-If $format is "json", return ONLY this JSON:
-
-\`\`\`json
+<json_output>
 {
   "items": [1, 2, 3]
 }
-\`\`\`
+</json_output>
     `;
 
     const schema = parseJsonResponseSchema(markdown);
@@ -181,14 +175,26 @@ If $format is "json", return ONLY this JSON:
 
   it("should return undefined for invalid JSON", () => {
     const markdown = `
-If $format is "json", return ONLY this JSON:
-
-\`\`\`json
+<json_output>
 { invalid json }
-\`\`\`
+</json_output>
     `;
 
     const schema = parseJsonResponseSchema(markdown);
     expect(schema).toBeUndefined();
+  });
+
+  it("should handle case-insensitive tags", () => {
+    const markdown = `
+<JSON_OUTPUT>
+{
+  "test": true
+}
+</JSON_OUTPUT>
+    `;
+
+    const schema = parseJsonResponseSchema(markdown);
+    expect(schema).toBeDefined();
+    expect(schema?.exampleJson.test).toBe(true);
   });
 });

@@ -54,7 +54,7 @@ describe("Template files packaging", () => {
 
   it("should include command files", async () => {
     const templatesDir = getTemplatesDir();
-    const commandPath = path.join(templatesDir, ".claude/commands/audit.md");
+    const commandPath = path.join(templatesDir, ".claude/commands/cmd/audit.md");
 
     const fileExists = await exists(commandPath);
     expect(fileExists).toBe(true);
@@ -190,7 +190,7 @@ describe("initProject", () => {
     const dirExists = await exists(commandsDir);
     expect(dirExists).toBe(true);
 
-    const auditCommand = path.join(commandsDir, "audit.md");
+    const auditCommand = path.join(commandsDir, "cmd/audit.md");
     const fileExists = await exists(auditCommand);
     expect(fileExists).toBe(true);
   });

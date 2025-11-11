@@ -6,36 +6,44 @@ import {
 import type { ResponseSchema } from "../types/slash-commands-internal";
 
 describe("commandNameToTypeName", () => {
-  it("should convert slash command to PascalCase with Result suffix", () => {
-    expect(commandNameToTypeName("/review-spec-implementation")).toBe(
-      "ReviewSpecImplementationResult"
+  it("should convert namespaced slash command to PascalCase with Response suffix", () => {
+    expect(commandNameToTypeName("/cmd:review-spec-implementation")).toBe(
+      "CmdReviewSpecImplementationResponse"
     );
   });
 
-  it("should handle single-word commands", () => {
-    expect(commandNameToTypeName("/test")).toBe("TestResult");
+  it("should handle nested namespaces", () => {
+    expect(commandNameToTypeName("/cmd:spec:estimate")).toBe("CmdSpecEstimateResponse");
+  });
+
+  it("should handle single-level namespace", () => {
+    expect(commandNameToTypeName("/cmd:test")).toBe("CmdTestResponse");
   });
 
   it("should handle commands without leading slash", () => {
-    expect(commandNameToTypeName("generate-prd")).toBe("GeneratePrdResult");
+    expect(commandNameToTypeName("cmd:generate-prd")).toBe("CmdGeneratePrdResponse");
   });
 
-  it("should handle multi-word commands", () => {
-    expect(commandNameToTypeName("/generate-feature-spec")).toBe(
-      "GenerateFeatureSpecResult"
+  it("should handle multi-word commands with namespace", () => {
+    expect(commandNameToTypeName("/cmd:generate-feature-spec")).toBe(
+      "CmdGenerateFeatureSpecResponse"
     );
+  });
+
+  it("should handle legacy non-namespaced commands", () => {
+    expect(commandNameToTypeName("/generate-prd")).toBe("GeneratePrdResponse");
   });
 });
 
 describe("generateResponseTypeCode", () => {
-  it("should generate interface with correct naming", () => {
+  it("should generate interface with correct naming for namespaced commands", () => {
     const schema: ResponseSchema = {
       exampleJson: { success: true },
       fieldDescriptions: new Map(),
     };
 
-    const code = generateResponseTypeCode("/review-spec", schema);
-    expect(code).toContain("export interface ReviewSpecResult");
+    const code = generateResponseTypeCode("/cmd:review-spec", schema);
+    expect(code).toContain("export interface CmdReviewSpecResponse");
     expect(code).toContain("success: boolean;");
   });
 
@@ -111,9 +119,9 @@ describe("generateResponseTypeCode", () => {
       fieldDescriptions: new Map(),
     };
 
-    const code = generateResponseTypeCode("/review-spec", schema);
+    const code = generateResponseTypeCode("/cmd:review-spec", schema);
     expect(code).toContain("/**");
-    expect(code).toContain("* Response type for /review-spec command");
+    expect(code).toContain("* Response type for /cmd:review-spec command");
     expect(code).toContain("*/");
   });
 
@@ -124,7 +132,7 @@ describe("generateResponseTypeCode", () => {
     };
 
     const code = generateResponseTypeCode("/test", schema);
-    expect(code).toContain("export interface TestResult {");
+    expect(code).toContain("export interface TestResponse {");
     expect(code).toContain("}");
   });
 

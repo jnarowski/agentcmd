@@ -59,6 +59,18 @@ import {
  */
 type PhasesConstraint = readonly PhaseDefinition[] | undefined;
 
+/**
+ * Extracts the phase ID type from TPhases constraint
+ */
+type ExtractPhaseId<TPhases extends PhasesConstraint> =
+  TPhases extends readonly PhaseDefinition[]
+    ? TPhases[number] extends string
+      ? TPhases[number]
+      : TPhases[number] extends { id: infer Id extends string }
+        ? Id
+        : string
+    : string;
+
 // ============================================================================
 // Constants
 // ============================================================================
@@ -171,7 +183,7 @@ export function createWorkflowRuntime(
             ReturnType<typeof getWorkflowRunForExecution>
           > | null = null;
           let workspace: WorkspaceResult | null = null;
-          let extendedStep: WorkflowStep<any> | null = null;
+          let extendedStep: WorkflowStep<ExtractPhaseId<TPhases>> | null = null;
 
           // SETUP PHASE: Catch errors before workflow execution
           // These errors should call handleWorkflowFailure since onFailure won't see them
@@ -206,6 +218,9 @@ export function createWorkflowRuntime(
             await handleWorkflowStart(runId, projectId, inngestRunId, logger);
 
             // Setup workspace (may fail)
+            if (!extendedStep) {
+              throw new Error("Failed to create extended step");
+            }
             workspace = await setupWorkspace(
               run,
               context,
@@ -325,7 +340,7 @@ async function setupWorkspace<
 >(
   run: WorkflowRun & { project: { path: string } },
   context: RuntimeContext<TPhases>,
-  extendedStep: WorkflowStep<any>,
+  extendedStep: WorkflowStep<ExtractPhaseId<TPhases>>,
   inngestStep: GetStepTools<Inngest.Any>,
   logger: FastifyBaseLogger
 ): Promise<WorkspaceResult> {
@@ -348,7 +363,7 @@ async function setupWorkspace<
   }
 
   // Explicit mode - delegate to workspace setup step (handles worktree/stay logic)
-  const workspace = await extendedStep.phase(SYSTEM_PHASES.SETUP, async () => {
+  const workspace = await extendedStep.phase(SYSTEM_PHASES.SETUP as ExtractPhaseId<TPhases>, async () => {
     const setupStep = createSetupWorkspaceStep(context, inngestStep);
     const worktreeName =
       run.mode === "worktree"
@@ -575,7 +590,7 @@ async function finalizeWorkspace<
   run: WorkflowRun,
   workspace: WorkspaceResult | null,
   context: RuntimeContext<TPhases>,
-  extendedStep: WorkflowStep<any>,
+  extendedStep: WorkflowStep<ExtractPhaseId<TPhases>>,
   inngestStep: GetStepTools<Inngest.Any>,
   logger: FastifyBaseLogger
 ): Promise<void> {
@@ -584,7 +599,7 @@ async function finalizeWorkspace<
   }
 
   try {
-    await extendedStep.phase(SYSTEM_PHASES.FINALIZE, async () => {
+    await extendedStep.phase(SYSTEM_PHASES.FINALIZE as ExtractPhaseId<TPhases>, async () => {
       const finalizeStep = createFinalizeWorkspaceStep(context, inngestStep);
       await finalizeStep("finalize-workspace", {
         workspaceResult: workspace,
