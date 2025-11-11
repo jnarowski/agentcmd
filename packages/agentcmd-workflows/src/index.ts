@@ -74,7 +74,12 @@ export type {
   CmdImplementSpecResponse,
   CmdReviewSpecImplementationArgs,
   CmdReviewSpecImplementationResponse,
+  SlashCommandName,
+  SlashCommandArgs,
 } from "./generated/slash-command-types";
+
+// Generated utilities for built-in template slash commands
+export { buildSlashCommand } from "./generated/slash-command-types";
 
 // Package version
 export const VERSION = "1.0.0";

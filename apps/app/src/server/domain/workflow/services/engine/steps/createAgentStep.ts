@@ -130,7 +130,12 @@ export function createAgentStep(
             result as unknown as Record<string, unknown>
           );
 
-          return result;
+          // Strip messages array to avoid Inngest 4MB payload limit
+          // Messages can be 50+MB with tool results, thinking blocks, images
+          return {
+            ...result,
+            messages: undefined,
+          };
         } catch (error) {
           // Mark session as failed using domain service
           await updateSession({

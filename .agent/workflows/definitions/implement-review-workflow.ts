@@ -1,6 +1,10 @@
 import {
+  buildSlashCommand,
   defineWorkflow,
   type WorkflowStep,
+  type CmdGenerateSpecResponse,
+  type CmdImplementSpecResponse,
+  type CmdReviewSpecImplementationResponse,
 } from "../../../packages/agentcmd-workflows/dist";
 
 /**
@@ -12,13 +16,9 @@ interface ImplementReviewWorkflowContext {
   specFile?: string;
 }
 
-interface AgentGenerateSpecResult {
-  specFile: string;
-}
-
 export default defineWorkflow(
   {
-    id: "agent-example-workflow",
+    id: "implement-review-workflow",
     name: "Implement Review Workflow",
     description: "Implements a spec file and reviews the implementation",
     phases: [
@@ -33,35 +33,37 @@ export default defineWorkflow(
     await step.phase("implement", async () => {
       ctx.specFile = await getSpecFile({ event, step });
 
-      const response = await step.agent("implement-spec", {
-        agent: "claude",
-        prompt: `/cmd:implement-spec ${ctx.specFile}`,
-        workingDir,
-        permissionMode: "bypassPermissions",
-      });
+      const response = await step.agent<CmdImplementSpecResponse>(
+        "implement-spec",
+        {
+          agent: "claude",
+          json: true,
+          prompt: buildSlashCommand("/cmd:implement-spec", {
+            specIdOrNameOrPath: ctx.specFile!,
+            format: "json",
+          }),
+          workingDir,
+        }
+      );
 
-      return {
-        success: response.success,
-        output: response.output,
-        message: response.message,
-        sessionId: response.sessionId,
-      };
+      return response;
     });
 
     await step.phase("review", async () => {
-      const response = await step.agent("review-spec-implementation", {
-        agent: "claude",
-        prompt: `/cmd:review-spec-implementation ${ctx.specFile}`,
-        workingDir,
-        permissionMode: "bypassPermissions",
-      });
+      const response = await step.agent<CmdReviewSpecImplementationResponse>(
+        "review-spec-implementation",
+        {
+          agent: "claude",
+          json: true,
+          prompt: buildSlashCommand("/cmd:review-spec-implementation", {
+            specIdOrNameOrPath: ctx.specFile!,
+            format: "json",
+          }),
+          workingDir,
+        }
+      );
 
-      return {
-        success: response.success,
-        output: response.output,
-        message: response.message,
-        sessionId: response.sessionId,
-      };
+      return response;
     });
   }
 );
@@ -77,15 +79,17 @@ const getSpecFile = async ({
     return event.data.specFile;
   }
 
-  const response = await step.agent<AgentGenerateSpecResult>(
+  const response = await step.agent<CmdGenerateSpecResponse>(
     "Generate Spec File",
     {
       agent: "claude",
-      prompt: `/cmd:generate-spec "${event.data.specContent}"`,
-      permissionMode: "bypassPermissions",
       json: true,
+      prompt: buildSlashCommand("/cmd:generate-spec", {
+        context: event.data.specContent,
+      }),
+      workingDir: event.data.workingDir,
     }
   );
 
-  return response.data?.specFile;
+  return response.data?.spec_file;
 };
