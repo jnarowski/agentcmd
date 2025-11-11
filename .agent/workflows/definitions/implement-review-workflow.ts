@@ -39,7 +39,7 @@ export default defineWorkflow(
           agent: "claude",
           json: true,
           prompt: buildSlashCommand("/cmd:implement-spec", {
-            specIdOrNameOrPath: ctx.specFile!,
+            specIdOrNameOrPath: ctx.specFile,
             format: "json",
           }),
           workingDir,
@@ -56,7 +56,7 @@ export default defineWorkflow(
           agent: "claude",
           json: true,
           prompt: buildSlashCommand("/cmd:review-spec-implementation", {
-            specIdOrNameOrPath: ctx.specFile!,
+            specIdOrNameOrPath: ctx.specFile,
             format: "json",
           }),
           workingDir,
