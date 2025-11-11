@@ -91,9 +91,10 @@ Assign complexity based on **context window usage and cognitive load**, not time
      {
        "specs": {
          "251024120101": {
-           "folder": "251024120101-auth-improvements",
+           "path": "todo/251024120101-auth-improvements",
+           "status": "draft",
            "created": "2025-10-24T00:01:01.000Z",
-           "location": "todo"
+           "updated": "2025-10-24T00:01:01.000Z"
          }
        }
      }

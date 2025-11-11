@@ -26,26 +26,27 @@ List all specs in the `.agent/specs/` directory, organized by workflow folder an
 
    - Read `.agent/specs/index.json`
    - For each spec in index, extract:
-     - Spec ID (timestamp format YYMMDDHHmmss)
-     - Folder name
+     - Spec ID (key in specs object)
+     - Path (contains both location and folder name)
+     - Status (cached from spec.md)
      - Created datetime
-     - Location (backlog/todo/done)
+     - Updated datetime
+     - Location: Derive from path by splitting on '/' (e.g., "todo/1-log-streaming" → location="todo", folder="1-log-streaming")
 
 2. **Apply Filters**
 
    - **Folder filter**:
-     - If $folder is "backlog": Only show specs in `backlog/`
-     - If $folder is "todo": Only show specs in `todo/`
-     - If $folder is "done": Only show specs in `done/`
+     - If $folder is "backlog": Only show specs where location (from path) is "backlog"
+     - If $folder is "todo": Only show specs where location is "todo"
+     - If $folder is "done": Only show specs where location is "done"
      - If $folder is "all" or not provided: Show all specs
 
    - **Status filter**:
      - If $status is specified and not "any":
-       - Read spec file content (spec.md or {id}-{name}-spec.md)
-       - Parse Status field
+       - Use cached status from index.json
        - Only include specs matching that status
-     - If $status is "any" or not provided: Show all specs without parsing file content
-     - If a spec has no Status field, treat it as status "unknown"
+     - If $status is "any" or not provided: Show all specs
+     - If a spec has no status field in index, treat it as status "unknown"
 
 3. **Display Results**
 
@@ -179,8 +180,8 @@ Please create the directory or check your working directory.
 
 ## Implementation Notes
 
-- **Performance**: Read index.json for O(1) lookup
-- **Feature names**: Extract from folder name
-  - From folder: `251024120101-workflow-safety/` → "workflow-safety"
+- **Performance**: Read index.json for O(1) lookup - status is cached, no file reads needed
+- **Feature names**: Extract from folder name in path
+  - From path: `todo/251024120101-workflow-safety` → location="todo", folder="251024120101-workflow-safety", name="workflow-safety"
 - **Sorting**: Timestamp IDs sort chronologically
-- **Status parsing**: Only read file content when status filter is active (optimization)
+- **Status caching**: Status is cached in index.json, synced from spec.md by other commands

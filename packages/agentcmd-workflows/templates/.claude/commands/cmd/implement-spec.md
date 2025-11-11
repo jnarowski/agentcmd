@@ -19,8 +19,8 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 - If it's a full path (contains `/`): use as-is
 - Otherwise, look up in `.agent/specs/index.json`:
   - For timestamp ID: Match by `id` field
-  - For feature name: Fuzzy match folder name (e.g., `message-queue` matches `251024120101-message-queue-implementation`)
-  - Use location from index: `{location}/{folder}/spec.md`
+  - For feature name: Fuzzy match path (e.g., `message-queue` matches `todo/251024120101-message-queue-implementation`)
+  - Use path from index: `.agent/specs/{path}/spec.md`
 - **If not found in index.json, fallback to directory search:**
   - Search in order: todo/, backlog
   - For ID: Pattern `{id}-*/spec.md`
@@ -87,15 +87,19 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 2. **Update spec Status:**
    - If spec is in `todo/` folder with Status "draft", update Status to "in-progress"
    - This indicates work has started without moving the file
-3. Read $spec_path file, think hard about the plan
-4. Implement the plan, one phase at a time:
+3. **Update index.json:**
+   - Update the spec's `status` field to "in-progress"
+   - Update the spec's `updated` field to current timestamp
+   - Write updated index back to `.agent/specs/index.json`
+4. Read $spec_path file, think hard about the plan
+5. Implement the plan, one phase at a time:
    - Work through tasks in order, top to bottom
    - **IMMEDIATELY check off each task** in $spec_path after completing it
    - Run validation after each logical step
-5. After completing each task group/phase:
+6. After completing each task group/phase:
    - **Fill in the "Completion Notes" section** with implementation context
    - Include any deviations, decisions, or important notes for reviewers
-6. Continue until all tasks are checked off and all completion notes are filled
+7. Continue until all tasks are checked off and all completion notes are filled
 
 ## Report
 

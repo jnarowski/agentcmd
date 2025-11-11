@@ -30,8 +30,8 @@ Move a spec folder between workflow folders (backlog/todo/done), update index.js
        - Use the path as-is
      - Otherwise, look up in `.agent/specs/index.json`:
        - For timestamp ID: Match by `id` field
-       - For feature name: Fuzzy match folder name (e.g., `message-queue` matches `251024120101-message-queue-implementation`)
-       - Use location from index: `{location}/{folder}/`
+       - For feature name: Fuzzy match path (e.g., `message-queue` matches `todo/251024120101-message-queue-implementation`)
+       - Use path from index: `.agent/specs/{path}/`
      - **If not found in index.json, fallback to directory search:**
        - Search in order: `.agent/specs/backlog/`, `.agent/specs/todo/`, `.agent/specs/done/`
        - For ID: Pattern `{id}-*/`
@@ -56,23 +56,26 @@ Move a spec folder between workflow folders (backlog/todo/done), update index.js
 5. **Update Index**
 
    - Read index.json
-   - Update the spec's `location` field to match target folder
+   - Update the spec's `path` field to match new location
+   - Update the spec's `updated` field to current timestamp
+   - Update the spec's `status` field based on target folder (see step 6)
    - Write updated index back to `.agent/specs/index.json`
 
 6. **Update Status Field**
 
    - Read spec.md file content
-   - Update Status field based on target folder:
+   - Update Status field in spec.md based on target folder:
      - Moving to "backlog": Set to "draft"
      - Moving to "todo": Set to "draft"
      - Moving to "done": Set to "completed"
+   - Also update status in index.json (step 5)
 
 7. **Report Results**
 
    - Display old path
    - Display new path
    - Display status field update (if any)
-   - Display index update (if applicable)
+   - Display index update (path and updated timestamp)
 
 ## Examples
 
@@ -103,7 +106,10 @@ From: .agent/specs/todo/1-workflow-safety/
 To:   .agent/specs/done/1-workflow-safety/
 
 Status updated: draft → completed
-Index updated: location "todo" → "done"
+Index updated:
+  - path: "todo/1-workflow-safety" → "done/1-workflow-safety"
+  - status: "draft" → "completed"
+  - updated: "2025-11-11T20:30:00.000Z"
 ```
 
 ## Error Handling

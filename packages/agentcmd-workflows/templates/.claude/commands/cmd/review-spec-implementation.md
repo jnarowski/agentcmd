@@ -19,8 +19,8 @@ Reviews a previous agent's implementation work by comparing the provided spec fi
 - If it's a full path (contains `/`): use as-is
 - Otherwise, look up in `.agent/specs/index.json`:
   - For timestamp ID: Match by `id` field
-  - For feature name: Fuzzy match folder name (e.g., `message-queue` matches `251024120101-message-queue-implementation`)
-  - Use location from index: `{location}/{folder}/spec.md`
+  - For feature name: Fuzzy match path (e.g., `message-queue` matches `todo/251024120101-message-queue-implementation`)
+  - Use path from index: `.agent/specs/{path}/spec.md`
 - **If not found in index.json, fallback to directory search:**
   - Search in order: backlog/, todo/, done/
   - For ID: Pattern `{id}-*/spec.md`
@@ -100,8 +100,8 @@ Use these guidelines to determine what issues to document:
        - Use the path as-is
      - Otherwise, look up in `.agent/specs/index.json`:
        - For timestamp ID: Match by `id` field
-       - For feature name: Fuzzy match folder name (e.g., `message-queue` matches `251024120101-message-queue-implementation`)
-       - Use location from index: `{location}/{folder}/spec.md`
+       - For feature name: Fuzzy match path (e.g., `message-queue` matches `todo/251024120101-message-queue-implementation`)
+       - Use path from index: `.agent/specs/{path}/spec.md`
      - **If not found in index.json, fallback to directory search:**
        - Search in order: `.agent/specs/backlog/`, `.agent/specs/todo/`, `.agent/specs/done/`
        - For ID: Pattern `{id}-*/spec.md`
@@ -168,6 +168,10 @@ Use these guidelines to determine what issues to document:
    - **Update spec Status field:**
      - If issues found: Set Status to "review"
      - If no issues found: Set Status to "completed"
+   - **Update index.json:**
+     - Update the spec's `status` field to match spec.md (either "review" or "completed")
+     - Update the spec's `updated` field to current timestamp
+     - Write updated index back to `.agent/specs/index.json`
 
 5. **Report Results**
 
