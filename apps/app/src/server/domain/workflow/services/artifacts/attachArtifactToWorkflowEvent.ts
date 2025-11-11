@@ -1,6 +1,7 @@
 import { prisma } from '@/shared/prisma';
 import type { WorkflowArtifact } from '@prisma/client';
 import { broadcastWorkflowEvent } from '../events/broadcastWorkflowEvent';
+import { WorkflowWebSocketEventTypes } from '@/shared/types/websocket.types';
 
 /**
  * Attach an artifact to an event
@@ -45,13 +46,12 @@ export async function attachArtifactToWorkflowEvent(
 
   // Emit artifact:created WebSocket event
   broadcastWorkflowEvent(event.workflow_run.project_id, {
-    type: 'workflow:run:artifact:created',
+    type: WorkflowWebSocketEventTypes.ARTIFACT_CREATED,
     data: {
       run_id: event.workflow_run.id,
       artifact: {
         id: updatedArtifact.id,
         workflow_run_id: updatedArtifact.workflow_run_id,
-        workflow_run_step_id: null, // WorkflowArtifact doesn't have step_id - attached to events only
         workflow_event_id: updatedArtifact.workflow_event_id,
         name: updatedArtifact.name,
         file_path: updatedArtifact.file_path,

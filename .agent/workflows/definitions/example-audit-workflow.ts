@@ -29,6 +29,7 @@ export default defineWorkflow(
       });
     });
 
-    return { success: true, output: response.output };
+    // return { success: true, output: response.output };
+    return response;
   }
 );

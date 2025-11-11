@@ -1,35 +1,91 @@
-import { defineWorkflow } from "../../../packages/agentcmd-workflows/dist";
+import {
+  defineWorkflow,
+  type WorkflowStep,
+} from "../../../packages/agentcmd-workflows/dist";
 
 /**
  * Example workflow demonstrating automatic workspace lifecycle.
  * Workspace setup and cleanup happen automatically via _system_setup and _system_finalize.
  */
+
+interface ImplementReviewWorkflowContext {
+  specFile?: string;
+}
+
+interface AgentGenerateSpecResult {
+  specFile: string;
+}
+
 export default defineWorkflow(
   {
     id: "agent-example-workflow",
-    name: "Agent Example Workflow",
-    description: "Demonstrates automatic workspace lifecycle and Claude Code integration",
-    phases: [{ id: "implement", label: "Implement" }],
+    name: "Implement Review Workflow",
+    description: "Implements a spec file and reviews the implementation",
+    phases: [
+      { id: "implement", label: "Implement" },
+      { id: "review", label: "Review" },
+    ],
   },
-  async ({ event, step, workspace }) => {
-    const { specFile, projectPath } = event.data;
+  async ({ event, step }) => {
+    const { specContent, workingDir } = event.data;
+    const ctx: ImplementReviewWorkflowContext = {};
 
-    // Workspace is automatically set up before this runs (_system_setup)
-    // Use workspace.workingDir for all operations
-    const workingDir = workspace?.workingDir || projectPath;
-
-    // Phase 1: Implement using the workspace
     await step.phase("implement", async () => {
-      await step.agent("implement-spec", {
+      ctx.specFile = await getSpecFile({ event, step });
+
+      const response = await step.agent("implement-spec", {
         agent: "claude",
-        prompt: `/implement-spec ${specFile}`,
-        projectPath: workingDir, // Use workspace directory
+        prompt: `/implement-spec ${ctx.specFile}`,
+        workingDir,
         permissionMode: "bypassPermissions",
       });
+
+      return {
+        success: response.success,
+        output: response.output,
+        message: response.message,
+        sessionId: response.sessionId,
+      };
     });
 
-    // Workspace is automatically cleaned up after this returns (_system_finalize)
+    await step.phase("review", async () => {
+      const response = await step.agent("review-spec-implementation", {
+        agent: "claude",
+        prompt: `/review-spec-implementation ${ctx.specFile}`,
+        workingDir,
+        permissionMode: "bypassPermissions",
+      });
 
-    return { success: true };
+      return {
+        success: response.success,
+        output: response.output,
+        message: response.message,
+        sessionId: response.sessionId,
+      };
+    });
   }
 );
+
+const getSpecFile = async ({
+  event,
+  step,
+}: {
+  event: any;
+  step: WorkflowStep;
+}) => {
+  if (event.data.specFile) {
+    return event.data.specFile;
+  }
+
+  const response = await step.agent<AgentGenerateSpecResult>(
+    "Generate Spec File",
+    {
+      agent: "claude",
+      prompt: `/generate-spec "${event.data.specContent}"`,
+      permissionMode: "bypassPermissions",
+      json: true,
+    }
+  );
+
+  return response.data?.specFile;
+};

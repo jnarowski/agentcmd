@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '@/shared/prisma';
 import type { WorkflowEvent, EventDataMap } from '@/server/domain/workflow/types';
 import { broadcastWorkflowEvent } from './broadcastWorkflowEvent';
+import { WorkflowWebSocketEventTypes } from '@/shared/types/websocket.types';
 
 export interface CreateWorkflowEventParams<T extends keyof EventDataMap = keyof EventDataMap> {
   workflow_run_id: string;
@@ -68,7 +69,7 @@ export async function createWorkflowEvent<T extends keyof EventDataMap>(
   // Emit event:created WebSocket event
   if (run) {
     broadcastWorkflowEvent(run.project_id, {
-      type: 'workflow:run:event:created',
+      type: WorkflowWebSocketEventTypes.EVENT_CREATED,
       data: {
         run_id: workflow_run_id,
         event: {

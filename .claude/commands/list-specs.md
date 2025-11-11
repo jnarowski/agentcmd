@@ -9,7 +9,7 @@ List all specs in the `.agent/specs/` directory, organized by workflow folder an
 
 ## Variables
 
-- $folder: $1 (optional) - Filter by folder: "todo", "doing", "done", or "all" (defaults to "all")
+- $folder: $1 (optional) - Filter by folder: "backlog", "todo", "done", or "all" (defaults to "all")
 - $status: $2 (optional) - Filter by status field: "draft", "ready", "in-progress", "review", "completed", or "any" (defaults to "any")
 
 ## Instructions
@@ -31,12 +31,12 @@ List all specs in the `.agent/specs/` directory, organized by workflow folder an
        - Spec ID (numeric)
        - Folder name
        - Created datetime
-       - Location (todo/doing/done)
+       - Location (backlog/todo/done)
 
    - **From filesystem** (legacy 3-char ID specs):
      - Search for `*-spec.md` files in:
+       - `.agent/specs/backlog/`
        - `.agent/specs/todo/`
-       - `.agent/specs/doing/`
        - `.agent/specs/done/`
      - For each file found, extract:
        - Spec ID (3-char alphanumeric)
@@ -48,8 +48,8 @@ List all specs in the `.agent/specs/` directory, organized by workflow folder an
 2. **Apply Filters**
 
    - **Folder filter**:
+     - If $folder is "backlog": Only show specs in `backlog/`
      - If $folder is "todo": Only show specs in `todo/`
-     - If $folder is "doing": Only show specs in `doing/`
      - If $folder is "done": Only show specs in `done/`
      - If $folder is "all" or not provided: Show all specs
 
@@ -63,7 +63,7 @@ List all specs in the `.agent/specs/` directory, organized by workflow folder an
 
 3. **Display Results**
 
-   - Group specs by location (todo, doing, done)
+   - Group specs by location (backlog, todo, done)
    - Within each group, sort by:
      - Numeric IDs first (ascending)
      - Then legacy 3-char IDs (lexicographic)
@@ -81,6 +81,11 @@ List all specs in the `.agent/specs/` directory, organized by workflow folder an
 ```text
 Spec Files
 
+💡 BACKLOG (1 spec)
+────────────────────────────────────────────────────────────
+  5    future-feature                      2025-11-10
+       .agent/specs/backlog/5-future-feature/
+
 📋 TODO (2 specs)
 ────────────────────────────────────────────────────────────
   1    workflow-safety                     2025-11-08
@@ -88,11 +93,6 @@ Spec Files
 
   ef3  gemini-integration                  (legacy)
        .agent/specs/todo/ef3-gemini-integration-spec.md
-
-🚧 DOING (1 spec)
-────────────────────────────────────────────────────────────
-  2    auth-improvements                   2025-11-08
-       .agent/specs/doing/2-auth-improvements/
 
 ✅ DONE (12 specs)
 ────────────────────────────────────────────────────────────

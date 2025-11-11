@@ -9,6 +9,7 @@ import {
   TabsContent,
 } from "@/client/components/ui/tabs";
 import { Combobox } from "@/client/components/ui/combobox";
+import { CodeEditor } from "@/client/components/CodeEditor";
 import { useCreateWorkflow } from "@/client/pages/projects/workflows/hooks/useWorkflowMutations";
 import { useProjectSpecs } from "@/client/pages/projects/hooks/useProjectSpecs";
 import { useProjectBranches } from "@/client/pages/projects/hooks/useProjectBranches";
@@ -51,6 +52,7 @@ export function NewRunForm({
   const [mode, setMode] = useState<"stay" | "branch" | "worktree">("branch");
   const [branchName, setBranchName] = useState("");
   const [isGeneratingNames, setIsGeneratingNames] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Derive actual definition from selectedDefinitionId or prop
@@ -191,6 +193,7 @@ export function NewRunForm({
 
   const handleSubmit = async () => {
     setError(null);
+    setShowValidation(true);
 
     // Validate workflow definition (only when definitions prop is provided)
     if (
@@ -211,8 +214,7 @@ export function NewRunForm({
 
     // Validate name
     if (!name.trim()) {
-      setError("Execution name is required");
-      return;
+      return; // Show inline error instead of global error
     }
 
     // Validate spec input
@@ -254,7 +256,7 @@ export function NewRunForm({
   };
 
   return (
-    <div className="space-y-4 [&>div]:space-y-2">
+    <div className="space-y-6 [&>div]:space-y-2">
       {/* Show error alert if selected workflow has load error */}
       {actualDefinition?.load_error && (
         <div className="rounded-lg border border-destructive bg-destructive/10 p-3">
@@ -286,51 +288,64 @@ export function NewRunForm({
           emptyMessage="No workflow definitions found"
           disabled={createWorkflow.isPending || !definitions}
         />
-        <p className="text-xs text-muted-foreground">
-          Choose the workflow template to run
-        </p>
       </div>
 
       {/* Spec input type selection */}
       <div>
         <Label className="mb-2 block">Spec Input</Label>
-        <Tabs
-          value={specInputType}
-          onValueChange={(v) => setSpecInputType(v as "file" | "content")}
-        >
-          <TabsList>
-            <TabsTrigger value="file">Select from file</TabsTrigger>
-            <TabsTrigger value="content">Paste content</TabsTrigger>
-          </TabsList>
+        <div className="rounded-lg border bg-card">
+          <Tabs
+            value={specInputType}
+            onValueChange={(v) => setSpecInputType(v as "file" | "content")}
+            className="w-full !gap-0"
+          >
+            <TabsList className="w-full rounded-t-lg rounded-b-none border-b h-auto p-0 bg-transparent">
+              <TabsTrigger
+                value="file"
+                className="flex-1 rounded-none data-[state=active]:border-b data-[state=active]:border-primary data-[state=active]:-mb-px rounded-tl-lg"
+              >
+                Select from file
+              </TabsTrigger>
+              <TabsTrigger
+                value="content"
+                className="flex-1 rounded-none data-[state=active]:border-b data-[state=active]:border-primary data-[state=active]:-mb-px rounded-tr-lg"
+              >
+                Write It
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="file" className="space-y-2 mt-3">
-            <Combobox
-              value={specFile}
-              onValueChange={setSpecFile}
-              options={specFileOptions}
-              placeholder="Select spec file..."
-              searchPlaceholder="Search spec files..."
-              emptyMessage="No spec files found"
-              disabled={createWorkflow.isPending}
-            />
-            <p className="text-xs text-muted-foreground">
-              Select from .agent/specs/todo/
-            </p>
-          </TabsContent>
+            <TabsContent value="file" className="space-y-2 p-3 m-0">
+              <Combobox
+                value={specFile}
+                onValueChange={setSpecFile}
+                options={specFileOptions}
+                placeholder="Select spec file..."
+                searchPlaceholder="Search spec files..."
+                emptyMessage="No spec files found"
+                disabled={createWorkflow.isPending}
+              />
+              <p className="text-xs text-muted-foreground">
+                Select from .agent/specs/todo/
+              </p>
+            </TabsContent>
 
-          <TabsContent value="content" className="space-y-2 mt-3">
-            <textarea
-              value={specContent}
-              onChange={(e) => setSpecContent(e.target.value)}
-              placeholder="Paste your spec content here..."
-              disabled={createWorkflow.isPending}
-              className="w-full min-h-[150px] rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-vertical"
-            />
-            <p className="text-xs text-muted-foreground">
-              Paste the spec content directly
-            </p>
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="content" className="m-0 p-0">
+              <CodeEditor
+                value={specContent}
+                onChange={setSpecContent}
+                language="markdown"
+                minHeight="200px"
+                height="auto"
+                showLineNumbers={true}
+                wordWrap={true}
+                readOnly={createWorkflow.isPending}
+                transparentBackground={true}
+                fontSize="13px"
+                className="rounded-b-lg"
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
 
       {/* Name input */}
@@ -343,6 +358,7 @@ export function NewRunForm({
             value={name}
             onChange={(e) => setName(e.target.value)}
             disabled={createWorkflow.isPending || isGeneratingNames}
+            aria-invalid={showValidation && !name.trim()}
           />
           {isGeneratingNames && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -374,24 +390,33 @@ export function NewRunForm({
             Generating names from spec...
           </p>
         )}
+        {showValidation && !name.trim() && (
+          <p className="text-xs text-red-600 dark:text-red-400">
+            Run Name is required
+          </p>
+        )}
       </div>
 
       {/* Setup: stay, branch, or worktree */}
       <div className="space-y-3">
-        <Label>Setup</Label>
+        <Label>Setup Phase</Label>
+        <div className="text-xs text-muted-foreground pb-3">
+          This runs automatically before your workflow and handles setting up
+          the git workspace the branch, worktree etc
+        </div>
         <RadioGroup
           value={mode}
           onValueChange={(v) => setMode(v as "stay" | "branch" | "worktree")}
         >
           {/* Branch option */}
-          <div className="space-y-3">
+          <div className="space-y-1">
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="branch" id="mode-branch" />
               <Label
                 htmlFor="mode-branch"
                 className="font-normal cursor-pointer"
               >
-                Branch
+                Create a new Branch
               </Label>
             </div>
             <p className="text-xs text-muted-foreground ml-6">
@@ -409,9 +434,6 @@ export function NewRunForm({
                     onChange={(e) => setBranchName(e.target.value)}
                     disabled={createWorkflow.isPending}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Auto-generated, but you can edit
-                  </p>
                 </div>
                 {/* Branch From (optional) */}
                 <div>
@@ -460,14 +482,14 @@ export function NewRunForm({
           </div>
 
           {/* Worktree option */}
-          <div className="space-y-3">
+          <div className="space-y-1">
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="worktree" id="mode-worktree" />
               <Label
                 htmlFor="mode-worktree"
                 className="font-normal cursor-pointer"
               >
-                Worktree
+                Create a new Worktree
               </Label>
             </div>
             <p className="text-xs text-muted-foreground ml-6">
@@ -485,9 +507,6 @@ export function NewRunForm({
                     onChange={(e) => setBranchName(e.target.value)}
                     disabled={createWorkflow.isPending}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Auto-generated, but you can edit
-                  </p>
                 </div>
                 {/* Branch From (optional) */}
                 <div>
@@ -538,15 +557,15 @@ export function NewRunForm({
           </div>
 
           {/* Skip Setup option */}
-          <div className="space-y-3">
+          <div className="space-y-1">
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="stay" id="mode-stay" />
               <Label htmlFor="mode-stay" className="font-normal cursor-pointer">
-                Skip Setup
+                Stay in Current Branch
               </Label>
             </div>
             <p className="text-xs text-muted-foreground ml-6">
-              Runs in current branch without git operations
+              Runs in current branch without creating a new branch or worktree
             </p>
           </div>
         </RadioGroup>

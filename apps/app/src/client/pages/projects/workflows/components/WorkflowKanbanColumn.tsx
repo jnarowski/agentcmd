@@ -18,7 +18,7 @@ export function WorkflowKanbanColumn({
   const Icon = config.icon;
 
   return (
-    <div className="flex min-h-[600px] flex-col rounded-lg border bg-muted/50 p-4">
+    <div className="flex h-full flex-col rounded-lg border bg-muted/50 p-4">
 
       {/* Column header */}
       <div className="mb-4 flex items-center justify-between">

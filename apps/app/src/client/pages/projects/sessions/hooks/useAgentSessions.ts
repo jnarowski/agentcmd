@@ -3,7 +3,6 @@ import type { SessionResponse } from "@/shared/types";
 import type { UnifiedMessage } from "agent-cli-sdk";
 import { api } from "@/client/utils/api";
 import { toast } from "sonner";
-import { projectKeys } from "@/client/pages/projects/hooks/queryKeys";
 import { sessionKeys } from "./queryKeys";
 
 export interface GetSessionsFilters {

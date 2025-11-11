@@ -22,18 +22,20 @@ export interface AgentStepConfig {
   agent: "claude" | "codex" | "gemini";
   /** Prompt or instruction for the agent */
   prompt: string;
-  /** Project directory path */
-  projectPath?: string;
+  /** Working directory path (project path or worktree path) */
+  workingDir?: string;
   /** Additional context or files */
   context?: Record<string, unknown>;
   /** Permission mode for agent */
   permissionMode?: "default" | "plan" | "acceptEdits" | "bypassPermissions";
+  /** Enable JSON mode - automatically extract and parse JSON from response */
+  json?: boolean;
 }
 
 /**
  * Result from agent execution
  */
-export interface AgentStepResult {
+export interface AgentStepResult<T = string> {
   /** Agent session ID */
   sessionId: string;
   /** Success status */
@@ -46,6 +48,8 @@ export interface AgentStepResult {
   output?: string;
   /** Number of steps executed */
   steps?: number;
+  /** Extracted data (JSON object when json: true, otherwise string output) */
+  data?: T;
 }
 
 /**
@@ -182,6 +186,8 @@ export interface ArtifactStepConfig {
   pattern?: string;
   /** Description */
   description?: string;
+  /** Optional event ID to attach artifact to */
+  eventId?: string;
 }
 
 /**
@@ -225,13 +231,54 @@ export interface AiStepConfig<TSchema = unknown> {
 }
 
 /**
+ * AI generation metadata (based on Vercel AI SDK types)
+ * Compatible with GenerateTextResult and GenerateObjectResult
+ */
+export interface AiGenerationMetadata {
+  /** Reason why generation stopped */
+  finishReason: 'stop' | 'length' | 'content-filter' | 'tool-calls' | 'error' | 'other' | 'unknown';
+  /** Token usage statistics */
+  usage: {
+    inputTokens?: number;
+    outputTokens?: number;
+    totalTokens?: number;
+    reasoningTokens?: number;
+  };
+  /** Total token usage across all steps (for multi-step generations) */
+  totalUsage?: {
+    inputTokens?: number;
+    outputTokens?: number;
+    totalTokens?: number;
+    reasoningTokens?: number;
+  };
+  /** Provider warnings (unsupported settings, etc.) */
+  warnings?: Array<{
+    type: string;
+    message?: string;
+  }>;
+  /** Provider-specific metadata */
+  providerMetadata?: Record<string, unknown>;
+  /** Request metadata */
+  request?: {
+    body?: unknown;
+  };
+  /** Response metadata */
+  response?: {
+    id?: string;
+    modelId?: string;
+    timestamp?: Date;
+    body?: unknown;
+  };
+}
+
+/**
  * Result from AI generation step
  */
 export interface AiStepResult<T = { text: string }> {
   /** Generated data (text or structured object) */
   data: T;
-  /** Full response from AI SDK (for advanced use cases) */
-  result?: unknown;
+  /** Full AI generation metadata (usage, finishReason, warnings, etc.) */
+  result?: AiGenerationMetadata;
   /** Success status */
   success: boolean;
   /** Error message if failed */
@@ -270,11 +317,11 @@ export interface WorkflowStep<TPhaseId extends string = string> extends InngestS
    * @param config - Agent configuration (includes optional name field)
    * @param options - Step options (timeout, retries, etc.)
    */
-  agent(
+  agent<T = string>(
     id: string,
     config: AgentStepConfig,
     options?: StepOptions
-  ): Promise<AgentStepResult>;
+  ): Promise<AgentStepResult<T>>;
 
   /**
    * Execute a git operation

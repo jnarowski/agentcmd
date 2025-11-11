@@ -4,7 +4,6 @@ import type {
   WorkflowConfig,
   WorkflowFunction,
   WorkflowStep,
-  WorkflowContext,
   WorkspaceResult,
   PhaseDefinition,
 } from "agentcmd-workflows";
@@ -54,15 +53,6 @@ import {
  * @see {WorkflowRuntime} - SDK interface this implements
  * @see {createAgentStep} - Custom step implementations in ./steps/
  */
-
-/**
- * Extended workflow context that includes workspace
- * (workspace is a runtime extension, not part of base SDK)
- */
-interface ExtendedWorkflowContext extends Omit<WorkflowContext, "step"> {
-  step: WorkflowStep;
-  workspace: WorkspaceResult | null;
-}
 
 /**
  * Generic type constraint for workflow phases
@@ -115,9 +105,11 @@ export function createWorkflowRuntime(
   logger: FastifyBaseLogger
 ): WorkflowRuntime {
   return {
-    createInngestFunction<TPhases extends PhasesConstraint>(
-      config: WorkflowConfig<TPhases>,
-      fn: WorkflowFunction<TPhases>
+    createInngestFunction<
+      TPhases extends PhasesConstraint
+    >(
+      config: WorkflowConfig<TPhases, Record<string, unknown>>,
+      fn: WorkflowFunction<TPhases, Record<string, unknown>>
     ) {
       const { functionId, eventName } = buildWorkflowIdentifiers(
         config.id,
@@ -128,6 +120,33 @@ export function createWorkflowRuntime(
         {
           id: functionId,
           name: config.name ?? config.id,
+          retries: 3, // Explicit retry config (Inngest default)
+          onFailure: async ({ event, error }) => {
+            // Catches failures AFTER all Inngest retries exhausted
+            // This handles workflow execution failures (step errors, timeout, etc.)
+            const runId = event.data.event?.data?.runId;
+            const projectId = event.data.event?.data?.projectId;
+
+            if (!runId || !projectId) {
+              logger.error(
+                { error: error.message },
+                "onFailure: missing runId/projectId from event data"
+              );
+              return;
+            }
+
+            logger.error(
+              {
+                runId,
+                projectId,
+                error: error.message,
+                stack: error.stack,
+              },
+              "Inngest function failed after retries - marking workflow as failed"
+            );
+
+            await handleWorkflowFailure(runId, projectId, error, logger);
+          },
           ...(config.timeout && {
             timeouts: {
               finish: `${Math.floor(config.timeout / 1000)}s` as `${number}s`,
@@ -148,17 +167,45 @@ export function createWorkflowRuntime(
             config,
           };
 
-          const run = await getWorkflowRunForExecution(runId);
-          if (!run) {
-            throw new Error(`Workflow run ${runId} not found`);
+          let run: Awaited<
+            ReturnType<typeof getWorkflowRunForExecution>
+          > | null = null;
+          let workspace: WorkspaceResult | null = null;
+          let extendedStep: WorkflowStep<any> | null = null;
+
+          // SETUP PHASE: Catch errors before workflow execution
+          // These errors should call handleWorkflowFailure since onFailure won't see them
+          try {
+            // Fetch workflow run
+            run = await getWorkflowRunForExecution(runId);
+            if (!run) {
+              throw new Error(`Workflow run ${runId} not found`);
+            }
+          } catch (error) {
+            // Pre-workflow errors (DB fetch, validation) - handle immediately
+            logger.error(
+              {
+                runId,
+                projectId,
+                error: error instanceof Error ? error.message : String(error),
+              },
+              "Workflow setup failed"
+            );
+
+            await handleWorkflowFailure(runId, projectId, error, logger);
+
+            throw error;
           }
 
-          const extendedStep = extendInngestSteps(context, inngestStep);
-          let workspace: WorkspaceResult | null = null;
-
+          // EXECUTION PHASE: Let onFailure handle workflow execution errors
+          // Catch and handle immediately, then re-throw for Inngest to also process
           try {
+            extendedStep = extendInngestSteps(context, inngestStep);
+
+            // Mark workflow as started
             await handleWorkflowStart(runId, projectId, inngestRunId, logger);
 
+            // Setup workspace (may fail)
             workspace = await setupWorkspace(
               run,
               context,
@@ -167,26 +214,46 @@ export function createWorkflowRuntime(
               logger
             );
 
-            const result = await fn({
-              event,
-              step: extendedStep,
-              workspace,
-            } as ExtendedWorkflowContext);
+            // Add workingDir to event.data for workflows to use
+            event.data.workingDir = workspace.workingDir;
 
+            // Execute workflow function
+            const result = await fn({
+              event: {
+                name: event.name,
+                data: event.data,
+              },
+              step: extendedStep,
+            });
+
+            // Mark workflow as completed
             await handleWorkflowCompletion(runId, projectId, logger);
             return result;
           } catch (error) {
+            // Handle workflow execution errors immediately
+            // Also let error propagate so onFailure can process in production
+            logger.error(
+              {
+                runId,
+                projectId,
+                error: error instanceof Error ? error.message : String(error),
+              },
+              "Workflow execution failed - handling and re-throwing"
+            );
             await handleWorkflowFailure(runId, projectId, error, logger);
             throw error;
           } finally {
-            await finalizeWorkspace(
-              run,
-              workspace,
-              context,
-              extendedStep,
-              inngestStep,
-              logger
-            );
+            // Always attempt cleanup (non-fatal)
+            if (run && workspace && extendedStep) {
+              await finalizeWorkspace(
+                run,
+                workspace,
+                context,
+                extendedStep,
+                inngestStep,
+                logger
+              );
+            }
           }
         }
       );
@@ -210,10 +277,20 @@ export function createWorkflowRuntime(
  * @param inngestStep - Base Inngest step tools (client-agnostic)
  * @returns Extended step object with all workflow methods
  */
-function extendInngestSteps<TPhases extends PhasesConstraint>(
+function extendInngestSteps<
+  TPhases extends PhasesConstraint
+>(
   context: RuntimeContext<TPhases>,
   inngestStep: GetStepTools<Inngest.Any>
-): WorkflowStep {
+): WorkflowStep<
+  TPhases extends readonly PhaseDefinition[]
+    ? TPhases[number] extends string
+      ? TPhases[number]
+      : TPhases[number] extends { id: infer Id extends string }
+        ? Id
+        : string
+    : string
+> {
   return {
     ...inngestStep,
     agent: createAgentStep(context, inngestStep),
@@ -243,10 +320,12 @@ function extendInngestSteps<TPhases extends PhasesConstraint>(
  * @param logger - Logger instance
  * @returns Workspace result with mode, working directory, and branch name
  */
-async function setupWorkspace<TPhases extends PhasesConstraint>(
+async function setupWorkspace<
+  TPhases extends PhasesConstraint
+>(
   run: WorkflowRun & { project: { path: string } },
   context: RuntimeContext<TPhases>,
-  extendedStep: WorkflowStep,
+  extendedStep: WorkflowStep<any>,
   inngestStep: GetStepTools<Inngest.Any>,
   logger: FastifyBaseLogger
 ): Promise<WorkspaceResult> {
@@ -402,6 +481,7 @@ async function handleWorkflowCompletion(
 /**
  * Handle workflow failure lifecycle.
  * Updates database status to 'failed' with error message, emits failure event for UI, and logs error.
+ * This function is made extra robust to ensure at least the DB update succeeds.
  *
  * @param runId - Workflow run ID
  * @param projectId - Project ID (null for global workflows)
@@ -417,29 +497,60 @@ async function handleWorkflowFailure(
   const err = error instanceof Error ? error : new Error(String(error));
   const failedAt = new Date();
 
-  await updateWorkflowRun({
-    runId,
-    data: {
-      status: "failed",
-      completed_at: failedAt,
-      error_message: err.message,
-    },
-    logger,
-  });
-
-  await emitLifecycleEvent(
-    runId,
-    "workflow_failed",
-    {
-      title: "Workflow Failed",
-      body: `Workflow execution encountered an error: ${err.message}`,
-      timestamp: failedAt.toISOString(),
-      error: err.message,
-    },
-    logger
+  logger.error(
+    { runId, projectId, error: err.message, stack: err.stack },
+    "Workflow failed - updating status"
   );
 
-  logger.error({ runId, projectId, error: err.message }, "Workflow failed");
+  // Try to update DB status (most critical operation)
+  try {
+    await updateWorkflowRun({
+      runId,
+      data: {
+        status: "failed",
+        completed_at: failedAt,
+        error_message: err.message,
+      },
+      logger,
+    });
+  } catch (updateError) {
+    // If update fails, log but don't throw - we'll try the event next
+    logger.error(
+      {
+        runId,
+        error:
+          updateError instanceof Error
+            ? updateError.message
+            : String(updateError),
+      },
+      "CRITICAL: Failed to update workflow run status to 'failed'"
+    );
+  }
+
+  // Try to emit lifecycle event (secondary operation)
+  try {
+    await emitLifecycleEvent(
+      runId,
+      "workflow_failed",
+      {
+        title: "Workflow Failed",
+        body: `Workflow execution encountered an error: ${err.message}`,
+        timestamp: failedAt.toISOString(),
+        error: err.message,
+      },
+      logger
+    );
+  } catch (eventError) {
+    // If event emission fails, log but don't throw
+    logger.error(
+      {
+        runId,
+        error:
+          eventError instanceof Error ? eventError.message : String(eventError),
+      },
+      "Failed to emit workflow failure event"
+    );
+  }
 }
 
 /**
@@ -458,11 +569,13 @@ async function handleWorkflowFailure(
  * @param inngestStep - Base Inngest step tools
  * @param logger - Logger instance
  */
-async function finalizeWorkspace<TPhases extends PhasesConstraint>(
+async function finalizeWorkspace<
+  TPhases extends PhasesConstraint
+>(
   run: WorkflowRun,
   workspace: WorkspaceResult | null,
   context: RuntimeContext<TPhases>,
-  extendedStep: WorkflowStep,
+  extendedStep: WorkflowStep<any>,
   inngestStep: GetStepTools<Inngest.Any>,
   logger: FastifyBaseLogger
 ): Promise<void> {

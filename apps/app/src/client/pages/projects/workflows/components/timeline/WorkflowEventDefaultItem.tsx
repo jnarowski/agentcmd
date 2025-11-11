@@ -6,6 +6,7 @@ import {
   MessageSquare,
   type LucideIcon,
 } from "lucide-react";
+import { useDebugMode } from "@/client/hooks/useDebugMode";
 import type { WorkflowEvent } from "@/client/pages/projects/workflows/types";
 
 // Format event type for display
@@ -118,6 +119,8 @@ interface WorkflowEventDefaultItemProps {
 export function WorkflowEventDefaultItem({
   event,
 }: WorkflowEventDefaultItemProps) {
+  const debugMode = useDebugMode();
+
   // Get config for this event type, or use default
   const config = EVENT_CONFIG[event.event_type] ?? DEFAULT_CONFIG;
 
@@ -135,9 +138,11 @@ export function WorkflowEventDefaultItem({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="font-medium">{title}</span>
-          <span className="text-xs text-muted-foreground font-mono">
-            [EVENT: {event.id}]
-          </span>
+          {debugMode && (
+            <span className="text-xs text-muted-foreground font-mono">
+              [EVENT: {event.id}]
+            </span>
+          )}
         </div>
 
         {body && (

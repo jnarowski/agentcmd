@@ -3,6 +3,7 @@ import type { WorkflowRun } from "@prisma/client";
 import { createWorkflowEvent } from "../events/createWorkflowEvent";
 import { broadcastWorkflowEvent } from "../events/broadcastWorkflowEvent";
 import type { ResumeWorkflowOptions } from "@/server/domain/workflow/types/ResumeWorkflowOptions";
+import { WorkflowWebSocketEventTypes } from "@/shared/types/websocket.types";
 
 /**
  * STUB: Resume a paused workflow execution (future implementation)
@@ -37,7 +38,7 @@ export async function resumeWorkflow({ runId, userId, logger }: ResumeWorkflowOp
 
   // Emit WebSocket event immediately for real-time updates
   broadcastWorkflowEvent(execution.project_id, {
-    type: 'workflow:run:updated',
+    type: WorkflowWebSocketEventTypes.RUN_UPDATED,
     data: {
       run_id: execution.id,
       project_id: execution.project_id,

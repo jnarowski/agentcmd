@@ -41,6 +41,7 @@ export type {
   AnnotationStepConfig,
   AiStepConfig,
   AiStepResult,
+  AiGenerationMetadata,
   SetupWorkspaceConfig,
   WorkspaceResult,
   CleanupWorkspaceConfig,

@@ -548,8 +548,8 @@ function sendMessage<T>(socket: WebSocket, type: string, data: T): void {
   }
 }
 
-// Usage
-sendMessage(socket, 'session:message', {
+// Usage - Events use dot notation
+sendMessage(socket, 'session.message', {
   messageId: '123',
   content: 'Hello',
 });
@@ -576,8 +576,8 @@ export async function registerMyWebSocket(fastify: FastifyInstance) {
 
           fastify.log.debug({ type: message.type }, 'Received WebSocket message');
 
-          // Route to handlers
-          if (message.type === 'my:event') {
+          // Route to handlers - Events use dot notation
+          if (message.type === 'my.event') {
             await handleMyEvent(socket, message.data);
           } else {
             fastify.log.warn({ type: message.type }, 'Unknown WebSocket message type');
@@ -585,7 +585,7 @@ export async function registerMyWebSocket(fastify: FastifyInstance) {
         } catch (error) {
           const err = error instanceof Error ? error : new Error(String(error));
           fastify.log.error({ err }, 'WebSocket message handling error');
-          sendMessage(socket, 'error', { message: err.message });
+          sendMessage(socket, 'global.error', { message: err.message });
         }
       });
 
@@ -602,8 +602,8 @@ export async function registerMyWebSocket(fastify: FastifyInstance) {
 }
 
 async function handleMyEvent(socket: WebSocket, data: unknown) {
-  // Event handling logic
-  sendMessage(socket, 'my:response', { success: true });
+  // Event handling logic - Events use dot notation
+  sendMessage(socket, 'my.response', { success: true });
 }
 
 function sendMessage<T>(socket: WebSocket, type: string, data: T): void {

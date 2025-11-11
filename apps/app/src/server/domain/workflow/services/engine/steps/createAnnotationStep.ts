@@ -1,6 +1,4 @@
 import type { GetStepTools } from "inngest";
-import { Channels } from "@/shared/websocket/channels";
-import { broadcast } from "@/server/websocket/infrastructure/subscriptions";
 import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 import { createWorkflowEvent } from "@/server/domain/workflow/services/events/createWorkflowEvent";
 import { generateInngestStepId } from "@/server/domain/workflow/services/engine/steps/utils/generateInngestStepId";
@@ -27,7 +25,7 @@ export function createAnnotationStep(
   ): Promise<void> {
     const id = toId(idOrName);
     const name = toName(idOrName);
-    const { runId, projectId, currentPhase, logger } = context;
+    const { runId, currentPhase, logger } = context;
     const message = config.message;
 
     // Generate phase-prefixed Inngest step ID
@@ -36,7 +34,7 @@ export function createAnnotationStep(
     // Wrap in Inngest step.run for memoization
     return (await inngestStep.run(inngestStepId, async () => {
       // Create annotation event using domain service
-      const event = await createWorkflowEvent({
+      await createWorkflowEvent({
         workflow_run_id: runId,
         event_type: "annotation_added",
         event_data: {
@@ -44,17 +42,6 @@ export function createAnnotationStep(
         },
         phase: currentPhase,
         logger,
-      });
-
-      // Broadcast annotation
-      broadcast(Channels.project(projectId), {
-        type: "workflow:annotation:created",
-        data: {
-          runId,
-          message,
-          phase: currentPhase,
-          timestamp: event.created_at.toISOString(),
-        },
       });
 
       logger.debug(

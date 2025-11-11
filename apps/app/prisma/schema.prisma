@@ -48,7 +48,7 @@ model WorkflowRun {
   workflow_definition_id String
   name                   String         // User-provided name for this execution
   args                   Json           // Workflow arguments
-  spec_file              String?        // Relative path to spec file (from .agent/specs/todo/)
+  spec_file              String?        // Relative path to spec file (from .agent/specs/)
   spec_content           String?        // Inline spec content (alternative to spec_file)
   mode                   String?        // Workspace mode: "stay" | "branch" | "worktree"
   branch_name            String?        // New branch name for execution

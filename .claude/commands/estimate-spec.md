@@ -40,17 +40,17 @@ Assign complexity based on **context window usage and cognitive load**, not time
 ## Workflow
 
 1. **Locate Spec File**:
-   - If $specIdentifier is a full path:
+   - If $specIdentifier is a full path (contains `/`):
      - Use that path directly
-   - If $specIdentifier is an ID (e.g., `ef3`, `a7b`):
-     - Search `.agent/specs/todo/` for files matching `{id}-*-spec.{md,json}`
-     - If not found, search `.agent/specs/doing/`
-     - If not found, search `.agent/specs/done/`
-   - If $specIdentifier is a feature name (e.g., `auth-improvements`):
-     - Search `.agent/specs/todo/` for files matching `*-auth-improvements-spec.{md,json}`
-     - If not found, search `.agent/specs/doing/`
-     - If not found, search `.agent/specs/done/`
-   - If file not found, report error
+   - Otherwise, look up in `.agent/specs/index.json`:
+     - For numeric ID: Match by `id` field
+     - For feature name: Fuzzy match folder name (e.g., `message-queue` matches `ef3-message-queue-implementation`)
+     - Use location from index: `{location}/{folder}/spec.md`
+   - **If not found in index.json, fallback to directory search:**
+     - Search in order: `.agent/specs/backlog/`, `.agent/specs/todo/`, `.agent/specs/done/`
+     - For ID: Pattern `{id}-*/spec.{md,json}`
+     - For feature name: Pattern `*{feature-name}*/spec.{md,json}` (fuzzy match)
+   - If still not found, report error
 
 2. **Read and Parse Spec**:
    - Detect format (markdown or json) from file extension

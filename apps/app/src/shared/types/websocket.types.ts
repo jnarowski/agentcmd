@@ -35,16 +35,17 @@ export interface ChannelEvent<T = string, D = unknown> {
 /**
  * Session event type constants
  * Used for session:* channels (agent streaming, message handling)
+ * Events use dot notation for hierarchical naming
  */
 export const SessionEventTypes = {
-  CANCEL: "cancel",
-  ERROR: "error",
-  MESSAGE_COMPLETE: "message_complete",
-  SEND_MESSAGE: "send_message",
-  SESSION_UPDATED: "session_updated",
-  STREAM_OUTPUT: "stream_output",
-  SUBSCRIBE: "subscribe",
-  SUBSCRIBE_SUCCESS: "subscribe_success",
+  CANCEL: "session.cancel",
+  ERROR: "session.error",
+  MESSAGE_COMPLETE: "session.message_complete",
+  SEND_MESSAGE: "session.send_message",
+  SESSION_UPDATED: "session.session_updated",
+  STREAM_OUTPUT: "session.stream_output",
+  SUBSCRIBE: "session.subscribe",
+  SUBSCRIBE_SUCCESS: "session.subscribe_success",
 } as const;
 
 /**
@@ -127,14 +128,15 @@ export type SessionEvent =
 /**
  * Global event type constants
  * Used for global channel (connection, heartbeat, subscriptions)
+ * Events use dot notation for hierarchical naming
  */
 export const GlobalEventTypes = {
-  CONNECTED: "connected",
-  ERROR: "error",
-  PING: "ping",
-  PONG: "pong",
-  SUBSCRIPTION_SUCCESS: "subscription_success",
-  SUBSCRIPTION_ERROR: "subscription_error",
+  CONNECTED: "global.connected",
+  ERROR: "global.error",
+  PING: "global.ping",
+  PONG: "global.pong",
+  SUBSCRIPTION_SUCCESS: "global.subscription_success",
+  SUBSCRIPTION_ERROR: "global.subscription_error",
 } as const;
 
 /**
@@ -206,17 +208,18 @@ export type GlobalEvent =
 /**
  * Shell event type constants
  * Used for shell:* channels (terminal PTY streams)
+ * Events use dot notation for hierarchical naming
  *
  * Note: Shell WebSocket uses a separate connection from session WebSocket
  * See .agent/docs/websockets.md for architectural rationale
  */
 export const ShellEventTypes = {
-  INIT: "init",
-  INPUT: "input",
-  OUTPUT: "output",
-  RESIZE: "resize",
-  EXIT: "exit",
-  ERROR: "error",
+  INIT: "shell.init",
+  INPUT: "shell.input",
+  OUTPUT: "shell.output",
+  RESIZE: "shell.resize",
+  EXIT: "shell.exit",
+  ERROR: "shell.error",
 } as const;
 
 /**
@@ -294,21 +297,21 @@ export type ShellEvent =
 /**
  * Workflow WebSocket event type constants
  *
- * Hierarchical event naming with colon delimiters (Socket.io convention)
- * - workflow:run:updated - Status, phase, error changes
- * - workflow:run:step:updated - Step status, logs, error changes
- * - workflow:run:event:created - WorkflowEvent created (annotations, etc.)
- * - workflow:run:artifact:created - WorkflowArtifact uploaded/attached
+ * Hierarchical event naming with dot notation
+ * - workflow.run.updated - Status, phase, error changes
+ * - workflow.run.step.updated - Step status, logs, error changes
+ * - workflow.run.event.created - WorkflowEvent created (annotations, etc.)
+ * - workflow.run.artifact.created - WorkflowArtifact uploaded/attached
  *
  * All events broadcast to project:${projectId} room only
  * Client-side filtering handled efficiently by React Query cache
  */
 export const WorkflowWebSocketEventTypes = {
-  RUN_UPDATED: "workflow:run:updated",
-  STEP_UPDATED: "workflow:run:step:updated",
-  STEP_LOG_CHUNK: "workflow:run:step:log_chunk",
-  EVENT_CREATED: "workflow:run:event:created",
-  ARTIFACT_CREATED: "workflow:run:artifact:created",
+  RUN_UPDATED: "workflow.run.updated",
+  STEP_UPDATED: "workflow.run.step.updated",
+  STEP_LOG_CHUNK: "workflow.run.step.log_chunk",
+  EVENT_CREATED: "workflow.run.event.created",
+  ARTIFACT_CREATED: "workflow.run.artifact.created",
 } as const;
 
 /**
@@ -390,7 +393,6 @@ export interface WorkflowArtifactCreatedData {
   artifact: {
     id: string;
     workflow_run_id: string;
-    workflow_run_step_id: string | null;
     workflow_event_id: string | null;
     name: string;
     file_path: string;

@@ -11,25 +11,27 @@ export interface AgentExecuteConfig {
   permissionMode?: PermissionMode;
   model?: string;
   images?: { path: string }[];
+  json?: boolean;
   onEvent?: (data: { raw: string; event: unknown; message: unknown | null }) => void;
   onStart?: (process: ChildProcess) => void;
 }
 
-export interface AgentExecuteResult {
+export interface AgentExecuteResult<T = string> {
   success: boolean;
   exitCode: number;
   error?: string;
   sessionId?: string;
   events?: unknown[];
+  data?: T;
 }
 
 /**
  * Execute agent command via agent-cli-sdk
  * Directly calls the SDK execute function for the specified agent
  */
-export async function executeAgent(
+export async function executeAgent<T = string>(
   config: AgentExecuteConfig
-): Promise<AgentExecuteResult> {
+): Promise<AgentExecuteResult<T>> {
   const {
     agent,
     prompt,
@@ -39,12 +41,13 @@ export async function executeAgent(
     permissionMode,
     model,
     images,
+    json,
     onEvent,
   } = config;
 
   try {
     // Execute via agent-cli-sdk
-    const result = await execute({
+    const result = await execute<T>({
       tool: agent,
       prompt,
       workingDir,
@@ -54,6 +57,7 @@ export async function executeAgent(
       model,
       verbose: true,
       images,
+      json,
     // @ts-ignore - onStart optional callback
       onStart: (process) => {
         // Store process reference immediately when execution starts

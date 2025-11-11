@@ -127,19 +127,13 @@ function tryParseImageContent(content: unknown): string | UnifiedImageBlock {
  * ]
  */
 export function enrichMessagesWithToolResults(messages: (UnifiedMessage | UIMessage)[]): UIMessage[] {
-  const initialCount = messages.length;
-
   // Step 1: Filter out messages with only system content
   const filteredMessages = messages.filter((msg) => {
     const content = msg.content;
 
     // If content is a string, check if it's a system message
     if (typeof content === 'string') {
-      const isSystem = isSystemMessage(content);
-      if (isSystem) {
-        console.log(`[ENRICH] Message ${msg.id} filtered - system content only (string)`);
-      }
-      return !isSystem;
+      return !isSystemMessage(content);
     }
 
     // If content is an array, check if all text blocks are system messages
@@ -153,9 +147,6 @@ export function enrichMessagesWithToolResults(messages: (UnifiedMessage | UIMess
 
       // Filter out messages where ALL text blocks are system messages
       const allSystemMessages = textBlocks.every(c => isSystemMessage(c.text));
-      if (allSystemMessages) {
-        console.log(`[ENRICH] Message ${msg.id} filtered - all text blocks are system messages`);
-      }
       return !allSystemMessages;
     }
 
@@ -178,14 +169,11 @@ export function enrichMessagesWithToolResults(messages: (UnifiedMessage | UIMess
     }
   }
 
-  // Second pass: build result map and log orphaned results
+  // Second pass: build result map
   for (const message of filteredMessages) {
     if (Array.isArray(message.content)) {
       for (const block of message.content) {
         if (block.type === 'tool_result') {
-          if (!allToolUseIds.has(block.tool_use_id)) {
-            console.log(`[ENRICH] Tool_result ${block.tool_use_id} - no matching tool_use`);
-          }
           resultMap.set(block.tool_use_id, {
             content: tryParseImageContent(block.content),
             is_error: block.is_error
@@ -232,21 +220,6 @@ export function enrichMessagesWithToolResults(messages: (UnifiedMessage | UIMess
         return true;
       });
 
-    // Log empty content blocks
-    if (Array.isArray(msg.content)) {
-      const emptyBlocks = msg.content.filter((block) => {
-        if (typeof block === 'string') return (block as string).trim() === '';
-        if (typeof block === 'object' && block !== null && 'type' in block && block.type === 'text' && 'text' in block) {
-          const textBlock = block as { text: string };
-          return !textBlock.text || textBlock.text.trim() === '';
-        }
-        return false;
-      });
-      if (emptyBlocks.length > 0) {
-        console.log(`[ENRICH] Message ${msg.id} has ${msg.content.length} blocks, ${emptyBlocks.length} empty`);
-      }
-    }
-
     return {
       ...msg,
       content: enrichedContent,
@@ -263,17 +236,8 @@ export function enrichMessagesWithToolResults(messages: (UnifiedMessage | UIMess
     if (!Array.isArray(msg.content)) return true;
 
     // Filter out empty content arrays (user messages with only tool_result blocks)
-    if (msg.content.length === 0) {
-      console.log(`[ENRICH] Message ${msg.id} filtered - empty content array after enrichment (only tool_result)`);
-      return false;
-    }
-
-    return true;
+    return msg.content.length > 0;
   });
-
-  // Log enrichment summary
-  const filteredCount = initialCount - finalMessages.length;
-  console.log(`[ENRICH] ${initialCount} messages → ${finalMessages.length} after enrichment (${filteredCount} filtered)`);
 
   return finalMessages;
 }
@@ -469,9 +433,6 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
     set((state) => {
       if (!state.session) return state;
 
-      console.log('[finalizeMessage] Called for messageId:', messageId);
-      console.log('[finalizeMessage] Current message count:', state.session.messages.length);
-
       // Mark messages as no longer streaming
       const messages = state.session.messages.map((msg) =>
         msg.id === messageId || msg.isStreaming
@@ -479,15 +440,9 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
           : msg
       );
 
-      console.log('[finalizeMessage] Messages before enrichment:', messages.length);
-      console.log('[finalizeMessage] Message roles:', messages.map(m => `${m.role}(${m.content.length})`).join(', '));
-
       // Apply enrichment to nest tool results and filter empty messages
       // This matches the behavior when loading saved sessions
       const enrichedMessages = enrichMessagesWithToolResults(messages);
-
-      console.log('[finalizeMessage] Messages after enrichment:', enrichedMessages.length);
-      console.log('[finalizeMessage] Enriched roles:', enrichedMessages.map(m => `${m.role}(${m.content.length})`).join(', '));
 
       return {
         session: {

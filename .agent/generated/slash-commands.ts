@@ -15,21 +15,21 @@ export interface SlashCommandArgs {
   "/commit-and-push": { "base-branch": string };
   "/commit": Record<string, never>;
   "/document-cli-tool": { "cli-name": string };
-  "/estimate-spec": { "spec-number-or-path-or-name": string };
+  "/estimate-spec": { "spec-id-or-path-or-name": string };
   "/find-claude-session": { "search-description": string; "project-path (optional)": string };
   "/fix": Record<string, never>;
   "/generate-feature": { "featureName": string; "context": string; "format": string };
   "/generate-prd": { "featurename": string; "context": string; "format": string };
   "/generate-research": { "featureName": string; "researchTopic": string; "format": string };
   "/generate-slash-command": { "command-name": string; "description": string };
-  "/generate-spec-simple": { "number-or-feature-name": string; "format": string };
-  "/generate-spec": { "number-or-feature-name": string; "format": string };
-  "/implement-spec": { "specNumberOrNameOrPath": string; "format": string };
+  "/generate-spec-simple": { "context (optional)": string; "format (optional)": string };
+  "/generate-spec": { "context (optional)": string };
+  "/implement-spec": { "specIdOrNameOrPath": string; "format": string };
   "/list-specs": { "folder": string; "status": string };
-  "/move-spec": { "specNumberOrNameOrPath": string; "targetFolder": string };
+  "/move-spec": { "specIdOrNameOrPath": string; "targetFolder": string };
   "/prime": Record<string, never>;
   "/pull-request": { "title": string; "format": string };
-  "/review-spec-implementation": { "specNumberOrNameOrPath": string; "format": string };
+  "/review-spec-implementation": { "specIdOrNameOrPath": string; "format": string };
   "/tools": Record<string, never>;
   "/use-browser": { "featureSteps": string };
 }
@@ -44,21 +44,21 @@ export const SlashCommandArgOrder = {
   "/commit-and-push": ["base-branch"],
   "/commit": [],
   "/document-cli-tool": ["cli-name"],
-  "/estimate-spec": ["spec-number-or-path-or-name"],
+  "/estimate-spec": ["spec-id-or-path-or-name"],
   "/find-claude-session": ["search-description", "project-path (optional)"],
   "/fix": [],
   "/generate-feature": ["featureName", "context", "format"],
   "/generate-prd": ["featurename", "context", "format"],
   "/generate-research": ["featureName", "researchTopic", "format"],
   "/generate-slash-command": ["command-name", "description"],
-  "/generate-spec-simple": ["number-or-feature-name", "format"],
-  "/generate-spec": ["number-or-feature-name", "format"],
-  "/implement-spec": ["specNumberOrNameOrPath", "format"],
+  "/generate-spec-simple": ["context (optional)", "format (optional)"],
+  "/generate-spec": ["context (optional)"],
+  "/implement-spec": ["specIdOrNameOrPath", "format"],
   "/list-specs": ["folder", "status"],
-  "/move-spec": ["specNumberOrNameOrPath", "targetFolder"],
+  "/move-spec": ["specIdOrNameOrPath", "targetFolder"],
   "/prime": [],
   "/pull-request": ["title", "format"],
-  "/review-spec-implementation": ["specNumberOrNameOrPath", "format"],
+  "/review-spec-implementation": ["specIdOrNameOrPath", "format"],
   "/tools": [],
   "/use-browser": ["featureSteps"]
 } as const;

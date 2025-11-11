@@ -89,7 +89,22 @@ async function executeGeneration<T>(
 
     return {
       data: result.object as T,
-      result,
+      result: {
+        finishReason: result.finishReason,
+        usage: {
+          inputTokens: result.usage.inputTokens,
+          outputTokens: result.usage.outputTokens,
+          totalTokens: result.usage.totalTokens,
+          reasoningTokens: result.usage.reasoningTokens,
+        },
+        warnings: result.warnings?.map(w => ({
+          type: w.type,
+          message: 'message' in w ? w.message : undefined,
+        })),
+        providerMetadata: result.providerMetadata,
+        request: result.request,
+        response: result.response,
+      },
       success: true,
     };
   }
@@ -106,7 +121,28 @@ async function executeGeneration<T>(
 
   return {
     data: { text: result.text } as T,
-    result,
+    result: {
+      finishReason: result.finishReason,
+      usage: {
+        inputTokens: result.usage.inputTokens,
+        outputTokens: result.usage.outputTokens,
+        totalTokens: result.usage.totalTokens,
+        reasoningTokens: result.usage.reasoningTokens,
+      },
+      totalUsage: result.totalUsage ? {
+        inputTokens: result.totalUsage.inputTokens,
+        outputTokens: result.totalUsage.outputTokens,
+        totalTokens: result.totalUsage.totalTokens,
+        reasoningTokens: result.totalUsage.reasoningTokens,
+      } : undefined,
+      warnings: result.warnings?.map(w => ({
+        type: w.type,
+        message: 'message' in w ? w.message : undefined,
+      })),
+      providerMetadata: result.providerMetadata,
+      request: result.request,
+      response: result.response,
+    },
     success: true,
   };
 }

@@ -75,9 +75,10 @@ const mockRunWithSteps: WorkflowRun = {
 const mockEvent: WorkflowEvent = {
   id: 'event-1',
   workflow_run_id: 'exec-1',
-  workflow_run_step_id: null,
   event_type: 'annotation_added',
   event_data: { title: 'Test', body: 'Test annotation' },
+  phase: null,
+  inngest_step_id: null,
   created_by_user_id: 'user-1',
   created_at: new Date('2025-01-01'),
 };

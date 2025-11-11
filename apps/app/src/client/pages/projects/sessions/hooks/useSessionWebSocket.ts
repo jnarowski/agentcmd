@@ -10,8 +10,6 @@ import {
 import { Channels } from "@/shared/websocket";
 import { sessionKeys } from "./queryKeys";
 import { generateUUID } from "@/client/utils/cn";
-import { projectKeys } from "@/client/pages/projects/hooks/queryKeys";
-import type { ProjectWithSessions } from "@/shared/types/project.types";
 import type { SessionResponse } from "@/shared/types";
 
 interface UseSessionWebSocketOptions {
@@ -285,7 +283,7 @@ export function useSessionWebSocket({
     // Subscribe to session channel on backend
     if (isConnected) {
       sendWsMessage(channel, {
-        type: "subscribe" as const,
+        type: SessionEventTypes.SUBSCRIBE,
         data: { sessionId },
       });
     }
@@ -317,7 +315,7 @@ export function useSessionWebSocket({
 
       // Send message event to session channel
       sendWsMessage(channel, {
-        type: "send_message" as const,
+        type: SessionEventTypes.SEND_MESSAGE,
         data: {
           message,
           images,

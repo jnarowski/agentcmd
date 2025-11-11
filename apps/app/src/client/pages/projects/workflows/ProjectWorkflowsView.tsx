@@ -159,9 +159,9 @@ export function ProjectWorkflowsView({
           {[
             WorkflowStatusValues.PENDING,
             WorkflowStatusValues.RUNNING,
-            WorkflowStatusValues.PAUSED,
             WorkflowStatusValues.COMPLETED,
             WorkflowStatusValues.FAILED,
+            WorkflowStatusValues.PAUSED,
           ].map((status) => (
             <div key={status} className="w-80">
               <WorkflowKanbanColumn

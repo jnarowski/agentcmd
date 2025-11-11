@@ -2,6 +2,7 @@ import { prisma } from '@/shared/prisma';
 import type { WorkflowRunStep } from '@prisma/client';
 import type { FastifyBaseLogger } from 'fastify';
 import { broadcastWorkflowEvent } from '../events/broadcastWorkflowEvent';
+import { WorkflowWebSocketEventTypes } from '@/shared/types/websocket.types';
 
 export type StepStatus = 'pending' | 'running' | 'completed' | 'failed';
 
@@ -57,7 +58,7 @@ export async function updateWorkflowStep(
   // Broadcast WebSocket event to project room
   if (Object.keys(changes).length > 0) {
     broadcastWorkflowEvent(step.workflow_run.project_id, {
-      type: 'workflow:run:step:updated',
+      type: WorkflowWebSocketEventTypes.STEP_UPDATED,
       data: {
         run_id: step.workflow_run_id,
         step_id: stepId,

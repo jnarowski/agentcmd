@@ -152,7 +152,6 @@ export interface WorkflowEvent {
 export interface WorkflowArtifact {
   id: string;
   workflow_run_id: string;
-  workflow_run_step_id: string | null;
   workflow_event_id: string | null;
   name: string;
   file_path: string;

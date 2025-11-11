@@ -6,12 +6,10 @@ import type {
   ArtifactStepConfig,
   ArtifactStepResult,
 } from "agentcmd-workflows";
-import { findOrCreateStep } from "@/server/domain/workflow/services/engine/steps/utils/findOrCreateStep";
 import { createWorkflowArtifact } from "@/server/domain/workflow/services/artifacts/createWorkflowArtifact";
 import { generateInngestStepId } from "@/server/domain/workflow/services/engine/steps/utils/generateInngestStepId";
 import { emitArtifactCreatedEvent } from "@/server/domain/workflow/services/engine/steps/utils/emitArtifactCreatedEvent";
 import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
-import { toName } from "@/server/domain/workflow/services/engine/steps/utils/toName";
 
 /**
  * Get MIME type from file extension
@@ -55,7 +53,6 @@ export function createArtifactStep(
     config: ArtifactStepConfig
   ): Promise<ArtifactStepResult> {
     const id = toId(idOrName);
-    const name = toName(idOrName);
 
     // Generate phase-prefixed Inngest step ID
     const inngestStepId = generateInngestStepId(context, id);
@@ -64,9 +61,6 @@ export function createArtifactStep(
       const { runId, projectId, projectPath, currentPhase, logger } = context;
       const artifactIds: string[] = [];
       let totalSize = 0;
-
-      // Find or create step record for linking artifacts
-      const step = await findOrCreateStep(context, inngestStepId, name);
 
       // Create artifacts directory: {projectPath}/.agent/workflows/runs/{runId}/artifacts
       const artifactsDir = join(
@@ -106,6 +100,8 @@ export function createArtifactStep(
               mime_type: getMimeType(config.name, "text/plain"),
               size_bytes: sizeBytes,
               phase: currentPhase,
+              inngest_step_id: inngestStepId,
+              workflow_event_id: config.eventId,
             },
             logger
           );
@@ -144,6 +140,8 @@ export function createArtifactStep(
               mime_type: getMimeType(config.file),
               size_bytes: fileStats.size,
               phase: currentPhase,
+              inngest_step_id: inngestStepId,
+              workflow_event_id: config.eventId,
             },
             logger
           );
@@ -194,6 +192,8 @@ export function createArtifactStep(
                 mime_type: getMimeType(file),
                 size_bytes: fileStats.size,
                 phase: currentPhase,
+                inngest_step_id: inngestStepId,
+                workflow_event_id: config.eventId,
               },
               logger
             );
@@ -208,7 +208,7 @@ export function createArtifactStep(
       }
 
       logger.info(
-        { runId, stepId: step.id, count: artifactIds.length, totalSize },
+        { runId, inngestStepId, count: artifactIds.length, totalSize },
         "Artifacts uploaded"
       );
 

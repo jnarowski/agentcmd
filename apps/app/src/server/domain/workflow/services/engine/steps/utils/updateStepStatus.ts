@@ -2,6 +2,7 @@ import { createWorkflowEvent } from "@/server/domain/workflow/services";
 import { broadcastWorkflowEvent } from "@/server/domain/workflow/services/events/broadcastWorkflowEvent";
 import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 import { updateWorkflowStep } from "@/server/domain/workflow/services/steps/updateWorkflowStep";
+import { WorkflowWebSocketEventTypes } from "@/shared/types/websocket.types";
 
 /**
  * Update workflow execution step status and create event
@@ -63,7 +64,7 @@ export async function updateStepStatus(
   }
 
   broadcastWorkflowEvent(projectId, {
-    type: "workflow:run:step:updated",
+    type: WorkflowWebSocketEventTypes.STEP_UPDATED,
     data: {
       run_id: runId,
       step_id: stepId,

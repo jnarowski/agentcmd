@@ -1,6 +1,6 @@
 ---
 description: Generate implementation spec and write to spec folder with sequential ID
-argument-hint: [feature-name, format]
+argument-hint: [context (optional), format (optional)]
 ---
 
 # Generate Simple Implementation Spec
@@ -9,7 +9,7 @@ Generate a well-structured implementation spec and save it to `.agent/specs/todo
 
 ## Variables
 
-- $featureName: $1 (required) - Feature name (e.g., `auth-improvements`)
+- $context: $1 (optional) - Additional context for autonomous spec generation (e.g., "Add OAuth support with Google and GitHub providers")
 - $format: $2 (optional) - Output format: `markdown` (default) or `json`
 
 ## Instructions
@@ -32,29 +32,34 @@ Generate a well-structured implementation spec and save it to `.agent/specs/todo
    - Read `.agent/specs/index.json`
    - Get `lastId` from index
    - Calculate `newId = lastId + 1`
+   - Append 2 random lowercase letters to create full ID (e.g., `4` → `4is`)
+   - Full ID format: `{number}{2-lowercase-letters}` (e.g., `1ab`, `4is`, `10xz`)
 
-2. **Normalize Feature Name**:
-   - Convert to kebab-case (lowercase, hyphens)
-   - Example: "Auth Improvements" → "auth-improvements"
+2. **Generate Feature Name**:
+   - If `$context` provided: Use AI to generate concise kebab-case name from context (max 4 words, e.g., "Add OAuth support" → "oauth-support")
+   - If no context: Analyze recent conversation history to infer feature name
+   - Ensure name is descriptive, lowercase, uses hyphens
+   - Note: With random ID suffixes, folder conflicts are extremely unlikely (1 in 676 chance)
 
 3. **Research Phase**:
    - Read `.agent/specs/todo/${featureName}/prd.md` if it exists (skip if not found)
    - Research codebase for existing patterns relevant to the feature
    - Gather context about architecture, file structure, and conventions
 
-4. **Clarification** (if needed):
-   - If unclear about implementation approach, ask questions ONE AT A TIME
-   - Don't use the Question tool
-   - Use this template:
+4. **Clarification** (conditional):
+   - **If $context provided ($1 given)**: Resolve ambiguities autonomously using recommended best practices. Do not ask questions.
+   - **If $context not provided**: Use session context and ask clarifying questions ONE AT A TIME if implementation approach is unclear:
+     - Don't use the Question tool
+     - Use this template:
 
-     ```md
-     **Question**: [Your question]
-     **Suggestions**:
+       ```md
+       **Question**: [Your question]
+       **Suggestions**:
 
-     1. [Option 1] (recommended - why)
-     2. [Option 2]
-     3. Other - user specifies
-     ```
+       1. [Option 1] (recommended - why)
+       2. [Option 2]
+       3. Other - user specifies
+       ```
 
 5. **Generate Spec**:
    - Once you have sufficient context, generate the spec following the Template below
@@ -62,27 +67,28 @@ Generate a well-structured implementation spec and save it to `.agent/specs/todo
    - Skip sections only if truly not applicable
 
 6. **Write Spec Folder and File**:
-   - Create folder: `.agent/specs/todo/{newId}-{featureName-kebab}/`
+   - Create folder: `.agent/specs/todo/{fullId}-{featureName-kebab}/`
    - If $format is "json": Write to `spec.json` in folder
    - Otherwise: Write to `spec.md` in folder
-   - Example (markdown): `.agent/specs/todo/1-auth-improvements/spec.md`
-   - Example (json): `.agent/specs/todo/1-auth-improvements/spec.json`
+   - Example (markdown): `.agent/specs/todo/4is-auth-improvements/spec.md`
+   - Example (json): `.agent/specs/todo/4is-auth-improvements/spec.json`
    - **Note**: Specs always start in `todo/` folder with Status "draft"
 
 7. **Update Index**:
-   - Add entry to index.json:
+   - Add entry to index.json using full ID (with suffix) as key:
      ```json
      {
-       "lastId": newId,
+       "lastId": 4,
        "specs": {
-         "{newId}": {
-           "folder": "{newId}-{featureName-kebab}",
+         "4is": {
+           "folder": "4is-auth-improvements",
            "created": "{ISO 8601 datetime}",
            "location": "todo"
          }
        }
      }
      ```
+   - Note: `lastId` stores the numeric part only (without suffix)
    - Write updated index back to `.agent/specs/index.json`
 
 ## Workflow Folder Progression
@@ -90,8 +96,9 @@ Generate a well-structured implementation spec and save it to `.agent/specs/todo
 Specs follow this workflow:
 
 1. **Created in `todo/`** (Status: "draft") - Use `/generate-spec-simple`
-2. **Auto-moved to `doing/`** (Status: "in-progress") - When running `/implement-spec`
-3. **Moved to `done/`** (Status: "completed") - After review passes, use `/move-spec {id} done`
+2. **Optional: Move to `backlog/`** - Use `/move-spec {id} backlog` for future ideas
+3. **Status updated to "in-progress"** - When running `/implement-spec` (stays in `todo/`)
+4. **Optional: Archive to `done/`** - Use `/move-spec {id} done` when complete
 
 ## Template
 
@@ -417,42 +424,43 @@ When $format is "json", generate a JSON file with this structure (output raw JSO
 
 ## Examples
 
-**Example 1: Basic usage**
+**Example 1: With context**
 ```bash
-/generate-spec-simple auth-improvements
+/generate-spec-simple "Add OAuth support with Google and GitHub providers"
 ```
 
-Gets next ID (e.g., 1), creates folder: `.agent/specs/todo/1-auth-improvements/spec.md`
+Generates name `oauth-support`, ID `1ab`, creates: `.agent/specs/todo/1ab-oauth-support/spec.md`
 
-**Example 2: Feature name with spaces**
-
-```bash
-/generate-spec-simple "Workflow Safety"
-```
-
-Converts to kebab-case, creates: `.agent/specs/todo/2-workflow-safety/spec.md`
-
-**Example 3: Using JSON format**
+**Example 2: With context and JSON format**
 
 ```bash
-/generate-spec-simple auth-improvements json
+/generate-spec-simple "Add OAuth support" json
 ```
 
-Creates: `.agent/specs/todo/1-auth-improvements/spec.json`
+Generates name `oauth-support`, ID `1ab`, creates: `.agent/specs/todo/1ab-oauth-support/spec.json`
 
-**Example 4: Complex feature name**
+**Example 3: From conversation**
 
 ```bash
-/generate-spec-simple websocket-reconnect-improvements
+/generate-spec-simple
 ```
 
-Creates: `.agent/specs/todo/3-websocket-reconnect-improvements/spec.md`
+Analyzes conversation history, infers feature name, generates ID `2xz`, creates: `.agent/specs/todo/2xz-workflow-safety/spec.md`
+
+**Example 4: Team conflict prevention**
+
+Two developers on different branches both create spec #4:
+- Dev A: Gets `4is-feature-auth` (random suffix: `is`)
+- Dev B: Gets `4aw-feature-search` (random suffix: `aw`)
+- Both merge cleanly with no conflicts (1 in 676 collision chance)
 
 ## Common Pitfalls
 
 - **Wrong directory**: Always create folder in `.agent/specs/todo/`, not `.agent/specs/` or `.agents/specs/`
-- **Folder structure**: Must create folder `{id}-{feature}/` with `spec.md` or `spec.json` inside
+- **Folder structure**: Must create folder `{fullId}-{feature}/` with `spec.md` or `spec.json` inside (e.g., `4is-oauth-support/`)
 - **Index not updated**: Always update index.json after creating spec
+- **ID format**: Full ID includes 2-letter suffix (e.g., `4is`, not `4`)
+- **Index lastId**: Store numeric part only in `lastId` field (e.g., `4`), but use full ID as key (e.g., `"4is"`)
 - **Generic placeholders**: Replace all `<placeholders>` with actual content
 - **Status field**: Use lowercase status values: `draft`, `ready`, `in-progress`, `review`, `completed`
 - **Kebab-case**: Always convert feature name to kebab-case for folder name
@@ -466,14 +474,14 @@ Creates: `.agent/specs/todo/3-websocket-reconnect-improvements/spec.md`
 ```json
 {
   "success": true,
-  "spec_folder": ".agent/specs/todo/[id]-[feature]",
-  "spec_file": ".agent/specs/todo/[id]-[feature]/spec.json",
-  "spec_id": [id],
+  "spec_folder": ".agent/specs/todo/[fullId]-[feature]",
+  "spec_file": ".agent/specs/todo/[fullId]-[feature]/spec.json",
+  "spec_id": "[fullId]",
   "feature_name": "[feature-name]",
   "format": "json",
   "files_to_create": ["[filepath1]", "[filepath2]"],
   "files_to_modify": ["[filepath3]", "[filepath4]"],
-  "next_command": "/implement-spec [id]"
+  "next_command": "/implement-spec [fullId]"
 }
 ```
 
@@ -482,7 +490,7 @@ Creates: `.agent/specs/todo/3-websocket-reconnect-improvements/spec.md`
 - `success`: Always true if spec generation completed
 - `spec_folder`: Path to the created spec folder
 - `spec_file`: Full path to the spec file (spec.json or spec.md)
-- `spec_id`: The spec ID used (numeric)
+- `spec_id`: The full spec ID with 2-letter suffix (e.g., "4is")
 - `feature_name`: Normalized feature name (kebab-case)
 - `format`: Output format used ("json" or "markdown")
 - `files_to_create`: Array of new files to be created
@@ -500,8 +508,8 @@ Otherwise, provide this human-readable information:
 **Format:**
 
 ```text
-✓ Created spec: .agent/specs/todo/[id]-[feature]/spec.md
-  ID: [id]
+✓ Created spec: .agent/specs/todo/[fullId]-[feature]/spec.md
+  ID: [fullId]
 
-Next: /implement-spec [id]
+Next: /implement-spec [fullId]
 ```

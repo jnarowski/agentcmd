@@ -39,7 +39,7 @@
     "8": {
       "folder": "8-refactor-session-loading",
       "created": "2025-11-09T14:20:00.000Z",
-      "location": "doing"
+      "location": "todo"
     },
     "9": {
       "folder": "9-query-keys",
@@ -64,17 +64,17 @@
     "13": {
       "folder": "13-refactor-react-query",
       "created": "2025-11-09T20:00:00.000Z",
-      "location": "doing"
+      "location": "todo"
     },
     "14": {
       "folder": "14-sidebar-refresh",
       "created": "2025-11-09T21:30:00.000Z",
-      "location": "doing"
+      "location": "todo"
     },
     "15": {
       "folder": "15-n-1-queries",
       "created": "2025-11-09T22:00:00.000Z",
-      "location": "doing"
+      "location": "todo"
     },
     "16": {
       "folder": "16-refactor-cleanup",
@@ -84,7 +84,7 @@
     "17": {
       "folder": "17-redesign-setup",
       "created": "2025-11-10T00:00:00.000Z",
-      "location": "doing"
+      "location": "todo"
     },
     "18": {
       "folder": "18-event-naming-revamp",

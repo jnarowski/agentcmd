@@ -11,12 +11,12 @@ import { useSessionStore } from "@/client/pages/projects/sessions/stores/session
 import { useActiveProject } from "@/client/hooks/navigation";
 import { api } from "@/client/utils/api";
 import { sessionKeys } from "./hooks/queryKeys";
-import { projectKeys } from "@/client/pages/projects/hooks/queryKeys";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
 import { generateUUID } from "@/client/utils/cn";
 import { AgentSelector } from "@/client/components/AgentSelector";
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
 import { Channels } from "@/shared/websocket";
+import { SessionEventTypes } from "@/shared/types/websocket.types";
 
 export default function NewSession() {
   const navigate = useNavigate();
@@ -102,7 +102,7 @@ export default function NewSession() {
       // This starts the assistant processing right away
       // New session = resume: false (no prior messages)
       globalSendMessage(Channels.session(newSession.id), {
-        type: 'send_message',
+        type: SessionEventTypes.SEND_MESSAGE,
         data: {
           message,
           images: imagePaths,

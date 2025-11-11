@@ -161,28 +161,25 @@ export function useWorkflowWebSocket(projectId: string) {
         (old) => {
           if (!old) return old;
 
-          // If artifact belongs to a step, update that step's artifacts
-          if (artifact.workflow_run_step_id && old.steps) {
-            const updatedSteps = old.steps.map((step) =>
-              step.id === artifact.workflow_run_step_id
+          // If artifact attached to event, add to that event's artifacts
+          let updatedEvents = old.events;
+          if (newArtifact.workflow_event_id && old.events) {
+            updatedEvents = old.events.map((event) =>
+              event.id === newArtifact.workflow_event_id
                 ? {
-                    ...step,
-                    artifacts: step.artifacts
-                      ? [...step.artifacts, newArtifact]
+                    ...event,
+                    artifacts: event.artifacts
+                      ? [...event.artifacts, newArtifact]
                       : [newArtifact],
                   }
-                : step
+                : event
             );
-            return {
-              ...old,
-              steps: updatedSteps,
-              artifacts: old.artifacts ? [...old.artifacts, newArtifact] : [newArtifact],
-            };
           }
 
-          // Otherwise, just add to top-level artifacts
+          // Always add to top-level artifacts
           return {
             ...old,
+            events: updatedEvents,
             artifacts: old.artifacts ? [...old.artifacts, newArtifact] : [newArtifact],
           };
         }
@@ -191,12 +188,12 @@ export function useWorkflowWebSocket(projectId: string) {
     [queryClient]
   );
 
-  // Handler: workflow:run:step:log_chunk
+  // Handler: workflow.run.step.log_chunk
   const handleLogChunk = useCallback(
     (data: WorkflowStepLogChunkData) => {
       // Emit via event bus for LogsTab to subscribe
       // LogsTab will handle buffering and display
-      const eventKey = `workflow:run:${data.run_id}:step:${data.step_id}:log_chunk`;
+      const eventKey = `workflow.run.${data.run_id}.step.${data.step_id}.log_chunk`;
       eventBus.emit(eventKey, { type: eventKey, data });
     },
     [eventBus]

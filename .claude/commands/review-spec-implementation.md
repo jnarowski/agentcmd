@@ -16,14 +16,16 @@ Reviews a previous agent's implementation work by comparing the provided spec fi
 ## Spec File Resolution
 
 **Parse and resolve $specIdOrNameOrPath:**
-- If it's a numeric ID (e.g., `1`, `2`):
-  - Check index.json for spec location and folder name
-  - Read from `{location}/{folder}/spec.md`
-- If it's a feature name:
-  - Search in order: todo/, doing/, done/
-  - Pattern: `*-{feature}/spec.md`
-- If it's a full path: use as-is
-- If not found: stop and report error
+- If it's a full path (contains `/`): use as-is
+- Otherwise, look up in `.agent/specs/index.json`:
+  - For numeric ID: Match by `id` field
+  - For feature name: Fuzzy match folder name (e.g., `message-queue` matches `ef3-message-queue-implementation`)
+  - Use location from index: `{location}/{folder}/spec.md`
+- **If not found in index.json, fallback to directory search:**
+  - Search in order: backlog/, todo/, done/
+  - For ID: Pattern `{id}-*/spec.md`
+  - For feature name: Pattern `*{feature-name}*/spec.md` (fuzzy match)
+- If still not found: stop and report error
 
 ## Instructions
 
@@ -94,20 +96,16 @@ Use these guidelines to determine what issues to document:
 1. **Validate Inputs**
 
    - **Parse and resolve $specIdOrNameOrPath:**
-     - If it's a full file path (contains `/` or starts with `.`):
+     - If it's a full file path (contains `/`):
        - Use the path as-is
-     - If it's an ID (e.g., `ef3`, `a7b`):
-       - Search in this order:
-         1. `.agent/specs/doing/{id}-*-spec.md`
-         2. `.agent/specs/todo/{id}-*-spec.md`
-         3. `.agent/specs/done/{id}-*-spec.md`
-       - Use the first matching file
-     - If it's a feature name (e.g., `kill-claude-process`):
-       - Search in this order:
-         1. `.agent/specs/doing/*-{feature-name}-spec.md`
-         2. `.agent/specs/todo/*-{feature-name}-spec.md`
-         3. `.agent/specs/done/*-{feature-name}-spec.md`
-       - Use the first matching file
+     - Otherwise, look up in `.agent/specs/index.json`:
+       - For numeric ID: Match by `id` field
+       - For feature name: Fuzzy match folder name (e.g., `message-queue` matches `ef3-message-queue-implementation`)
+       - Use location from index: `{location}/{folder}/spec.md`
+     - **If not found in index.json, fallback to directory search:**
+       - Search in order: `.agent/specs/backlog/`, `.agent/specs/todo/`, `.agent/specs/done/`
+       - For ID: Pattern `{id}-*/spec.md`
+       - For feature name: Pattern `*{feature-name}*/spec.md` (fuzzy match anywhere in folder name)
    - Verify spec file exists at resolved path (exit with error if not found)
    - Set `$specFilePath` to the resolved full path for use in subsequent steps
    - Determine main branch (main/master) using `git branch` or git config
@@ -169,14 +167,14 @@ Use these guidelines to determine what issues to document:
    - **If no issues found at all:** Still add Review Findings section with "No issues found" message
    - **Update spec Status field:**
      - If issues found: Set Status to "review"
-     - If no issues found: Set Status to "completed" and suggest `/move-spec {id} done`
+     - If no issues found: Set Status to "completed"
 
 5. **Report Results**
 
    - Summary: iteration X of 3, files reviewed, issue counts by priority
    - Next step:
      - If issues found: `/implement-spec $specIdOrNameOrPath` then `/review-spec-implementation $specIdOrNameOrPath`
-     - If no issues found: `/move-spec {id} done` to mark complete
+     - If no issues found: Implementation is complete
 
 ## Review Findings Template
 

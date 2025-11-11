@@ -8,11 +8,9 @@ import {
 import { toast } from "sonner";
 import type {
   Project,
-  ProjectWithSessions,
   CreateProjectRequest,
   UpdateProjectRequest,
   ProjectsResponse,
-  ProjectsWithSessionsResponse,
   ProjectResponse,
 } from "@/shared/types/project.types";
 import type { SyncProjectsResponse } from "@/shared/types/project-sync.types";

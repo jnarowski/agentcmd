@@ -87,11 +87,7 @@ export function PhaseCard({
 
     if (hasPhaseFailedEvent || stepStatuses.some((s) => s === "failed")) {
       status = "failed";
-    } else if (
-      hasPhaseCompletedEvent ||
-      (steps.length > 0 &&
-        stepStatuses.every((s) => s === "completed" || s === "skipped"))
-    ) {
+    } else if (hasPhaseCompletedEvent) {
       status = "completed";
     } else if (
       stepStatuses.some((s) => s === "running") ||

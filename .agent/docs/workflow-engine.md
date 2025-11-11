@@ -364,7 +364,7 @@ interface FunctionStepConfig {
 
 // Workflow run context
 interface WorkflowContext {
-  executionId: string;
+  runId: string;
   projectPath: string;
   args: Record<string, any>;
 
@@ -992,7 +992,7 @@ Emitted when artifact attached to comment.
 │   └── fix-bug.ts
 │
 └── executions/                     # Execution data
-    └── {executionId}/
+    └── {runId}/
         ├── definition.json         # Immutable snapshot of workflow definition
         ├── args.json               # Immutable snapshot of execution arguments
         │

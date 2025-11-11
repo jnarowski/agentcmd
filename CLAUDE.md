@@ -402,23 +402,32 @@ prisma migrate deploy
 
 ## WebSocket Patterns
 
-**Event Naming**: Flat dot notation
+**Event Naming**: Dot notation for events, colons for channels
 
 ```typescript
-// ✅ GOOD
-"workflow.{runId}.step.{stepId}.progress";
-"session.{sessionId}.stream_output";
-"shell.{sessionId}.output";
+// ✅ GOOD - Events use dots
+"workflow.run.updated"
+"session.stream_output"
+"shell.output"
 
-// ❌ BAD
-"workflow:step:progress";
+// ✅ GOOD - Channels use colons
+"session:123"
+"project:abc"
+
+// ❌ BAD - Don't mix conventions
+"workflow:run:updated" // Events should use dots
 ```
+
+**Naming Conventions:**
+
+- **Channels**: Use colons for namespacing (`session:123`, `project:abc`) - Phoenix Channels pattern
+- **Events**: Use dots for hierarchy (`session.stream_output`, `workflow.run.updated`) - JavaScript/WebSocket standard
 
 **Message Structure**:
 
 ```typescript
 interface WebSocketMessage<T = unknown> {
-  type: string; // Event type
+  type: string; // Event type (dot notation)
   data: T; // Payload
 }
 ```

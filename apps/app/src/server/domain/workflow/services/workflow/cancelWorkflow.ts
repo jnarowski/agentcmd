@@ -3,6 +3,7 @@ import type { WorkflowRun } from "@prisma/client";
 import { createWorkflowEvent } from "../events/createWorkflowEvent";
 import { broadcastWorkflowEvent } from "../events/broadcastWorkflowEvent";
 import type { CancelWorkflowOptions } from "@/server/domain/workflow/types/CancelWorkflowOptions";
+import { WorkflowWebSocketEventTypes } from "@/shared/types/websocket.types";
 
 /**
  * Cancels a workflow execution
@@ -35,7 +36,7 @@ export async function cancelWorkflow({ runId, userId, reason, logger }: CancelWo
 
   // Emit WebSocket event for real-time updates
   broadcastWorkflowEvent(execution.project_id, {
-    type: 'workflow:run:updated',
+    type: WorkflowWebSocketEventTypes.RUN_UPDATED,
     data: {
       run_id: execution.id,
       project_id: execution.project_id,

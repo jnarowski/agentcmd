@@ -82,8 +82,8 @@ describe("Template files packaging", () => {
   it("should include .gitkeep files in subdirectories", async () => {
     const templatesDir = getTemplatesDir();
     const gitkeepPaths = [
+      ".agent/specs/backlog/.gitkeep",
       ".agent/specs/todo/.gitkeep",
-      ".agent/specs/doing/.gitkeep",
       ".agent/specs/done/.gitkeep",
       ".agent/workflows/executions/.gitkeep",
       ".agent/agents/.gitkeep",

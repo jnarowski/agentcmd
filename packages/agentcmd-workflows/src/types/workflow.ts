@@ -1,5 +1,5 @@
 import type { JSONSchema7 } from "json-schema";
-import type { WorkflowStep } from "./steps";
+import type { WorkflowStep, WorkspaceResult } from "./steps";
 
 /**
  * Phase definition - can be a simple string (id = label) or object with separate id and label
@@ -58,20 +58,24 @@ export interface WorkflowContext<
       ? ExtractPhaseIds<TPhases>
       : string
   >;
+  /** Workspace configuration and result */
+  workspace?: WorkspaceResult;
 }
 
 /**
  * Event data structure for workflow triggers
  */
 export interface WorkflowEventData<TArgs = Record<string, unknown>> {
-  /** Workflow execution ID */
-  executionId: string;
+  /** Workflow run ID */
+  runId: string;
   /** Project ID */
   projectId: string;
   /** User ID who triggered the workflow */
   userId: string;
   /** Project filesystem path */
   projectPath: string;
+  /** Working directory (set after workspace setup, falls back to projectPath) */
+  workingDir?: string;
   /** Spec file path */
   specFile?: string;
   /** Spec file content */

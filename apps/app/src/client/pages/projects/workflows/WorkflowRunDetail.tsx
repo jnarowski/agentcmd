@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, XCircle } from "lucide-react";
 import { WorkflowStatusBadge } from "./components/WorkflowStatusBadge";
 import { PhaseTimeline } from "./components/timeline/PhaseTimeline";
 import { WorkflowDetailPanel } from "./components/detail-panel/WorkflowDetailPanel";
@@ -109,10 +109,23 @@ export function WorkflowRunDetail() {
             </button>
           </div>
         </div>
+
+        {/* Error Alert */}
+        {run.status === "failed" && run.error_message && (
+          <div className="mt-3 rounded-md bg-red-500/10 border border-red-500/20 px-4 py-3">
+            <div className="flex items-start gap-3">
+              <XCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-medium text-red-500">Workflow Failed</h3>
+                <p className="mt-1 text-sm text-red-500/90">{run.error_message}</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Content - Split Pane Layout */}
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-[2fr_3fr] overflow-hidden">
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-2 overflow-hidden">
         {/* Left Pane - Phase Timeline */}
         <div className="flex flex-col overflow-hidden">
           <div className="border-b px-6 py-4">

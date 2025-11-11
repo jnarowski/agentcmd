@@ -1,5 +1,3 @@
-import { Channels } from "@/shared/websocket/channels";
-import { broadcast } from "@/server/websocket/infrastructure/subscriptions";
 import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 import type { PhaseDefinition } from "agentcmd-workflows";
 import { updateWorkflowRun } from "@/server/domain/workflow/services/runs/updateWorkflowRun";
@@ -22,7 +20,9 @@ import { toName } from "@/server/domain/workflow/services/engine/steps/utils/toN
  * @param context - Runtime context (will be mutated to set currentPhase)
  * @returns Phase step function
  */
-export function createPhaseStep<TPhases extends readonly PhaseDefinition[] | undefined>(
+export function createPhaseStep<
+  TPhases extends readonly PhaseDefinition[] | undefined
+>(
   context: RuntimeContext<TPhases>
 ) {
   return async function phase<T>(
@@ -31,7 +31,7 @@ export function createPhaseStep<TPhases extends readonly PhaseDefinition[] | und
   ): Promise<T> {
     const id = toId(idOrName);
     const name = toName(idOrName);
-    const { runId, projectId, logger, config } = context;
+    const { runId, logger, config } = context;
 
     // Validate phase ID in development
     if (process.env.NODE_ENV !== "production" && config.phases) {
@@ -77,16 +77,6 @@ export function createPhaseStep<TPhases extends readonly PhaseDefinition[] | und
       logger,
     });
 
-    // Broadcast phase started
-    broadcast(Channels.project(projectId), {
-      type: "workflow:phase:started",
-      data: {
-        runId,
-        phase: id,
-        timestamp: new Date().toISOString(),
-      },
-    });
-
     try {
       // Execute phase function (Inngest handles retries at function level)
       const result = await fn();
@@ -103,16 +93,6 @@ export function createPhaseStep<TPhases extends readonly PhaseDefinition[] | und
         phase: id,
         inngest_step_id: phaseStepId,
         logger,
-      });
-
-      // Broadcast phase completed
-      broadcast(Channels.project(projectId), {
-        type: "workflow:phase:completed",
-        data: {
-          runId,
-          phase: id,
-          timestamp: new Date().toISOString(),
-        },
       });
 
       logger.info({ runId, phase: name }, "Phase completed");
@@ -140,16 +120,6 @@ export function createPhaseStep<TPhases extends readonly PhaseDefinition[] | und
         phase: id,
         inngest_step_id: phaseStepId,
         logger,
-      });
-
-      broadcast(Channels.project(projectId), {
-        type: "workflow:phase:failed",
-        data: {
-          runId,
-          phase: id,
-          error: err.message,
-          timestamp: new Date().toISOString(),
-        },
       });
 
       // Throw error - Inngest will handle retry at function level

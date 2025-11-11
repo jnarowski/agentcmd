@@ -1,20 +1,20 @@
 ---
-description: Move a spec folder between workflow folders (todo/doing/done)
+description: Move a spec folder between workflow folders (backlog/todo/done)
 argument-hint: [specIdOrNameOrPath, targetFolder]
 ---
 
 # Move Spec
 
-Move a spec folder between workflow folders (todo/doing/done), update index.json, and optionally update status field.
+Move a spec folder between workflow folders (backlog/todo/done), update index.json, and optionally update status field.
 
 ## Variables
 
 - $specIdOrNameOrPath: $1 (required) - Either a spec ID (e.g., `1`, `2`), feature name (e.g., `workflow-safety`), or full path (e.g., `.agent/specs/todo/1-workflow-safety/`)
-- $targetFolder: $2 (required) - Target workflow folder: "todo", "doing", or "done"
+- $targetFolder: $2 (required) - Target workflow folder: "backlog", "todo", or "done"
 
 ## Instructions
 
-- Search for the spec folder in all locations (todo/, doing/, done/)
+- Search for the spec folder in all locations (backlog/, todo/, done/)
 - Move the entire folder to the target folder
 - Update index.json with new location
 - Update the Status field in spec.md front matter based on target folder
@@ -26,19 +26,21 @@ Move a spec folder between workflow folders (todo/doing/done), update index.json
 1. **Find the Spec Folder or File**
 
    - **Parse and resolve $specIdOrNameOrPath:**
-     - If it's a numeric ID (e.g., `1`, `2`):
-       - Check index.json for spec location and folder name
-       - Use `{location}/{folder}/`
-     - If it's a feature name (e.g., `workflow-safety`):
-       - Search in order: todo/, doing/, done/
-       - Pattern: `*-{feature-name}/`
-     - If it's a full path:
+     - If it's a full path (contains `/`):
        - Use the path as-is
-   - If not found, report error and exit
+     - Otherwise, look up in `.agent/specs/index.json`:
+       - For numeric ID: Match by `id` field
+       - For feature name: Fuzzy match folder name (e.g., `message-queue` matches `ef3-message-queue-implementation`)
+       - Use location from index: `{location}/{folder}/`
+     - **If not found in index.json, fallback to directory search:**
+       - Search in order: `.agent/specs/backlog/`, `.agent/specs/todo/`, `.agent/specs/done/`
+       - For ID: Pattern `{id}-*/`
+       - For feature name: Pattern `*{feature-name}*/` (fuzzy match)
+   - If still not found, report error and exit
 
 2. **Validate Target Folder**
 
-   - Ensure $targetFolder is one of: "todo", "doing", or "done"
+   - Ensure $targetFolder is one of: "backlog", "todo", or "done"
    - If invalid, report error and exit
 
 3. **Check for Conflicts**
@@ -61,8 +63,8 @@ Move a spec folder between workflow folders (todo/doing/done), update index.json
 
    - Read spec.md file content
    - Update Status field based on target folder:
+     - Moving to "backlog": Set to "draft"
      - Moving to "todo": Set to "draft"
-     - Moving to "doing": Set to "in-progress"
      - Moving to "done": Set to "completed"
 
 7. **Report Results**
@@ -92,12 +94,6 @@ Finds `2-*/` folder and moves it to `todo/`
 ```
 Finds `*-workflow-safety/` folder and moves it to `done/`
 
-**Example 4: Move to doing**
-```bash
-/move-spec 1 doing
-```
-Moves spec to `doing/` and sets Status to "in-progress"
-
 ## Report
 
 ```text
@@ -117,8 +113,8 @@ Index updated: location "todo" → "done"
 ✗ Error: Could not find spec matching "workflow-safety"
 
 Searched in:
+- .agent/specs/backlog/
 - .agent/specs/todo/
-- .agent/specs/doing/
 - .agent/specs/done/
 
 Please check the spec name/ID and try again.
@@ -137,5 +133,5 @@ Please resolve the conflict manually or use a different target folder.
 ```text
 ✗ Error: Invalid target folder "invalid"
 
-Valid options: "todo", "doing", "done"
+Valid options: "backlog", "todo", "done"
 ```

@@ -351,10 +351,11 @@ export async function createServer() {
     return reply.status(statusCode).send(errorResponse);
   });
 
-  // Configure JSON parser to allow empty bodies
+  // Configure JSON parser to allow empty bodies and support larger Inngest payloads
+  // Inngest recommends 4MB bodyLimit for step state/memoization data
   fastify.addContentTypeParser(
     "application/json",
-    { parseAs: "string" },
+    { parseAs: "string", bodyLimit: 4 * 1024 * 1024 },
     (_req, body, done) => {
       try {
         // Allow empty bodies (e.g., DELETE requests with Content-Type: application/json)

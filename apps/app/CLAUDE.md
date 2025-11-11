@@ -234,9 +234,9 @@ export async function registerRoutes(fastify: FastifyInstance) {
 ```typescript
 import { webSocketEventBus } from "@/server/websocket/infrastructure";
 
-// Broadcast to project channel
+// Broadcast to project channel (channels use colons)
 webSocketEventBus.emit("project:123", {
-  type: "workflow:run:updated",
+  type: "workflow.run.updated", // Events use dot notation
   data: { run_id: "456", changes: { status: "completed" } },
 });
 
@@ -245,6 +245,11 @@ webSocketEventBus.subscribe("project:123", (msg) => {
   socket.send(JSON.stringify(msg));
 });
 ```
+
+**Event naming conventions:**
+
+- **Channels**: Use colons for namespacing (`session:123`, `project:abc`) - Phoenix Channels pattern
+- **Events**: Use dots for hierarchy (`session.stream_output`, `workflow.run.updated`) - JavaScript/WebSocket standard
 
 ### State Management
 

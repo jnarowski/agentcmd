@@ -1,5 +1,6 @@
 import type { WorkflowArtifact } from "@prisma/client";
 import { broadcastWorkflowEvent } from "@/server/domain/workflow/services/events/broadcastWorkflowEvent";
+import { WorkflowWebSocketEventTypes } from "@/shared/types/websocket.types";
 
 /**
  * Emit artifact:created event for a workflow artifact
@@ -20,13 +21,12 @@ export function emitArtifactCreatedEvent(
   artifact: WorkflowArtifact
 ): void {
   broadcastWorkflowEvent(projectId, {
-    type: "workflow:run:artifact:created",
+    type: WorkflowWebSocketEventTypes.ARTIFACT_CREATED,
     data: {
       run_id: runId,
       artifact: {
         id: artifact.id,
         workflow_run_id: artifact.workflow_run_id,
-        workflow_run_step_id: null,
         workflow_event_id: artifact.workflow_event_id,
         name: artifact.name,
         file_path: artifact.file_path,

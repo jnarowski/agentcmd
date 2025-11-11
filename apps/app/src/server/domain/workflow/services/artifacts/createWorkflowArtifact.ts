@@ -13,6 +13,7 @@ export interface CreateWorkflowArtifactData {
   size_bytes: number;
   phase: string;
   inngest_step_id?: string;
+  workflow_event_id?: string;
 }
 
 /**
@@ -25,7 +26,7 @@ export async function createWorkflowArtifact(
   logger?: FastifyBaseLogger
 ): Promise<WorkflowArtifact> {
   logger?.debug(
-    { name: data.name, fileType: data.file_type, phase: data.phase, inngestStepId: data.inngest_step_id },
+    { name: data.name, fileType: data.file_type, phase: data.phase, inngestStepId: data.inngest_step_id, workflowEventId: data.workflow_event_id },
     'Creating workflow artifact'
   );
 
@@ -39,6 +40,7 @@ export async function createWorkflowArtifact(
       size_bytes: data.size_bytes,
       phase: data.phase,
       inngest_step_id: data.inngest_step_id,
+      workflow_event_id: data.workflow_event_id,
     },
   });
 

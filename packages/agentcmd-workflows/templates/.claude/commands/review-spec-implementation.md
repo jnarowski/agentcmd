@@ -86,15 +86,13 @@ Use these guidelines to determine what issues to document:
        - Use the path as-is
      - If it's an ID (e.g., `ef3`, `a7b`):
        - Search in this order:
-         1. `.agent/specs/doing/{id}-*-spec.md`
-         2. `.agent/specs/todo/{id}-*-spec.md`
-         3. `.agent/specs/done/{id}-*-spec.md`
+         1. `.agent/specs/todo/{id}-*-spec.md`
+         2. `.agent/specs/done/{id}-*-spec.md`
        - Use the first matching file
      - If it's a feature name (e.g., `kill-claude-process`):
        - Search in this order:
-         1. `.agent/specs/doing/*-{feature-name}-spec.md`
-         2. `.agent/specs/todo/*-{feature-name}-spec.md`
-         3. `.agent/specs/done/*-{feature-name}-spec.md`
+         1. `.agent/specs/todo/*-{feature-name}-spec.md`
+         2. `.agent/specs/done/*-{feature-name}-spec.md`
        - Use the first matching file
    - Verify spec file exists at resolved path (exit with error if not found)
    - Set `$specFilePath` to the resolved full path for use in subsequent steps

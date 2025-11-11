@@ -15,14 +15,17 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 ## Instructions
 
 **Parse and resolve $specIdOrNameOrPath:**
-- If it's a numeric ID (e.g., `1`, `2`):
-  - Check index.json for spec location and folder name
-  - Read from `{location}/{folder}/spec.md`
-- If it's a feature name (e.g., `workflow-safety`):
-  - Search in order: todo/, doing/, done/
-  - Pattern: `*-{feature-name}/spec.md`
-- If it's a full path: use as-is
-- If not found: stop and report error
+
+- If it's a full path (contains `/`): use as-is
+- Otherwise, look up in `.agent/specs/index.json`:
+  - For numeric ID: Match by `id` field
+  - For feature name: Fuzzy match folder name (e.g., `message-queue` matches `ef3-message-queue-implementation`)
+  - Use location from index: `{location}/{folder}/spec.md`
+- **If not found in index.json, fallback to directory search:**
+  - Search in order: backlog/, todo/, done/
+  - For ID: Pattern `{id}-*/spec.md`
+  - For feature name: Pattern `*{feature-name}*/spec.md` (fuzzy match)
+- If still not found: stop and report error
 
 ## Task Tracking Requirements
 
@@ -31,7 +34,6 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 ### What to Update
 
 1. **Individual Tasks** - Check off IMMEDIATELY after completing each task:
-
    - Change `- [ ] 1.1 Task description` to `- [x] 1.1 Task description`
    - Do this AFTER finishing each task, NOT in batches
    - Never move to the next task without checking off the current one
@@ -82,11 +84,9 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 ## Workflow
 
 1. Parse and resolve the spec file path according to the instructions above
-2. **Auto-move spec to doing/ folder:**
-   - If spec is in `todo/` folder, automatically move it to `doing/`
-   - Use `/move-spec {id} doing` to perform the move
-   - This updates both the folder location and Status field to "in-progress"
-   - If already in `doing/` or `done/`, skip this step
+2. **Update spec Status:**
+   - If spec is in `todo/` folder with Status "draft", update Status to "in-progress"
+   - This indicates work has started without moving the file
 3. Read $spec_path file, think hard about the plan
 4. Implement the plan, one phase at a time:
    - Work through tasks in order, top to bottom
@@ -96,7 +96,6 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
    - **Fill in the "Completion Notes" section** with implementation context
    - Include any deviations, decisions, or important notes for reviewers
 6. Continue until all tasks are checked off and all completion notes are filled
-7. When complete, remind user to run `/move-spec {id} done` to mark finished
 
 ## Report
 

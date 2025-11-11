@@ -14,7 +14,7 @@ import {
   startHeartbeat as startHeartbeatMonitoring,
   stopHeartbeat as stopHeartbeatMonitoring,
 } from "@/client/utils/websocketHeartbeat";
-import { ReadyState, GlobalEventTypes, type ChannelEvent, type GlobalEvent } from "@/shared/types/websocket.types";
+import { ReadyState, GlobalEventTypes, SessionEventTypes, type ChannelEvent, type GlobalEvent } from "@/shared/types/websocket.types";
 import { useAuthStore } from "@/client/stores/authStore";
 import {
   WebSocketContext,
@@ -209,7 +209,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
           wsMetrics.trackReceived();
 
           if (import.meta.env.DEV) {
-            if (type === "stream_output") {
+            if (type === SessionEventTypes.STREAM_OUTPUT) {
               const streamData = data as Record<string, unknown>;
               const message = streamData.message as Record<string, unknown> | undefined;
               console.log("[WebSocket] Stream output:", {
@@ -226,8 +226,8 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
             }
           }
 
-          // Handle global.connected event (backward compatibility)
-          if (type === "connected" && channel === "global") {
+          // Handle global.connected event
+          if (type === GlobalEventTypes.CONNECTED && channel === "global") {
             if (import.meta.env.DEV) {
               console.log("[WebSocket] ✓ Received connected from server");
               console.log(

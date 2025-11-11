@@ -1,16 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import CodeMirror from "@uiw/react-codemirror";
-import { javascript } from "@codemirror/lang-javascript";
-import { python } from "@codemirror/lang-python";
-import { html } from "@codemirror/lang-html";
-import { css } from "@codemirror/lang-css";
-import { json } from "@codemirror/lang-json";
-import { markdown } from "@codemirror/lang-markdown";
-import { oneDark } from "@codemirror/theme-one-dark";
-import { EditorView } from "@codemirror/view";
 import { X, Save, Maximize2, Minimize2 } from "lucide-react";
 import { Button } from "@/client/components/ui/button";
-import { useCodeBlockTheme } from "@/client/utils/codeBlockTheme";
+import { CodeEditor, type SupportedLanguage } from "@/client/components/CodeEditor";
 import { api } from "@/client/utils/api";
 
 interface FileEditorProps {
@@ -20,32 +11,34 @@ interface FileEditorProps {
   onClose: () => void;
 }
 
-// Get language extension based on file extension
-function getLanguageExtension(filename: string) {
+// Get language based on file extension
+function getLanguageFromFilename(filename: string): SupportedLanguage | undefined {
   const ext = filename.split(".").pop()?.toLowerCase();
   switch (ext) {
     case "js":
+      return "javascript";
     case "jsx":
-      return [javascript({ jsx: true })];
+      return "jsx";
     case "ts":
+      return "typescript";
     case "tsx":
-      return [javascript({ jsx: true, typescript: true })];
+      return "tsx";
     case "py":
-      return [python()];
+      return "python";
     case "html":
     case "htm":
-      return [html()];
+      return "html";
     case "css":
     case "scss":
     case "less":
-      return [css()];
+      return "css";
     case "json":
-      return [json()];
+      return "json";
     case "md":
     case "markdown":
-      return [markdown()];
+      return "markdown";
     default:
-      return [];
+      return undefined;
   }
 }
 
@@ -61,7 +54,6 @@ export function FileEditor({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [wordWrap, setWordWrap] = useState(false);
-  const { isDark } = useCodeBlockTheme();
 
   // Load file content
   useEffect(() => {
@@ -250,31 +242,13 @@ export function FileEditor({
 
         {/* Editor */}
         <div className="flex-1 overflow-hidden">
-          <CodeMirror
+          <CodeEditor
             value={content}
             onChange={setContent}
-            extensions={[
-              ...getLanguageExtension(fileName),
-              ...(wordWrap ? [EditorView.lineWrapping] : []),
-            ]}
-            theme={isDark ? oneDark : "light"}
+            language={getLanguageFromFilename(fileName)}
             height="100%"
-            style={{
-              fontSize: "14px",
-              height: "100%",
-            }}
-            basicSetup={{
-              lineNumbers: true,
-              foldGutter: true,
-              dropCursor: false,
-              allowMultipleSelections: false,
-              indentOnInput: true,
-              bracketMatching: true,
-              closeBrackets: true,
-              autocompletion: true,
-              highlightSelectionMatches: true,
-              searchKeymap: true,
-            }}
+            showLineNumbers={true}
+            wordWrap={wordWrap}
           />
         </div>
 

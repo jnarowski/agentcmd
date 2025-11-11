@@ -19,23 +19,19 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
   - Use the path as-is and set $spec_path to it
 - If it's an ID (e.g., `ef3`, `a7b`):
   - Search in this order:
-    1. `.agent/specs/doing/{id}-*-spec.md`
-    2. `.agent/specs/todo/{id}-*-spec.md`
-    3. `.agent/specs/done/{id}-*-spec.md`
+    1. `.agent/specs/todo/{id}-*-spec.md`
+    2. `.agent/specs/done/{id}-*-spec.md`
   - Use the first matching file and set $spec_path to it
 - If it's a feature name (e.g., `kill-claude-process`):
   - Search in this order:
-    1. `.agent/specs/doing/*-{feature-name}-spec.md`
-    2. `.agent/specs/todo/*-{feature-name}-spec.md`
-    3. `.agent/specs/done/*-{feature-name}-spec.md`
+    1. `.agent/specs/todo/*-{feature-name}-spec.md`
+    2. `.agent/specs/done/*-{feature-name}-spec.md`
   - Use the first matching file and set $spec_path to it
 - If $spec_path file is not found after searching all locations, stop IMMEDIATELY and let the user know that the file wasn't found and you cannot continue
 
-**Move spec to doing folder:**
-- Before starting implementation, move the spec file to `.agent/specs/doing/` folder if it's not already there
-- Use `mv` command to move the file: `mv "$spec_path" ".agent/specs/doing/[filename]"`
-- Update $spec_path to the new location: `.agent/specs/doing/[filename]`
-- This indicates the spec is actively being worked on
+**Update spec Status:**
+- If spec is in `todo/` folder with Status "draft", update Status field to "in-progress"
+- This indicates work has started without moving the file
 
 ## Task Tracking Requirements
 
@@ -95,7 +91,7 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 ## Workflow
 
 1. Parse and resolve the spec file path according to the instructions above
-2. Move the spec file to `.agent/specs/doing/` folder if not already there
+2. Update spec Status to "in-progress" if currently "draft"
 3. Read $spec_path file, think hard about the plan
 4. Implement the plan, one phase at a time:
    - Work through tasks in order, top to bottom

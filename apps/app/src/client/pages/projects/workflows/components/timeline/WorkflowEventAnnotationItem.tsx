@@ -1,4 +1,5 @@
 import { MessageSquare, User } from "lucide-react";
+import { useDebugMode } from "@/client/hooks/useDebugMode";
 import type { WorkflowEvent } from "@/client/pages/projects/workflows/types";
 
 interface WorkflowEventAnnotationItemProps {
@@ -8,6 +9,7 @@ interface WorkflowEventAnnotationItemProps {
 export function WorkflowEventAnnotationItem({
   event,
 }: WorkflowEventAnnotationItemProps) {
+  const debugMode = useDebugMode();
   const message = event.event_data?.message || "Annotation";
 
   return (
@@ -18,9 +20,11 @@ export function WorkflowEventAnnotationItem({
       {/* Annotation Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground font-mono">
-            [EVENT: {event.id}]
-          </span>
+          {debugMode && (
+            <span className="text-xs text-muted-foreground font-mono">
+              [EVENT: {event.id}]
+            </span>
+          )}
           {event.created_by_user && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <User className="h-3 w-3" />

@@ -12,11 +12,11 @@ import type { InferSchemaType } from "../types/schema";
  */
 export interface WorkflowDefinition<
   TPhases extends readonly PhaseDefinition[] | undefined = undefined,
-  TArgsSchema extends Record<string, unknown> = Record<string, unknown>,
+  TArgsSchema extends Record<string, unknown> = Record<string, unknown>
 > {
   __type: "workflow";
   config: WorkflowConfig<TPhases, TArgsSchema>;
-  fn: WorkflowFunction<TPhases>;
+  fn: WorkflowFunction<TPhases, Record<string, unknown>>;
   /**
    * Create an Inngest function using the provided runtime adapter
    * This is called by the web app to hydrate the workflow with real implementations
@@ -29,6 +29,7 @@ export interface WorkflowDefinition<
  *
  * argsSchema provides both runtime validation and automatic type inference.
  * event.data.args is automatically typed based on the schema definition.
+ * Use standard TypeScript closures for shared context across phase callbacks.
  *
  * @param config - Workflow configuration
  * @param fn - Workflow function to execute
@@ -37,6 +38,10 @@ export interface WorkflowDefinition<
  * @example
  * ```typescript
  * import { defineWorkflow, defineSchema } from 'agentcmd-workflows';
+ *
+ * interface MyContext {
+ *   specFile?: string;
+ * }
  *
  * const argsSchema = defineSchema({
  *   type: 'object',
@@ -52,15 +57,19 @@ export interface WorkflowDefinition<
  *   id: 'implement-feature',
  *   phases: [{ id: 'plan', label: 'Plan' }] as const,
  *   argsSchema
- * }, async ({ event }) => {
+ * }, async ({ event, step }) => {
  *   const { featureName, priority, tags } = event.data.args; // Fully typed!
- *   // featureName: string, priority: 'high' | 'medium' | 'low', tags?: string[]
+ *   const ctx: MyContext = {};  // Manual context via closure
+ *
+ *   await step.phase("plan", async () => {
+ *     ctx.specFile = "..."; // Type-safe context access!
+ *   });
  * });
  * ```
  */
 export function defineWorkflow<
   const TPhases extends readonly PhaseDefinition[] | undefined = undefined,
-  const TArgsSchema extends Record<string, unknown> = Record<string, unknown>,
+  const TArgsSchema extends Record<string, unknown> = Record<string, unknown>
 >(
   config: WorkflowConfig<TPhases, TArgsSchema>,
   fn: WorkflowFunction<TPhases, InferSchemaType<TArgsSchema>>
@@ -69,7 +78,7 @@ export function defineWorkflow<
     __type: "workflow",
     config,
     // Type erasure: cast to untyped function for runtime compatibility
-    fn: fn as WorkflowFunction<TPhases>,
+    fn: fn as WorkflowFunction<TPhases, Record<string, unknown>>,
     createInngestFunction(runtime: WorkflowRuntime): any {
       // This will be called by the web app with the runtime adapter
       // The runtime adapter provides the actual implementations of step methods

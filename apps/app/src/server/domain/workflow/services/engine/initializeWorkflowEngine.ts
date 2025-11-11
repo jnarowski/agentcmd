@@ -87,8 +87,11 @@ export async function initializeWorkflowEngine(
     );
   }
 
-  // Load all workflow definitions from database (now populated by scan)
+  // Load all active workflow definitions from database (now populated by scan)
   const definitions = await prisma.workflowDefinition.findMany({
+    where: {
+      status: "active",
+    },
     select: {
       id: true,
       identifier: true,
@@ -126,8 +129,19 @@ export async function initializeWorkflowEngine(
         } else {
           logger.warn(
             { definitionId: definition.id, identifier: definition.identifier, path: definition.path },
-            "Global workflow file no longer exports matching definition"
+            "Workflow file no longer exports matching definition - marking as archived"
           );
+
+          // Mark workflow as archived since file no longer exports definition
+          await prisma.workflowDefinition.update({
+            where: { id: definition.id },
+            data: {
+              status: "archived",
+              file_exists: false,
+              load_error: "Workflow file no longer exports matching definition",
+              archived_at: new Date(),
+            },
+          });
         }
       } else {
         // Load project workflow
@@ -161,15 +175,38 @@ export async function initializeWorkflowEngine(
         } else {
           logger.warn(
             { definitionId: definition.id, identifier: definition.identifier, path: definition.path },
-            "Workflow file no longer exports matching definition"
+            "Workflow file no longer exports matching definition - marking as archived"
           );
+
+          // Mark workflow as archived since file no longer exports definition
+          await prisma.workflowDefinition.update({
+            where: { id: definition.id },
+            data: {
+              status: "archived",
+              file_exists: false,
+              load_error: "Workflow file no longer exports matching definition",
+              archived_at: new Date(),
+            },
+          });
         }
       }
     } catch (error) {
+      const errorMessage = (error as Error).message;
       logger.error(
-        { definitionId: definition.id, error: (error as Error).message },
-        "Failed to load workflow"
+        { definitionId: definition.id, error: errorMessage },
+        "Failed to load workflow - marking as archived"
       );
+
+      // Mark workflow as archived since it failed to load
+      await prisma.workflowDefinition.update({
+        where: { id: definition.id },
+        data: {
+          status: "archived",
+          file_exists: false,
+          load_error: errorMessage,
+          archived_at: new Date(),
+        },
+      });
     }
   }
 
