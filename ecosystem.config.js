@@ -1,8 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 
-// Load .env file from project root (turbo uses this)
-const envPath = path.join(__dirname, ".env");
+// Load .env file from apps/app directory
+const envPath = path.join(__dirname, "apps/app/.env");
 const envConfig = {};
 
 if (fs.existsSync(envPath)) {
@@ -23,12 +23,12 @@ module.exports = {
     {
       name: "agentcmd",
       script: "pnpm",
-      args: "dev",
+      args: "start",
       // cwd: "/Users/jnarowski/Dev/sourceborn/src/agentcmd",
       interpreter: "none",
       env: {
         ...envConfig,
-        NODE_ENV: "development",
+        NODE_ENV: "production",
       },
       error_file: "./logs/pm2-error.log",
       out_file: "./logs/pm2-out.log",

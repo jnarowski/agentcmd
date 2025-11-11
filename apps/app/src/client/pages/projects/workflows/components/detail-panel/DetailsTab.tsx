@@ -53,6 +53,13 @@ export function DetailsTab({ run }: DetailsTabProps) {
             </dd>
           </div>
 
+          {run.workflow_definition && (
+            <div className="grid grid-cols-2 gap-2 py-2">
+              <dt className="text-muted-foreground">Workflow:</dt>
+              <dd className="font-medium">{run.workflow_definition.name}</dd>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-2 py-2">
             <dt className="text-muted-foreground">Status:</dt>
             <dd className="capitalize">{run.status}</dd>

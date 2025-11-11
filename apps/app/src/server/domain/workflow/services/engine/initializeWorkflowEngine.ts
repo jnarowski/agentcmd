@@ -26,13 +26,7 @@ export async function initializeWorkflowEngine(
 ): Promise<void> {
   const logger = fastify.log;
 
-  // Check if workflow engine is enabled
-  if (!config.workflow.enabled) {
-    logger.info("Workflow engine disabled");
-    return;
-  }
-
-  logger.info("Initializing workflow engine");
+  logger.info("=== WORKFLOW ENGINE INITIALIZATION ===");
 
   // Create Inngest client
   const inngestClient = createWorkflowClient({
@@ -102,20 +96,33 @@ export async function initializeWorkflowEngine(
     },
   });
 
-  logger.info({ count: definitions.length }, "Loading workflow definitions");
+  logger.info({ count: definitions.length }, `\nRegistering ${definitions.length} workflow definition(s)...`);
 
   // Collect Inngest functions
   const inngestFunctions = [];
 
-  // Load each workflow from filesystem
-  for (const definition of definitions) {
-    try {
-      if (definition.scope === "global") {
-        // Load global workflow
-        const runtime = createWorkflowRuntime(inngestClient, null, logger);
-        const { workflows } = await loadGlobalWorkflows(runtime, logger);
+  // Group definitions by scope and project to avoid reloading workflows multiple times
+  const globalDefinitions = definitions.filter(d => d.scope === "global");
+  const projectDefinitionsMap = new Map<string, typeof definitions>();
 
-        // Find matching workflow
+  for (const definition of definitions) {
+    if (definition.scope === "project" && definition.project_id) {
+      if (!projectDefinitionsMap.has(definition.project_id)) {
+        projectDefinitionsMap.set(definition.project_id, []);
+      }
+      projectDefinitionsMap.get(definition.project_id)!.push(definition);
+    }
+  }
+
+  // Load global workflows once
+  if (globalDefinitions.length > 0) {
+    try {
+      const runtime = createWorkflowRuntime(inngestClient, null, logger);
+      const { workflows } = await loadGlobalWorkflows(runtime, logger);
+
+      logger.info(`  Global Workflows:`);
+
+      for (const definition of globalDefinitions) {
         const workflow = workflows.find(
           (w) => w.definition.config.id === definition.identifier
         );
@@ -123,16 +130,15 @@ export async function initializeWorkflowEngine(
         if (workflow) {
           inngestFunctions.push(workflow.inngestFunction);
           logger.info(
-            { workflowId: definition.identifier, name: definition.name, path: definition.path, scope: "global" },
-            "Registered global workflow"
+            { workflowId: definition.identifier, scope: "global" },
+            `    ✓ ${definition.name} (${definition.identifier})`
           );
         } else {
           logger.warn(
             { definitionId: definition.id, identifier: definition.identifier, path: definition.path },
-            "Workflow file no longer exports matching definition - marking as archived"
+            `    ✗ ${definition.name} (${definition.identifier}) - file no longer exports matching definition`
           );
 
-          // Mark workflow as archived since file no longer exports definition
           await prisma.workflowDefinition.update({
             where: { id: definition.id },
             data: {
@@ -143,25 +149,37 @@ export async function initializeWorkflowEngine(
             },
           });
         }
-      } else {
-        // Load project workflow
-        const project = await prisma.project.findUnique({
-          where: { id: definition.project_id! },
-          select: { path: true },
-        });
+      }
+    } catch (error) {
+      logger.error({ error: (error as Error).message }, "Failed to load global workflows");
+    }
+  }
 
-        if (!project) {
-          logger.warn({ definitionId: definition.id }, "Project not found for workflow definition");
-          continue;
-        }
+  // Load project workflows once per project
+  for (const [projectId, projectDefinitions] of projectDefinitionsMap) {
+    try {
+      // Get project path
+      const project = await prisma.project.findUnique({
+        where: { id: projectId },
+        select: { path: true, name: true },
+      });
 
-        // Create project-scoped runtime
-        const runtime = createWorkflowRuntime(inngestClient, definition.project_id!, logger);
+      if (!project) {
+        logger.warn({ projectId }, "Project not found for workflow definitions");
+        continue;
+      }
 
-        // Load workflows from project (will reload from stored path)
-        const { workflows } = await loadProjectWorkflows(project.path, runtime, logger);
+      // Create project-scoped runtime
+      const runtime = createWorkflowRuntime(inngestClient, projectId, logger);
 
-        // Find matching workflow
+      // Load all workflows from project ONCE
+      const { workflows } = await loadProjectWorkflows(project.path, runtime, logger);
+
+      // Log project header
+      logger.info(`  Project: ${project.name}`);
+
+      // Match and register all definitions from this project
+      for (const definition of projectDefinitions) {
         const workflow = workflows.find(
           (w) => w.definition.config.id === definition.identifier
         );
@@ -169,16 +187,15 @@ export async function initializeWorkflowEngine(
         if (workflow) {
           inngestFunctions.push(workflow.inngestFunction);
           logger.info(
-            { workflowId: definition.identifier, name: definition.name, path: definition.path, scope: "project" },
-            "Registered project workflow"
+            { workflowId: definition.identifier, projectId },
+            `    ✓ ${definition.name} (${definition.identifier})`
           );
         } else {
           logger.warn(
             { definitionId: definition.id, identifier: definition.identifier, path: definition.path },
-            "Workflow file no longer exports matching definition - marking as archived"
+            `    ✗ ${definition.name} (${definition.identifier}) - file no longer exports matching definition`
           );
 
-          // Mark workflow as archived since file no longer exports definition
           await prisma.workflowDefinition.update({
             where: { id: definition.id },
             data: {
@@ -193,20 +210,22 @@ export async function initializeWorkflowEngine(
     } catch (error) {
       const errorMessage = (error as Error).message;
       logger.error(
-        { definitionId: definition.id, error: errorMessage },
-        "Failed to load workflow - marking as archived"
+        { projectId, error: errorMessage },
+        "Failed to load workflows for project"
       );
 
-      // Mark workflow as archived since it failed to load
-      await prisma.workflowDefinition.update({
-        where: { id: definition.id },
-        data: {
-          status: "archived",
-          file_exists: false,
-          load_error: errorMessage,
-          archived_at: new Date(),
-        },
-      });
+      // Mark all definitions from this project as archived
+      for (const definition of projectDefinitions) {
+        await prisma.workflowDefinition.update({
+          where: { id: definition.id },
+          data: {
+            status: "archived",
+            file_exists: false,
+            load_error: errorMessage,
+            archived_at: new Date(),
+          },
+        });
+      }
     }
   }
 
@@ -226,7 +245,7 @@ export async function initializeWorkflowEngine(
       functions: inngestFunctions.length,
       memoization: config.workflow.memoizationDbPath,
     },
-    "Workflow engine initialized"
+    `\nRegistered ${inngestFunctions.length} total workflow function(s)\n=== WORKFLOW ENGINE READY ===`
   );
 }
 

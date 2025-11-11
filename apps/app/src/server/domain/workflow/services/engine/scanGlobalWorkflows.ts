@@ -33,12 +33,11 @@ export async function scanGlobalWorkflows(
     const { config } = definition;
     foundIdentifiers.add(config.id);
 
-    const existingDefinition = await prisma.workflowDefinition.findUnique({
+    // Find existing global workflow (no unique constraint, use findFirst)
+    const existingDefinition = await prisma.workflowDefinition.findFirst({
       where: {
-        scope_identifier: {
-          scope: "global",
-          identifier: config.id,
-        },
+        scope: "global",
+        identifier: config.id,
       },
     });
 
@@ -48,39 +47,41 @@ export async function scanGlobalWorkflows(
       (existingDefinition.status === "archived" ||
         existingDefinition.file_exists === false);
 
-    await prisma.workflowDefinition.upsert({
-      where: {
-        scope_identifier: {
-          scope: "global",
-          identifier: config.id,
+    if (existingDefinition) {
+      // Update existing
+      await prisma.workflowDefinition.update({
+        where: { id: existingDefinition.id },
+        data: {
+          name: config.name ?? config.id,
+          description: config.description ?? null,
+          path: filePath,
+          phases: config.phases ?? [],
+          args_schema: (config.argsSchema as object) ?? null,
+          status: shouldReactivate ? "active" : undefined,
+          file_exists: true,
+          load_error: null,
+          archived_at: shouldReactivate ? null : undefined,
         },
-      },
-      create: {
-        scope: "global",
-        project_id: null,
-        identifier: config.id,
-        name: config.name ?? config.id,
-        description: config.description ?? null,
-        type: "code",
-        path: filePath,
-        phases: config.phases ?? [],
-        args_schema: (config.argsSchema as object) ?? null,
-        status: "active",
-        file_exists: true,
-        load_error: null,
-      },
-      update: {
-        name: config.name ?? config.id,
-        description: config.description ?? null,
-        path: filePath,
-        phases: config.phases ?? [],
-        args_schema: (config.argsSchema as object) ?? null,
-        status: shouldReactivate ? "active" : undefined,
-        file_exists: true,
-        load_error: null,
-        archived_at: shouldReactivate ? null : undefined,
-      },
-    });
+      });
+    } else {
+      // Create new
+      await prisma.workflowDefinition.create({
+        data: {
+          scope: "global",
+          project_id: null,
+          identifier: config.id,
+          name: config.name ?? config.id,
+          description: config.description ?? null,
+          type: "code",
+          path: filePath,
+          phases: config.phases ?? [],
+          args_schema: (config.argsSchema as object) ?? null,
+          status: "active",
+          file_exists: true,
+          load_error: null,
+        },
+      });
+    }
 
     logger.info(
       { identifier: config.id, path: filePath },

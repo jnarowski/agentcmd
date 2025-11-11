@@ -64,10 +64,6 @@ export async function loadProjectWorkflows(
 
   // Find all workflow files
   const files = await findWorkflowFiles(workflowsDir);
-  logger.debug(
-    { projectPath, filesFound: files.length },
-    "Found workflow files"
-  );
 
   // Load each file
   for (const file of files) {
@@ -89,7 +85,7 @@ export async function loadProjectWorkflows(
           filePath: file,
         });
 
-        logger.info(
+        logger.debug(
           { file, workflowId: definition.config.id },
           "Loaded workflow"
         );

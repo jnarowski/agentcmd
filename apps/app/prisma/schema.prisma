@@ -30,7 +30,6 @@ model WorkflowDefinition {
   project Project?           @relation(fields: [project_id], references: [id], onDelete: Cascade)
   runs    WorkflowRun[]
 
-  @@unique([scope, identifier], name: "scope_identifier")
   @@unique([project_id, identifier], name: "project_id_identifier")
   @@index([type])
   @@index([is_template])

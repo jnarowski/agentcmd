@@ -25,7 +25,7 @@ export async function configCommand(options: ConfigOptions): Promise<void> {
     if (options.show) {
       if (!existsSync(configPath)) {
         console.error(`Config file not found at ${configPath}`);
-        console.error("Run 'agent-workflows-ui install' first.");
+        console.error("Run 'agentcmd install' first.");
         process.exit(1);
       }
 
@@ -40,7 +40,7 @@ export async function configCommand(options: ConfigOptions): Promise<void> {
     if (options.edit) {
       if (!existsSync(configPath)) {
         console.error(`Config file not found at ${configPath}`);
-        console.error("Run 'agent-workflows-ui install' first.");
+        console.error("Run 'agentcmd install' first.");
         process.exit(1);
       }
 
@@ -123,7 +123,7 @@ export async function configCommand(options: ConfigOptions): Promise<void> {
     }
 
     // No flags: show help
-    console.log("Usage: agent-workflows-ui config [options]");
+    console.log("Usage: agentcmd config [options]");
     console.log("");
     console.log("Options:");
     console.log("  --show         Display current configuration");

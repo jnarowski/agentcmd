@@ -9,6 +9,7 @@ import {
 import { useSettings, useUpdateSettings } from "@/client/hooks/useSettings";
 import { useProjects } from "@/client/pages/projects/hooks/useProjects";
 import { useSessions } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
+import { useAllWorkflowRuns } from "@/client/pages/projects/workflows/hooks/useAllWorkflowRuns";
 import { useNavigationStore } from "@/client/stores/navigationStore";
 // import { NavTasks } from "./NavTasks";
 import { NavActivities } from "./NavActivities";
@@ -19,6 +20,7 @@ export function SidebarTabs() {
   const updateSettings = useUpdateSettings();
   const { data: projects } = useProjects();
   const { data: sessions } = useSessions();
+  const { data: allWorkflowRuns } = useAllWorkflowRuns(['pending', 'running', 'failed']);
   const { activeSessionId } = useNavigationStore();
   const { runId } = useParams();
 
@@ -37,8 +39,8 @@ export function SidebarTabs() {
 
   // Count sessions and workflows for activities
   const sessionCount = sessions?.length || 0;
-  const workflowCount = 0;
-  const activitiesCount = Math.min(sessionCount + workflowCount, 10); // Limited to 10
+  const workflowCount = allWorkflowRuns?.length || 0;
+  const activitiesCount = sessionCount + workflowCount;
 
   // Count projects based on current view
   let projectsCount = 0;

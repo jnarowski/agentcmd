@@ -99,10 +99,22 @@ export async function loadGlobalWorkflows(
       }
     } catch (error) {
       const errorMessage = (error as Error).message;
-      logger.error(
-        { file, error: errorMessage },
-        "Failed to load global workflow file"
-      );
+
+      // Check if this is a module resolution error
+      const isModuleError = errorMessage.includes("Cannot find module");
+
+      if (isModuleError) {
+        logger.error(
+          { file, error: errorMessage },
+          `Failed to load global workflow: missing dependencies. Run 'cd ${workflowsDir.replace('/workflows', '')} && npm install'`
+        );
+      } else {
+        logger.error(
+          { file, error: errorMessage },
+          "Failed to load global workflow file"
+        );
+      }
+
       errors.push({
         filePath: file,
         error: errorMessage,

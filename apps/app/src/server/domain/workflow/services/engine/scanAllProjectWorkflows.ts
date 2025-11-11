@@ -20,7 +20,7 @@ export async function scanAllProjectWorkflows(
     throw new Error("Workflow client not initialized");
   }
 
-  logger.info("Scanning all projects for workflows");
+  logger.info("Scanning all projects for workflows...");
 
   // Load all projects from database
   const projects = await prisma.project.findMany({
@@ -51,6 +51,19 @@ export async function scanAllProjectWorkflows(
       );
       result.scanned++;
       result.discovered += count;
+
+      // Log per-project summary
+      if (count > 0) {
+        logger.info(
+          { projectName: project.name, projectPath: project.path, workflowCount: count },
+          `  ✓ ${project.name}: Registered ${count} workflow(s)`
+        );
+      } else {
+        logger.info(
+          { projectName: project.name, projectPath: project.path },
+          `  - ${project.name}: No workflows found`
+        );
+      }
     } catch (error) {
       logger.error(
         {
@@ -67,7 +80,29 @@ export async function scanAllProjectWorkflows(
     }
   }
 
-  logger.info(result, "Completed workflow scanning");
+  // Log final summary
+  if (result.discovered > 0) {
+    logger.info(
+      {
+        projectsScanned: result.scanned,
+        workflowsDiscovered: result.discovered,
+        errors: result.errors.length,
+      },
+      `\nSummary: Discovered ${result.discovered} workflow(s) from ${result.scanned} project(s)`
+    );
+  } else {
+    logger.info(
+      { projectsScanned: result.scanned },
+      `\nNo workflows found in ${result.scanned} project(s)`
+    );
+  }
+
+  if (result.errors.length > 0) {
+    logger.warn(
+      { errors: result.errors },
+      `⚠ ${result.errors.length} error(s) during scanning`
+    );
+  }
 
   return result;
 }

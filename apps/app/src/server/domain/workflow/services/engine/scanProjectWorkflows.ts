@@ -18,8 +18,6 @@ export async function scanProjectWorkflows(
   runtime: WorkflowRuntime,
   logger: FastifyBaseLogger
 ): Promise<number> {
-  logger.info({ projectId, projectPath }, "Scanning project for workflows");
-
   // Load workflows from project
   const { workflows, errors } = await loadProjectWorkflows(projectPath, runtime, logger);
 
@@ -35,6 +33,17 @@ export async function scanProjectWorkflows(
   // Create or update WorkflowDefinition records
   for (const { definition, filePath } of workflows) {
     const { config } = definition;
+
+    // Skip workflows with missing identifier
+    if (!config.id) {
+      logger.warn(
+        { projectId, filePath, config },
+        "Workflow missing required 'id' field - skipping"
+      );
+      erroredFiles.set(filePath, "Workflow definition missing required 'id' field");
+      continue;
+    }
+
     foundIdentifiers.add(config.id);
 
     const existingDefinition = await prisma.workflowDefinition.findUnique({
@@ -89,12 +98,12 @@ export async function scanProjectWorkflows(
     if (shouldReactivate) {
       logger.info(
         { projectId, workflowId: config.id, filePath },
-        "Reactivated workflow definition (file returned)"
+        `    ✓ ${filePath.split('/').pop()} (reactivated)`
       );
     } else {
-      logger.info(
+      logger.debug(
         { projectId, workflowId: config.id, filePath },
-        "Created/updated workflow definition"
+        `    ✓ ${filePath.split('/').pop()}`
       );
     }
   }
