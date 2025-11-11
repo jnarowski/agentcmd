@@ -1,65 +1,111 @@
-import { defineWorkflow } from "agentcmd-workflows";
+import { defineWorkflow } from "../../../packages/agentcmd-workflows/dist";
 
 /**
- * AI-powered workflow example demonstrating agent integration
- *
- * This shows how to integrate AI steps for tasks like:
- * - Code generation
- * - Analysis and research
- * - Automated decision making
+ * Example workflow demonstrating step.ai capabilities.
+ * Shows text generation and structured output with JSON Schema.
  */
-export const aiWorkflow = defineWorkflow({
-  name: "ai-workflow",
-  description: "Workflow with AI-powered steps",
-
-  async execute({ step, logger, config, ai }) {
-    // Step 1: Analyze requirements
-    const analysis = await step({
-      name: "analyze-requirements",
-      execute: async () => {
-        logger.info("Analyzing requirements with AI");
-
-        // Use AI step for analysis
-        const result = await ai({
-          prompt:
-            "Analyze the project requirements and suggest implementation approach",
-          context: {
-            projectPath: config.projectPath,
-          },
-        });
-
-        return result;
-      },
-    });
-
-    // Step 2: Generate code
-    await step({
-      name: "generate-code",
-      execute: async () => {
-        logger.info("Generating code based on analysis");
-
-        const result = await ai({
-          prompt: `Generate implementation based on: ${analysis.summary}`,
-          context: {
-            analysis,
-          },
-        });
-
-        return result;
-      },
-    });
-
-    // Step 3: Review and validate
-    await step({
-      name: "review",
-      execute: async () => {
-        logger.info("Reviewing generated code");
-
-        // Add validation logic
-        return { validated: true };
-      },
-    });
-
-    return { success: true };
+export default defineWorkflow(
+  {
+    id: "ai-example-workflow",
+    name: "AI Example Workflow",
+    description: "Demonstrates step.ai with text and structured output",
+    phases: [
+      { id: "generate", label: "Generate Content" },
+      { id: "structured", label: "Structured Output" },
+    ],
   },
-});
+  async ({ step }) => {
+    let haikuResponse: string | undefined;
+    let planResponse: { data: TaskBreakdown } | undefined;
+
+    // Type definition for structured output
+    interface TaskBreakdown {
+      title: string;
+      priority: "low" | "medium" | "high";
+      tasks: Array<{
+        name: string;
+        estimatedHours: number;
+      }>;
+    }
+
+    // Phase 1: Simple text generation
+    await step.phase("generate", async () => {
+      const haiku = await step.ai("generate-haiku", {
+        provider: "anthropic",
+        model: "claude-sonnet-4-5-20250929",
+        prompt: "Write a haiku about workflow automation",
+        temperature: 0.7,
+      });
+
+      haikuResponse = haiku.data.text;
+
+      // Access full Vercel AI SDK response
+      console.log("Full result:", haiku.result);
+
+      await step.artifact("haiku-output", {
+        name: "haiku.txt",
+        type: "text",
+        content: haiku.data.text,
+      });
+    });
+
+    // Phase 2: Structured output with JSON Schema
+    await step.phase("structured", async () => {
+      interface TaskBreakdown {
+        title: string;
+        priority: "low" | "medium" | "high";
+        tasks: Array<{
+          name: string;
+          estimatedHours: number;
+        }>;
+      }
+
+      const taskSchema = {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          priority: { type: "string", enum: ["low", "medium", "high"] },
+          tasks: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                estimatedHours: { type: "number" },
+              },
+              required: ["name", "estimatedHours"],
+            },
+          },
+        },
+        required: ["title", "priority", "tasks"],
+      };
+
+      planResponse = await step.ai<TaskBreakdown>("generate-plan", {
+        provider: "anthropic",
+        prompt: "Create a task breakdown for implementing user authentication",
+        schema: taskSchema,
+        temperature: 0.3,
+      });
+
+      // Access full Vercel AI SDK response (usage, warnings, metadata, etc.)
+      // @ts-ignore
+      console.log("Full result:", planResponse?.data);
+
+      await step.artifact("plan-output", {
+        name: "task-plan.json",
+        type: "text",
+        content: JSON.stringify(planResponse?.data, null, 2),
+      });
+    });
+
+    return {
+      success: true,
+      message: "AI workflow completed",
+      taskResponse: {
+        haikuResponse,
+        planResponse: planResponse.data,
+      },
+      timestamp: new Date().toISOString(),
+    };
+  }
+);
