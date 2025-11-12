@@ -42,7 +42,7 @@ export default defineWorkflow(
       await step.sleep("wait-after-check", "3s");
 
       await step.annotation("project-verified", {
-        message: "✅ Project structure verified",
+        message: "Project structure verified",
       });
 
       // Note: Git status check removed (not a supported git operation)
