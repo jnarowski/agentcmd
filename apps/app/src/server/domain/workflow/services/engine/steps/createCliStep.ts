@@ -25,13 +25,19 @@ export function createCliStep(
     idOrName: string,
     config: CliStepConfig,
     options?: CliStepOptions
-  ): Promise<CliStepResult> {
+  ): Promise<{ runStepId: string; result: CliStepResult }> {
     const timeout = options?.timeout ?? DEFAULT_CLI_TIMEOUT;
     const id = toId(idOrName);
     const name = toName(idOrName);
     const command = config.command;
 
-    return executeStep(context, id, name, async () => {
+    return executeStep({
+      context,
+      stepId: id,
+      stepName: name,
+      stepType: "cli",
+      inngestStep,
+      fn: async () => {
       const { projectPath, logger } = context;
       const cwd = config.cwd ?? projectPath;
       const env = { ...process.env, ...config.env };
@@ -73,6 +79,7 @@ export function createCliStep(
           success: false,
         };
       }
-    }, inngestStep);
+      },
+    });
   };
 }

@@ -55,6 +55,7 @@ CREATE TABLE "workflow_run_steps" (
     "workflow_run_id" TEXT NOT NULL,
     "inngest_step_id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "step_type" TEXT NOT NULL,
     "phase" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'pending',
     "log_directory_path" TEXT,
@@ -160,9 +161,6 @@ CREATE INDEX "workflow_definitions_scope_idx" ON "workflow_definitions"("scope")
 
 -- CreateIndex
 CREATE INDEX "workflow_definitions_project_id_status_idx" ON "workflow_definitions"("project_id", "status");
-
--- CreateIndex
-CREATE UNIQUE INDEX "workflow_definitions_scope_identifier_key" ON "workflow_definitions"("scope", "identifier");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "workflow_definitions_project_id_identifier_key" ON "workflow_definitions"("project_id", "identifier");

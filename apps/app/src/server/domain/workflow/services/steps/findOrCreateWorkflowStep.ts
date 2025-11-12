@@ -1,4 +1,4 @@
-import type { WorkflowRunStep } from '@prisma/client';
+import type { WorkflowRunStep, StepType } from '@prisma/client';
 import type { FastifyBaseLogger } from 'fastify';
 import { findWorkflowStepByName } from './findWorkflowStepByName';
 import { createWorkflowStep } from './createWorkflowStep';
@@ -11,6 +11,7 @@ export async function findOrCreateWorkflowStep(
   runId: string,
   inngestStepId: string,
   stepName: string,
+  stepType: StepType,
   phase?: string,
   logger?: FastifyBaseLogger
 ): Promise<WorkflowRunStep> {
@@ -23,7 +24,7 @@ export async function findOrCreateWorkflowStep(
       { runId, inngestStepId, stepName, phase },
       'Step not found, creating new step'
     );
-    step = await createWorkflowStep(runId, inngestStepId, stepName, phase, logger);
+    step = await createWorkflowStep(runId, inngestStepId, stepName, stepType, phase, logger);
   }
 
   return step;

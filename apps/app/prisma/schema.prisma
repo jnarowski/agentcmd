@@ -84,6 +84,7 @@ model WorkflowRunStep {
   workflow_run_id String
   inngest_step_id       String     // Auto-generated: "${phase}-${userStepId}" for Inngest memoization
   name                  String     // Display name
+  step_type             StepType   // Type of step for UI categorization
   phase                 String     // Phase this step belongs to
   status                StepStatus @default(pending)
   log_directory_path    String?    // Path to logs directory on filesystem
@@ -230,6 +231,17 @@ enum StepStatus {
   completed
   failed
   skipped
+}
+
+enum StepType {
+  agent
+  git
+  cli
+  ai
+  artifact
+  annotation
+  system
+  command
 }
 
 model AgentSession {

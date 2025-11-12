@@ -74,11 +74,14 @@ export interface WorkflowRun {
   };
 }
 
+export type StepType = 'agent' | 'git' | 'cli' | 'ai' | 'artifact' | 'annotation' | 'system' | 'command';
+
 export interface WorkflowRunStep {
   id: string;
   workflow_run_id: string;
   inngest_step_id: string; // Phase-prefixed step ID for Inngest memoization
   name: string; // Display name
+  step_type: StepType; // Type of step for UI categorization
   phase: string;
   status: StepStatus;
   logs: string | null;

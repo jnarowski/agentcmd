@@ -1,5 +1,5 @@
 import { prisma } from '@/shared/prisma';
-import type { WorkflowRunStep } from '@prisma/client';
+import type { WorkflowRunStep, StepType } from '@prisma/client';
 import type { FastifyBaseLogger } from 'fastify';
 
 /**
@@ -10,6 +10,7 @@ export async function createWorkflowStep(
   runId: string,
   inngestStepId: string,
   stepName: string,
+  stepType: StepType,
   phase?: string,
   logger?: FastifyBaseLogger
 ): Promise<WorkflowRunStep> {
@@ -23,6 +24,7 @@ export async function createWorkflowStep(
       workflow_run_id: runId,
       inngest_step_id: inngestStepId,
       name: stepName,
+      step_type: stepType,
       status: 'pending',
       phase: phase || '',
     },

@@ -1,5 +1,6 @@
 import type { GetStepTools } from "inngest";
 import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
+import type { StepType } from "@prisma/client";
 import { findOrCreateStep } from "./findOrCreateStep";
 import { updateStepStatus } from "./updateStepStatus";
 import { handleStepFailure } from "./handleStepFailure";
@@ -7,29 +8,25 @@ import { generateInngestStepId } from "./generateInngestStepId";
 
 /**
  * Execute a step function with automatic status tracking and Inngest memoization
- *
- * @param context - Runtime context
- * @param stepId - User-provided step ID (will be prefixed with phase)
- * @param stepName - Step display name
- * @param fn - Step function to execute
- * @param inngestStep - Inngest step instance for memoization
- * @returns Step result
  */
-export async function executeStep<T>(
-  context: RuntimeContext,
-  stepId: string,
-  stepName: string,
-  fn: () => Promise<T>,
+export async function executeStep<T>(params: {
+  context: RuntimeContext;
+  stepId: string;
+  stepName: string;
+  stepType: StepType;
+  fn: () => Promise<T>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  inngestStep: GetStepTools<any>
-): Promise<T> {
+  inngestStep: GetStepTools<any>;
+}): Promise<{ runStepId: string; result: T }> {
+  const { context, stepId, stepName, stepType, fn, inngestStep } = params;
+
   // Generate phase-prefixed Inngest step ID
   const inngestStepId = generateInngestStepId(context, stepId);
 
   // Wrap entire step in inngestStep.run for idempotency
   return (await inngestStep.run(inngestStepId, async () => {
     // Find or create step in database
-    const step = await findOrCreateStep(context, inngestStepId, stepName);
+    const step = await findOrCreateStep({ context, inngestStepId, stepName, stepType });
 
     // Update to running
     await updateStepStatus(context, step.id, "running");
@@ -46,11 +43,11 @@ export async function executeStep<T>(
         result as Record<string, unknown>
       );
 
-      return result;
+      return { runStepId: step.id, result };
     } catch (error) {
       // Handle failure
       await handleStepFailure(context, step.id, error as Error);
       throw error;
     }
-  })) as unknown as Promise<T>;
+  })) as unknown as Promise<{ runStepId: string; result: T }>;
 }

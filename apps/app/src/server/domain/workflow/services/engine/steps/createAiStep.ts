@@ -160,16 +160,18 @@ export function createAiStep(
     idOrName: string,
     config: AiStepConfig,
     options?: StepOptions
-  ): Promise<AiStepResult<T>> {
+  ): Promise<{ runStepId: string; result: AiStepResult<T> }> {
     const timeout = options?.timeout ?? DEFAULT_AI_TIMEOUT;
     const id = toId(idOrName);
     const name = toName(idOrName);
 
-    return executeStep(
+    return executeStep({
       context,
-      id,
-      name,
-      async () => {
+      stepId: id,
+      stepName: name,
+      stepType: "ai",
+      inngestStep,
+      fn: async () => {
         const { logger } = context;
         const configuration = Configuration.getInstance();
         const apiKeys = configuration.get("apiKeys");
@@ -210,7 +212,6 @@ export function createAiStep(
           };
         }
       },
-      inngestStep
-    );
+    });
   };
 }

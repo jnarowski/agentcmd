@@ -19,7 +19,7 @@ export function createRunStep(
   return async function run<T>(
     idOrName: string,
     fn: () => Promise<T> | T
-  ): Promise<T> {
+  ): Promise<{ runStepId: string; result: T }> {
     const id = toId(idOrName);
     const name = toName(idOrName);
 
@@ -28,7 +28,12 @@ export function createRunStep(
 
     return (await inngestStep.run(inngestStepId, async () => {
       // Find or create step in database
-      const step = await findOrCreateStep(context, inngestStepId, name);
+      const step = await findOrCreateStep({
+        context,
+        inngestStepId,
+        stepName: name,
+        stepType: "command",
+      });
 
       // Update to running
       await updateStepStatus(context, step.id, "running");
@@ -45,12 +50,12 @@ export function createRunStep(
           result as Record<string, unknown>
         );
 
-        return result;
+        return { runStepId: step.id, result };
       } catch (error) {
         // Handle failure
         await handleStepFailure(context, step.id, error as Error);
         throw error;
       }
-    })) as unknown as Promise<T>;
+    })) as unknown as Promise<{ runStepId: string; result: T }>;
   };
 }
