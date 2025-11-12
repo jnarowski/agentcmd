@@ -1,4 +1,4 @@
-import { fastifyPlugin } from "inngest/fastify";
+import { serve } from "inngest/fastify";
 import type { FastifyInstance } from "fastify";
 import { createWorkflowClient } from "./createWorkflowClient";
 import { createWorkflowRuntime } from "./createWorkflowRuntime";
@@ -6,8 +6,14 @@ import { loadProjectWorkflows } from "./loadProjectWorkflows";
 import { loadGlobalWorkflows } from "./loadGlobalWorkflows";
 import { scanAllProjectWorkflows } from "./scanAllProjectWorkflows";
 import { scanGlobalWorkflows } from "./scanGlobalWorkflows";
+import { rescanAndLoadWorkflows, type ResyncDiff } from "./rescanAndLoadWorkflows";
 import { prisma } from "@/shared/prisma";
 import config from "@/server/config";
+
+// Module-level mutable handler reference for hot-reloading
+// This allows us to swap the Inngest handler without restarting the server
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let currentHandler: (req: any, reply: any) => Promise<unknown>;
 
 /**
  * Initialize workflow engine and register Inngest endpoint
@@ -224,14 +230,51 @@ export async function initializeWorkflowEngine(
     }
   }
 
-  // Register Inngest endpoint using the plugin pattern
+  // Register Inngest endpoint using serve() directly instead of fastifyPlugin
+  // This allows us to swap the handler at runtime for hot-reloading
+  // See: https://github.com/inngest/inngest-js/blob/main/packages/inngest/src/fastify.ts#L17-L36
   // This endpoint bypasses JWT auth and uses Inngest signing key validation
-  await fastify.register(fastifyPlugin, {
+  currentHandler = serve({
     client: inngestClient,
     functions: inngestFunctions,
-    options: {
-      servePath: config.workflow.servePath,
-    },
+  });
+
+  // Register route that delegates to currentHandler
+  fastify.route({
+    method: ["GET", "POST", "PUT"],
+    url: config.workflow.servePath,
+    handler: async (req, reply) => currentHandler(req, reply),
+  });
+
+  // Expose reloadWorkflowEngine decorator for hot-reloading
+  fastify.decorate("reloadWorkflowEngine", async (): Promise<ResyncDiff> => {
+    logger.info("Reloading workflow engine...");
+
+    // Rescan and load workflows with cache busting
+    const { functions, diff } = await rescanAndLoadWorkflows(
+      fastify,
+      inngestClient,
+      logger
+    );
+
+    // Swap handler atomically
+    currentHandler = serve({
+      client: inngestClient,
+      functions,
+    });
+
+    logger.info(
+      {
+        total: functions.length,
+        new: diff.new.length,
+        updated: diff.updated.length,
+        archived: diff.archived.length,
+        errors: diff.errors.length,
+      },
+      "Workflow engine reloaded successfully"
+    );
+
+    return diff;
   });
 
   logger.info(
@@ -248,5 +291,6 @@ export async function initializeWorkflowEngine(
 declare module "fastify" {
   interface FastifyInstance {
     workflowClient?: ReturnType<typeof createWorkflowClient>;
+    reloadWorkflowEngine?: () => Promise<ResyncDiff>;
   }
 }

@@ -245,4 +245,48 @@ export async function registerWorkflowDefinitionRoutes(
       return reply.send(buildSuccessResponse(parsedDefinition));
     }
   );
+
+  /**
+   * POST /api/workflow-definitions/resync
+   * Resync workflow definitions from filesystem without restarting server
+   */
+  fastify.post(
+    '/api/workflow-definitions/resync',
+    {
+      preHandler: fastify.authenticate,
+    },
+    async (request, reply) => {
+      const userId = (request.user! as { id: string }).id;
+
+      fastify.log.info({ userId }, 'Resyncing workflow definitions');
+
+      // Call the reloadWorkflowEngine decorator
+      if (!fastify.reloadWorkflowEngine) {
+        throw new Error('Workflow engine not initialized');
+      }
+
+      const diff = await fastify.reloadWorkflowEngine();
+
+      // Build summary
+      const summary = {
+        total: diff.new.length + diff.updated.length + diff.archived.length + diff.errors.length,
+        new: diff.new.length,
+        updated: diff.updated.length,
+        archived: diff.archived.length,
+        errors: diff.errors.length,
+      };
+
+      return reply.send(
+        buildSuccessResponse({
+          summary,
+          workflows: {
+            new: diff.new,
+            updated: diff.updated,
+            archived: diff.archived,
+            errors: diff.errors,
+          },
+        })
+      );
+    }
+  );
 }

@@ -1,6 +1,12 @@
 import { Button } from "@/client/components/ui/button";
 import { Badge } from "@/client/components/ui/badge";
 import { TableCell, TableRow } from "@/client/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/client/components/ui/tooltip";
 import { Archive, ArchiveRestore, AlertCircle } from "lucide-react";
 import type { WorkflowDefinition } from "@/client/pages/projects/workflows/types";
 
@@ -25,10 +31,19 @@ export function WorkflowDefinitionRow({
       <TableCell className="font-medium">
         {definition.name}
         {definition.load_error && (
-          <Badge variant="destructive" className="ml-2">
-            <AlertCircle className="w-3 h-3 mr-1" />
-            Error
-          </Badge>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant="destructive" className="ml-2">
+                  <AlertCircle className="w-3 h-3 mr-1" />
+                  Error
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-sm">
+                <p className="break-words">{definition.load_error}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
       </TableCell>
       <TableCell className="max-w-md truncate">

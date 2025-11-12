@@ -8,8 +8,11 @@ import {
 import { useTasks } from "@/client/hooks/useTasks";
 import { useRescanTasks } from "@/client/hooks/useRescanTasks";
 import { useNavigate } from "react-router-dom";
-import { RefreshCw, Loader2 } from "lucide-react";
+import { RefreshCw, Loader2, FileText } from "lucide-react";
 import { useSettings } from "@/client/hooks/useSettings";
+import { SessionListItem } from "@/client/pages/projects/sessions/components/SessionListItem";
+import type { SessionResponse } from "@/shared/types";
+import { formatDistanceToNow } from "date-fns";
 
 export function NavTasks() {
   const navigate = useNavigate();
@@ -26,15 +29,16 @@ export function NavTasks() {
     rescanMutation.mutate();
   };
 
-  const handleOpenWorkflow = (specPath: string, taskProjectId: string) => {
-    // Navigate to workflow creation page with spec pre-populated
-    navigate(
-      `/projects/${taskProjectId}/workflows/new?specFile=${encodeURIComponent(specPath)}`
-    );
-  };
+  const handleOpenWorkflow = (specPath: string, taskProjectId: string, taskName: string) => {
+    // Remove 'todo/' prefix from specPath since API returns relative to .agent/specs/todo/
+    const relativeSpecPath = specPath.startsWith("todo/")
+      ? specPath.slice(5)
+      : specPath;
 
-  const handleViewSession = (sessionProjectId: string, sessionId: string) => {
-    navigate(`/projects/${sessionProjectId}/sessions/${sessionId}`);
+    // Navigate to workflow creation page with spec and name pre-populated
+    navigate(
+      `/projects/${taskProjectId}/workflows/new?specFile=${encodeURIComponent(relativeSpecPath)}&name=${encodeURIComponent(taskName)}`
+    );
   };
 
   if (error) {
@@ -83,40 +87,32 @@ export function NavTasks() {
                 <SidebarMenu className="mb-4">
                   {data.tasks.map((task) => (
                     <SidebarMenuItem key={task.id}>
-                      <div className="flex flex-col gap-1 py-1">
-                        <div className="flex items-center gap-2">
-                          <SidebarMenuButton
-                            asChild
-                            className="flex-1 h-auto py-1"
-                          >
-                            <div className="flex flex-col items-start gap-1">
-                              <span className="text-sm truncate w-full">
-                                {task.name}
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <Badge variant="secondary" className="text-xs">
-                                  {task.status}
-                                </Badge>
-                                <span className="text-xs text-muted-foreground">
-                                  {new Date(
-                                    task.created_at
-                                  ).toLocaleDateString()}
-                                </span>
-                              </div>
-                            </div>
-                          </SidebarMenuButton>
+                      <SidebarMenuButton
+                        onClick={() =>
+                          handleOpenWorkflow(task.specPath, task.projectId, task.name)
+                        }
+                        className="h-auto min-h-[28px] px-2 py-1"
+                      >
+                        <FileText className="size-4 shrink-0 mr-1" />
+                        <div className="flex flex-1 flex-col gap-0.5 min-w-0">
+                          <span className="text-sm min-w-0 truncate">
+                            {task.name}
+                          </span>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <Badge
+                              variant="secondary"
+                              className="h-4 px-1.5 text-[10px] bg-muted/50 text-muted-foreground hover:bg-muted/50 truncate"
+                            >
+                              {task.status}
+                            </Badge>
+                            <span className="text-[10px] text-muted-foreground">
+                              {formatDistanceToNow(new Date(task.created_at), {
+                                addSuffix: true,
+                              })}
+                            </span>
+                          </div>
                         </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-6 px-2 text-xs w-full"
-                          onClick={() =>
-                            handleOpenWorkflow(task.specPath, task.projectId)
-                          }
-                        >
-                          Open Workflow
-                        </Button>
-                      </div>
+                      </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))}
                 </SidebarMenu>
@@ -134,43 +130,10 @@ export function NavTasks() {
                 <SidebarMenu>
                   {data.planningSessions.map((session) => (
                     <SidebarMenuItem key={session.id}>
-                      <div className="flex flex-col gap-1 py-1">
-                        <div className="flex items-center gap-2">
-                          <SidebarMenuButton
-                            asChild
-                            className="flex-1 h-auto py-1"
-                          >
-                            <div className="flex flex-col items-start gap-1">
-                              <span className="text-sm truncate w-full">
-                                {session.name || "Untitled Session"}
-                              </span>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <Badge variant="outline" className="text-xs">
-                                  {session.agent}
-                                </Badge>
-                                {session.projectId && (
-                                  <Badge
-                                    variant="secondary"
-                                    className="text-xs"
-                                  >
-                                    Project
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                          </SidebarMenuButton>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-6 px-2 text-xs w-full"
-                          onClick={() =>
-                            handleViewSession(session.projectId, session.id)
-                          }
-                        >
-                          View
-                        </Button>
-                      </div>
+                      <SessionListItem
+                        session={session as SessionResponse}
+                        projectId={session.projectId}
+                      />
                     </SidebarMenuItem>
                   ))}
                 </SidebarMenu>

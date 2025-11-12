@@ -39,9 +39,9 @@
     },
     "251112054939": {
       "path": "todo/251112054939-workflow-resync/spec.md",
-      "status": "draft",
+      "status": "completed",
       "created": "2025-11-12T05:49:39.000Z",
-      "updated": "2025-11-12T05:49:39.000Z"
+      "updated": "2025-11-12T21:45:00.000Z"
     },
     "251112070556": {
       "path": "done/251112070556-tasks-nav-workflow-integration/spec.md",

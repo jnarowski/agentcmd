@@ -11,6 +11,7 @@ export default function NewWorkflowRun() {
   const [searchParams] = useSearchParams();
   const activeProjectId = projectId || id;
   const initialSpecFile = searchParams.get("specFile") ?? undefined;
+  const initialName = searchParams.get("name") ?? undefined;
 
   // Get project name for title
   const { data: project } = useProject(activeProjectId!);
@@ -62,6 +63,7 @@ export default function NewWorkflowRun() {
               definition={definition}
               definitions={definitions}
               initialSpecFile={initialSpecFile}
+              initialName={initialName}
               onSuccess={handleSuccess}
               onCancel={handleCancel}
             />

@@ -97,10 +97,9 @@ export function SidebarTabs() {
     }
   }
 
-  // Count tasks (specs + planning sessions) filtered by project
+  // Count tasks (specs only) filtered by project
   const { data: tasksData } = useTasks(projectFilter);
-  const tasksCount =
-    (tasksData?.tasks.length || 0) + (tasksData?.planningSessions.length || 0);
+  const tasksCount = tasksData?.tasks.length || 0;
 
   const handleTabChange = (value: string) => {
     updateSettings.mutate({

@@ -26,6 +26,7 @@ interface NewRunFormProps {
   definition?: WorkflowDefinition;
   definitions?: WorkflowDefinition[];
   initialSpecFile?: string;
+  initialName?: string;
   onSuccess: (run: WorkflowRun) => void;
   onCancel: () => void;
 }
@@ -36,6 +37,7 @@ export function NewRunForm({
   definition,
   definitions,
   initialSpecFile,
+  initialName,
   onSuccess,
   onCancel,
 }: NewRunFormProps) {
@@ -78,23 +80,36 @@ export function NewRunForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [definitionId, definitions]);
 
-  // Reset dependent state when definition changes
+  // Pre-fill spec file and name from URL params (runs before reset effect)
   useEffect(() => {
-    if (selectedDefinitionId && selectedDefinitionId !== definitionId) {
-      setSpecFile("");
-      setName("");
-      setArgs({});
-    }
-  }, [selectedDefinitionId, definitionId]);
-
-  // Pre-fill spec file from URL param
-  useEffect(() => {
-    if (initialSpecFile && !specFile) {
+    if (initialSpecFile && specFile !== initialSpecFile) {
       setSpecFile(initialSpecFile);
       setSpecInputType("file");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialSpecFile]);
+
+  useEffect(() => {
+    if (initialName && !name) {
+      setName(initialName);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialName]);
+
+  // Reset dependent state when definition changes (but preserve initialSpecFile and initialName)
+  useEffect(() => {
+    if (selectedDefinitionId && selectedDefinitionId !== definitionId) {
+      // Don't reset specFile if we have an initialSpecFile from URL
+      if (!initialSpecFile) {
+        setSpecFile("");
+      }
+      // Don't reset name if we have an initialName from URL
+      if (!initialName) {
+        setName("");
+      }
+      setArgs({});
+    }
+  }, [selectedDefinitionId, definitionId, initialSpecFile, initialName]);
 
   // Fetch available spec files
   const { data: specFiles } = useProjectSpecs(projectId, true);
@@ -161,9 +176,9 @@ export function NewRunForm({
     return options;
   }, [definitions]);
 
-  // Auto-generate names from spec file using AI
+  // Auto-generate names from spec file using AI (only if name not pre-filled)
   useEffect(() => {
-    if (!specFile || !projectId) return;
+    if (!specFile || !projectId || name) return; // Skip if name already set
 
     const generateNames = async () => {
       setIsGeneratingNames(true);
@@ -188,7 +203,7 @@ export function NewRunForm({
     };
 
     generateNames();
-  }, [specFile, projectId]);
+  }, [specFile, projectId, name]);
 
   // Auto-generate branch name from run name
   useEffect(() => {

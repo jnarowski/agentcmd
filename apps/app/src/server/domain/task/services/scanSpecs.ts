@@ -38,14 +38,27 @@ export async function scanSpecs(projectPath: string, projectId: string): Promise
         continue;
       }
 
-      // Extract name from path (e.g., "todo/251112070556-tasks-nav-workflow-integration" -> "tasks-nav-workflow-integration")
-      const pathParts = entry.path.split("/");
-      const folderName = pathParts[pathParts.length - 1];
-      const namePart = folderName.split("-").slice(1).join("-"); // Remove timestamp prefix
-      const displayName = namePart
-        .split("-")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ");
+      // Read spec.md file to extract header
+      const specFilePath = path.join(projectPath, ".agent", "specs", entry.path);
+      let displayName = id; // Fallback to ID
+
+      try {
+        const specContent = await fs.readFile(specFilePath, "utf-8");
+        // Extract first H1 header (# Title)
+        const headerMatch = specContent.match(/^#\s+(.+)$/m);
+        if (headerMatch) {
+          displayName = headerMatch[1].trim();
+        }
+      } catch (error) {
+        // If file read fails, fall back to generating name from path
+        const pathParts = entry.path.split("/");
+        const folderName = pathParts[pathParts.length - 1];
+        const namePart = folderName.split("-").slice(1).join("-"); // Remove timestamp prefix
+        displayName = namePart
+          .split("-")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ");
+      }
 
       specTasks.push({
         id,

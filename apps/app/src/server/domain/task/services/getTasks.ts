@@ -33,7 +33,7 @@ export async function getTasks(
     return cached.data;
   }
 
-  // Get projects for this user (filtered by projectId if provided)
+  // Get projects (filtered by projectId if provided)
   const projects = await prisma.project.findMany({
     where: projectId ? { id: projectId } : undefined,
     select: { id: true, path: true },

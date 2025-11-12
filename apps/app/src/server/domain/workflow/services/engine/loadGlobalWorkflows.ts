@@ -70,8 +70,9 @@ export async function loadGlobalWorkflows(
   // Load each file
   for (const file of files) {
     try {
-      // Dynamic import with file URL
-      const fileUrl = pathToFileURL(file).href;
+      // Dynamic import with file URL and cache busting
+      // Cache busting ensures Node.js re-imports the module on each resync
+      const fileUrl = pathToFileURL(file).href + "?v=" + Date.now();
       const module = await import(fileUrl);
 
       // Extract workflow definition
