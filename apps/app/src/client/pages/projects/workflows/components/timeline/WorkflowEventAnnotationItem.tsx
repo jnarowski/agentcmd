@@ -23,21 +23,23 @@ export function WorkflowEventAnnotationItem({
         </span>
       }
     >
-      <div className="flex items-center gap-2">
-        {debugMode && (
-          <span className="text-xs text-muted-foreground font-mono">
-            [EVENT: {event.id}]
-          </span>
-        )}
-        {event.created_by_user && (
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <User className="h-3 w-3" />
-            <span className="font-medium">{event.created_by_user.username}</span>
-          </div>
-        )}
-      </div>
+      {(debugMode || event.created_by_user) && (
+        <div className="flex items-center gap-2">
+          {debugMode && (
+            <span className="text-xs text-muted-foreground font-mono">
+              [EVENT: {event.id}]
+            </span>
+          )}
+          {event.created_by_user && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <User className="h-3 w-3" />
+              <span className="font-medium">{event.created_by_user.username}</span>
+            </div>
+          )}
+        </div>
+      )}
 
-      <p className="text-sm text-foreground mt-1 whitespace-pre-wrap">
+      <p className={`font-medium whitespace-pre-wrap ${(debugMode || event.created_by_user) ? "mt-1" : ""}`}>
         {message}
       </p>
 
