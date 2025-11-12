@@ -131,12 +131,11 @@ describe("scanGlobalWorkflows", () => {
       await scanGlobalWorkflows(mockRuntime, mockLogger);
 
       // Assert
-      const workflow = await prisma.workflowDefinition.findUnique({
+      const workflow = await prisma.workflowDefinition.findFirst({
         where: {
-          scope_identifier: {
-            scope: "global",
-            identifier: "new-workflow",
-          },
+          scope: "global",
+          identifier: "new-workflow",
+          project_id: null,
         },
       });
 
