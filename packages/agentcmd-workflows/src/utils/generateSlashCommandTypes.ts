@@ -4,6 +4,17 @@ import path from 'path';
 import { generateResponseTypeCode, commandNameToTypeName, commandNameToArgsTypeName } from './generateCommandResponseTypes';
 
 /**
+ * Check if a property name needs quotes in TypeScript
+ * @param name - Property name to check
+ * @returns True if the name needs quotes
+ */
+function needsQuotes(name: string): boolean {
+  // Check if name is a valid JavaScript identifier
+  // Valid identifiers: start with letter/underscore/$, followed by letters/digits/underscores/$
+  return !/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(name);
+}
+
+/**
  * Generate TypeScript Args interface for a command
  *
  * @param cmd - Command definition
@@ -21,7 +32,8 @@ function generateArgsTypeCode(cmd: CommandDefinition): string {
 
   for (const arg of cmd.arguments) {
     const optional = arg.required ? '' : '?';
-    result += `  ${arg.name}${optional}: string;\n`;
+    const propName = needsQuotes(arg.name) ? `"${arg.name}"` : arg.name;
+    result += `  ${propName}${optional}: string;\n`;
   }
 
   result += '}\n';
@@ -92,7 +104,7 @@ export function buildSlashCommand(): string {
  */
 export function buildSlashCommand<T extends SlashCommandName>(
   name: T,
-  args: SlashCommandArgs[T]
+  args?: SlashCommandArgs[T]
 ): string {
   const parts: string[] = [name];
   const argOrder = SlashCommandArgOrder[name];

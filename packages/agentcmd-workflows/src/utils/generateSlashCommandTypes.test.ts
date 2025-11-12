@@ -101,4 +101,43 @@ describe("generateSlashCommandTypesCode", () => {
     expect(code).toContain('"optional1"?: string');
     expect(code).toContain('"optional2"?: string');
   });
+
+  it("should quote property names with hyphens in both mapping and interfaces", () => {
+    const commands: CommandDefinition[] = [
+      {
+        name: "/commit-and-push",
+        description: "Commit and push changes",
+        arguments: [
+          { name: "base-branch", required: true },
+          { name: "commit-message", required: false },
+        ],
+      },
+      {
+        name: "/simple-cmd",
+        description: "Simple command",
+        arguments: [
+          { name: "normalArg", required: true },
+        ],
+      },
+    ];
+
+    const code = generateSlashCommandTypesCode(commands);
+
+    // SlashCommandArgs mapping should quote properties with hyphens
+    expect(code).toContain('"/commit-and-push": { "base-branch": string; "commit-message"?: string }');
+    expect(code).toContain('"/simple-cmd": { "normalArg": string }');
+
+    // Individual Args interface should quote properties with hyphens
+    expect(code).toContain('export interface CommitAndPushArgs {');
+    expect(code).toContain('  "base-branch": string;');
+    expect(code).toContain('  "commit-message"?: string;');
+
+    // Properties without hyphens should not be quoted in interfaces
+    expect(code).toContain('export interface SimpleCmdArgs {');
+    expect(code).toContain('  normalArg: string;');
+
+    // Verify it's valid TypeScript syntax
+    expect(code).not.toContain('base-branch: string'); // Should be quoted
+    expect(code).not.toContain('commit-message?: string'); // Should be quoted
+  });
 });

@@ -9,7 +9,6 @@
  * - Artifact generation
  * - Sleep delays to simulate processing
  */
-
 import { defineWorkflow } from "agentcmd-workflows";
 
 export default defineWorkflow(

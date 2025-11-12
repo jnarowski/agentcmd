@@ -1,9 +1,9 @@
-import { defineWorkflow } from "agentcmd-workflows";
-
 /**
  * Example workflow demonstrating step.agent with Claude CLI integration.
  * Shows how to use AI agents within workflow steps for automated tasks.
  */
+import { buildSlashCommand, defineWorkflow } from "agentcmd-workflows";
+
 export default defineWorkflow(
   {
     id: "audit-workflow",
@@ -24,7 +24,7 @@ export default defineWorkflow(
     const response = await step.phase("audit", async () => {
       return await step.agent("Audit", {
         agent: "claude",
-        prompt: `/cmd:audit`,
+        prompt: buildSlashCommand("/audit"),
         permissionMode: "plan",
       });
     });

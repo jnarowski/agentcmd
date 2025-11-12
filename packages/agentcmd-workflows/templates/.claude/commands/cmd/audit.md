@@ -1,6 +1,6 @@
 ---
 description: Comprehensive codebase audit with scoring and prioritized refactoring plan
-argument-hint: [mode, scope]
+argument-hint: [mode?, scope?]
 ---
 
 # Audit Codebase

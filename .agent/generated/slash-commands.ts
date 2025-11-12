@@ -4,14 +4,19 @@
 /**
  * Union type of all available slash command names
  */
-export type SlashCommandName = "/audit" | "/check" | "/commit-and-push" | "/commit" | "/document-cli-tool" | "/estimate-spec" | "/find-claude-session" | "/fix" | "/generate-feature" | "/generate-prd" | "/generate-research" | "/generate-slash-command" | "/generate-spec-simple" | "/generate-spec" | "/implement-spec" | "/list-specs" | "/move-spec" | "/prime" | "/pull-request" | "/review-spec-implementation" | "/tools" | "/use-browser";
+export type SlashCommandName = "/audit" | "/check" | "/cmd:generate-spec" | "/cmd:implement-spec" | "/cmd:list-specs" | "/cmd:move-spec" | "/cmd:review-spec-implementation" | "/commit-and-push" | "/commit" | "/document-cli-tool" | "/estimate-spec" | "/find-claude-session" | "/fix" | "/generate-feature" | "/generate-prd" | "/generate-research" | "/generate-slash-command" | "/generate-spec-simple" | "/linear:implement-issue" | "/prime" | "/pull-request" | "/tools" | "/use-browser";
 
 /**
  * Mapping of command names to their argument types
  */
 export interface SlashCommandArgs {
-  "/audit": { "mode": string; "scope": string };
+  "/audit": { "mode"?: string; "scope"?: string };
   "/check": { "format": string };
+  "/cmd:generate-spec": { "context"?: string };
+  "/cmd:implement-spec": { "specIdOrNameOrPath": string; "format": string };
+  "/cmd:list-specs": { "folder": string; "status": string };
+  "/cmd:move-spec": { "specIdOrNameOrPath": string; "targetFolder": string };
+  "/cmd:review-spec-implementation": { "specIdOrNameOrPath": string; "format": string };
   "/commit-and-push": { "base-branch": string };
   "/commit": Record<string, never>;
   "/document-cli-tool": { "cli-name": string };
@@ -23,13 +28,9 @@ export interface SlashCommandArgs {
   "/generate-research": { "featureName": string; "researchTopic": string; "format": string };
   "/generate-slash-command": { "command-name": string; "description": string };
   "/generate-spec-simple": { "context (optional)": string; "format (optional)": string };
-  "/generate-spec": { "context (optional)": string };
-  "/implement-spec": { "specIdOrNameOrPath": string; "format": string };
-  "/list-specs": { "folder": string; "status": string };
-  "/move-spec": { "specIdOrNameOrPath": string; "targetFolder": string };
+  "/linear:implement-issue": Record<string, never>;
   "/prime": Record<string, never>;
   "/pull-request": { "title": string; "format": string };
-  "/review-spec-implementation": { "specIdOrNameOrPath": string; "format": string };
   "/tools": Record<string, never>;
   "/use-browser": { "featureSteps": string };
 }
@@ -41,6 +42,11 @@ export interface SlashCommandArgs {
 export const SlashCommandArgOrder = {
   "/audit": ["mode", "scope"],
   "/check": ["format"],
+  "/cmd:generate-spec": ["context"],
+  "/cmd:implement-spec": ["specIdOrNameOrPath", "format"],
+  "/cmd:list-specs": ["folder", "status"],
+  "/cmd:move-spec": ["specIdOrNameOrPath", "targetFolder"],
+  "/cmd:review-spec-implementation": ["specIdOrNameOrPath", "format"],
   "/commit-and-push": ["base-branch"],
   "/commit": [],
   "/document-cli-tool": ["cli-name"],
@@ -52,13 +58,9 @@ export const SlashCommandArgOrder = {
   "/generate-research": ["featureName", "researchTopic", "format"],
   "/generate-slash-command": ["command-name", "description"],
   "/generate-spec-simple": ["context (optional)", "format (optional)"],
-  "/generate-spec": ["context (optional)"],
-  "/implement-spec": ["specIdOrNameOrPath", "format"],
-  "/list-specs": ["folder", "status"],
-  "/move-spec": ["specIdOrNameOrPath", "targetFolder"],
+  "/linear:implement-issue": [],
   "/prime": [],
   "/pull-request": ["title", "format"],
-  "/review-spec-implementation": ["specIdOrNameOrPath", "format"],
   "/tools": [],
   "/use-browser": ["featureSteps"]
 } as const;
@@ -76,7 +78,7 @@ export const SlashCommandArgOrder = {
  */
 export function buildSlashCommand<T extends SlashCommandName>(
   name: T,
-  args: SlashCommandArgs[T]
+  args?: SlashCommandArgs[T]
 ): string {
   const parts: string[] = [name];
   const argOrder = SlashCommandArgOrder[name];
@@ -97,3 +99,271 @@ export function buildSlashCommand<T extends SlashCommandName>(
   return parts.join(" ");
 }
 
+// Individual Args type interfaces
+/**
+ * Args type for /audit command
+ */
+export interface AuditArgs {
+  mode?: string;
+  scope?: string;
+}
+
+/**
+ * Args type for /check command
+ */
+export interface CheckArgs {
+  format: string;
+}
+
+/**
+ * Args type for /cmd:generate-spec command
+ */
+export interface CmdGenerateSpecArgs {
+  context?: string;
+}
+
+/**
+ * Args type for /cmd:implement-spec command
+ */
+export interface CmdImplementSpecArgs {
+  specIdOrNameOrPath: string;
+  format: string;
+}
+
+/**
+ * Args type for /cmd:list-specs command
+ */
+export interface CmdListSpecsArgs {
+  folder: string;
+  status: string;
+}
+
+/**
+ * Args type for /cmd:move-spec command
+ */
+export interface CmdMoveSpecArgs {
+  specIdOrNameOrPath: string;
+  targetFolder: string;
+}
+
+/**
+ * Args type for /cmd:review-spec-implementation command
+ */
+export interface CmdReviewSpecImplementationArgs {
+  specIdOrNameOrPath: string;
+  format: string;
+}
+
+/**
+ * Args type for /commit-and-push command
+ */
+export interface CommitAndPushArgs {
+  "base-branch": string;
+}
+
+/**
+ * Args type for /commit command (no arguments)
+ */
+export interface CommitArgs {}
+
+/**
+ * Args type for /document-cli-tool command
+ */
+export interface DocumentCliToolArgs {
+  "cli-name": string;
+}
+
+/**
+ * Args type for /estimate-spec command
+ */
+export interface EstimateSpecArgs {
+  "spec-id-or-path-or-name": string;
+}
+
+/**
+ * Args type for /find-claude-session command
+ */
+export interface FindClaudeSessionArgs {
+  "search-description": string;
+  "project-path (optional)": string;
+}
+
+/**
+ * Args type for /fix command (no arguments)
+ */
+export interface FixArgs {}
+
+/**
+ * Args type for /generate-feature command
+ */
+export interface GenerateFeatureArgs {
+  featureName: string;
+  context: string;
+  format: string;
+}
+
+/**
+ * Args type for /generate-prd command
+ */
+export interface GeneratePrdArgs {
+  featurename: string;
+  context: string;
+  format: string;
+}
+
+/**
+ * Args type for /generate-research command
+ */
+export interface GenerateResearchArgs {
+  featureName: string;
+  researchTopic: string;
+  format: string;
+}
+
+/**
+ * Args type for /generate-slash-command command
+ */
+export interface GenerateSlashCommandArgs {
+  "command-name": string;
+  description: string;
+}
+
+/**
+ * Args type for /generate-spec-simple command
+ */
+export interface GenerateSpecSimpleArgs {
+  "context (optional)": string;
+  "format (optional)": string;
+}
+
+/**
+ * Args type for /linear:implement-issue command (no arguments)
+ */
+export interface LinearImplementIssueArgs {}
+
+/**
+ * Args type for /prime command (no arguments)
+ */
+export interface PrimeArgs {}
+
+/**
+ * Args type for /pull-request command
+ */
+export interface PullRequestArgs {
+  title: string;
+  format: string;
+}
+
+/**
+ * Args type for /tools command (no arguments)
+ */
+export interface ToolsArgs {}
+
+/**
+ * Args type for /use-browser command
+ */
+export interface UseBrowserArgs {
+  featureSteps: string;
+}
+
+// Response type interfaces
+/**
+ * Response type for /cmd:generate-spec command
+ */
+export interface CmdGenerateSpecResponse {
+  /** Always true if spec generation completed */
+  success: boolean;
+  /** Path to the created spec folder */
+  spec_folder: string;
+  /** Full path to the spec file (always spec.md) */
+  spec_file: string;
+  /** The timestamp-based spec ID in YYMMDDHHmmss format (e.g., "251024120101") */
+  spec_id: string;
+  /** Normalized feature name (kebab-case) */
+  feature_name: string;
+  /** Total and average complexity scores */
+  complexity: {
+    total: string;
+    avg: string;
+  };
+  /** Array of new files to be created */
+  files_to_create: string[];
+  /** Array of existing files to be modified */
+  files_to_modify: string[];
+  /** Suggested next command to run */
+  next_command: string;
+}
+
+/**
+ * Response type for /cmd:implement-spec command
+ */
+export interface CmdImplementSpecResponse {
+  /** Always true if implementation completed */
+  success: boolean;
+  /** Path to the spec file that was implemented */
+  spec_path: string;
+  /** Normalized feature name (lowercase, hyphenated) */
+  feature_name: string;
+  /** Total number of tasks in the spec */
+  total_tasks: number;
+  /** Number of tasks completed (should equal total_tasks) */
+  completed_tasks: number;
+  /** Number of existing files modified */
+  files_modified: number;
+  /** Number of new files created */
+  files_created: number;
+  /** Total lines added + removed */
+  total_lines_changed: number;
+  /** Number of lines added */
+  lines_added: number;
+  /** Number of lines removed */
+  lines_removed: number;
+  /** True if all validation steps passed */
+  validation_passed: boolean;
+  /** Output from git diff --stat */
+  git_diff_stat: string;
+}
+
+/**
+ * Response type for /cmd:review-spec-implementation command
+ */
+export interface CmdReviewSpecImplementationResponse {
+  /** True if review passed, false if it failed */
+  success: boolean;
+  /** Current iteration number (1-based, auto-detected) */
+  review_iteration: number;
+  /** Always 3 */
+  max_iterations: number;
+  /** True if review_iteration > 3 */
+  max_iterations_reached: boolean;
+  /** Path to spec file reviewed */
+  spec_path: string;
+  /** Current git branch */
+  branch: string;
+  /** Number of commits since branching */
+  commits_reviewed: number;
+  /** Total issues in this review iteration */
+  issues_found: number;
+  /** Count of issues from previous review that were fixed (0 if first review) */
+  previous_issues_resolved: number;
+  /** Counts by priority level */
+  priority_breakdown: {
+    high: number;
+    medium: number;
+  };
+  /** Counts by issue category */
+  categories: {
+    missing_implementations: number;
+    incomplete_implementations: number;
+    code_quality: number;
+  };
+}
+
+/**
+ * Mapping of slash commands to their JSON response types
+ */
+export interface SlashCommandResponses {
+  "/cmd:generate-spec": CmdGenerateSpecResponse;
+  "/cmd:implement-spec": CmdImplementSpecResponse;
+  "/cmd:review-spec-implementation": CmdReviewSpecImplementationResponse;
+}

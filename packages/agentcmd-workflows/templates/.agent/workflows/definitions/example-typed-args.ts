@@ -1,7 +1,4 @@
-import {
-  defineWorkflow,
-  defineSchema,
-} from "agentcmd-workflows";
+import { defineSchema, defineWorkflow } from "agentcmd-workflows";
 
 /**
  * Example: Type-safe workflow arguments with defineSchema

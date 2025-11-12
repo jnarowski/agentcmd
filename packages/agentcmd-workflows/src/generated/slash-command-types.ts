@@ -10,7 +10,7 @@ export type SlashCommandName = "/cmd:audit" | "/cmd:generate-spec" | "/cmd:imple
  * Mapping of command names to their argument types
  */
 export interface SlashCommandArgs {
-  "/cmd:audit": { "mode": string; "scope": string };
+  "/cmd:audit": { "mode"?: string; "scope"?: string };
   "/cmd:generate-spec": { "context"?: string };
   "/cmd:implement-spec": { "specIdOrNameOrPath": string; "format": string };
   "/cmd:list-specs": { "folder": string; "status": string };
@@ -44,7 +44,7 @@ export const SlashCommandArgOrder = {
  */
 export function buildSlashCommand<T extends SlashCommandName>(
   name: T,
-  args: SlashCommandArgs[T]
+  args?: SlashCommandArgs[T]
 ): string {
   const parts: string[] = [name];
   const argOrder = SlashCommandArgOrder[name];
@@ -70,8 +70,8 @@ export function buildSlashCommand<T extends SlashCommandName>(
  * Args type for /cmd:audit command
  */
 export interface CmdAuditArgs {
-  mode: string;
-  scope: string;
+  mode?: string;
+  scope?: string;
 }
 
 /**
@@ -124,7 +124,7 @@ export interface CmdGenerateSpecResponse {
   spec_folder: string;
   /** Full path to the spec file (always spec.md) */
   spec_file: string;
-  /** The full spec ID with 2-letter suffix (e.g., "4is") */
+  /** The timestamp-based spec ID in YYMMDDHHmmss format (e.g., "251024120101") */
   spec_id: string;
   /** Normalized feature name (kebab-case) */
   feature_name: string;
