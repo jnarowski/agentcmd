@@ -51,7 +51,12 @@ describe("findOrCreateStep", () => {
     };
 
     // Act
-    const step = await findOrCreateStep(context, "build-compile", "Compile");
+    const step = await findOrCreateStep({
+      context,
+      inngestStepId: "build-compile",
+      stepName: "Compile",
+      stepType: "command",
+    });
 
     // Assert
     expect(step).toBeDefined();
@@ -109,8 +114,18 @@ describe("findOrCreateStep", () => {
     };
 
     // Act: Call twice with same step ID
-    const step1 = await findOrCreateStep(context, "build-compile", "Compile");
-    const step2 = await findOrCreateStep(context, "build-compile", "Compile");
+    const step1 = await findOrCreateStep({
+      context,
+      inngestStepId: "build-compile",
+      stepName: "Compile",
+      stepType: "command",
+    });
+    const step2 = await findOrCreateStep({
+      context,
+      inngestStepId: "build-compile",
+      stepName: "Compile",
+      stepType: "command",
+    });
 
     // Assert: Same step returned
     expect(step1.id).toBe(step2.id);

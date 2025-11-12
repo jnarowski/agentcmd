@@ -58,16 +58,18 @@ describe("executeStep", () => {
     const stepFn = vi.fn().mockResolvedValue("success");
 
     // Act
-    const result = await executeStep(
+    const result = await executeStep({
       context,
-      "compile",
-      "Compile Code",
-      stepFn,
-      mockInngestStep as RuntimeContext["inngestStep"]
-    );
+      stepId: "compile",
+      stepName: "Compile Code",
+      stepType: "command",
+      fn: stepFn,
+      inngestStep: mockInngestStep as RuntimeContext["inngestStep"],
+    });
 
     // Assert
-    expect(result).toBe("success");
+    expect(result.result).toBe("success");
+    expect(result.runStepId).toBeDefined();
     expect(stepFn).toHaveBeenCalledTimes(1);
     expect(mockInngestStep.run).toHaveBeenCalledWith(
       "build-compile",
@@ -135,13 +137,14 @@ describe("executeStep", () => {
 
     // Act & Assert
     await expect(
-      executeStep(
+      executeStep({
         context,
-        "compile",
-        "Compile Code",
-        stepFn,
-        mockInngestStep as RuntimeContext["inngestStep"]
-      )
+        stepId: "compile",
+        stepName: "Compile Code",
+        stepType: "command",
+        fn: stepFn,
+        inngestStep: mockInngestStep as RuntimeContext["inngestStep"],
+      })
     ).rejects.toThrow("Build failed");
 
     const step = await prisma.workflowRunStep.findFirst({
