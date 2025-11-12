@@ -160,12 +160,12 @@ export function createAiStep(
     idOrName: string,
     config: AiStepConfig,
     options?: StepOptions
-  ): Promise<{ runStepId: string; result: AiStepResult<T> }> {
+  ): Promise<AiStepResult<T>> {
     const timeout = options?.timeout ?? DEFAULT_AI_TIMEOUT;
     const id = toId(idOrName);
     const name = toName(idOrName);
 
-    return executeStep({
+    const { result } = await executeStep({
       context,
       stepId: id,
       stepName: name,
@@ -213,5 +213,7 @@ export function createAiStep(
         }
       },
     });
+
+    return result;
   };
 }

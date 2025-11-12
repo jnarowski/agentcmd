@@ -59,7 +59,7 @@ export default defineWorkflow(
     // ========================================
     await step.phase("build", async () => {
       await step.annotation("build-start", {
-        message: "🔨 Starting build phase",
+        message: "Starting build phase",
       });
 
       // Simulate linting

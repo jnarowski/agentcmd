@@ -19,14 +19,14 @@ export function createRunStep(
   return async function run<T>(
     idOrName: string,
     fn: () => Promise<T> | T
-  ): Promise<{ runStepId: string; result: T }> {
+  ): Promise<T> {
     const id = toId(idOrName);
     const name = toName(idOrName);
 
     // Generate phase-prefixed Inngest step ID
     const inngestStepId = generateInngestStepId(context, id);
 
-    return (await inngestStep.run(inngestStepId, async () => {
+    const { result } = (await inngestStep.run(inngestStepId, async () => {
       // Find or create step in database
       const step = await findOrCreateStep({
         context,
@@ -56,6 +56,8 @@ export function createRunStep(
         await handleStepFailure(context, step.id, error as Error);
         throw error;
       }
-    })) as unknown as Promise<{ runStepId: string; result: T }>;
+    })) as unknown as { runStepId: string; result: T };
+
+    return result;
   };
 }

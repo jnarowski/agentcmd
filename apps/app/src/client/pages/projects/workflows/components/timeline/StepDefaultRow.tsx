@@ -11,6 +11,7 @@ import { useIsMobile } from "@/client/hooks/use-mobile";
 import { useDebugMode } from "@/client/hooks/useDebugMode";
 import type { WorkflowRunStep } from "@/client/pages/projects/workflows/types";
 import type { WorkflowTab } from "@/client/pages/projects/workflows/hooks/useWorkflowDetailPanel";
+import { TimelineRow } from "./TimelineRow";
 
 interface StepDefaultRowProps {
   step: WorkflowRunStep;
@@ -58,15 +59,27 @@ export function StepDefaultRow({ step, projectId, onSelectSession, onSetActiveTa
     return `${seconds}s`;
   };
 
-  return (
-    <div className="flex items-center gap-3 p-3 hover:bg-accent/50 transition-colors">
-      {/* Status Icon */}
-      <StatusIcon
-        className={`h-5 w-5 ${statusColor} ${step.status === "running" ? "animate-spin" : ""}`}
-      />
+  // Format step type for tooltip
+  const tooltipLabel = step.step_type
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ") + " Step";
 
-      {/* Step Info */}
-      <div className="flex-1 min-w-0">
+  return (
+    <>
+      <TimelineRow
+        icon={
+          <StatusIcon
+            className={`h-5 w-5 ${statusColor} ${step.status === "running" ? "animate-spin" : ""}`}
+          />
+        }
+        tooltipLabel={tooltipLabel}
+        rightContent={
+          <span className="px-2 py-1 text-xs font-medium rounded bg-background/50 text-muted-foreground">
+            {tooltipLabel}
+          </span>
+        }
+      >
         <div className="flex items-center gap-2">
           <span className="font-medium">{step.name}</span>
           {debugMode && (
@@ -102,27 +115,7 @@ export function StepDefaultRow({ step, projectId, onSelectSession, onSetActiveTa
             <span className="text-red-500">{step.error_message}</span>
           )}
         </div>
-
-        {/* Status Badge beneath step info */}
-        <div className="mt-1">
-          <span
-            className={`px-2 py-1 text-xs font-medium rounded ${
-              {
-                pending: "bg-gray-500/10 text-gray-500",
-                running: "bg-blue-500/10 text-blue-500",
-                completed: "bg-green-500/10 text-green-500",
-                failed: "bg-red-500/10 text-red-500",
-                skipped: "bg-gray-500/10 text-gray-500",
-              }[step.status]
-            }`}
-          >
-            {step.status}
-          </span>
-        </div>
-      </div>
-
-      {/* Label */}
-      <span className="text-xs text-muted-foreground capitalize">{step.step_type}</span>
+      </TimelineRow>
 
       {/* Session Modal */}
       {step.agent_session_id && (
@@ -134,6 +127,6 @@ export function StepDefaultRow({ step, projectId, onSelectSession, onSetActiveTa
           sessionName={`${step.name} Session`}
         />
       )}
-    </div>
+    </>
   );
 }

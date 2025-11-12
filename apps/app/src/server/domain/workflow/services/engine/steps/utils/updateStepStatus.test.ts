@@ -51,6 +51,7 @@ describe("updateStepStatus", () => {
         name: "Test Step",
         phase: "test-phase",
         status: "running",
+        step_type: "command",
         started_at: new Date(),
       },
     });
@@ -117,6 +118,7 @@ describe("updateStepStatus", () => {
         name: "Test Step",
         phase: "test-phase",
         status: "running",
+        step_type: "command",
         started_at: new Date(),
       },
     });
@@ -193,6 +195,7 @@ describe("updateStepStatus", () => {
         name: "Test Step",
         phase: "test-phase",
         status: "pending",
+        step_type: "command",
       },
     });
 

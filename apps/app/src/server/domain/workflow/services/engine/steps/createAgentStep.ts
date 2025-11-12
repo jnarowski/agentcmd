@@ -34,7 +34,7 @@ export function createAgentStep(
     idOrName: string,
     config: AgentStepConfig,
     options?: AgentStepOptions
-  ): Promise<{ runStepId: string; result: AgentStepResult }> {
+  ): Promise<AgentStepResult> {
     const id = toId(idOrName);
     const name = toName(idOrName);
     const timeout = options?.timeout ?? DEFAULT_AGENT_TIMEOUT;
@@ -138,11 +138,8 @@ export function createAgentStep(
           // Strip messages array to avoid Inngest 4MB payload limit
           // Messages can be 50+MB with tool results, thinking blocks, images
           return {
-            runStepId: step.id,
-            result: {
-              ...result,
-              messages: undefined,
-            },
+            ...result,
+            messages: undefined,
           };
         } catch (error) {
           // Mark session as failed using domain service
@@ -162,6 +159,6 @@ export function createAgentStep(
         await handleStepFailure(context, step.id, error as Error);
         throw error;
       }
-    })) as unknown as Promise<{ runStepId: string; result: AgentStepResult }>;
+    })) as unknown as Promise<AgentStepResult>;
   };
 }

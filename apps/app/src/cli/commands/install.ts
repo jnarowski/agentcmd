@@ -1,4 +1,10 @@
-import { existsSync, unlinkSync, copyFileSync, readdirSync } from "fs";
+import {
+  existsSync,
+  unlinkSync,
+  copyFileSync,
+  readdirSync,
+  writeFileSync,
+} from "fs";
 import { spawnSync } from "child_process";
 import { randomBytes } from "crypto";
 import { join, dirname } from "path";
@@ -90,10 +96,7 @@ export async function installCommand(options: InstallOptions): Promise<void> {
       },
     };
 
-    require("fs").writeFileSync(
-      packageJsonPath,
-      JSON.stringify(packageJson, null, 2)
-    );
+    writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
     // Install dependencies
     console.log("Installing workflow dependencies...");

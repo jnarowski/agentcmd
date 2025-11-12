@@ -25,13 +25,13 @@ export function createCliStep(
     idOrName: string,
     config: CliStepConfig,
     options?: CliStepOptions
-  ): Promise<{ runStepId: string; result: CliStepResult }> {
+  ): Promise<CliStepResult> {
     const timeout = options?.timeout ?? DEFAULT_CLI_TIMEOUT;
     const id = toId(idOrName);
     const name = toName(idOrName);
     const command = config.command;
 
-    return executeStep({
+    const { result } = await executeStep({
       context,
       stepId: id,
       stepName: name,
@@ -81,5 +81,7 @@ export function createCliStep(
       }
       },
     });
+
+    return result;
   };
 }

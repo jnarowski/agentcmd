@@ -4,10 +4,10 @@ import {
   Loader2,
   XCircle,
   MinusCircle,
-  GitBranch,
 } from "lucide-react";
 import { useDebugMode } from "@/client/hooks/useDebugMode";
 import type { WorkflowRunStep } from "@/client/pages/projects/workflows/types";
+import { TimelineRow } from "./TimelineRow";
 
 interface StepGitRowProps {
   step: WorkflowRunStep;
@@ -51,19 +51,28 @@ export function StepGitRow({ step }: StepGitRowProps) {
     return `${seconds}s`;
   };
 
+  // Format step type for tooltip
+  const tooltipLabel = step.step_type
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ") + " Step";
+
   return (
-    <div className="flex items-center gap-2 py-2 px-3 hover:bg-accent/30 transition-colors">
-      {/* Status Icon - smaller */}
-      <StatusIcon
-        className={`h-4 w-4 ${statusColor} ${step.status === "running" ? "animate-spin" : ""}`}
-      />
-
-      {/* Git Icon */}
-      <GitBranch className="h-4 w-4 text-muted-foreground" />
-
-      {/* Compact Step Info */}
-      <div className="flex-1 min-w-0 flex items-center gap-2">
-        <span className="text-sm">{step.name}</span>
+    <TimelineRow
+      icon={
+        <StatusIcon
+          className={`h-5 w-5 ${statusColor} ${step.status === "running" ? "animate-spin" : ""}`}
+        />
+      }
+      tooltipLabel={tooltipLabel}
+      rightContent={
+        <span className="px-2 py-1 text-xs font-medium rounded bg-background/50 text-muted-foreground">
+          {tooltipLabel}
+        </span>
+      }
+    >
+      <div className="flex items-center gap-3">
+        <span className="font-medium">{step.name}</span>
         {debugMode && (
           <span className="text-xs text-muted-foreground font-mono">
             [STEP: {step.id}]
@@ -76,21 +85,6 @@ export function StepGitRow({ step }: StepGitRowProps) {
           <span className="text-xs text-red-500 truncate">{step.error_message}</span>
         )}
       </div>
-
-      {/* Compact Status Badge */}
-      <span
-        className={`px-1.5 py-0.5 text-xs font-medium rounded ${
-          {
-            pending: "bg-gray-500/10 text-gray-500",
-            running: "bg-blue-500/10 text-blue-500",
-            completed: "bg-green-500/10 text-green-500",
-            failed: "bg-red-500/10 text-red-500",
-            skipped: "bg-gray-500/10 text-gray-500",
-          }[step.status]
-        }`}
-      >
-        {step.status}
-      </span>
-    </div>
+    </TimelineRow>
   );
 }

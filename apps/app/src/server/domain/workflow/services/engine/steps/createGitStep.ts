@@ -26,12 +26,12 @@ export function createGitStep(
     idOrName: string,
     config: GitStepConfig,
     options?: GitStepOptions
-  ): Promise<{ runStepId: string; result: GitStepResult }> {
+  ): Promise<GitStepResult> {
     const id = toId(idOrName);
     const name = idOrName; // Use original name for display
     const timeout = options?.timeout ?? DEFAULT_GIT_TIMEOUT;
 
-    return await executeStep({
+    const { result } = await executeStep({
       context,
       stepId: id,
       stepName: name,
@@ -41,7 +41,7 @@ export function createGitStep(
         const { projectPath } = context;
 
         const operation = await withTimeout(
-          executeGitOperation(projectPath, config, context),
+          executeGitOperation(projectPath, config),
           timeout,
           "Git operation"
         );
@@ -49,13 +49,14 @@ export function createGitStep(
         return operation;
       },
     });
+
+    return result;
   };
 }
 
 async function executeGitOperation(
   projectPath: string,
-  config: GitStepConfig,
-  context: RuntimeContext
+  config: GitStepConfig
 ): Promise<GitStepResult> {
   switch (config.operation) {
     case "commit": {

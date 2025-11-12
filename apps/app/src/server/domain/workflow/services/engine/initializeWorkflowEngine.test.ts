@@ -24,7 +24,6 @@ describe("initializeWorkflowEngine", () => {
   let mockFastify: FastifyInstance;
   let mockLoadProjectWorkflows: ReturnType<typeof vi.fn>;
   let mockLoadGlobalWorkflows: ReturnType<typeof vi.fn>;
-  let mockCreateWorkflowClient: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     // Mock Fastify instance
@@ -41,9 +40,9 @@ describe("initializeWorkflowEngine", () => {
 
     // Mock workflow client
     const mockClient = { id: vi.fn().mockReturnValue("test-client") };
-    mockCreateWorkflowClient = vi
-      .mocked(createWorkflowClientModule.createWorkflowClient)
-      .mockReturnValue(mockClient as any);
+    vi.mocked(createWorkflowClientModule.createWorkflowClient).mockReturnValue(
+      mockClient as unknown as ReturnType<typeof createWorkflowClientModule.createWorkflowClient>
+    );
 
     // Mock scanning functions
     vi.mocked(scanGlobalWorkflowsModule.scanGlobalWorkflows).mockResolvedValue(0);
@@ -130,17 +129,17 @@ describe("initializeWorkflowEngine", () => {
         workflows: [
           {
             definition: createMockDefinition("workflow-1", "Workflow 1"),
-            inngestFunction: { id: () => "workflow-1" } as any,
+            inngestFunction: { id: () => "workflow-1" },
             filePath: workflow1.path,
           },
           {
             definition: createMockDefinition("workflow-2", "Workflow 2"),
-            inngestFunction: { id: () => "workflow-2" } as any,
+            inngestFunction: { id: () => "workflow-2" },
             filePath: workflow2.path,
           },
           {
             definition: createMockDefinition("workflow-3", "Workflow 3"),
-            inngestFunction: { id: () => "workflow-3" } as any,
+            inngestFunction: { id: () => "workflow-3" },
             filePath: workflow3.path,
           },
         ],
@@ -251,12 +250,12 @@ describe("initializeWorkflowEngine", () => {
             workflows: [
               {
                 definition: createMockDefinition("p1-workflow-1", "P1 Workflow 1"),
-                inngestFunction: { id: () => "p1-workflow-1" } as any,
+                inngestFunction: { id: () => "p1-workflow-1" },
                 filePath: "/tmp/project-1/.agent/workflows/definitions/workflow-1.ts",
               },
               {
                 definition: createMockDefinition("p1-workflow-2", "P1 Workflow 2"),
-                inngestFunction: { id: () => "p1-workflow-2" } as any,
+                inngestFunction: { id: () => "p1-workflow-2" },
                 filePath: "/tmp/project-1/.agent/workflows/definitions/workflow-2.ts",
               },
             ],
@@ -267,17 +266,17 @@ describe("initializeWorkflowEngine", () => {
             workflows: [
               {
                 definition: createMockDefinition("p2-workflow-1", "P2 Workflow 1"),
-                inngestFunction: { id: () => "p2-workflow-1" } as any,
+                inngestFunction: { id: () => "p2-workflow-1" },
                 filePath: "/tmp/project-2/.agent/workflows/definitions/workflow-1.ts",
               },
               {
                 definition: createMockDefinition("p2-workflow-2", "P2 Workflow 2"),
-                inngestFunction: { id: () => "p2-workflow-2" } as any,
+                inngestFunction: { id: () => "p2-workflow-2" },
                 filePath: "/tmp/project-2/.agent/workflows/definitions/workflow-2.ts",
               },
               {
                 definition: createMockDefinition("p2-workflow-3", "P2 Workflow 3"),
-                inngestFunction: { id: () => "p2-workflow-3" } as any,
+                inngestFunction: { id: () => "p2-workflow-3" },
                 filePath: "/tmp/project-2/.agent/workflows/definitions/workflow-3.ts",
               },
             ],
@@ -359,17 +358,17 @@ describe("initializeWorkflowEngine", () => {
         workflows: [
           {
             definition: createMockDefinition("global-1", "Global 1"),
-            inngestFunction: { id: () => "global-1" } as any,
+            inngestFunction: { id: () => "global-1" },
             filePath: "/home/.agentcmd/workflows/global-1.ts",
           },
           {
             definition: createMockDefinition("global-2", "Global 2"),
-            inngestFunction: { id: () => "global-2" } as any,
+            inngestFunction: { id: () => "global-2" },
             filePath: "/home/.agentcmd/workflows/global-2.ts",
           },
           {
             definition: createMockDefinition("global-3", "Global 3"),
-            inngestFunction: { id: () => "global-3" } as any,
+            inngestFunction: { id: () => "global-3" },
             filePath: "/home/.agentcmd/workflows/global-3.ts",
           },
         ],
@@ -417,9 +416,9 @@ describe("initializeWorkflowEngine", () => {
       });
 
       mockLoadProjectWorkflows.mockResolvedValue({
-        workflows: workflows.map((w, i) => ({
+        workflows: workflows.map((w) => ({
           definition: createMockDefinition(w.identifier, w.name),
-          inngestFunction: { id: () => w.identifier } as any,
+          inngestFunction: { id: () => w.identifier },
           filePath: w.path,
         })),
         errors: [],
@@ -487,7 +486,7 @@ describe("initializeWorkflowEngine", () => {
         workflows: [
           {
             definition: createMockDefinition("global-workflow", "Global Workflow"),
-            inngestFunction: { id: () => "global-workflow" } as any,
+            inngestFunction: { id: () => "global-workflow" },
             filePath: "/home/.agentcmd/workflows/global.ts",
           },
         ],
@@ -498,7 +497,7 @@ describe("initializeWorkflowEngine", () => {
         workflows: [
           {
             definition: createMockDefinition("project-workflow", "Project Workflow"),
-            inngestFunction: { id: () => "project-workflow" } as any,
+            inngestFunction: { id: () => "project-workflow" },
             filePath: "/tmp/test/.agent/workflows/definitions/workflow.ts",
           },
         ],
