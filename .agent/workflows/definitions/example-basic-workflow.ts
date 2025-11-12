@@ -123,7 +123,7 @@ Time: ${new Date().toISOString()}
     // ========================================
     await step.phase("test", async () => {
       await step.annotation("test-start", {
-        message: "🧪 Starting test phase",
+        message: "Starting test phase",
       });
 
       // Simulate unit tests
