@@ -14,6 +14,7 @@ import {
   type ResizeMessage,
 } from '@/server/domain/shell/schemas';
 import type { JWTPayload } from '@/server/utils/auth';
+import { ShellEventTypes } from '@/shared/types/websocket.types';
 
 export async function registerShellRoute(fastify: FastifyInstance) {
   fastify.register(async (fastify) => {
@@ -36,7 +37,7 @@ export async function registerShellRoute(fastify: FastifyInstance) {
             if (!token) {
               socket.send(
                 JSON.stringify({
-                  type: 'error',
+                  type: ShellEventTypes.ERROR,
                   data: {
                     shellId: 'unknown',
                     error: 'Authentication required',
@@ -57,7 +58,7 @@ export async function registerShellRoute(fastify: FastifyInstance) {
             fastify.log.error({ error }, 'Shell WebSocket authentication failed');
             socket.send(
               JSON.stringify({
-                type: 'error',
+                type: ShellEventTypes.ERROR,
                 data: {
                   shellId: 'unknown',
                   error: 'Invalid authentication token',
@@ -76,23 +77,23 @@ export async function registerShellRoute(fastify: FastifyInstance) {
             // Validate message schema
             const validatedMessage = shellMessageSchema.parse(message);
 
-            if (validatedMessage.type === 'init') {
+            if (validatedMessage.type === ShellEventTypes.INIT) {
               await handleInit(
                 validatedMessage,
                 userId!,
                 socket,
                 fastify
               );
-            } else if (validatedMessage.type === 'input') {
+            } else if (validatedMessage.type === ShellEventTypes.INPUT) {
               handleInput(validatedMessage, sessionId, socket);
-            } else if (validatedMessage.type === 'resize') {
+            } else if (validatedMessage.type === ShellEventTypes.RESIZE) {
               handleResize(validatedMessage, sessionId, socket, fastify);
             }
           } catch (error) {
             fastify.log.error({ error }, 'Error processing shell message');
             socket.send(
               JSON.stringify({
-                type: 'error',
+                type: ShellEventTypes.ERROR,
                 data: {
                   shellId: sessionId || 'unknown',
                   error: error instanceof Error ? error.message : 'Unknown error',
@@ -128,7 +129,7 @@ export async function registerShellRoute(fastify: FastifyInstance) {
             session.ptyProcess.onData((data) => {
               socket.send(
                 JSON.stringify({
-                  type: 'output',
+                  type: ShellEventTypes.OUTPUT,
                   data: {
                     shellId: sessionId!,
                     data,
@@ -145,7 +146,7 @@ export async function registerShellRoute(fastify: FastifyInstance) {
               );
               socket.send(
                 JSON.stringify({
-                  type: 'exit',
+                  type: ShellEventTypes.EXIT,
                   data: {
                     shellId: sessionId!,
                     code: exitCode,
@@ -154,10 +155,10 @@ export async function registerShellRoute(fastify: FastifyInstance) {
               );
             });
 
-            // Send success response (using 'init' type to match ShellEventTypes.INIT)
+            // Send success response
             socket.send(
               JSON.stringify({
-                type: 'init',
+                type: ShellEventTypes.INIT,
                 data: {
                   shellId: sessionId,
                   rows,
@@ -171,7 +172,7 @@ export async function registerShellRoute(fastify: FastifyInstance) {
             fastify.log.error({ error }, 'Failed to initialize shell');
             socket.send(
               JSON.stringify({
-                type: 'error',
+                type: ShellEventTypes.ERROR,
                 data: {
                   shellId: sessionId || 'unknown',
                   error:
@@ -193,7 +194,7 @@ export async function registerShellRoute(fastify: FastifyInstance) {
           if (!sessionId) {
             socket.send(
               JSON.stringify({
-                type: 'error',
+                type: ShellEventTypes.ERROR,
                 data: {
                   shellId: 'unknown',
                   error: 'Session not initialized',
@@ -207,7 +208,7 @@ export async function registerShellRoute(fastify: FastifyInstance) {
           if (!session) {
             socket.send(
               JSON.stringify({
-                type: 'error',
+                type: ShellEventTypes.ERROR,
                 data: {
                   shellId: sessionId,
                   error: 'Session not found',
@@ -231,7 +232,7 @@ export async function registerShellRoute(fastify: FastifyInstance) {
           if (!sessionId) {
             socket.send(
               JSON.stringify({
-                type: 'error',
+                type: ShellEventTypes.ERROR,
                 data: {
                   shellId: 'unknown',
                   error: 'Session not initialized',
@@ -245,7 +246,7 @@ export async function registerShellRoute(fastify: FastifyInstance) {
           if (!session) {
             socket.send(
               JSON.stringify({
-                type: 'error',
+                type: ShellEventTypes.ERROR,
                 data: {
                   shellId: sessionId,
                   error: 'Session not found',
@@ -301,7 +302,7 @@ export async function registerShellRoute(fastify: FastifyInstance) {
           try {
             socket.send(
               JSON.stringify({
-                type: 'error',
+                type: ShellEventTypes.ERROR,
                 data: {
                   shellId: 'unknown',
                   error: errorMessage,

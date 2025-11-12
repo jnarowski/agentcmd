@@ -2,12 +2,13 @@
  * Shell domain Zod validation schemas
  */
 import { z } from 'zod';
+import { ShellEventTypes } from '@/shared/types/websocket.types';
 
 /**
  * Message sent by client to initialize a shell session
  */
 export const initMessageSchema = z.object({
-  type: z.literal('init'),
+  type: z.literal(ShellEventTypes.INIT),
   projectId: z.string().min(1),
   cols: z.number().int().positive(),
   rows: z.number().int().positive(),
@@ -17,7 +18,7 @@ export const initMessageSchema = z.object({
  * Message sent by client with user input
  */
 export const inputMessageSchema = z.object({
-  type: z.literal('input'),
+  type: z.literal(ShellEventTypes.INPUT),
   data: z.string(),
 });
 
@@ -25,7 +26,7 @@ export const inputMessageSchema = z.object({
  * Message sent by client when terminal is resized
  */
 export const resizeMessageSchema = z.object({
-  type: z.literal('resize'),
+  type: z.literal(ShellEventTypes.RESIZE),
   cols: z.number().int().positive(),
   rows: z.number().int().positive(),
 });
