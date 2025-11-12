@@ -8,7 +8,7 @@ import type { AgentType } from './agent.types';
 /**
  * Session type enum
  */
-export type SessionType = 'chat' | 'planning' | 'workflow';
+export type SessionType = 'chat' | 'workflow';
 
 /**
  * Session metadata stored in AgentSession.metadata JSON field
@@ -44,6 +44,7 @@ export interface SessionResponse {
   name?: string; // AI-generated session name (optional for legacy sessions)
   agent: AgentType;
   type: SessionType;
+  permission_mode: 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions';
   cli_session_id?: string; // Session ID from CLI tool (Claude/Codex) - needed for loading/resuming sessions
   session_path?: string; // Full absolute path to session JSONL file (optional for legacy sessions)
   metadata: AgentSessionMetadata;

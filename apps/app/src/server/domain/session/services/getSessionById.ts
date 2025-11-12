@@ -30,6 +30,7 @@ export async function getSessionById({
     name: session.name ?? undefined,
     agent: session.agent,
     type: session.type as SessionType,
+    permission_mode: session.permission_mode as 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions',
     cli_session_id: session.cli_session_id ?? undefined,
     session_path: session.session_path ?? undefined,
     metadata: session.metadata as unknown as AgentSessionMetadata,

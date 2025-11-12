@@ -94,11 +94,17 @@ export function AgentSessionViewer({
         name: sessionData.name,
         agent: sessionData.agent,
         type: sessionData.type,
+        permission_mode: sessionData.permission_mode,
         messages: enrichedMessages,
         isStreaming: false,
         metadata: sessionData.metadata,
         loadingState: isLoadingMessages ? "loading" : "loaded",
         error: null,
+      },
+      // Set form permission mode from session data
+      form: {
+        ...useSessionStore.getState().form,
+        permissionMode: sessionData.permission_mode,
       },
     });
 
@@ -109,6 +115,7 @@ export function AgentSessionViewer({
         name: sessionData.name,
         agent: sessionData.agent,
         type: sessionData.type,
+        permission_mode: sessionData.permission_mode,
         messages: enrichedMessages,
         isStreaming: false,
         metadata: sessionData.metadata,

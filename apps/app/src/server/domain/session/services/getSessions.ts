@@ -5,6 +5,7 @@ export interface GetSessionsFilters {
   projectId?: string;
   userId: string;
   type?: SessionType;
+  permission_mode?: 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions';
   limit?: number;
   includeArchived?: boolean;
   orderBy?: 'created_at' | 'updated_at';
@@ -20,6 +21,7 @@ export async function getSessions(filters: GetSessionsFilters): Promise<SessionR
     projectId,
     userId,
     type,
+    permission_mode,
     limit = 20,
     includeArchived = false,
     orderBy = 'created_at',
@@ -31,6 +33,7 @@ export async function getSessions(filters: GetSessionsFilters): Promise<SessionR
       userId,
       ...(projectId ? { projectId } : {}),
       ...(type ? { type } : {}),
+      ...(permission_mode ? { permission_mode } : {}),
       ...(includeArchived ? {} : { is_archived: false }),
     },
     orderBy: {
@@ -47,6 +50,7 @@ export async function getSessions(filters: GetSessionsFilters): Promise<SessionR
     name: session.name ?? undefined,
     agent: session.agent,
     type: session.type as SessionType,
+    permission_mode: session.permission_mode as 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions',
     cli_session_id: session.cli_session_id ?? undefined,
     session_path: session.session_path ?? undefined,
     metadata: session.metadata as unknown as AgentSessionMetadata,

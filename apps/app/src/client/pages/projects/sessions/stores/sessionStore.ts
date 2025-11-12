@@ -266,6 +266,7 @@ export interface SessionData {
   name?: string; // AI-generated session name
   agent: AgentType;
   type: SessionType;
+  permission_mode: 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions';
   messages: UIMessage[];
   isStreaming: boolean;
   metadata: AgentSessionMetadata | null;

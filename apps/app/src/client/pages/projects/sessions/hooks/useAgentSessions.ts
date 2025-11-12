@@ -87,10 +87,10 @@ export function useUpdateSession() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+    mutationFn: async ({ id, name, permission_mode }: { id: string; name?: string; permission_mode?: string }) => {
       const result = await api.patch<{ data: SessionResponse }>(
         `/api/sessions/${id}`,
-        { name }
+        { name, permission_mode }
       );
       return result.data;
     },
@@ -106,10 +106,10 @@ export function useUpdateSession() {
         }
       );
 
-      toast.success("Session name updated successfully");
+      toast.success("Session updated successfully");
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : "Failed to update session name";
+      const message = error instanceof Error ? error.message : "Failed to update session";
       toast.error(message);
     },
   });

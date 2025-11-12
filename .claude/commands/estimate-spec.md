@@ -44,8 +44,8 @@ Assign complexity based on **context window usage and cognitive load**, not time
      - Use that path directly
    - Otherwise, look up in `.agent/specs/index.json`:
      - For numeric ID: Match by `id` field
-     - For feature name: Fuzzy match folder name (e.g., `message-queue` matches `ef3-message-queue-implementation`)
-     - Use location from index: `{location}/{folder}/spec.md`
+     - For feature name: Fuzzy match folder name (e.g., `message-queue` matches `ef3-message-queue-implementation/spec.md`)
+     - Use path from index: `.agent/specs/{path}`
    - **If not found in index.json, fallback to directory search:**
      - Search in order: `.agent/specs/backlog/`, `.agent/specs/todo/`, `.agent/specs/done/`
      - For ID: Pattern `{id}-*/spec.{md,json}`

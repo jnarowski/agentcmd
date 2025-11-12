@@ -34,6 +34,7 @@ import { cn } from "@/client/utils/cn";
 import { TokenUsageCircle } from "./TokenUsageCircle";
 import { usePromptInputState } from "../hooks/usePromptInputState";
 import { useWebSocket } from "@/client/hooks/useWebSocket";
+import { useUpdateSession } from "../hooks/useAgentSessions";
 import {
   Tooltip,
   TooltipTrigger,
@@ -84,17 +85,31 @@ const ChatPromptInputInner = forwardRef<
     // Session store for permission modes, model, and agent type
     const permissionMode = useSessionStore((s) => s.form.permissionMode);
     const setPermissionMode = useSessionStore((s) => s.setPermissionMode);
+    const sessionId = useSessionStore((s) => s.sessionId);
     const model = useSessionStore((s) => s.form.model);
     const setModel = useSessionStore((s) => s.setModel);
     const sessionAgent = useSessionStore((s) => s.session?.agent);
     const formAgent = useSessionStore((s) => s.form.agent);
-    const sessionType = useSessionStore((s) => s.session?.type);
+
+    // Mutation for persisting permission mode changes
+    const updateSession = useUpdateSession();
+
+    // Wrapper function to update both local state and database
+    const handlePermissionModeChange = (mode: string) => {
+      // Update local state immediately
+      setPermissionMode(mode as any);
+
+      // Persist to database if session exists
+      if (sessionId) {
+        updateSession.mutate({
+          id: sessionId,
+          permission_mode: mode,
+        });
+      }
+    };
 
     // Use agent prop if provided, otherwise fall back to session agent, then form agent
     const agent = agentProp || sessionAgent || formAgent;
-
-    // Check if this is a planning session
-    const isPlanning = sessionType === 'planning';
 
     // Get agent capabilities from settings (with fallback while loading)
     const capabilities = useAgentCapabilities(agent) ?? {
@@ -131,8 +146,8 @@ const ChatPromptInputInner = forwardRef<
       text,
     } = usePromptInputState({
       controller,
-      permissionMode: isPlanning ? 'plan' : permissionMode,
-      onPermissionModeChange: setPermissionMode,
+      permissionMode,
+      onPermissionModeChange: handlePermissionModeChange,
       textareaRef,
       disabled,
       isStreaming: externalIsStreaming,
@@ -219,17 +234,10 @@ const ChatPromptInputInner = forwardRef<
                 models={capabilities.models}
                 onModelChange={setModel}
               />
-              {!isPlanning && (
-                <PermissionModeSelector
-                  permissionMode={permissionMode}
-                  onPermissionModeChange={setPermissionMode}
-                />
-              )}
-              {isPlanning && (
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-green-500/10 text-green-500 text-xs font-medium">
-                  <span>Planning Mode</span>
-                </div>
-              )}
+              <PermissionModeSelector
+                permissionMode={permissionMode}
+                onPermissionModeChange={handlePermissionModeChange}
+              />
             </PromptInputTools>
             <div className="flex items-center gap-2">
               {totalTokens !== undefined && (

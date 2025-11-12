@@ -65,6 +65,7 @@ export function createAgentStep(
             userId,
             sessionId,
             agent: config.agent,
+            type: 'workflow',
             name,
             metadataOverride: {}, // Empty metadata for workflow sessions
           },

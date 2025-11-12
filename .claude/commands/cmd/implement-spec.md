@@ -19,8 +19,8 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 - If it's a full path (contains `/`): use as-is
 - Otherwise, look up in `.agent/specs/index.json`:
   - For timestamp ID: Match by `id` field
-  - For feature name: Fuzzy match path (e.g., `message-queue` matches `todo/251024120101-message-queue-implementation`)
-  - Use path from index: `.agent/specs/{path}/spec.md`
+  - For feature name: Fuzzy match path (e.g., `message-queue` matches `todo/251024120101-message-queue-implementation/spec.md`)
+  - Use path from index: `.agent/specs/{path}`
 - **If not found in index.json, fallback to directory search:**
   - Search in order: todo/, backlog
   - For ID: Pattern `{id}-*/spec.md`

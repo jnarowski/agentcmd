@@ -37,6 +37,14 @@ export const updateSessionNameSchema = z.object({
 });
 
 /**
+ * Update session request schema (for generic updates)
+ */
+export const updateSessionSchema = z.object({
+  name: z.string().min(1).max(255).optional(),
+  permission_mode: z.enum(['default', 'plan', 'acceptEdits', 'bypassPermissions']).optional(),
+});
+
+/**
  * Session ID parameter schema
  * Note: Session IDs are JSONL filenames, not UUIDs (e.g., timestamp-based strings)
  */

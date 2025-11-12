@@ -30,8 +30,8 @@ Move a spec folder between workflow folders (backlog/todo/done), update index.js
        - Use the path as-is
      - Otherwise, look up in `.agent/specs/index.json`:
        - For timestamp ID: Match by `id` field
-       - For feature name: Fuzzy match path (e.g., `message-queue` matches `todo/251024120101-message-queue-implementation`)
-       - Use path from index: `.agent/specs/{path}/`
+       - For feature name: Fuzzy match path (e.g., `message-queue` matches `todo/251024120101-message-queue-implementation/spec.md`)
+       - Use path from index: `.agent/specs/{path}` (extract folder from file path: `dirname({path})`)
      - **If not found in index.json, fallback to directory search:**
        - Search in order: `.agent/specs/backlog/`, `.agent/specs/todo/`, `.agent/specs/done/`
        - For ID: Pattern `{id}-*/`
@@ -56,7 +56,8 @@ Move a spec folder between workflow folders (backlog/todo/done), update index.js
 5. **Update Index**
 
    - Read index.json
-   - Update the spec's `path` field to match new location
+   - Update the spec's `path` field to match new location (e.g., `todo/folder/spec.md` → `done/folder/spec.md`)
+   - Preserve the filename, only update the folder portion of the path
    - Update the spec's `updated` field to current timestamp
    - Update the spec's `status` field based on target folder (see step 6)
    - Write updated index back to `.agent/specs/index.json`

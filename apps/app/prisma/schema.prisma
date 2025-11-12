@@ -189,7 +189,6 @@ enum AgentType {
 
 enum SessionType {
   chat
-  planning
   workflow
 }
 
@@ -258,6 +257,7 @@ model AgentSession {
   name           String? // AI-generated session name (nullable for legacy sessions)
   agent          AgentType               @default(claude)
   type           SessionType             @default(chat)
+  permission_mode String                 @default("default") // 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions'
   cli_session_id String? // Session ID from CLI tool (Claude/Codex) - needed for loading/resuming sessions
   session_path   String? // Full absolute path to session JSONL file (nullable during migration)
   metadata       Json // { totalTokens, messageCount, lastMessageAt, firstMessagePreview }

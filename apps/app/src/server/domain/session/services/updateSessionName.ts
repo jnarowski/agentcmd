@@ -37,6 +37,7 @@ export async function updateSessionName({
       name: updatedSession.name ?? undefined,
       agent: updatedSession.agent,
       type: updatedSession.type as SessionType,
+      permission_mode: updatedSession.permission_mode as 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions',
       cli_session_id: updatedSession.cli_session_id ?? undefined,
       session_path: updatedSession.session_path ?? undefined,
       metadata: updatedSession.metadata as unknown as AgentSessionMetadata,

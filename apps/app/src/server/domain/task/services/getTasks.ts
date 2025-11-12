@@ -44,7 +44,7 @@ export async function getTasks(userId: string): Promise<TasksResponse> {
   // Get planning sessions (across all projects)
   const planningSessions = await getSessions({
     userId,
-    type: "planning",
+    permission_mode: "plan",
     includeArchived: false,
     limit: 50, // Reasonable limit for planning sessions
   });

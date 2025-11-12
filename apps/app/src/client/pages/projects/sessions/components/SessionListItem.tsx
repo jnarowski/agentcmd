@@ -22,7 +22,7 @@ export function SessionListItem({
   projectId,
   isActive = false,
 }: SessionListItemProps) {
-  const { id, metadata, created_at, type } = session;
+  const { id, metadata, created_at, type, permission_mode } = session;
   const { messageCount } = metadata;
   const { isMobile, setOpenMobile } = useSidebar();
   const [isHovered, setIsHovered] = useState(false);
@@ -74,7 +74,7 @@ export function SessionListItem({
               <span className="truncate" title={displayName}>
                 {truncatedName}
               </span>
-              {type === 'planning' && (
+              {permission_mode === 'plan' && (
                 <Badge variant="secondary" className="text-xs px-1.5 py-0 bg-green-500/10 text-green-500 border-green-500/20 shrink-0">
                   Planning
                 </Badge>

@@ -6,7 +6,7 @@ import type { GetSessionsByProjectOptions } from '../types/GetSessionsByProjectO
  * Get all sessions for a project
  */
 export async function getSessionsByProject({
-  filters: { projectId, userId, includeArchived = false, type }
+  filters: { projectId, userId, includeArchived = false, type, permission_mode }
 }: GetSessionsByProjectOptions): Promise<SessionResponse[]> {
   const sessions = await prisma.agentSession.findMany({
     where: {
@@ -14,6 +14,7 @@ export async function getSessionsByProject({
       userId,
       ...(includeArchived ? {} : { is_archived: false }),
       ...(type && { type }),
+      ...(permission_mode && { permission_mode }),
     },
     // Don't order by updated_at as sync operations set all sessions to same timestamp
     // We'll sort by metadata.lastMessageAt in application code instead
@@ -27,6 +28,7 @@ export async function getSessionsByProject({
     name: session.name ?? undefined,
     agent: session.agent,
     type: session.type as SessionType,
+    permission_mode: session.permission_mode as 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions',
     cli_session_id: session.cli_session_id ?? undefined,
     session_path: session.session_path ?? undefined,
     metadata: session.metadata as unknown as AgentSessionMetadata,

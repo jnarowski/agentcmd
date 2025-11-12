@@ -17,10 +17,10 @@ Scans spec folders and reconciles with index.json, removing orphaned entries, ad
 
 ## Workflow
 
-1. **Scan filesystem for spec folders:**
-   - Use `find .agent/specs/{backlog,todo,in-progress,done} -maxdepth 1 -type d -name "*-*"`
+1. **Scan filesystem for spec files:**
+   - Use `find .agent/specs/{backlog,todo,in-progress,done} -maxdepth 2 -type f -name "*.md"`
    - Extract spec IDs from folder names (pattern: `{id}-{feature-name}`)
-   - Build list of filesystem specs with their locations
+   - Build list of filesystem specs with their file paths (relative to `.agent/specs/`)
 
 2. **Load and parse index.json:**
    - Read `.agent/specs/index.json`
@@ -54,7 +54,7 @@ When adding a spec folder that's not in index.json:
   - `done/` → `"completed"`
 - **created**: Parse from spec.md `**Created**: YYYY-MM-DD` field, or use current timestamp
 - **updated**: Current timestamp
-- **path**: Relative path from `.agent/specs/` (e.g., `"todo/251112054939-workflow-resync"`)
+- **path**: Relative path from `.agent/specs/` to the spec file (e.g., `"todo/251112054939-workflow-resync/spec.md"`)
 
 ## Parsing spec.md
 

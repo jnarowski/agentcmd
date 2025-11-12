@@ -8,7 +8,7 @@ import {
   getSessionMessages,
   createSession,
   syncProjectSessions,
-  updateSessionName,
+  updateSession,
   archiveSession,
   unarchiveSession,
 } from "@/server/domain/session/services";
@@ -16,7 +16,7 @@ import {
   createSessionSchema,
   sessionIdSchema,
   projectIdSchema,
-  updateSessionNameSchema,
+  updateSessionSchema,
 } from "@/server/domain/session/schemas";
 import type { CreateSessionRequest } from "@/shared/types/agent-session.types";
 import { buildErrorResponse } from "@/server/errors";
@@ -296,18 +296,18 @@ export async function sessionRoutes(fastify: FastifyInstance) {
 
   /**
    * PATCH /api/sessions/:sessionId
-   * Update session name
+   * Update session (name and/or permission_mode)
    */
   fastify.patch<{
     Params: { sessionId: string };
-    Body: { name: string };
+    Body: { name?: string; permission_mode?: string };
   }>(
     "/api/sessions/:sessionId",
     {
       preHandler: fastify.authenticate,
       schema: {
         params: sessionIdSchema,
-        body: updateSessionNameSchema,
+        body: updateSessionSchema,
       },
     },
     async (request, reply) => {
@@ -317,19 +317,26 @@ export async function sessionRoutes(fastify: FastifyInstance) {
       }
 
       const { sessionId } = request.params;
-      const { name } = request.body;
+      const { name, permission_mode } = request.body;
 
-      request.log.info({ sessionId, userId, name }, 'Updating session name');
+      request.log.info({ sessionId, userId, name, permission_mode }, 'Updating session');
 
-      const session = await updateSessionName({
-        id: sessionId,
-        data: { name },
-        userId,
+      // Verify session ownership
+      const existingSession = await prisma.agentSession.findFirst({
+        where: { id: sessionId, userId },
       });
 
-      if (!session) {
+      if (!existingSession) {
         return reply.code(404).send(buildErrorResponse(404, "Session not found"));
       }
+
+      const session = await updateSession({
+        id: sessionId,
+        data: {
+          ...(name !== undefined && { name }),
+          ...(permission_mode !== undefined && { permission_mode }),
+        },
+      });
 
       return reply.send({ data: session });
     }

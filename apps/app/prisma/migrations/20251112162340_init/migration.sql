@@ -133,6 +133,7 @@ CREATE TABLE "agent_sessions" (
     "name" TEXT,
     "agent" TEXT NOT NULL DEFAULT 'claude',
     "type" TEXT NOT NULL DEFAULT 'chat',
+    "permission_mode" TEXT NOT NULL DEFAULT 'default',
     "cli_session_id" TEXT,
     "session_path" TEXT,
     "metadata" JSONB NOT NULL,
