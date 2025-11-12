@@ -85,8 +85,8 @@ describe("createArtifactStep", () => {
     });
 
     // Assert
-    expect(result.count).toBe(1);
-    expect(result.totalSize).toBeGreaterThan(0);
+    expect(result.data.count).toBe(1);
+    expect(result.data.totalSize).toBeGreaterThan(0);
     expect(mockMkdir).toHaveBeenCalled();
     expect(mockWriteFile).toHaveBeenCalled();
 
@@ -165,8 +165,8 @@ describe("createArtifactStep", () => {
     });
 
     // Assert
-    expect(result.count).toBe(1);
-    expect(result.totalSize).toBe(1024);
+    expect(result.data.count).toBe(1);
+    expect(result.data.totalSize).toBe(1024);
     expect(mockMkdir).toHaveBeenCalled();
     expect(mockCopyFile).toHaveBeenCalled();
 

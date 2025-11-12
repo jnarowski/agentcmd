@@ -18,7 +18,7 @@ export default defineWorkflow(
         command: "npm test || true", // Continue even if tests fail
       });
 
-      if (testResult.exitCode === 0) {
+      if (testResult.data.exitCode === 0) {
         await step.annotation("tests-passed", {
           message: "## All Tests Passed ✓\n\nNo fixes needed!",
         });
@@ -31,8 +31,8 @@ export default defineWorkflow(
           model: "claude",
           prompt: `Analyze the following test output and suggest fixes:
 
-${testResult.stdout}
-${testResult.stderr}
+${testResult.data.stdout}
+${testResult.data.stderr}
 
 Provide:
 1. Summary of what failed

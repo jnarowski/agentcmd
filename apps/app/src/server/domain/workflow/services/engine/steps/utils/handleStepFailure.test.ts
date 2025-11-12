@@ -34,8 +34,12 @@ describe("handleStepFailure", () => {
       context,
       "step-123",
       "failed",
-      undefined,
-      "Step execution failed"
+      undefined, // no args update
+      expect.objectContaining({ // errorOutput
+        error: "Step execution failed",
+        name: "Error",
+      }),
+      "Step execution failed" // error message
     );
     expect(mockUpdateStepStatus).toHaveBeenCalledTimes(1);
   });

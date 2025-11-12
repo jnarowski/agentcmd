@@ -9,8 +9,9 @@ import {
 import { AgentSessionModal } from "@/client/pages/projects/workflows/components/AgentSessionModal";
 import { useIsMobile } from "@/client/hooks/use-mobile";
 import { useDebugMode } from "@/client/hooks/useDebugMode";
-import type { WorkflowRunStep } from "@/client/pages/projects/workflows/types";
+import type { WorkflowRunStep, StepOutput } from "@/shared/types/workflow-step.types";
 import type { WorkflowTab } from "@/client/pages/projects/workflows/hooks/useWorkflowDetailPanel";
+import type { TraceEntry } from "agentcmd-workflows";
 import { TimelineRow } from "./TimelineRow";
 
 interface StepDefaultRowProps {
@@ -24,6 +25,9 @@ export function StepDefaultRow({ step, projectId, onSelectSession, onSetActiveTa
   const [showSessionModal, setShowSessionModal] = useState(false);
   const isMobile = useIsMobile();
   const debugMode = useDebugMode();
+
+  // Type-safe output access for trace
+  const output = step.output as StepOutput<typeof step.step_type> | null;
 
   // Status icon
   const StatusIcon = {
@@ -115,6 +119,21 @@ export function StepDefaultRow({ step, projectId, onSelectSession, onSetActiveTa
             <span className="text-red-500">{step.error_message}</span>
           )}
         </div>
+
+        {/* Trace display */}
+        {output?.trace && output.trace.length > 0 && (
+          <div className="text-xs font-mono text-muted-foreground space-y-1 mt-2">
+            {(output.trace as TraceEntry[]).map((entry, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <span className="text-blue-400">$</span>
+                <span>{entry.command}</span>
+                {entry.duration && (
+                  <span className="text-gray-500">({entry.duration}ms)</span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </TimelineRow>
 
       {/* Session Modal */}

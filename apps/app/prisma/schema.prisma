@@ -87,9 +87,10 @@ model WorkflowRunStep {
   step_type             StepType   // Type of step for UI categorization
   phase                 String     // Phase this step belongs to
   status                StepStatus @default(pending)
-  log_directory_path    String?    // Path to logs directory on filesystem
+  args                  Json?      // Sanitized step arguments/configuration (JSON)
+  output                Json?      // Sanitized execution results (success or failure)
   agent_session_id      String?    // Link to AgentSession (nullable - only for agent steps)
-  error_message         String?
+  error_message         String?    // Simple error summary for UI
   started_at            DateTime?
   completed_at          DateTime?
   created_at            DateTime   @default(now())
@@ -186,6 +187,12 @@ enum AgentType {
   gemini
 }
 
+enum SessionType {
+  chat
+  planning
+  workflow
+}
+
 enum SessionState {
   idle      // Ready for new messages
   working   // Agent actively processing
@@ -250,6 +257,7 @@ model AgentSession {
   userId         String
   name           String? // AI-generated session name (nullable for legacy sessions)
   agent          AgentType               @default(claude)
+  type           SessionType             @default(chat)
   cli_session_id String? // Session ID from CLI tool (Claude/Codex) - needed for loading/resuming sessions
   session_path   String? // Full absolute path to session JSONL file (nullable during migration)
   metadata       Json // { totalTokens, messageCount, lastMessageAt, firstMessagePreview }

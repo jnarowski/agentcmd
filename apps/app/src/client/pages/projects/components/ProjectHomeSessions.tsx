@@ -32,6 +32,7 @@ export function ProjectHomeSessions({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedState, setSelectedState] = useState<string>("all");
   const [selectedAgent, setSelectedAgent] = useState<string>("all");
+  const [selectedType, setSelectedType] = useState<string>("all");
   const [archivedFilter, setArchivedFilter] = useState<string>("active");
 
   const stateOptions: { value: string; label: string }[] = [
@@ -47,6 +48,13 @@ export function ProjectHomeSessions({
     { value: "codex", label: "Codex" },
     { value: "gemini", label: "Gemini" },
     { value: "cursor", label: "Cursor" },
+  ];
+
+  const typeOptions: { value: string; label: string }[] = [
+    { value: "all", label: "All Types" },
+    { value: "chat", label: "Chat" },
+    { value: "planning", label: "Planning" },
+    { value: "workflow", label: "Workflow" },
   ];
 
   const archivedOptions: { value: string; label: string }[] = [
@@ -84,6 +92,11 @@ export function ProjectHomeSessions({
       result = result.filter((s) => s.agent === selectedAgent);
     }
 
+    // Type filter
+    if (selectedType !== "all") {
+      result = result.filter((s) => s.type === selectedType);
+    }
+
     // Sort by lastMessageAt (newest first)
     result.sort(
       (a, b) =>
@@ -92,18 +105,20 @@ export function ProjectHomeSessions({
     );
 
     return result;
-  }, [sessions, searchTerm, selectedState, selectedAgent, archivedFilter]);
+  }, [sessions, searchTerm, selectedState, selectedAgent, selectedType, archivedFilter]);
 
   const activeFilterCount =
     (searchTerm.trim() ? 1 : 0) +
     (selectedState !== "all" ? 1 : 0) +
     (selectedAgent !== "all" ? 1 : 0) +
+    (selectedType !== "all" ? 1 : 0) +
     (archivedFilter !== "active" ? 1 : 0);
 
   const clearAllFilters = () => {
     setSearchTerm("");
     setSelectedState("all");
     setSelectedAgent("all");
+    setSelectedType("all");
     setArchivedFilter("active");
   };
 
@@ -125,7 +140,7 @@ export function ProjectHomeSessions({
       {/* Filter Controls */}
       <div className="space-y-3">
         {/* Filter Row */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
           {/* Search Input */}
           <div className="relative md:col-span-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -162,6 +177,22 @@ export function ProjectHomeSessions({
               </SelectTrigger>
               <SelectContent>
                 {agentOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Type Filter */}
+          <div className="md:col-span-1">
+            <Select value={selectedType} onValueChange={setSelectedType}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Filter by type" />
+              </SelectTrigger>
+              <SelectContent>
+                {typeOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>
@@ -222,6 +253,18 @@ export function ProjectHomeSessions({
               Agent: {agentOptions.find((o) => o.value === selectedAgent)?.label}
               <button
                 onClick={() => setSelectedAgent("all")}
+                className="ml-1 hover:bg-muted-foreground/20 rounded-sm"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+
+          {selectedType !== "all" && (
+            <Badge variant="secondary" className="text-xs gap-1">
+              Type: {typeOptions.find((o) => o.value === selectedType)?.label}
+              <button
+                onClick={() => setSelectedType("all")}
                 className="ml-1 hover:bg-muted-foreground/20 rounded-sm"
               >
                 <X className="h-3 w-3" />

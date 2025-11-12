@@ -98,8 +98,8 @@ describe("createAgentStep", () => {
 
     // Assert
     expect(result.success).toBe(true);
-    expect(result.exitCode).toBe(0);
-    expect(result.sessionId).toBe("session-123");
+    expect(result.data.exitCode).toBe(0);
+    expect(result.data.sessionId).toBe("session-123");
 
     expect(mockCreateSession).toHaveBeenCalledWith({
       data: {

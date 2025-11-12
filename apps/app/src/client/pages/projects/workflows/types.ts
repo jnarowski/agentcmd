@@ -4,9 +4,10 @@ import type {
   WorkflowEventType,
 } from "@/shared/schemas/workflow.schemas";
 import type { PhaseDefinition } from "agentcmd-workflows";
+import type { WorkflowRunStep } from "@/shared/types/workflow-step.types";
 
 // Re-export types only
-export type { WorkflowStatus, StepStatus, WorkflowEventType, PhaseDefinition };
+export type { WorkflowStatus, StepStatus, WorkflowEventType, PhaseDefinition, WorkflowRunStep };
 
 export interface WorkflowDefinition {
   id: string;
@@ -72,26 +73,6 @@ export interface WorkflowRun {
     steps: number;
     events: number;
   };
-}
-
-export type StepType = 'agent' | 'git' | 'cli' | 'ai' | 'artifact' | 'annotation' | 'system' | 'command';
-
-export interface WorkflowRunStep {
-  id: string;
-  workflow_run_id: string;
-  inngest_step_id: string; // Phase-prefixed step ID for Inngest memoization
-  name: string; // Display name
-  step_type: StepType; // Type of step for UI categorization
-  phase: string;
-  status: StepStatus;
-  logs: string | null;
-  error_message: string | null;
-  agent_session_id: string | null;
-  started_at: Date | null;
-  completed_at: Date | null;
-  created_at: Date;
-  updated_at: Date;
-  artifacts?: WorkflowArtifact[];
 }
 
 // User information interface (for created_by_user relation)

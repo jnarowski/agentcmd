@@ -31,7 +31,8 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "check": "turbo run check"
+    "check": "turbo run check",
+    "start": "pnpm --filter=apps/app start:prod"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",

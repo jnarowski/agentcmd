@@ -6,6 +6,11 @@
 import type { AgentType } from './agent.types';
 
 /**
+ * Session type enum
+ */
+export type SessionType = 'chat' | 'planning' | 'workflow';
+
+/**
  * Session metadata stored in AgentSession.metadata JSON field
  */
 export interface AgentSessionMetadata {
@@ -38,6 +43,7 @@ export interface SessionResponse {
   userId: string;
   name?: string; // AI-generated session name (optional for legacy sessions)
   agent: AgentType;
+  type: SessionType;
   cli_session_id?: string; // Session ID from CLI tool (Claude/Codex) - needed for loading/resuming sessions
   session_path?: string; // Full absolute path to session JSONL file (optional for legacy sessions)
   metadata: AgentSessionMetadata;

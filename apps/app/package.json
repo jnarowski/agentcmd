@@ -35,6 +35,7 @@
     "prisma:studio": "prisma studio",
     "ship": "pnpm build && pnpm version patch && (git commit -am \"bump version\" || true) && git push --follow-tags && pnpm publish",
     "start": "pnpm build && tsx --env-file=.env src/server/index.ts",
+    "start:prod": "node --env-file=.env dist/server/index.js",
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:watch": "vitest"

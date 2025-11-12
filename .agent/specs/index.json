@@ -1,6 +1,18 @@
 {
-  "lastId": 251111090117,
+  "lastId": 251112061640,
   "specs": {
+    "251112061640": {
+      "path": "todo/251112061640-type-safe-workflow-steps",
+      "status": "in-progress",
+      "created": "2025-11-12T06:16:40.000Z",
+      "updated": "2025-11-12T20:30:00.000Z"
+    },
+    "251112061023": {
+      "path": "done/251112061023-session-type-system",
+      "status": "completed",
+      "created": "2025-11-12T06:10:23.000Z",
+      "updated": "2025-11-12T13:30:00.000Z"
+    },
     "251108000000": {
       "path": "todo/251108000000-log-streaming",
       "status": "draft",
@@ -19,17 +31,17 @@
       "created": "2025-11-09T00:00:00.000Z",
       "updated": "2025-11-09T22:51:17.309Z"
     },
-    "251109230000": {
-      "path": "todo/251109230000-refactor-cleanup",
-      "status": "draft",
-      "created": "2025-11-09T00:00:00.000Z",
-      "updated": "2025-11-10T13:51:16.173Z"
-    },
     "251111090117": {
       "path": "todo/251111090117-frontend-layout-standardization",
       "status": "draft",
       "created": "2025-11-11T00:00:00.000Z",
       "updated": "2025-11-11T16:03:28.999Z"
+    },
+    "251112054939": {
+      "path": "todo/251112054939-workflow-resync",
+      "status": "draft",
+      "created": "2025-11-12T05:49:39.000Z",
+      "updated": "2025-11-12T05:49:39.000Z"
     }
   }
 }

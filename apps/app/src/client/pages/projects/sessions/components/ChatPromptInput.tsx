@@ -88,9 +88,13 @@ const ChatPromptInputInner = forwardRef<
     const setModel = useSessionStore((s) => s.setModel);
     const sessionAgent = useSessionStore((s) => s.session?.agent);
     const formAgent = useSessionStore((s) => s.form.agent);
+    const sessionType = useSessionStore((s) => s.session?.type);
 
     // Use agent prop if provided, otherwise fall back to session agent, then form agent
     const agent = agentProp || sessionAgent || formAgent;
+
+    // Check if this is a planning session
+    const isPlanning = sessionType === 'planning';
 
     // Get agent capabilities from settings (with fallback while loading)
     const capabilities = useAgentCapabilities(agent) ?? {
@@ -127,7 +131,7 @@ const ChatPromptInputInner = forwardRef<
       text,
     } = usePromptInputState({
       controller,
-      permissionMode,
+      permissionMode: isPlanning ? 'plan' : permissionMode,
       onPermissionModeChange: setPermissionMode,
       textareaRef,
       disabled,
@@ -215,10 +219,17 @@ const ChatPromptInputInner = forwardRef<
                 models={capabilities.models}
                 onModelChange={setModel}
               />
-              <PermissionModeSelector
-                permissionMode={permissionMode}
-                onPermissionModeChange={setPermissionMode}
-              />
+              {!isPlanning && (
+                <PermissionModeSelector
+                  permissionMode={permissionMode}
+                  onPermissionModeChange={setPermissionMode}
+                />
+              )}
+              {isPlanning && (
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-green-500/10 text-green-500 text-xs font-medium">
+                  <span>Planning Mode</span>
+                </div>
+              )}
             </PromptInputTools>
             <div className="flex items-center gap-2">
               {totalTokens !== undefined && (

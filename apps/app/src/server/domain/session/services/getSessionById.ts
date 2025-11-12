@@ -1,5 +1,5 @@
 import { prisma } from '@/shared/prisma';
-import type { SessionResponse, AgentSessionMetadata } from '@/shared/types/agent-session.types';
+import type { SessionResponse, AgentSessionMetadata, SessionType } from '@/shared/types/agent-session.types';
 
 /**
  * Get single session by ID with ownership check
@@ -29,6 +29,7 @@ export async function getSessionById({
     userId: session.userId,
     name: session.name ?? undefined,
     agent: session.agent,
+    type: session.type as SessionType,
     cli_session_id: session.cli_session_id ?? undefined,
     session_path: session.session_path ?? undefined,
     metadata: session.metadata as unknown as AgentSessionMetadata,

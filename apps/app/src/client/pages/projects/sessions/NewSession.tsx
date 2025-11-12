@@ -84,6 +84,7 @@ export default function NewSession() {
           id: newSession.id,
           name: undefined,
           agent,
+          type: 'chat', // Default to chat type for new sessions
           messages: [{
             id: generateUUID(),
             role: "user",

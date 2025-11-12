@@ -20,5 +20,19 @@ export async function handleStepFailure(
     "Step failed"
   );
 
-  await updateStepStatus(context, stepId, "failed", undefined, error.message);
+  // Store error details in output
+  const errorOutput = {
+    error: error.message,
+    name: error.name,
+    stack: error.stack,
+  };
+
+  await updateStepStatus(
+    context,
+    stepId,
+    "failed",
+    undefined, // no input update
+    errorOutput, // error details as output
+    error.message // simple error message
+  );
 }

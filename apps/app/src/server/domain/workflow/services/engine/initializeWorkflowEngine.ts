@@ -120,8 +120,6 @@ export async function initializeWorkflowEngine(
       const runtime = createWorkflowRuntime(inngestClient, null, logger);
       const { workflows } = await loadGlobalWorkflows(runtime, logger);
 
-      logger.info(`  Global Workflows:`);
-
       for (const definition of globalDefinitions) {
         const workflow = workflows.find(
           (w) => w.definition.config.id === definition.identifier
@@ -130,8 +128,8 @@ export async function initializeWorkflowEngine(
         if (workflow) {
           inngestFunctions.push(workflow.inngestFunction);
           logger.info(
-            { workflowId: definition.identifier, scope: "global" },
-            `    ✓ ${definition.name} (${definition.identifier})`
+            { workflowId: definition.identifier, workflowName: definition.name, scope: "global" },
+            "Registered global workflow"
           );
         } else {
           logger.warn(
@@ -175,9 +173,6 @@ export async function initializeWorkflowEngine(
       // Load all workflows from project ONCE
       const { workflows } = await loadProjectWorkflows(project.path, runtime, logger);
 
-      // Log project header
-      logger.info(`  Project: ${project.name}`);
-
       // Match and register all definitions from this project
       for (const definition of projectDefinitions) {
         const workflow = workflows.find(
@@ -187,8 +182,8 @@ export async function initializeWorkflowEngine(
         if (workflow) {
           inngestFunctions.push(workflow.inngestFunction);
           logger.info(
-            { workflowId: definition.identifier, projectId },
-            `    ✓ ${definition.name} (${definition.identifier})`
+            { workflowId: definition.identifier, workflowName: definition.name, projectId },
+            "Registered project workflow"
           );
         } else {
           logger.warn(

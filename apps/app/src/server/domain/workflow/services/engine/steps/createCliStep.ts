@@ -37,6 +37,7 @@ export function createCliStep(
       stepName: name,
       stepType: "cli",
       inngestStep,
+      input: config,
       fn: async () => {
       const { projectPath, logger } = context;
       const cwd = config.cwd ?? projectPath;
@@ -44,6 +45,7 @@ export function createCliStep(
 
       logger.debug({ command, cwd }, "Executing CLI command");
 
+      const startTime = Date.now();
       try {
         const { stdout, stderr } = await withTimeout(
           execAsync(command, {
@@ -55,15 +57,20 @@ export function createCliStep(
           timeout,
           "CLI command"
         );
+        const duration = Date.now() - startTime;
 
         return {
-          command,
-          exitCode: 0,
-          stdout: stdout.trim(),
-          stderr: stderr.trim(),
+          data: {
+            command,
+            exitCode: 0,
+            stdout: stdout.trim(),
+            stderr: stderr.trim(),
+          },
           success: true,
+          trace: [{ command, output: stdout.trim(), exitCode: 0, duration }],
         };
       } catch (error: unknown) {
+        const duration = Date.now() - startTime;
         // Command failed but we still want to return result
         const err = error as {
           code?: number;
@@ -71,12 +78,19 @@ export function createCliStep(
           stderr?: string;
           message?: string;
         };
+        const exitCode = err.code ?? 1;
+        const stderr = err.stderr?.trim() ?? err.message ?? "Unknown error";
+
         return {
-          command,
-          exitCode: err.code ?? 1,
-          stdout: err.stdout?.trim() ?? "",
-          stderr: err.stderr?.trim() ?? err.message ?? "Unknown error",
+          data: {
+            command,
+            exitCode,
+            stdout: err.stdout?.trim() ?? "",
+            stderr,
+          },
           success: false,
+          error: stderr,
+          trace: [{ command, output: stderr, exitCode, duration }],
         };
       }
       },

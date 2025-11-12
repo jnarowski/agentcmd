@@ -74,6 +74,10 @@ async function executeGeneration<T>(
 ): Promise<AiStepResult<T>> {
   const params = buildGenerationParams(config);
 
+  const startTime = Date.now();
+  const provider = config.provider ?? "anthropic";
+  const modelName = config.model ?? (provider === "anthropic" ? "claude-sonnet-4-5-20250929" : "gpt-4");
+
   if (config.schema) {
     // Structured output with schema
     const result = await withTimeout(
@@ -86,6 +90,7 @@ async function executeGeneration<T>(
       timeout,
       "AI generation"
     );
+    const duration = Date.now() - startTime;
 
     return {
       data: result.object as T,
@@ -106,6 +111,10 @@ async function executeGeneration<T>(
         response: result.response,
       },
       success: true,
+      trace: [{
+        command: `AI generateObject (${provider}/${modelName})`,
+        duration,
+      }],
     };
   }
 
@@ -118,6 +127,7 @@ async function executeGeneration<T>(
     timeout,
     "AI generation"
   );
+  const duration = Date.now() - startTime;
 
   return {
     data: { text: result.text } as T,
@@ -144,6 +154,10 @@ async function executeGeneration<T>(
       response: result.response,
     },
     success: true,
+    trace: [{
+      command: `AI generateText (${provider}/${modelName})`,
+      duration,
+    }],
   };
 }
 
@@ -171,6 +185,7 @@ export function createAiStep(
       stepName: name,
       stepType: "ai",
       inngestStep,
+      input: config,
       fn: async () => {
         const { logger } = context;
         const configuration = Configuration.getInstance();
@@ -205,10 +220,15 @@ export function createAiStep(
             "AI step failed"
           );
 
+          const modelName = config.model ?? (provider === "anthropic" ? "claude-sonnet-4-5-20250929" : "gpt-4");
           return {
             data: {} as T,
             success: false,
             error: err.message,
+            trace: [{
+              command: `AI generation (${provider}/${modelName})`,
+              output: err.message,
+            }],
           };
         }
       },

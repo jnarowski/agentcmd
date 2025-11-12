@@ -1,4 +1,18 @@
 /**
+ * Trace entry for command execution logging
+ */
+export interface TraceEntry {
+  /** Command that was executed */
+  command: string;
+  /** Optional command output */
+  output?: string;
+  /** Optional exit code for CLI/shell commands */
+  exitCode?: number;
+  /** Optional execution duration in milliseconds */
+  duration?: number;
+}
+
+/**
  * Options that can be passed to any step method for timeout configuration
  */
 export interface StepOptions {
@@ -36,20 +50,27 @@ export interface AgentStepConfig {
  * Result from agent execution
  */
 export interface AgentStepResult<T = string> {
-  /** Agent session ID */
-  sessionId: string;
+  /** Result data */
+  data: {
+    /** Agent session ID */
+    sessionId: string;
+    /** Exit code from agent execution */
+    exitCode: number;
+    /** Output or error message */
+    message?: string;
+    /** Agent output content */
+    output?: string;
+    /** Number of steps executed */
+    steps?: number;
+    /** Extracted data (JSON object when json: true, otherwise string output) */
+    extracted?: T;
+  };
   /** Success status */
   success: boolean;
-  /** Exit code from agent execution */
-  exitCode: number;
-  /** Output or error message */
-  message?: string;
-  /** Agent output content */
-  output?: string;
-  /** Number of steps executed */
-  steps?: number;
-  /** Extracted data (JSON object when json: true, otherwise string output) */
-  data?: T;
+  /** Error message if failed */
+  error?: string;
+  /** Execution trace */
+  trace: TraceEntry[];
 }
 
 /**
@@ -102,22 +123,27 @@ export interface CleanupWorkspaceConfig {
  * Result from git operation
  */
 export interface GitStepResult {
-  /** Operation that was performed */
-  operation: "commit" | "branch" | "pr" | "commit-and-branch";
-  /** Commit SHA */
-  commitSha?: string;
-  /** Branch name */
-  branch?: string;
-  /** PR number */
-  prNumber?: number;
-  /** PR URL */
-  prUrl?: string;
-  /** Whether there were uncommitted changes (commit-and-branch only) */
-  hadUncommittedChanges?: boolean;
-  /** Whether already on target branch (commit-and-branch only) */
-  alreadyOnBranch?: boolean;
+  /** Result data */
+  data: {
+    /** Commit SHA */
+    commitSha?: string;
+    /** Branch name */
+    branch?: string;
+    /** PR number */
+    prNumber?: number;
+    /** PR URL */
+    prUrl?: string;
+    /** Whether there were uncommitted changes (commit-and-branch only) */
+    hadUncommittedChanges?: boolean;
+    /** Whether already on target branch (commit-and-branch only) */
+    alreadyOnBranch?: boolean;
+  };
   /** Success status */
   success: boolean;
+  /** Error message if failed */
+  error?: string;
+  /** Execution trace */
+  trace: TraceEntry[];
 }
 
 /**
@@ -156,16 +182,23 @@ export interface CliStepConfig {
  * Result from CLI command execution
  */
 export interface CliStepResult {
-  /** Command that was executed */
-  command: string;
-  /** Exit code */
-  exitCode: number;
-  /** Standard output */
-  stdout: string;
-  /** Standard error */
-  stderr: string;
+  /** Result data */
+  data: {
+    /** Command that was executed */
+    command: string;
+    /** Exit code */
+    exitCode: number;
+    /** Standard output */
+    stdout: string;
+    /** Standard error */
+    stderr: string;
+  };
   /** Success status (exitCode === 0) */
   success: boolean;
+  /** Error message if failed */
+  error?: string;
+  /** Execution trace */
+  trace: TraceEntry[];
 }
 
 /**
@@ -194,12 +227,21 @@ export interface ArtifactStepConfig {
  * Result from artifact upload
  */
 export interface ArtifactStepResult {
-  /** Number of artifacts uploaded */
-  count: number;
-  /** Artifact IDs */
-  artifactIds: string[];
-  /** Total size in bytes */
-  totalSize: number;
+  /** Result data */
+  data: {
+    /** Number of artifacts uploaded */
+    count: number;
+    /** Artifact IDs */
+    artifactIds: string[];
+    /** Total size in bytes */
+    totalSize: number;
+  };
+  /** Success status */
+  success: boolean;
+  /** Error message if failed */
+  error?: string;
+  /** Execution trace */
+  trace: TraceEntry[];
 }
 
 /**
@@ -208,6 +250,18 @@ export interface ArtifactStepResult {
 export interface AnnotationStepConfig {
   /** Annotation message */
   message: string;
+}
+
+/**
+ * Result from annotation step
+ */
+export interface AnnotationStepResult {
+  /** Result data (always undefined for annotations) */
+  data: undefined;
+  /** Success status */
+  success: boolean;
+  /** Execution trace */
+  trace: TraceEntry[];
 }
 
 /**
@@ -283,6 +337,8 @@ export interface AiStepResult<T = { text: string }> {
   success: boolean;
   /** Error message if failed */
   error?: string;
+  /** Execution trace */
+  trace: TraceEntry[];
 }
 
 /**
@@ -364,7 +420,7 @@ export interface WorkflowStep<TPhaseId extends string = string> extends InngestS
    * @param id - Unique step identifier
    * @param config - Annotation configuration (message)
    */
-  annotation(id: string, config: AnnotationStepConfig): Promise<void>;
+  annotation(id: string, config: AnnotationStepConfig): Promise<AnnotationStepResult>;
 
   /**
    * Generate AI text or structured output

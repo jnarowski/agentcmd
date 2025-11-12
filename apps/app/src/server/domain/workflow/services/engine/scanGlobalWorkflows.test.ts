@@ -198,12 +198,11 @@ describe("scanGlobalWorkflows", () => {
       await scanGlobalWorkflows(mockRuntime, mockLogger);
 
       // Assert
-      const workflow = await prisma.workflowDefinition.findUnique({
+      const workflow = await prisma.workflowDefinition.findFirst({
         where: {
-          scope_identifier: {
-            scope: "global",
-            identifier: "existing-workflow",
-          },
+          scope: "global",
+          project_id: null,
+          identifier: "existing-workflow",
         },
       });
 
@@ -259,12 +258,11 @@ describe("scanGlobalWorkflows", () => {
       await scanGlobalWorkflows(mockRuntime, mockLogger);
 
       // Assert
-      const workflow = await prisma.workflowDefinition.findUnique({
+      const workflow = await prisma.workflowDefinition.findFirst({
         where: {
-          scope_identifier: {
-            scope: "global",
-            identifier: "archived-workflow",
-          },
+          scope: "global",
+          project_id: null,
+          identifier: "archived-workflow",
         },
       });
 
@@ -316,12 +314,11 @@ describe("scanGlobalWorkflows", () => {
       await scanGlobalWorkflows(mockRuntime, mockLogger);
 
       // Assert
-      const workflow = await prisma.workflowDefinition.findUnique({
+      const workflow = await prisma.workflowDefinition.findFirst({
         where: {
-          scope_identifier: {
-            scope: "global",
-            identifier: "missing-workflow",
-          },
+          scope: "global",
+          project_id: null,
+          identifier: "missing-workflow",
         },
       });
 
@@ -355,12 +352,11 @@ describe("scanGlobalWorkflows", () => {
       await scanGlobalWorkflows(mockRuntime, mockLogger);
 
       // Assert
-      const workflow = await prisma.workflowDefinition.findUnique({
+      const workflow = await prisma.workflowDefinition.findFirst({
         where: {
-          scope_identifier: {
-            scope: "global",
-            identifier: "deleted-workflow",
-          },
+          scope: "global",
+          project_id: null,
+          identifier: "deleted-workflow",
         },
       });
 
@@ -404,12 +400,11 @@ describe("scanGlobalWorkflows", () => {
       await scanGlobalWorkflows(mockRuntime, mockLogger);
 
       // Assert
-      const workflow = await prisma.workflowDefinition.findUnique({
+      const workflow = await prisma.workflowDefinition.findFirst({
         where: {
-          scope_identifier: {
-            scope: "global",
-            identifier: "broken-workflow",
-          },
+          scope: "global",
+          project_id: null,
+          identifier: "broken-workflow",
         },
       });
 
@@ -473,8 +468,8 @@ describe("scanGlobalWorkflows", () => {
       // Assert - project workflow unchanged
       const projectWorkflow = await prisma.workflowDefinition.findUnique({
         where: {
-          scope_identifier: {
-            scope: "project",
+          project_id_identifier: {
+            project_id: project.id,
             identifier: "project-workflow",
           },
         },
@@ -486,12 +481,11 @@ describe("scanGlobalWorkflows", () => {
       expect(projectWorkflow?.project_id).toBe(project.id);
 
       // Assert - global workflow created
-      const globalWorkflow = await prisma.workflowDefinition.findUnique({
+      const globalWorkflow = await prisma.workflowDefinition.findFirst({
         where: {
-          scope_identifier: {
-            scope: "global",
-            identifier: "global-workflow",
-          },
+          scope: "global",
+          project_id: null,
+          identifier: "global-workflow",
         },
       });
 
@@ -551,19 +545,18 @@ describe("scanGlobalWorkflows", () => {
       // Assert - both workflows exist independently
       const projectWorkflow = await prisma.workflowDefinition.findUnique({
         where: {
-          scope_identifier: {
-            scope: "project",
+          project_id_identifier: {
+            project_id: project.id,
             identifier: "shared",
           },
         },
       });
 
-      const globalWorkflow = await prisma.workflowDefinition.findUnique({
+      const globalWorkflow = await prisma.workflowDefinition.findFirst({
         where: {
-          scope_identifier: {
-            scope: "global",
-            identifier: "shared",
-          },
+          scope: "global",
+          project_id: null,
+          identifier: "shared",
         },
       });
 

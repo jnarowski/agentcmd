@@ -20,7 +20,10 @@ describe("createGitStep", () => {
   it("executes commit operation with message", async () => {
     // Arrange
     const mockCommitChanges = vi.mocked(commitChangesModule.commitChanges);
-    mockCommitChanges.mockResolvedValue("abc123");
+    mockCommitChanges.mockResolvedValue({
+      commitSha: "abc123",
+      commands: ["git add .", "git commit -m \"feat: add new feature\""],
+    });
 
     const user = await prisma.user.create({
       data: {
@@ -77,8 +80,7 @@ describe("createGitStep", () => {
     });
 
     // Assert
-    expect(result.operation).toBe("commit");
-    expect(result.commitSha).toBe("abc123");
+    expect(result.data.commitSha).toBe("abc123");
     expect(result.success).toBe(true);
     expect(mockCommitChanges).toHaveBeenCalledWith({
       projectPath: "/tmp/test",
@@ -92,7 +94,10 @@ describe("createGitStep", () => {
     const mockCreateAndSwitchBranch = vi.mocked(
       createAndSwitchBranchModule.createAndSwitchBranch
     );
-    mockCreateAndSwitchBranch.mockResolvedValue(undefined);
+    mockCreateAndSwitchBranch.mockResolvedValue({
+      branch: { name: "feature/new-feature", current: true },
+      commands: ["git checkout -b feature/new-feature"],
+    });
 
     const user = await prisma.user.create({
       data: {
@@ -149,8 +154,7 @@ describe("createGitStep", () => {
     });
 
     // Assert
-    expect(result.operation).toBe("branch");
-    expect(result.branch).toBe("feature/new-feature");
+    expect(result.data.branch).toBe("feature/new-feature");
     expect(result.success).toBe(true);
     expect(mockCreateAndSwitchBranch).toHaveBeenCalledWith({
       projectPath: "/tmp/test",
@@ -167,6 +171,8 @@ describe("createGitStep", () => {
     mockCreatePullRequest.mockResolvedValue({
       success: true,
       prUrl: "https://github.com/org/repo/pull/123",
+      useGhCli: true,
+      commands: ["gh pr create --title \"Add new feature\" --body \"This PR adds a new feature\" --base main"],
     });
 
     const user = await prisma.user.create({
@@ -225,8 +231,7 @@ describe("createGitStep", () => {
     });
 
     // Assert
-    expect(result.operation).toBe("pr");
-    expect(result.prUrl).toBe("https://github.com/org/repo/pull/123");
+    expect(result.data.prUrl).toBe("https://github.com/org/repo/pull/123");
     expect(result.success).toBe(true);
     expect(mockCreatePullRequest).toHaveBeenCalledWith({
       projectPath: "/tmp/test",
@@ -239,7 +244,10 @@ describe("createGitStep", () => {
   it("accepts sentence case and converts to kebab-case ID", async () => {
     // Arrange
     const mockCommitChanges = vi.mocked(commitChangesModule.commitChanges);
-    mockCommitChanges.mockResolvedValue("def456");
+    mockCommitChanges.mockResolvedValue({
+      commitSha: "def456",
+      commands: ["git add .", "git commit -m \"feat: new feature\""],
+    });
 
     const user = await prisma.user.create({
       data: {
@@ -305,7 +313,10 @@ describe("createGitStep", () => {
   it("both formats produce same Inngest step ID", async () => {
     // Arrange
     const mockCommitChanges = vi.mocked(commitChangesModule.commitChanges);
-    mockCommitChanges.mockResolvedValue("ghi789");
+    mockCommitChanges.mockResolvedValue({
+      commitSha: "ghi789",
+      commands: ["git add .", "git commit -m \"initial commit\""],
+    });
 
     const user = await prisma.user.create({
       data: {

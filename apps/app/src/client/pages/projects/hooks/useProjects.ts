@@ -388,17 +388,13 @@ export function useInstallWorkflowPackage(): UseMutationResult<
 
   return useMutation({
     mutationFn: (projectId) => installWorkflowPackage(projectId),
-    onSuccess: (data, projectId) => {
+    onSuccess: (_data, projectId) => {
       // Invalidate project query to refetch capabilities
       queryClient.invalidateQueries({
         queryKey: projectKeys.detail(projectId),
       });
 
-      if (data.success) {
-        toast.success(data.message);
-      } else {
-        toast.error(data.message);
-      }
+      // Note: Toast removed - output is shown in dialog
     },
     onError: (error) => {
       toast.error(error.message || "Failed to install agentcmd-workflows");

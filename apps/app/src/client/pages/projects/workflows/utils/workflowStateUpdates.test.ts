@@ -44,10 +44,13 @@ const mockRunWithSteps: WorkflowRun = {
     {
       id: 'step-1',
       workflow_run_id: 'exec-1',
+      inngest_step_id: 'phase-1-step-1',
       name: 'Step 1',
+      step_type: 'cli',
       phase: 'Phase 1',
       status: StepStatusValues.PENDING,
-      logs: null,
+      args: null,
+      output: null,
       error_message: null,
       agent_session_id: null,
       started_at: null,
@@ -58,10 +61,13 @@ const mockRunWithSteps: WorkflowRun = {
     {
       id: 'step-2',
       workflow_run_id: 'exec-1',
+      inngest_step_id: 'phase-1-step-2',
       name: 'Step 2',
+      step_type: 'cli',
       phase: 'Phase 1',
       status: StepStatusValues.PENDING,
-      logs: null,
+      args: null,
+      output: null,
       error_message: null,
       agent_session_id: null,
       started_at: null,
@@ -194,11 +200,9 @@ describe('applyStepCompleted', () => {
     const run = mockRunWithSteps;
     const result = applyStepCompleted(run, {
       stepId: 'step-1',
-      logs: 'Step completed successfully',
     });
 
     expect(result.steps![0].status).toBe(StepStatusValues.COMPLETED);
-    expect(result.steps![0].logs).toBe('Step completed successfully');
     expect(result.steps![0].completed_at).toBeInstanceOf(Date);
   });
 
@@ -206,7 +210,6 @@ describe('applyStepCompleted', () => {
     const run = mockRun;
     const result = applyStepCompleted(run, {
       stepId: 'step-1',
-      logs: 'logs',
     });
 
     expect(result).toBe(run);

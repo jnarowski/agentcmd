@@ -1,13 +1,10 @@
 import type { GetStepTools } from "inngest";
 import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
+import type { AnnotationStepConfig, AnnotationStepResult } from "agentcmd-workflows";
 import { createWorkflowEvent } from "@/server/domain/workflow/services/events/createWorkflowEvent";
 import { generateInngestStepId } from "@/server/domain/workflow/services/engine/steps/utils/generateInngestStepId";
 import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
 import { toName } from "@/server/domain/workflow/services/engine/steps/utils/toName";
-
-export interface AnnotationStepConfig {
-  message: string;
-}
 
 /**
  * Create annotation step factory function
@@ -22,7 +19,7 @@ export function createAnnotationStep(
   return async function annotation(
     idOrName: string,
     config: AnnotationStepConfig
-  ): Promise<void> {
+  ): Promise<AnnotationStepResult> {
     const id = toId(idOrName);
     const name = toName(idOrName);
     const { runId, currentPhase, logger } = context;
@@ -48,6 +45,15 @@ export function createAnnotationStep(
         { runId, name, message, phase: currentPhase },
         "Annotation added"
       );
-    })) as unknown as Promise<void>;
+
+      return {
+        data: undefined,
+        success: true,
+        trace: [{
+          command: `Annotation: ${name}`,
+          output: message,
+        }],
+      };
+    })) as unknown as Promise<AnnotationStepResult>;
   };
 }

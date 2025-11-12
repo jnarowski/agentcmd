@@ -10,14 +10,16 @@ import { WorkflowWebSocketEventTypes } from "@/shared/types/websocket.types";
  * @param context - Runtime context
  * @param stepId - Step ID
  * @param status - New status
- * @param result - Optional result data
+ * @param args - Optional args data (arguments passed to step)
+ * @param output - Optional output data (result from step execution)
  * @param error - Optional error message
  */
 export async function updateStepStatus(
   context: RuntimeContext,
   stepId: string,
   status: "pending" | "running" | "completed" | "failed",
-  _result?: Record<string, unknown>,
+  args?: unknown,
+  output?: unknown,
   error?: string
 ): Promise<void> {
   const { runId, projectId, logger } = context;
@@ -26,6 +28,8 @@ export async function updateStepStatus(
   const step = await updateWorkflowStep({
     stepId,
     status,
+    args,
+    output,
     errorMessage: error,
     startedAt: status === "running" ? new Date() : undefined,
     completedAt:
@@ -61,6 +65,12 @@ export async function updateStepStatus(
   }
   if (status === "failed" && error) {
     changes.error_message = error;
+  }
+  if (args !== undefined && step.args) {
+    changes.args = step.args;
+  }
+  if (output !== undefined && step.output) {
+    changes.output = step.output;
   }
 
   broadcastWorkflowEvent(projectId, {

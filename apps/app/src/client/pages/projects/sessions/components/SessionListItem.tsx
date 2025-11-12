@@ -3,6 +3,7 @@ import { formatDistanceToNow } from "date-fns";
 import type { SessionResponse } from "@/shared/types";
 import { cn } from "@/client/utils/cn";
 import { AgentIcon } from "@/client/components/AgentIcon";
+import { Badge } from "@/client/components/ui/badge";
 import { useSidebar } from "@/client/components/ui/sidebar";
 import { useState } from "react";
 import { SessionDropdownMenu } from "./SessionDropdownMenu";
@@ -21,7 +22,7 @@ export function SessionListItem({
   projectId,
   isActive = false,
 }: SessionListItemProps) {
-  const { id, metadata, created_at } = session;
+  const { id, metadata, created_at, type } = session;
   const { messageCount } = metadata;
   const { isMobile, setOpenMobile } = useSidebar();
   const [isHovered, setIsHovered] = useState(false);
@@ -69,8 +70,20 @@ export function SessionListItem({
             )}
           />
           <div className="space-y-1 min-w-0 flex-1">
-            <div className="text-sm leading-tight truncate" title={displayName}>
-              {truncatedName}
+            <div className="flex items-center gap-1.5 text-sm leading-tight min-w-0">
+              <span className="truncate" title={displayName}>
+                {truncatedName}
+              </span>
+              {type === 'planning' && (
+                <Badge variant="secondary" className="text-xs px-1.5 py-0 bg-green-500/10 text-green-500 border-green-500/20 shrink-0">
+                  Planning
+                </Badge>
+              )}
+              {type === 'workflow' && (
+                <Badge variant="secondary" className="text-xs px-1.5 py-0 bg-blue-500/10 text-blue-500 border-blue-500/20 shrink-0">
+                  Workflow
+                </Badge>
+              )}
             </div>
             <div className="flex items-center justify-between text-xs text-muted-foreground gap-2">
               <span className="truncate">{timeAgo}</span>

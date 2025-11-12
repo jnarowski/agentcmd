@@ -122,12 +122,12 @@ export async function gitRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const { path, name, from } = request.body;
 
-      const branch = await gitService.createAndSwitchBranch({
+      const result = await gitService.createAndSwitchBranch({
         projectPath: path,
         branchName: name,
         from,
       });
-      return reply.code(201).send(buildSuccessResponse(branch));
+      return reply.code(201).send(buildSuccessResponse(result.branch));
     }
   );
 
@@ -202,8 +202,8 @@ export async function gitRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const { path, message, files } = request.body;
 
-      const hash = await gitService.commitChanges({ projectPath: path, message, files });
-      return reply.code(201).send(buildSuccessResponse({ hash }));
+      const result = await gitService.commitChanges({ projectPath: path, message, files });
+      return reply.code(201).send(buildSuccessResponse({ hash: result.commitSha }));
     }
   );
 

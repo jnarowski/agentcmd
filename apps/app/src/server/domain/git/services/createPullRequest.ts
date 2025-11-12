@@ -9,15 +9,17 @@ const execAsync = promisify(exec)
 
 /**
  * Create a pull request (tries gh CLI, falls back to web URL)
+ * Returns PR result and commands executed
  */
 export async function createPullRequest({
   projectPath,
   title,
   description,
   baseBranch = 'main'
-}: CreatePullRequestOptions): Promise<PrResult> {
+}: CreatePullRequestOptions): Promise<PrResult & { commands: string[] }> {
   try {
     const git = simpleGit(projectPath);
+    const commands: string[] = [];
 
     // Check gh CLI availability
     const ghAvailable = await checkGhCliAvailable({ projectPath });
@@ -25,10 +27,9 @@ export async function createPullRequest({
     if (ghAvailable) {
       // Try using gh CLI
       try {
-        const { stdout } = await execAsync(
-          `gh pr create --title "${title.replace(/"/g, '\\"')}" --body "${description.replace(/"/g, '\\"')}" --base ${baseBranch}`,
-          { cwd: projectPath }
-        );
+        const cmd = `gh pr create --title "${title.replace(/"/g, '\\"')}" --body "${description.replace(/"/g, '\\"')}" --base ${baseBranch}`;
+        commands.push(cmd);
+        const { stdout } = await execAsync(cmd, { cwd: projectPath });
 
         // Extract PR URL from output
         const urlMatch = stdout.match(/https:\/\/github\.com\/[^\s]+/);
@@ -38,13 +39,16 @@ export async function createPullRequest({
           success: true,
           useGhCli: true,
           prUrl,
+          commands,
         };
       } catch {
         // Fall through to web URL method
+        commands.length = 0; // Clear failed command
       }
     }
 
     // Fallback: construct GitHub compare URL
+    commands.push('git remote -v'); // Show how remote was queried
     const remotes = await git.getRemotes(true);
     const origin = remotes.find((r) => r.name === 'origin');
 
@@ -70,6 +74,7 @@ export async function createPullRequest({
     }
 
     // Get current branch
+    commands.push('git status'); // Show how current branch was determined
     const status = await git.status();
     const currentBranch = status.current || 'HEAD';
 
@@ -79,6 +84,7 @@ export async function createPullRequest({
       success: true,
       useGhCli: false,
       prUrl: compareUrl,
+      commands,
     };
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
@@ -86,6 +92,7 @@ export async function createPullRequest({
       success: false,
       useGhCli: false,
       error: err.message,
+      commands: [],
     };
   }
 }

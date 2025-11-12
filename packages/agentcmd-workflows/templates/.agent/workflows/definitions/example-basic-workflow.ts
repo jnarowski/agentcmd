@@ -28,7 +28,7 @@ export default defineWorkflow(
     // ========================================
     await step.phase("setup", async () => {
       await step.annotation("setup-start", {
-        message: "🚀 Starting setup phase",
+        message: "Starting setup phase",
       });
 
       // Simulate checking project structure
@@ -41,7 +41,7 @@ export default defineWorkflow(
       await step.sleep("wait-after-check", "3s");
 
       await step.annotation("project-verified", {
-        message: "✅ Project structure verified",
+        message: "Project structure verified",
       });
 
       // Note: Git status check removed (not a supported git operation)
@@ -50,7 +50,7 @@ export default defineWorkflow(
       await step.sleep("wait-after-git", "2s");
 
       await step.annotation("setup-complete", {
-        message: "✅ Setup phase complete",
+        message: "Setup phase complete",
       });
     });
 
@@ -113,7 +113,7 @@ Time: ${new Date().toISOString()}
       });
 
       await step.annotation("build-complete", {
-        message: "✅ Build phase complete",
+        message: "Build complete",
       });
     });
 
@@ -122,7 +122,7 @@ Time: ${new Date().toISOString()}
     // ========================================
     await step.phase("test", async () => {
       await step.annotation("test-start", {
-        message: "🧪 Starting test phase",
+        message: "Starting test phase",
       });
 
       // Simulate unit tests
@@ -175,7 +175,7 @@ Time: ${new Date().toISOString()}
       });
 
       await step.annotation("tests-passed", {
-        message: "✅ All tests passed",
+        message: "All tests passed",
       });
     });
 
@@ -184,7 +184,7 @@ Time: ${new Date().toISOString()}
     // ========================================
     await step.phase("deploy", async () => {
       await step.annotation("deploy-start", {
-        message: "🚢 Starting deployment phase",
+        message: "Starting deployment",
       });
 
       // Create a commit with changes
@@ -236,7 +236,7 @@ Health checks:
       });
 
       await step.annotation("deploy-success", {
-        message: "✅ Deployment successful",
+        message: "Deployment successful",
       });
     });
 
@@ -244,7 +244,7 @@ Health checks:
     // Completion
     // ========================================
     await step.annotation("workflow-complete", {
-      message: "🎉 Workflow completed successfully!",
+      message: "Workflow completed",
     });
 
     return {

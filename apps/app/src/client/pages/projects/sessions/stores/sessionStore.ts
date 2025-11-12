@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { UnifiedMessage, UnifiedContent, UnifiedImageBlock, PermissionMode } from 'agent-cli-sdk';
 import type { UIMessage } from '@/shared/types/message.types';
-import type { AgentSessionMetadata } from "@/shared/types/agent-session.types";
+import type { AgentSessionMetadata, SessionType } from "@/shared/types/agent-session.types";
 import type { AgentType } from "@/shared/types/agent.types";
 import { isSystemMessage } from '@/shared/utils/message.utils';
 
@@ -265,6 +265,7 @@ export interface SessionData {
   id: string;
   name?: string; // AI-generated session name
   agent: AgentType;
+  type: SessionType;
   messages: UIMessage[];
   isStreaming: boolean;
   metadata: AgentSessionMetadata | null;

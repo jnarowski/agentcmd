@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/shared/prisma';
-import type { AgentSessionMetadata, SessionResponse } from '@/shared/types/agent-session.types';
+import type { AgentSessionMetadata, SessionResponse, SessionType } from '@/shared/types/agent-session.types';
 import type { UpdateSessionMetadataOptions } from '../types/UpdateSessionMetadataOptions';
 
 /**
@@ -37,6 +37,7 @@ export async function updateSessionMetadata({
       userId: updatedSession.userId,
       name: updatedSession.name ?? undefined,
       agent: updatedSession.agent,
+      type: updatedSession.type as SessionType,
       cli_session_id: updatedSession.cli_session_id ?? undefined,
       session_path: updatedSession.session_path ?? undefined,
       metadata: updatedMetadata,

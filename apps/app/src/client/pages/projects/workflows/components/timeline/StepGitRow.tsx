@@ -6,7 +6,7 @@ import {
   MinusCircle,
 } from "lucide-react";
 import { useDebugMode } from "@/client/hooks/useDebugMode";
-import type { WorkflowRunStep } from "@/client/pages/projects/workflows/types";
+import type { WorkflowRunStep, StepOutput } from "@/shared/types/workflow-step.types";
 import { TimelineRow } from "./TimelineRow";
 
 interface StepGitRowProps {
@@ -15,6 +15,11 @@ interface StepGitRowProps {
 
 export function StepGitRow({ step }: StepGitRowProps) {
   const debugMode = useDebugMode();
+
+  // Type-safe output access
+  const output = step.step_type === "git" || step.step_type === "cli"
+    ? (step.output as StepOutput<"git"> | StepOutput<"cli">)
+    : null;
 
   // Status icon
   const StatusIcon = {
@@ -71,18 +76,35 @@ export function StepGitRow({ step }: StepGitRowProps) {
         </span>
       }
     >
-      <div className="flex items-center gap-3">
-        <span className="font-medium">{step.name}</span>
-        {debugMode && (
-          <span className="text-xs text-muted-foreground font-mono">
-            [STEP: {step.id}]
-          </span>
-        )}
-        {duration && (
-          <span className="text-xs text-muted-foreground">{formatDuration(duration)}</span>
-        )}
-        {step.error_message && (
-          <span className="text-xs text-red-500 truncate">{step.error_message}</span>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-3">
+          <span className="font-medium">{step.name}</span>
+          {debugMode && (
+            <span className="text-xs text-muted-foreground font-mono">
+              [STEP: {step.id}]
+            </span>
+          )}
+          {duration && (
+            <span className="text-xs text-muted-foreground">{formatDuration(duration)}</span>
+          )}
+          {step.error_message && (
+            <span className="text-xs text-red-500 truncate">{step.error_message}</span>
+          )}
+        </div>
+
+        {/* Trace display */}
+        {output?.trace && output.trace.length > 0 && (
+          <div className="text-xs font-mono text-muted-foreground space-y-1">
+            {output.trace.map((entry, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <span className="text-blue-400">$</span>
+                <span>{entry.command}</span>
+                {entry.duration && (
+                  <span className="text-gray-500">({entry.duration}ms)</span>
+                )}
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </TimelineRow>

@@ -137,8 +137,9 @@ describe("updateStepStatus", () => {
       context,
       step.id,
       "failed",
-      undefined,
-      "Something went wrong"
+      undefined, // args
+      undefined, // output
+      "Something went wrong" // error
     );
 
     // Assert
@@ -153,6 +154,12 @@ describe("updateStepStatus", () => {
       expect.objectContaining({
         workflow_run_id: execution.id,
         event_type: "step_failed",
+        event_data: expect.objectContaining({
+          title: expect.stringContaining("Step Failed"),
+          stepId: step.id,
+          error: "Something went wrong",
+        }),
+        phase: "test-phase",
       })
     );
   });

@@ -72,7 +72,7 @@ export async function getWorkflowRunById({ id }: GetWorkflowRunByIdOptions): Pro
       ...step,
       stepName: step.name,
       phaseName: step.phase,
-      logs: step.log_directory_path,
+      logs: null,
     })),
     // Use all events fetched separately
     events: allEvents.map(event => ({

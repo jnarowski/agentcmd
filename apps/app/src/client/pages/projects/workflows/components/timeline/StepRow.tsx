@@ -1,6 +1,6 @@
 import { StepDefaultRow } from "@/client/pages/projects/workflows/components/timeline/StepDefaultRow";
 import { StepGitRow } from "@/client/pages/projects/workflows/components/timeline/StepGitRow";
-import type { WorkflowRunStep } from "@/client/pages/projects/workflows/types";
+import type { WorkflowRunStep } from "@/shared/types/workflow-step.types";
 import type { WorkflowTab } from "@/client/pages/projects/workflows/hooks/useWorkflowDetailPanel";
 
 interface StepRowProps {
@@ -23,10 +23,10 @@ export function StepRow({ step, projectId, onSelectSession, onSetActiveTab }: St
 
     case "agent":
     case "ai":
-    case "command":
     case "artifact":
     case "annotation":
-    case "system":
+    case "conditional":
+    case "loop":
     default:
       // Full display for agent/AI/other steps
       return (

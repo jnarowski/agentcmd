@@ -1,5 +1,5 @@
 import { prisma } from '@/shared/prisma';
-import type { AgentSessionMetadata, SessionResponse } from '@/shared/types/agent-session.types';
+import type { AgentSessionMetadata, SessionResponse, SessionType } from '@/shared/types/agent-session.types';
 import type { AgentType } from '@/shared/types/agent.types';
 import { getSessionFilePath } from '@/server/utils/path';
 import type { CreateSessionOptions } from '../types/CreateSessionOptions';
@@ -16,6 +16,7 @@ export async function createSession({
     userId,
     sessionId,
     agent = 'claude' as AgentType,
+    type = 'chat' as SessionType,
     name,
     metadataOverride
   } = data;
@@ -47,6 +48,7 @@ export async function createSession({
       projectId,
       userId,
       agent,
+      type,
       session_path: sessionPath,
       metadata: JSON.parse(JSON.stringify(metadata)),
       state: 'working',
@@ -61,6 +63,7 @@ export async function createSession({
     userId: session.userId,
     name: session.name ?? undefined,
     agent: session.agent,
+    type: session.type as SessionType,
     cli_session_id: session.cli_session_id ?? undefined,
     session_path: session.session_path ?? undefined,
     metadata: metadata,

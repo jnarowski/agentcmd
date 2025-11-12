@@ -6,9 +6,10 @@ import { buildSlashCommand, defineWorkflow } from "agentcmd-workflows";
 
 export default defineWorkflow(
   {
-    id: "audit-workflow",
-    name: "Audit Slash Command",
-    description: "Audits the codebase",
+    id: "example-audit-workflow",
+    name: "Example Audit Workflow",
+    description:
+      "Example workflow demonstrating step.agent with Claude CLI integration",
     phases: [{ id: "audit", label: "Audit" }],
   },
   async ({ event, step }) => {

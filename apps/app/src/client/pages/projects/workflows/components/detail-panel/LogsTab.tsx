@@ -4,11 +4,23 @@ interface LogsTabProps {
   run: WorkflowRun;
 }
 
+interface TraceEntry {
+  command: string;
+  output?: string;
+}
+
+interface StepOutputWithTrace {
+  trace?: TraceEntry[];
+}
+
 export function LogsTab({ run }: LogsTabProps) {
   const steps = run.steps || [];
-  const stepsWithLogs = steps.filter((s) => s.logs);
+  const stepsWithTrace = steps.filter((s) => {
+    const output = s.output as StepOutputWithTrace | null | undefined;
+    return output && Array.isArray(output.trace) && output.trace.length > 0;
+  });
 
-  if (stepsWithLogs.length === 0) {
+  if (stepsWithTrace.length === 0) {
     return (
       <div className="text-sm text-muted-foreground text-center py-8">
         No logs available
@@ -16,15 +28,17 @@ export function LogsTab({ run }: LogsTabProps) {
     );
   }
 
-  const currentStep = stepsWithLogs[0];
+  const currentStep = stepsWithTrace[0];
+  const output = currentStep?.output as StepOutputWithTrace | null | undefined;
+  const trace = output?.trace || [];
 
   return (
     <div className="space-y-4">
-      {stepsWithLogs.length > 1 && (
+      {stepsWithTrace.length > 1 && (
         <div>
           <label className="text-sm font-medium block mb-2">Select Step:</label>
           <select className="w-full border rounded px-3 py-2 text-sm">
-            {stepsWithLogs.map((step) => (
+            {stepsWithTrace.map((step) => (
               <option key={step.id} value={step.id}>
                 {step.name} ({step.status})
               </option>
@@ -35,7 +49,9 @@ export function LogsTab({ run }: LogsTabProps) {
 
       <div className="bg-muted p-4 rounded">
         <pre className="text-xs font-mono whitespace-pre-wrap">
-          {currentStep?.logs || "No logs available"}
+          {trace.length > 0
+            ? trace.map((entry: TraceEntry) => `$ ${entry.command}${entry.output ? '\n' + entry.output : ''}`).join('\n\n')
+            : "No logs available"}
         </pre>
         <div className="text-sm text-muted-foreground mt-2">
           (Real-time log streaming will be implemented with WebSocket)

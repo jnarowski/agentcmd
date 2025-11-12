@@ -73,7 +73,7 @@ describe("createCliStep", () => {
     };
 
     const mockInngestStep = {
-      run: vi.fn(<T>(id: string, fn: () => T) => fn()),
+      run: vi.fn(async <T>(id: string, fn: () => Promise<T>) => await fn()),
     };
 
     const cliStepFn = createCliStep(
@@ -88,9 +88,9 @@ describe("createCliStep", () => {
 
     // Assert
     expect(result.success).toBe(true);
-    expect(result.exitCode).toBe(0);
-    expect(result.stdout).toBe("Hello World");
-    expect(result.command).toBe("echo 'Hello World'");
+    expect(result.data.exitCode).toBe(0);
+    expect(result.data.stdout).toBe("Hello World");
+    expect(result.data.command).toBe("echo 'Hello World'");
   });
 
   it("accepts sentence case idOrName and converts to kebab-case", async () => {
@@ -150,10 +150,10 @@ describe("createCliStep", () => {
     };
 
     const mockInngestStep = {
-      run: vi.fn(<T>(id: string, fn: () => T) => {
+      run: vi.fn(async <T>(id: string, fn: () => Promise<T>) => {
         // Verify kebab-case ID with phase prefix
         expect(id).toBe("build-run-tests");
-        return fn();
+        return await fn();
       }),
     };
 
@@ -229,10 +229,10 @@ describe("createCliStep", () => {
     };
 
     const mockInngestStep = {
-      run: vi.fn(<T>(id: string, fn: () => T) => {
+      run: vi.fn(async <T>(id: string, fn: () => Promise<T>) => {
         // Expect phase prefix since currentPhase is "build"
         expect(id).toBe("build-build-project");
-        return fn();
+        return await fn();
       }),
     };
 
@@ -313,7 +313,7 @@ describe("createCliStep", () => {
     };
 
     const mockInngestStep = {
-      run: vi.fn(<T>(id: string, fn: () => T) => fn()),
+      run: vi.fn(async <T>(id: string, fn: () => Promise<T>) => await fn()),
     };
 
     const cliStepFn = createCliStep(
@@ -328,7 +328,7 @@ describe("createCliStep", () => {
 
     // Assert
     expect(result.success).toBe(false);
-    expect(result.exitCode).toBe(1);
-    expect(result.stderr).toBe("Command not found");
+    expect(result.data.exitCode).toBe(1);
+    expect(result.data.stderr).toBe("Command not found");
   });
 });

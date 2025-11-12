@@ -17,8 +17,9 @@ export async function executeStep<T>(params: {
   fn: () => Promise<T>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   inngestStep: GetStepTools<any>;
+  input?: unknown;
 }): Promise<{ runStepId: string; result: T }> {
-  const { context, stepId, stepName, stepType, fn, inngestStep } = params;
+  const { context, stepId, stepName, stepType, fn, inngestStep, input: args } = params;
 
   // Generate phase-prefixed Inngest step ID
   const inngestStepId = generateInngestStepId(context, stepId);
@@ -28,19 +29,20 @@ export async function executeStep<T>(params: {
     // Find or create step in database
     const step = await findOrCreateStep({ context, inngestStepId, stepName, stepType });
 
-    // Update to running
-    await updateStepStatus(context, step.id, "running");
+    // Update to running with args
+    await updateStepStatus(context, step.id, "running", args);
 
     try {
       // Execute step function
       const result = await fn();
 
-      // Update to completed
+      // Update to completed with output
       await updateStepStatus(
         context,
         step.id,
         "completed",
-        result as Record<string, unknown>
+        undefined, // no input update
+        result
       );
 
       return { runStepId: step.id, result };

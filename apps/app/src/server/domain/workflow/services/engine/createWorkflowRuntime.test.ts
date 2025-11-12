@@ -72,8 +72,14 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
     // Set up default git mock responses
     vi.mocked(getCurrentBranch).mockResolvedValue("main");
     vi.mocked(getGitStatus).mockResolvedValue({ files: [] });
-    vi.mocked(commitChanges).mockResolvedValue();
-    vi.mocked(createAndSwitchBranch).mockResolvedValue();
+    vi.mocked(commitChanges).mockResolvedValue({
+      commitSha: "abc123",
+      commands: ["git add .", "git commit -m \"Auto-commit\""],
+    });
+    vi.mocked(createAndSwitchBranch).mockResolvedValue({
+      branch: { name: "feat-test", current: true },
+      commands: ["git checkout -b feat-test"],
+    });
     vi.mocked(createWorktree).mockResolvedValue("/tmp/test-project/.worktrees/feat-test");
     vi.mocked(removeWorktree).mockResolvedValue();
     vi.mocked(switchBranch).mockResolvedValue();

@@ -53,8 +53,8 @@ export function createAgentStep(
         stepType: "agent",
       });
 
-      // Update to running
-      await updateStepStatus(context, step.id, "running");
+      // Update to running with input
+      await updateStepStatus(context, step.id, "running", config);
 
       try {
         // Create agent session using domain service
@@ -84,13 +84,6 @@ export function createAgentStep(
             "Executing agent"
           );
 
-          console.log("Executing agent =============", {
-            sessionId: session.id,
-            agent: config.agent,
-            prompt: config.prompt,
-            workingDir: config.workingDir ?? context.projectPath,
-            json: config.json,
-          });
           // Execute agent with timeout (bypass permissions for workflow context)
           const result = await withTimeout(
             executeAgent({
@@ -101,7 +94,11 @@ export function createAgentStep(
               permissionMode: "bypassPermissions", // Hardcoded to bypass permissions in workflows
               json: config.json,
               onEvent: ({ message }) => {
-                if (message && typeof message === "object" && message !== null) {
+                if (
+                  message &&
+                  typeof message === "object" &&
+                  message !== null
+                ) {
                   broadcast(Channels.session(session.id), {
                     type: SessionEventTypes.STREAM_OUTPUT,
                     data: { message, sessionId: session.id },
@@ -127,20 +124,32 @@ export function createAgentStep(
             logger,
           });
 
-          // Update to completed
+          // Wrap result in new format
+          const wrappedResult: AgentStepResult = {
+            data: {
+              sessionId: result.sessionId || session.id,
+              exitCode: result.exitCode,
+            },
+            success: result.success,
+            error: result.error,
+            trace: [{
+              command: `Agent ${config.agent}`,
+              output: result.error || 'Agent execution completed',
+              exitCode: result.exitCode,
+            }],
+          };
+
+          // Update to completed with wrapped output
           await updateStepStatus(
             context,
             step.id,
             "completed",
-            result as unknown as Record<string, unknown>
+            undefined, // no input update
+            wrappedResult // wrapped output
           );
 
-          // Strip messages array to avoid Inngest 4MB payload limit
-          // Messages can be 50+MB with tool results, thinking blocks, images
-          return {
-            ...result,
-            messages: undefined,
-          };
+          // Strip messages and return wrapped result
+          return wrappedResult;
         } catch (error) {
           // Mark session as failed using domain service
           await updateSession({

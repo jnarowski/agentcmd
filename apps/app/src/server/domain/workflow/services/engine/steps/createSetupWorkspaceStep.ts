@@ -101,7 +101,7 @@ async function executeSetupWorkspace(
     if (status.files.length > 0) {
       // Auto-commit uncommitted changes before branching
       const commitStartTime = Date.now();
-      await commitChanges({
+      const commitResult = await commitChanges({
         projectPath,
         message: "WIP: Auto-commit before branching",
         files: ["."],
@@ -110,14 +110,14 @@ async function executeSetupWorkspace(
       await createWorkflowEventCommand(
         context,
         "git",
-        ["commit", "-m", "WIP: Auto-commit before branching"],
+        commitResult.commands,
         commitDuration
       );
     }
 
     // Create and switch to branch
     const checkoutStartTime = Date.now();
-    await createAndSwitchBranch({
+    const branchResult = await createAndSwitchBranch({
       projectPath,
       branchName: branch,
       from: baseBranch,
@@ -126,7 +126,7 @@ async function executeSetupWorkspace(
     await createWorkflowEventCommand(
       context,
       "git",
-      ["checkout", "-b", branch],
+      branchResult.commands,
       checkoutDuration
     );
 

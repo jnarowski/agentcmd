@@ -213,9 +213,16 @@ export function createArtifactStep(
       );
 
       return {
-        count: artifactIds.length,
-        artifactIds,
-        totalSize,
+        data: {
+          count: artifactIds.length,
+          artifactIds,
+          totalSize,
+        },
+        success: true,
+        trace: [{
+          command: `Upload artifacts (${config.type})`,
+          output: `Uploaded ${artifactIds.length} artifact(s), ${totalSize} bytes`,
+        }],
       };
     });
   };

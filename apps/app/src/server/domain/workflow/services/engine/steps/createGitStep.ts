@@ -37,6 +37,7 @@ export function createGitStep(
       stepName: name,
       stepType: "git",
       inngestStep,
+      input: config,
       fn: async () => {
         const { projectPath } = context;
 
@@ -63,16 +64,20 @@ async function executeGitOperation(
       if (!config.message) {
         throw new Error("Commit message is required for commit operation");
       }
-      const commitSha = await commitChanges({
+      const startTime = Date.now();
+      const { commitSha, commands } = await commitChanges({
         projectPath,
         message: config.message,
         files: ["."],
       });
+      const duration = Date.now() - startTime;
 
       return {
-        operation: "commit",
-        commitSha,
+        data: {
+          commitSha,
+        },
         success: true,
+        trace: commands.map((cmd) => ({ command: cmd, duration })),
       };
     }
 
@@ -80,16 +85,20 @@ async function executeGitOperation(
       if (!config.branch) {
         throw new Error("Branch name is required for branch operation");
       }
-      await createAndSwitchBranch({
+      const startTime = Date.now();
+      const { branch, commands } = await createAndSwitchBranch({
         projectPath,
         branchName: config.branch,
         from: config.baseBranch,
       });
+      const duration = Date.now() - startTime;
 
       return {
-        operation: "branch",
-        branch: config.branch,
+        data: {
+          branch: branch.name,
+        },
         success: true,
+        trace: commands.map((cmd) => ({ command: cmd, duration })),
       };
     }
 
@@ -97,17 +106,22 @@ async function executeGitOperation(
       if (!config.title) {
         throw new Error("PR title is required for pr operation");
       }
+      const startTime = Date.now();
       const result = await createPullRequest({
         projectPath,
         title: config.title,
         description: config.body ?? "",
         baseBranch: config.baseBranch ?? "main",
       });
+      const duration = Date.now() - startTime;
 
       return {
-        operation: "pr",
-        prUrl: result.prUrl,
+        data: {
+          prUrl: result.prUrl,
+        },
         success: result.success,
+        error: result.success ? undefined : result.error || "Failed to create pull request",
+        trace: result.commands.map((cmd) => ({ command: cmd, duration })),
       };
     }
 
@@ -116,36 +130,47 @@ async function executeGitOperation(
         throw new Error("Branch name is required for commit-and-branch operation");
       }
 
+      const startTime = Date.now();
+      const allCommands: string[] = [];
+
       // Get current branch
+      allCommands.push('git branch --show-current');
       const currentBranch = await getCurrentBranch({ projectPath });
 
       // Check if already on target branch
       if (currentBranch === config.branch) {
         // Already on target branch - just commit if needed
+        allCommands.push('git status');
         const status = await getGitStatus({ projectPath });
         const hasUncommittedChanges = status.files.length > 0;
 
         let commitSha: string | undefined;
         if (hasUncommittedChanges) {
           const commitMessage = config.commitMessage ?? "WIP: Auto-commit";
-          commitSha = await commitChanges({
+          const result = await commitChanges({
             projectPath,
             message: commitMessage,
             files: ["."],
           });
+          commitSha = result.commitSha;
+          allCommands.push(...result.commands);
         }
 
+        const duration = Date.now() - startTime;
         return {
-          operation: "commit-and-branch",
-          branch: config.branch,
-          commitSha,
-          hadUncommittedChanges: hasUncommittedChanges,
-          alreadyOnBranch: true,
+          data: {
+            branch: config.branch,
+            commitSha,
+            hadUncommittedChanges: hasUncommittedChanges,
+            alreadyOnBranch: true,
+          },
           success: true,
+          trace: allCommands.map((cmd) => ({ command: cmd, duration })),
         };
       }
 
       // Not on target branch - check for uncommitted changes
+      allCommands.push('git status');
       const status = await getGitStatus({ projectPath });
       const hasUncommittedChanges = status.files.length > 0;
 
@@ -154,27 +179,33 @@ async function executeGitOperation(
       // If uncommitted changes exist, commit them
       if (hasUncommittedChanges) {
         const commitMessage = config.commitMessage ?? "WIP: Auto-commit before branching";
-        commitSha = await commitChanges({
+        const result = await commitChanges({
           projectPath,
           message: commitMessage,
           files: ["."],
         });
+        commitSha = result.commitSha;
+        allCommands.push(...result.commands);
       }
 
       // Create and switch to new branch
-      await createAndSwitchBranch({
+      const branchResult = await createAndSwitchBranch({
         projectPath,
         branchName: config.branch,
         from: config.baseBranch,
       });
+      allCommands.push(...branchResult.commands);
 
+      const duration = Date.now() - startTime;
       return {
-        operation: "commit-and-branch",
-        branch: config.branch,
-        commitSha,
-        hadUncommittedChanges: hasUncommittedChanges,
-        alreadyOnBranch: false,
+        data: {
+          branch: config.branch,
+          commitSha,
+          hadUncommittedChanges: hasUncommittedChanges,
+          alreadyOnBranch: false,
+        },
         success: true,
+        trace: allCommands.map((cmd) => ({ command: cmd, duration })),
       };
     }
 

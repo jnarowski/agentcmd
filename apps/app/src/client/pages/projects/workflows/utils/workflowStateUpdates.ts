@@ -56,7 +56,7 @@ export function updateStepInExecution(
     ...run,
     steps: run.steps.map((step) =>
       step.id === stepId
-        ? { ...step, ...updates, updated_at: new Date() }
+        ? ({ ...step, ...updates, updated_at: new Date() } as WorkflowRunStep)
         : step
     ),
     updated_at: new Date(),
@@ -191,14 +191,13 @@ export function applyStepCompleted(
   run: WorkflowRun,
   event: {
     stepId: string;
-    logs: string;
+    logs?: string; // Optional for backward compatibility
   }
 ): WorkflowRun {
   if (!run.steps) return run;
 
   return updateStepInExecution(run, event.stepId, {
     status: StepStatusValues.COMPLETED,
-    logs: event.logs,
     completed_at: new Date(),
   });
 }

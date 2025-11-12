@@ -153,7 +153,10 @@ describe("createSetupWorkspaceStep", () => {
 
       vi.mocked(getCurrentBranch).mockResolvedValue("main");
       vi.mocked(getGitStatus).mockResolvedValue({ files: [] });
-      vi.mocked(createAndSwitchBranch).mockResolvedValue();
+      vi.mocked(createAndSwitchBranch).mockResolvedValue({
+        branch: { name: "feat/new", current: true },
+        commands: ["git checkout -b feat/new"],
+      });
 
       const setupWorkspace = createSetupWorkspaceStep(
         mockContext,
@@ -189,8 +192,14 @@ describe("createSetupWorkspaceStep", () => {
           { path: "file2.ts", status: "added" },
         ],
       });
-      vi.mocked(commitChanges).mockResolvedValue();
-      vi.mocked(createAndSwitchBranch).mockResolvedValue();
+      vi.mocked(commitChanges).mockResolvedValue({
+        commitSha: "abc123",
+        commands: ["git add .", "git commit -m \"Auto-commit\""],
+      });
+      vi.mocked(createAndSwitchBranch).mockResolvedValue({
+        branch: { name: "feat/new", current: true },
+        commands: ["git checkout -b feat/new"],
+      });
 
       const setupWorkspace = createSetupWorkspaceStep(
         mockContext,
@@ -238,7 +247,10 @@ describe("createSetupWorkspaceStep", () => {
 
       vi.mocked(getCurrentBranch).mockResolvedValue("main");
       vi.mocked(getGitStatus).mockResolvedValue({ files: [] });
-      vi.mocked(createAndSwitchBranch).mockResolvedValue();
+      vi.mocked(createAndSwitchBranch).mockResolvedValue({
+        branch: { name: "feat/new", current: true },
+        commands: ["git checkout -b feat/new"],
+      });
 
       const setupWorkspace = createSetupWorkspaceStep(
         mockContext,
@@ -502,7 +514,10 @@ describe("createSetupWorkspaceStep", () => {
 
       vi.mocked(getCurrentBranch).mockResolvedValue("main");
       vi.mocked(getGitStatus).mockResolvedValue({ files: [] });
-      vi.mocked(createAndSwitchBranch).mockResolvedValue();
+      vi.mocked(createAndSwitchBranch).mockResolvedValue({
+        branch: { name: "feat/new", current: true },
+        commands: ["git checkout -b feat/new"],
+      });
 
       const setupWorkspace = createSetupWorkspaceStep(
         mockContext,
@@ -568,7 +583,10 @@ describe("createSetupWorkspaceStep", () => {
 
       vi.mocked(getCurrentBranch).mockResolvedValue("main");
       vi.mocked(getGitStatus).mockResolvedValue({ files: [] });
-      vi.mocked(createAndSwitchBranch).mockResolvedValue();
+      vi.mocked(createAndSwitchBranch).mockResolvedValue({
+        branch: { name: "feat/new", current: true },
+        commands: ["git checkout -b feat/new"],
+      });
 
       const setupWorkspace = createSetupWorkspaceStep(
         mockContext,
