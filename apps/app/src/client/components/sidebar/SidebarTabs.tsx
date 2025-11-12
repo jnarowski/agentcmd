@@ -11,9 +11,10 @@ import { useProjects } from "@/client/pages/projects/hooks/useProjects";
 import { useSessions } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
 import { useAllWorkflowRuns } from "@/client/pages/projects/workflows/hooks/useAllWorkflowRuns";
 import { useNavigationStore } from "@/client/stores/navigationStore";
-// import { NavTasks } from "./NavTasks";
+import { NavTasks } from "./NavTasks";
 import { NavActivities } from "./NavActivities";
 import { NavProjects } from "./NavProjects";
+import { useTasks } from "@/client/hooks/useTasks";
 
 export function SidebarTabs() {
   const { data: settings } = useSettings();
@@ -56,6 +57,10 @@ export function SidebarTabs() {
     }
   }
 
+  // Count tasks (specs + planning sessions) from all projects
+  const { data: tasksData } = useTasks();
+  const tasksCount = (tasksData?.tasks.length || 0) + (tasksData?.planningSessions.length || 0);
+
   const handleTabChange = (value: string) => {
     updateSettings.mutate({
       sidebar_active_tab: value as "projects" | "activities" | "tasks",
@@ -69,12 +74,15 @@ export function SidebarTabs() {
       className="flex-1 flex flex-col min-h-0 overflow-hidden"
     >
       <div className="pl-2 pr-2 pt-3 pb-2 shrink-0">
-        <TabsList className="w-full grid grid-cols-2 h-7 p-0.5">
+        <TabsList className="w-full grid grid-cols-3 h-7 p-0.5">
           <TabsTrigger value="projects" className="text-xs h-full px-1.5">
             Projects ({projectsCount})
           </TabsTrigger>
           <TabsTrigger value="activities" className="text-xs h-full px-1.5">
             Activities ({activitiesCount})
+          </TabsTrigger>
+          <TabsTrigger value="tasks" className="text-xs h-full px-1.5">
+            Tasks ({tasksCount})
           </TabsTrigger>
         </TabsList>
       </div>
@@ -85,6 +93,10 @@ export function SidebarTabs() {
 
       <TabsContent value="activities" className="flex-1 mt-0 overflow-hidden">
         <NavActivities />
+      </TabsContent>
+
+      <TabsContent value="tasks" className="flex-1 mt-0 overflow-hidden">
+        <NavTasks />
       </TabsContent>
     </Tabs>
   );

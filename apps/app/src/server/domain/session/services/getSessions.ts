@@ -4,6 +4,7 @@ import type { AgentSessionMetadata, SessionResponse, SessionType } from '@/share
 export interface GetSessionsFilters {
   projectId?: string;
   userId: string;
+  type?: SessionType;
   limit?: number;
   includeArchived?: boolean;
   orderBy?: 'created_at' | 'updated_at';
@@ -18,6 +19,7 @@ export async function getSessions(filters: GetSessionsFilters): Promise<SessionR
   const {
     projectId,
     userId,
+    type,
     limit = 20,
     includeArchived = false,
     orderBy = 'created_at',
@@ -28,6 +30,7 @@ export async function getSessions(filters: GetSessionsFilters): Promise<SessionR
     where: {
       userId,
       ...(projectId ? { projectId } : {}),
+      ...(type ? { type } : {}),
       ...(includeArchived ? {} : { is_archived: false }),
     },
     orderBy: {

@@ -19,6 +19,7 @@ import { SessionItem } from "@/client/components/sidebar/SessionItem";
 import { WorkflowItem } from "@/client/components/sidebar/WorkflowItem";
 import type { AgentType } from "@/shared/types/agent.types";
 import type { SessionResponse } from "@/shared/types";
+import type { WorkflowStatus } from "@/shared/schemas/workflow.schemas";
 
 type ActivityFilter = "all" | "sessions" | "workflows";
 
@@ -28,10 +29,11 @@ interface Activity {
   name: string;
   projectId: string;
   projectName: string;
-  status: string;
+  status: string | WorkflowStatus;
   createdAt: Date;
   agent?: AgentType;
   session?: SessionResponse;
+  workflowDefinitionId?: string;
 }
 
 export function NavActivities() {
@@ -99,6 +101,7 @@ export function NavActivities() {
             : projectName,
         status: run.status,
         createdAt: new Date(run.created_at),
+        workflowDefinitionId: run.workflow_definition_id,
       });
     }
     return activities;
@@ -211,7 +214,8 @@ export function NavActivities() {
                     name={activity.name}
                     projectId={activity.projectId}
                     projectName={activity.projectName}
-                    status={activity.status}
+                    status={activity.status as WorkflowStatus}
+                    workflowDefinitionId={activity.workflowDefinitionId!}
                   />
                 );
               }

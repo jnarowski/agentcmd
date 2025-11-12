@@ -25,6 +25,7 @@ interface NewRunFormProps {
   definitionId?: string;
   definition?: WorkflowDefinition;
   definitions?: WorkflowDefinition[];
+  initialSpecFile?: string;
   onSuccess: (run: WorkflowRun) => void;
   onCancel: () => void;
 }
@@ -34,6 +35,7 @@ export function NewRunForm({
   definitionId,
   definition,
   definitions,
+  initialSpecFile,
   onSuccess,
   onCancel,
 }: NewRunFormProps) {
@@ -84,6 +86,15 @@ export function NewRunForm({
       setArgs({});
     }
   }, [selectedDefinitionId, definitionId]);
+
+  // Pre-fill spec file from URL param
+  useEffect(() => {
+    if (initialSpecFile && !specFile) {
+      setSpecFile(initialSpecFile);
+      setSpecInputType("file");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSpecFile]);
 
   // Fetch available spec files
   const { data: specFiles } = useProjectSpecs(projectId, true);

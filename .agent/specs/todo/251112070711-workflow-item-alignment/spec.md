@@ -1,6 +1,6 @@
 # Workflow Item Sidebar Alignment
 
-**Status**: draft
+**Status**: in-progress
 **Created**: 2025-11-12
 **Package**: apps/app
 **Total Complexity**: 13 points
@@ -111,12 +111,12 @@ None - all changes are modifications to existing file
 **Phase Complexity**: 8 points (avg 4.0/10)
 
 <!-- prettier-ignore -->
-- [ ] 1.1 5/10 Import status config and icon components
+- [x] 1.1 5/10 Import status config and icon components
   - Add import for `getWorkflowStatusConfig` from `@/client/pages/projects/workflows/utils/workflowStatus`
   - Add import for `type { WorkflowStatus }` from `@/shared/schemas/workflow.schemas`
   - File: `apps/app/src/client/components/sidebar/WorkflowItem.tsx`
   - Update WorkflowItemProps status type from `string` to `WorkflowStatus`
-- [ ] 1.2 3/10 Render status icon before workflow name
+- [x] 1.2 3/10 Render status icon before workflow name
   - Get status config using `getWorkflowStatusConfig(status)`
   - Destructure icon component from config
   - Render icon with classes: `size-4 shrink-0 mr-1`
@@ -126,19 +126,23 @@ None - all changes are modifications to existing file
 
 #### Completion Notes
 
-(This will be filled in by the agent implementing this phase)
+- Added status icon from workflowStatus.ts config before workflow name
+- Icon uses correct size-4, shrink-0, mr-1 classes matching SessionItem layout
+- Running status shows spinning animation
+- Text colors from status config applied (blue/green/red/gray)
+- All Phase 1 and Phase 2 tasks completed in single implementation
 
 ### Phase 2: Layout Alignment
 
 **Phase Complexity**: 5 points (avg 2.5/10)
 
 <!-- prettier-ignore -->
-- [ ] 2.1 3/10 Add truncation and active state support
+- [x] 2.1 3/10 Add truncation and active state support
   - Add `isActive?: boolean` to WorkflowItemProps interface (default false)
   - Add `truncate` class to workflow name span (line 49)
   - Pass `isActive` prop to SidebarMenuButton
   - File: `apps/app/src/client/components/sidebar/WorkflowItem.tsx`
-- [ ] 2.2 2/10 Add hover state tracking
+- [x] 2.2 2/10 Add hover state tracking
   - Import `useState` from "react"
   - Add hover state: `const [isHovered, setIsHovered] = useState(false)`
   - Add `onMouseEnter` and `onMouseLeave` handlers to SidebarMenuItem
@@ -146,7 +150,11 @@ None - all changes are modifications to existing file
 
 #### Completion Notes
 
-(This will be filled in by the agent implementing this phase)
+- Added isActive prop support with default false
+- Added truncate class to workflow name span for proper text overflow
+- Added hover state tracking with useState
+- Added mouse enter/leave handlers to SidebarMenuItem
+- Component now matches SessionItem visual structure and behavior
 
 ## Testing Strategy
 

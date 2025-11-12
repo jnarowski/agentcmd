@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
 import { useWorkflowDefinitions } from "./hooks/useWorkflowDefinitions";
@@ -8,7 +8,9 @@ import type { WorkflowRun } from "./types";
 export default function NewWorkflowRun() {
   const navigate = useNavigate();
   const { projectId, id, definitionId } = useParams();
+  const [searchParams] = useSearchParams();
   const activeProjectId = projectId || id;
+  const initialSpecFile = searchParams.get("specFile") ?? undefined;
 
   // Get project name for title
   const { data: project } = useProject(activeProjectId!);
@@ -59,6 +61,7 @@ export default function NewWorkflowRun() {
               definitionId={definitionId}
               definition={definition}
               definitions={definitions}
+              initialSpecFile={initialSpecFile}
               onSuccess={handleSuccess}
               onCancel={handleCancel}
             />

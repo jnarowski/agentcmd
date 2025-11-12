@@ -1,6 +1,6 @@
 # Type-Safe Workflow Step Args/Output
 
-**Status**: in-progress
+**Status**: completed
 **Created**: 2025-11-12
 **Package**: apps/app, agentcmd-workflows
 **Total Complexity**: 71 points

@@ -4,13 +4,17 @@ import {
   SidebarMenuButton,
 } from "@/client/components/ui/sidebar";
 import { Badge } from "@/client/components/ui/badge";
+import { getWorkflowStatusConfig } from "@/client/pages/projects/workflows/utils/workflowStatus";
+import type { WorkflowStatus } from "@/shared/schemas/workflow.schemas";
 
 interface WorkflowItemProps {
   id: string;
   name: string;
   projectId: string;
   projectName: string;
-  status: string;
+  status: WorkflowStatus;
+  workflowDefinitionId: string;
+  isActive?: boolean;
 }
 
 export function WorkflowItem({
@@ -19,11 +23,13 @@ export function WorkflowItem({
   projectId,
   projectName,
   status,
+  workflowDefinitionId,
+  isActive = false,
 }: WorkflowItemProps) {
   const navigate = useNavigate();
 
   const handleActivityClick = () => {
-    navigate(`/projects/${projectId}/workflows/${id}`);
+    navigate(`/projects/${projectId}/workflows/${workflowDefinitionId}/runs/${id}`);
   };
 
   const getStatusColor = (status: string) => {
@@ -39,14 +45,21 @@ export function WorkflowItem({
     }
   };
 
+  const statusConfig = getWorkflowStatusConfig(status);
+  const StatusIcon = statusConfig.icon;
+
   return (
     <SidebarMenuItem key={id}>
       <SidebarMenuButton
         onClick={handleActivityClick}
+        isActive={isActive}
         className="h-auto min-h-[28px] px-2 py-1"
       >
+        <StatusIcon
+          className={`size-4 shrink-0 mr-1 ${statusConfig.textColor} ${status === "running" ? "animate-spin" : ""}`}
+        />
         <div className="flex flex-1 flex-col gap-0.5 min-w-0">
-          <span className="text-sm min-w-0">{name}</span>
+          <span className="text-sm min-w-0 truncate">{name}</span>
           <div className="flex items-center gap-1.5 mt-0.5">
             <Badge
               variant="secondary"
