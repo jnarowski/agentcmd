@@ -7,12 +7,18 @@ interface WorkflowRunsResponse {
   data: WorkflowRunListItem[];
 }
 
-async function fetchAllWorkflowRuns(status?: string | string[]): Promise<WorkflowRunListItem[]> {
+async function fetchAllWorkflowRuns(
+  status?: string | string[],
+  projectId?: string | null
+): Promise<WorkflowRunListItem[]> {
   const params = new URLSearchParams();
   if (status) {
     // If array, join with comma; otherwise use as-is
     const statusParam = Array.isArray(status) ? status.join(',') : status;
     params.append('status', statusParam);
+  }
+  if (projectId) {
+    params.append('project_id', projectId);
   }
 
   const url = `/api/workflow-runs${params.toString() ? `?${params.toString()}` : ''}`;
@@ -21,12 +27,12 @@ async function fetchAllWorkflowRuns(status?: string | string[]): Promise<Workflo
 }
 
 /**
- * Fetch all workflow runs for the current user (across all projects)
+ * Fetch workflow runs for the current user (optionally filtered by project)
  * Used for user-wide views like sidebar activities
  */
-export function useAllWorkflowRuns(status?: string | string[]) {
+export function useAllWorkflowRuns(status?: string | string[], projectId?: string | null) {
   return useQuery({
-    queryKey: workflowKeys.allRuns(),
-    queryFn: () => fetchAllWorkflowRuns(status),
+    queryKey: workflowKeys.allRuns(status, projectId),
+    queryFn: () => fetchAllWorkflowRuns(status, projectId),
   });
 }

@@ -38,17 +38,34 @@ interface Activity {
 
 export function NavActivities() {
   const activeSessionId = useNavigationStore((s) => s.activeSessionId);
+  const activeProjectId = useNavigationStore((s) => s.activeProjectId);
   const { data: settings } = useSettings();
   const updateSettings = useUpdateSettings();
   const { data: projects } = useProjects();
-  const { data: sessions } = useSessions({ limit: 100, orderBy: 'created_at', order: 'desc' });
-  // Fetch only active/in-progress runs from backend
-  const { data: allWorkflowRuns } = useAllWorkflowRuns(['pending', 'running', 'failed']);
   const queryClient = useQueryClient();
   const syncProjectsMutation = useSyncProjectsMutation();
 
   const filter: ActivityFilter =
     settings?.userPreferences?.activity_filter || "all";
+
+  // Get project filter: use setting if explicitly set (including null), otherwise use activeProjectId
+  const projectFilter =
+    settings?.userPreferences?.active_project_filter !== undefined
+      ? settings.userPreferences.active_project_filter
+      : activeProjectId;
+
+  const { data: sessions } = useSessions({
+    projectId: projectFilter || undefined,
+    limit: 100,
+    orderBy: 'created_at',
+    order: 'desc',
+  });
+
+  // Fetch only active/in-progress runs from backend
+  const { data: allWorkflowRuns } = useAllWorkflowRuns(
+    ['pending', 'running', 'failed'],
+    projectFilter
+  );
 
   // Map sessions to Activity type, join with project names
   const sessionActivities = useMemo(() => {
@@ -187,7 +204,7 @@ export function NavActivities() {
       <div className="flex-1 overflow-y-auto px-2">
         {filteredActivities.length === 0 ? (
           <div className="py-4 text-center text-sm text-muted-foreground">
-            No recent activity
+            {projectFilter ? "No items in this project" : "No recent activity"}
           </div>
         ) : (
           <SidebarMenu>

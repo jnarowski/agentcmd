@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Outlet, useParams, Navigate } from "react-router-dom";
 import { ConnectionStatusBanner } from "@/client/components/ConnectionStatusBanner";
 import { ProjectHeader } from "@/client/components/ProjectHeader";
@@ -5,7 +6,7 @@ import { AppSidebar } from "@/client/components/AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/client/components/ui/sidebar";
 import { useWebSocket } from "@/client/hooks/useWebSocket";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
-import { useAuthStore } from "@/client/stores/index";
+import { useAuthStore, useNavigationStore } from "@/client/stores/index";
 import { Skeleton } from "@/client/components/ui/skeleton";
 
 /**
@@ -18,6 +19,18 @@ export default function WorkflowLayout() {
   const { readyState, reconnectAttempt, reconnect } = useWebSocket();
   const { data: project, isLoading } = useProject(projectId!);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const setActiveProject = useNavigationStore((state) => state.setActiveProject);
+  const clearNavigation = useNavigationStore((state) => state.clearNavigation);
+
+  // Set active project in navigation store
+  useEffect(() => {
+    if (projectId) {
+      setActiveProject(projectId);
+    }
+    return () => {
+      clearNavigation();
+    };
+  }, [projectId, setActiveProject, clearNavigation]);
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {

@@ -13,7 +13,8 @@ export const workflowKeys = {
 
   // Workflow Runs
   runs: () => [...workflowKeys.all, "runs"] as const,
-  allRuns: () => [...workflowKeys.runs(), "all"] as const,
+  allRuns: (status?: string | string[], projectId?: string | null) =>
+    [...workflowKeys.runs(), "all", status, projectId] as const,
   runsList: (
     projectId: string,
     status?: string,

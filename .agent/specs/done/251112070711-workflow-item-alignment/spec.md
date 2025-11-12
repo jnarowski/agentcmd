@@ -1,6 +1,6 @@
 # Workflow Item Sidebar Alignment
 
-**Status**: in-progress
+**Status**: completed
 **Created**: 2025-11-12
 **Package**: apps/app
 **Total Complexity**: 13 points

@@ -17,12 +17,15 @@ const CACHE_TTL = 30000; // 30 seconds
 const cache = new Map<string, CacheEntry>();
 
 /**
- * Get all tasks (specs from ALL projects' .agent/specs/todo/ folders) and planning sessions
- * Results are cached per user for 30 seconds
+ * Get all tasks (specs and planning sessions), optionally filtered by project
+ * Results are cached per user/project for 30 seconds
  */
-export async function getTasks(userId: string): Promise<TasksResponse> {
+export async function getTasks(
+  userId: string,
+  projectId?: string
+): Promise<TasksResponse> {
   const now = Date.now();
-  const cacheKey = userId;
+  const cacheKey = projectId ? `${userId}:${projectId}` : userId;
 
   // Return cached data if valid
   const cached = cache.get(cacheKey);
@@ -30,20 +33,22 @@ export async function getTasks(userId: string): Promise<TasksResponse> {
     return cached.data;
   }
 
-  // Get all projects for this user
+  // Get projects for this user (filtered by projectId if provided)
   const projects = await prisma.project.findMany({
+    where: projectId ? { id: projectId } : undefined,
     select: { id: true, path: true },
   });
 
-  // Scan specs from all projects
+  // Scan specs from projects
   const allTasks = await Promise.all(
     projects.map((project) => scanSpecs(project.path, project.id))
   );
   const tasks = allTasks.flat();
 
-  // Get planning sessions (across all projects)
+  // Get planning sessions (filtered by projectId if provided)
   const planningSessions = await getSessions({
     userId,
+    projectId,
     permission_mode: "plan",
     includeArchived: false,
     limit: 50, // Reasonable limit for planning sessions

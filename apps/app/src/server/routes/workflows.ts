@@ -3,7 +3,6 @@ import { z } from "zod";
 import {
   createWorkflowRun,
   getWorkflowRunById,
-  getWorkflowRuns,
   getAllWorkflowRuns,
   executeWorkflow,
   pauseWorkflow,
@@ -128,24 +127,14 @@ export async function workflowRoutes(fastify: FastifyInstance) {
         ? (status as unknown as WorkflowStatus[])
         : status;
 
-      // If no project_id, fetch all runs for user
-      if (!project_id) {
-        fastify.log.info({ userId, status: parsedStatus }, "Fetching all workflow runs for user");
-
-        const runs = await getAllWorkflowRuns({ userId, status: parsedStatus });
-
-        return reply.send({ data: runs });
-      }
-
-      // Project-specific runs
       fastify.log.info(
         { userId, projectId: project_id, status: parsedStatus },
-        "Fetching workflow runs for project"
+        "Fetching workflow runs"
       );
 
-      const runs = await getWorkflowRuns({
-        project_id,
-        user_id: userId,
+      const runs = await getAllWorkflowRuns({
+        userId,
+        projectId: project_id,
         status: parsedStatus,
       });
 

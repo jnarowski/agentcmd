@@ -24,6 +24,7 @@ const userPreferencesSchema = z.object({
   activity_filter: z.enum(["all", "sessions", "workflows"]).optional(),
   projects_view: z.enum(["all", "favorites", "hidden"]).optional(),
   sidebar_active_tab: z.enum(["projects", "activities", "tasks"]).optional(),
+  active_project_filter: z.string().nullable().optional(),
 });
 
 // Zod schema for updating user preferences (all fields optional)

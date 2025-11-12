@@ -30,6 +30,7 @@ interface UserPreferences {
   activity_filter?: 'all' | 'sessions' | 'workflows';
   projects_view?: 'all' | 'favorites' | 'hidden';
   sidebar_active_tab?: 'projects' | 'activities' | 'tasks';
+  active_project_filter?: string | null;
 }
 
 interface Settings {
@@ -91,9 +92,9 @@ export function useUpdateSettings() {
       const response = await api.patch<{ data: Settings }>('/api/settings', updates);
       return response.data;
     },
-    onSuccess: (data) => {
+    onSuccess: (responseData) => {
       // Update settings cache with new data
-      queryClient.setQueryData(settingsKeys.all, data);
+      queryClient.setQueryData(settingsKeys.all, responseData);
     },
   });
 }

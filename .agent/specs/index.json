@@ -44,16 +44,16 @@
       "updated": "2025-11-12T05:49:39.000Z"
     },
     "251112070556": {
-      "path": "todo/251112070556-tasks-nav-workflow-integration/spec.md",
+      "path": "done/251112070556-tasks-nav-workflow-integration/spec.md",
       "status": "completed",
       "created": "2025-11-12T07:05:56.000Z",
-      "updated": "2025-11-12T08:23:00.000Z"
+      "updated": "2025-11-12T20:27:00.000Z"
     },
     "251112070711": {
-      "path": "todo/251112070711-workflow-item-alignment/spec.md",
-      "status": "in-progress",
+      "path": "done/251112070711-workflow-item-alignment/spec.md",
+      "status": "completed",
       "created": "2025-11-12T07:07:11.000Z",
-      "updated": "2025-11-12T07:15:00.000Z"
+      "updated": "2025-11-12T20:27:00.000Z"
     }
   }
 }
