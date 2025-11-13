@@ -17,7 +17,7 @@ export async function createSession({
     sessionId,
     agent = 'claude' as AgentType,
     type = 'chat' as SessionType,
-    permission_mode = 'default',
+    permission_mode,
     name,
     metadataOverride
   } = data;
@@ -50,7 +50,7 @@ export async function createSession({
       userId,
       agent,
       type,
-      permission_mode,
+      permission_mode: permission_mode ?? 'default',
       session_path: sessionPath,
       metadata: JSON.parse(JSON.stringify(metadata)),
       state: 'working',

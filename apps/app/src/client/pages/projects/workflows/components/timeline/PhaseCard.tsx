@@ -1,9 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import { StepRow } from "./StepRow";
 import { ArtifactRow } from "./ArtifactRow";
 import { EventRow } from "./EventRow";
-import { AgentLoadingIndicator } from "@/client/pages/projects/sessions/components/AgentLoadingIndicator";
 import type {
   WorkflowRunStep,
   WorkflowEvent,
@@ -272,8 +271,9 @@ export function PhaseCard({
 
           {/* Loading indicator at bottom when phase is actively running and has no steps yet */}
           {metadata.status === "running" && steps.length === 0 && (
-            <div className="px-4">
-              <AgentLoadingIndicator isStreaming={true} />
+            <div className="px-4 py-4 flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Processing</span>
             </div>
           )}
         </div>

@@ -27,6 +27,7 @@ export interface AgentSessionMetadata {
 export interface CreateSessionRequest {
   sessionId: string; // Pre-generated UUID
   agent?: AgentType; // Optional agent type (defaults to 'claude')
+  permission_mode?: 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions'; // Optional permission mode
 }
 
 /**

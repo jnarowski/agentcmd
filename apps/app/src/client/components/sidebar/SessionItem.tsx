@@ -11,7 +11,7 @@ import { SessionDropdownMenu } from "@/client/pages/projects/sessions/components
 import { SessionStateBadge } from "@/client/pages/projects/sessions/components/SessionStateBadge";
 import type { SessionResponse } from "@/shared/types";
 import type { AgentType } from "@/shared/types/agent.types";
-import { formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 
 interface SessionItemProps {
   id: string;
@@ -42,9 +42,7 @@ export function SessionItem({
   const [menuOpenActivityId, setMenuOpenActivityId] = useState<string | null>(
     null
   );
-  const timeAgo = formatDistanceToNow(new Date(session.created_at), {
-    addSuffix: true,
-  });
+  const timeAgo = format(new Date(session.created_at), "MM/dd 'at' h:mma");
   const handleActivityClick = () => {
     if (isMobile) {
       setOpenMobile(false);
@@ -66,26 +64,30 @@ export function SessionItem({
       >
         {agent && <AgentIcon agent={agent} className="size-4 shrink-0 mr-1" />}
         <div className="flex flex-1 flex-col gap-0.5 min-w-0">
-          <span className="truncate text-sm">{name}</span>
-          {(session.state === "working" || session.permission_mode === "plan") && (
-            <div className="flex items-center gap-1.5">
-              {session.state === "working" && (
-                <SessionStateBadge state={session.state} />
-              )}
-              {session.state === "working" && session.permission_mode === "plan" && (
-                <div className="text-xs text-muted-foreground">•</div>
-              )}
-              {session.permission_mode === "plan" && (
-                <Badge variant="secondary" className="text-xs px-1.5 py-0 h-5 bg-green-500/10 text-green-600 border-green-500/20 shrink-0">
-                  Plan
-                </Badge>
-              )}
-            </div>
-          )}
           <div className="flex items-center gap-1.5">
-            <div className="text-xs text-muted-foreground">{timeAgo}</div>
+            <span className="truncate text-sm">{name}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="text-xs text-muted-foreground tabular-nums">
+              {timeAgo}
+            </div>
             <div className="text-xs text-muted-foreground">•</div>
             <div className="text-xs text-muted-foreground">{projectName}</div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            {session.permission_mode === "plan" && (
+              <Badge
+                variant="secondary"
+                className="text-xs px-1.5 mt-0.5 py-0 h-4 bg-green-500/10 text-green-600 border-green-500/20 shrink-0"
+              >
+                Plan
+              </Badge>
+            )}
+            <SessionStateBadge
+              state={session.state}
+              errorMessage={session.error_message}
+              compact
+            />
           </div>
         </div>
       </SidebarMenuButton>

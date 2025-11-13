@@ -237,6 +237,7 @@ export async function sessionRoutes(fastify: FastifyInstance) {
         userId,
         sessionId: request.body.sessionId,
         agent: request.body.agent || 'claude',
+        permission_mode: request.body.permission_mode,
       }, 'Creating session');
 
       const session = await createSession({
@@ -245,6 +246,7 @@ export async function sessionRoutes(fastify: FastifyInstance) {
           userId,
           sessionId: request.body.sessionId,
           agent: request.body.agent,
+          permission_mode: request.body.permission_mode,
         },
       });
 

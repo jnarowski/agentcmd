@@ -1,5 +1,5 @@
 import { useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ChatPromptInput,
@@ -18,9 +18,11 @@ import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
 import { Channels } from "@/shared/websocket";
 import { SessionEventTypes } from "@/shared/types/websocket.types";
 import { useSettings } from "@/client/hooks/useSettings";
+import type { PermissionMode } from "agent-cli-sdk";
 
 export default function NewSession() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { projectId } = useActiveProject();
   const queryClient = useQueryClient();
   const chatInputRef = useRef<ChatPromptInputHandle>(null);
@@ -32,6 +34,7 @@ export default function NewSession() {
   // Get agent from store
   const agent = useSessionStore((s) => s.form.agent);
   const setAgent = useSessionStore((s) => s.setAgent);
+  const setPermissionMode = useSessionStore((s) => s.setPermissionMode);
   const initializeFromSettings = useSessionStore((s) => s.initializeFromSettings);
 
   // Load user settings to reset form to defaults
@@ -39,12 +42,19 @@ export default function NewSession() {
 
   // Reset form to user defaults on every mount (not just settings change)
   // This ensures navigating from existing session → /new resets to defaults
+  // Also check for mode query parameter to override defaults
   useEffect(() => {
     if (settings?.userPreferences) {
       initializeFromSettings({
         permissionMode: settings.userPreferences.default_permission_mode,
         agent: settings.userPreferences.default_agent,
       });
+    }
+
+    // Check for mode query parameter and override if present
+    const modeParam = searchParams.get('mode');
+    if (modeParam && ['default', 'plan', 'acceptEdits', 'bypassPermissions'].includes(modeParam)) {
+      setPermissionMode(modeParam as PermissionMode);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount only
@@ -72,13 +82,15 @@ export default function NewSession() {
     const message = text || "";
 
     try {
-      // Get current agent from store
+      // Get current agent and permission mode from store
       const agent = useSessionStore.getState().getAgent();
+      const getPermissionMode = useSessionStore.getState().getPermissionMode;
+      const permissionMode = getPermissionMode();
 
       // Create session via API
       const { data: newSession } = await api.post<{ data: { id: string } }>(
         `/api/projects/${projectId}/sessions`,
-        { sessionId: generateUUID(), agent }
+        { sessionId: generateUUID(), agent, permission_mode: permissionMode }
       );
 
       // Invalidate all session lists to update sidebar immediately
@@ -88,10 +100,6 @@ export default function NewSession() {
 
       // No image upload for now - files parameter not used
       const imagePaths = undefined;
-
-      // Get permission mode from form
-      const getPermissionMode = useSessionStore.getState().getPermissionMode;
-      const permissionMode = getPermissionMode();
 
       // Initialize session in store with optimistic message
       // This prevents AgentSessionViewer from fetching when it mounts
