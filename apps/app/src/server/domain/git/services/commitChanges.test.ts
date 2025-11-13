@@ -1,11 +1,15 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { commitChanges } from "./commitChanges";
+import type { SimpleGit } from "simple-git";
 
 // Mock simple-git
 vi.mock("simple-git");
 
 describe("commitChanges", () => {
-  let mockGit: any;
+  let mockGit: {
+    add: ReturnType<typeof vi.fn>;
+    commit: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
     const simpleGit = await import("simple-git");
@@ -13,7 +17,7 @@ describe("commitChanges", () => {
       add: vi.fn().mockResolvedValue(undefined),
       commit: vi.fn().mockResolvedValue({ commit: "abc123def456" }),
     };
-    vi.mocked(simpleGit.default).mockReturnValue(mockGit as any);
+    vi.mocked(simpleGit.default).mockReturnValue(mockGit as unknown as SimpleGit);
   });
 
   afterEach(() => {
@@ -193,7 +197,7 @@ describe("commitChanges", () => {
     };
 
     // Act
-    const result = await commitChanges(options);
+    await commitChanges(options);
 
     // Assert
     expect(mockGit.commit).toHaveBeenCalledWith(

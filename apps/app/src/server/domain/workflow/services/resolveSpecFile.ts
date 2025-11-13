@@ -1,6 +1,7 @@
 import {
   buildSlashCommand,
   type CmdGenerateSpecResponse,
+  type SlashCommandName,
   type WorkflowEvent,
   type WorkflowStep,
 } from "agentcmd-workflows";
@@ -26,7 +27,7 @@ export async function resolveSpecFile(
       {
         agent: "claude",
         json: true,
-        prompt: buildSlashCommand(command as any),
+        prompt: buildSlashCommand(command as SlashCommandName),
         resume: event.data.planningSessionId,
         workingDir: event.data.workingDir,
       }
@@ -45,7 +46,7 @@ export async function resolveSpecFile(
     {
       agent: "claude",
       json: true,
-      prompt: buildSlashCommand(command as any, {
+      prompt: buildSlashCommand(command as SlashCommandName, {
         context: event.data.specContent,
       }),
       workingDir: event.data.workingDir,

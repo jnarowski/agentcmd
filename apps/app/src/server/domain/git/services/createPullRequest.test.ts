@@ -1,42 +1,62 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
-import { createPullRequest } from "./createPullRequest";
-import * as checkGhCliAvailableModule from "./checkGhCliAvailable";
-import type { ChildProcess } from "child_process";
+import type { ChildProcess, ExecOptions, ExecException } from "child_process";
 
-// Mock dependencies
-vi.mock("simple-git");
-vi.mock("child_process");
+// Hoist mocks to ensure they're available before module imports
+const { mockExec, mockGit } = vi.hoisted(() => {
+  const mockExecFn = vi.fn((cmd: string, options: ExecOptions, callback: (error: ExecException | null, result: { stdout: string; stderr: string }) => void) => {
+    callback(null, { stdout: "https://github.com/user/repo/pull/123", stderr: "" });
+    return {} as ChildProcess;
+  });
+
+  const mockGitObj = {
+    getRemotes: vi.fn().mockResolvedValue([
+      {
+        name: "origin",
+        refs: {
+          push: "https://github.com/user/repo.git",
+          fetch: "https://github.com/user/repo.git",
+        },
+      },
+    ]),
+    status: vi.fn().mockResolvedValue({ current: "feature/test" }),
+  };
+
+  return { mockExec: mockExecFn, mockGit: mockGitObj };
+});
+
+// Mock modules before import
+vi.mock("simple-git", () => ({
+  default: vi.fn(() => mockGit),
+}));
+
+vi.mock("child_process", () => ({
+  exec: mockExec,
+}));
+
 vi.mock("./checkGhCliAvailable");
 
+// Now import after mocks are set up
+import { createPullRequest } from "./createPullRequest";
+import * as checkGhCliAvailableModule from "./checkGhCliAvailable";
+
 describe("createPullRequest", () => {
-  let mockGit: any;
-  let mockExec: any;
-
-  beforeEach(async () => {
-    // Mock simple-git
-    const simpleGit = await import("simple-git");
-    mockGit = {
-      getRemotes: vi.fn().mockResolvedValue([
-        {
-          name: "origin",
-          refs: {
-            push: "https://github.com/user/repo.git",
-            fetch: "https://github.com/user/repo.git",
-          },
+  beforeEach(() => {
+    // Reset mock implementations
+    mockGit.getRemotes.mockResolvedValue([
+      {
+        name: "origin",
+        refs: {
+          push: "https://github.com/user/repo.git",
+          fetch: "https://github.com/user/repo.git",
         },
-      ]),
-      status: vi.fn().mockResolvedValue({ current: "feature/test" }),
-    };
-    vi.mocked(simpleGit.default).mockReturnValue(mockGit as any);
+      },
+    ]);
+    mockGit.status.mockResolvedValue({ current: "feature/test" });
 
-    // Mock child_process.exec to call callback with success
-    const childProcess = await import("child_process");
-    mockExec = vi.fn((cmd: string, options: any, callback: any) => {
-      // Call callback with success by default
+    mockExec.mockImplementation((cmd: string, options: ExecOptions, callback: (error: ExecException | null, result: { stdout: string; stderr: string }) => void) => {
       callback(null, { stdout: "https://github.com/user/repo/pull/123", stderr: "" });
       return {} as ChildProcess;
     });
-    vi.mocked(childProcess.exec).mockImplementation(mockExec);
 
     // Mock checkGhCliAvailable
     vi.mocked(checkGhCliAvailableModule.checkGhCliAvailable).mockResolvedValue(
@@ -104,7 +124,7 @@ describe("createPullRequest", () => {
     ).mockResolvedValue(true);
 
     // Mock exec to fail
-    mockExec.mockImplementation((cmd: string, options: any, callback: any) => {
+    mockExec.mockImplementation((cmd: string, options: ExecOptions, callback: (error: ExecException | null, result: { stdout: string; stderr: string }) => void) => {
       callback(new Error("gh: command not found"), null, null);
       return {} as ChildProcess;
     });
@@ -352,7 +372,7 @@ describe("createPullRequest", () => {
     ).mockResolvedValue(true);
 
     // Mock exec to return output without URL
-    mockExec.mockImplementation((cmd: string, options: any, callback: any) => {
+    mockExec.mockImplementation((cmd: string, options: ExecOptions, callback: (error: ExecException | null, result: { stdout: string; stderr: string }) => void) => {
       callback(null, { stdout: "Pull request created", stderr: "" });
       return {} as ChildProcess;
     });

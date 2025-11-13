@@ -49,10 +49,3 @@ export function mockNodePty() {
 
   return { mockPty };
 }
-
-/**
- * Verify that a PTY process was killed
- */
-export function expectPtyKilled(ptyProcess: IPty) {
-  expect(ptyProcess.kill).toHaveBeenCalled();
-}

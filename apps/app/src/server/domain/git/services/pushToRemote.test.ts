@@ -1,18 +1,21 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { pushToRemote } from "./pushToRemote";
+import type { SimpleGit } from "simple-git";
 
 // Mock simple-git
 vi.mock("simple-git");
 
 describe("pushToRemote", () => {
-  let mockGit: any;
+  let mockGit: {
+    push: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
     const simpleGit = await import("simple-git");
     mockGit = {
       push: vi.fn().mockResolvedValue(undefined),
     };
-    vi.mocked(simpleGit.default).mockReturnValue(mockGit as any);
+    vi.mocked(simpleGit.default).mockReturnValue(mockGit as unknown as SimpleGit);
   });
 
   afterEach(() => {

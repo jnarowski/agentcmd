@@ -3,8 +3,7 @@ import { getFileTree } from "./getFileTree";
 import { prisma } from "@/shared/prisma";
 import { cleanTestDB } from "@/server/test-utils/db";
 import { createTestUser, createTestProject } from "@/server/test-utils/fixtures";
-import fs from "fs/promises";
-import type { FileTreeItem } from "@/shared/types/file.types";
+import fs, { type Dirent, type Stats } from "fs/promises";
 
 // Mock fs/promises
 vi.mock("fs/promises", () => ({
@@ -18,7 +17,6 @@ vi.mock("fs/promises", () => ({
 describe("getFileTree", () => {
   let userId: string;
   let projectId: string;
-  let projectPath: string;
 
   beforeEach(async () => {
     const user = await createTestUser(prisma);
@@ -30,7 +28,6 @@ describe("getFileTree", () => {
       path: "/test/project",
     });
     projectId = project.id;
-    projectPath = project.path;
 
     // Default mock for successful access
     vi.mocked(fs.access).mockResolvedValue(undefined);
@@ -55,12 +52,12 @@ describe("getFileTree", () => {
       { name: "file2.txt", isDirectory: () => false, isFile: () => true },
     ];
 
-    vi.mocked(fs.readdir).mockResolvedValue(mockEntries as any);
+    vi.mocked(fs.readdir).mockResolvedValue(mockEntries as unknown as Dirent[]);
     vi.mocked(fs.stat).mockResolvedValue({
       size: 1024,
       mtime: new Date("2025-01-01"),
       mode: 0o644,
-    } as any);
+    } as unknown as Stats);
 
     const tree = await getFileTree({ projectId });
 
@@ -82,11 +79,11 @@ describe("getFileTree", () => {
       { name: "src", isDirectory: () => true, isFile: () => false },
     ];
 
-    vi.mocked(fs.readdir).mockResolvedValue(mockEntries as any);
+    vi.mocked(fs.readdir).mockResolvedValue(mockEntries as unknown as Dirent[]);
     vi.mocked(fs.stat).mockResolvedValue({
       mtime: new Date("2025-01-01"),
       mode: 0o755,
-    } as any);
+    } as unknown as Stats);
 
     const tree = await getFileTree({ projectId });
 
@@ -105,12 +102,12 @@ describe("getFileTree", () => {
       { name: "docs", isDirectory: () => true, isFile: () => false },
     ];
 
-    vi.mocked(fs.readdir).mockResolvedValue(mockEntries as any);
+    vi.mocked(fs.readdir).mockResolvedValue(mockEntries as unknown as Dirent[]);
     vi.mocked(fs.stat).mockResolvedValue({
       size: 1024,
       mtime: new Date("2025-01-01"),
       mode: 0o644,
-    } as any);
+    } as unknown as Stats);
 
     const tree = await getFileTree({ projectId });
 
@@ -126,12 +123,12 @@ describe("getFileTree", () => {
       { name: "beta.txt", isDirectory: () => false, isFile: () => true },
     ];
 
-    vi.mocked(fs.readdir).mockResolvedValue(mockEntries as any);
+    vi.mocked(fs.readdir).mockResolvedValue(mockEntries as unknown as Dirent[]);
     vi.mocked(fs.stat).mockResolvedValue({
       size: 1024,
       mtime: new Date("2025-01-01"),
       mode: 0o644,
-    } as any);
+    } as unknown as Stats);
 
     const tree = await getFileTree({ projectId });
 
@@ -146,11 +143,11 @@ describe("getFileTree", () => {
       { name: "src", isDirectory: () => true, isFile: () => false },
     ];
 
-    vi.mocked(fs.readdir).mockResolvedValue(mockEntries as any);
+    vi.mocked(fs.readdir).mockResolvedValue(mockEntries as unknown as Dirent[]);
     vi.mocked(fs.stat).mockResolvedValue({
       mtime: new Date("2025-01-01"),
       mode: 0o755,
-    } as any);
+    } as unknown as Stats);
 
     const tree = await getFileTree({ projectId });
 
@@ -169,11 +166,11 @@ describe("getFileTree", () => {
       { name: "src", isDirectory: () => true, isFile: () => false },
     ];
 
-    vi.mocked(fs.readdir).mockResolvedValue(mockEntries as any);
+    vi.mocked(fs.readdir).mockResolvedValue(mockEntries as unknown as Dirent[]);
     vi.mocked(fs.stat).mockResolvedValue({
       mtime: new Date("2025-01-01"),
       mode: 0o755,
-    } as any);
+    } as unknown as Stats);
 
     const tree = await getFileTree({ projectId });
 
@@ -189,11 +186,11 @@ describe("getFileTree", () => {
       { name: "src", isDirectory: () => true, isFile: () => false },
     ];
 
-    vi.mocked(fs.readdir).mockResolvedValue(mockEntries as any);
+    vi.mocked(fs.readdir).mockResolvedValue(mockEntries as unknown as Dirent[]);
     vi.mocked(fs.stat).mockResolvedValue({
       mtime: new Date("2025-01-01"),
       mode: 0o755,
-    } as any);
+    } as unknown as Stats);
 
     const tree = await getFileTree({ projectId });
 
@@ -206,12 +203,12 @@ describe("getFileTree", () => {
       { name: "file.txt", isDirectory: () => false, isFile: () => true },
     ];
 
-    vi.mocked(fs.readdir).mockResolvedValue(mockEntries as any);
+    vi.mocked(fs.readdir).mockResolvedValue(mockEntries as unknown as Dirent[]);
     vi.mocked(fs.stat).mockResolvedValue({
       size: 1024,
       mtime: new Date("2025-01-01"),
       mode: 0o644, // rw-r--r--
-    } as any);
+    } as unknown as Stats);
 
     const tree = await getFileTree({ projectId });
 
@@ -224,12 +221,12 @@ describe("getFileTree", () => {
       { name: "file.txt", isDirectory: () => false, isFile: () => true },
     ];
 
-    vi.mocked(fs.readdir).mockResolvedValue(mockEntries as any);
+    vi.mocked(fs.readdir).mockResolvedValue(mockEntries as unknown as Dirent[]);
     vi.mocked(fs.stat).mockResolvedValue({
       size: 1024,
       mtime: mockDate,
       mode: 0o644,
-    } as any);
+    } as unknown as Stats);
 
     const tree = await getFileTree({ projectId });
 
@@ -256,13 +253,13 @@ describe("getFileTree", () => {
       { name: "file2.txt", isDirectory: () => false, isFile: () => true },
     ];
 
-    vi.mocked(fs.readdir).mockResolvedValue(mockEntries as any);
+    vi.mocked(fs.readdir).mockResolvedValue(mockEntries as unknown as Dirent[]);
     vi.mocked(fs.stat)
       .mockResolvedValueOnce({
         size: 1024,
         mtime: new Date(),
         mode: 0o644,
-      } as any)
+      } as unknown as Stats)
       .mockRejectedValueOnce(new Error("EACCES"));
 
     const tree = await getFileTree({ projectId });
@@ -274,16 +271,16 @@ describe("getFileTree", () => {
 
   it("handles recursive directory scanning", async () => {
     // Mock root directory
-    vi.mocked(fs.readdir).mockImplementation((path: any) => {
+    vi.mocked(fs.readdir).mockImplementation((path: string) => {
       if (path === "/test/project") {
         return Promise.resolve([
           { name: "src", isDirectory: () => true, isFile: () => false },
-        ] as any);
+        ] as unknown as Dirent[]);
       }
       if (path.includes("/src")) {
         return Promise.resolve([
           { name: "index.ts", isDirectory: () => false, isFile: () => true },
-        ] as any);
+        ] as unknown as Dirent[]);
       }
       return Promise.resolve([]);
     });
@@ -292,7 +289,7 @@ describe("getFileTree", () => {
       size: 1024,
       mtime: new Date("2025-01-01"),
       mode: 0o644,
-    } as any);
+    } as unknown as Stats);
 
     const tree = await getFileTree({ projectId });
 
@@ -311,7 +308,7 @@ describe("getFileTree", () => {
         // Beyond MAX_DEPTH (10)
         return Promise.resolve([
           { name: `level${depth}`, isDirectory: () => true, isFile: () => false },
-        ] as any);
+        ] as unknown as Dirent[]);
       }
       return Promise.resolve([]);
     });
@@ -319,7 +316,7 @@ describe("getFileTree", () => {
     vi.mocked(fs.stat).mockResolvedValue({
       mtime: new Date("2025-01-01"),
       mode: 0o755,
-    } as any);
+    } as unknown as Stats);
 
     const tree = await getFileTree({ projectId });
 
@@ -329,11 +326,11 @@ describe("getFileTree", () => {
   });
 
   it("handles empty subdirectories", async () => {
-    vi.mocked(fs.readdir).mockImplementation((path: any) => {
+    vi.mocked(fs.readdir).mockImplementation((path: string) => {
       if (path === "/test/project") {
         return Promise.resolve([
           { name: "empty", isDirectory: () => true, isFile: () => false },
-        ] as any);
+        ] as unknown as Dirent[]);
       }
       return Promise.resolve([]);
     });
@@ -341,7 +338,7 @@ describe("getFileTree", () => {
     vi.mocked(fs.stat).mockResolvedValue({
       mtime: new Date("2025-01-01"),
       mode: 0o755,
-    } as any);
+    } as unknown as Stats);
 
     const tree = await getFileTree({ projectId });
 
@@ -363,12 +360,12 @@ describe("getFileTree", () => {
         { name: "file.txt", isDirectory: () => false, isFile: () => true },
       ];
 
-      vi.mocked(fs.readdir).mockResolvedValue(mockEntries as any);
+      vi.mocked(fs.readdir).mockResolvedValue(mockEntries as unknown as Dirent[]);
       vi.mocked(fs.stat).mockResolvedValue({
         size: 1024,
         mtime: new Date(),
         mode,
-      } as any);
+      } as unknown as Stats);
 
       const tree = await getFileTree({ projectId });
       expect(tree[0].permissions).toBe(expected);

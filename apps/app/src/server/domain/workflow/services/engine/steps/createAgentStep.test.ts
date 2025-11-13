@@ -116,7 +116,7 @@ describe("createAgentStep", () => {
     };
 
     const mockInngestStep = {
-      run: vi.fn(<T>(id: string, fn: () => T) => fn()),
+      run: vi.fn(<T>(id: string, fn: () => T): T => fn()),
     };
 
     const agentStepFn = createAgentStep(
@@ -132,19 +132,19 @@ describe("createAgentStep", () => {
 
     // Assert
     expect(result.success).toBe(true);
-    expect(result.data.exitCode).toBe(0);
-    expect(result.data.sessionId).toBe("session-123");
+    expect(result.exitCode).toBe(0);
+    expect(result.sessionId).toBe("session-123");
 
     expect(mockCreateSession).toHaveBeenCalledWith({
       data: expect.objectContaining({
         projectId: "project-456",
         userId: "user-789",
-        sessionId: expect.any(String), // sessionId (UUID)
+        sessionId: expect.any(String) as string, // sessionId (UUID)
         agent: "claude",
         name: "Code Review", // toName("code-review") -> "Code Review"
         type: "workflow",
         metadataOverride: {},
-        cli_session_id: expect.any(String), // Always set now
+        cli_session_id: expect.any(String) as string, // Always set now
       })
     });
 
@@ -245,7 +245,7 @@ describe("createAgentStep", () => {
     };
 
     const mockInngestStep = {
-      run: vi.fn(<T>(id: string, fn: () => T) => fn()),
+      run: vi.fn(<T>(id: string, fn: () => T): T => fn()),
     };
 
     const agentStepFn = createAgentStep(
@@ -358,7 +358,7 @@ describe("createAgentStep", () => {
     };
 
     const mockInngestStep = {
-      run: vi.fn(<T>(id: string, fn: () => T) => fn()),
+      run: vi.fn(<T>(id: string, fn: () => T): T => fn()),
     };
 
     const agentStepFn = createAgentStep(
@@ -471,7 +471,7 @@ describe("createAgentStep", () => {
     };
 
     const mockInngestStep = {
-      run: vi.fn(<T>(id: string, fn: () => T) => fn()),
+      run: vi.fn(<T>(id: string, fn: () => T): T => fn()),
     };
 
     const agentStepFn = createAgentStep(

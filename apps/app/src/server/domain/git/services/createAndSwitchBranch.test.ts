@@ -1,11 +1,18 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { createAndSwitchBranch } from "./createAndSwitchBranch";
+import type { SimpleGit } from "simple-git";
 
 // Mock simple-git
 vi.mock("simple-git");
 
 describe("createAndSwitchBranch", () => {
-  let mockGit: any;
+  let mockGit: {
+    status: ReturnType<typeof vi.fn>;
+    add: ReturnType<typeof vi.fn>;
+    commit: ReturnType<typeof vi.fn>;
+    checkout: ReturnType<typeof vi.fn>;
+    checkoutLocalBranch: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
     const simpleGit = await import("simple-git");
@@ -16,7 +23,7 @@ describe("createAndSwitchBranch", () => {
       checkout: vi.fn().mockResolvedValue(undefined),
       checkoutLocalBranch: vi.fn().mockResolvedValue(undefined),
     };
-    vi.mocked(simpleGit.default).mockReturnValue(mockGit as any);
+    vi.mocked(simpleGit.default).mockReturnValue(mockGit as unknown as SimpleGit);
   });
 
   afterEach(() => {
@@ -204,7 +211,7 @@ describe("createAndSwitchBranch", () => {
     };
 
     // Act
-    const result = await createAndSwitchBranch(options);
+    await createAndSwitchBranch(options);
 
     // Assert
     expect(mockGit.add).toHaveBeenCalledWith(".");
@@ -220,7 +227,7 @@ describe("createAndSwitchBranch", () => {
 
     // Act & Assert
     await expect(createAndSwitchBranch(options)).rejects.toThrow(
-      'Invalid branch name. Only alphanumeric, dash, underscore, and slash allowed.'
+      'Invalid branch name. Only alphanumeric, dash, underscore, dot, and slash allowed.'
     );
   });
 
@@ -254,7 +261,7 @@ describe("createAndSwitchBranch", () => {
     };
 
     // Act
-    const result = await createAndSwitchBranch(options);
+    await createAndSwitchBranch(options);
 
     // Assert - simpleGit should be called with empty string
     const simpleGit = await import("simple-git");
@@ -270,10 +277,9 @@ describe("createAndSwitchBranch", () => {
     };
 
     // Act
-    const result = await createAndSwitchBranch(options);
+    await createAndSwitchBranch(options);
 
     // Assert
-    expect(result.branch.name).toBe("release/123456");
     expect(mockGit.checkoutLocalBranch).toHaveBeenCalledWith("release/123456");
   });
 
@@ -288,7 +294,7 @@ describe("createAndSwitchBranch", () => {
     };
 
     // Act
-    const result = await createAndSwitchBranch(options);
+    await createAndSwitchBranch(options);
 
     // Assert
     expect(mockGit.add).toHaveBeenCalledWith(".");

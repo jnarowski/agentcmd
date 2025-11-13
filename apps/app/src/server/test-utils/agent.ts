@@ -1,6 +1,6 @@
 import { vi } from "vitest";
 import type { ChildProcess } from "node:child_process";
-import type { AgentExecuteResult } from "@/server/domain/session/services/executeAgent";
+import type { ExecuteOptions } from "agent-cli-sdk";
 
 /**
  * Mock agent execution result
@@ -40,24 +40,23 @@ export interface MockAgentResult<T = string> {
  * });
  * ```
  */
-export function mockAgentExecution<T = string>(
+export async function mockAgentExecution<T = string>(
   resultOrCallback:
     | MockAgentResult<T>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | ((config: any) => MockAgentResult<T> | Promise<MockAgentResult<T>>)
-): void {
-  const { execute } = require("agent-cli-sdk");
+    | ((config: ExecuteOptions) => MockAgentResult<T> | Promise<MockAgentResult<T>>)
+): Promise<void> {
+  const { execute } = await import("agent-cli-sdk");
 
   if (typeof resultOrCallback === "function") {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    vi.mocked(execute).mockImplementation(async (config: any) => {
+    vi.mocked(execute).mockImplementation(async (config: ExecuteOptions) => {
       const result = await resultOrCallback(config);
       return {
         success: true,
         exitCode: 0,
         sessionId: "mock-session",
         ...result,
-      } as AgentExecuteResult<T>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any;
     });
   } else {
     vi.mocked(execute).mockResolvedValue({
@@ -65,7 +64,8 @@ export function mockAgentExecution<T = string>(
       exitCode: 0,
       sessionId: "mock-session",
       ...resultOrCallback,
-    } as AgentExecuteResult<T>);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
   }
 }
 
@@ -92,23 +92,25 @@ export function createMockProcess(pid = 12345): ChildProcess {
  * mockAgentWithProcess(mockProcess, { success: true });
  * ```
  */
-export function mockAgentWithProcess<T = string>(
+export async function mockAgentWithProcess<T = string>(
   process: ChildProcess,
   result: MockAgentResult<T> = {}
-): void {
-  const { execute } = require("agent-cli-sdk");
+): Promise<void> {
+  const { execute } = await import("agent-cli-sdk");
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  vi.mocked(execute).mockImplementation(async (config: any) => {
-    if (config.onStart) {
-      config.onStart(process);
+  vi.mocked(execute).mockImplementation(async (config: ExecuteOptions) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((config as any).onStart) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (config as any).onStart(process);
     }
     return {
       success: true,
       exitCode: 0,
       sessionId: "mock-session",
       ...result,
-    } as AgentExecuteResult<T>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
   });
 }
 
@@ -123,18 +125,19 @@ export function mockAgentWithProcess<T = string>(
  * ]);
  * ```
  */
-export function mockAgentWithEvents(
+export async function mockAgentWithEvents(
   events: Array<{ type: string; [key: string]: unknown }>,
   result: MockAgentResult = {}
-): void {
-  const { execute } = require("agent-cli-sdk");
+): Promise<void> {
+  const { execute } = await import("agent-cli-sdk");
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  vi.mocked(execute).mockImplementation(async (config: any) => {
+  vi.mocked(execute).mockImplementation(async (config: ExecuteOptions) => {
     // Simulate event streaming
-    if (config.onEvent) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((config as any).onEvent) {
       for (const event of events) {
-        config.onEvent({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (config as any).onEvent({
           raw: JSON.stringify(event),
           event,
           message: event.type === "output" ? event : null,
@@ -147,7 +150,8 @@ export function mockAgentWithEvents(
       sessionId: "mock-session",
       events,
       ...result,
-    } as AgentExecuteResult;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
   });
 }
 
@@ -159,8 +163,8 @@ export function mockAgentWithEvents(
  * mockAgentFailure("Agent execution failed");
  * ```
  */
-export function mockAgentFailure(errorMessage: string): void {
-  const { execute } = require("agent-cli-sdk");
+export async function mockAgentFailure(errorMessage: string): Promise<void> {
+  const { execute } = await import("agent-cli-sdk");
 
   vi.mocked(execute).mockRejectedValue(new Error(errorMessage));
 }

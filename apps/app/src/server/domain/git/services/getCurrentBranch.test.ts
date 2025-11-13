@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { getCurrentBranch } from "./getCurrentBranch";
-import simpleGit from "simple-git";
+import simpleGit, { type SimpleGit } from "simple-git";
 
 // Mock simple-git
 vi.mock("simple-git");
@@ -16,7 +16,7 @@ describe("getCurrentBranch", () => {
       checkIsRepo: vi.fn().mockResolvedValue(true),
       branch: vi.fn().mockResolvedValue({ current: "main" }),
     };
-    vi.mocked(simpleGit).mockReturnValue(mockGit as any);
+    vi.mocked(simpleGit).mockReturnValue(mockGit as unknown as SimpleGit);
 
     // Act
     const result = await getCurrentBranch({ projectPath: "/tmp/project" });
@@ -33,7 +33,7 @@ describe("getCurrentBranch", () => {
       checkIsRepo: vi.fn().mockResolvedValue(true),
       branch: vi.fn().mockResolvedValue({ current: "" }),
     };
-    vi.mocked(simpleGit).mockReturnValue(mockGit as any);
+    vi.mocked(simpleGit).mockReturnValue(mockGit as unknown as SimpleGit);
 
     // Act
     const result = await getCurrentBranch({ projectPath: "/tmp/project" });
@@ -48,7 +48,7 @@ describe("getCurrentBranch", () => {
       checkIsRepo: vi.fn().mockResolvedValue(false),
       branch: vi.fn(),
     };
-    vi.mocked(simpleGit).mockReturnValue(mockGit as any);
+    vi.mocked(simpleGit).mockReturnValue(mockGit as unknown as SimpleGit);
 
     // Act
     const result = await getCurrentBranch({ projectPath: "/tmp/non-git" });
@@ -65,7 +65,7 @@ describe("getCurrentBranch", () => {
       checkIsRepo: vi.fn().mockRejectedValue(new Error("Git not found")),
       branch: vi.fn(),
     };
-    vi.mocked(simpleGit).mockReturnValue(mockGit as any);
+    vi.mocked(simpleGit).mockReturnValue(mockGit as unknown as SimpleGit);
 
     // Act
     const result = await getCurrentBranch({ projectPath: "/tmp/project" });
@@ -80,7 +80,7 @@ describe("getCurrentBranch", () => {
       checkIsRepo: vi.fn().mockResolvedValue(true),
       branch: vi.fn().mockResolvedValue({ current: "feature/new-feature" }),
     };
-    vi.mocked(simpleGit).mockReturnValue(mockGit as any);
+    vi.mocked(simpleGit).mockReturnValue(mockGit as unknown as SimpleGit);
 
     // Act
     const result = await getCurrentBranch({
@@ -97,7 +97,7 @@ describe("getCurrentBranch", () => {
       checkIsRepo: vi.fn().mockResolvedValue(true),
       branch: vi.fn().mockRejectedValue(new Error("Branch command failed")),
     };
-    vi.mocked(simpleGit).mockReturnValue(mockGit as any);
+    vi.mocked(simpleGit).mockReturnValue(mockGit as unknown as SimpleGit);
 
     // Act
     const result = await getCurrentBranch({ projectPath: "/tmp/project" });
@@ -112,7 +112,7 @@ describe("getCurrentBranch", () => {
       checkIsRepo: vi.fn().mockResolvedValue(true),
       branch: vi.fn().mockResolvedValue({ current: undefined }),
     };
-    vi.mocked(simpleGit).mockReturnValue(mockGit as any);
+    vi.mocked(simpleGit).mockReturnValue(mockGit as unknown as SimpleGit);
 
     // Act
     const result = await getCurrentBranch({ projectPath: "/tmp/project" });

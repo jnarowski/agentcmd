@@ -16,7 +16,6 @@ import {
   createTestProject,
   createTestSession,
 } from "@/server/test-utils/fixtures";
-import { AgentType, SessionState } from "@prisma/client";
 import fs from "fs/promises";
 import path from "path";
 import os from "os";

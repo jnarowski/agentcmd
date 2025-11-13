@@ -116,7 +116,7 @@ export function NewRunForm({
     if (matchingTask) {
       setSpecType(matchingTask.spec_type);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [specFile, tasksData]);
 
   // Reset dependent state when definition changes (but preserve initialSpecFile and initialName)

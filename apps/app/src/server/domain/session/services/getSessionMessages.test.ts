@@ -215,7 +215,7 @@ describe("getSessionMessages", () => {
     const session = await createTestSession(prisma, {
       projectId,
       userId,
-      agent: "codex" as any,
+      agent: "codex",
     });
 
     vi.mocked(loadMessages).mockResolvedValue([]);

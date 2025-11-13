@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
 import { cleanupUserSessions } from "./cleanupUserSessions";
-import { setShellSession, getShellSession, getUserSessions } from "./getShellSession";
+import { setShellSession, getUserSessions } from "./getShellSession";
 import { createMockPty } from "@/server/test-utils/shell";
 import type { ShellSession } from "../types";
 

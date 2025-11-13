@@ -13,8 +13,8 @@ export async function createAndSwitchBranch({
   from
 }: CreateAndSwitchBranchOptions): Promise<{ branch: GitBranch; commands: string[] }> {
   // Validate branch name
-  if (!/^[a-zA-Z0-9_/-]+$/.test(branchName)) {
-    throw new Error('Invalid branch name. Only alphanumeric, dash, underscore, and slash allowed.');
+  if (!/^[a-zA-Z0-9_/.-]+$/.test(branchName)) {
+    throw new Error('Invalid branch name. Only alphanumeric, dash, underscore, dot, and slash allowed.');
   }
 
   const git = simpleGit(projectPath);

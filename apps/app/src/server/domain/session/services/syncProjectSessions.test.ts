@@ -7,7 +7,7 @@ import {
   createTestProject,
   createTestSession,
 } from "@/server/test-utils/fixtures";
-import fs from "fs/promises";
+import fs, { type Dirent } from "fs/promises";
 
 // Mock filesystem and path utilities
 vi.mock("fs/promises");
@@ -31,7 +31,6 @@ import { parseJSONLFile } from "./parseJSONLFile";
 describe("syncProjectSessions", () => {
   let userId: string;
   let projectId: string;
-  let projectPath: string;
 
   beforeEach(async () => {
     const user = await createTestUser(prisma);
@@ -43,7 +42,6 @@ describe("syncProjectSessions", () => {
       path: "/test/project",
     });
     projectId = project.id;
-    projectPath = project.path;
 
     // Default mock: directory exists and is accessible
     vi.mocked(fs.access).mockResolvedValue(undefined);
@@ -59,7 +57,7 @@ describe("syncProjectSessions", () => {
     vi.mocked(fs.readdir).mockResolvedValue([
       "session-1.jsonl",
       "session-2.jsonl",
-    ] as any);
+    ] as unknown as fs.Dirent[]);
 
     const result = await syncProjectSessions({
       projectId,
@@ -86,7 +84,7 @@ describe("syncProjectSessions", () => {
       "readme.txt",
       "notes.md",
       "session-2.jsonl",
-    ] as any);
+    ] as unknown as fs.Dirent[]);
 
     const result = await syncProjectSessions({
       projectId,
@@ -108,7 +106,7 @@ describe("syncProjectSessions", () => {
       "agent-config.jsonl",
       "agent-state.jsonl",
       "session-2.jsonl",
-    ] as any);
+    ] as unknown as fs.Dirent[]);
 
     const result = await syncProjectSessions({
       projectId,
@@ -145,7 +143,7 @@ describe("syncProjectSessions", () => {
     vi.mocked(fs.readdir).mockResolvedValue([
       `${existingSessionId}.jsonl`,
       "new-session.jsonl",
-    ] as any);
+    ] as unknown as fs.Dirent[]);
 
     const result = await syncProjectSessions({
       projectId,
@@ -181,7 +179,7 @@ describe("syncProjectSessions", () => {
       createdAt: metadataCreatedAt.toISOString(),
     });
 
-    vi.mocked(fs.readdir).mockResolvedValue([`${session.id}.jsonl`] as any);
+    vi.mocked(fs.readdir).mockResolvedValue([`${session.id}.jsonl`] as unknown as Dirent[]);
 
     const result = await syncProjectSessions({
       projectId,
@@ -218,7 +216,7 @@ describe("syncProjectSessions", () => {
       createdAt: closeTimestamp.toISOString(),
     });
 
-    vi.mocked(fs.readdir).mockResolvedValue([`${session.id}.jsonl`] as any);
+    vi.mocked(fs.readdir).mockResolvedValue([`${session.id}.jsonl`] as unknown as Dirent[]);
 
     const result = await syncProjectSessions({
       projectId,
@@ -234,7 +232,7 @@ describe("syncProjectSessions", () => {
       projectId,
       userId,
       state: "idle",
-      agent: "claude" as any,
+      agent: "claude",
     });
 
     // Set created_at to more than 5 seconds ago to pass the protection check
@@ -244,7 +242,7 @@ describe("syncProjectSessions", () => {
     });
 
     // Mock empty filesystem (no JSONL files)
-    vi.mocked(fs.readdir).mockResolvedValue([] as any);
+    vi.mocked(fs.readdir).mockResolvedValue([] as unknown as Dirent[]);
 
     const result = await syncProjectSessions({
       projectId,
@@ -265,7 +263,7 @@ describe("syncProjectSessions", () => {
       projectId,
       userId,
       state: "working",
-      agent: "claude" as any,
+      agent: "claude",
     });
 
     // Set created_at to old to pass time check
@@ -274,7 +272,7 @@ describe("syncProjectSessions", () => {
       data: { created_at: new Date(Date.now() - 10000) },
     });
 
-    vi.mocked(fs.readdir).mockResolvedValue([] as any);
+    vi.mocked(fs.readdir).mockResolvedValue([] as unknown as Dirent[]);
 
     await syncProjectSessions({
       projectId,
@@ -290,17 +288,17 @@ describe("syncProjectSessions", () => {
   });
 
   it("does not delete recently created sessions (race condition protection)", async () => {
-    const recentSession = await createTestSession(prisma, {
+    await createTestSession(prisma, {
       projectId,
       userId,
       state: "idle",
-      agent: "claude" as any,
+      agent: "claude",
     });
 
     // created_at is very recent (default from createTestSession)
     // This simulates a session being created right before sync
 
-    vi.mocked(fs.readdir).mockResolvedValue([] as any);
+    vi.mocked(fs.readdir).mockResolvedValue([] as unknown as Dirent[]);
 
     await syncProjectSessions({
       projectId,
@@ -316,7 +314,7 @@ describe("syncProjectSessions", () => {
 
   it("handles missing directory gracefully", async () => {
     // Mock directory not found
-    const error: NodeJS.ErrnoException = new Error("ENOENT") as any;
+    const error = new Error("ENOENT") as NodeJS.ErrnoException;
     error.code = "ENOENT";
     vi.mocked(fs.access).mockRejectedValue(error);
 
@@ -332,7 +330,7 @@ describe("syncProjectSessions", () => {
 
   it("throws error for non-ENOENT filesystem errors", async () => {
     // Mock permission denied error
-    const error: NodeJS.ErrnoException = new Error("EACCES") as any;
+    const error = new Error("EACCES") as NodeJS.ErrnoException;
     error.code = "EACCES";
     vi.mocked(fs.access).mockRejectedValue(error);
 
@@ -348,7 +346,7 @@ describe("syncProjectSessions", () => {
     vi.mocked(fs.readdir).mockResolvedValue([
       "good-session.jsonl",
       "corrupt-session.jsonl",
-    ] as any);
+    ] as unknown as fs.Dirent[]);
 
     // Mock parseJSONLFile to succeed for first, fail for second
     vi.mocked(parseJSONLFile)
@@ -392,10 +390,10 @@ describe("syncProjectSessions", () => {
     await createTestSession(prisma, {
       projectId,
       userId,
-      agent: "codex" as any,
+      agent: "codex",
     });
 
-    vi.mocked(fs.readdir).mockResolvedValue(["claude-session.jsonl"] as any);
+    vi.mocked(fs.readdir).mockResolvedValue(["claude-session.jsonl"] as unknown as Dirent[]);
 
     const result = await syncProjectSessions({
       projectId,
@@ -420,7 +418,7 @@ describe("syncProjectSessions", () => {
     await createTestSession(prisma, {
       projectId,
       userId,
-      agent: "codex" as any,
+      agent: "codex",
     });
 
     const codexSessionId = (
@@ -432,7 +430,7 @@ describe("syncProjectSessions", () => {
     // Mock filesystem with same session ID
     vi.mocked(fs.readdir).mockResolvedValue([
       `${codexSessionId}.jsonl`,
-    ] as any);
+    ] as unknown as fs.Dirent[]);
 
     const result = await syncProjectSessions({
       projectId,
@@ -452,7 +450,7 @@ describe("syncProjectSessions", () => {
     vi.mocked(fs.readdir).mockResolvedValue([
       "session-1.jsonl",
       "session-2.jsonl",
-    ] as any);
+    ] as unknown as fs.Dirent[]);
 
     // Run 3 concurrent syncs
     const syncPromises = Array.from({ length: 3 }, () =>
@@ -481,7 +479,7 @@ describe("syncProjectSessions", () => {
     };
 
     vi.mocked(parseJSONLFile).mockResolvedValue(customMetadata);
-    vi.mocked(fs.readdir).mockResolvedValue(["test-session.jsonl"] as any);
+    vi.mocked(fs.readdir).mockResolvedValue(["test-session.jsonl"] as unknown as Dirent[]);
 
     await syncProjectSessions({
       projectId,
