@@ -1,6 +1,6 @@
 ---
 description: Generate implementation spec with complexity estimates and write to spec folder with sequential ID
-argument-hint: [context?]
+argument-hint: [context-or-spec-id?, context?]
 ---
 
 # Feature Specification
@@ -9,7 +9,8 @@ Generate a comprehensive spec document for new features with phases, complexity 
 
 ## Variables
 
-- $context: $1 (optional) - Additional context for autonomous spec generation (e.g., "Add OAuth support with Google and GitHub providers")
+- $param1: $1 (optional) - Either 12-digit spec ID to reuse existing folder, or context string for new feature
+- $param2: $2 (optional) - Additional context (only used if $1 is spec ID)
 
 ## Instructions
 
@@ -41,26 +42,34 @@ Assign complexity based on **context window usage and cognitive load**, not time
 
 ## Workflow
 
-1. **Generate Timestamp ID**:
-   - Generate timestamp-based ID in format: `YYMMDDHHmmss`
-   - Example: October 24, 2025 at 12:01:01am → `251024120101`
-   - This ensures uniqueness without coordination and embeds creation time
-   - Read `.agent/specs/index.json` (will be updated in step 7)
+1. **Determine Context**:
+   - If no explicit context: Use conversation history
+   - If spec ID provided: Read existing folder (PRD if present) + conversation history
+   - Otherwise: Use provided context string
 
-2. **Generate Feature Name**:
-   - If `$context` provided: Use AI to generate concise kebab-case name from context (max 4 words, e.g., "Add OAuth support" → "oauth-support")
-   - If no context: Analyze recent conversation history to infer feature name
-   - Ensure name is descriptive, lowercase, uses hyphens
-   - Note: With timestamp IDs, folder conflicts are virtually impossible
+   **Detection:**
+   - If $param1 matches /^\d{12}$/: It's a spec ID → reuse folder, context from $param2 or conversation
+   - Otherwise: $param1 is context (or empty) → create new folder
 
-3. **Research Phase**:
-   - Read `.agent/specs/todo/${featureName}/prd.md` if it exists (skip if not found)
+2. **Generate or Reuse Spec ID**:
+   - If reusing folder: Extract spec ID from $param1
+   - If new folder: Generate timestamp-based ID in format `YYMMDDHHmmss`
+   - Example: November 13, 2025 at 3:22:01pm → `251113152201`
+   - Read `.agent/specs/index.json` (will be updated in step 8)
+
+3. **Generate Feature Name**:
+   - Generate concise kebab-case name from context (max 4 words)
+   - Examples: "Add OAuth support" → "oauth-support", "Dashboard redesign" → "dashboard-redesign"
+   - If reusing folder: Extract name from existing folder path
+
+4. **Research Phase**:
+   - If reusing folder: Read existing `prd.md` if present
    - Research codebase for existing patterns relevant to the feature
    - Gather context about architecture, file structure, and conventions
 
-4. **Clarification** (conditional):
-   - **If $context provided ($2 given)**: Resolve ambiguities autonomously using recommended best practices. Do not ask questions.
-   - **If $context not provided**: Use session context and ask clarifying questions ONE AT A TIME if implementation approach is unclear:
+5. **Clarification** (conditional):
+   - **If explicit context provided**: Resolve ambiguities autonomously using recommended best practices
+   - **If inferring from conversation**: Ask clarifying questions ONE AT A TIME if implementation approach is unclear:
      - Don't use the Question tool
      - Use this template:
 
@@ -73,31 +82,32 @@ Assign complexity based on **context window usage and cognitive load**, not time
        3. Other - user specifies
        ```
 
-5. **Generate Spec with Complexity**:
+6. **Generate Spec with Complexity**:
    - Once you have sufficient context, generate the spec following the Template below
    - Analyze each task and assign complexity score (1-10)
    - Calculate phase totals and averages
    - Be concise but comprehensive
    - Skip sections only if truly not applicable
 
-6. **Write Spec Folder and File**:
-   - Create folder: `.agent/specs/todo/{timestampId}-{featureName-kebab}/`
+7. **Write Spec Folder and File**:
+   - If new folder: Create folder `.agent/specs/todo/{timestampId}-{featureName}/`
+   - If reusing: Verify folder exists, check for conflicts (don't overwrite existing spec.md)
    - Always write to `spec.md` in folder (never `spec.json`)
-   - Example: `.agent/specs/todo/251024120101-auth-improvements/spec.md`
+   - Example: `.agent/specs/todo/251113152201-oauth-support/spec.md`
    - **Note**: Specs always start in `todo/` folder with Status "draft"
 
-7. **Update Index**:
+8. **Update Index**:
    - Add entry to index.json using timestamp ID as key:
 
      ```json
      {
        "specs": {
-         "251024120101": {
-           "path": "todo/251024120101-auth-improvements/spec.md",
+         "251113152201": {
+           "path": "todo/251113152201-oauth-support/spec.md",
            "status": "draft",
            "spec_type": "feature",
-           "created": "2025-10-24T00:01:01.000Z",
-           "updated": "2025-10-24T00:01:01.000Z"
+           "created": "2025-11-13T15:22:01.000Z",
+           "updated": "2025-11-13T15:22:01.000Z"
          }
        }
      }
@@ -355,28 +365,45 @@ Execute these commands to verify the feature works correctly:
 
 ## Examples
 
-### Example 1: With context
+### Example 1: Infer from conversation
 
 ```bash
-/generate-spec "Add OAuth support with Google and GitHub providers"
+/cmd:generate-spec
 ```
 
-Generates name `oauth-support`, ID `251024120101`, creates: `.agent/specs/todo/251024120101-oauth-support/spec.md`
+Analyzes conversation history, generates ID `251113152201`, creates: `.agent/specs/todo/251113152201-oauth-support/spec.md`
 
-### Example 2: From conversation
+### Example 2: Explicit context
 
 ```bash
-/generate-spec
+/cmd:generate-spec "Add OAuth support with Google and GitHub providers"
 ```
 
-Analyzes conversation history, infers feature name, generates ID `251107093022`, creates: `.agent/specs/todo/251107093022-workflow-safety/spec.md`
+Uses explicit context, generates ID `251113152201`, creates: `.agent/specs/todo/251113152201-oauth-support/spec.md`
+
+### Example 3: Add spec to existing PRD folder
+
+```bash
+/cmd:generate-spec 251113150000
+```
+
+Reuses folder with existing PRD, infers context from conversation + PRD, adds: `.agent/specs/todo/251113150000-oauth-support/spec.md`
+
+### Example 4: Add spec with explicit context
+
+```bash
+/cmd:generate-spec 251113150000 "Add OAuth with Google and GitHub"
+```
+
+Reuses folder, uses explicit context, adds: `.agent/specs/todo/251113150000-oauth-support/spec.md`
 
 ## Common Pitfalls
 
+- **Spec ID format**: Must be exactly 12 digits (`YYMMDDHHmmss`) to be recognized as folder reuse
+- **Folder conflicts**: When reusing folder, verify spec.md doesn't already exist
 - **Wrong directory**: Always create folder in `.agent/specs/todo/`, not `.agent/specs/` or `.agents/specs/`
-- **Folder structure**: Must create folder `{timestampId}-{feature}/` with `spec.md` inside (e.g., `251024120101-oauth-support/`)
+- **Folder structure**: Must create folder `{timestampId}-{feature}/` with `spec.md` inside (e.g., `251113152201-oauth-support/`)
 - **Index not updated**: Always update index.json after creating spec
-- **ID format**: Use 12-character timestamp format `YYMMDDHHmmss` (e.g., `251024120101`)
 - **Generic placeholders**: Replace all `<placeholders>` with actual content
 - **Missing complexity scores**: EVERY task must have a `[X/10]` complexity score
 - **Including hours**: Do NOT include hour estimates - use complexity points only
@@ -386,7 +413,7 @@ Analyzes conversation history, infers feature name, generates ID `251107093022`,
 
 ## Report
 
-**IMPORTANT**: After completing all steps (1-7), output this JSON as your final message to the user:
+**IMPORTANT**: After completing all steps (1-8), output this JSON as your final message to the user:
 
 <json_output>
 {
@@ -394,6 +421,7 @@ Analyzes conversation history, infers feature name, generates ID `251107093022`,
 "spec_folder": ".agent/specs/todo/[fullId]-[feature]",
 "spec_file": ".agent/specs/todo/[fullId]-[feature]/spec.md",
 "spec_id": "[fullId]",
+"spec_type": "feature",
 "feature_name": "[feature-name]",
 "complexity": {
 "total": "[X]",
@@ -410,7 +438,8 @@ Analyzes conversation history, infers feature name, generates ID `251107093022`,
 - `success`: Always true if spec generation completed
 - `spec_folder`: Path to the created spec folder
 - `spec_file`: Full path to the spec file (always spec.md)
-- `spec_id`: The timestamp-based spec ID in YYMMDDHHmmss format (e.g., "251024120101")
+- `spec_id`: The timestamp-based spec ID in YYMMDDHHmmss format (e.g., "251113152201")
+- `spec_type`: Always "feature"
 - `feature_name`: Normalized feature name (kebab-case)
 - `complexity`: Total and average complexity scores
 - `files_to_create`: Array of new files to be created
