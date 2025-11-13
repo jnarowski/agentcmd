@@ -19,6 +19,7 @@ export interface CreateWorkflowRunInput {
   args: Record<string, unknown>;
   spec_file?: string;
   spec_content?: string;
+  spec_type?: string;
   planning_session_id?: string;
   mode?: string;
   base_branch?: string;

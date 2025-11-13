@@ -154,6 +154,7 @@ export const createWorkflowRunSchema = z
     args: z.record(z.string(), z.unknown()).default({}),
     spec_file: z.string().optional(),
     spec_content: z.string().optional(),
+    spec_type: z.string().optional(),
     planning_session_id: z.string().uuid().optional(),
     mode: z.enum(['stay', 'branch', 'worktree']).optional(),
     base_branch: z.string().optional(),

@@ -406,16 +406,16 @@ prisma migrate deploy
 
 ```typescript
 // ✅ GOOD - Events use dots
-"workflow.run.updated"
-"session.stream_output"
-"shell.output"
+"workflow.run.updated";
+"session.stream_output";
+"shell.output";
 
 // ✅ GOOD - Channels use colons
-"session:123"
-"project:abc"
+"session:123";
+"project:abc";
 
 // ❌ BAD - Don't mix conventions
-"workflow:run:updated" // Events should use dots
+"workflow:run:updated"; // Events should use dots
 ```
 
 **Naming Conventions:**
@@ -519,4 +519,16 @@ See `.env.example` for full template.
 ## Plans
 
 - At end of plans, list unresolved questions (extremely concise)
-- Pre-1.0: Can use `prisma:reset` to flatten migrations
+- Use `prisma:reset` to flatten migrations
+- Ask clarifying questions ONE AT A TIME if implementation approach is unclear:
+  - Don't use the AskUserQuestion tool
+  - Use this template:
+
+    ```md
+    **Question**: [Your question]
+    **Suggestions**:
+
+    1. [Option 1] (recommended - why)
+    2. [Option 2]
+    3. Other - user specifies
+    ```

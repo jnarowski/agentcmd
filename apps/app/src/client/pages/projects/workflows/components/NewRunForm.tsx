@@ -14,12 +14,14 @@ import { useCreateWorkflow } from "@/client/pages/projects/workflows/hooks/useWo
 import { useProjectSpecs } from "@/client/pages/projects/hooks/useProjectSpecs";
 import { useProjectBranches } from "@/client/pages/projects/hooks/useProjectBranches";
 import { useSessions } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
+import { useTasks } from "@/client/hooks/useTasks";
 import { api } from "@/client/utils/api";
 import type {
   WorkflowDefinition,
   WorkflowRun,
 } from "@/client/pages/projects/workflows/types";
 import { NewRunFormDialogArgSchemaFields } from "./NewRunFormDialogArgSchemaFields";
+import { SpecTypeSelect } from "./SpecTypeSelect";
 
 interface NewRunFormProps {
   projectId: string;
@@ -46,10 +48,11 @@ export function NewRunForm({
 
   // Don't set initial value - let useEffect handle it after definitions load
   const [selectedDefinitionId, setSelectedDefinitionId] = useState("");
-  const [specInputType, setSpecInputType] = useState<"file" | "planning" | "content">(
-    "file"
-  );
+  const [specInputType, setSpecInputType] = useState<
+    "file" | "planning" | "content"
+  >("file");
   const [specFile, setSpecFile] = useState<string>("");
+  const [specType, setSpecType] = useState<string>("feature");
   const [planningSessionId, setPlanningSessionId] = useState<string>("");
   const [specContent, setSpecContent] = useState<string>("");
   const [name, setName] = useState("");
@@ -64,6 +67,9 @@ export function NewRunForm({
   // Derive actual definition from selectedDefinitionId or prop
   const actualDefinition =
     definition || definitions?.find((d) => d.id === selectedDefinitionId);
+
+  // Fetch tasks to get spec metadata (for auto-populating spec_type)
+  const { data: tasksData } = useTasks(projectId);
 
   // Auto-select definition: use definitionId prop if provided, else first definition
   useEffect(() => {
@@ -97,6 +103,21 @@ export function NewRunForm({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialName]);
+
+  // Auto-populate spec type when spec file is selected
+  useEffect(() => {
+    if (!specFile || !tasksData?.tasks) return;
+
+    // Find matching task by spec path
+    const matchingTask = tasksData.tasks.find(
+      (task) => task.specPath === specFile
+    );
+
+    if (matchingTask) {
+      setSpecType(matchingTask.spec_type);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [specFile, tasksData]);
 
   // Reset dependent state when definition changes (but preserve initialSpecFile and initialName)
   useEffect(() => {
@@ -145,7 +166,7 @@ export function NewRunForm({
   const planningSessionOptions = useMemo(() => {
     if (!sessions) return [];
     return sessions
-      .filter((session) => session.permission_mode === 'plan')
+      .filter((session) => session.permission_mode === "plan")
       .map((session) => ({
         value: session.id,
         label: session.name || `Session ${session.id.slice(0, 8)}`,
@@ -291,7 +312,9 @@ export function NewRunForm({
         args,
         spec_file: specInputType === "file" ? specFile : undefined,
         spec_content: specInputType === "content" ? specContent : undefined,
-        planning_session_id: specInputType === "planning" ? planningSessionId : undefined,
+        spec_type: specType || undefined,
+        planning_session_id:
+          specInputType === "planning" ? planningSessionId : undefined,
         mode: mode,
         base_branch: mode !== "stay" ? baseBranch || undefined : undefined,
         branch_name: mode !== "stay" ? branchName || undefined : undefined,
@@ -344,7 +367,9 @@ export function NewRunForm({
         <div className="rounded-lg border bg-card">
           <Tabs
             value={specInputType}
-            onValueChange={(v) => setSpecInputType(v as "file" | "planning" | "content")}
+            onValueChange={(v) =>
+              setSpecInputType(v as "file" | "planning" | "content")
+            }
             className="w-full !gap-0"
           >
             <TabsList className="w-full rounded-t-lg rounded-b-none border-b h-auto p-0 bg-transparent">
@@ -415,6 +440,17 @@ export function NewRunForm({
             </TabsContent>
           </Tabs>
         </div>
+      </div>
+
+      {/* Spec Type Selection */}
+      <div>
+        <Label htmlFor="spec-type">Spec Type</Label>
+        <SpecTypeSelect
+          projectId={projectId}
+          value={specType}
+          onValueChange={setSpecType}
+          disabled={createWorkflow.isPending}
+        />
       </div>
 
       {/* Name input */}

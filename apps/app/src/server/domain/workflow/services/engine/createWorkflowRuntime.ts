@@ -4,6 +4,7 @@ import type {
   WorkflowConfig,
   WorkflowFunction,
   WorkflowStep,
+  WorkflowEvent,
   WorkspaceResult,
   PhaseDefinition,
 } from "agentcmd-workflows";
@@ -17,6 +18,9 @@ import {
 } from "@/server/domain/workflow/services";
 import { buildWorkflowIdentifiers } from "@/server/domain/workflow/utils/buildWorkflowIdentifiers";
 import { getCurrentBranch } from "@/server/domain/git/services/getCurrentBranch";
+import { resolveSpecFile } from "@/server/domain/workflow/services/resolveSpecFile";
+import { existsSync } from "fs";
+import { join } from "path";
 import {
   createPhaseStep,
   createAgentStep,
@@ -217,20 +221,33 @@ export function createWorkflowRuntime(
             // Mark workflow as started
             await handleWorkflowStart(runId, projectId, inngestRunId, logger);
 
-            // Setup workspace (may fail)
+            // System setup phase: workspace and spec preparation
             if (!extendedStep) {
               throw new Error("Failed to create extended step");
             }
-            workspace = await setupWorkspace(
-              run,
-              context,
-              extendedStep,
-              inngestStep,
-              logger
-            );
 
-            // Add workingDir to event.data for workflows to use
-            event.data.workingDir = workspace.workingDir;
+            const step = extendedStep; // Type narrowing for closure
+
+            await step.phase(SYSTEM_PHASES.SETUP as ExtractPhaseId<TPhases>, async () => {
+              // Setup workspace (may fail)
+              workspace = await setupWorkspace({
+                run,
+                context,
+                inngestStep,
+                logger,
+              });
+
+              // Add workingDir to event.data for workflows to use
+              event.data.workingDir = workspace.workingDir;
+
+              // Setup spec file (generate if needed)
+              await setupSpec({
+                run,
+                event: event as WorkflowEvent,
+                step,
+                logger,
+              });
+            });
 
             // Execute workflow function
             const result = await fn({
@@ -327,23 +344,14 @@ function extendInngestSteps<
  * - `worktree`: Creates isolated git worktree for parallel workflows on separate branches
  * - `stay`: Uses existing project directory (must coordinate concurrent runs manually)
  * - `null`/`undefined`: Defaults to stay mode with current branch
- *
- * @param run - Workflow run with mode, branch info, and project path
- * @param context - Runtime execution context
- * @param extendedStep - Extended step object for phase tracking
- * @param inngestStep - Base Inngest step tools
- * @param logger - Logger instance
- * @returns Workspace result with mode, working directory, and branch name
  */
-async function setupWorkspace<
-  TPhases extends PhasesConstraint
->(
-  run: WorkflowRun & { project: { path: string } },
-  context: RuntimeContext<TPhases>,
-  extendedStep: WorkflowStep<ExtractPhaseId<TPhases>>,
-  inngestStep: GetStepTools<Inngest.Any>,
-  logger: FastifyBaseLogger
-): Promise<WorkspaceResult> {
+async function setupWorkspace<TPhases extends PhasesConstraint>(params: {
+  run: WorkflowRun & { project: { path: string } };
+  context: RuntimeContext<TPhases>;
+  inngestStep: GetStepTools<Inngest.Any>;
+  logger: FastifyBaseLogger;
+}): Promise<WorkspaceResult> {
+  const { run, context, inngestStep, logger } = params;
   // No mode specified - default to stay mode (use existing project directory)
   if (!run.mode) {
     const currentBranch = await getCurrentBranch({
@@ -363,19 +371,17 @@ async function setupWorkspace<
   }
 
   // Explicit mode - delegate to workspace setup step (handles worktree/stay logic)
-  const workspace = await extendedStep.phase(SYSTEM_PHASES.SETUP as ExtractPhaseId<TPhases>, async () => {
-    const setupStep = createSetupWorkspaceStep(context, inngestStep);
-    const worktreeName =
-      run.mode === "worktree"
-        ? `run-${run.id}-${run.branch_name || "main"}`
-        : undefined;
+  const setupStep = createSetupWorkspaceStep(context, inngestStep);
+  const worktreeName =
+    run.mode === "worktree"
+      ? `run-${run.id}-${run.branch_name || "main"}`
+      : undefined;
 
-    return await setupStep("setup-workspace", {
-      branch: run.branch_name ?? undefined,
-      baseBranch: run.base_branch ?? "main",
-      projectPath: run.project.path,
-      worktreeName,
-    });
+  const workspace = await setupStep("setup-workspace", {
+    branch: run.branch_name ?? undefined,
+    baseBranch: run.base_branch ?? "main",
+    projectPath: run.project.path,
+    worktreeName,
   });
 
   logger.info(
@@ -384,6 +390,72 @@ async function setupWorkspace<
   );
 
   return workspace;
+}
+
+/**
+ * Setup spec file for workflow execution.
+ * Ensures event.data.specFile is populated, either from provided file or by generating new spec.
+ *
+ * **Behavior:**
+ * - If `event.data.specFile` exists: Verifies file exists, throws if not found
+ * - Otherwise: Generates spec using `/cmd:generate-{specType}-spec` command
+ * - Defaults to `specType: "feature"` if not specified
+ * - Validates that required slash command exists before generation
+ */
+async function setupSpec<TPhases extends PhasesConstraint>(params: {
+  run: WorkflowRun & { project: { path: string } };
+  event: WorkflowEvent;
+  step: WorkflowStep<ExtractPhaseId<TPhases>>;
+  logger: FastifyBaseLogger;
+}): Promise<void> {
+  const { run, event, step, logger } = params;
+  // Early return if no data
+  if (!event.data) {
+    return;
+  }
+
+  // If specFile already provided, verify it exists
+  if (event.data.specFile) {
+    if (!existsSync(event.data.specFile)) {
+      throw new Error(`Spec file not found: ${event.data.specFile}`);
+    }
+
+    logger.info(
+      { runId: run.id, specFile: event.data.specFile },
+      "Using provided spec file"
+    );
+    return;
+  }
+
+  // Default to "feature" spec type if not specified
+  const specType = event.data.specType ?? "feature";
+
+  // Verify slash command exists
+  const commandPath = join(process.cwd(), ".claude", "commands", "cmd", `generate-${specType}-spec.md`);
+  if (!existsSync(commandPath)) {
+    throw new Error(
+      `Spec command not found: /cmd:generate-${specType}-spec\n` +
+      `Expected file: ${commandPath}\n` +
+      `Available spec types can be found in .claude/commands/cmd/`
+    );
+  }
+
+  // Generate spec file
+  logger.info(
+    { runId: run.id, specType },
+    "Generating spec file"
+  );
+
+  const specFile = await resolveSpecFile(event, step);
+
+  if (event.data) {
+    event.data.specFile = specFile;
+  }
+
+  logger.info(
+    { runId: run.id, specFile },
+    "Spec file generated"
+  );
 }
 
 /**

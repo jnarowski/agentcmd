@@ -12,6 +12,7 @@ import {
   syncFromClaudeProjects,
   listSpecFiles,
 } from "@/server/domain/project/services";
+import { getAvailableSpecTypes } from "@/server/domain/workflow/services/getAvailableSpecTypes";
 import { installWorkflowPackage } from "@/server/domain/project/services/installWorkflowPackage";
 import { getBranches } from "@/server/domain/git/services";
 import { getFileTree, readFile, writeFile } from "@/server/domain/file/services/index";
@@ -619,6 +620,39 @@ export async function projectRoutes(fastify: FastifyInstance) {
       }
 
       return reply.send({ data: installResult });
+    }
+  );
+
+  /**
+   * GET /api/projects/:id/spec-types
+   * Get available spec types for a project
+   */
+  fastify.get<{
+    Params: { id: string };
+  }>(
+    "/api/projects/:id/spec-types",
+    {
+      preHandler: fastify.authenticate,
+      schema: {
+        params: projectIdSchema,
+      },
+    },
+    async (request, reply) => {
+      const { id } = request.params;
+
+      fastify.log.info({ projectId: id }, "Fetching available spec types");
+
+      const project = await getProjectById({ id });
+
+      if (!project) {
+        return reply
+          .code(404)
+          .send(buildErrorResponse(404, "Project not found"));
+      }
+
+      const specTypes = await getAvailableSpecTypes(project.path);
+
+      return reply.send({ data: specTypes });
     }
   );
 }

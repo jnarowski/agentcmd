@@ -49,6 +49,7 @@ model WorkflowRun {
   args                   Json           // Workflow arguments
   spec_file              String?        // Relative path to spec file (from .agent/specs/)
   spec_content           String?        // Inline spec content (alternative to spec_file)
+  spec_type              String?        // Spec type used (e.g., "feature", "test", "bug")
   planning_session_id    String?        // Planning session to resume for spec generation
   mode                   String?        // Workspace mode: "stay" | "branch" | "worktree"
   branch_name            String?        // New branch name for execution

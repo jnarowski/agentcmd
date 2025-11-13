@@ -3,9 +3,9 @@ description: Generate implementation spec with complexity estimates and write to
 argument-hint: [context?]
 ---
 
-# Generate Implementation Spec with Complexity
+# Feature Specification
 
-Generate a well-structured implementation spec with complexity estimates and save it to `.agent/specs/todo/[id]-[feature]/spec.md` with timestamp-based ID.
+Comprehensive spec for new features with phases, complexity estimates, and test plans. Generates a well-structured implementation spec and saves it to `.agent/specs/todo/[id]-[feature]/spec.md` with timestamp-based ID.
 
 ## Variables
 
@@ -94,6 +94,7 @@ Assign complexity based on **context window usage and cognitive load**, not time
          "251024120101": {
            "path": "todo/251024120101-auth-improvements/spec.md",
            "status": "draft",
+           "spec_type": "feature",
            "created": "2025-10-24T00:01:01.000Z",
            "updated": "2025-10-24T00:01:01.000Z"
          }

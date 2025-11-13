@@ -9,6 +9,7 @@ import type { SpecTask } from "@/shared/types/task.types";
 interface SpecIndexEntry {
   path: string;
   status: string;
+  spec_type?: string | null;
   created: string;
   updated: string;
 }
@@ -66,6 +67,7 @@ export async function scanSpecs(projectPath: string, projectId: string): Promise
         specPath: entry.path,
         projectId, // Set from parameter
         status: entry.status,
+        spec_type: entry.spec_type ?? "feature", // Default to "feature" for legacy specs
         created_at: entry.created,
       });
     }

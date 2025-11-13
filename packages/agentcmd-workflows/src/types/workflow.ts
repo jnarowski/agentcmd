@@ -85,6 +85,10 @@ export interface WorkflowEventData<TArgs = Record<string, unknown>> {
   specFile?: string;
   /** Spec file content */
   specContent?: string;
+  /** Spec type (e.g., "feature", "bug", "patch") - routes to /cmd:generate-{type}-spec */
+  specType?: string;
+  /** Override spec generation command (e.g., "/my-custom-spec-generator") */
+  specCommandOverride?: string;
   /** Planning session CLI session ID (for resuming planning sessions) */
   planningSessionId?: string;
   /** Git branch to create worktree from */

@@ -1,9 +1,6 @@
 import {
   buildSlashCommand,
   defineWorkflow,
-  type WorkflowStep,
-  type WorkflowEvent,
-  type CmdGenerateSpecResponse,
   type CmdImplementSpecResponse,
   type CmdReviewSpecImplementationResponse,
 } from "../../../packages/agentcmd-workflows/dist";
@@ -11,11 +8,8 @@ import {
 /**
  * Example workflow demonstrating automatic workspace lifecycle.
  * Workspace setup and cleanup happen automatically via _system_setup and _system_finalize.
+ * Spec file resolution happens automatically in system setup phase.
  */
-
-interface ImplementReviewWorkflowContext {
-  specFile?: string;
-}
 
 export default defineWorkflow(
   {
@@ -23,16 +17,15 @@ export default defineWorkflow(
     name: "Implement Review Workflow",
     description: "Implements a spec file and reviews the implementation",
     phases: [
+      { id: "setup", label: "Setup" },
       { id: "implement", label: "Implement" },
       { id: "review", label: "Review" },
     ],
   },
   async ({ event, step }) => {
-    const { workingDir } = event.data;
-    const ctx: ImplementReviewWorkflowContext = {};
+    const { workingDir, specFile } = event.data;
 
     await step.phase("implement", async () => {
-      ctx.specFile = await getSpecFile({ event, step });
 
       const response = await step.agent<CmdImplementSpecResponse>(
         "implement-spec",
@@ -40,7 +33,7 @@ export default defineWorkflow(
           agent: "claude",
           json: true,
           prompt: buildSlashCommand("/cmd:implement-spec", {
-            specIdOrNameOrPath: ctx.specFile,
+            specIdOrNameOrPath: specFile,
             format: "json",
           }),
           workingDir,
@@ -57,7 +50,7 @@ export default defineWorkflow(
           agent: "claude",
           json: true,
           prompt: buildSlashCommand("/cmd:review-spec-implementation", {
-            specIdOrNameOrPath: ctx.specFile,
+            specIdOrNameOrPath: specFile,
             format: "json",
           }),
           workingDir,
@@ -68,44 +61,3 @@ export default defineWorkflow(
     });
   }
 );
-
-const getSpecFile = async ({
-  event,
-  step,
-}: {
-  event: WorkflowEvent;
-  step: WorkflowStep;
-}) => {
-  if (event.data.specFile) {
-    return event.data.specFile;
-  }
-
-  if (event.data.planningSessionId) {
-    const response = await step.agent<CmdGenerateSpecResponse>(
-      "Generate Spec",
-      {
-        agent: "claude",
-        json: true,
-        prompt: buildSlashCommand("/cmd:generate-spec"),
-        resume: event.data.planningSessionId,
-        workingDir: event.data.workingDir,
-      }
-    );
-
-    return response.data?.extracted?.spec_file;
-  }
-
-  const response = await step.agent<CmdGenerateSpecResponse>(
-    "Generate Spec File",
-    {
-      agent: "claude",
-      json: true,
-      prompt: buildSlashCommand("/cmd:generate-spec", {
-        context: event.data.specContent,
-      }),
-      workingDir: event.data.workingDir,
-    }
-  );
-
-  return response.data?.spec_file;
-};

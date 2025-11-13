@@ -52,21 +52,12 @@ export interface AgentStepConfig {
  * Result from agent execution
  */
 export interface AgentStepResult<T = string> {
-  /** Result data */
-  data: {
-    /** Agent session ID */
-    sessionId: string;
-    /** Exit code from agent execution */
-    exitCode: number;
-    /** Output or error message */
-    message?: string;
-    /** Agent output content */
-    output?: string;
-    /** Number of steps executed */
-    steps?: number;
-    /** Extracted data (JSON object when json: true, otherwise string output) */
-    extracted?: T;
-  };
+  /** Agent session ID */
+  sessionId: string;
+  /** Exit code from agent execution */
+  exitCode: number;
+  /** Result data (extracted JSON when json: true, otherwise string output) */
+  data: T;
   /** Success status */
   success: boolean;
   /** Error message if failed */

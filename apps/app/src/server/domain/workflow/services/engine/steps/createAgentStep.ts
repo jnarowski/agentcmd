@@ -138,10 +138,9 @@ export function createAgentStep(
 
           // Wrap result in new format
           const wrappedResult: AgentStepResult = {
-            data: {
-              sessionId: result.sessionId || session.id,
-              exitCode: result.exitCode,
-            },
+            sessionId: result.sessionId || session.id,
+            exitCode: result.exitCode,
+            data: result.data ?? '',
             success: result.success,
             error: result.error,
             trace: [{
