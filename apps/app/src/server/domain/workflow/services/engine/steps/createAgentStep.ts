@@ -71,13 +71,8 @@ export function createAgentStep(
           },
         });
 
-        // Update step with session ID immediately (before agent execution)
-        // This allows frontend to start watching the session right away
-        await updateWorkflowStep({
-          stepId: step.id,
-          agentSessionId: session.id,
-          logger,
-        });
+        // Track if session ID has been set (will be set on first message)
+        let sessionIdSet = false;
 
         try {
           logger.info(
@@ -94,7 +89,17 @@ export function createAgentStep(
               workingDir: config.workingDir ?? context.projectPath,
               permissionMode: "bypassPermissions", // Hardcoded to bypass permissions in workflows
               json: config.json,
-              onEvent: ({ message }) => {
+              onEvent: async ({ message }) => {
+                // Set agent_session_id on first message (only once)
+                if (!sessionIdSet) {
+                  await updateWorkflowStep({
+                    stepId: step.id,
+                    agentSessionId: session.id,
+                    logger,
+                  });
+                  sessionIdSet = true;
+                }
+
                 if (
                   message &&
                   typeof message === "object" &&

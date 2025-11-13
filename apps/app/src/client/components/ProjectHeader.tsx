@@ -130,7 +130,7 @@ export function ProjectHeader({ projectId, projectName, projectPath, gitCapabili
         </div>
 
         {/* Desktop navigation - tabs */}
-        <div className="hidden lg:flex items-center gap-2">
+        <div className="hidden lg:flex items-center">
           <nav className="flex gap-2">
             {navItems.map((item) => (
               <NavLink
@@ -150,7 +150,9 @@ export function ProjectHeader({ projectId, projectName, projectPath, gitCapabili
               </NavLink>
             ))}
           </nav>
-          <NewButton />
+          <div className="ml-2">
+            <NewButton />
+          </div>
         </div>
 
         {/* Mobile navigation - dropdown */}
