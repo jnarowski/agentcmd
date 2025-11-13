@@ -5,7 +5,7 @@ import type { ListSpecFilesOptions } from "@/server/domain/project/types/ListSpe
 /**
  * List all spec files from .agent/specs/todo/ directory
  * @param options - Options object with projectPath
- * @returns Array of relative paths to spec files
+ * @returns Array of paths relative to project root (e.g., ".agent/specs/todo/241231-feature/spec.md")
  */
 export async function listSpecFiles({ projectPath }: ListSpecFilesOptions): Promise<string[]> {
   const specsDir = join(projectPath, ".agent", "specs", "todo");
@@ -20,12 +20,17 @@ export async function listSpecFiles({ projectPath }: ListSpecFilesOptions): Prom
         // Get relative path from specsDir
         // In Node.js 20.1+, dirent has path property (not in all TS types)
         const direntPath = (dirent as { path?: string }).path;
-        const relativePath = direntPath
+        const relativeToSpecsDir = direntPath
           ? join(direntPath.replace(specsDir, ""), dirent.name)
           : dirent.name;
 
         // Remove leading slash if present
-        return relativePath.startsWith("/") ? relativePath.slice(1) : relativePath;
+        const cleanPath = relativeToSpecsDir.startsWith("/")
+          ? relativeToSpecsDir.slice(1)
+          : relativeToSpecsDir;
+
+        // Return path relative to project root (include .agent/specs/todo/)
+        return join(".agent", "specs", "todo", cleanPath);
       })
       .sort(); // Alphabetical order
 

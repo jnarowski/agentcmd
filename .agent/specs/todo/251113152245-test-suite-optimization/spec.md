@@ -3,10 +3,10 @@
 **Status**: draft
 **Created**: 2025-11-13
 **Package**: apps/app
-**Total Complexity**: 58 points
-**Phases**: 4
-**Tasks**: 21
-**Overall Avg Complexity**: 2.8/10
+**Total Complexity**: 46 points
+**Phases**: 3
+**Tasks**: 17
+**Overall Avg Complexity**: 2.7/10
 
 ## Complexity Breakdown
 
@@ -15,33 +15,30 @@
 | Phase 1: Create Workflow Fixtures   | 3       | 8            | 2.7/10         | 4/10     |
 | Phase 2: Migrate to Shared Fixtures | 4       | 14           | 3.5/10         | 5/10     |
 | Phase 3: Remove Redundant Tests     | 10      | 24           | 2.4/10         | 3/10     |
-| Phase 4: Enable Parallel Execution  | 4       | 12           | 3.0/10         | 4/10     |
-| **Total**                           | **21**  | **58**       | **2.8/10**     | **5/10** |
+| **Total**                           | **17**  | **46**       | **2.7/10**     | **5/10** |
 
 ## Overview
 
-Optimize test suite by creating shared fixtures, removing redundant tests, and enabling parallel execution. Combined with in-memory DB (already completed), this will reduce test suite runtime by 60-80% while maintaining coverage and improving maintainability.
+Optimize test suite by creating shared workflow fixtures and removing redundant tests. This reduces maintenance burden, improves test readability, and eliminates ~1600 lines of duplicative test code while maintaining meaningful coverage.
 
 ## User Story
 
 As a developer
-I want a fast-running test suite with minimal redundancy
-So that I get quick feedback during development without sacrificing coverage
+I want a maintainable test suite with minimal redundancy
+So that tests are easier to read, update, and reason about without sacrificing coverage
 
 ## Technical Approach
 
-Four-phase optimization:
+Three-phase optimization:
 1. Create reusable workflow fixtures to eliminate 160+ inline DB creations
 2. Migrate all tests to use shared fixtures
 3. Remove ~1600 lines of redundant tests (duplicate auth checks, string conversion tests, edge cases)
-4. Enable Vitest concurrent execution for independent test blocks
 
 ## Key Design Decisions
 
-1. **In-memory DB already completed**: User migrated from `file:./test-temp.db` to `file::memory:?cache=shared` - provides 30-50% speed boost
-2. **Fixture-first approach**: All test data creation goes through fixtures for consistency and maintainability
-3. **Conservative test removal**: Only remove truly redundant tests (duplicate auth, ownership, string conversion utilities tested through integration)
-4. **Selective parallelization**: Use `describe.concurrent` only for independent tests, keep sequential where state is shared
+1. **Fixture-first approach**: All test data creation goes through fixtures for consistency and maintainability
+2. **Conservative test removal**: Only remove truly redundant tests (duplicate auth, ownership, string conversion utilities tested through integration)
+3. **Focus on maintainability**: Reduce cognitive load by consolidating setup patterns and removing duplicate validation
 
 ## Architecture
 
@@ -350,33 +347,6 @@ describe('Stateful operations', () => {
 
 (This will be filled in by the agent implementing this phase)
 
-### Phase 4: Enable Parallel Execution
-
-**Phase Complexity**: 12 points (avg 3.0/10)
-
-- [ ] 4.1 [3/10] Add concurrent execution to route tests
-  - Wrap CRUD operation tests in `describe.concurrent()` blocks
-  - Keep auth tests sequential (single example per file)
-  - Files: sessions.test.ts, workflows.test.ts, projects.test.ts, workflow-definitions.test.ts, auth.test.ts
-
-- [ ] 4.2 [3/10] Add concurrent execution to workflow step tests
-  - Wrap independent test cases in `describe.concurrent()` blocks
-  - Heavy mocking makes these safe for parallelization
-  - Files: All 7 `createXStep.test.ts` files
-
-- [ ] 4.3 [3/10] Add concurrent execution to workflow engine tests
-  - Wrap independent tests in concurrent blocks
-  - Files: createWorkflowRuntime.test.ts, initializeWorkflowEngine.test.ts, scanGlobalWorkflows.test.ts, executeWorkflow.test.ts
-
-- [ ] 4.4 [3/10] Add concurrent execution to session/project service tests
-  - Be conservative - only parallelize truly independent tests
-  - Skip if tests share state or have side effects
-  - Files: syncProjectSessions.test.ts, getSessionById.test.ts, createProject.test.ts, validateSessionOwnership.test.ts
-
-#### Completion Notes
-
-(This will be filled in by the agent implementing this phase)
-
 ## Testing Strategy
 
 ### Unit Tests
@@ -388,29 +358,16 @@ No new test files needed - this is optimization of existing tests.
 After each phase, run test suite to verify:
 - All tests still pass
 - No regression in coverage
-- Execution time improves
-
-### Performance Benchmarks
-
-Baseline (before optimization):
-- Current test execution time: ~XX seconds (measure before starting)
-
-Expected after each phase:
-- Phase 1 complete: ~5% faster (reduced DB calls)
-- Phase 2 complete: ~10% faster (all fixtures migrated)
-- Phase 3 complete: ~30% faster (20% fewer tests + less execution)
-- Phase 4 complete: ~60-80% faster (parallel execution + in-memory DB)
+- Test code is more maintainable and readable
 
 ## Success Criteria
 
 - [ ] All existing tests still pass after optimization
-- [ ] Test suite runs 60-80% faster than baseline
 - [ ] Zero loss of meaningful test coverage
 - [ ] All inline DB creation replaced with fixtures (160+ replacements)
 - [ ] ~1600 lines of redundant tests removed
-- [ ] Concurrent execution enabled for independent tests
-- [ ] No new test failures or flakiness introduced
-- [ ] Test code is more maintainable (fixtures centralized)
+- [ ] No new test failures introduced
+- [ ] Test code is more maintainable (fixtures centralized, less duplication)
 
 ## Validation
 
@@ -419,9 +376,9 @@ Execute these commands to verify the optimization works correctly:
 **Automated Verification:**
 
 ```bash
-# Run full test suite (measure time)
+# Run full test suite
 pnpm test
-# Expected: All tests pass, runtime 60-80% faster than baseline
+# Expected: All tests pass
 
 # Type checking
 pnpm check-types
@@ -438,20 +395,17 @@ pnpm test --coverage
 
 **Manual Verification:**
 
-1. Measure baseline: Run `pnpm test` before starting, note execution time
-2. After Phase 1: Run tests, verify ~5% improvement
-3. After Phase 2: Run tests, verify ~10% improvement
-4. After Phase 3: Run tests, verify ~30% improvement
-5. After Phase 4: Run tests, verify ~60-80% improvement
-6. Check logs: No flaky tests or race conditions
-7. Verify fixtures: All workflow tests use createTestWorkflowContext or createTestWorkflowRun
+1. After Phase 1: Run tests, verify all pass with new fixtures
+2. After Phase 2: Run tests, verify all pass after migration
+3. After Phase 3: Run tests, verify all pass after removals
+4. Verify fixtures: All workflow tests use createTestWorkflowContext or createTestWorkflowRun
+5. Verify cleanup: Test files are more readable and maintainable
 
 **Feature-Specific Checks:**
 
-- Grep for remaining inline creations: `grep -r "prisma.workflowRun.create" --include="*.test.ts"` should find 0 in workflow tests
-- Count test files: Verify line counts reduced by ~1600 total
-- Check for concurrent blocks: Verify `describe.concurrent` added to appropriate files
-- In-memory DB: Verify `vitest.global-setup.ts` uses `file::memory:?cache=shared`
+- Grep for remaining inline creations: `grep -r "prisma.workflowRun.create" --include="*.test.ts"` should find 0 in workflow domain tests
+- Count lines removed: Verify ~1600 lines removed across test files
+- Fixture usage: All workflow tests use shared fixtures from test-utils/fixtures/
 
 ## Implementation Notes
 
@@ -459,15 +413,7 @@ pnpm test --coverage
 
 When removing tests, ensure we're not removing the only test for a specific behavior. If a test is the sole coverage for a code path, keep it even if it seems redundant.
 
-### 2. Be Conservative with Concurrent
-
-Not all tests can safely run in parallel. Skip concurrent execution if:
-- Tests modify shared database state in ways that could collide
-- Tests have timing dependencies
-- Tests share module-level variables
-- Unsure if tests are truly independent
-
-### 3. Fixture Design Philosophy
+### 2. Fixture Design Philosophy
 
 Fixtures should:
 - Provide sensible defaults for all required fields
@@ -475,7 +421,7 @@ Fixtures should:
 - Return the created entity (not void)
 - Follow naming convention: `createTest{Entity}(prisma, overrides?)`
 
-### 4. Line Number Accuracy
+### 3. Line Number Accuracy
 
 Line numbers for removals are approximate (based on current file state). If files have changed since analysis, use the description to find the correct test blocks rather than relying solely on line numbers.
 
@@ -487,14 +433,12 @@ Line numbers for removals are approximate (based on current file state). If file
 
 ## References
 
-- Vitest concurrent mode: https://vitest.dev/api/#test-concurrent
-- SQLite in-memory mode: https://www.sqlite.org/inmemorydb.html
 - Existing fixture patterns: `apps/app/src/server/test-utils/fixtures/`
+- Prisma testing best practices: https://www.prisma.io/docs/orm/prisma-client/testing
 
 ## Next Steps
 
-1. Measure baseline test execution time (run `time pnpm test`)
-2. Begin Phase 1: Create workflow fixtures
-3. Verify fixtures work with a sample test
-4. Proceed through phases sequentially
-5. Measure final test execution time and document improvement
+1. Begin Phase 1: Create workflow fixtures
+2. Verify fixtures work with a sample test
+3. Proceed through phases sequentially
+4. Verify all tests pass and coverage is maintained
