@@ -107,9 +107,10 @@ Assign complexity based on **context window usage and cognitive load**, not time
 
 ## Template
 
-### Markdown Template
+**IMPORTANT: Use the exact template structure below:**
 
-```md
+<!-- prettier-ignore-start -->
+`````md
 # [Feature Name]
 
 **Status**: draft
@@ -339,7 +340,8 @@ Execute these commands to verify the feature works correctly:
 3. [Third step]
    [... ordered list of actionable next steps]
 
-````
+`````
+<!-- prettier-ignore-end -->
 
 ## Formatting Rules
 

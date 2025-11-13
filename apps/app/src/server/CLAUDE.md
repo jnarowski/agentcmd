@@ -743,6 +743,9 @@ const validated = MessageSchema.parse(parsedData);
 ### Import Paths
 
 ```typescript
+// Config
+import { config } from '@/server/config';
+
 // Utilities
 import { JWTPayload } from '@/server/utils/auth';
 import { NotFoundError, buildErrorResponse } from '@/server/utils/error';

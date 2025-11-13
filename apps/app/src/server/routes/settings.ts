@@ -9,7 +9,7 @@ import { promisify } from "util";
 import { z } from "zod";
 import { buildSuccessResponse } from "@/server/utils/response";
 import { getCapabilities } from "agent-cli-sdk";
-import { config } from "@/server/config/Configuration";
+import { config } from "@/server/config";
 import { prisma } from "@/shared/prisma";
 import '@/server/plugins/auth';
 
@@ -82,7 +82,7 @@ export async function settingsRoutes(fastify: FastifyInstance) {
 
       const settings = {
         features: {
-          aiEnabled: !!config.get('apiKeys').anthropicApiKey,
+          aiEnabled: !!config.apiKeys.anthropicApiKey,
           gitEnabled: true, // Git operations are always available
           ghCliEnabled: ghInstalled, // GitHub CLI for PR creation
         },
@@ -145,7 +145,7 @@ export async function settingsRoutes(fastify: FastifyInstance) {
 
       const settings = {
         features: {
-          aiEnabled: !!config.get('apiKeys').anthropicApiKey,
+          aiEnabled: !!config.apiKeys.anthropicApiKey,
           gitEnabled: true,
           ghCliEnabled: ghInstalled,
         },

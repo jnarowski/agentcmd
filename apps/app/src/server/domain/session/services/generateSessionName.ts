@@ -1,6 +1,6 @@
 import { generateText } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
-import { config } from "@/server/config/Configuration";
+import { config } from "@/server/config";
 
 /**
  * Options for generating a session name
@@ -30,7 +30,7 @@ export async function generateSessionName(
 ): Promise<string> {
   const { userPrompt } = options;
 
-  const apiKey = config.get('apiKeys').anthropicApiKey;
+  const apiKey = config.apiKeys.anthropicApiKey;
 
   if (!apiKey) {
     // Silently return default - this is an optional feature

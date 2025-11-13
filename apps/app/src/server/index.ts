@@ -39,7 +39,7 @@ import {
 import { registerShellRoute } from "@/server/routes/shell";
 import { authPlugin } from "@/server/plugins/auth";
 import { setupGracefulShutdown } from "@/server/utils/shutdown";
-import { config } from "@/server/config/Configuration";
+import { config } from "@/server/config";
 import { AppError, ConflictError, buildErrorResponse } from "@/server/errors";
 import { ServiceUnavailableError } from "@/server/errors/ServiceUnavailableError";
 import { initializeWorkflowEngine } from "@/server/domain/workflow/services/engine";
@@ -49,7 +49,7 @@ const __dirname = dirname(__filename);
 
 export async function createServer() {
   // Validate configuration on startup (will throw if invalid)
-  const serverConfig = config.get("server");
+  const serverConfig = config.server;
 
   const fastify = Fastify({
     logger:
@@ -326,7 +326,7 @@ export async function createServer() {
     );
 
     // Build response based on environment
-    const isDevelopment = config.get("server").nodeEnv === "development";
+    const isDevelopment = config.server.nodeEnv === "development";
     const errorResponse: { error: { message: string; statusCode: number; code?: string; stack?: string; details?: unknown } } = {
       error: {
         message:
@@ -368,9 +368,8 @@ export async function createServer() {
   );
 
   // Register CORS
-  const corsConfig = config.get("cors");
   await fastify.register(cors, {
-    origin: corsConfig.allowedOrigins,
+    origin: config.cors.allowedOrigins,
     credentials: true,
   });
 
@@ -455,9 +454,8 @@ export async function createServer() {
  * Used by CLI tool to start server with config from CLI flags
  */
 export async function startServer(options?: { port?: number; host?: string }) {
-  const serverConfig = config.get("server");
-  const PORT = options?.port ?? serverConfig.port;
-  const HOST = options?.host ?? serverConfig.host;
+  const PORT = options?.port ?? config.server.port;
+  const HOST = options?.host ?? config.server.host;
 
   const server = await createServer();
 
@@ -475,9 +473,8 @@ export async function startServer(options?: { port?: number; host?: string }) {
 // Start server when run directly (not imported as module)
 if (import.meta.url === `file://${process.argv[1]}`) {
   // Validate configuration (will throw on startup if invalid)
-  const serverConfig = config.get("server");
-  const PORT = serverConfig.port;
-  const HOST = serverConfig.host;
+  const PORT = config.server.port;
+  const HOST = config.server.host;
 
   await startServer({ port: PORT, host: HOST });
 

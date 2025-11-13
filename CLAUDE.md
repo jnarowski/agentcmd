@@ -93,14 +93,19 @@ server/domain/
 - ✅ One function per file in `domain/*/services/`
 - ✅ Pure functions - pass dependencies as params, no classes
 - ✅ Routes are thin - delegate to domain services
-- ✅ Centralized config - never access `process.env` directly
+- ✅ Centralized config - never access `process.env` directly, always use `import { config } from '@/server/config'`
 - ❌ Never import from old `services/` directory
 
 **Import Pattern**:
 
 ```typescript
-// ✅ GOOD
+// ✅ GOOD - Domain services
 import { getProjectById } from "@/server/domain/project/services/getProjectById";
+
+// ✅ GOOD - Config access
+import { config } from '@/server/config';
+const port = config.server.port;
+const apiKey = config.apiKeys.anthropicApiKey;
 
 // ❌ BAD
 import { getProjectById } from "@/server/services/project.service";

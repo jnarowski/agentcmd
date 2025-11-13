@@ -48,6 +48,11 @@ Generate a well-defined spec file based on the provided context. Read Instructio
 
 ## Template
 
+**IMPORTANT: Use the exact template structure below:**
+
+---
+
+<!-- prettier-ignore-start -->
 ```md
 # Feature: <feature name>
 
@@ -190,6 +195,7 @@ Execute these commands to verify the feature works correctly:
 
 <any dependencies, future considerations, or important context>
 ```
+<!-- prettier-ignore-end -->
 
 ## Report
 

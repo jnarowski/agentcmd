@@ -1,7 +1,7 @@
 import { generateObject } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
-import { config } from "@/server/config/Configuration";
+import { config } from "@/server/config";
 
 /**
  * Options for generating run names
@@ -47,7 +47,7 @@ export async function generateRunNames(
 ): Promise<GenerateRunNamesResult | null> {
   const { specContent } = options;
 
-  const apiKey = config.get("apiKeys").anthropicApiKey;
+  const apiKey = config.apiKeys.anthropicApiKey;
 
   if (!apiKey) {
     // Silently return null - this is an optional feature

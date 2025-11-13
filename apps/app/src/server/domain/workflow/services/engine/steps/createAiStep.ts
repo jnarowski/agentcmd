@@ -12,7 +12,7 @@ import { executeStep } from "@/server/domain/workflow/services/engine/steps/util
 import { withTimeout } from "@/server/domain/workflow/services/engine/steps/utils/withTimeout";
 import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
 import { toName } from "@/server/domain/workflow/services/engine/steps/utils/toName";
-import { Configuration } from "@/server/config/Configuration";
+import { config as appConfig } from "@/server/config";
 
 const DEFAULT_AI_TIMEOUT = 60000; // 60 seconds
 
@@ -188,8 +188,7 @@ export function createAiStep(
       input: config,
       fn: async () => {
         const { logger } = context;
-        const configuration = Configuration.getInstance();
-        const apiKeys = configuration.get("apiKeys");
+        const apiKeys = appConfig.apiKeys;
 
         const provider = config.provider ?? "anthropic";
 

@@ -1,6 +1,6 @@
 # Config System Simplification
 
-**Status**: draft
+**Status**: review
 **Created**: 2025-11-13
 **Package**: apps/app
 **Total Complexity**: 35 points
@@ -131,17 +131,17 @@ No new files required.
 **Phase Complexity**: 12 points (avg 4.0/10)
 
 <!-- prettier-ignore -->
-- [ ] 1.1 [4/10] Add workflow config schema to config/schemas.ts
+- [x] 1.1 [4/10] Add workflow config schema to config/schemas.ts
   - Add WorkflowConfigSchema with: enabled, appId, eventKey, devMode, memoizationDbPath, servePath
   - Use z.coerce.boolean() for boolean fields to handle string env vars
   - Set defaults: enabled=true, devMode=true, appId="sourceborn-workflows", servePath="/api/workflows/inngest"
   - File: `apps/app/src/server/config/schemas.ts`
 
-- [ ] 1.2 [3/10] Add WorkflowConfig type export to config/types.ts
+- [x] 1.2 [3/10] Add WorkflowConfig type export to config/types.ts
   - Add: `export type WorkflowConfig = AppConfig['workflow']`
   - File: `apps/app/src/server/config/types.ts`
 
-- [ ] 1.3 [5/10] Simplify Configuration.ts and rename to index.ts
+- [x] 1.3 [5/10] Simplify Configuration.ts and rename to index.ts
   - Remove Configuration class and singleton pattern
   - Create rawConfig object with workflow section added
   - Export validated config: `export const config = ConfigSchema.parse(rawConfig)`
@@ -152,24 +152,28 @@ No new files required.
 
 #### Completion Notes
 
-(This will be filled in by the agent implementing this phase)
+- Added WorkflowConfigSchema with all 6 fields (enabled, appId, eventKey, devMode, memoizationDbPath, servePath)
+- Used z.coerce.boolean() for enabled/devMode to properly handle string env vars
+- Removed Configuration singleton class entirely
+- Created index.ts with direct config export - simpler module-level validation
+- Maintained reset() function for testing compatibility
 
 ### Phase 2: Update Imports
 
 **Phase Complexity**: 14 points (avg 3.5/10)
 
 <!-- prettier-ignore -->
-- [ ] 2.1 [4/10] Update initializeWorkflowEngine.ts import and usage
+- [x] 2.1 [4/10] Update initializeWorkflowEngine.ts import and usage
   - Change: `import config from "@/server/config"` → `import { config } from '@/server/config'`
   - Update usage: `config.workflow.appId` (no change needed in usage pattern)
   - File: `apps/app/src/server/domain/workflow/services/engine/initializeWorkflowEngine.ts`
 
-- [ ] 2.2 [3/10] Update server infrastructure imports (index.ts, routes/settings.ts, plugins/auth.ts)
+- [x] 2.2 [3/10] Update server infrastructure imports (index.ts, routes/settings.ts, plugins/auth.ts)
   - Change all: `import { config } from '@/server/config/Configuration'` → `import { config } from '@/server/config'`
   - Usage pattern stays same: `config.get('server')` → `config.server`
   - Files: `apps/app/src/server/index.ts`, `apps/app/src/server/routes/settings.ts`, `apps/app/src/server/plugins/auth.ts`
 
-- [ ] 2.3 [4/10] Update domain service imports (4 files)
+- [x] 2.3 [4/10] Update domain service imports (4 files)
   - Change all: `import { config } from '@/server/config/Configuration'` → `import { config } from '@/server/config'`
   - Update usage: `config.get('apiKeys').anthropicApiKey` → `config.apiKeys.anthropicApiKey`
   - Files:
@@ -178,39 +182,47 @@ No new files required.
     - `apps/app/src/server/domain/git/services/generateCommitMessage.ts`
     - `apps/app/src/server/domain/workflow/services/engine/steps/createAiStep.ts`
 
-- [ ] 2.4 [3/10] Delete old config.ts file
+- [x] 2.4 [3/10] Delete old config.ts file
   - Remove: `apps/app/src/server/config.ts`
   - Verify no references remain with: `grep -r "from.*server/config['\"]" apps/app/src/server --exclude-dir=node_modules`
 
 #### Completion Notes
 
-(This will be filled in by the agent implementing this phase)
+- Updated initializeWorkflowEngine.ts to use named import `{ config }`
+- Updated server/index.ts with dot notation access (config.server.port, config.cors.allowedOrigins, config.jwt.secret)
+- Updated routes/settings.ts and plugins/auth.ts to use unified config
+- Updated 4 domain service files to use dot notation (config.apiKeys.anthropicApiKey)
+- Deleted old config.ts file - verified no old import references remain
+- All files now use consistent pattern: `import { config } from '@/server/config'`
 
 ### Phase 3: Update Documentation
 
 **Phase Complexity**: 9 points (avg 3.0/10)
 
 <!-- prettier-ignore -->
-- [ ] 3.1 [3/10] Update root CLAUDE.md backend architecture section
+- [x] 3.1 [3/10] Update root CLAUDE.md backend architecture section
   - Update "Backend Architecture" → "Key Principles" to mention: "Centralized config - never access process.env directly"
   - Add config import example: `import { config } from '@/server/config'`
   - File: `CLAUDE.md`
 
-- [ ] 3.2 [4/10] Update apps/app/CLAUDE.md config pattern
+- [x] 3.2 [4/10] Update apps/app/CLAUDE.md config pattern
   - Remove Configuration.ts singleton references
   - Update "Environment Variables" section with new pattern
   - Show example: `const port = config.server.port;` (not `config.get('server').port`)
   - Update "Quick Reference" → "Import paths" section
   - File: `apps/app/CLAUDE.md`
 
-- [ ] 3.3 [2/10] Update apps/app/src/server/CLAUDE.md config examples
+- [x] 3.3 [2/10] Update apps/app/src/server/CLAUDE.md config examples
   - Update config import in "Quick Reference" section
   - Remove Configuration class references
   - File: `apps/app/src/server/CLAUDE.md`
 
 #### Completion Notes
 
-(This will be filled in by the agent implementing this phase)
+- Updated root CLAUDE.md with config import example and clarified centralized config principle
+- Added "Config Access" section to apps/app/CLAUDE.md with dot notation examples
+- Updated Quick Reference in both app CLAUDE.md files to include config import
+- All documentation now reflects unified config pattern without singleton references
 
 ## Testing Strategy
 

@@ -1,7 +1,7 @@
 import simpleGit from 'simple-git'
 import { generateText } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
-import { config } from '@/server/config/Configuration'
+import { config } from '@/server/config'
 import type { GenerateCommitMessageOptions } from '../types/GenerateCommitMessageOptions'
 
 /**
@@ -9,7 +9,7 @@ import type { GenerateCommitMessageOptions } from '../types/GenerateCommitMessag
  * Requires ANTHROPIC_API_KEY environment variable to be set
  */
 export async function generateCommitMessage({ projectPath, files }: GenerateCommitMessageOptions): Promise<string> {
-  const apiKey = config.get('apiKeys').anthropicApiKey;
+  const apiKey = config.apiKeys.anthropicApiKey;
 
   if (!apiKey) {
     throw new Error('ANTHROPIC_API_KEY not configured. Please set the environment variable to use AI-generated commit messages.');

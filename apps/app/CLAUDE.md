@@ -318,6 +318,19 @@ npx agentcmd config --set port=7000
 - `ANTHROPIC_API_KEY` - For AI features
 - `NODE_ENV=development` - Environment
 
+**Config Access:**
+
+All config accessed via centralized module with Zod validation:
+
+```typescript
+import { config } from '@/server/config';
+
+const port = config.server.port;
+const jwtSecret = config.jwt.secret;
+const apiKey = config.apiKeys.anthropicApiKey;
+const workflowAppId = config.workflow.appId;
+```
+
 ## Database
 
 **SQLite with Prisma ORM**
@@ -431,6 +444,7 @@ const run = await prisma.workflowRun.findUnique({ where: { id } });
 ```typescript
 import { prisma } from "@/shared/prisma";
 import { NotFoundError } from "@/server/errors";
+import { config } from "@/server/config";
 import { getProjectById } from "@/server/domain/project/services/getProjectById";
 import { webSocketEventBus } from "@/server/websocket/infrastructure";
 ```

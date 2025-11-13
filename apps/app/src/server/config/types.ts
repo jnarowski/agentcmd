@@ -36,3 +36,8 @@ export type DatabaseConfig = AppConfig['database'];
  * API keys configuration type
  */
 export type ApiKeysConfig = AppConfig['apiKeys'];
+
+/**
+ * Workflow configuration type
+ */
+export type WorkflowConfig = AppConfig['workflow'];

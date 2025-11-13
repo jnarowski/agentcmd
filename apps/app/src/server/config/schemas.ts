@@ -52,6 +52,18 @@ const ApiKeysConfigSchema = z.object({
 });
 
 /**
+ * Workflow configuration schema
+ */
+const WorkflowConfigSchema = z.object({
+  enabled: z.coerce.boolean().default(true),
+  appId: z.string().default('sourceborn-workflows'),
+  eventKey: z.string().optional(),
+  devMode: z.coerce.boolean().default(true),
+  memoizationDbPath: z.string().default('./prisma/workflows.db'),
+  servePath: z.string().default('/api/workflows/inngest'),
+});
+
+/**
  * Complete application configuration schema
  */
 export const ConfigSchema = z.object({
@@ -60,4 +72,5 @@ export const ConfigSchema = z.object({
   jwt: JwtConfigSchema,
   database: DatabaseConfigSchema,
   apiKeys: ApiKeysConfigSchema,
+  workflow: WorkflowConfigSchema,
 });

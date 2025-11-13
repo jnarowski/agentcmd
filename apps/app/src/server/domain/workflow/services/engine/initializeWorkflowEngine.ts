@@ -8,7 +8,7 @@ import { scanAllProjectWorkflows } from "./scanAllProjectWorkflows";
 import { scanGlobalWorkflows } from "./scanGlobalWorkflows";
 import { rescanAndLoadWorkflows, type ResyncDiff } from "./rescanAndLoadWorkflows";
 import { prisma } from "@/shared/prisma";
-import config from "@/server/config";
+import { config } from "@/server/config";
 
 // Module-level mutable handler reference for hot-reloading
 // This allows us to swap the Inngest handler without restarting the server
