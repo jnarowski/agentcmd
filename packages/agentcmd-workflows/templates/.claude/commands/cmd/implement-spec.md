@@ -19,8 +19,8 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 - If it's a full path (contains `/`): use as-is
 - Otherwise, look up in `.agent/specs/index.json`:
   - For timestamp ID: Match by `id` field
-  - For feature name: Fuzzy match path (e.g., `message-queue` matches `todo/251024120101-message-queue-implementation`)
-  - Use path from index: `.agent/specs/{path}/spec.md`
+  - For feature name: Fuzzy match path (e.g., `message-queue` matches `todo/251024120101-message-queue-implementation/spec.md`)
+  - Use path from index: `.agent/specs/{path}`
 - **If not found in index.json, fallback to directory search:**
   - Search in order: todo/, backlog
   - For ID: Pattern `{id}-*/spec.md`
@@ -100,6 +100,13 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
    - **Fill in the "Completion Notes" section** with implementation context
    - Include any deviations, decisions, or important notes for reviewers
 7. Continue until all tasks are checked off and all completion notes are filled
+8. **Update spec Status to "review":**
+   - Update Status field in spec.md to "review"
+   - Update index.json:
+     - Set `status` field to "review"
+     - Update `updated` field to current timestamp
+   - Write updated index back to `.agent/specs/index.json`
+   - This indicates implementation is complete and ready for review
 
 ## Report
 
@@ -112,6 +119,7 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 "success": true,
 "spec_path": ".agent/specs/feature-name-spec.md",
 "feature_name": "feature-name",
+"status": "review",
 "total_tasks": 15,
 "completed_tasks": 15,
 "files_modified": 8,
@@ -129,6 +137,7 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 - `success`: Always true if implementation completed
 - `spec_path`: Path to the spec file that was implemented
 - `feature_name`: Normalized feature name (lowercase, hyphenated)
+- `status`: Status after implementation ("review")
 - `total_tasks`: Total number of tasks in the spec
 - `completed_tasks`: Number of tasks completed (should equal total_tasks)
 - `files_modified`: Number of existing files modified
@@ -145,3 +154,4 @@ Otherwise, provide this human-readable information to the user:
 
 - Summarize the work you've just done in a concise bullet point list
 - Report the files and total lines changed with `git diff --stat`
+- Note that spec status has been updated to "review" and is ready for validation

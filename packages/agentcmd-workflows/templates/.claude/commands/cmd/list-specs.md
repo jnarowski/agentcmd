@@ -1,6 +1,6 @@
 ---
 description: List all spec folders/files organized by folder and/or filtered by status
-argument-hint: [folder, status]
+argument-hint: [folder, status, --search keyword, --sort field]
 ---
 
 # List Specs
@@ -11,6 +11,8 @@ List all specs in the `.agent/specs/` directory, organized by workflow folder an
 
 - $folder: $1 (optional) - Filter by folder: "backlog", "todo", "done", or "all" (defaults to "all")
 - $status: $2 (optional) - Filter by status field: "draft", "ready", "in-progress", "review", "completed", or "any" (defaults to "any")
+- --search: (optional) - Search keyword to fuzzy match in spec names/paths
+- --sort: (optional) - Sort field: "created", "updated", or "id" (defaults to "created")
 
 ## Instructions
 
@@ -18,7 +20,10 @@ List all specs in the `.agent/specs/` directory, organized by workflow folder an
 - Parse spec files to extract metadata (Status field) only when status filtering is needed
 - Filter by folder if specified
 - Filter by status if specified
-- Display results organized by folder with spec ID, feature name, created date, and status
+- Search by keyword if specified (fuzzy match in spec names)
+- Sort results by specified field
+- Group specs in same folder for multi-spec folders
+- Display results organized by folder with spec ID, feature name, created/updated dates, and status
 
 ## Workflow
 
@@ -48,48 +53,95 @@ List all specs in the `.agent/specs/` directory, organized by workflow folder an
      - If $status is "any" or not provided: Show all specs
      - If a spec has no status field in index, treat it as status "unknown"
 
-3. **Display Results**
+   - **Search filter**:
+     - If --search is specified:
+       - Extract feature name from path (e.g., "todo/251112-workflow-item/spec.md" → "workflow-item")
+       - Fuzzy match: Check if search keyword appears anywhere in feature name (case-insensitive)
+       - Only include specs where feature name contains the search keyword
+
+3. **Sort Results**
+
+   - Sort specs by specified field (defaults to "created"):
+     - "created": Sort by created timestamp (oldest first)
+     - "updated": Sort by updated timestamp (newest first)
+     - "id": Sort by spec ID (chronological order)
+
+4. **Group Multi-Spec Folders**
+
+   - Extract folder path (without filename) from each spec path
+   - Group specs that share the same folder path
+   - Display folder header when multiple specs share a folder
+
+5. **Display Results**
 
    - Group specs by location (backlog, todo, done)
-   - Within each group, sort by timestamp ID (chronologically)
+   - Within each group, apply sort order from step 3
    - For each spec, display:
      - Spec ID
-     - Feature name (from folder name)
+     - Feature name (from folder/file name)
      - Created date (from index)
-     - Status (if status filter used)
+     - Updated date (from index) if different from created
+     - Status (from index)
+   - For multi-spec folders (multiple specs in same folder):
+     - Display folder header once
+     - Indent individual spec entries
    - Show count for each location
    - Show total count
 
 ## Display Format
 
+**Single-spec folders:**
 ```text
 Spec Files
 
 💡 BACKLOG (1 spec)
 ────────────────────────────────────────────────────────────
-  251110140500  future-feature                   2025-11-10
-                .agent/specs/backlog/251110140500-future-feature/
+  251110140500  future-feature            [draft]
+                Created: 2025-11-10
+                .agent/specs/backlog/251110140500-future-feature/spec.md
 
 📋 TODO (2 specs)
 ────────────────────────────────────────────────────────────
-  251108120000  workflow-safety                  2025-11-08
-                .agent/specs/todo/251108120000-workflow-safety/
+  251108120000  workflow-safety           [in-progress]
+                Created: 2025-11-08  Updated: 2025-11-10
+                .agent/specs/todo/251108120000-workflow-safety/spec.md
 
-  251108130500  gemini-integration               2025-11-08
-                .agent/specs/todo/251108130500-gemini-integration/
+  251108130500  gemini-integration        [draft]
+                Created: 2025-11-08
+                .agent/specs/todo/251108130500-gemini-integration/spec.md
 
 ✅ DONE (11 specs)
 ────────────────────────────────────────────────────────────
-  250115093000  diff-refactor                    2025-01-15
-                .agent/specs/done/250115093000-diff-refactor/
+  250115093000  diff-refactor             [completed]
+                Created: 2025-01-15  Updated: 2025-01-18
+                .agent/specs/done/250115093000-diff-refactor/spec.md
 
-  250120141500  cli-install                      2025-01-20
-                .agent/specs/done/250120141500-cli-install/
+  250120141500  cli-install               [completed]
+                Created: 2025-01-20
+                .agent/specs/done/250120141500-cli-install/spec.md
 
   ...
 
 ────────────────────────────────────────────────────────────
 Total: 14 specs
+```
+
+**Multi-spec folders:**
+```text
+📋 TODO (3 specs)
+────────────────────────────────────────────────────────────
+  📁 auth-system/ (2 specs)
+    251112070711  backend                 [completed]
+                  Created: 2025-11-12  Updated: 2025-11-12
+                  .agent/specs/todo/251112070000-auth-system/backend.md
+
+    251112070712  frontend                [in-progress]
+                  Created: 2025-11-12  Updated: 2025-11-12
+                  .agent/specs/todo/251112070000-auth-system/frontend.md
+
+  251108130500  gemini-integration        [draft]
+                Created: 2025-11-08
+                .agent/specs/todo/251108130500-gemini-integration/spec.md
 ```
 
 ## Filtered Display Examples
@@ -142,6 +194,69 @@ Spec Files (done, status: completed)
 Total: 11 specs
 ```
 
+**Search by keyword:**
+```bash
+/list-specs all any --search workflow
+```
+
+```text
+Spec Files (search: "workflow")
+
+📋 TODO (2 specs)
+────────────────────────────────────────────────────────────
+  251108120000  workflow-safety           [in-progress]
+                Created: 2025-11-08  Updated: 2025-11-10
+                .agent/specs/todo/251108120000-workflow-safety/spec.md
+
+  251112070556  workflow-integration      [review]
+                Created: 2025-11-12  Updated: 2025-11-12
+                .agent/specs/todo/251112070556-workflow-integration/spec.md
+
+Total: 2 specs
+```
+
+**Sort by updated:**
+```bash
+/list-specs todo --sort updated
+```
+
+```text
+Spec Files (todo, sorted by updated)
+
+📋 TODO (3 specs)
+────────────────────────────────────────────────────────────
+  251112070712  auth-frontend             [in-progress]
+                Created: 2025-11-12  Updated: 2025-11-12
+                .agent/specs/todo/251112070712-auth-frontend/spec.md
+
+  251108120000  workflow-safety           [in-progress]
+                Created: 2025-11-08  Updated: 2025-11-10
+                .agent/specs/todo/251108120000-workflow-safety/spec.md
+
+  251108130500  gemini-integration        [draft]
+                Created: 2025-11-08
+                .agent/specs/todo/251108130500-gemini-integration/spec.md
+
+Total: 3 specs
+```
+
+**Combined filters:**
+```bash
+/list-specs todo in-progress --search auth --sort updated
+```
+
+```text
+Spec Files (todo, status: in-progress, search: "auth", sorted by updated)
+
+📋 TODO (1 spec)
+────────────────────────────────────────────────────────────
+  251112070712  auth-frontend             [in-progress]
+                Created: 2025-11-12  Updated: 2025-11-12
+                .agent/specs/todo/251112070712-auth-frontend/spec.md
+
+Total: 1 spec
+```
+
 ## Status Legend
 
 Display at the bottom of output:
@@ -181,7 +296,14 @@ Please create the directory or check your working directory.
 ## Implementation Notes
 
 - **Performance**: Read index.json for O(1) lookup - status is cached, no file reads needed
-- **Feature names**: Extract from folder name in path
-  - From path: `todo/251024120101-workflow-safety` → location="todo", folder="251024120101-workflow-safety", name="workflow-safety"
-- **Sorting**: Timestamp IDs sort chronologically
+- **Feature names**: Extract from folder/file name in path
+  - From path: `todo/251024120101-workflow-safety/spec.md` → location="todo", folder="251024120101-workflow-safety", name="workflow-safety"
+  - For multi-spec: `todo/251112-auth/backend.md` → folder="251112-auth", name="backend"
+- **Sorting**:
+  - "created": Sort by created timestamp (oldest first)
+  - "updated": Sort by updated timestamp (newest first for recently active specs)
+  - "id": Sort by spec ID (chronological by creation)
+- **Search**: Case-insensitive fuzzy matching on feature name extracted from path
+- **Multi-spec grouping**: Group by folder path (dirname of spec path), show folder header when >1 spec in folder
 - **Status caching**: Status is cached in index.json, synced from spec.md by other commands
+- **Backward compatibility**: Positional args still work: `/list-specs todo completed`
