@@ -8,13 +8,8 @@ process.env.JWT_SECRET = 'test-jwt-secret-for-vitest';
 
 // Reset Configuration after imports to ensure it reads test JWT_SECRET
 beforeAll(async () => {
-  // Dynamic import after JWT_SECRET is set
-  const { Configuration } = await import('./src/server/config/Configuration');
-
-  // Reset Configuration singleton to re-read JWT_SECRET from environment
-  // This ensures Configuration reads the test JWT_SECRET even if it was
-  // imported elsewhere before this setup file ran
-  Configuration.reset();
+  // Config is now loaded from @/server/config which validates on import
+  // No need to reset anymore since env vars are set before any imports
 });
 
 expect.extend(matchers);
