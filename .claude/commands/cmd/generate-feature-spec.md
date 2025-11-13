@@ -5,7 +5,7 @@ argument-hint: [context?]
 
 # Feature Specification
 
-Comprehensive spec for new features with phases, complexity estimates, and test plans. Generates a well-structured implementation spec and saves it to `.agent/specs/todo/[id]-[feature]/spec.md` with timestamp-based ID.
+Generate a comprehensive spec document for new features with phases, complexity estimates, and test plans. Generates a well-structured implementation spec and saves it to `.agent/specs/todo/[id]-[feature]/spec.md` with timestamp-based ID.
 
 ## Variables
 
@@ -88,6 +88,7 @@ Assign complexity based on **context window usage and cognitive load**, not time
 
 7. **Update Index**:
    - Add entry to index.json using timestamp ID as key:
+
      ```json
      {
        "specs": {
@@ -101,16 +102,8 @@ Assign complexity based on **context window usage and cognitive load**, not time
        }
      }
      ```
+
    - Write updated index back to `.agent/specs/index.json`
-
-## Workflow Folder Progression
-
-Specs follow this workflow:
-
-1. **Created in `todo/`** (Status: "draft") - Use `/generate-spec`
-2. **Optional: Move to `backlog/`** - Use `/cmd:move-spec {id} backlog` for future ideas
-3. **Status updated to "in-progress"** - When running `/cmd:implement-spec` (stays in `todo/`)
-4. **Optional: Archive to `done/`** - Use `/cmd:move-spec {id} done` when complete
 
 ## Template
 
@@ -129,11 +122,11 @@ Specs follow this workflow:
 
 ## Complexity Breakdown
 
-| Phase | Tasks | Total Points | Avg Complexity | Max Task |
-|-------|-------|--------------|----------------|----------|
-| Phase 1: [Name] | [N] | [X] | [X.X]/10 | [X]/10 |
-| Phase 2: [Name] | [N] | [X] | [X.X]/10 | [X]/10 |
-| **Total** | **[N]** | **[X]** | **[X.X]/10** | **[X]/10** |
+| Phase           | Tasks   | Total Points | Avg Complexity | Max Task   |
+| --------------- | ------- | ------------ | -------------- | ---------- |
+| Phase 1: [Name] | [N]     | [X]          | [X.X]/10       | [X]/10     |
+| Phase 2: [Name] | [N]     | [X]          | [X.X]/10       | [X]/10     |
+| **Total**       | **[N]** | **[X]**      | **[X.X]/10**   | **[X]/10** |
 
 ## Overview
 
@@ -162,7 +155,7 @@ So that [benefit/value]
 
 [Show relevant file/directory structure]
 
-```
+````
 
 ### Integration Points
 
@@ -215,7 +208,6 @@ So that [benefit/value]
 
 **Phase Complexity**: [X] points (avg [X.X]/10)
 
-<!-- prettier-ignore -->
 - [ ] [task-id] [X/10] [Specific task description]
   - [Implementation detail or note]
   - File: `[specific filepath]`
@@ -233,7 +225,6 @@ So that [benefit/value]
 
 **Phase Complexity**: [X] points (avg [X.X]/10)
 
-<!-- prettier-ignore -->
 - [ ] [task-id] [X/10] [Specific task description]
   - [Implementation detail or note]
   - File: `[specific filepath]`
@@ -251,9 +242,7 @@ So that [benefit/value]
 
 **`[test-file.test.ts]`** - [what it tests]:
 
-```typescript
 [Example test structure or key test cases]
-```
 
 ### Integration Tests
 
@@ -350,7 +339,7 @@ Execute these commands to verify the feature works correctly:
 3. [Third step]
    [... ordered list of actionable next steps]
 
-```
+````
 
 ## Formatting Rules
 
@@ -364,14 +353,15 @@ Execute these commands to verify the feature works correctly:
 
 ## Examples
 
-**Example 1: With context**
+### Example 1: With context
+
 ```bash
 /generate-spec "Add OAuth support with Google and GitHub providers"
 ```
 
 Generates name `oauth-support`, ID `251024120101`, creates: `.agent/specs/todo/251024120101-oauth-support/spec.md`
 
-**Example 2: From conversation**
+### Example 2: From conversation
 
 ```bash
 /generate-spec
@@ -398,18 +388,18 @@ Analyzes conversation history, infers feature name, generates ID `251107093022`,
 
 <json_output>
 {
-  "success": true,
-  "spec_folder": ".agent/specs/todo/[fullId]-[feature]",
-  "spec_file": ".agent/specs/todo/[fullId]-[feature]/spec.md",
-  "spec_id": "[fullId]",
-  "feature_name": "[feature-name]",
-  "complexity": {
-    "total": "[X]",
-    "avg": "[X.X]"
-  },
-  "files_to_create": ["[filepath1]", "[filepath2]"],
-  "files_to_modify": ["[filepath3]", "[filepath4]"],
-  "next_command": "/cmd:implement-spec [fullId]"
+"success": true,
+"spec_folder": ".agent/specs/todo/[fullId]-[feature]",
+"spec_file": ".agent/specs/todo/[fullId]-[feature]/spec.md",
+"spec_id": "[fullId]",
+"feature_name": "[feature-name]",
+"complexity": {
+"total": "[X]",
+"avg": "[X.X]"
+},
+"files_to_create": ["[filepath1]", "[filepath2]"],
+"files_to_modify": ["[filepath3]", "[filepath4]"],
+"next_command": "/cmd:implement-spec [fullId]"
 }
 </json_output>
 

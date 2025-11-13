@@ -1,6 +1,13 @@
 {
-  "lastId": 251113084311,
+  "lastId": 251113111725,
   "specs": {
+    "251113111725": {
+      "path": "todo/251113111725-config-simplification/spec.md",
+      "status": "draft",
+      "spec_type": "feature",
+      "created": "2025-11-13T11:17:25.000Z",
+      "updated": "2025-11-13T11:17:25.000Z"
+    },
     "251113084311": {
       "path": "todo/251113084311-spec-type-routing/spec.md",
       "status": "review",

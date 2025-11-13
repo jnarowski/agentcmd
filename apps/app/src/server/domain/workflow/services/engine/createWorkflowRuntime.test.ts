@@ -42,6 +42,14 @@ vi.mock("@/server/domain/git/services/switchBranch", () => ({
   switchBranch: vi.fn(),
 }));
 
+vi.mock("@/server/domain/workflow/services/resolveSpecFile", () => ({
+  resolveSpecFile: vi.fn(),
+}));
+
+vi.mock("fs", () => ({
+  existsSync: vi.fn(),
+}));
+
 // Import mocked functions
 import { getCurrentBranch } from "@/server/domain/git/services/getCurrentBranch";
 import { getGitStatus } from "@/server/domain/git/services/getGitStatus";
@@ -50,6 +58,8 @@ import { createAndSwitchBranch } from "@/server/domain/git/services/createAndSwi
 import { createWorktree } from "@/server/domain/git/services/createWorktree";
 import { removeWorktree } from "@/server/domain/git/services/removeWorktree";
 import { switchBranch } from "@/server/domain/git/services/switchBranch";
+import { resolveSpecFile } from "@/server/domain/workflow/services/resolveSpecFile";
+import { existsSync } from "fs";
 
 describe("createWorkflowRuntime - Automatic Lifecycle", () => {
   const mockLogger = {
@@ -83,6 +93,8 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
     vi.mocked(createWorktree).mockResolvedValue("/tmp/test-project/.worktrees/feat-test");
     vi.mocked(removeWorktree).mockResolvedValue();
     vi.mocked(switchBranch).mockResolvedValue();
+    vi.mocked(resolveSpecFile).mockResolvedValue(".agent/specs/todo/251024120101-test-feature/spec.md");
+    vi.mocked(existsSync).mockReturnValue(true);
 
     // Create test data
     user = await prisma.user.create({
@@ -695,6 +707,428 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         projectPath: project.path,
         branch: "feat/auto-generated",
       });
+    });
+  });
+
+  describe("Spec generation in _system_setup", () => {
+    it("generates spec file automatically when spec_type provided", async () => {
+      const run = await prisma.workflowRun.create({
+        data: {
+          project_id: project.id,
+          user_id: user.id,
+          workflow_definition_id: workflowDefinition.id,
+          name: "Test Run",
+          args: {},
+          mode: "branch",
+          branch_name: "feat/test",
+          base_branch: "main",
+          status: "pending",
+        },
+        include: {
+          project: true,
+        },
+      });
+
+      const runtime = createWorkflowRuntime(mockInngest, project.id, mockLogger as never);
+
+      const workflowConfig: WorkflowConfig = {
+        id: "test-workflow",
+        name: "Test Workflow",
+        phases: [{ id: "implement", label: "Implement" }],
+      };
+
+      let capturedSpecFile: string | undefined = undefined;
+      const workflowFn: WorkflowFunction = async ({ event }) => {
+        capturedSpecFile = event.data.specFile;
+        return { success: true };
+      };
+
+      const inngestFn = runtime.createInngestFunction(workflowConfig, workflowFn);
+
+      await inngestFn.fn({
+        event: {
+          name: "project.test-workflow",
+          data: {
+            runId: run.id,
+            projectId: project.id,
+            userId: user.id,
+            projectPath: project.path,
+            specType: "feature",
+          },
+        },
+        step: {
+          run: vi.fn(async (_id, callback) => await callback()),
+        } as never,
+        runId: "inngest-run-123",
+      } as never);
+
+      // Verify specFile was populated
+      expect(capturedSpecFile).toBeDefined();
+      expect(capturedSpecFile).toContain(".agent/specs/todo/");
+      expect(capturedSpecFile).toContain("spec.md");
+
+      // Verify resolveSpecFile was called
+      expect(resolveSpecFile).toHaveBeenCalled();
+
+      // Verify spec generation was logged
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.objectContaining({ specType: "feature" }),
+        "Generating spec file"
+      );
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.objectContaining({
+          specFile: expect.stringContaining(".agent/specs/todo/")
+        }),
+        "Spec file generated"
+      );
+    });
+
+    it("defaults to feature spec type when not specified", async () => {
+      const run = await prisma.workflowRun.create({
+        data: {
+          project_id: project.id,
+          user_id: user.id,
+          workflow_definition_id: workflowDefinition.id,
+          name: "Test Run",
+          args: {},
+          mode: "branch",
+          branch_name: "feat/test",
+          base_branch: "main",
+          status: "pending",
+        },
+        include: {
+          project: true,
+        },
+      });
+
+      const runtime = createWorkflowRuntime(mockInngest, project.id, mockLogger as never);
+
+      const workflowConfig: WorkflowConfig = {
+        id: "test-workflow",
+        name: "Test Workflow",
+        phases: [{ id: "implement", label: "Implement" }],
+      };
+
+      const workflowFn: WorkflowFunction = async () => {
+        return { success: true };
+      };
+
+      const inngestFn = runtime.createInngestFunction(workflowConfig, workflowFn);
+
+      await inngestFn.fn({
+        event: {
+          name: "project.test-workflow",
+          data: {
+            runId: run.id,
+            projectId: project.id,
+            userId: user.id,
+            projectPath: project.path,
+            // No specType provided - should default to "feature"
+          },
+        },
+        step: {
+          run: vi.fn(async (_id, callback) => await callback()),
+        } as never,
+        runId: "inngest-run-123",
+      } as never);
+
+      // Verify default "feature" spec type was used
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.objectContaining({ specType: "feature" }),
+        "Generating spec file"
+      );
+    });
+
+    it("verifies existing spec file if provided", async () => {
+      const existingSpecPath = "/tmp/test-project/.agent/specs/todo/existing-spec/spec.md";
+      vi.mocked(existsSync).mockReturnValue(true);
+
+      const run = await prisma.workflowRun.create({
+        data: {
+          project_id: project.id,
+          user_id: user.id,
+          workflow_definition_id: workflowDefinition.id,
+          name: "Test Run",
+          args: {},
+          mode: "branch",
+          branch_name: "feat/test",
+          base_branch: "main",
+          status: "pending",
+        },
+        include: {
+          project: true,
+        },
+      });
+
+      const runtime = createWorkflowRuntime(mockInngest, project.id, mockLogger as never);
+
+      const workflowConfig: WorkflowConfig = {
+        id: "test-workflow",
+        name: "Test Workflow",
+        phases: [{ id: "implement", label: "Implement" }],
+      };
+
+      let capturedSpecFile: string | undefined = undefined;
+      const workflowFn: WorkflowFunction = async ({ event }) => {
+        capturedSpecFile = event.data.specFile;
+        return { success: true };
+      };
+
+      const inngestFn = runtime.createInngestFunction(workflowConfig, workflowFn);
+
+      await inngestFn.fn({
+        event: {
+          name: "project.test-workflow",
+          data: {
+            runId: run.id,
+            projectId: project.id,
+            userId: user.id,
+            projectPath: project.path,
+            specFile: existingSpecPath,
+          },
+        },
+        step: {
+          run: vi.fn(async (_id, callback) => await callback()),
+        } as never,
+        runId: "inngest-run-123",
+      } as never);
+
+      // Verify specFile was kept as-is
+      expect(capturedSpecFile).toBe(existingSpecPath);
+
+      // Verify resolveSpecFile was NOT called
+      expect(resolveSpecFile).not.toHaveBeenCalled();
+
+      // Verify file existence was checked
+      expect(existsSync).toHaveBeenCalledWith(existingSpecPath);
+
+      // Verify log message
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.objectContaining({ specFile: existingSpecPath }),
+        "Using provided spec file"
+      );
+    });
+
+    it("throws error when provided spec file doesn't exist", async () => {
+      const nonExistentSpecPath = "/tmp/test-project/.agent/specs/todo/missing-spec/spec.md";
+      vi.mocked(existsSync).mockReturnValue(false);
+
+      const run = await prisma.workflowRun.create({
+        data: {
+          project_id: project.id,
+          user_id: user.id,
+          workflow_definition_id: workflowDefinition.id,
+          name: "Test Run",
+          args: {},
+          mode: "branch",
+          branch_name: "feat/test",
+          base_branch: "main",
+          status: "pending",
+        },
+        include: {
+          project: true,
+        },
+      });
+
+      const runtime = createWorkflowRuntime(mockInngest, project.id, mockLogger as never);
+
+      const workflowConfig: WorkflowConfig = {
+        id: "test-workflow",
+        name: "Test Workflow",
+        phases: [{ id: "implement", label: "Implement" }],
+      };
+
+      const workflowFn: WorkflowFunction = async () => {
+        return { success: true };
+      };
+
+      const inngestFn = runtime.createInngestFunction(workflowConfig, workflowFn);
+
+      await expect(
+        inngestFn.fn({
+          event: {
+            name: "project.test-workflow",
+            data: {
+              runId: run.id,
+              projectId: project.id,
+              userId: user.id,
+              projectPath: project.path,
+              specFile: nonExistentSpecPath,
+            },
+          },
+          step: {
+            run: vi.fn(async (_id, callback) => await callback()),
+          } as never,
+          runId: "inngest-run-123",
+        } as never)
+      ).rejects.toThrow(`Spec file not found: ${nonExistentSpecPath}`);
+
+      // Verify workflow was marked as failed
+      const updatedRun = await prisma.workflowRun.findUnique({
+        where: { id: run.id },
+      });
+      expect(updatedRun?.status).toBe("failed");
+    });
+
+    it("throws error when spec type slash command doesn't exist", async () => {
+      vi.mocked(existsSync).mockImplementation((path) => {
+        // Mock that the slash command file doesn't exist
+        if (typeof path === "string" && path.includes("generate-invalid-spec")) {
+          return false;
+        }
+        return true;
+      });
+
+      const run = await prisma.workflowRun.create({
+        data: {
+          project_id: project.id,
+          user_id: user.id,
+          workflow_definition_id: workflowDefinition.id,
+          name: "Test Run",
+          args: {},
+          mode: "branch",
+          branch_name: "feat/test",
+          base_branch: "main",
+          status: "pending",
+        },
+        include: {
+          project: true,
+        },
+      });
+
+      const runtime = createWorkflowRuntime(mockInngest, project.id, mockLogger as never);
+
+      const workflowConfig: WorkflowConfig = {
+        id: "test-workflow",
+        name: "Test Workflow",
+        phases: [{ id: "implement", label: "Implement" }],
+      };
+
+      const workflowFn: WorkflowFunction = async () => {
+        return { success: true };
+      };
+
+      const inngestFn = runtime.createInngestFunction(workflowConfig, workflowFn);
+
+      await expect(
+        inngestFn.fn({
+          event: {
+            name: "project.test-workflow",
+            data: {
+              runId: run.id,
+              projectId: project.id,
+              userId: user.id,
+              projectPath: project.path,
+              specType: "invalid",
+            },
+          },
+          step: {
+            run: vi.fn(async (_id, callback) => await callback()),
+          } as never,
+          runId: "inngest-run-123",
+        } as never)
+      ).rejects.toThrow("Spec command not found: /cmd:generate-invalid-spec");
+
+      // Verify error message includes helpful context
+      await expect(
+        inngestFn.fn({
+          event: {
+            name: "project.test-workflow",
+            data: {
+              runId: run.id,
+              projectId: project.id,
+              userId: user.id,
+              projectPath: project.path,
+              specType: "invalid",
+            },
+          },
+          step: {
+            run: vi.fn(async (_id, callback) => await callback()),
+          } as never,
+          runId: "inngest-run-123",
+        } as never)
+      ).rejects.toThrow("Available spec types can be found in .claude/commands/cmd/");
+
+      // Verify workflow was marked as failed
+      const updatedRun = await prisma.workflowRun.findUnique({
+        where: { id: run.id },
+      });
+      expect(updatedRun?.status).toBe("failed");
+    });
+
+    it("runs spec generation in same _system_setup phase as workspace", async () => {
+      const run = await prisma.workflowRun.create({
+        data: {
+          project_id: project.id,
+          user_id: user.id,
+          workflow_definition_id: workflowDefinition.id,
+          name: "Test Run",
+          args: {},
+          mode: "branch",
+          branch_name: "feat/test",
+          base_branch: "main",
+          status: "pending",
+        },
+        include: {
+          project: true,
+        },
+      });
+
+      const runtime = createWorkflowRuntime(mockInngest, project.id, mockLogger as never);
+
+      const workflowConfig: WorkflowConfig = {
+        id: "test-workflow",
+        name: "Test Workflow",
+        phases: [{ id: "implement", label: "Implement" }],
+      };
+
+      const workflowFn: WorkflowFunction = async () => {
+        return { success: true };
+      };
+
+      const inngestFn = runtime.createInngestFunction(workflowConfig, workflowFn);
+
+      await inngestFn.fn({
+        event: {
+          name: "project.test-workflow",
+          data: {
+            runId: run.id,
+            projectId: project.id,
+            userId: user.id,
+            projectPath: project.path,
+            specType: "feature",
+          },
+        },
+        step: {
+          run: vi.fn(async (_id, callback) => await callback()),
+        } as never,
+        runId: "inngest-run-123",
+      } as never);
+
+      // Verify both workspace setup and spec generation were logged
+      // (both happen in _system_setup phase)
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.objectContaining({ phase: "_system_setup" }),
+        "Phase started"
+      );
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.objectContaining({ mode: "branch" }),
+        "Workspace setup completed"
+      );
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.objectContaining({ specType: "feature" }),
+        "Generating spec file"
+      );
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.objectContaining({
+          specFile: expect.stringContaining(".agent/specs/todo/")
+        }),
+        "Spec file generated"
+      );
     });
   });
 });
