@@ -42,10 +42,6 @@ vi.mock("@/server/domain/git/services/switchBranch", () => ({
   switchBranch: vi.fn(),
 }));
 
-vi.mock("@/server/domain/workflow/services/resolveSpecFile", () => ({
-  resolveSpecFile: vi.fn(),
-}));
-
 vi.mock("fs", () => ({
   existsSync: vi.fn(),
 }));
@@ -58,7 +54,6 @@ import { createAndSwitchBranch } from "@/server/domain/git/services/createAndSwi
 import { createWorktree } from "@/server/domain/git/services/createWorktree";
 import { removeWorktree } from "@/server/domain/git/services/removeWorktree";
 import { switchBranch } from "@/server/domain/git/services/switchBranch";
-import { resolveSpecFile } from "@/server/domain/workflow/services/resolveSpecFile";
 import { existsSync } from "fs";
 
 describe("createWorkflowRuntime - Automatic Lifecycle", () => {
@@ -93,7 +88,6 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
     vi.mocked(createWorktree).mockResolvedValue("/tmp/test-project/.worktrees/feat-test");
     vi.mocked(removeWorktree).mockResolvedValue();
     vi.mocked(switchBranch).mockResolvedValue();
-    vi.mocked(resolveSpecFile).mockResolvedValue(".agent/specs/todo/251024120101-test-feature/spec.md");
     vi.mocked(existsSync).mockReturnValue(true);
 
     // Create test data
@@ -181,6 +175,9 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         },
         step: {
           run: vi.fn(async (_id, callback) => await callback()),
+          agent: vi.fn(async () => ({
+            data: { spec_file: ".agent/specs/todo/251024120101-test-feature/spec.md" },
+          })),
         } as never,
         runId: "inngest-run-123",
       } as never);
@@ -254,6 +251,9 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         },
         step: {
           run: vi.fn(async (_id, callback) => await callback()),
+          agent: vi.fn(async () => ({
+            data: { spec_file: ".agent/specs/todo/251024120101-test-feature/spec.md" },
+          })),
         } as never,
         runId: "inngest-run-123",
       } as never);
@@ -377,6 +377,9 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         },
         step: {
           run: vi.fn(async (_id, callback) => await callback()),
+          agent: vi.fn(async () => ({
+            data: { spec_file: ".agent/specs/todo/251024120101-test-feature/spec.md" },
+          })),
         } as never,
         runId: "inngest-run-123",
       } as never);
@@ -439,6 +442,9 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         },
         step: {
           run: vi.fn(async (_id, callback) => await callback()),
+          agent: vi.fn(async () => ({
+            data: { spec_file: ".agent/specs/todo/251024120101-test-feature/spec.md" },
+          })),
         } as never,
         runId: "inngest-run-123",
       } as never);
@@ -450,7 +456,7 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
       // Verify "No workspace mode specified" was logged
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.objectContaining({ runId: run.id }),
-        "No workspace mode specified, using stay mode"
+        "No workspace mode specified, staying in current branch"
       );
     });
 
@@ -501,6 +507,9 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         },
         step: {
           run: vi.fn(async (_id, callback) => await callback()),
+          agent: vi.fn(async () => ({
+            data: { spec_file: ".agent/specs/todo/251024120101-test-feature/spec.md" },
+          })),
         } as never,
         runId: "inngest-run-123",
       } as never);
@@ -637,6 +646,9 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         },
         step: {
           run: vi.fn(async (_id, callback) => await callback()),
+          agent: vi.fn(async () => ({
+            data: { spec_file: ".agent/specs/todo/251024120101-test-feature/spec.md" },
+          })),
         } as never,
         runId: "inngest-run-123",
       } as never);
@@ -689,6 +701,9 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         },
         step: {
           run: vi.fn(async (_id, callback) => await callback()),
+          agent: vi.fn(async () => ({
+            data: { spec_file: ".agent/specs/todo/251024120101-test-feature/spec.md" },
+          })),
         } as never,
         runId: "inngest-run-123",
       } as never);
@@ -758,6 +773,9 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         },
         step: {
           run: vi.fn(async (_id, callback) => await callback()),
+          agent: vi.fn(async () => ({
+            data: { spec_file: ".agent/specs/todo/251024120101-test-feature/spec.md" },
+          })),
         } as never,
         runId: "inngest-run-123",
       } as never);
@@ -766,9 +784,6 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
       expect(capturedSpecFile).toBeDefined();
       expect(capturedSpecFile).toContain(".agent/specs/todo/");
       expect(capturedSpecFile).toContain("spec.md");
-
-      // Verify resolveSpecFile was called
-      expect(resolveSpecFile).toHaveBeenCalled();
 
       // Verify spec generation was logged
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -829,6 +844,9 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         },
         step: {
           run: vi.fn(async (_id, callback) => await callback()),
+          agent: vi.fn(async () => ({
+            data: { spec_file: ".agent/specs/todo/251024120101-test-feature/spec.md" },
+          })),
         } as never,
         runId: "inngest-run-123",
       } as never);
@@ -890,15 +908,15 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         },
         step: {
           run: vi.fn(async (_id, callback) => await callback()),
+          agent: vi.fn(async () => ({
+            data: { spec_file: ".agent/specs/todo/251024120101-test-feature/spec.md" },
+          })),
         } as never,
         runId: "inngest-run-123",
       } as never);
 
       // Verify specFile was kept as-is
       expect(capturedSpecFile).toBe(existingSpecPath);
-
-      // Verify resolveSpecFile was NOT called
-      expect(resolveSpecFile).not.toHaveBeenCalled();
 
       // Verify file existence was checked
       expect(existsSync).toHaveBeenCalledWith(existingSpecPath);
@@ -1102,6 +1120,9 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         },
         step: {
           run: vi.fn(async (_id, callback) => await callback()),
+          agent: vi.fn(async () => ({
+            data: { spec_file: ".agent/specs/todo/251024120101-test-feature/spec.md" },
+          })),
         } as never,
         runId: "inngest-run-123",
       } as never);

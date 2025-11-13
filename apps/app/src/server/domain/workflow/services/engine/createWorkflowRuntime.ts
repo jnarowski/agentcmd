@@ -10,17 +10,12 @@ import type {
 } from "agentcmd-workflows";
 import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 import type { FastifyBaseLogger } from "fastify";
-import type { WorkflowRun } from "@prisma/client";
 import {
   createWorkflowEvent,
   getWorkflowRunForExecution,
   updateWorkflowRun,
 } from "@/server/domain/workflow/services";
 import { buildWorkflowIdentifiers } from "@/server/domain/workflow/utils/buildWorkflowIdentifiers";
-import { getCurrentBranch } from "@/server/domain/git/services/getCurrentBranch";
-import { resolveSpecFile } from "@/server/domain/workflow/services/resolveSpecFile";
-import { existsSync } from "fs";
-import { join } from "path";
 import {
   createPhaseStep,
   createAgentStep,
@@ -30,9 +25,10 @@ import {
   createAnnotationStep,
   createRunStep,
   createAiStep,
-  createSetupWorkspaceStep,
-  createFinalizeWorkspaceStep,
 } from "./steps";
+import { setupWorkspace } from "./setupWorkspace";
+import { setupSpec } from "./setupSpec";
+import { finalizeWorkspace } from "./finalizeWorkspace";
 
 /**
  * @fileoverview Workflow Runtime Adapter
@@ -328,129 +324,6 @@ function extendInngestSteps<TPhases extends PhasesConstraint>(
 }
 
 /**
- * Setup workspace based on run mode.
- * Determines isolation strategy for workflow execution to prevent conflicts.
- *
- * **Modes:**
- * - `worktree`: Creates isolated git worktree for parallel workflows on separate branches
- * - `stay`: Uses existing project directory (must coordinate concurrent runs manually)
- * - `null`/`undefined`: Defaults to stay mode with current branch
- */
-async function setupWorkspace<TPhases extends PhasesConstraint>(params: {
-  run: WorkflowRun & { project: { path: string } };
-  context: RuntimeContext<TPhases>;
-  inngestStep: GetStepTools<Inngest.Any>;
-  logger: FastifyBaseLogger;
-}): Promise<WorkspaceResult> {
-  const { run, context, inngestStep, logger } = params;
-  // No mode specified - default to stay mode (use existing project directory)
-  if (!run.mode) {
-    const currentBranch = await getCurrentBranch({
-      projectPath: run.project.path,
-    });
-
-    logger.info(
-      { runId: run.id },
-      "No workspace mode specified, using stay mode"
-    );
-
-    return {
-      mode: "stay",
-      workingDir: run.project.path,
-      branch: currentBranch ?? "main",
-    };
-  }
-
-  // Explicit mode - delegate to workspace setup step (handles worktree/stay logic)
-  const setupStep = createSetupWorkspaceStep(context, inngestStep);
-  const worktreeName =
-    run.mode === "worktree"
-      ? `run-${run.id}-${run.branch_name || "main"}`
-      : undefined;
-
-  const workspace = await setupStep("setup-workspace", {
-    branch: run.branch_name ?? undefined,
-    baseBranch: run.base_branch ?? "main",
-    projectPath: run.project.path,
-    worktreeName,
-  });
-
-  logger.info(
-    { runId: run.id, mode: run.mode, workingDir: workspace.workingDir },
-    "Workspace setup completed"
-  );
-
-  return workspace;
-}
-
-/**
- * Setup spec file for workflow execution.
- * Ensures event.data.specFile is populated, either from provided file or by generating new spec.
- *
- * **Behavior:**
- * - If `event.data.specFile` exists: Verifies file exists, throws if not found
- * - Otherwise: Generates spec using `/cmd:generate-{specType}-spec` command
- * - Defaults to `specType: "feature"` if not specified
- * - Validates that required slash command exists before generation
- */
-async function setupSpec<TPhases extends PhasesConstraint>(params: {
-  run: WorkflowRun & { project: { path: string } };
-  event: WorkflowEvent;
-  step: WorkflowStep<ExtractPhaseId<TPhases>>;
-  logger: FastifyBaseLogger;
-}): Promise<void> {
-  const { run, event, step, logger } = params;
-  // Early return if no data
-  if (!event.data) {
-    return;
-  }
-
-  // If specFile already provided, verify it exists
-  if (event.data.specFile) {
-    if (!existsSync(event.data.specFile)) {
-      throw new Error(`Spec file not found: ${event.data.specFile}`);
-    }
-
-    logger.info(
-      { runId: run.id, specFile: event.data.specFile },
-      "Using provided spec file"
-    );
-    return;
-  }
-
-  // Default to "feature" spec type if not specified
-  const specType = event.data.specType ?? "feature";
-
-  // Verify slash command exists
-  const commandPath = join(
-    process.cwd(),
-    ".claude",
-    "commands",
-    "cmd",
-    `generate-${specType}-spec.md`
-  );
-
-  if (!existsSync(commandPath)) {
-    throw new Error(
-      `Spec command not found: /cmd:generate-${specType}-spec\n` +
-        `Expected file: ${commandPath}\n` +
-        `Available spec types can be found in .claude/commands/cmd/`
-    );
-  }
-
-  // Generate spec file
-  logger.info({ runId: run.id, specType }, "Generating spec file");
-
-  const specFile = await resolveSpecFile(event, step);
-
-  if (event.data) {
-    event.data.specFile = specFile;
-  }
-
-  logger.info({ runId: run.id, specFile }, "Spec file generated");
-}
-
-/**
  * Emit a lifecycle event with user-friendly messages.
  * Centralizes event emission for workflow start, completion, and failure.
  *
@@ -628,55 +501,6 @@ async function handleWorkflowFailure(
           eventError instanceof Error ? eventError.message : String(eventError),
       },
       "Failed to emit workflow failure event"
-    );
-  }
-}
-
-/**
- * Finalize workspace cleanup (non-fatal).
- * Runs in finally block to ensure cleanup even on workflow failure. Errors are logged but don't fail workflow.
- *
- * **Behavior:**
- * - Worktree mode: Removes temporary worktree and cleans up git objects
- * - Stay mode: No cleanup needed (uses original project directory)
- * - No mode: Skips cleanup
- *
- * @param run - Workflow run with mode information
- * @param workspace - Workspace result from setup (null if setup was skipped)
- * @param context - Runtime execution context
- * @param extendedStep - Extended step object for phase tracking
- * @param inngestStep - Base Inngest step tools
- * @param logger - Logger instance
- */
-async function finalizeWorkspace<TPhases extends PhasesConstraint>(
-  run: WorkflowRun,
-  workspace: WorkspaceResult | null,
-  context: RuntimeContext<TPhases>,
-  extendedStep: WorkflowStep<ExtractPhaseId<TPhases>>,
-  inngestStep: GetStepTools<Inngest.Any>,
-  logger: FastifyBaseLogger
-): Promise<void> {
-  if (!workspace || !run.mode) {
-    return;
-  }
-
-  try {
-    await extendedStep.phase(
-      SYSTEM_PHASES.FINALIZE as ExtractPhaseId<TPhases>,
-      async () => {
-        const finalizeStep = createFinalizeWorkspaceStep(context, inngestStep);
-        await finalizeStep("finalize-workspace", {
-          workspaceResult: workspace,
-        });
-      }
-    );
-
-    logger.info({ runId: run.id, mode: run.mode }, "Workspace finalized");
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error));
-    logger.error(
-      { runId: run.id, error: err.message },
-      "Failed to finalize workspace (non-fatal)"
     );
   }
 }
