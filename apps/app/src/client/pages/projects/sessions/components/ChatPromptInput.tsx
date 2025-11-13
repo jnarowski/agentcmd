@@ -83,7 +83,7 @@ const ChatPromptInputInner = forwardRef<
     const { project } = useActiveProject();
 
     // Session store for permission modes, model, and agent type
-    const permissionMode = useSessionStore((s) => s.form.permissionMode);
+    const permissionMode = useSessionStore((s) => s.form.permissionMode || "acceptEdits");
     const setPermissionMode = useSessionStore((s) => s.setPermissionMode);
     const sessionId = useSessionStore((s) => s.sessionId);
     const model = useSessionStore((s) => s.form.model);
@@ -96,21 +96,22 @@ const ChatPromptInputInner = forwardRef<
 
     // Wrapper function to update both local state and database
     const handlePermissionModeChange = (mode: string) => {
-      // Validate permission mode before updating
+      // Validate permission mode before updating, fallback to default if invalid
       const validModes = ['default', 'plan', 'acceptEdits', 'bypassPermissions'];
+      let safeMode = mode;
       if (!validModes.includes(mode)) {
-        console.error('[ChatPromptInput] Invalid permission mode:', mode);
-        return;
+        console.warn('[ChatPromptInput] Invalid permission mode:', mode, '- falling back to acceptEdits');
+        safeMode = 'acceptEdits';
       }
 
       // Update local state immediately
-      setPermissionMode(mode as 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions');
+      setPermissionMode(safeMode as 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions');
 
       // Persist to database if session exists
       if (sessionId) {
         updateSession.mutate({
           id: sessionId,
-          permission_mode: mode,
+          permission_mode: safeMode,
         });
       }
     };

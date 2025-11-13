@@ -518,7 +518,7 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
   // Get permission mode from form
   getPermissionMode: () => {
     const state = get();
-    return state.form.permissionMode;
+    return state.form.permissionMode || "acceptEdits";
   },
 
   // Set agent in form

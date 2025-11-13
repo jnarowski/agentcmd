@@ -13,6 +13,7 @@ import { CodeEditor } from "@/client/components/CodeEditor";
 import { useCreateWorkflow } from "@/client/pages/projects/workflows/hooks/useWorkflowMutations";
 import { useProjectSpecs } from "@/client/pages/projects/hooks/useProjectSpecs";
 import { useProjectBranches } from "@/client/pages/projects/hooks/useProjectBranches";
+import { useSessions } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
 import { api } from "@/client/utils/api";
 import type {
   WorkflowDefinition,
@@ -45,10 +46,11 @@ export function NewRunForm({
 
   // Don't set initial value - let useEffect handle it after definitions load
   const [selectedDefinitionId, setSelectedDefinitionId] = useState("");
-  const [specInputType, setSpecInputType] = useState<"file" | "content">(
+  const [specInputType, setSpecInputType] = useState<"file" | "planning" | "content">(
     "file"
   );
   const [specFile, setSpecFile] = useState<string>("");
+  const [planningSessionId, setPlanningSessionId] = useState<string>("");
   const [specContent, setSpecContent] = useState<string>("");
   const [name, setName] = useState("");
   const [args, setArgs] = useState<Record<string, unknown>>({});
@@ -117,6 +119,9 @@ export function NewRunForm({
   // Fetch available branches
   const { data: branches } = useProjectBranches(projectId, true);
 
+  // Fetch planning sessions (permission_mode === 'plan')
+  const { data: sessions } = useSessions({ projectId });
+
   // Transform branches to combobox options
   const branchOptions = useMemo(() => {
     if (!branches) return [];
@@ -135,6 +140,18 @@ export function NewRunForm({
       label: file,
     }));
   }, [specFiles]);
+
+  // Transform planning sessions to combobox options
+  const planningSessionOptions = useMemo(() => {
+    if (!sessions) return [];
+    return sessions
+      .filter((session) => session.permission_mode === 'plan')
+      .map((session) => ({
+        value: session.id,
+        label: session.name || `Session ${session.id.slice(0, 8)}`,
+        description: new Date(session.updated_at).toLocaleDateString(),
+      }));
+  }, [sessions]);
 
   // Transform definitions to combobox options with scope grouping
   const definitionOptions = useMemo(() => {
@@ -248,6 +265,10 @@ export function NewRunForm({
       setError("Spec file is required");
       return;
     }
+    if (specInputType === "planning" && !planningSessionId) {
+      setError("Planning session is required");
+      return;
+    }
     if (specInputType === "content" && !specContent.trim()) {
       setError("Spec content is required");
       return;
@@ -270,6 +291,7 @@ export function NewRunForm({
         args,
         spec_file: specInputType === "file" ? specFile : undefined,
         spec_content: specInputType === "content" ? specContent : undefined,
+        planning_session_id: specInputType === "planning" ? planningSessionId : undefined,
         mode: mode,
         base_branch: mode !== "stay" ? baseBranch || undefined : undefined,
         branch_name: mode !== "stay" ? branchName || undefined : undefined,
@@ -322,7 +344,7 @@ export function NewRunForm({
         <div className="rounded-lg border bg-card">
           <Tabs
             value={specInputType}
-            onValueChange={(v) => setSpecInputType(v as "file" | "content")}
+            onValueChange={(v) => setSpecInputType(v as "file" | "planning" | "content")}
             className="w-full !gap-0"
           >
             <TabsList className="w-full rounded-t-lg rounded-b-none border-b h-auto p-0 bg-transparent">
@@ -330,7 +352,13 @@ export function NewRunForm({
                 value="file"
                 className="flex-1 rounded-none data-[state=active]:border-b data-[state=active]:border-primary data-[state=active]:-mb-px rounded-tl-lg"
               >
-                Select from file
+                Select Spec
+              </TabsTrigger>
+              <TabsTrigger
+                value="planning"
+                className="flex-1 rounded-none data-[state=active]:border-b data-[state=active]:border-primary data-[state=active]:-mb-px"
+              >
+                From Planning Session
               </TabsTrigger>
               <TabsTrigger
                 value="content"
@@ -352,6 +380,21 @@ export function NewRunForm({
               />
               <p className="text-xs text-muted-foreground">
                 Select from .agent/specs/todo/
+              </p>
+            </TabsContent>
+
+            <TabsContent value="planning" className="space-y-2 p-3 m-0">
+              <Combobox
+                value={planningSessionId}
+                onValueChange={setPlanningSessionId}
+                options={planningSessionOptions}
+                placeholder="Select planning session..."
+                searchPlaceholder="Search sessions..."
+                emptyMessage="No planning sessions found"
+                disabled={createWorkflow.isPending}
+              />
+              <p className="text-xs text-muted-foreground">
+                Select a planning session to generate spec from
               </p>
             </TabsContent>
 

@@ -29,7 +29,6 @@ export function SessionItem({
   name,
   projectId,
   projectName,
-  status,
   agent,
   session,
   isActive = false,

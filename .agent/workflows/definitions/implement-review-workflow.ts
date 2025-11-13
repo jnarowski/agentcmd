@@ -2,6 +2,7 @@ import {
   buildSlashCommand,
   defineWorkflow,
   type WorkflowStep,
+  type WorkflowEvent,
   type CmdGenerateSpecResponse,
   type CmdImplementSpecResponse,
   type CmdReviewSpecImplementationResponse,
@@ -72,11 +73,25 @@ const getSpecFile = async ({
   event,
   step,
 }: {
-  event: any;
+  event: WorkflowEvent;
   step: WorkflowStep;
 }) => {
   if (event.data.specFile) {
     return event.data.specFile;
+  }
+
+  if (event.data.planningSessionId) {
+    const response = await step.agent<CmdGenerateSpecResponse>(
+      "Generate Spec",
+      {
+        agent: "claude",
+        json: true,
+        prompt: buildSlashCommand("/cmd:generate-spec"),
+        resume: event.data.planningSessionId,
+        workingDir: event.data.workingDir,
+      }
+    );
+    return response.data?.spec_file;
   }
 
   const response = await step.agent<CmdGenerateSpecResponse>(

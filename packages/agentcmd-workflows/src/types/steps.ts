@@ -44,6 +44,8 @@ export interface AgentStepConfig {
   permissionMode?: "default" | "plan" | "acceptEdits" | "bypassPermissions";
   /** Enable JSON mode - automatically extract and parse JSON from response */
   json?: boolean;
+  /** CLI session ID to resume (e.g., planning session's cli_session_id) */
+  resume?: string;
 }
 
 /**

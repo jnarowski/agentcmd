@@ -9,8 +9,8 @@ export interface GetSessionsFilters {
   projectId?: string;
   limit?: number;
   includeArchived?: boolean;
-  orderBy?: 'created_at' | 'updated_at';
-  order?: 'asc' | 'desc';
+  orderBy?: "created_at" | "updated_at";
+  order?: "asc" | "desc";
 }
 
 /**
@@ -24,11 +24,11 @@ export function useSessions(filters?: GetSessionsFilters) {
       : sessionKeys.list(filters),
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (filters?.projectId) params.append('projectId', filters.projectId);
-      if (filters?.limit) params.append('limit', String(filters.limit));
-      if (filters?.includeArchived) params.append('includeArchived', 'true');
-      if (filters?.orderBy) params.append('orderBy', filters.orderBy);
-      if (filters?.order) params.append('order', filters.order);
+      if (filters?.projectId) params.append("projectId", filters.projectId);
+      if (filters?.limit) params.append("limit", String(filters.limit));
+      if (filters?.includeArchived) params.append("includeArchived", "true");
+      if (filters?.orderBy) params.append("orderBy", filters.orderBy);
+      if (filters?.order) params.append("order", filters.order);
 
       const result = await api.get<{ data: SessionResponse[] }>(
         `/api/sessions?${params.toString()}`
@@ -42,11 +42,18 @@ export function useSessions(filters?: GetSessionsFilters) {
  * Single session metadata query
  * Automatically fetches in parallel with useSessionMessages
  */
-export function useSession(sessionId: string | undefined, projectId: string | undefined) {
+export function useSession(
+  sessionId: string | undefined,
+  projectId: string | undefined
+) {
   return useQuery({
-    queryKey: sessionId && projectId ? sessionKeys.detail(sessionId, projectId) : ['session-disabled'],
+    queryKey:
+      sessionId && projectId
+        ? sessionKeys.detail(sessionId, projectId)
+        : ["session-disabled"],
     queryFn: async () => {
-      if (!sessionId || !projectId) throw new Error('Session ID and Project ID are required');
+      if (!sessionId || !projectId)
+        throw new Error("Session ID and Project ID are required");
 
       const result = await api.get<{ data: SessionResponse }>(
         `/api/projects/${projectId}/sessions/${sessionId}`
@@ -61,11 +68,18 @@ export function useSession(sessionId: string | undefined, projectId: string | un
  * Session messages query
  * Special handling: 404 means new session (no messages yet)
  */
-export function useSessionMessages(sessionId: string | undefined, projectId: string | undefined) {
+export function useSessionMessages(
+  sessionId: string | undefined,
+  projectId: string | undefined
+) {
   return useQuery({
-    queryKey: sessionId && projectId ? sessionKeys.messages(sessionId, projectId) : ['messages-disabled'],
+    queryKey:
+      sessionId && projectId
+        ? sessionKeys.messages(sessionId, projectId)
+        : ["messages-disabled"],
     queryFn: async () => {
-      if (!sessionId || !projectId) throw new Error('Session ID and Project ID are required');
+      if (!sessionId || !projectId)
+        throw new Error("Session ID and Project ID are required");
 
       const result = await api.get<{ data: UnifiedMessage[] }>(
         `/api/projects/${projectId}/sessions/${sessionId}/messages`
@@ -75,7 +89,7 @@ export function useSessionMessages(sessionId: string | undefined, projectId: str
     enabled: !!sessionId && !!projectId,
     retry: (failureCount, error) => {
       // Don't retry on 404 - new sessions have no messages yet
-      if (error instanceof Error && error.message.includes('404')) {
+      if (error instanceof Error && error.message.includes("404")) {
         return false;
       }
       return failureCount < 3;
@@ -87,7 +101,15 @@ export function useUpdateSession() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, name, permission_mode }: { id: string; name?: string; permission_mode?: string }) => {
+    mutationFn: async ({
+      id,
+      name,
+      permission_mode,
+    }: {
+      id: string;
+      name?: string;
+      permission_mode?: string;
+    }) => {
       const result = await api.patch<{ data: SessionResponse }>(
         `/api/sessions/${id}`,
         { name, permission_mode }
@@ -99,11 +121,10 @@ export function useUpdateSession() {
       queryClient.invalidateQueries({
         queryKey: sessionKeys.lists(),
       });
-
-      toast.success("Session updated successfully");
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : "Failed to update session";
+      const message =
+        error instanceof Error ? error.message : "Failed to update session";
       toast.error(message);
     },
   });
@@ -128,7 +149,8 @@ export function useArchiveSession() {
       toast.success("Session archived successfully");
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : "Failed to archive session";
+      const message =
+        error instanceof Error ? error.message : "Failed to archive session";
       toast.error(message);
     },
   });
@@ -153,7 +175,8 @@ export function useUnarchiveSession() {
       toast.success("Session unarchived successfully");
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : "Failed to unarchive session";
+      const message =
+        error instanceof Error ? error.message : "Failed to unarchive session";
       toast.error(message);
     },
   });

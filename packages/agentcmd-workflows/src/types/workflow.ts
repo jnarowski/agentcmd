@@ -41,6 +41,16 @@ export interface WorkflowConfig<
 }
 
 /**
+ * Workflow event structure
+ */
+export interface WorkflowEvent<TArgs = Record<string, unknown>> {
+  /** Event name */
+  name: string;
+  /** Event data payload */
+  data: WorkflowEventData<TArgs>;
+}
+
+/**
  * Workflow execution context passed to workflow function
  */
 export interface WorkflowContext<
@@ -48,10 +58,7 @@ export interface WorkflowContext<
   TArgs = Record<string, unknown>
 > {
   /** Inngest event data */
-  event: {
-    name: string;
-    data: WorkflowEventData<TArgs>;
-  };
+  event: WorkflowEvent<TArgs>;
   /** Extended step interface with custom methods */
   step: WorkflowStep<
     TPhases extends readonly PhaseDefinition[]
@@ -78,6 +85,8 @@ export interface WorkflowEventData<TArgs = Record<string, unknown>> {
   specFile?: string;
   /** Spec file content */
   specContent?: string;
+  /** Planning session CLI session ID (for resuming planning sessions) */
+  planningSessionId?: string;
   /** Git branch to create worktree from */
   baseBranch?: string;
   /** New branch name for worktree */

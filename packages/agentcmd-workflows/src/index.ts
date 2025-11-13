@@ -49,6 +49,7 @@ export type {
   CleanupWorkspaceConfig,
   WorkflowConfig,
   WorkflowContext,
+  WorkflowEvent,
   WorkflowEventData,
   WorkflowFunction,
   PhaseDefinition,

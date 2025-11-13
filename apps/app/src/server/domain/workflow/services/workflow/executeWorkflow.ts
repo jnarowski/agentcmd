@@ -2,7 +2,7 @@ import Ajv from "ajv";
 import { access } from "node:fs/promises";
 import { constants } from "node:fs";
 import type { ExecuteWorkflowOptions } from "@/server/domain/workflow/types/ExecuteWorkflowOptions";
-import type { WorkflowRun, WorkflowDefinition, Project } from "@prisma/client";
+import type { WorkflowRun, WorkflowDefinition, Project, AgentSession } from "@prisma/client";
 import type { FastifyBaseLogger } from "fastify";
 import { getWorkflowRunForExecution } from "../runs/getWorkflowRunForExecution";
 import { updateWorkflowRun } from "../runs/updateWorkflowRun";
@@ -87,6 +87,7 @@ async function validateWorkflowDefinition(
   execution: WorkflowRun & {
     workflow_definition: WorkflowDefinition | null;
     project: Project;
+    planning_session: AgentSession | null;
   },
   runId: string,
   logger?: FastifyBaseLogger
@@ -200,6 +201,7 @@ async function validateWorkflowArgs(
   execution: WorkflowRun & {
     workflow_definition: WorkflowDefinition | null;
     project: Project;
+    planning_session: AgentSession | null;
   },
   runId: string,
   logger?: FastifyBaseLogger
@@ -282,6 +284,7 @@ function buildWorkflowEventData(
   execution: WorkflowRun & {
     workflow_definition: WorkflowDefinition | null;
     project: Project;
+    planning_session: AgentSession | null;
   }
 ) {
   return {
@@ -291,6 +294,7 @@ function buildWorkflowEventData(
     userId: execution.user_id,
     specFile: execution.spec_file ?? undefined,
     specContent: execution.spec_content ?? undefined,
+    planningSessionId: execution.planning_session?.cli_session_id ?? undefined,
     mode: execution.mode ?? undefined,
     baseBranch: execution.base_branch ?? undefined,
     branchName: execution.branch_name ?? undefined,

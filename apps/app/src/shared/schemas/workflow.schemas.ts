@@ -154,19 +154,22 @@ export const createWorkflowRunSchema = z
     args: z.record(z.string(), z.unknown()).default({}),
     spec_file: z.string().optional(),
     spec_content: z.string().optional(),
+    planning_session_id: z.string().uuid().optional(),
     mode: z.enum(['stay', 'branch', 'worktree']).optional(),
     base_branch: z.string().optional(),
     branch_name: z.string().optional(),
     inngest_run_id: z.string().optional(),
   })
   .refine((data) => {
-    // XOR: spec_file OR spec_content (exactly one must be provided)
+    // XOR: spec_file OR spec_content OR planning_session_id (exactly one must be provided)
     const hasSpecFile = !!data.spec_file;
     const hasSpecContent = !!data.spec_content;
-    return hasSpecFile !== hasSpecContent; // XOR: true when exactly one is true
+    const hasPlanningSession = !!data.planning_session_id;
+    const count = [hasSpecFile, hasSpecContent, hasPlanningSession].filter(Boolean).length;
+    return count === 1;
   }, {
-    message: "Either spec_file or spec_content must be provided, but not both",
-    path: ["spec_file", "spec_content"],
+    message: "Exactly one of spec_file, spec_content, or planning_session_id must be provided",
+    path: ["spec_file", "spec_content", "planning_session_id"],
   });
 
 /**

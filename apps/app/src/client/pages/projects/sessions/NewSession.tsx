@@ -46,7 +46,7 @@ export default function NewSession() {
   useEffect(() => {
     if (settings?.userPreferences) {
       initializeFromSettings({
-        permissionMode: settings.userPreferences.default_permission_mode,
+        permissionMode: settings.userPreferences.default_permission_mode || "acceptEdits",
         agent: settings.userPreferences.default_agent,
       });
     }
@@ -85,7 +85,7 @@ export default function NewSession() {
       // Get current agent and permission mode from store
       const agent = useSessionStore.getState().getAgent();
       const getPermissionMode = useSessionStore.getState().getPermissionMode;
-      const permissionMode = getPermissionMode();
+      const permissionMode = getPermissionMode() || "acceptEdits";
 
       // Create session via API
       const { data: newSession } = await api.post<{ data: { id: string } }>(

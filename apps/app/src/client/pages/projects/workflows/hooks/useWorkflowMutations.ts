@@ -12,6 +12,7 @@ interface CreateWorkflowInput {
   args: Record<string, unknown>;
   spec_file?: string;
   spec_content?: string;
+  planning_session_id?: string;
   mode?: string;
   base_branch?: string;
   branch_name?: string;
@@ -31,6 +32,7 @@ async function createWorkflow(input: CreateWorkflowInput): Promise<WorkflowRun> 
       args: input.args,
       spec_file: input.spec_file,
       spec_content: input.spec_content,
+      planning_session_id: input.planning_session_id,
       mode: input.mode,
       base_branch: input.base_branch,
       branch_name: input.branch_name,

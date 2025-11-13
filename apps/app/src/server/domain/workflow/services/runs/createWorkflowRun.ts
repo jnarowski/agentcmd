@@ -33,6 +33,7 @@ export async function createWorkflowRun(
       args: data.args,
       spec_file: data.spec_file,
       spec_content: data.spec_content,
+      planning_session_id: data.planning_session_id,
       mode: data.mode,
       base_branch: data.base_branch,
       branch_name: data.branch_name,

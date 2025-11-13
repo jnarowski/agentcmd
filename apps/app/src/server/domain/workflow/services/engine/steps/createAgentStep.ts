@@ -81,9 +81,14 @@ export function createAgentStep(
           );
 
           // Execute agent with timeout (bypass permissions for workflow context)
+          // If config.resume is provided (CLI session ID), use it for resumption
+          const shouldResume = !!config.resume;
+          const sessionIdForCLI = config.resume || session.id;
+
           const result = await withTimeout(
             executeAgent({
-              sessionId: session.id,
+              sessionId: sessionIdForCLI,
+              resume: shouldResume,
               agent: config.agent as "claude" | "codex",
               prompt: config.prompt,
               workingDir: config.workingDir ?? context.projectPath,

@@ -49,6 +49,7 @@ model WorkflowRun {
   args                   Json           // Workflow arguments
   spec_file              String?        // Relative path to spec file (from .agent/specs/)
   spec_content           String?        // Inline spec content (alternative to spec_file)
+  planning_session_id    String?        // Planning session to resume for spec generation
   mode                   String?        // Workspace mode: "stay" | "branch" | "worktree"
   branch_name            String?        // New branch name for execution
   base_branch            String?        // Branch to create new branch from
@@ -67,6 +68,7 @@ model WorkflowRun {
   project             Project                 @relation(fields: [project_id], references: [id], onDelete: Cascade)
   user                User                    @relation(fields: [user_id], references: [id], onDelete: Cascade)
   workflow_definition WorkflowDefinition      @relation(fields: [workflow_definition_id], references: [id], onDelete: Cascade)
+  planning_session    AgentSession?           @relation("WorkflowRunPlanningSession", fields: [planning_session_id], references: [id], onDelete: SetNull)
   steps               WorkflowRunStep[]
   events              WorkflowEvent[]
   artifacts           WorkflowArtifact[]
@@ -74,6 +76,7 @@ model WorkflowRun {
   @@index([project_id, status])
   @@index([user_id, status])
   @@index([workflow_definition_id])
+  @@index([planning_session_id])
   @@index([status])
   @@index([inngest_run_id])
   @@map("workflow_runs")
@@ -268,9 +271,10 @@ model AgentSession {
   created_at     DateTime                @default(now())
   updated_at     DateTime                @updatedAt
 
-  project       Project                 @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  user          User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  workflowSteps WorkflowRunStep[]
+  project                Project                 @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user                   User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workflowSteps          WorkflowRunStep[]
+  workflowRunsPlanning   WorkflowRun[]           @relation("WorkflowRunPlanningSession")
 
   @@index([projectId, updated_at])
   @@index([userId, updated_at])

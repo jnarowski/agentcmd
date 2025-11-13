@@ -28,6 +28,7 @@ export type {
 export type {
   WorkflowConfig,
   WorkflowContext,
+  WorkflowEvent,
   WorkflowEventData,
   WorkflowFunction,
   PhaseDefinition,

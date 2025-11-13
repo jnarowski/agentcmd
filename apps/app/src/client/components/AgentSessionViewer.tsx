@@ -62,18 +62,20 @@ export function AgentSessionViewer({
   clearOnUnmount = false,
   onApprove,
 }: AgentSessionViewerProps) {
-  // Check if store already has messages (skip fetch for optimistic case)
+  // Check if store already has messages FOR THIS SESSION (skip fetch for optimistic case)
+  const storeSessionId = useSessionStore((s) => s.sessionId);
   const hasMessages = useSessionStore((s) => (s.session?.messages.length ?? 0) > 0);
+  const shouldSkipFetch = hasMessages && storeSessionId === sessionId;
 
   // Fetch session data via React Query (parallel fetching)
-  // Skip if store already has messages (optimistic loading case)
+  // Skip if store already has THIS SESSION's messages (optimistic loading case)
   const { data: sessionData, isLoading: isLoadingSession, error: sessionError } = useSession(
-    hasMessages ? undefined : sessionId,
-    hasMessages ? undefined : projectId
+    shouldSkipFetch ? undefined : sessionId,
+    shouldSkipFetch ? undefined : projectId
   );
   const { data: messagesData, isLoading: isLoadingMessages, error: messagesError } = useSessionMessages(
-    hasMessages ? undefined : sessionId,
-    hasMessages ? undefined : projectId
+    shouldSkipFetch ? undefined : sessionId,
+    shouldSkipFetch ? undefined : projectId
   );
 
   // Subscribe to current session from store
@@ -81,10 +83,26 @@ export function AgentSessionViewer({
   const clearSession = useSessionStore((s) => s.clearSession);
 
   // Sync React Query data → Zustand store (one-way flow)
-  // Skip if store already has messages (optimistic case)
   useEffect(() => {
-    if (hasMessages || !sessionData) return;
+    if (!sessionData) return;
 
+    // Check if we're loading a different session than what's in the store
+    const currentStoreSessionId = useSessionStore.getState().sessionId;
+    const isNewSession = currentStoreSessionId !== sessionData.id;
+
+    // If same session and we already have messages, just update form state (keep messages)
+    // This handles React Query cache refreshes without replacing optimistic/WebSocket messages
+    if (!isNewSession && hasMessages) {
+      useSessionStore.setState({
+        form: {
+          ...useSessionStore.getState().form,
+          permissionMode: sessionData.permission_mode,
+        },
+      });
+      return;
+    }
+
+    // Full sync for new session or first load
     const enrichedMessages = messagesData ? enrichMessagesWithToolResults(messagesData) : [];
 
     useSessionStore.setState({
@@ -124,7 +142,7 @@ export function AgentSessionViewer({
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionData, messagesData, isLoadingMessages, hasMessages]);
+  }, [sessionId, sessionData, messagesData, isLoadingMessages, hasMessages]);
 
   // Handle errors from React Query
   useEffect(() => {

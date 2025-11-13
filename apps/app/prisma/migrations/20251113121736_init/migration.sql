@@ -30,6 +30,7 @@ CREATE TABLE "workflow_runs" (
     "args" JSONB NOT NULL,
     "spec_file" TEXT,
     "spec_content" TEXT,
+    "planning_session_id" TEXT,
     "mode" TEXT,
     "branch_name" TEXT,
     "base_branch" TEXT,
@@ -46,7 +47,8 @@ CREATE TABLE "workflow_runs" (
     "updated_at" DATETIME NOT NULL,
     CONSTRAINT "workflow_runs_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "projects" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "workflow_runs_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "workflow_runs_workflow_definition_id_fkey" FOREIGN KEY ("workflow_definition_id") REFERENCES "workflow_definitions" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT "workflow_runs_workflow_definition_id_fkey" FOREIGN KEY ("workflow_definition_id") REFERENCES "workflow_definitions" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "workflow_runs_planning_session_id_fkey" FOREIGN KEY ("planning_session_id") REFERENCES "agent_sessions" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -176,6 +178,9 @@ CREATE INDEX "workflow_runs_user_id_status_idx" ON "workflow_runs"("user_id", "s
 
 -- CreateIndex
 CREATE INDEX "workflow_runs_workflow_definition_id_idx" ON "workflow_runs"("workflow_definition_id");
+
+-- CreateIndex
+CREATE INDEX "workflow_runs_planning_session_id_idx" ON "workflow_runs"("planning_session_id");
 
 -- CreateIndex
 CREATE INDEX "workflow_runs_status_idx" ON "workflow_runs"("status");
