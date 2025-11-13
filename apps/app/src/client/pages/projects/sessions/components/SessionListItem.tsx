@@ -9,6 +9,7 @@ import { useState } from "react";
 import { SessionDropdownMenu } from "./SessionDropdownMenu";
 import { getSessionDisplayName } from "@/client/utils/getSessionDisplayName";
 import { truncate } from "@/client/utils/truncate";
+import { Loader2 } from "lucide-react";
 
 interface SessionListItemProps {
   session: SessionResponse;
@@ -22,7 +23,7 @@ export function SessionListItem({
   projectId,
   isActive = false,
 }: SessionListItemProps) {
-  const { id, metadata, created_at, type, permission_mode } = session;
+  const { id, metadata, created_at, type, permission_mode, state } = session;
   const messageCount = metadata?.messageCount ?? 0;
   const { isMobile, setOpenMobile } = useSidebar();
   const [isHovered, setIsHovered] = useState(false);
@@ -82,6 +83,12 @@ export function SessionListItem({
               {type === 'workflow' && (
                 <Badge variant="secondary" className="text-xs px-1.5 py-0 bg-blue-500/10 text-blue-500 border-blue-500/20 shrink-0">
                   Workflow
+                </Badge>
+              )}
+              {state === 'working' && (
+                <Badge variant="secondary" className="flex items-center gap-1 text-xs px-1.5 py-0 bg-amber-500/10 text-amber-600 border-amber-500/20 shrink-0">
+                  <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                  <span>Working</span>
                 </Badge>
               )}
             </div>

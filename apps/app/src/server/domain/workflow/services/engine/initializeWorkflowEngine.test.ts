@@ -18,6 +18,9 @@ vi.mock("./scanAllProjectWorkflows");
 vi.mock("./createWorkflowClient");
 vi.mock("inngest/fastify", () => ({
   fastifyPlugin: vi.fn(() => async () => {}),
+  serve: vi.fn(() => ({
+    register: vi.fn(),
+  })),
 }));
 
 describe("initializeWorkflowEngine", () => {
@@ -36,6 +39,7 @@ describe("initializeWorkflowEngine", () => {
       },
       decorate: vi.fn(),
       register: vi.fn(),
+      route: vi.fn(),
     } as unknown as FastifyInstance;
 
     // Mock workflow client

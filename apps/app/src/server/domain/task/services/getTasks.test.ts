@@ -76,11 +76,11 @@ describe("getTasks", () => {
       },
     ];
 
-    vi.mocked(prisma.project.findMany).mockResolvedValue(mockProjects as any);
+    vi.mocked(prisma.project.findMany).mockResolvedValue(mockProjects);
     vi.mocked(scanSpecsModule.scanSpecs)
       .mockResolvedValueOnce(mockTasks1)
       .mockResolvedValueOnce(mockTasks2);
-    vi.mocked(getSessionsModule.getSessions).mockResolvedValue(mockSessions as any);
+    vi.mocked(getSessionsModule.getSessions).mockResolvedValue(mockSessions);
 
     const result = await getTasks("user-1");
 
@@ -99,7 +99,8 @@ describe("getTasks", () => {
 
     expect(getSessionsModule.getSessions).toHaveBeenCalledWith({
       userId: "user-1",
-      type: "planning",
+      permission_mode: "plan",
+      projectId: undefined,
       includeArchived: false,
       limit: 50,
     });
@@ -118,7 +119,7 @@ describe("getTasks", () => {
       },
     ];
 
-    vi.mocked(prisma.project.findMany).mockResolvedValue(mockProjects as any);
+    vi.mocked(prisma.project.findMany).mockResolvedValue(mockProjects);
     vi.mocked(scanSpecsModule.scanSpecs).mockResolvedValue(mockTasks);
     vi.mocked(getSessionsModule.getSessions).mockResolvedValue([]);
 
@@ -137,7 +138,7 @@ describe("getTasks", () => {
   it("should respect cache per user", async () => {
     const mockProjects = [{ id: "project-1", path: "/path/to/project1" }];
 
-    vi.mocked(prisma.project.findMany).mockResolvedValue(mockProjects as any);
+    vi.mocked(prisma.project.findMany).mockResolvedValue(mockProjects);
     vi.mocked(scanSpecsModule.scanSpecs).mockResolvedValue([]);
     vi.mocked(getSessionsModule.getSessions).mockResolvedValue([]);
 
@@ -156,7 +157,7 @@ describe("getTasks", () => {
   it("should clear cache when clearTasksCache is called", async () => {
     const mockProjects = [{ id: "project-1", path: "/path/to/project1" }];
 
-    vi.mocked(prisma.project.findMany).mockResolvedValue(mockProjects as any);
+    vi.mocked(prisma.project.findMany).mockResolvedValue(mockProjects);
     vi.mocked(scanSpecsModule.scanSpecs).mockResolvedValue([]);
     vi.mocked(getSessionsModule.getSessions).mockResolvedValue([]);
 
@@ -195,9 +196,9 @@ describe("getTasks", () => {
       updated_at: new Date("2025-11-12T08:00:00.000Z"),
     };
 
-    vi.mocked(prisma.project.findMany).mockResolvedValue(mockProjects as any);
+    vi.mocked(prisma.project.findMany).mockResolvedValue(mockProjects);
     vi.mocked(scanSpecsModule.scanSpecs).mockResolvedValue([]);
-    vi.mocked(getSessionsModule.getSessions).mockResolvedValue([mockSession] as any);
+    vi.mocked(getSessionsModule.getSessions).mockResolvedValue([mockSession]);
 
     const result = await getTasks("user-1");
 

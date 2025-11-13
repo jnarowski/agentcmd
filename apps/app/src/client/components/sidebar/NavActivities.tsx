@@ -56,7 +56,7 @@ export function NavActivities() {
 
   const { data: sessions } = useSessions({
     projectId: projectFilter || undefined,
-    limit: 100,
+    limit: 20,
     orderBy: 'created_at',
     order: 'desc',
   });

@@ -39,10 +39,13 @@ export function NewButton() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-72">
+        {/* Projects Section */}
+        <DropdownMenuItem onClick={() => setIsProjectDialogOpen(true)}>
+          <FolderPlus className="size-4" />
+          New Project
+        </DropdownMenuItem>
+
         {/* Sessions Section */}
-        <DropdownMenuLabel className="text-[10px] uppercase text-muted-foreground font-semibold">
-          Sessions
-        </DropdownMenuLabel>
         <DropdownMenuItem
           onClick={() => {
             if (activeProjectId) {
@@ -76,17 +79,9 @@ export function NewButton() {
                   );
                 }
               }}
-              className="flex-col items-start gap-1 py-2"
             >
-              <div className="flex items-center gap-2">
-                <Workflow className="size-4" />
-                <span>New {workflow.name}</span>
-              </div>
-              {workflow.description && (
-                <p className="text-xs text-muted-foreground pl-6 truncate w-full">
-                  {workflow.description}
-                </p>
-              )}
+              <Workflow className="size-4 shrink-0" />
+              <span className="truncate">New {workflow.name}</span>
             </DropdownMenuItem>
           ))
         ) : (
@@ -94,18 +89,6 @@ export function NewButton() {
             No workflows defined
           </DropdownMenuItem>
         )}
-
-        {/* Divider */}
-        <DropdownMenuSeparator />
-
-        {/* Projects Section */}
-        <DropdownMenuLabel className="text-[10px] uppercase text-muted-foreground font-semibold">
-          Projects
-        </DropdownMenuLabel>
-        <DropdownMenuItem onClick={() => setIsProjectDialogOpen(true)}>
-          <FolderPlus className="size-4" />
-          New Project
-        </DropdownMenuItem>
       </DropdownMenuContent>
 
       {/* Project Dialog */}

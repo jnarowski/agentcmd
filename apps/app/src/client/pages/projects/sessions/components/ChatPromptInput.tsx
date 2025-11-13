@@ -96,8 +96,15 @@ const ChatPromptInputInner = forwardRef<
 
     // Wrapper function to update both local state and database
     const handlePermissionModeChange = (mode: string) => {
+      // Validate permission mode before updating
+      const validModes = ['default', 'plan', 'acceptEdits', 'bypassPermissions'];
+      if (!validModes.includes(mode)) {
+        console.error('[ChatPromptInput] Invalid permission mode:', mode);
+        return;
+      }
+
       // Update local state immediately
-      setPermissionMode(mode as any);
+      setPermissionMode(mode as 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions');
 
       // Persist to database if session exists
       if (sessionId) {

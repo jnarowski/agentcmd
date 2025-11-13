@@ -154,17 +154,22 @@ export function useSessionWebSocket({
             store.updateMetadata(data.metadata);
           }
 
-          // NOTE: Commented out to prevent duplicate fetches when streaming completes.
-          // Store is already updated via finalizeMessage(). Uncomment if server-side
-          // metadata (e.g., AI-generated session name, computed stats) needs to sync
-          // after streaming.
-          // queryClient.invalidateQueries({
-          //   queryKey: sessionKeys.detail(sessionIdRef.current, projectIdRef.current),
-          // });
+          // Update React Query cache to set state to idle when message completes
+          // This ensures SessionStateBadge shows correct state immediately
+          queryClient.setQueryData<SessionResponse>(
+            sessionKeys.detail(sessionIdRef.current, projectIdRef.current),
+            (old) => {
+              if (!old) return old;
+              return {
+                ...old,
+                state: "idle",
+              };
+            }
+          );
 
-          // Invalidate sessions lists to update sidebar
+          // Invalidate all session lists to update sidebar
           queryClient.invalidateQueries({
-            queryKey: sessionKeys.byProject(projectIdRef.current),
+            queryKey: sessionKeys.lists(),
           });
           break;
         }
@@ -174,22 +179,25 @@ export function useSessionWebSocket({
           console.log("[useSessionWebSocket] session.updated received:", data);
 
           // Update session detail cache directly (optimistic update)
-          queryClient.setQueryData<{ data: SessionResponse }>(
+          // Note: useSession returns unwrapped SessionResponse, not { data: SessionResponse }
+          queryClient.setQueryData<SessionResponse>(
             sessionKeys.detail(sessionIdRef.current, projectIdRef.current),
             (old) => {
               if (!old) return old;
               return {
                 ...old,
-                data: {
-                  ...old.data,
-                  ...(data.state && { state: data.state }),
-                  ...(data.error_message !== undefined && { error_message: data.error_message || undefined }),
-                  ...(data.name && { name: data.name }),
-                  ...(data.updated_at && { updated_at: new Date(data.updated_at) }),
-                },
+                ...(data.state && { state: data.state }),
+                ...(data.error_message !== undefined && { error_message: data.error_message || undefined }),
+                ...(data.name && { name: data.name }),
+                ...(data.updated_at && { updated_at: new Date(data.updated_at) }),
               };
             }
           );
+
+          // Invalidate all session lists to update sidebar
+          queryClient.invalidateQueries({
+            queryKey: sessionKeys.lists(),
+          });
 
           // Sync sessionStore with database state
           if (data.state === "error") {

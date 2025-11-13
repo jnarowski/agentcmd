@@ -32,21 +32,24 @@ export function PermissionModeSelector({
   permissionMode,
   onPermissionModeChange,
 }: PermissionModeSelectorProps) {
+  // Ensure we always have a valid permission mode, fallback to 'acceptEdits'
+  const safePermissionMode = permissionMode || 'acceptEdits';
+
   return (
     <PromptInputPermissionModeSelect
       onValueChange={onPermissionModeChange}
-      value={permissionMode}
+      value={safePermissionMode}
     >
       <PromptInputPermissionModeSelectTrigger>
         <div className="flex items-center gap-2">
           {/* Show dot + short name on mobile */}
           <div
             className={`size-2 rounded-full md:hidden ${
-              PERMISSION_MODES.find((m) => m.id === permissionMode)?.color
+              PERMISSION_MODES.find((m) => m.id === safePermissionMode)?.color
             }`}
           />
           <span className="md:hidden">
-            {PERMISSION_MODES.find((m) => m.id === permissionMode)?.shortName}
+            {PERMISSION_MODES.find((m) => m.id === safePermissionMode)?.shortName}
           </span>
           {/* Show full name with dot on desktop (via SelectValue) */}
           <span className="hidden md:inline">

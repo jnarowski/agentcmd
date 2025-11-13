@@ -49,7 +49,7 @@ export async function scanSpecs(projectPath: string, projectId: string): Promise
         if (headerMatch) {
           displayName = headerMatch[1].trim();
         }
-      } catch (error) {
+      } catch {
         // If file read fails, fall back to generating name from path
         const pathParts = entry.path.split("/");
         const folderName = pathParts[pathParts.length - 1];

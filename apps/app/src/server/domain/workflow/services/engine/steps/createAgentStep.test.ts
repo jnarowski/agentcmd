@@ -108,6 +108,7 @@ describe("createAgentStep", () => {
         sessionId: expect.any(String), // sessionId (UUID)
         agent: "claude",
         name: "Code Review", // toName("code-review") -> "Code Review"
+        type: "workflow",
         metadataOverride: {}
       }
     });

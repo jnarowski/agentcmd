@@ -1,4 +1,4 @@
-import { Radio } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Badge } from "@/client/components/ui/badge";
 import {
   Tooltip,
@@ -21,13 +21,13 @@ export function SessionStateBadge({
     return null;
   }
 
-  // Working state - show streaming indicator with pulse animation
+  // Working state - show streaming indicator with spinning loader
   if (state === "working") {
     return (
-      <div className="flex items-center gap-1.5 text-xs uppercase text-muted-foreground">
-        <Radio className="h-3.5 w-3.5 animate-pulse" />
-        <span>Streaming</span>
-      </div>
+      <Badge variant="secondary" className="flex items-center gap-1.5 text-xs px-2 py-0.5 bg-amber-500/10 text-amber-600 border-amber-500/20 shrink-0">
+        <Loader2 className="h-3 w-3 animate-spin" />
+        <span>Working</span>
+      </Badge>
     );
   }
 

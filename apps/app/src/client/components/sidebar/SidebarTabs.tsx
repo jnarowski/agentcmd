@@ -13,9 +13,6 @@ import {
   TooltipTrigger,
 } from "@/client/components/ui/tooltip";
 import { useSettings, useUpdateSettings } from "@/client/hooks/useSettings";
-import { useProjects } from "@/client/pages/projects/hooks/useProjects";
-import { useSessions } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
-import { useAllWorkflowRuns } from "@/client/pages/projects/workflows/hooks/useAllWorkflowRuns";
 import { useNavigationStore } from "@/client/stores/navigationStore";
 import { NavTasks } from "./NavTasks";
 import { NavActivities } from "./NavActivities";
@@ -25,29 +22,15 @@ import { useTasks } from "@/client/hooks/useTasks";
 export function SidebarTabs() {
   const { data: settings } = useSettings();
   const updateSettings = useUpdateSettings();
-  const { data: projects } = useProjects();
   const { activeSessionId, activeProjectId } = useNavigationStore();
   const { runId } = useParams();
 
   const activeTab =
     settings?.userPreferences?.sidebar_active_tab || "activities";
-  const view = settings?.userPreferences?.projects_view || "all";
 
   // Get project filter: only use if explicitly set
   const projectFilter =
     settings?.userPreferences?.active_project_filter || undefined;
-
-  // Fetch filtered data for counts
-  const { data: sessions } = useSessions({
-    projectId: projectFilter || undefined,
-    limit: 100,
-    orderBy: "created_at",
-    order: "desc",
-  });
-  const { data: allWorkflowRuns } = useAllWorkflowRuns(
-    ["pending", "running", "failed"],
-    projectFilter
-  );
 
   const isFiltered =
     settings?.userPreferences?.active_project_filter &&
@@ -78,24 +61,24 @@ export function SidebarTabs() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeProjectId, isFiltered]);
 
-  // Count sessions and workflows for activities
-  const sessionCount = sessions?.length || 0;
-  const workflowCount = allWorkflowRuns?.length || 0;
-  const activitiesCount = sessionCount + workflowCount;
+  // Count sessions and workflows for activities (unused, but kept for potential future use)
+  // const sessionCount = sessions?.length || 0;
+  // const workflowCount = allWorkflowRuns?.length || 0;
+  // const activitiesCount = sessionCount + workflowCount;
 
-  // Count projects based on current view
-  let projectsCount = 0;
-  if (projects) {
-    if (view === "favorites") {
-      projectsCount = projects.filter(
-        (p) => p.is_starred && !p.is_hidden
-      ).length;
-    } else if (view === "hidden") {
-      projectsCount = projects.filter((p) => p.is_hidden).length;
-    } else {
-      projectsCount = projects.filter((p) => !p.is_hidden).length;
-    }
-  }
+  // Count projects based on current view (unused, but kept for potential future use)
+  // let projectsCount = 0;
+  // if (projects) {
+  //   if (view === "favorites") {
+  //     projectsCount = projects.filter(
+  //       (p) => p.is_starred && !p.is_hidden
+  //     ).length;
+  //   } else if (view === "hidden") {
+  //     projectsCount = projects.filter((p) => p.is_hidden).length;
+  //   } else {
+  //     projectsCount = projects.filter((p) => !p.is_hidden).length;
+  //   }
+  // }
 
   // Count tasks (specs only) filtered by project
   const { data: tasksData } = useTasks(projectFilter);
@@ -116,10 +99,10 @@ export function SidebarTabs() {
       <div className="pl-2 pr-2 pt-3 shrink-0 space-y-2">
         <TabsList className="w-full grid grid-cols-3 h-7 p-0.5">
           <TabsTrigger value="projects" className="text-xs h-full px-1.5">
-            Projects ({projectsCount})
+            Projects
           </TabsTrigger>
           <TabsTrigger value="activities" className="text-xs h-full px-1.5">
-            Activities ({activitiesCount})
+            Activities
           </TabsTrigger>
           <TabsTrigger value="tasks" className="text-xs h-full px-1.5">
             Tasks ({tasksCount})

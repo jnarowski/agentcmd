@@ -94,17 +94,11 @@ export function useUpdateSession() {
       );
       return result.data;
     },
-    onSuccess: (updatedSession) => {
-      // Update cache for the project's sessions
-      queryClient.setQueryData<SessionResponse[]>(
-        sessionKeys.byProject(updatedSession.projectId),
-        (old) => {
-          if (!old) return [updatedSession];
-          return old.map((session) =>
-            session.id === updatedSession.id ? updatedSession : session
-          );
-        }
-      );
+    onSuccess: () => {
+      // Invalidate all session lists to update sidebar
+      queryClient.invalidateQueries({
+        queryKey: sessionKeys.lists(),
+      });
 
       toast.success("Session updated successfully");
     },
@@ -125,17 +119,11 @@ export function useArchiveSession() {
       );
       return result.data;
     },
-    onSuccess: (archivedSession) => {
-      // Update cache for the project's sessions
-      queryClient.setQueryData<SessionResponse[]>(
-        sessionKeys.byProject(archivedSession.projectId),
-        (old) => {
-          if (!old) return [archivedSession];
-          return old.map((session) =>
-            session.id === archivedSession.id ? archivedSession : session
-          );
-        }
-      );
+    onSuccess: () => {
+      // Invalidate all session lists to update sidebar
+      queryClient.invalidateQueries({
+        queryKey: sessionKeys.lists(),
+      });
 
       toast.success("Session archived successfully");
     },
@@ -156,17 +144,11 @@ export function useUnarchiveSession() {
       );
       return result.data;
     },
-    onSuccess: (unarchivedSession) => {
-      // Update cache for the project's sessions
-      queryClient.setQueryData<SessionResponse[]>(
-        sessionKeys.byProject(unarchivedSession.projectId),
-        (old) => {
-          if (!old) return [unarchivedSession];
-          return old.map((session) =>
-            session.id === unarchivedSession.id ? unarchivedSession : session
-          );
-        }
-      );
+    onSuccess: () => {
+      // Invalidate all session lists to update sidebar
+      queryClient.invalidateQueries({
+        queryKey: sessionKeys.lists(),
+      });
 
       toast.success("Session unarchived successfully");
     },

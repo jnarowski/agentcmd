@@ -17,6 +17,7 @@ import { AgentSelector } from "@/client/components/AgentSelector";
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
 import { Channels } from "@/shared/websocket";
 import { SessionEventTypes } from "@/shared/types/websocket.types";
+import { useSettings } from "@/client/hooks/useSettings";
 
 export default function NewSession() {
   const navigate = useNavigate();
@@ -31,6 +32,22 @@ export default function NewSession() {
   // Get agent from store
   const agent = useSessionStore((s) => s.form.agent);
   const setAgent = useSessionStore((s) => s.setAgent);
+  const initializeFromSettings = useSessionStore((s) => s.initializeFromSettings);
+
+  // Load user settings to reset form to defaults
+  const { data: settings } = useSettings();
+
+  // Reset form to user defaults on every mount (not just settings change)
+  // This ensures navigating from existing session → /new resets to defaults
+  useEffect(() => {
+    if (settings?.userPreferences) {
+      initializeFromSettings({
+        permissionMode: settings.userPreferences.default_permission_mode,
+        agent: settings.userPreferences.default_agent,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount only
 
   // App-wide WebSocket hook for sending messages during session creation
   const {
@@ -64,9 +81,9 @@ export default function NewSession() {
         { sessionId: generateUUID(), agent }
       );
 
-      // Invalidate sessions query to update sidebar immediately
+      // Invalidate all session lists to update sidebar immediately
       queryClient.invalidateQueries({
-        queryKey: sessionKeys.byProject(projectId),
+        queryKey: sessionKeys.lists(),
       });
 
       // No image upload for now - files parameter not used

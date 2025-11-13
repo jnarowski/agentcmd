@@ -73,7 +73,10 @@ describe("scanSpecs", () => {
       },
     };
 
-    vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(mockIndex));
+    // Mock index.json read to succeed, spec.md read to fail
+    vi.mocked(fs.readFile)
+      .mockResolvedValueOnce(JSON.stringify(mockIndex))
+      .mockRejectedValueOnce(new Error("spec.md not found"));
     vi.mocked(path.join).mockReturnValue("/fake/path/index.json");
 
     const result = await scanSpecs("/fake/project/path", "project-123");
