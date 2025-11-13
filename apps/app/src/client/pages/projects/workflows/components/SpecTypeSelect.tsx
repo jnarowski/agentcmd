@@ -1,12 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/client/components/ui/select";
+import { Combobox } from "@/client/components/ui/combobox";
 import { api } from "@/client/utils/api";
+import { cn } from "@/client/utils/cn";
 
 export interface SpecTypeMetadata {
   id: string;
@@ -40,68 +35,68 @@ export function SpecTypeSelect({
     enabled: !!projectId,
   });
 
-  if (isLoading) {
-    return (
-      <Select disabled>
-        <SelectTrigger>
-          <SelectValue placeholder="Loading spec types..." />
-        </SelectTrigger>
-      </Select>
-    );
-  }
-
-  if (!data || data.length === 0) {
-    return (
-      <Select disabled>
-        <SelectTrigger>
-          <SelectValue placeholder="No spec types found" />
-        </SelectTrigger>
-      </Select>
-    );
-  }
-
-  // Get selected type for display
-  const selectedType = data.find((t) => t.id === value);
+  const options = (data || []).map((type) => ({
+    value: type.id,
+    label: type.name,
+    description: type.description,
+    badge: type.command,
+  }));
 
   return (
-    <Select value={value} onValueChange={onValueChange} disabled={disabled}>
-      <SelectTrigger>
-        <SelectValue placeholder="Select spec type">
-          {selectedType && (
-            <span className="flex items-center gap-2">
-              <span className="font-medium">{selectedType.name}</span>
-              <span className="text-xs text-muted-foreground">·</span>
-              <span className="text-xs text-muted-foreground">
-                {selectedType.command}
-              </span>
+    <Combobox
+      value={value}
+      onValueChange={onValueChange}
+      options={options}
+      placeholder={
+        isLoading
+          ? "Loading spec types..."
+          : !data || data.length === 0
+            ? "No spec types found"
+            : "Select spec type..."
+      }
+      searchPlaceholder="Search spec types..."
+      emptyMessage="No spec types found"
+      disabled={disabled || isLoading || !data || data.length === 0}
+      renderTrigger={(selectedOption) =>
+        selectedOption ? (
+          <div className="flex items-center justify-between gap-2 w-full">
+            <span className="truncate font-medium">{selectedOption.label}</span>
+            <span className="text-xs text-muted-foreground/60 shrink-0 font-mono">
+              {selectedOption.badge}
             </span>
-          )}
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent className="w-[--radix-select-trigger-width]" align="start" position="popper" sideOffset={4}>
-        {data.map((type: SpecTypeMetadata) => {
-          // Extract first sentence from description
-          const firstSentence = type.description.split(/[.!?]/)[0].trim();
+          </div>
+        ) : (
+          <span>
+            {isLoading
+              ? "Loading spec types..."
+              : !data || data.length === 0
+                ? "No spec types found"
+                : "Select spec type..."}
+          </span>
+        )
+      }
+      renderOption={(option, selected) => {
+        // Extract first sentence from description
+        const firstSentence = option.description?.split(/[.!?]/)[0].trim();
 
-          return (
-            <SelectItem key={type.id} value={type.id} className="!pr-2 w-full">
-              <div className="flex flex-col gap-1 py-1 w-full pr-6">
-                <div className="flex items-center justify-between gap-2 w-full">
-                  <div className="font-medium">{type.name}</div>
-                  <div className="text-xs text-muted-foreground font-mono shrink-0">
-                    {type.command}
-                  </div>
-                </div>
-                {firstSentence && (
-                  <div className="text-xs text-muted-foreground">
-                    {firstSentence}
-                  </div>
-                )}
+        return (
+          <div className="flex flex-col gap-1 py-1 w-full">
+            <div className="flex items-center justify-between gap-2">
+              <div className={cn("font-medium", selected && "text-primary")}>
+                {option.label}
               </div>
-            </SelectItem>
-          );
-        })}
-      </SelectContent>
-    </Select>
+            </div>
+            <div className="text-xs text-muted-foreground font-mono shrink-0">
+              {option.badge}
+            </div>
+            {firstSentence && (
+              <div className="text-xs text-muted-foreground/60">
+                {firstSentence}
+              </div>
+            )}
+          </div>
+        );
+      }}
+    />
   );
 }

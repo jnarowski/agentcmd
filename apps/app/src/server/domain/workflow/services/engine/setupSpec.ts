@@ -8,33 +8,36 @@ import type { FastifyBaseLogger } from "fastify";
 import type { WorkflowRun } from "@prisma/client";
 import { getSpecCommand } from "../getSpecCommand";
 import { existsSync } from "fs";
-import { join, resolve, isAbsolute } from "path";
+import { resolve, isAbsolute } from "path";
 
 /**
  * Setup spec file for workflow execution.
- * Ensures event.data.specFile is populated, either from provided file or by generating new spec.
+ * Ensures spec file exists and returns its absolute path.
  *
  * **Behavior:**
  * - If `event.data.specFile` exists: Verifies file exists, throws if not found
  * - Otherwise: Generates spec using `/cmd:generate-{specType}-spec` command
  * - Defaults to `specType: "feature"` if not specified
  * - Validates that required slash command exists before generation
+ *
+ * @returns Absolute path to spec file
  */
 export async function setupSpec(params: {
   run: WorkflowRun & { project: { path: string } };
   event: WorkflowEvent;
   step: WorkflowStep;
   logger: FastifyBaseLogger;
-}): Promise<void> {
-  const { run, event, step, logger } = params;
-  // Early return if no data
+}): Promise<string | null> {
+  const { run, event, step } = params;
+
+  // Guard: Skip if event has no data payload
   if (!event.data) {
-    return;
+    return null;
   }
 
-  // If specFile already provided, verify it exists
+  // CASE 1: Spec file already provided - just validate it exists
   if (event.data.specFile) {
-    // Resolve relative paths from project directory
+    // Convert relative paths to absolute (relative to project root)
     const specFilePath = resolveProjectPath(
       run.project.path,
       event.data.specFile
@@ -44,27 +47,19 @@ export async function setupSpec(params: {
       throw new Error(`Spec file not found: ${event.data.specFile}`);
     }
 
-    // Update to absolute path
-    event.data.specFile = specFilePath;
-
-    logger.info(
-      { runId: run.id, specFile: specFilePath },
-      "Using provided spec file"
-    );
-    return;
+    return specFilePath;
   }
 
-  // Default to "feature" spec type if not specified
+  // CASE 2: No spec file - generate one via AI agent
+
+  // Determine which type of spec to generate (feature, bug, prd, etc.)
+  // Defaults to "feature" if not specified
   const specType = event.data.specType ?? "feature";
 
-  // Verify slash command exists
-  const commandPath = join(
-    run.project.path,
-    ".claude",
-    "commands",
-    "cmd",
-    `generate-${specType}-spec.md`
-  );
+  // Verify the slash command exists before calling agent
+  // Command format: /cmd:generate-{specType}-spec
+  // Example: /cmd:generate-feature-spec, /cmd:generate-bug-spec
+  const commandPath = `${run.project.path}/.claude/commands/cmd/generate-${specType}-spec.md`;
 
   if (!existsSync(commandPath)) {
     throw new Error(
@@ -74,16 +69,10 @@ export async function setupSpec(params: {
     );
   }
 
-  // Generate spec file
-  logger.info({ runId: run.id, specType }, "Generating spec file");
+  // Call agent to generate spec - handles both fresh generation and resuming from planning
+  const specFile = await generateSpecFileWithAgent(event, step);
 
-  const specFile = await resolveSpecFile(event, step);
-
-  if (event.data) {
-    event.data.specFile = specFile;
-  }
-
-  logger.info({ runId: run.id, specFile }, "Spec file generated");
+  return specFile;
 }
 
 // ============================================================================
@@ -99,35 +88,52 @@ function resolveProjectPath(projectPath: string, filePath: string): string {
 }
 
 /**
- * Resolve spec file by generating it via agent step.
- * Handles both fresh generation and resuming from planning session.
+ * Generate spec file using AI agent.
+ * Handles two generation modes:
+ * 1. Resume from planning session (uses existing session context)
+ * 2. Fresh generation (uses provided spec content as context)
+ *
+ * @returns Absolute path to generated spec file
+ * @throws Error if generation fails or no spec_file returned
  */
-async function resolveSpecFile(
+async function generateSpecFileWithAgent(
   event: WorkflowEvent,
   step: WorkflowStep
 ): Promise<string> {
-  // 1. Use provided spec if available
+  // Guard: If spec file already exists, return it
   if (event.data.specFile) {
     return event.data.specFile;
   }
 
-  // Determine which command to use
+  // Determine which slash command to use for generation
+  // specType: Type of spec to generate (e.g., "feature", "bug", "prd", "issue")
+  //   - Determines which .claude/commands/cmd/generate-{specType}-spec.md file to use
+  //   - Examples: "feature" → /cmd:generate-feature-spec
+  //              "bug" → /cmd:generate-bug-spec
+  //              "prd" → /cmd:generate-prd-spec
   const specType = event.data.specType ?? "feature";
+
+  // getSpecCommand(specType): Converts spec type to slash command format
+  //   Input:  "feature"
+  //   Output: "/cmd:generate-feature-spec"
+  // specCommandOverride: Allows manually specifying a different command (bypasses type mapping)
   const command = event.data.specCommandOverride ?? getSpecCommand(specType);
 
-  // 2. Resume from planning session
+  // MODE 1: Resume from existing planning session
+  // Uses session history as context for spec generation
   if (event.data.planningSessionId) {
     const response = await step.agent<CmdGenerateSpecResponse>(
-      "Generate Spec",
+      "Generateing Spec From Planning Session",
       {
-        agent: "claude",
-        json: true,
+        agent: "claude", // Use Claude for spec generation
+        json: true, // Expect structured JSON response
         prompt: buildSlashCommand(command as SlashCommandName),
-        resume: event.data.planningSessionId,
+        resume: event.data.planningSessionId, // Resume from this session
         workingDir: event.data.workingDir,
       }
     );
 
+    // Validate response contains spec file path
     if (!response.data?.spec_file) {
       throw new Error("Spec generation failed: no spec_file returned");
     }
@@ -135,19 +141,21 @@ async function resolveSpecFile(
     return response.data.spec_file;
   }
 
-  // 3. Generate fresh spec
+  // MODE 2: Fresh spec generation
+  // Uses provided spec content/context as input
   const response = await step.agent<CmdGenerateSpecResponse>(
-    "Generate Spec File",
+    "Generate Spec From Provided Context",
     {
       agent: "claude",
-      json: true,
+      json: true, // Expect structured JSON response with spec_file path
       prompt: buildSlashCommand(command as SlashCommandName, {
-        context: event.data.specContent,
+        context: event.data.specContent, // Pass context to slash command
       }),
       workingDir: event.data.workingDir,
     }
   );
 
+  // Validate response contains spec file path
   if (!response.data?.spec_file) {
     throw new Error("Spec generation failed: no spec_file returned");
   }

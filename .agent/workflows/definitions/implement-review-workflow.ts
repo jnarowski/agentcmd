@@ -26,7 +26,6 @@ export default defineWorkflow(
     const { workingDir, specFile } = event.data;
 
     await step.phase("implement", async () => {
-
       const response = await step.agent<CmdImplementSpecResponse>(
         "implement-spec",
         {

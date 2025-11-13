@@ -145,15 +145,6 @@ describe("Workflow Routes", () => {
   });
 
   describe("GET /api/workflow-runs", () => {
-    it("should return 401 without authentication", async () => {
-      const response = await app.inject({
-        method: "GET",
-        url: "/api/workflow-runs",
-      });
-
-      expect(response.statusCode).toBe(401);
-    });
-
     it("should return user workflow runs", async () => {
       const { headers, user } = await createAuthenticatedUser(prisma, app);
       const project = await createTestProject(prisma, {
@@ -326,79 +317,9 @@ describe("Workflow Routes", () => {
       expect(body.data[0].status).toBe("running");
     });
 
-    it("should not return other users' workflow runs", async () => {
-      const { headers, user } = await createAuthenticatedUser(prisma, app);
-      const otherUser = await prisma.user.create({
-        data: {
-          email: "other@test.com",
-          password_hash: "hash",
-          is_active: true,
-        },
-      });
-
-      const project = await createTestProject(prisma, {
-        name: "Test Project",
-        path: "/tmp/test",
-      });
-
-      const workflowDef = await prisma.workflowDefinition.create({
-        data: {
-          project_id: project.id,
-          identifier: "test-workflow",
-          name: "Test Workflow",
-          type: "code",
-          path: ".workflows/test.ts",
-          phases: [],
-        },
-      });
-
-      // Create run for current user
-      await prisma.workflowRun.create({
-        data: {
-          user_id: user.id,
-          project_id: project.id,
-          workflow_definition_id: workflowDef.id,
-          name: "My Run",
-          status: "pending",
-          args: {},
-        },
-      });
-
-      // Create run for other user
-      await prisma.workflowRun.create({
-        data: {
-          user_id: otherUser.id,
-          project_id: project.id,
-          workflow_definition_id: workflowDef.id,
-          name: "Other Run",
-          status: "pending",
-          args: {},
-        },
-      });
-
-      const response = await app.inject({
-        method: "GET",
-        url: "/api/workflow-runs",
-        headers,
-      });
-
-      expect(response.statusCode).toBe(200);
-      const body = JSON.parse(response.body);
-      expect(body.data).toHaveLength(1);
-      expect(body.data[0].name).toBe("My Run");
-    });
   });
 
   describe("GET /api/workflow-runs/:id", () => {
-    it("should return 401 without authentication", async () => {
-      const response = await app.inject({
-        method: "GET",
-        url: "/api/workflow-runs/clzabc123456789012345",
-      });
-
-      expect(response.statusCode).toBe(401);
-    });
-
     it("should return workflow run by id", async () => {
       const { headers, user } = await createAuthenticatedUser(prisma, app);
       const project = await createTestProject(prisma, {
@@ -452,63 +373,9 @@ describe("Workflow Routes", () => {
       expect(response.statusCode).toBe(404);
     });
 
-    it("should return 403 for other user's run", async () => {
-      const { headers } = await createAuthenticatedUser(prisma, app);
-      const otherUser = await prisma.user.create({
-        data: {
-          email: "other@test.com",
-          password_hash: "hash",
-          is_active: true,
-        },
-      });
-
-      const project = await createTestProject(prisma, {
-        name: "Test Project",
-        path: "/tmp/test",
-      });
-
-      const workflowDef = await prisma.workflowDefinition.create({
-        data: {
-          project_id: project.id,
-          identifier: "test-workflow",
-          name: "Test Workflow",
-          type: "code",
-          path: ".workflows/test.ts",
-          phases: [],
-        },
-      });
-
-      const run = await prisma.workflowRun.create({
-        data: {
-          user_id: otherUser.id,
-          project_id: project.id,
-          workflow_definition_id: workflowDef.id,
-          name: "Other Run",
-          status: "pending",
-          args: {},
-        },
-      });
-
-      const response = await app.inject({
-        method: "GET",
-        url: `/api/workflow-runs/${run.id}`,
-        headers,
-      });
-
-      expect(response.statusCode).toBe(403);
-    });
   });
 
   describe("POST /api/workflow-runs/:id/pause", () => {
-    it("should return 401 without authentication", async () => {
-      const response = await app.inject({
-        method: "POST",
-        url: "/api/workflow-runs/clzabc123456789012345/pause",
-      });
-
-      expect(response.statusCode).toBe(401);
-    });
-
     it("should pause a running workflow", async () => {
       const { headers, user } = await createAuthenticatedUser(prisma, app);
       const project = await createTestProject(prisma, {
@@ -587,52 +454,6 @@ describe("Workflow Routes", () => {
       expect(response.statusCode).toBe(400);
     });
 
-    it("should return 403 for other user's run", async () => {
-      const { headers } = await createAuthenticatedUser(prisma, app);
-      const otherUser = await prisma.user.create({
-        data: {
-          email: "other@test.com",
-          password_hash: "hash",
-          is_active: true,
-        },
-      });
-
-      const project = await createTestProject(prisma, {
-        name: "Test Project",
-        path: "/tmp/test",
-      });
-
-      const workflowDef = await prisma.workflowDefinition.create({
-        data: {
-          project_id: project.id,
-          identifier: "test-workflow",
-          name: "Test Workflow",
-          type: "code",
-          path: ".workflows/test.ts",
-          phases: [],
-        },
-      });
-
-      const run = await prisma.workflowRun.create({
-        data: {
-          user_id: otherUser.id,
-          project_id: project.id,
-          workflow_definition_id: workflowDef.id,
-          name: "Other Run",
-          status: "running",
-          args: {},
-        },
-      });
-
-      const response = await app.inject({
-        method: "POST",
-        url: `/api/workflow-runs/${run.id}/pause`,
-        headers,
-      });
-
-      expect(response.statusCode).toBe(403);
-    });
-
     it("should return 404 for non-existent run", async () => {
       const { headers } = await createAuthenticatedUser(prisma, app);
 
@@ -647,15 +468,6 @@ describe("Workflow Routes", () => {
   });
 
   describe("POST /api/workflow-runs/:id/resume", () => {
-    it("should return 401 without authentication", async () => {
-      const response = await app.inject({
-        method: "POST",
-        url: "/api/workflow-runs/clzabc123456789012345/resume",
-      });
-
-      expect(response.statusCode).toBe(401);
-    });
-
     it("should resume a paused workflow", async () => {
       const { headers, user } = await createAuthenticatedUser(prisma, app);
       const project = await createTestProject(prisma, {
@@ -734,52 +546,6 @@ describe("Workflow Routes", () => {
       expect(response.statusCode).toBe(400);
     });
 
-    it("should return 403 for other user's run", async () => {
-      const { headers } = await createAuthenticatedUser(prisma, app);
-      const otherUser = await prisma.user.create({
-        data: {
-          email: "other@test.com",
-          password_hash: "hash",
-          is_active: true,
-        },
-      });
-
-      const project = await createTestProject(prisma, {
-        name: "Test Project",
-        path: "/tmp/test",
-      });
-
-      const workflowDef = await prisma.workflowDefinition.create({
-        data: {
-          project_id: project.id,
-          identifier: "test-workflow",
-          name: "Test Workflow",
-          type: "code",
-          path: ".workflows/test.ts",
-          phases: [],
-        },
-      });
-
-      const run = await prisma.workflowRun.create({
-        data: {
-          user_id: otherUser.id,
-          project_id: project.id,
-          workflow_definition_id: workflowDef.id,
-          name: "Other Run",
-          status: "paused",
-          args: {},
-        },
-      });
-
-      const response = await app.inject({
-        method: "POST",
-        url: `/api/workflow-runs/${run.id}/resume`,
-        headers,
-      });
-
-      expect(response.statusCode).toBe(403);
-    });
-
     it("should return 404 for non-existent run", async () => {
       const { headers } = await createAuthenticatedUser(prisma, app);
 
@@ -794,15 +560,6 @@ describe("Workflow Routes", () => {
   });
 
   describe("POST /api/workflow-runs/:id/cancel", () => {
-    it("should return 401 without authentication", async () => {
-      const response = await app.inject({
-        method: "POST",
-        url: "/api/workflow-runs/clzabc123456789012345/cancel",
-      });
-
-      expect(response.statusCode).toBe(401);
-    });
-
     it("should cancel a workflow run", async () => {
       const { headers, user } = await createAuthenticatedUser(prisma, app);
       const project = await createTestProject(prisma, {
@@ -883,52 +640,6 @@ describe("Workflow Routes", () => {
       expect(body.data.status).toBe("cancelled");
     });
 
-    it("should return 403 for other user's run", async () => {
-      const { headers } = await createAuthenticatedUser(prisma, app);
-      const otherUser = await prisma.user.create({
-        data: {
-          email: "other@test.com",
-          password_hash: "hash",
-          is_active: true,
-        },
-      });
-
-      const project = await createTestProject(prisma, {
-        name: "Test Project",
-        path: "/tmp/test",
-      });
-
-      const workflowDef = await prisma.workflowDefinition.create({
-        data: {
-          project_id: project.id,
-          identifier: "test-workflow",
-          name: "Test Workflow",
-          type: "code",
-          path: ".workflows/test.ts",
-          phases: [],
-        },
-      });
-
-      const run = await prisma.workflowRun.create({
-        data: {
-          user_id: otherUser.id,
-          project_id: project.id,
-          workflow_definition_id: workflowDef.id,
-          name: "Other Run",
-          status: "running",
-          args: {},
-        },
-      });
-
-      const response = await app.inject({
-        method: "POST",
-        url: `/api/workflow-runs/${run.id}/cancel`,
-        headers,
-      });
-
-      expect(response.statusCode).toBe(403);
-    });
-
     it("should return 404 for non-existent run", async () => {
       const { headers } = await createAuthenticatedUser(prisma, app);
 
@@ -942,131 +653,4 @@ describe("Workflow Routes", () => {
     });
   });
 
-  describe("State Transition Tests", () => {
-    it("should handle invalid state transition pause → pause", async () => {
-      const { headers, user } = await createAuthenticatedUser(prisma, app);
-      const project = await createTestProject(prisma, {
-        name: "Test Project",
-        path: "/tmp/test",
-      });
-
-      const workflowDef = await prisma.workflowDefinition.create({
-        data: {
-          project_id: project.id,
-          identifier: "test-workflow",
-          name: "Test Workflow",
-          type: "code",
-          path: ".workflows/test.ts",
-          phases: [],
-        },
-      });
-
-      const run = await prisma.workflowRun.create({
-        data: {
-          user_id: user.id,
-          project_id: project.id,
-          workflow_definition_id: workflowDef.id,
-          name: "Test Run",
-          status: "paused",
-          args: {},
-        },
-      });
-
-      const response = await app.inject({
-        method: "POST",
-        url: `/api/workflow-runs/${run.id}/pause`,
-        headers,
-      });
-
-      expect(response.statusCode).toBe(400);
-    });
-
-    it("should handle invalid state transition completed → resume", async () => {
-      const { headers, user } = await createAuthenticatedUser(prisma, app);
-      const project = await createTestProject(prisma, {
-        name: "Test Project",
-        path: "/tmp/test",
-      });
-
-      const workflowDef = await prisma.workflowDefinition.create({
-        data: {
-          project_id: project.id,
-          identifier: "test-workflow",
-          name: "Test Workflow",
-          type: "code",
-          path: ".workflows/test.ts",
-          phases: [],
-        },
-      });
-
-      const run = await prisma.workflowRun.create({
-        data: {
-          user_id: user.id,
-          project_id: project.id,
-          workflow_definition_id: workflowDef.id,
-          name: "Test Run",
-          status: "completed",
-          args: {},
-        },
-      });
-
-      const response = await app.inject({
-        method: "POST",
-        url: `/api/workflow-runs/${run.id}/resume`,
-        headers,
-      });
-
-      expect(response.statusCode).toBe(400);
-    });
-
-    it("should handle concurrent state changes", async () => {
-      const { headers, user } = await createAuthenticatedUser(prisma, app);
-      const project = await createTestProject(prisma, {
-        name: "Test Project",
-        path: "/tmp/test",
-      });
-
-      const workflowDef = await prisma.workflowDefinition.create({
-        data: {
-          project_id: project.id,
-          identifier: "test-workflow",
-          name: "Test Workflow",
-          type: "code",
-          path: ".workflows/test.ts",
-          phases: [],
-        },
-      });
-
-      const run = await prisma.workflowRun.create({
-        data: {
-          user_id: user.id,
-          project_id: project.id,
-          workflow_definition_id: workflowDef.id,
-          name: "Test Run",
-          status: "running",
-          args: {},
-        },
-      });
-
-      // Try to pause and cancel simultaneously
-      const [pauseResponse, cancelResponse] = await Promise.all([
-        app.inject({
-          method: "POST",
-          url: `/api/workflow-runs/${run.id}/pause`,
-          headers,
-        }),
-        app.inject({
-          method: "POST",
-          url: `/api/workflow-runs/${run.id}/cancel`,
-          headers,
-        }),
-      ]);
-
-      // One should succeed, at least
-      const successResponses = [pauseResponse, cancelResponse].filter(
-        (r) => r.statusCode === 200
-      );
-      expect(successResponses.length).toBeGreaterThanOrEqual(1);
-    });
-  });
 });

@@ -16,6 +16,8 @@ import { getAvailableSpecTypes } from "@/server/domain/workflow/services/getAvai
 import { installWorkflowPackage } from "@/server/domain/project/services/installWorkflowPackage";
 import { getBranches } from "@/server/domain/git/services";
 import { getFileTree, readFile, writeFile } from "@/server/domain/file/services/index";
+import { scanSpecs } from "@/server/domain/task/services/scanSpecs";
+import type { SpecTask } from "@/shared/types/task.types";
 import {
   createProjectSchema,
   updateProjectSchema,
@@ -126,7 +128,7 @@ export async function projectRoutes(fastify: FastifyInstance) {
 
   /**
    * GET /api/projects/:id/specs
-   * List all spec files in .agent/specs/todo/
+   * List all spec tasks from .agent/specs/todo/
    */
   fastify.get<{
     Params: { id: string };
@@ -138,7 +140,15 @@ export async function projectRoutes(fastify: FastifyInstance) {
         params: projectIdSchema,
         response: {
           200: z.object({
-            data: z.array(z.string()),
+            data: z.array(z.object({
+              id: z.string(),
+              name: z.string(),
+              specPath: z.string(),
+              projectId: z.string(),
+              status: z.string(),
+              spec_type: z.string(),
+              created_at: z.string(),
+            })),
           }),
           404: errorResponse,
         },
@@ -153,9 +163,9 @@ export async function projectRoutes(fastify: FastifyInstance) {
           .send(buildErrorResponse(404, "Project not found"));
       }
 
-      const specFiles = await listSpecFiles({ projectPath: project.path });
+      const specTasks = await scanSpecs(project.path, project.id);
 
-      return reply.send({ data: specFiles });
+      return reply.send({ data: specTasks });
     }
   );
 

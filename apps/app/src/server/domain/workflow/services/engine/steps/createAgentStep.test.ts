@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { prisma } from "@/shared/prisma";
 import { cleanTestDB } from "@/server/test-utils/db";
+import { createTestWorkflowContext } from "@/server/test-utils/fixtures";
 import { createAgentStep } from "./createAgentStep";
 import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 import * as executeAgentModule from "@/server/domain/session/services/executeAgent";
@@ -59,34 +60,8 @@ describe("createAgentStep", () => {
     });
     mockUpdateStepStatus.mockResolvedValue();
 
-    const user = await prisma.user.create({
-      data: {
-        email: "test@example.com",
-        password_hash: "hash",
-      },
-    });
-    const project = await prisma.project.create({
-      data: { name: "Test Project", path: "/tmp/test" },
-    });
-    const workflow = await prisma.workflowDefinition.create({
-      data: {
-        project_id: project.id,
-        name: "test-workflow",
-        identifier: "test-workflow",
-        type: "code",
-        path: "/tmp/test.ts",
-        phases: []
-      },
-    });
-    const execution = await prisma.workflowRun.create({
-      data: {
-        project_id: project.id,
-        user_id: user.id,
-        workflow_definition_id: workflow.id,
-        name: "Test Execution",
-        args: {},
-        status: "running",
-      },
+    const { user, project, run: execution } = await createTestWorkflowContext(prisma, {
+      run: { name: "Test Execution", status: "running", args: {} }
     });
 
     // Create real agent session in DB to satisfy foreign key constraint
@@ -192,34 +167,8 @@ describe("createAgentStep", () => {
     mockUpdateStepStatus.mockResolvedValue();
     mockHandleStepFailure.mockResolvedValue();
 
-    const user = await prisma.user.create({
-      data: {
-        email: "test@example.com",
-        password_hash: "hash",
-      },
-    });
-    const project = await prisma.project.create({
-      data: { name: "Test Project", path: "/tmp/test" },
-    });
-    const workflow = await prisma.workflowDefinition.create({
-      data: {
-        project_id: project.id,
-        name: "test-workflow",
-        identifier: "test-workflow",
-        type: "code",
-        path: "/tmp/test.ts",
-        phases: []
-      },
-    });
-    const execution = await prisma.workflowRun.create({
-      data: {
-        project_id: project.id,
-        user_id: user.id,
-        workflow_definition_id: workflow.id,
-        name: "Test Execution",
-        args: {},
-        status: "running",
-      },
+    const { user, project, run: execution } = await createTestWorkflowContext(prisma, {
+      run: { name: "Test Execution", status: "running", args: {} }
     });
 
     // Create real agent session in DB to satisfy foreign key constraint
@@ -301,34 +250,8 @@ describe("createAgentStep", () => {
     });
     mockUpdateStepStatus.mockResolvedValue();
 
-    const user = await prisma.user.create({
-      data: {
-        email: "test@example.com",
-        password_hash: "hash",
-      },
-    });
-    const project = await prisma.project.create({
-      data: { name: "Test Project", path: "/tmp/test" },
-    });
-    const workflow = await prisma.workflowDefinition.create({
-      data: {
-        project_id: project.id,
-        name: "test-workflow",
-        identifier: "test-workflow",
-        type: "code",
-        path: "/tmp/test.ts",
-        phases: []
-      },
-    });
-    const execution = await prisma.workflowRun.create({
-      data: {
-        project_id: project.id,
-        user_id: user.id,
-        workflow_definition_id: workflow.id,
-        name: "Test Execution",
-        args: {},
-        status: "running",
-      },
+    const { user, project, run: execution } = await createTestWorkflowContext(prisma, {
+      run: { name: "Test Execution", status: "running", args: {} }
     });
 
     // Create real agent session in DB to satisfy foreign key constraint
@@ -414,34 +337,8 @@ describe("createAgentStep", () => {
     });
     mockUpdateStepStatus.mockResolvedValue();
 
-    const user = await prisma.user.create({
-      data: {
-        email: "test@example.com",
-        password_hash: "hash",
-      },
-    });
-    const project = await prisma.project.create({
-      data: { name: "Test Project", path: "/tmp/test" },
-    });
-    const workflow = await prisma.workflowDefinition.create({
-      data: {
-        project_id: project.id,
-        name: "test-workflow",
-        identifier: "test-workflow",
-        type: "code",
-        path: "/tmp/test.ts",
-        phases: []
-      },
-    });
-    const execution = await prisma.workflowRun.create({
-      data: {
-        project_id: project.id,
-        user_id: user.id,
-        workflow_definition_id: workflow.id,
-        name: "Test Execution",
-        args: {},
-        status: "running",
-      },
+    const { user, project, run: execution } = await createTestWorkflowContext(prisma, {
+      run: { name: "Test Execution", status: "running", args: {} }
     });
 
     // Create real agent session in DB to satisfy foreign key constraint

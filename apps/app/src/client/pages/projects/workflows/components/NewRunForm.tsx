@@ -16,6 +16,7 @@ import { useProjectBranches } from "@/client/pages/projects/hooks/useProjectBran
 import { useSessions } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
 import { useTasks } from "@/client/hooks/useTasks";
 import { api } from "@/client/utils/api";
+import { cn } from "@/client/utils/cn";
 import type {
   WorkflowDefinition,
   WorkflowRun,
@@ -116,7 +117,6 @@ export function NewRunForm({
     if (matchingTask) {
       setSpecType(matchingTask.spec_type);
     }
-     
   }, [specFile, tasksData]);
 
   // Reset dependent state when definition changes (but preserve initialSpecFile and initialName)
@@ -153,12 +153,13 @@ export function NewRunForm({
     }));
   }, [branches]);
 
-  // Transform spec files to combobox options
+  // Transform spec tasks to combobox options
   const specFileOptions = useMemo(() => {
     if (!specFiles) return [];
-    return specFiles.map((file) => ({
-      value: file,
-      label: file,
+    return specFiles.map((task) => ({
+      value: task.specPath,
+      label: task.name,
+      description: task.specPath,
     }));
   }, [specFiles]);
 
@@ -345,7 +346,7 @@ export function NewRunForm({
 
       {/* Workflow definition selection - always show */}
       <div>
-        <Label>Workflow Definition</Label>
+        <Label>Workflow</Label>
         <Combobox
           value={selectedDefinitionId}
           onValueChange={setSelectedDefinitionId}
@@ -402,9 +403,39 @@ export function NewRunForm({
                 searchPlaceholder="Search spec files..."
                 emptyMessage="No spec files found"
                 disabled={createWorkflow.isPending}
+                renderTrigger={(selectedOption) =>
+                  selectedOption ? (
+                    <div className="flex items-center justify-between gap-2 w-full">
+                      <span className="truncate font-medium">
+                        {selectedOption.label}
+                      </span>
+                      <span className="text-xs text-muted-foreground/60 shrink-0">
+                        {selectedOption.description?.replace(
+                          ".agent/specs/todo/",
+                          ""
+                        )}
+                      </span>
+                    </div>
+                  ) : (
+                    <span>Select spec file...</span>
+                  )
+                }
+                renderOption={(option, selected) => (
+                  <div className="flex flex-col gap-0.5">
+                    <div
+                      className={cn("font-medium", selected && "text-primary")}
+                    >
+                      {option.label}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {option.description}
+                    </div>
+                  </div>
+                )}
               />
               <p className="text-xs text-muted-foreground">
-                Select from .agent/specs/todo/
+                Use /cmd:generate-[type]-spec to generate spec files for this
+                dropdown
               </p>
             </TabsContent>
 
@@ -542,7 +573,7 @@ export function NewRunForm({
                 </div>
                 {/* Branch From (optional) */}
                 <div>
-                  <Label htmlFor="branch-from">Branch From (optional)</Label>
+                  <Label htmlFor="branch-from">Branch From</Label>
                   <Combobox
                     value={baseBranch}
                     onValueChange={setBaseBranch}
@@ -578,9 +609,6 @@ export function NewRunForm({
                       </div>
                     )}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Defaults to main if not specified
-                  </p>
                 </div>
               </div>
             )}
@@ -615,9 +643,7 @@ export function NewRunForm({
                 </div>
                 {/* Branch From (optional) */}
                 <div>
-                  <Label htmlFor="worktree-branch-from">
-                    Branch From (optional)
-                  </Label>
+                  <Label htmlFor="worktree-branch-from">Branch From</Label>
                   <Combobox
                     value={baseBranch}
                     onValueChange={setBaseBranch}
@@ -653,9 +679,6 @@ export function NewRunForm({
                       </div>
                     )}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Defaults to main if not specified
-                  </p>
                 </div>
               </div>
             )}

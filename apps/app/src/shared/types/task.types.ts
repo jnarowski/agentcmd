@@ -9,7 +9,7 @@
 export interface SpecTask {
   id: string; // Timestamp ID from index.json
   name: string; // Extracted from folder/file name
-  specPath: string; // Relative path from .agent/specs/
+  specPath: string; // Full path from project root (e.g., ".agent/specs/todo/...")
   projectId: string; // Project ID this task belongs to
   status: string; // From index.json (e.g., "draft", "in-progress")
   spec_type: string; // Spec type (e.g., "feature", "test") - defaults to "feature" for legacy specs

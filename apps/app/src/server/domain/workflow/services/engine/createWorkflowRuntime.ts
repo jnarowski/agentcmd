@@ -229,12 +229,15 @@ export function createWorkflowRuntime(
                 event.data.workingDir = workspace.workingDir;
 
                 // Setup spec file (generate if needed)
-                await setupSpec({
+                const specFile = await setupSpec({
                   run,
                   event: event as WorkflowEvent,
                   step,
                   logger,
                 });
+
+                // Update event with spec file path
+                event.data.specFile = specFile;
               }
             );
 

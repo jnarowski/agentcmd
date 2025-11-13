@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createWorkflowRuntime } from "./createWorkflowRuntime";
 import { prisma } from "@/shared/prisma";
 import { cleanTestDB } from "@/server/test-utils/db";
+import { createTestWorkflowContext, createTestWorkflowRun } from "@/server/test-utils/fixtures";
 import type { WorkflowConfig, WorkflowFunction } from "agentcmd-workflows";
 import type { Inngest } from "inngest";
 
@@ -91,23 +92,9 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
     vi.mocked(existsSync).mockReturnValue(true);
 
     // Create test data
-    user = await prisma.user.create({
-      data: {
-        email: "test@example.com",
-        password_hash: "hash",
-      },
-    });
-
-    project = await prisma.project.create({
-      data: {
-        name: "Test Project",
-        path: "/tmp/test-project",
-      },
-    });
-
-    workflowDefinition = await prisma.workflowDefinition.create({
-      data: {
-        project_id: project.id,
+    const context = await createTestWorkflowContext(prisma, {
+      project: { name: "Test Project", path: "/tmp/test-project" },
+      workflow: {
         name: "Test Workflow",
         identifier: "test-workflow",
         type: "code",
@@ -115,6 +102,9 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         phases: [{ id: "implement", label: "Implement" }],
       },
     });
+    user = context.user;
+    project = context.project;
+    workflowDefinition = context.workflow;
 
     // Create a simplified mock Inngest client
     mockInngest = {
@@ -130,21 +120,16 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
 
   describe("Lifecycle with workspace mode", () => {
     it("creates _system_setup phase before workflow", async () => {
-      const run = await prisma.workflowRun.create({
-        data: {
-          project_id: project.id,
-          user_id: user.id,
-          workflow_definition_id: workflowDefinition.id,
-          name: "Test Run",
-          args: {},
-          mode: "branch",
-          branch_name: "feat/test",
-          base_branch: "main",
-          status: "pending",
-        },
-        include: {
-          project: true,
-        },
+      const run = await createTestWorkflowRun(prisma, {
+        project_id: project.id,
+        user_id: user.id,
+        workflow_definition_id: workflowDefinition.id,
+        name: "Test Run",
+        args: {},
+        mode: "branch",
+        branch_name: "feat/test",
+        base_branch: "main",
+        status: "pending",
       });
 
       const runtime = createWorkflowRuntime(mockInngest, project.id, mockLogger as never);
@@ -202,20 +187,16 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
     });
 
     it("creates _system_finalize phase after workflow", async () => {
-      const run = await prisma.workflowRun.create({
-        data: {
-          project_id: project.id,
-          user_id: user.id,
-          workflow_definition_id: workflowDefinition.id,
+      const run = await createTestWorkflowRun(prisma, {
+        project_id: project.id,
+        user_id: user.id,
+        workflow_definition_id: workflowDefinition.id,
           name: "Test Run",
           args: {},
           mode: "worktree",
           branch_name: "feat/test",
           base_branch: "main",
           status: "pending",
-        },
-        include: {
-          project: true,
         },
       });
 
@@ -264,21 +245,16 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
     });
 
     it("finalize runs even when workflow fails", async () => {
-      const run = await prisma.workflowRun.create({
-        data: {
-          project_id: project.id,
-          user_id: user.id,
-          workflow_definition_id: workflowDefinition.id,
-          name: "Test Run",
-          args: {},
-          mode: "branch",
-          branch_name: "feat/test",
-          base_branch: "main",
-          status: "pending",
-        },
-        include: {
-          project: true,
-        },
+      const run = await createTestWorkflowRun(prisma, {
+        project_id: project.id,
+        user_id: user.id,
+        workflow_definition_id: workflowDefinition.id,
+        name: "Test Run",
+        args: {},
+        mode: "branch",
+        branch_name: "feat/test",
+        base_branch: "main",
+        status: "pending",
       });
 
       const runtime = createWorkflowRuntime(mockInngest, project.id, mockLogger as never);
@@ -332,21 +308,16 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
     });
 
     it("provides workspace when automatic setup enabled with non-null workspace mode", async () => {
-      const run = await prisma.workflowRun.create({
-        data: {
-          project_id: project.id,
-          user_id: user.id,
-          workflow_definition_id: workflowDefinition.id,
-          name: "Test Run",
-          args: {},
-          mode: "branch",
-          branch_name: "feat/test",
-          base_branch: "main",
-          status: "pending",
-        },
-        include: {
-          project: true,
-        },
+      const run = await createTestWorkflowRun(prisma, {
+        project_id: project.id,
+        user_id: user.id,
+        workflow_definition_id: workflowDefinition.id,
+        name: "Test Run",
+        args: {},
+        mode: "branch",
+        branch_name: "feat/test",
+        base_branch: "main",
+        status: "pending",
       });
 
       const runtime = createWorkflowRuntime(mockInngest, project.id, mockLogger as never);
@@ -391,18 +362,14 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
 
   describe("Lifecycle without workspace mode", () => {
     it("skips setup/finalize when mode is null", async () => {
-      const run = await prisma.workflowRun.create({
-        data: {
-          project_id: project.id,
-          user_id: user.id,
-          workflow_definition_id: workflowDefinition.id,
+      const run = await createTestWorkflowRun(prisma, {
+        project_id: project.id,
+        user_id: user.id,
+        workflow_definition_id: workflowDefinition.id,
           name: "Test Run",
           args: {},
           mode: null, // No workspace mode
           status: "pending",
-        },
-        include: {
-          project: true,
         },
       });
 
@@ -464,18 +431,14 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
       const getCurrentBranch = await import("@/server/domain/git/services/getCurrentBranch");
       vi.mocked(getCurrentBranch.getCurrentBranch).mockResolvedValue("develop");
 
-      const run = await prisma.workflowRun.create({
-        data: {
-          project_id: project.id,
-          user_id: user.id,
-          workflow_definition_id: workflowDefinition.id,
+      const run = await createTestWorkflowRun(prisma, {
+        project_id: project.id,
+        user_id: user.id,
+        workflow_definition_id: workflowDefinition.id,
           name: "Test Run",
           args: {},
           mode: null,
           status: "pending",
-        },
-        include: {
-          project: true,
         },
       });
 
@@ -520,20 +483,16 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
 
   describe("Finalize error handling", () => {
     it("logs finalize errors as non-fatal", async () => {
-      const run = await prisma.workflowRun.create({
-        data: {
-          project_id: project.id,
-          user_id: user.id,
-          workflow_definition_id: workflowDefinition.id,
+      const run = await createTestWorkflowRun(prisma, {
+        project_id: project.id,
+        user_id: user.id,
+        workflow_definition_id: workflowDefinition.id,
           name: "Test Run",
           args: {},
           mode: "worktree",
           branch_name: "feat/test",
           base_branch: "main",
           status: "pending",
-        },
-        include: {
-          project: true,
         },
       });
 
@@ -601,20 +560,16 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
 
   describe("Workspace configuration from DB", () => {
     it("uses mode, branch_name, base_branch from workflow run", async () => {
-      const run = await prisma.workflowRun.create({
-        data: {
-          project_id: project.id,
-          user_id: user.id,
-          workflow_definition_id: workflowDefinition.id,
+      const run = await createTestWorkflowRun(prisma, {
+        project_id: project.id,
+        user_id: user.id,
+        workflow_definition_id: workflowDefinition.id,
           name: "Test Run",
           args: {},
           mode: "worktree",
           branch_name: "feat/custom-branch",
           base_branch: "develop",
           status: "pending",
-        },
-        include: {
-          project: true,
         },
       });
 
@@ -658,20 +613,16 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
     });
 
     it("auto-generates worktree name from runId and branchName", async () => {
-      const run = await prisma.workflowRun.create({
-        data: {
-          project_id: project.id,
-          user_id: user.id,
-          workflow_definition_id: workflowDefinition.id,
+      const run = await createTestWorkflowRun(prisma, {
+        project_id: project.id,
+        user_id: user.id,
+        workflow_definition_id: workflowDefinition.id,
           name: "Test Run",
           args: {},
           mode: "worktree",
           branch_name: "feat/auto-generated",
           base_branch: "main",
           status: "pending",
-        },
-        include: {
-          project: true,
         },
       });
 
@@ -727,21 +678,16 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
 
   describe("Spec generation in _system_setup", () => {
     it("generates spec file automatically when spec_type provided", async () => {
-      const run = await prisma.workflowRun.create({
-        data: {
-          project_id: project.id,
-          user_id: user.id,
-          workflow_definition_id: workflowDefinition.id,
-          name: "Test Run",
-          args: {},
-          mode: "branch",
-          branch_name: "feat/test",
-          base_branch: "main",
-          status: "pending",
-        },
-        include: {
-          project: true,
-        },
+      const run = await createTestWorkflowRun(prisma, {
+        project_id: project.id,
+        user_id: user.id,
+        workflow_definition_id: workflowDefinition.id,
+        name: "Test Run",
+        args: {},
+        mode: "branch",
+        branch_name: "feat/test",
+        base_branch: "main",
+        status: "pending",
       });
 
       const runtime = createWorkflowRuntime(mockInngest, project.id, mockLogger as never);
@@ -800,21 +746,16 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
     });
 
     it("defaults to feature spec type when not specified", async () => {
-      const run = await prisma.workflowRun.create({
-        data: {
-          project_id: project.id,
-          user_id: user.id,
-          workflow_definition_id: workflowDefinition.id,
-          name: "Test Run",
-          args: {},
-          mode: "branch",
-          branch_name: "feat/test",
-          base_branch: "main",
-          status: "pending",
-        },
-        include: {
-          project: true,
-        },
+      const run = await createTestWorkflowRun(prisma, {
+        project_id: project.id,
+        user_id: user.id,
+        workflow_definition_id: workflowDefinition.id,
+        name: "Test Run",
+        args: {},
+        mode: "branch",
+        branch_name: "feat/test",
+        base_branch: "main",
+        status: "pending",
       });
 
       const runtime = createWorkflowRuntime(mockInngest, project.id, mockLogger as never);
@@ -862,21 +803,16 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
       const existingSpecPath = "/tmp/test-project/.agent/specs/todo/existing-spec/spec.md";
       vi.mocked(existsSync).mockReturnValue(true);
 
-      const run = await prisma.workflowRun.create({
-        data: {
-          project_id: project.id,
-          user_id: user.id,
-          workflow_definition_id: workflowDefinition.id,
-          name: "Test Run",
-          args: {},
-          mode: "branch",
-          branch_name: "feat/test",
-          base_branch: "main",
-          status: "pending",
-        },
-        include: {
-          project: true,
-        },
+      const run = await createTestWorkflowRun(prisma, {
+        project_id: project.id,
+        user_id: user.id,
+        workflow_definition_id: workflowDefinition.id,
+        name: "Test Run",
+        args: {},
+        mode: "branch",
+        branch_name: "feat/test",
+        base_branch: "main",
+        status: "pending",
       });
 
       const runtime = createWorkflowRuntime(mockInngest, project.id, mockLogger as never);
@@ -932,21 +868,16 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
       const nonExistentSpecPath = "/tmp/test-project/.agent/specs/todo/missing-spec/spec.md";
       vi.mocked(existsSync).mockReturnValue(false);
 
-      const run = await prisma.workflowRun.create({
-        data: {
-          project_id: project.id,
-          user_id: user.id,
-          workflow_definition_id: workflowDefinition.id,
-          name: "Test Run",
-          args: {},
-          mode: "branch",
-          branch_name: "feat/test",
-          base_branch: "main",
-          status: "pending",
-        },
-        include: {
-          project: true,
-        },
+      const run = await createTestWorkflowRun(prisma, {
+        project_id: project.id,
+        user_id: user.id,
+        workflow_definition_id: workflowDefinition.id,
+        name: "Test Run",
+        args: {},
+        mode: "branch",
+        branch_name: "feat/test",
+        base_branch: "main",
+        status: "pending",
       });
 
       const runtime = createWorkflowRuntime(mockInngest, project.id, mockLogger as never);
@@ -998,21 +929,16 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         return true;
       });
 
-      const run = await prisma.workflowRun.create({
-        data: {
-          project_id: project.id,
-          user_id: user.id,
-          workflow_definition_id: workflowDefinition.id,
-          name: "Test Run",
-          args: {},
-          mode: "branch",
-          branch_name: "feat/test",
-          base_branch: "main",
-          status: "pending",
-        },
-        include: {
-          project: true,
-        },
+      const run = await createTestWorkflowRun(prisma, {
+        project_id: project.id,
+        user_id: user.id,
+        workflow_definition_id: workflowDefinition.id,
+        name: "Test Run",
+        args: {},
+        mode: "branch",
+        branch_name: "feat/test",
+        base_branch: "main",
+        status: "pending",
       });
 
       const runtime = createWorkflowRuntime(mockInngest, project.id, mockLogger as never);
@@ -1076,21 +1002,16 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
     });
 
     it("runs spec generation in same _system_setup phase as workspace", async () => {
-      const run = await prisma.workflowRun.create({
-        data: {
-          project_id: project.id,
-          user_id: user.id,
-          workflow_definition_id: workflowDefinition.id,
-          name: "Test Run",
-          args: {},
-          mode: "branch",
-          branch_name: "feat/test",
-          base_branch: "main",
-          status: "pending",
-        },
-        include: {
-          project: true,
-        },
+      const run = await createTestWorkflowRun(prisma, {
+        project_id: project.id,
+        user_id: user.id,
+        workflow_definition_id: workflowDefinition.id,
+        name: "Test Run",
+        args: {},
+        mode: "branch",
+        branch_name: "feat/test",
+        base_branch: "main",
+        status: "pending",
       });
 
       const runtime = createWorkflowRuntime(mockInngest, project.id, mockLogger as never);

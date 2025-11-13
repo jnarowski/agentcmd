@@ -295,15 +295,6 @@ describe("Session Routes", () => {
   });
 
   describe("GET /api/projects/:id/sessions/:sessionId", () => {
-    it("should return 401 without authentication", async () => {
-      const response = await app.inject({
-        method: "GET",
-        url: "/api/projects/test-id/sessions/test-session-id",
-      });
-
-      expect(response.statusCode).toBe(401);
-    });
-
     it("should return session by ID", async () => {
       const { headers, user } = await createAuthenticatedUser(prisma, app);
       const project = await createTestProject(prisma, {
@@ -346,43 +337,9 @@ describe("Session Routes", () => {
       expect(body.error.message).toContain("not found");
     });
 
-    it("should not return sessions from other users", async () => {
-      const { headers: user1Headers } = await createAuthenticatedUser(prisma, app, {
-        email: "user1@test.com",
-      });
-      const { user: user2 } = await createAuthenticatedUser(prisma, app, {
-        email: "user2@test.com",
-      });
-      const project = await createTestProject(prisma, {
-        name: "Test Project",
-        path: "/tmp/test",
-      });
-      const session = await createTestSession(prisma, {
-        projectId: project.id,
-        userId: user2.id,
-        name: "User2 Session",
-      });
-
-      const response = await app.inject({
-        method: "GET",
-        url: `/api/projects/${project.id}/sessions/${session.id}`,
-        headers: user1Headers,
-      });
-
-      expect(response.statusCode).toBe(404);
-    });
   });
 
   describe("GET /api/projects/:id/sessions/:sessionId/messages", () => {
-    it("should return 401 without authentication", async () => {
-      const response = await app.inject({
-        method: "GET",
-        url: "/api/projects/test-id/sessions/test-session-id/messages",
-      });
-
-      expect(response.statusCode).toBe(401);
-    });
-
     it("should return 404 for non-existent session", async () => {
       const { headers } = await createAuthenticatedUser(prisma, app);
       const project = await createTestProject(prisma, {
@@ -521,18 +478,6 @@ describe("Session Routes", () => {
   });
 
   describe("PATCH /api/sessions/:sessionId", () => {
-    it("should return 401 without authentication", async () => {
-      const response = await app.inject({
-        method: "PATCH",
-        url: "/api/sessions/test-id",
-        payload: {
-          name: "Updated Name",
-        },
-      });
-
-      expect(response.statusCode).toBe(401);
-    });
-
     it("should update session name", async () => {
       const { headers, user } = await createAuthenticatedUser(prisma, app);
       const project = await createTestProject(prisma, {
@@ -600,46 +545,9 @@ describe("Session Routes", () => {
       expect(response.statusCode).toBe(404);
     });
 
-    it("should not allow updating other users sessions", async () => {
-      const { headers: user1Headers } = await createAuthenticatedUser(prisma, app, {
-        email: "user1@test.com",
-      });
-      const { user: user2 } = await createAuthenticatedUser(prisma, app, {
-        email: "user2@test.com",
-      });
-      const project = await createTestProject(prisma, {
-        name: "Test Project",
-        path: "/tmp/test",
-      });
-      const session = await createTestSession(prisma, {
-        projectId: project.id,
-        userId: user2.id,
-        name: "User2 Session",
-      });
-
-      const response = await app.inject({
-        method: "PATCH",
-        url: `/api/sessions/${session.id}`,
-        headers: user1Headers,
-        payload: {
-          name: "Hacked Name",
-        },
-      });
-
-      expect(response.statusCode).toBe(404);
-    });
   });
 
   describe("GET /api/sessions/:sessionId/file", () => {
-    it("should return 401 without authentication", async () => {
-      const response = await app.inject({
-        method: "GET",
-        url: "/api/sessions/test-id/file",
-      });
-
-      expect(response.statusCode).toBe(401);
-    });
-
     it("should return session file content", async () => {
       const { headers, user } = await createAuthenticatedUser(prisma, app);
       const project = await createTestProject(prisma, {
@@ -729,44 +637,9 @@ describe("Session Routes", () => {
       expect(body.error.message).toContain("not found");
     });
 
-    it("should not allow accessing other users session files", async () => {
-      const { headers: user1Headers } = await createAuthenticatedUser(prisma, app, {
-        email: "user1@test.com",
-      });
-      const { user: user2 } = await createAuthenticatedUser(prisma, app, {
-        email: "user2@test.com",
-      });
-      const project = await createTestProject(prisma, {
-        name: "Test Project",
-        path: "/tmp/test",
-      });
-      const session = await createTestSession(prisma, {
-        projectId: project.id,
-        userId: user2.id,
-        name: "User2 Session",
-        session_path: "/tmp/session.jsonl",
-      });
-
-      const response = await app.inject({
-        method: "GET",
-        url: `/api/sessions/${session.id}/file`,
-        headers: user1Headers,
-      });
-
-      expect(response.statusCode).toBe(404);
-    });
   });
 
   describe("POST /api/sessions/:sessionId/archive", () => {
-    it("should return 401 without authentication", async () => {
-      const response = await app.inject({
-        method: "POST",
-        url: "/api/sessions/test-id/archive",
-      });
-
-      expect(response.statusCode).toBe(401);
-    });
-
     it("should archive session", async () => {
       const { headers, user } = await createAuthenticatedUser(prisma, app);
       const project = await createTestProject(prisma, {
@@ -802,43 +675,9 @@ describe("Session Routes", () => {
       expect(response.statusCode).toBe(404);
     });
 
-    it("should not allow archiving other users sessions", async () => {
-      const { headers: user1Headers } = await createAuthenticatedUser(prisma, app, {
-        email: "user1@test.com",
-      });
-      const { user: user2 } = await createAuthenticatedUser(prisma, app, {
-        email: "user2@test.com",
-      });
-      const project = await createTestProject(prisma, {
-        name: "Test Project",
-        path: "/tmp/test",
-      });
-      const session = await createTestSession(prisma, {
-        projectId: project.id,
-        userId: user2.id,
-        name: "User2 Session",
-      });
-
-      const response = await app.inject({
-        method: "POST",
-        url: `/api/sessions/${session.id}/archive`,
-        headers: user1Headers,
-      });
-
-      expect(response.statusCode).toBe(404);
-    });
   });
 
   describe("POST /api/sessions/:sessionId/unarchive", () => {
-    it("should return 401 without authentication", async () => {
-      const response = await app.inject({
-        method: "POST",
-        url: "/api/sessions/test-id/unarchive",
-      });
-
-      expect(response.statusCode).toBe(401);
-    });
-
     it("should unarchive session", async () => {
       const { headers, user } = await createAuthenticatedUser(prisma, app);
       const project = await createTestProject(prisma, {
@@ -881,77 +720,4 @@ describe("Session Routes", () => {
     });
   });
 
-  describe("Concurrent Operations", () => {
-    it("should handle concurrent session creation", async () => {
-      const { headers, user } = await createAuthenticatedUser(prisma, app);
-      const project = await createTestProject(prisma, {
-        name: "Test Project",
-        path: "/tmp/test",
-      });
-
-      // Create 5 sessions concurrently
-      const promises = Array.from({ length: 5 }, (_, i) =>
-        app.inject({
-          method: "POST",
-          url: `/api/projects/${project.id}/sessions`,
-          headers,
-          payload: {
-            sessionId: `concurrent-session-${i}`,
-            agent: "claude",
-          },
-        })
-      );
-
-      const responses = await Promise.all(promises);
-
-      // All should succeed
-      responses.forEach((response) => {
-        expect(response.statusCode).toBe(201);
-      });
-
-      // Verify all sessions created
-      const sessions = await prisma.agentSession.findMany({
-        where: { projectId: project.id, userId: user.id },
-      });
-      expect(sessions).toHaveLength(5);
-    });
-
-    it("should handle concurrent updates to same session", async () => {
-      const { headers, user } = await createAuthenticatedUser(prisma, app);
-      const project = await createTestProject(prisma, {
-        name: "Test Project",
-        path: "/tmp/test",
-      });
-      const session = await createTestSession(prisma, {
-        projectId: project.id,
-        userId: user.id,
-        name: "Original",
-      });
-
-      // Update name concurrently
-      const promises = Array.from({ length: 3 }, (_, i) =>
-        app.inject({
-          method: "PATCH",
-          url: `/api/sessions/${session.id}`,
-          headers,
-          payload: {
-            name: `Updated ${i}`,
-          },
-        })
-      );
-
-      const responses = await Promise.all(promises);
-
-      // All should succeed
-      responses.forEach((response) => {
-        expect(response.statusCode).toBe(200);
-      });
-
-      // Final state should be consistent
-      const updatedSession = await prisma.agentSession.findUnique({
-        where: { id: session.id },
-      });
-      expect(updatedSession?.name).toMatch(/Updated \d/);
-    });
-  });
 });

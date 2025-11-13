@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach, vi, beforeEach } from "vitest";
 import { prisma } from "@/shared/prisma";
 import { cleanTestDB } from "@/server/test-utils/db";
+import { createTestUser, createTestProject } from "@/server/test-utils/fixtures";
 import { executeWorkflow } from "./executeWorkflow";
 import * as fs from "node:fs/promises";
 import * as getWorkflowRunForExecutionModule from "../runs/getWorkflowRunForExecution";
@@ -28,20 +29,11 @@ describe("executeWorkflow validation", () => {
   let testProject: { id: string; name: string; path: string };
 
   beforeEach(async () => {
-    // Create test user
-    testUser = await prisma.user.create({
-      data: {
-        email: "test@example.com",
-        password_hash: "hashed",
-      },
-    });
-
-    // Create test project
-    testProject = await prisma.project.create({
-      data: {
-        name: "Test Project",
-        path: "/tmp/test-project",
-      },
+    // Create test user and project
+    testUser = await createTestUser(prisma);
+    testProject = await createTestProject(prisma, {
+      name: "Test Project",
+      path: "/tmp/test-project",
     });
 
     // Mock Inngest client
