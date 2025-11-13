@@ -68,6 +68,7 @@ export function createAgentStep(
             type: 'workflow',
             name,
             metadataOverride: {}, // Empty metadata for workflow sessions
+            cli_session_id: config.resume ?? sessionId, // Set CLI session ID (resume or new)
           },
         });
 
@@ -81,13 +82,13 @@ export function createAgentStep(
           );
 
           // Execute agent with timeout (bypass permissions for workflow context)
-          // If config.resume is provided (CLI session ID), use it for resumption
+          // If config.resume is provided, we're resuming an existing CLI session
           const shouldResume = !!config.resume;
-          const sessionIdForCLI = config.resume || session.id;
 
           const result = await withTimeout(
             executeAgent({
-              sessionId: sessionIdForCLI,
+              processTrackingId: session.id, // Always track by workflow DB session ID
+              sessionId: session.cli_session_id!, // CLI session ID (always set now)
               resume: shouldResume,
               agent: config.agent as "claude" | "codex",
               prompt: config.prompt,

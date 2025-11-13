@@ -12,6 +12,13 @@ import type { CancelSessionOptions } from '../types/CancelSessionOptions';
  *
  * Kills the running agent process and returns the session to idle state.
  * Handles validation, process cleanup, and broadcasting.
+ *
+ * Process Tracking:
+ * - Looks up process by sessionId (DB session ID) in activeSessions map
+ * - Works correctly for both chat sessions and workflow resume scenarios
+ * - Chat: sessionId = processTrackingId = cli_session_id (all same)
+ * - Workflow: sessionId = processTrackingId (workflow DB ID), cli_session_id may differ (planning ID)
+ * - Cancellation always uses sessionId parameter to find the correct process
  */
 export async function cancelSession({
   sessionId,

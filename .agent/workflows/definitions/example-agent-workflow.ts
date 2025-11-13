@@ -19,7 +19,12 @@ export default defineWorkflow(
       branchName,
       worktreeName,
       projectPath,
+      planningSessionId,
     } = event.data;
+
+    if (planningSessionId) {
+
+      return { success: true, planningSessionId };
 
     await step.phase("implement", async () => {
       await step.agent("Implement Spec", {

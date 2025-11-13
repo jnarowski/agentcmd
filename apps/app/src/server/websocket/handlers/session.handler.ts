@@ -93,11 +93,8 @@ export async function handleSessionSendMessage(
   // Parse execution configuration
   const config = await parseExecutionConfig({ config: data.config });
 
-  // Determine session ID to use (CLI session ID or database ID)
-  const cliSessionId = session.cli_session_id || sessionId;
-
   fastify.log.info(
-    { sessionId, cliSessionId, resume: config.resume },
+    { sessionId, cliSessionId: session.cli_session_id, resume: config.resume },
     "[WebSocket] Executing with session ID"
   );
 
@@ -118,7 +115,8 @@ export async function handleSessionSendMessage(
     agent: session.agent as "claude" | "codex",
     prompt: data.message,
     workingDir: projectPath,
-    sessionId: cliSessionId,
+    processTrackingId: sessionId, // Always track by DB session ID
+    sessionId: session.cli_session_id!, // CLI session ID (always set now)
     resume: config.resume,
     permissionMode: config.permissionMode,
     model: config.model,

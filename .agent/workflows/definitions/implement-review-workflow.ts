@@ -91,7 +91,8 @@ const getSpecFile = async ({
         workingDir: event.data.workingDir,
       }
     );
-    return response.data?.spec_file;
+
+    return response.data?.extracted?.spec_file;
   }
 
   const response = await step.agent<CmdGenerateSpecResponse>(

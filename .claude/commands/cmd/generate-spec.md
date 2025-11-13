@@ -14,6 +14,7 @@ Generate a well-structured implementation spec with complexity estimates and sav
 ## Instructions
 
 - **IMPORTANT**: Use your reasoning model - THINK HARD about feature requirements, design, implementation approach, AND complexity
+- **IMPORTANT**: This command ONLY generates the spec - do NOT implement any code or make file changes beyond creating the spec folder/file and updating index.json
 - Normalize feature name to kebab-case for the folder name
 - Replace ALL `<placeholders>` with specific details relevant to that section
 - **Create detailed step-by-step tasks** grouped logically (e.g., by phase, component, or feature area)
@@ -392,7 +393,7 @@ Analyzes conversation history, infers feature name, generates ID `251107093022`,
 
 ## Report
 
-**IMPORTANT**: Always return ONLY the JSON from the output tags below:
+**IMPORTANT**: After completing all steps (1-7), output this JSON as your final message to the user:
 
 <json_output>
 {

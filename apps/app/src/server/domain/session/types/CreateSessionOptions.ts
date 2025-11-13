@@ -14,6 +14,7 @@ export const createSessionOptionsSchema = z.object({
     permission_mode: z.enum(['default', 'plan', 'acceptEdits', 'bypassPermissions']).optional(),
     name: z.string().optional(),
     metadataOverride: z.record(z.string(), z.unknown()).optional(),
+    cli_session_id: z.string().optional(),
   }),
 });
 

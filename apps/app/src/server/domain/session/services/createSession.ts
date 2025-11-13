@@ -19,7 +19,8 @@ export async function createSession({
     type = 'chat' as SessionType,
     permission_mode,
     name,
-    metadataOverride
+    metadataOverride,
+    cli_session_id
   } = data;
   // Get project to determine session file path
   const project = await prisma.project.findUnique({
@@ -55,6 +56,7 @@ export async function createSession({
       metadata: JSON.parse(JSON.stringify(metadata)),
       state: 'working',
       error_message: null,
+      cli_session_id: cli_session_id ?? sessionId, // Always set, defaults to DB session ID
       ...(name && { name }),
     },
   });

@@ -1,6 +1,12 @@
 {
-  "lastId": 251112070711,
+  "lastId": 251113070834,
   "specs": {
+    "251113070834": {
+      "path": "todo/251113070834-workflow-resume-process-tracking/spec.md",
+      "status": "completed",
+      "created": "2025-11-13T07:08:34.000Z",
+      "updated": "2025-11-13T19:27:00.000Z"
+    },
     "251112061640": {
       "path": "done/251112061640-type-safe-workflow-steps/spec.md",
       "status": "completed",
