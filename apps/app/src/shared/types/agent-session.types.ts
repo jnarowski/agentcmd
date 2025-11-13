@@ -19,6 +19,7 @@ export interface AgentSessionMetadata {
   lastMessageAt: string; // ISO 8601 timestamp
   firstMessagePreview: string; // First user message preview (truncated)
   createdAt?: string; // ISO 8601 timestamp from first JSONL entry
+  isPlanSession?: boolean; // True if session contains Plan Task tool uses
 }
 
 /**

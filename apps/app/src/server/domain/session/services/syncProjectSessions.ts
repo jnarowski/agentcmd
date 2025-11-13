@@ -86,6 +86,7 @@ export async function syncProjectSessions({
       state: 'idle';
       error_message: null;
       created_at: Date;
+      permission_mode: string;
     }> = [];
     const sessionsToUpdate: Array<{
       id: string;
@@ -135,6 +136,7 @@ export async function syncProjectSessions({
             state: 'idle',
             error_message: null,
             created_at: metadata.createdAt ? new Date(metadata.createdAt) : new Date(),
+            permission_mode: metadata.isPlanSession ? 'plan' : 'default',
           });
         }
 
@@ -146,11 +148,35 @@ export async function syncProjectSessions({
 
     // Batch create new sessions
     if (sessionsToCreate.length > 0) {
-      await prisma.agentSession.createMany({
-        // @ts-ignore - Prisma type compatibility
-        data: sessionsToCreate,
+      const beforeCount = await prisma.agentSession.count({
+        where: { projectId },
       });
-      created = sessionsToCreate.length;
+
+      try {
+        await prisma.agentSession.createMany({
+          // @ts-ignore - Prisma type compatibility
+          data: sessionsToCreate,
+        });
+      } catch {
+        // Handle race condition: another sync may have created some sessions
+        // Create sessions one by one, skipping duplicates
+        for (const session of sessionsToCreate) {
+          try {
+            await prisma.agentSession.create({
+              // @ts-ignore - Prisma type compatibility
+              data: session,
+            });
+          } catch {
+            // Skip if session already exists (race condition)
+          }
+        }
+      }
+
+      const afterCount = await prisma.agentSession.count({
+        where: { projectId },
+      });
+
+      created = afterCount - beforeCount;
     }
 
     // Batch update existing sessions with correct creation dates

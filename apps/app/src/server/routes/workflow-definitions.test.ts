@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { prisma } from "@/shared/prisma";
 import { cleanTestDB } from "@/server/test-utils/db";
@@ -17,6 +17,10 @@ describe("GET /api/projects/:projectId/workflow-definitions", () => {
 
   beforeAll(async () => {
     app = await createTestApp();
+  });
+
+  beforeEach(async () => {
+    await cleanTestDB(prisma);
   });
 
   afterEach(async () => {

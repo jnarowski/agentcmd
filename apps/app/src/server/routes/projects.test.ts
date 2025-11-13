@@ -3,6 +3,7 @@ import {
   it,
   expect,
   beforeAll,
+  beforeEach,
   afterEach,
   afterAll,
 } from "vitest";
@@ -26,6 +27,11 @@ describe("GET /api/projects/:id", () => {
   beforeAll(async () => {
     // Schema already applied by globalSetup - just create app
     app = await createTestApp();
+  });
+
+  beforeEach(async () => {
+    // Clean data between tests (preserves schema)
+    await cleanTestDB(prisma);
   });
 
   afterEach(async () => {

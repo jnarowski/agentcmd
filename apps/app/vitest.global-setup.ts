@@ -14,7 +14,7 @@ export default async function globalSetup() {
   console.log("🔧 Global Setup: Applying Prisma schema to test database...");
 
   // Set test database URL (runs before vitest.setup.ts)
-  const testDbPath = "file:./test-temp.db";
+  const testDbPath = "file::memory:?cache=shared";
   process.env.DATABASE_URL = testDbPath;
 
   try {

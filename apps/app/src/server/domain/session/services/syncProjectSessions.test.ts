@@ -23,6 +23,7 @@ vi.mock("./parseJSONLFile", () => ({
     messageCount: 5,
     lastMessageAt: new Date().toISOString(),
     firstMessagePreview: "Test message",
+    isPlanSession: false,
   }),
 }));
 
@@ -497,5 +498,73 @@ describe("syncProjectSessions", () => {
       lastMessageAt: "2024-01-15T10:30:00Z",
       firstMessagePreview: "Custom preview text",
     });
+  });
+
+  it("sets permission_mode to plan when isPlanSession is true", async () => {
+    vi.mocked(parseJSONLFile).mockResolvedValue({
+      totalTokens: 100,
+      messageCount: 5,
+      lastMessageAt: new Date().toISOString(),
+      firstMessagePreview: "Plan session",
+      isPlanSession: true,
+    });
+    vi.mocked(fs.readdir).mockResolvedValue(["plan-session.jsonl"] as unknown as Dirent[]);
+
+    await syncProjectSessions({
+      projectId,
+      userId,
+    });
+
+    const session = await prisma.agentSession.findFirst({
+      where: { id: "plan-session" },
+    });
+
+    expect(session).toBeTruthy();
+    expect(session!.permission_mode).toBe("plan");
+  });
+
+  it("sets permission_mode to default when isPlanSession is false", async () => {
+    vi.mocked(parseJSONLFile).mockResolvedValue({
+      totalTokens: 100,
+      messageCount: 5,
+      lastMessageAt: new Date().toISOString(),
+      firstMessagePreview: "Regular session",
+      isPlanSession: false,
+    });
+    vi.mocked(fs.readdir).mockResolvedValue(["regular-session.jsonl"] as unknown as Dirent[]);
+
+    await syncProjectSessions({
+      projectId,
+      userId,
+    });
+
+    const session = await prisma.agentSession.findFirst({
+      where: { id: "regular-session" },
+    });
+
+    expect(session).toBeTruthy();
+    expect(session!.permission_mode).toBe("default");
+  });
+
+  it("sets permission_mode to default when isPlanSession is undefined", async () => {
+    vi.mocked(parseJSONLFile).mockResolvedValue({
+      totalTokens: 100,
+      messageCount: 5,
+      lastMessageAt: new Date().toISOString(),
+      firstMessagePreview: "Legacy session",
+    });
+    vi.mocked(fs.readdir).mockResolvedValue(["legacy-session.jsonl"] as unknown as Dirent[]);
+
+    await syncProjectSessions({
+      projectId,
+      userId,
+    });
+
+    const session = await prisma.agentSession.findFirst({
+      where: { id: "legacy-session" },
+    });
+
+    expect(session).toBeTruthy();
+    expect(session!.permission_mode).toBe("default");
   });
 });

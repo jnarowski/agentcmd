@@ -121,9 +121,7 @@ export function createWorkflowRuntime(
   logger: FastifyBaseLogger
 ): WorkflowRuntime {
   return {
-    createInngestFunction<
-      TPhases extends PhasesConstraint
-    >(
+    createInngestFunction<TPhases extends PhasesConstraint>(
       config: WorkflowConfig<TPhases, Record<string, unknown>>,
       fn: WorkflowFunction<TPhases, Record<string, unknown>>
     ) {
@@ -142,14 +140,6 @@ export function createWorkflowRuntime(
             // This handles workflow execution failures (step errors, timeout, etc.)
             const runId = event.data.event?.data?.runId;
             const projectId = event.data.event?.data?.projectId;
-
-            if (!runId || !projectId) {
-              logger.error(
-                { error: error.message },
-                "onFailure: missing runId/projectId from event data"
-              );
-              return;
-            }
 
             logger.error(
               {
@@ -228,26 +218,29 @@ export function createWorkflowRuntime(
 
             const step = extendedStep; // Type narrowing for closure
 
-            await step.phase(SYSTEM_PHASES.SETUP as ExtractPhaseId<TPhases>, async () => {
-              // Setup workspace (may fail)
-              workspace = await setupWorkspace({
-                run,
-                context,
-                inngestStep,
-                logger,
-              });
+            await step.phase(
+              SYSTEM_PHASES.SETUP as ExtractPhaseId<TPhases>,
+              async () => {
+                // Setup workspace (may fail)
+                workspace = await setupWorkspace({
+                  run,
+                  context,
+                  inngestStep,
+                  logger,
+                });
 
-              // Add workingDir to event.data for workflows to use
-              event.data.workingDir = workspace.workingDir;
+                // Add workingDir to event.data for workflows to use
+                event.data.workingDir = workspace.workingDir;
 
-              // Setup spec file (generate if needed)
-              await setupSpec({
-                run,
-                event: event as WorkflowEvent,
-                step,
-                logger,
-              });
-            });
+                // Setup spec file (generate if needed)
+                await setupSpec({
+                  run,
+                  event: event as WorkflowEvent,
+                  step,
+                  logger,
+                });
+              }
+            );
 
             // Execute workflow function
             const result = await fn({
@@ -309,9 +302,7 @@ export function createWorkflowRuntime(
  * @param inngestStep - Base Inngest step tools (client-agnostic)
  * @returns Extended step object with all workflow methods
  */
-function extendInngestSteps<
-  TPhases extends PhasesConstraint
->(
+function extendInngestSteps<TPhases extends PhasesConstraint>(
   context: RuntimeContext<TPhases>,
   inngestStep: GetStepTools<Inngest.Any>
 ): WorkflowStep<
@@ -431,20 +422,24 @@ async function setupSpec<TPhases extends PhasesConstraint>(params: {
   const specType = event.data.specType ?? "feature";
 
   // Verify slash command exists
-  const commandPath = join(process.cwd(), ".claude", "commands", "cmd", `generate-${specType}-spec.md`);
+  const commandPath = join(
+    process.cwd(),
+    ".claude",
+    "commands",
+    "cmd",
+    `generate-${specType}-spec.md`
+  );
+
   if (!existsSync(commandPath)) {
     throw new Error(
       `Spec command not found: /cmd:generate-${specType}-spec\n` +
-      `Expected file: ${commandPath}\n` +
-      `Available spec types can be found in .claude/commands/cmd/`
+        `Expected file: ${commandPath}\n` +
+        `Available spec types can be found in .claude/commands/cmd/`
     );
   }
 
   // Generate spec file
-  logger.info(
-    { runId: run.id, specType },
-    "Generating spec file"
-  );
+  logger.info({ runId: run.id, specType }, "Generating spec file");
 
   const specFile = await resolveSpecFile(event, step);
 
@@ -452,10 +447,7 @@ async function setupSpec<TPhases extends PhasesConstraint>(params: {
     event.data.specFile = specFile;
   }
 
-  logger.info(
-    { runId: run.id, specFile },
-    "Spec file generated"
-  );
+  logger.info({ runId: run.id, specFile }, "Spec file generated");
 }
 
 /**
@@ -656,9 +648,7 @@ async function handleWorkflowFailure(
  * @param inngestStep - Base Inngest step tools
  * @param logger - Logger instance
  */
-async function finalizeWorkspace<
-  TPhases extends PhasesConstraint
->(
+async function finalizeWorkspace<TPhases extends PhasesConstraint>(
   run: WorkflowRun,
   workspace: WorkspaceResult | null,
   context: RuntimeContext<TPhases>,
@@ -671,12 +661,15 @@ async function finalizeWorkspace<
   }
 
   try {
-    await extendedStep.phase(SYSTEM_PHASES.FINALIZE as ExtractPhaseId<TPhases>, async () => {
-      const finalizeStep = createFinalizeWorkspaceStep(context, inngestStep);
-      await finalizeStep("finalize-workspace", {
-        workspaceResult: workspace,
-      });
-    });
+    await extendedStep.phase(
+      SYSTEM_PHASES.FINALIZE as ExtractPhaseId<TPhases>,
+      async () => {
+        const finalizeStep = createFinalizeWorkspaceStep(context, inngestStep);
+        await finalizeStep("finalize-workspace", {
+          workspaceResult: workspace,
+        });
+      }
+    );
 
     logger.info({ runId: run.id, mode: run.mode }, "Workspace finalized");
   } catch (error) {

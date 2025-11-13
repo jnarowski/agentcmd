@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { prisma } from "@/shared/prisma";
 import { cleanTestDB } from "@/server/test-utils/db";
 import { createPhaseStep } from "./createPhaseStep";
@@ -11,6 +11,10 @@ vi.mock("@/server/websocket/infrastructure/subscriptions", () => ({
 }));
 
 describe("createPhaseStep", () => {
+  beforeEach(async () => {
+    await cleanTestDB(prisma);
+  });
+
   afterEach(async () => {
     await cleanTestDB(prisma);
     vi.clearAllMocks();

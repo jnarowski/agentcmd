@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { prisma } from "@/shared/prisma";
 import type { Stats } from "node:fs";
 import { cleanTestDB } from "@/server/test-utils/db";
@@ -19,6 +19,10 @@ vi.mock("./utils/emitArtifactCreatedEvent", () => ({
 }));
 
 describe("createArtifactStep", () => {
+  beforeEach(async () => {
+    await cleanTestDB(prisma);
+  });
+
   afterEach(async () => {
     await cleanTestDB(prisma);
     vi.clearAllMocks();

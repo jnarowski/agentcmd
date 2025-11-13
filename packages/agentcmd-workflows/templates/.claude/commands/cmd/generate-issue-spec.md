@@ -1,6 +1,6 @@
 ---
 description: Generate spec for single issue/bug with tasks and complexity estimates
-argument-hint: [context-or-spec-id?, context?]
+argument-hint: [context?]
 ---
 
 # Issue Specification
@@ -9,8 +9,7 @@ Generate a focused spec for single issues, bugs, or small tasks. Creates structu
 
 ## Variables
 
-- $param1: $1 (optional) - Either 12-digit spec ID to reuse existing folder, or context string for new issue
-- $param2: $2 (optional) - Additional context (only used if $1 is spec ID)
+- $context: $1 (optional) - Issue description (e.g., "Fix memory leak in workflow engine" or "Add export button to sessions page")
 
 ## Instructions
 
@@ -38,35 +37,24 @@ Assign based on **context window usage and cognitive load**:
 
 ## Workflow
 
-1. **Determine Context**:
-   - If no explicit context: Use conversation history
-   - If spec ID provided: Read existing folder (PRD if present) + conversation history
-   - Otherwise: Use provided context string
+1. **Generate Timestamp ID**:
+   - Format: `YYMMDDHHmmss` (e.g., `251024120101`)
+   - Ensures uniqueness, embeds creation time
+   - Read `.agent/specs/index.json` (updated in step 6)
 
-   **Detection:**
-   - If $param1 matches /^\d{12}$/: It's a spec ID → reuse folder, context from $param2 or conversation
-   - Otherwise: $param1 is context (or empty) → create new folder
-
-2. **Generate or Reuse Spec ID**:
-   - If reusing folder: Extract spec ID from $param1
-   - If new folder: Generate timestamp-based ID in format `YYMMDDHHmmss`
-   - Example: November 13, 2025 at 2:22:01pm → `251113142201`
-   - Read `.agent/specs/index.json` (will be updated in step 7)
-
-3. **Generate Issue Name**:
-   - Generate concise kebab-case name from context (max 4 words)
+2. **Generate Issue Name**:
+   - If `$context` provided: Generate concise kebab-case name (max 4 words)
+   - If no context: Infer from conversation history
    - Examples: "Fix memory leak" → "memory-leak-fix", "Add export button" → "export-button"
-   - If reusing folder: Extract name from existing folder path
 
-4. **Research Phase**:
-   - If reusing folder: Read existing `prd.md` if present
+3. **Research Phase**:
    - Search codebase for relevant patterns/files
    - Gather context on architecture and conventions
    - Identify files to modify
 
-5. **Clarification** (conditional):
-   - **If explicit context provided**: Resolve ambiguities autonomously
-   - **If inferring from conversation**: Ask clarifying questions ONE AT A TIME:
+4. **Clarification** (conditional):
+   - **If $context provided**: Resolve ambiguities autonomously
+   - **If no context**: Ask clarifying questions ONE AT A TIME:
      ```md
      **Question**: [Your question]
      **Suggestions**:
@@ -75,20 +63,19 @@ Assign based on **context window usage and cognitive load**:
      3. Other - user specifies
      ```
 
-6. **Generate Spec**:
+5. **Generate Spec**:
    - Follow Template below
    - Assign complexity to each task
    - Calculate totals and average
    - Be concise but complete
 
-7. **Write Spec**:
-   - If new folder: Create folder `.agent/specs/todo/{timestampId}-{issueName}/`
-   - If reusing: Verify folder exists, check for conflicts (don't overwrite existing spec.md)
+6. **Write Spec**:
+   - Create folder: `.agent/specs/todo/{timestampId}-{issueName}/`
    - Write: `spec.md` (never spec.json)
    - Example: `.agent/specs/todo/251113142201-memory-leak-fix/spec.md`
    - Always starts in `todo/` with Status "draft"
 
-8. **Update Index**:
+7. **Update Index**:
    - Add entry to `.agent/specs/index.json`:
      ```json
      {
@@ -252,45 +239,36 @@ So that [benefit/value]
 
 ## Examples
 
-### Example 1: Infer from conversation
+### Example 1: Bug fix
 
 ```bash
-/cmd:generate-issue-spec
+/generate-issue-spec "Fix memory leak in workflow engine when runs are cancelled"
 ```
 
-Analyzes conversation history, generates ID `251113142201`, creates: `.agent/specs/todo/251113142201-memory-leak-fix/spec.md`
+Creates: `.agent/specs/todo/251113142201-memory-leak-fix/spec.md`
 
-### Example 2: Explicit context
+### Example 2: Small feature
 
 ```bash
-/cmd:generate-issue-spec "Fix memory leak in workflow engine when runs are cancelled"
+/generate-issue-spec "Add export button to sessions page"
 ```
 
-Uses explicit context, generates ID `251113142201`, creates: `.agent/specs/todo/251113142201-memory-leak-fix/spec.md`
+Creates: `.agent/specs/todo/251113143015-export-button/spec.md`
 
-### Example 3: Add spec to existing PRD folder
+### Example 3: From conversation
 
 ```bash
-/cmd:generate-issue-spec 251113150000
+/generate-issue-spec
 ```
 
-Reuses folder with existing PRD, infers context from conversation + PRD, adds: `.agent/specs/todo/251113150000-export-button/spec.md`
-
-### Example 4: Add spec with explicit context
-
-```bash
-/cmd:generate-issue-spec 251113150000 "Add export button to sessions page"
-```
-
-Reuses folder, uses explicit context, adds: `.agent/specs/todo/251113150000-export-button/spec.md`
+Infers issue from context, generates spec
 
 ## Common Pitfalls
 
-- **Spec ID format**: Must be exactly 12 digits (`YYMMDDHHmmss`) to be recognized as folder reuse
-- **Folder conflicts**: When reusing folder, verify spec.md doesn't already exist
 - **Wrong directory**: Always `.agent/specs/todo/`, not `.agent/specs/`
 - **Folder structure**: `{timestampId}-{issue}/spec.md` inside
 - **Index not updated**: Must update index.json
+- **ID format**: 12-char timestamp `YYMMDDHHmmss`
 - **Generic placeholders**: Replace all `<placeholders>`
 - **Missing complexity**: EVERY task needs `[X/10]`
 - **Hour estimates**: Never include hours

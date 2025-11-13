@@ -1,6 +1,6 @@
 ---
 description: Generate bug fix spec with reproduction steps and investigation workflow
-argument-hint: [context-or-spec-id?, context?]
+argument-hint: [context?]
 ---
 
 # Bug Fix Specification
@@ -9,8 +9,7 @@ Generate focused spec for bugs with reproduce → diagnose → fix → verify wo
 
 ## Variables
 
-- $param1: $1 (optional) - Either 12-digit spec ID to reuse existing folder, or context string for new bug
-- $param2: $2 (optional) - Additional context (only used if $1 is spec ID)
+- $context: $1 (optional) - Bug description (e.g., "Memory leak in workflow engine when runs cancelled" or "Sessions page crashes on export")
 
 ## Instructions
 
@@ -39,36 +38,25 @@ Assign based on **context window usage and cognitive load**:
 
 ## Workflow
 
-1. **Determine Context**:
-   - If no explicit context: Use conversation history
-   - If spec ID provided: Read existing folder (PRD if present) + conversation history
-   - Otherwise: Use provided context string
+1. **Generate Timestamp ID**:
+   - Format: `YYMMDDHHmmss` (e.g., `251113142201`)
+   - Ensures uniqueness, embeds creation time
+   - Read `.agent/specs/index.json` (updated in step 6)
 
-   **Detection:**
-   - If $param1 matches /^\d{12}$/: It's a spec ID → reuse folder, context from $param2 or conversation
-   - Otherwise: $param1 is context (or empty) → create new folder
-
-2. **Generate or Reuse Spec ID**:
-   - If reusing folder: Extract spec ID from $param1
-   - If new folder: Generate timestamp-based ID in format `YYMMDDHHmmss`
-   - Example: November 13, 2025 at 2:22:01pm → `251113142201`
-   - Read `.agent/specs/index.json` (will be updated in step 8)
-
-3. **Generate Bug Name**:
-   - Generate concise kebab-case name from context (max 4 words)
+2. **Generate Bug Name**:
+   - If `$context` provided: Generate concise kebab-case name (max 4 words)
+   - If no context: Infer from conversation history
    - Examples: "Memory leak in workflows" → "workflow-memory-leak", "Export crash" → "export-crash-fix"
-   - If reusing folder: Extract name from existing folder path
 
-4. **Research Phase**:
-   - If reusing folder: Read existing `prd.md` if present
+3. **Research Phase**:
    - Search codebase for relevant code paths
    - Attempt to reproduce bug if possible
    - Gather context on architecture
    - Look for similar bugs/fixes
 
-5. **Clarification** (conditional):
-   - **If explicit context provided**: Resolve ambiguities autonomously
-   - **If inferring from conversation**: Ask clarifying questions ONE AT A TIME:
+4. **Clarification** (conditional):
+   - **If $context provided**: Resolve ambiguities autonomously
+   - **If no context**: Ask clarifying questions ONE AT A TIME:
      ```md
      **Question**: [Your question]
      **Suggestions**:
@@ -77,21 +65,20 @@ Assign based on **context window usage and cognitive load**:
      3. Other - user specifies
      ```
 
-6. **Generate Spec**:
+5. **Generate Spec**:
    - Follow Template below
    - Formalize reproduction steps
    - Provide initial root cause hypothesis
    - Assign complexity to each task
    - Calculate totals and average
 
-7. **Write Spec**:
-   - If new folder: Create folder `.agent/specs/todo/{timestampId}-{bugName}/`
-   - If reusing: Verify folder exists, check for conflicts (don't overwrite existing spec.md)
+6. **Write Spec**:
+   - Create folder: `.agent/specs/todo/{timestampId}-{bugName}/`
    - Write: `spec.md` (never spec.json)
    - Example: `.agent/specs/todo/251113142201-workflow-memory-leak/spec.md`
    - Always starts in `todo/` with Status "draft"
 
-8. **Update Index**:
+7. **Update Index**:
    - Add entry to `.agent/specs/index.json`:
      ```json
      {
@@ -288,46 +275,37 @@ Assign based on **context window usage and cognitive load**:
 
 ## Examples
 
-### Example 1: Infer from conversation
+### Example 1: Memory leak
 
 ```bash
-/cmd:generate-bug-spec
+/generate-bug-spec "Memory leak in workflow engine when runs are cancelled"
 ```
 
-Analyzes conversation history, generates ID `251113142201`, creates: `.agent/specs/todo/251113142201-workflow-memory-leak/spec.md`
+Creates: `.agent/specs/todo/251113142201-workflow-memory-leak/spec.md`
 
-### Example 2: Explicit context
+### Example 2: Crash
 
 ```bash
-/cmd:generate-bug-spec "Memory leak in workflow engine when runs are cancelled"
+/generate-bug-spec "Sessions page crashes when clicking export button"
 ```
 
-Uses explicit context, generates ID `251113142201`, creates: `.agent/specs/todo/251113142201-workflow-memory-leak/spec.md`
+Creates: `.agent/specs/todo/251113143522-export-crash-fix/spec.md`
 
-### Example 3: Add spec to existing PRD folder
+### Example 3: From conversation
 
 ```bash
-/cmd:generate-bug-spec 251113150000
+/generate-bug-spec
 ```
 
-Reuses folder with existing PRD, infers context from conversation + PRD, adds: `.agent/specs/todo/251113150000-export-crash-fix/spec.md`
-
-### Example 4: Add spec with explicit context
-
-```bash
-/cmd:generate-bug-spec 251113150000 "Sessions page crashes when clicking export button"
-```
-
-Reuses folder, uses explicit context, adds: `.agent/specs/todo/251113150000-export-crash-fix/spec.md`
+Infers bug from context, generates spec
 
 ## Common Pitfalls
 
-- **Spec ID format**: Must be exactly 12 digits (`YYMMDDHHmmss`) to be recognized as folder reuse
-- **Folder conflicts**: When reusing folder, verify spec.md doesn't already exist
 - **Vague reproduction steps**: Be specific - "click button" → "click Export button in sessions table header"
 - **Wrong directory**: Always `.agent/specs/todo/`, not `.agent/specs/`
 - **Folder structure**: `{timestampId}-{bug}/spec.md` inside
 - **Index not updated**: Must update index.json
+- **ID format**: 12-char timestamp `YYMMDDHHmmss`
 - **Generic placeholders**: Replace all `<placeholders>`
 - **Missing complexity**: EVERY task needs `[X/10]`
 - **Hour estimates**: Never include hours

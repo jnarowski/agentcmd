@@ -3,6 +3,7 @@ import {
   it,
   expect,
   beforeAll,
+  beforeEach,
   afterEach,
   afterAll,
   vi,
@@ -16,16 +17,24 @@ import {
   createTestProject,
 } from "@/server/test-utils/fixtures";
 
-// Mock Inngest client
-vi.mock("@/server/domain/workflow/services/executeWorkflow", () => ({
-  executeWorkflow: vi.fn().mockResolvedValue({ runId: "test-run-id" }),
-}));
+// Mock only executeWorkflow to avoid Inngest dependency
+vi.mock("@/server/domain/workflow/services", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...(actual as object),
+    executeWorkflow: vi.fn().mockResolvedValue(undefined),
+  };
+});
 
 describe("Workflow Routes", () => {
   let app: FastifyInstance & { jwt: { sign: (payload: object) => string } };
 
   beforeAll(async () => {
     app = await createTestApp();
+  });
+
+  beforeEach(async () => {
+    await cleanTestDB(prisma);
   });
 
   afterEach(async () => {
@@ -43,8 +52,10 @@ describe("Workflow Routes", () => {
         method: "POST",
         url: "/api/workflow-runs",
         payload: {
-          project_id: "test-project",
-          workflow_definition_id: "test-workflow",
+          project_id: "clzabc123456789012345",
+          workflow_definition_id: "clzdef456789012345678",
+          name: "Test Run",
+          spec_content: "test spec",
         },
       });
 
@@ -98,6 +109,7 @@ describe("Workflow Routes", () => {
           workflow_definition_id: workflowDef.id,
           name: "Test Run",
           args: { test: "value" },
+          spec_content: "test spec",
         },
       });
 
@@ -122,8 +134,9 @@ describe("Workflow Routes", () => {
         headers,
         payload: {
           project_id: project.id,
-          workflow_definition_id: "non-existent",
+          workflow_definition_id: "clznonexistent123456",
           name: "Test Run",
+          spec_content: "test spec",
         },
       });
 
@@ -168,7 +181,6 @@ describe("Workflow Routes", () => {
           name: "Run 1",
           status: "pending",
           args: {},
-          args: {},
         },
       });
 
@@ -179,7 +191,6 @@ describe("Workflow Routes", () => {
           workflow_definition_id: workflowDef.id,
           name: "Run 2",
           status: "running",
-          args: {},
           args: {},
         },
       });
@@ -319,7 +330,7 @@ describe("Workflow Routes", () => {
       const { headers, user } = await createAuthenticatedUser(prisma, app);
       const otherUser = await prisma.user.create({
         data: {
-          username: "other-user",
+          email: "other@test.com",
           password_hash: "hash",
           is_active: true,
         },
@@ -382,7 +393,7 @@ describe("Workflow Routes", () => {
     it("should return 401 without authentication", async () => {
       const response = await app.inject({
         method: "GET",
-        url: "/api/workflow-runs/test-id",
+        url: "/api/workflow-runs/clzabc123456789012345",
       });
 
       expect(response.statusCode).toBe(401);
@@ -413,7 +424,6 @@ describe("Workflow Routes", () => {
           workflow_definition_id: workflowDef.id,
           name: "Test Run",
           status: "pending",
-          args: {},
           args: {},
         },
       });
@@ -446,7 +456,7 @@ describe("Workflow Routes", () => {
       const { headers } = await createAuthenticatedUser(prisma, app);
       const otherUser = await prisma.user.create({
         data: {
-          username: "other-user",
+          email: "other@test.com",
           password_hash: "hash",
           is_active: true,
         },
@@ -493,7 +503,7 @@ describe("Workflow Routes", () => {
     it("should return 401 without authentication", async () => {
       const response = await app.inject({
         method: "POST",
-        url: "/api/workflow-runs/test-id/pause",
+        url: "/api/workflow-runs/clzabc123456789012345/pause",
       });
 
       expect(response.statusCode).toBe(401);
@@ -524,7 +534,6 @@ describe("Workflow Routes", () => {
           workflow_definition_id: workflowDef.id,
           name: "Test Run",
           status: "running",
-          args: {},
           args: {},
         },
       });
@@ -582,7 +591,7 @@ describe("Workflow Routes", () => {
       const { headers } = await createAuthenticatedUser(prisma, app);
       const otherUser = await prisma.user.create({
         data: {
-          username: "other-user",
+          email: "other@test.com",
           password_hash: "hash",
           is_active: true,
         },
@@ -641,7 +650,7 @@ describe("Workflow Routes", () => {
     it("should return 401 without authentication", async () => {
       const response = await app.inject({
         method: "POST",
-        url: "/api/workflow-runs/test-id/resume",
+        url: "/api/workflow-runs/clzabc123456789012345/resume",
       });
 
       expect(response.statusCode).toBe(401);
@@ -713,7 +722,6 @@ describe("Workflow Routes", () => {
           name: "Test Run",
           status: "running",
           args: {},
-          args: {},
         },
       });
 
@@ -730,7 +738,7 @@ describe("Workflow Routes", () => {
       const { headers } = await createAuthenticatedUser(prisma, app);
       const otherUser = await prisma.user.create({
         data: {
-          username: "other-user",
+          email: "other@test.com",
           password_hash: "hash",
           is_active: true,
         },
@@ -759,6 +767,7 @@ describe("Workflow Routes", () => {
           workflow_definition_id: workflowDef.id,
           name: "Other Run",
           status: "paused",
+          args: {},
         },
       });
 
@@ -788,7 +797,7 @@ describe("Workflow Routes", () => {
     it("should return 401 without authentication", async () => {
       const response = await app.inject({
         method: "POST",
-        url: "/api/workflow-runs/test-id/cancel",
+        url: "/api/workflow-runs/clzabc123456789012345/cancel",
       });
 
       expect(response.statusCode).toBe(401);
@@ -819,7 +828,6 @@ describe("Workflow Routes", () => {
           workflow_definition_id: workflowDef.id,
           name: "Test Run",
           status: "running",
-          args: {},
           args: {},
         },
       });
@@ -879,7 +887,7 @@ describe("Workflow Routes", () => {
       const { headers } = await createAuthenticatedUser(prisma, app);
       const otherUser = await prisma.user.create({
         data: {
-          username: "other-user",
+          email: "other@test.com",
           password_hash: "hash",
           is_active: true,
         },
@@ -1036,7 +1044,6 @@ describe("Workflow Routes", () => {
           workflow_definition_id: workflowDef.id,
           name: "Test Run",
           status: "running",
-          args: {},
           args: {},
         },
       });

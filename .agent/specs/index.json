@@ -1,6 +1,13 @@
 {
-  "lastId": 251113112739,
+  "lastId": 251113152245,
   "specs": {
+    "251113152245": {
+      "path": "todo/251113152245-test-suite-optimization/spec.md",
+      "status": "draft",
+      "spec_type": "feature",
+      "created": "2025-11-13T15:22:45.000Z",
+      "updated": "2025-11-13T15:22:45.000Z"
+    },
     "251113112739": {
       "path": "todo/251113112739-critical-test-coverage/spec.md",
       "status": "review",

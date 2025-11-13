@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { prisma } from "@/shared/prisma";
 import { cleanTestDB } from "@/server/test-utils/db";
 import { createGitStep } from "./createGitStep";
@@ -12,6 +12,10 @@ vi.mock("@/server/domain/git/services/createAndSwitchBranch");
 vi.mock("@/server/domain/git/services/createPullRequest");
 
 describe("createGitStep", () => {
+  beforeEach(async () => {
+    await cleanTestDB(prisma);
+  });
+
   afterEach(async () => {
     await cleanTestDB(prisma);
     vi.clearAllMocks();

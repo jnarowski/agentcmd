@@ -1,10 +1,14 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { prisma } from "@/shared/prisma";
 import { cleanTestDB } from "@/server/test-utils/db";
 import { findOrCreateStep } from "./findOrCreateStep";
 import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 
 describe("findOrCreateStep", () => {
+  beforeEach(async () => {
+    await cleanTestDB(prisma);
+  });
+
   afterEach(async () => {
     await cleanTestDB(prisma);
   });

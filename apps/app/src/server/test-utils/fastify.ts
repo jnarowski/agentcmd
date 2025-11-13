@@ -12,6 +12,10 @@ import { gitRoutes } from "@/server/routes/git";
 import { slashCommandsRoutes } from "@/server/routes/slash-commands";
 import { settingsRoutes } from "@/server/routes/settings";
 import { registerWorkflowDefinitionRoutes } from "@/server/routes/workflow-definitions";
+import { workflowRoutes } from "@/server/routes/workflows";
+import { workflowStepRoutes } from "@/server/routes/workflow-steps";
+import { workflowArtifactRoutes } from "@/server/routes/workflow-artifacts";
+import { workflowEventRoutes } from "@/server/routes/workflow-events";
 import { createAuthToken } from "./fixtures";
 
 /**
@@ -37,6 +41,12 @@ export async function createTestApp(): Promise<
   // Register auth plugin (JWT)
   await app.register(authPlugin);
 
+  // Mock workflow client for tests
+  // @ts-expect-error - Mock Inngest client for testing
+  app.decorate('workflowClient', {
+    send: async () => ({ ids: ['test-inngest-run-id'] }),
+  });
+
   // Register route modules
   await app.register(authRoutes);
   await app.register(projectRoutes);
@@ -45,6 +55,10 @@ export async function createTestApp(): Promise<
   await app.register(slashCommandsRoutes);
   await app.register(settingsRoutes);
   await app.register(registerWorkflowDefinitionRoutes);
+  await app.register(workflowRoutes);
+  await app.register(workflowStepRoutes);
+  await app.register(workflowArtifactRoutes);
+  await app.register(workflowEventRoutes);
 
   // Note: WebSocket routes are skipped in test app
 

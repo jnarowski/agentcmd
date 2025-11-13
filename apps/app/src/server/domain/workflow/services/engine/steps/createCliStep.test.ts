@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { prisma } from "@/shared/prisma";
 import type { ChildProcess } from "node:child_process";
 import { cleanTestDB } from "@/server/test-utils/db";
@@ -11,6 +11,10 @@ vi.mock("node:child_process", () => ({
 }));
 
 describe("createCliStep", () => {
+  beforeEach(async () => {
+    await cleanTestDB(prisma);
+  });
+
   afterEach(async () => {
     await cleanTestDB(prisma);
     vi.clearAllMocks();

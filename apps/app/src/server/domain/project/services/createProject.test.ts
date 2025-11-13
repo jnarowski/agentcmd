@@ -2,6 +2,7 @@ import {
   describe,
   it,
   expect,
+  beforeEach,
   afterEach,
   vi,
 } from "vitest";
@@ -22,6 +23,10 @@ vi.mock("@/server/domain/project/services/checkWorkflowPackage", () => ({
 }));
 
 describe("createProject", () => {
+  beforeEach(async () => {
+    await cleanTestDB(prisma);
+  });
+
   afterEach(async () => {
     await cleanTestDB(prisma);
     vi.clearAllMocks();

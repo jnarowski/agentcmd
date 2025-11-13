@@ -20,6 +20,7 @@ export async function parseJSONLFile({
     let lastMessageAt = new Date().toISOString();
     let firstMessagePreview = '';
     let createdAt: string | undefined;
+    let isPlanSession = false;
 
     for (const line of lines) {
       try {
@@ -97,6 +98,23 @@ export async function parseJSONLFile({
               (usage.output_tokens || 0);
             totalTokens += messageTokens;
           }
+
+          // Check if this is a Plan session (Task tool with subagent_type: "Plan")
+          if (!isPlanSession) {
+            const content = entry.message?.content ?? entry.content;
+            if (Array.isArray(content)) {
+              for (const block of content) {
+                if (
+                  block.type === 'tool_use' &&
+                  block.name === 'Task' &&
+                  block.input?.subagent_type === 'Plan'
+                ) {
+                  isPlanSession = true;
+                  break;
+                }
+              }
+            }
+          }
         }
 
         // Track the timestamp from the latest message
@@ -123,6 +141,7 @@ export async function parseJSONLFile({
       lastMessageAt,
       firstMessagePreview: firstMessagePreview || 'Untitled Session',
       createdAt,
+      isPlanSession,
     };
   } catch (error) {
     // Return default metadata if file can't be read

@@ -3,6 +3,7 @@ import {
   it,
   expect,
   beforeAll,
+  beforeEach,
   afterEach,
   afterAll,
   vi,
@@ -25,6 +26,10 @@ describe("Session Routes", () => {
 
   beforeAll(async () => {
     app = await createTestApp();
+  });
+
+  beforeEach(async () => {
+    await cleanTestDB(prisma);
   });
 
   afterEach(async () => {

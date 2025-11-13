@@ -1,10 +1,14 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { prisma } from "@/shared/prisma";
 import { cleanTestDB } from "@/server/test-utils/db";
 import { createTestUser, createTestProject, createTestSession } from "@/server/test-utils/fixtures";
 import { validateSessionOwnership } from "./validateSessionOwnership";
 
 describe("validateSessionOwnership", () => {
+  beforeEach(async () => {
+    await cleanTestDB(prisma);
+  });
+
   afterEach(async () => {
     await cleanTestDB(prisma);
   });
