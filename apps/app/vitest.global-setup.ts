@@ -1,4 +1,6 @@
 import { execSync } from "child_process";
+import fs from "fs";
+import path from "path";
 
 /**
  * Vitest globalSetup - runs ONCE before all test suites
@@ -9,12 +11,18 @@ import { execSync } from "child_process";
  * - Verify database connectivity
  *
  * Note: This runs BEFORE vitest.setup.ts, so we must set DATABASE_URL here
+ *
+ * File-based DB approach (current):
+ * - Uses temp file for SQLite database
+ * - Allows parallel test execution across multiple workers
+ * - Tests run concurrently on multi-core systems
+ * - Trade-off: File I/O overhead (minimal on SSD)
  */
 export default async function globalSetup() {
   console.log("🔧 Global Setup: Applying Prisma schema to test database...");
 
-  // Set test database URL (runs before vitest.setup.ts)
-  const testDbPath = "file::memory:?cache=shared";
+  // File-based DB for parallel test execution
+  const testDbPath = "file:./test-temp.db";
   process.env.DATABASE_URL = testDbPath;
 
   try {
@@ -44,13 +52,27 @@ export default async function globalSetup() {
     const { prisma } = await import("./src/shared/prisma");
     await prisma.$disconnect();
 
-    // Delete test database file
+    // Clean up test database file
+    const dbFilePath = path.resolve(process.cwd(), "test-temp.db");
+    const dbFilePathWal = path.resolve(process.cwd(), "test-temp.db-wal");
+    const dbFilePathShm = path.resolve(process.cwd(), "test-temp.db-shm");
+
     try {
-      const fs = await import("fs/promises");
-      await fs.unlink("./test-temp.db");
-      console.log("✅ Global Teardown: Test database deleted");
-    } catch {
-      // Ignore if file doesn't exist
+      if (fs.existsSync(dbFilePath)) {
+        fs.unlinkSync(dbFilePath);
+        console.log("✅ Removed test database file");
+      }
+      if (fs.existsSync(dbFilePathWal)) {
+        fs.unlinkSync(dbFilePathWal);
+      }
+      if (fs.existsSync(dbFilePathShm)) {
+        fs.unlinkSync(dbFilePathShm);
+      }
+    } catch (error) {
+      console.warn(
+        "⚠️  Failed to clean up test database files:",
+        error instanceof Error ? error.message : String(error)
+      );
     }
   };
 }
