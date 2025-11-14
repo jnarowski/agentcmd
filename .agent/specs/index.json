@@ -9,11 +9,11 @@
       "updated": "2025-11-14T08:30:00.000Z"
     },
     "251114000000": {
-      "path": "todo/251114000000-parallel-test-execution/spec.md",
-      "status": "review",
+      "path": "done/251114000000-parallel-test-execution/spec.md",
+      "status": "completed",
       "spec_type": "feature",
       "created": "2025-11-14T00:00:00.000Z",
-      "updated": "2025-11-14T14:00:00.000Z"
+      "updated": "2025-11-14T21:15:55.169Z"
     },
     "251113152245": {
       "path": "todo/251113152245-test-suite-optimization/spec.md",

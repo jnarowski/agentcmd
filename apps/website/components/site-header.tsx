@@ -1,5 +1,6 @@
 "use client";
 
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlignJustify, XIcon } from "lucide-react";
@@ -102,6 +103,20 @@ export function SiteHeader() {
             Magic UI
           </Link>
 
+          <div className="ml-auto flex h-full items-center">
+            <Link className="mr-6 text-sm" href="/signin">
+              Log in
+            </Link>
+            <Link
+              className={cn(
+                buttonVariants({ variant: "secondary" }),
+                "mr-6 text-sm"
+              )}
+              href="/signup"
+            >
+              Sign up
+            </Link>
+          </div>
           <button
             className="ml-6 md:hidden"
             onClick={() => setHamburgerMenuIsOpen((open) => !open)}
