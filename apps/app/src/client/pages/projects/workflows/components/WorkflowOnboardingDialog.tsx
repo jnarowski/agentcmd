@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/client/components/ui/dialog";
 import { Button } from "@/client/components/ui/button";
-import { useProject } from "@/client/pages/projects/hooks/useProjects";
+import { useProject, projectKeys } from "@/client/pages/projects/hooks/useProjects";
 import { WorkflowPackageInstallDialog } from "@/client/pages/projects/components/WorkflowPackageInstallDialog";
 import { workflowKeys } from "@/client/pages/projects/workflows/hooks/queryKeys";
 import { useState } from "react";
@@ -34,6 +34,8 @@ export function WorkflowOnboardingDialog({
 
   const handleCloseInstallDialog = () => {
     setShowInstallDialog(false);
+    // Refresh project data to update capabilities
+    queryClient.invalidateQueries({ queryKey: projectKeys.detail(projectId) });
     // Refresh definitions after dialog closes (in case install succeeded)
     handleRefreshDefinitions();
     // Check if we should complete onboarding

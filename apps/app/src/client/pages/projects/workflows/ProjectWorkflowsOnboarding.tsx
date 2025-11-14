@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { Button } from "@/client/components/ui/button";
-import { useProject } from "@/client/pages/projects/hooks/useProjects";
+import { useProject, projectKeys } from "@/client/pages/projects/hooks/useProjects";
 import { WorkflowPackageInstallDialog } from "@/client/pages/projects/components/WorkflowPackageInstallDialog";
 import { workflowKeys } from "@/client/pages/projects/workflows/hooks/queryKeys";
 import { useState } from "react";
@@ -20,6 +20,9 @@ export function ProjectWorkflowsOnboarding() {
 
   const handleCloseInstallDialog = () => {
     setShowInstallDialog(false);
+    // Refresh project data to update capabilities
+    queryClient.invalidateQueries({ queryKey: projectKeys.detail(projectId!) });
+    // Refresh workflow definitions
     handleRefreshDefinitions();
   };
 

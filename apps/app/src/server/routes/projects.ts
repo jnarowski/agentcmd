@@ -605,29 +605,42 @@ export async function projectRoutes(fastify: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      const project = await getProjectById({ id: request.params.id });
+      try {
+        const project = await getProjectById({ id: request.params.id });
 
-      if (!project) {
-        return reply
-          .code(404)
-          .send(buildErrorResponse(404, "Project not found"));
-      }
+        if (!project) {
+          return reply
+            .code(404)
+            .send(buildErrorResponse(404, "Project not found"));
+        }
 
-      fastify.log.info(
-        { projectId: project.id, projectPath: project.path },
-        "Installing agentcmd-workflows package"
-      );
-
-      const installResult = await installWorkflowPackage({ projectPath: project.path });
-
-      if (!installResult.success) {
-        fastify.log.error(
-          { projectId: project.id, error: installResult.message },
-          "Workflow SDK installation failed"
+        fastify.log.info(
+          { projectId: project.id, projectPath: project.path },
+          "Installing agentcmd-workflows package"
         );
-      }
 
-      return reply.send({ data: installResult });
+        const installResult = await installWorkflowPackage({ projectPath: project.path });
+
+        fastify.log.info(
+          { projectId: project.id, success: installResult.success },
+          "Install workflow package result"
+        );
+
+        if (!installResult.success) {
+          fastify.log.error(
+            { projectId: project.id, error: installResult.message },
+            "Workflow SDK installation failed"
+          );
+        }
+
+        return reply.send({ data: installResult });
+      } catch (error) {
+        fastify.log.error(
+          { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined },
+          "Unexpected error in workflow package install route"
+        );
+        throw error;
+      }
     }
   );
 

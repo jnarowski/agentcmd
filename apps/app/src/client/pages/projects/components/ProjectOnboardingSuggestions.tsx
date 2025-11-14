@@ -4,6 +4,7 @@
  */
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import {
   Alert,
@@ -12,6 +13,7 @@ import {
 } from "@/client/components/ui/alert";
 import { Badge } from "@/client/components/ui/badge";
 import { WorkflowPackageInstallDialog } from "./WorkflowPackageInstallDialog";
+import { projectKeys } from "@/client/pages/projects/hooks/useProjects";
 import type { Project } from "@/shared/types/project.types";
 
 interface ProjectOnboardingSuggestionsProps {
@@ -21,7 +23,14 @@ interface ProjectOnboardingSuggestionsProps {
 export function ProjectOnboardingSuggestions({
   project,
 }: ProjectOnboardingSuggestionsProps) {
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    // Refresh project data to update capabilities
+    queryClient.invalidateQueries({ queryKey: projectKeys.detail(project.id) });
+  };
 
   const isInstalled = project.capabilities.workflow_sdk.installed;
 
@@ -67,7 +76,7 @@ export function ProjectOnboardingSuggestions({
         projectId={project.id}
         sdkStatus={project.capabilities.workflow_sdk}
         isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
+        onClose={handleCloseDialog}
       />
     </>
   );

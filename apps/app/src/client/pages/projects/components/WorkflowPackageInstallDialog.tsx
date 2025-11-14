@@ -3,20 +3,28 @@
  * Dialog for installing agentcmd-workflows package in a project
  */
 
-import { useState } from 'react';
-import { Loader2, Copy, Check } from 'lucide-react';
+import { useState } from "react";
+import { Loader2, Copy, Check } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/client/components/ui/dialog';
-import { Button } from '@/client/components/ui/button';
-import { Alert, AlertDescription } from '@/client/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/client/components/ui/tabs';
-import { useInstallWorkflowPackage, type WorkflowPackageInstallResult } from '@/client/pages/projects/hooks/useProjects';
-import type { WorkflowPackageCapabilities } from '@/shared/types/project.types';
+} from "@/client/components/ui/dialog";
+import { Button } from "@/client/components/ui/button";
+import { Alert, AlertDescription } from "@/client/components/ui/alert";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/client/components/ui/tabs";
+import {
+  useInstallWorkflowPackage,
+  type WorkflowPackageInstallResult,
+} from "@/client/pages/projects/hooks/useProjects";
+import type { WorkflowPackageCapabilities } from "@/shared/types/project.types";
 
 interface WorkflowPackageInstallDialogProps {
   projectId: string;
@@ -33,8 +41,9 @@ export function WorkflowPackageInstallDialog({
 }: WorkflowPackageInstallDialogProps) {
   const installMutation = useInstallWorkflowPackage();
   const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
-  const [selectedTab, setSelectedTab] = useState<string>('npm');
-  const [installResult, setInstallResult] = useState<WorkflowPackageInstallResult | null>(null);
+  const [selectedTab, setSelectedTab] = useState<string>("npm");
+  const [installResult, setInstallResult] =
+    useState<WorkflowPackageInstallResult | null>(null);
 
   const handleInstall = async () => {
     const result = await installMutation.mutateAsync(projectId);
@@ -53,9 +62,9 @@ export function WorkflowPackageInstallDialog({
   };
 
   const commands = {
-    npm: 'npm install --save-dev agentcmd-workflows && npx agentcmd-workflows init --yes',
-    pnpm: 'pnpm add -D agentcmd-workflows && pnpm agentcmd-workflows init --yes',
-    yarn: 'yarn add -D agentcmd-workflows && yarn agentcmd-workflows init --yes',
+    npm: "npm install --save-dev agentcmd-workflows && npx agentcmd-workflows init",
+    pnpm: "pnpm add -D agentcmd-workflows && pnpm agentcmd-workflows init",
+    yarn: "yarn add -D agentcmd-workflows && yarn agentcmd-workflows init",
   };
 
   return (
@@ -64,19 +73,18 @@ export function WorkflowPackageInstallDialog({
         <DialogHeader>
           <DialogTitle>Install Workflow Package</DialogTitle>
           <DialogDescription>
-            {!sdkStatus.has_package_json
-              ? 'No package.json found. The installation will create one for you.'
-              : 'Install agentcmd-workflows to enable workflow execution in this project.'}
+            Install agentcmd-workflows to enable workflow execution in this
+            project.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           {installResult ? (
             <div className="space-y-4">
-              <Alert variant={installResult.success ? "default" : "destructive"}>
-                <AlertDescription>
-                  {installResult.message}
-                </AlertDescription>
+              <Alert
+                variant={installResult.success ? "default" : "destructive"}
+              >
+                <AlertDescription>{installResult.message}</AlertDescription>
               </Alert>
 
               {installResult.output && (
@@ -99,8 +107,8 @@ export function WorkflowPackageInstallDialog({
               {!sdkStatus.has_package_json && (
                 <Alert>
                   <AlertDescription>
-                    No package.json found. Click "Install Now" to create a package.json
-                    and install agentcmd-workflows automatically.
+                    No package.json found. Click "Install Now" to create a
+                    package.json and install agentcmd-workflows automatically.
                   </AlertDescription>
                 </Alert>
               )}
@@ -154,7 +162,7 @@ export function WorkflowPackageInstallDialog({
                       Installing...
                     </>
                   ) : (
-                    'Install Now'
+                    "Install Now"
                   )}
                 </Button>
                 <Button
@@ -169,7 +177,7 @@ export function WorkflowPackageInstallDialog({
               {installMutation.isError && (
                 <Alert variant="destructive">
                   <AlertDescription>
-                    {installMutation.error?.message || 'Installation failed'}
+                    {installMutation.error?.message || "Installation failed"}
                   </AlertDescription>
                 </Alert>
               )}
