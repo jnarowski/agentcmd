@@ -128,34 +128,8 @@ describe("createGitStep", () => {
       commands: ["gh pr create --title \"Add new feature\" --body \"This PR adds a new feature\" --base main"],
     });
 
-    const user = await prisma.user.create({
-      data: {
-        email: "test@example.com",
-        password_hash: "hash",
-      },
-    });
-    const project = await prisma.project.create({
-      data: { name: "Test Project", path: "/tmp/test" },
-    });
-    const workflow = await prisma.workflowDefinition.create({
-      data: {
-        project_id: project.id,
-        name: "test-workflow",
-        identifier: "test-workflow",
-        type: "code",
-        path: "/tmp/test.ts",
-        phases: [],
-      },
-    });
-    const execution = await prisma.workflowRun.create({
-      data: {
-        project_id: project.id,
-        user_id: user.id,
-        workflow_definition_id: workflow.id,
-        name: "Test Execution",
-        args: {},
-        status: "running",
-      },
+    const { run: execution } = await createTestWorkflowContext(prisma, {
+      run: { name: "Test Execution", status: "running", args: {} }
     });
 
     const context: RuntimeContext = {
@@ -202,34 +176,8 @@ describe("createGitStep", () => {
       commands: ["git add .", "git commit -m \"feat: new feature\""],
     });
 
-    const user = await prisma.user.create({
-      data: {
-        email: "test2@example.com",
-        password_hash: "hash",
-      },
-    });
-    const project = await prisma.project.create({
-      data: { name: "Test Project 2", path: "/tmp/test2" },
-    });
-    const workflow = await prisma.workflowDefinition.create({
-      data: {
-        project_id: project.id,
-        name: "test-workflow-2",
-        identifier: "test-workflow-2",
-        type: "code",
-        path: "/tmp/test2.ts",
-        phases: [],
-      },
-    });
-    const execution = await prisma.workflowRun.create({
-      data: {
-        project_id: project.id,
-        user_id: user.id,
-        workflow_definition_id: workflow.id,
-        name: "Test Execution 2",
-        args: {},
-        status: "running",
-      },
+    const { run: execution } = await createTestWorkflowContext(prisma, {
+      run: { name: "Test Execution 2", status: "running", args: {} }
     });
 
     const context: RuntimeContext = {
@@ -271,34 +219,8 @@ describe("createGitStep", () => {
       commands: ["git add .", "git commit -m \"initial commit\""],
     });
 
-    const user = await prisma.user.create({
-      data: {
-        email: "test3@example.com",
-        password_hash: "hash",
-      },
-    });
-    const project = await prisma.project.create({
-      data: { name: "Test Project 3", path: "/tmp/test3" },
-    });
-    const workflow = await prisma.workflowDefinition.create({
-      data: {
-        project_id: project.id,
-        name: "test-workflow-3",
-        identifier: "test-workflow-3",
-        type: "code",
-        path: "/tmp/test3.ts",
-        phases: [],
-      },
-    });
-    const execution = await prisma.workflowRun.create({
-      data: {
-        project_id: project.id,
-        user_id: user.id,
-        workflow_definition_id: workflow.id,
-        name: "Test Execution 3",
-        args: {},
-        status: "running",
-      },
+    const { run: execution } = await createTestWorkflowContext(prisma, {
+      run: { name: "Test Execution 3", status: "running", args: {} }
     });
 
     const context: RuntimeContext = {

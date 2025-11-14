@@ -10,14 +10,12 @@ import {
   deleteProject,
   projectExistsByPath,
   syncFromClaudeProjects,
-  listSpecFiles,
 } from "@/server/domain/project/services";
 import { getAvailableSpecTypes } from "@/server/domain/workflow/services/getAvailableSpecTypes";
 import { installWorkflowPackage } from "@/server/domain/project/services/installWorkflowPackage";
 import { getBranches } from "@/server/domain/git/services";
 import { getFileTree, readFile, writeFile } from "@/server/domain/file/services/index";
 import { scanSpecs } from "@/server/domain/task/services/scanSpecs";
-import type { SpecTask } from "@/shared/types/task.types";
 import {
   createProjectSchema,
   updateProjectSchema,

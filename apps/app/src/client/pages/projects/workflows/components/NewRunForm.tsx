@@ -364,7 +364,7 @@ export function NewRunForm({
 
       {/* Spec input type selection */}
       <div>
-        <Label className="mb-2 block">Spec Input</Label>
+        <Label className="mb-2 block">Task</Label>
         <div className="rounded-lg border bg-card">
           <Tabs
             value={specInputType}
@@ -378,13 +378,13 @@ export function NewRunForm({
                 value="file"
                 className="flex-1 rounded-none data-[state=active]:border-b data-[state=active]:border-primary data-[state=active]:-mb-px rounded-tl-lg"
               >
-                Select Spec
+                Select Spec File
               </TabsTrigger>
               <TabsTrigger
                 value="planning"
                 className="flex-1 rounded-none data-[state=active]:border-b data-[state=active]:border-primary data-[state=active]:-mb-px"
               >
-                From Planning Session
+                Generate From Planning Session
               </TabsTrigger>
               <TabsTrigger
                 value="content"
@@ -449,9 +449,6 @@ export function NewRunForm({
                 emptyMessage="No planning sessions found"
                 disabled={createWorkflow.isPending}
               />
-              <p className="text-xs text-muted-foreground">
-                Select a planning session to generate spec from
-              </p>
             </TabsContent>
 
             <TabsContent value="content" className="m-0 p-0">
@@ -470,75 +467,83 @@ export function NewRunForm({
               />
             </TabsContent>
           </Tabs>
-        </div>
-      </div>
 
-      {/* Spec Type Selection */}
-      <div>
-        <Label htmlFor="spec-type">Spec Type</Label>
-        <SpecTypeSelect
-          projectId={projectId}
-          value={specType}
-          onValueChange={setSpecType}
-          disabled={createWorkflow.isPending}
-        />
-      </div>
+          {/* Run Name and Spec Type - Only for Planning/Content modes */}
+          {(specInputType === "planning" || specInputType === "content") && (
+            <div className="px-4 pb-4 pt-4 border-t space-y-4">
+              {/* Run Name */}
+              <div className="space-y-2">
+                <Label htmlFor="run-name">Name</Label>
+                <div className="relative">
+                  <Input
+                    id="run-name"
+                    placeholder="e.g., Feature Implementation - API v2"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    disabled={createWorkflow.isPending || isGeneratingNames}
+                    aria-invalid={showValidation && !name.trim()}
+                  />
+                  {isGeneratingNames && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <svg
+                        className="animate-spin h-4 w-4 text-muted-foreground"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                {isGeneratingNames && (
+                  <p className="text-xs text-muted-foreground">
+                    Generating names from spec...
+                  </p>
+                )}
+                {showValidation && !name.trim() && (
+                  <p className="text-xs text-red-600 dark:text-red-400">
+                    Name is required
+                  </p>
+                )}
+              </div>
 
-      {/* Name input */}
-      <div>
-        <Label htmlFor="run-name">Run Name</Label>
-        <div className="relative">
-          <Input
-            id="run-name"
-            placeholder="e.g., Feature Implementation - API v2"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            disabled={createWorkflow.isPending || isGeneratingNames}
-            aria-invalid={showValidation && !name.trim()}
-          />
-          {isGeneratingNames && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <svg
-                className="animate-spin h-4 w-4 text-muted-foreground"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
+              {/* Spec Type */}
+              <div className="space-y-2">
+                <Label htmlFor="spec-type">Spec Type</Label>
+                <SpecTypeSelect
+                  projectId={projectId}
+                  value={specType}
+                  onValueChange={setSpecType}
+                  disabled={createWorkflow.isPending}
                 />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
+                <p className="text-xs text-muted-foreground">
+                  This determines the command used to generate the spec file
+                  from the above content.
+                </p>
+              </div>
             </div>
           )}
         </div>
-        {isGeneratingNames && (
-          <p className="text-xs text-muted-foreground">
-            Generating names from spec...
-          </p>
-        )}
-        {showValidation && !name.trim() && (
-          <p className="text-xs text-red-600 dark:text-red-400">
-            Run Name is required
-          </p>
-        )}
       </div>
 
       {/* Setup: stay, branch, or worktree */}
       <div className="space-y-3">
-        <Label>Setup Phase</Label>
+        <Label>Git Workspace</Label>
         <div className="text-xs text-muted-foreground pb-3">
-          This runs automatically before your workflow and handles setting up
-          the git workspace the branch, worktree etc
+          Choose where this workflow will run
         </div>
         <RadioGroup
           value={mode}
@@ -552,11 +557,11 @@ export function NewRunForm({
                 htmlFor="mode-branch"
                 className="font-normal cursor-pointer"
               >
-                Create a new Branch
+                Create a Branch
               </Label>
             </div>
             <p className="text-xs text-muted-foreground ml-6">
-              Creates and checks out a new branch from base
+              Switches to a new branch in your current directory
             </p>
             {mode === "branch" && (
               <div className="ml-2 space-y-3 border-l-2 border-muted pl-3.5 py-3 [&>div]:space-y-2">
@@ -565,7 +570,7 @@ export function NewRunForm({
                   <Label htmlFor="branch-name">Branch Name</Label>
                   <Input
                     id="branch-name"
-                    placeholder="Auto-generated from run name"
+                    placeholder="Auto-generated from name"
                     value={branchName}
                     onChange={(e) => setBranchName(e.target.value)}
                     disabled={createWorkflow.isPending}
@@ -622,11 +627,11 @@ export function NewRunForm({
                 htmlFor="mode-worktree"
                 className="font-normal cursor-pointer"
               >
-                Create a new Worktree
+                Create a Worktree
               </Label>
             </div>
             <p className="text-xs text-muted-foreground ml-6">
-              Creates a git worktree with a new branch for parallel work
+              Creates a new worktree directory for isolated parallel work
             </p>
             {mode === "worktree" && (
               <div className="ml-2 space-y-3 border-l-2 border-muted pl-3.5 py-3 [&>div]:space-y-2">
@@ -635,7 +640,7 @@ export function NewRunForm({
                   <Label htmlFor="worktree-branch-name">Branch Name</Label>
                   <Input
                     id="worktree-branch-name"
-                    placeholder="Auto-generated from run name"
+                    placeholder="Auto-generated from name"
                     value={branchName}
                     onChange={(e) => setBranchName(e.target.value)}
                     disabled={createWorkflow.isPending}
@@ -693,7 +698,7 @@ export function NewRunForm({
               </Label>
             </div>
             <p className="text-xs text-muted-foreground ml-6">
-              Runs in current branch without creating a new branch or worktree
+              Runs in your current branch and directory
             </p>
           </div>
         </RadioGroup>

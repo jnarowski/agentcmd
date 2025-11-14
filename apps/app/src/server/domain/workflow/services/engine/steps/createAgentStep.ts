@@ -128,11 +128,10 @@ export function createAgentStep(
             cliSessionId: result.sessionId,
           });
 
-          // Update step with CLI session ID (if available), otherwise use db session ID
-          const agentSessionId = result.sessionId || session.id;
+          // Update step with database session ID (foreign key constraint)
           await updateWorkflowStep({
             stepId: step.id,
-            agentSessionId,
+            agentSessionId: session.id,
             logger,
           });
 

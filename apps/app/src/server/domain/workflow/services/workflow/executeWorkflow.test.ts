@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach, vi, beforeEach } from "vitest";
 import { prisma } from "@/shared/prisma";
 import { cleanTestDB } from "@/server/test-utils/db";
-import { createTestUser, createTestProject } from "@/server/test-utils/fixtures";
+import { createTestUser, createTestProject, createTestWorkflowRun } from "@/server/test-utils/fixtures";
 import { executeWorkflow } from "./executeWorkflow";
 import * as fs from "node:fs/promises";
 import * as getWorkflowRunForExecutionModule from "../runs/getWorkflowRunForExecution";
@@ -63,14 +63,12 @@ describe("executeWorkflow validation", () => {
         },
       });
 
-      const workflowRun = await prisma.workflowRun.create({
-        data: {
-          project_id: testProject.id,
-          user_id: testUser.id,
-          workflow_definition_id: workflowDef.id,
-          name: "Test Run",
-          args: {},
-        },
+      const workflowRun = await createTestWorkflowRun(prisma, {
+        project_id: testProject.id,
+        user_id: testUser.id,
+        workflow_definition_id: workflowDef.id,
+        name: "Test Run",
+        args: {},
       });
 
       // Mock getWorkflowRunForExecution to return our test data
@@ -132,14 +130,12 @@ describe("executeWorkflow validation", () => {
         },
       });
 
-      const workflowRun = await prisma.workflowRun.create({
-        data: {
-          project_id: testProject.id,
-          user_id: testUser.id,
-          workflow_definition_id: workflowDef.id,
-          name: "Test Run",
-          args: {},
-        },
+      const workflowRun = await createTestWorkflowRun(prisma, {
+        project_id: testProject.id,
+        user_id: testUser.id,
+        workflow_definition_id: workflowDef.id,
+        name: "Test Run",
+        args: {},
       });
 
       // Mock getWorkflowRunForExecution
@@ -211,14 +207,12 @@ describe("executeWorkflow validation", () => {
         },
       });
 
-      const workflowRun = await prisma.workflowRun.create({
-        data: {
-          project_id: testProject.id,
-          user_id: testUser.id,
-          workflow_definition_id: workflowDef.id,
-          name: "Test Run",
-          args: {},
-        },
+      const workflowRun = await createTestWorkflowRun(prisma, {
+        project_id: testProject.id,
+        user_id: testUser.id,
+        workflow_definition_id: workflowDef.id,
+        name: "Test Run",
+        args: {},
       });
 
       // Mock getWorkflowRunForExecution
@@ -290,14 +284,12 @@ describe("executeWorkflow validation", () => {
         },
       });
 
-      const workflowRun = await prisma.workflowRun.create({
-        data: {
-          project_id: testProject.id,
-          user_id: testUser.id,
-          workflow_definition_id: workflowDef.id,
-          name: "Test Run",
-          args: {},
-        },
+      const workflowRun = await createTestWorkflowRun(prisma, {
+        project_id: testProject.id,
+        user_id: testUser.id,
+        workflow_definition_id: workflowDef.id,
+        name: "Test Run",
+        args: {},
       });
 
       // Mock getWorkflowRunForExecution

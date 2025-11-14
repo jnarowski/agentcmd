@@ -22,7 +22,7 @@ export async function createTestUser(
     is_active: boolean;
   }>
 ) {
-  const email = overrides?.email || "test@example.com";
+  const email = overrides?.email || `test-${Date.now()}-${Math.random().toString(36).substring(7)}@example.com`;
   const password = overrides?.password || DEFAULT_PASSWORD;
   const is_active = overrides?.is_active ?? true;
 

@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach, vi, beforeEach } from "vitest";
 import { prisma } from "@/shared/prisma";
 import { cleanTestDB } from "@/server/test-utils/db";
+import { createTestProject } from "@/server/test-utils/fixtures";
 import { scanGlobalWorkflows } from "./scanGlobalWorkflows";
 import * as loadGlobalWorkflowsModule from "./loadGlobalWorkflows";
 import type { WorkflowRuntime } from "agentcmd-workflows";
@@ -418,12 +419,7 @@ describe("scanGlobalWorkflows", () => {
   describe("scope isolation", () => {
     it("should not affect project-specific workflows", async () => {
       // Create project workflow
-      const project = await prisma.project.create({
-        data: {
-          name: "Test Project",
-          path: "/tmp/test-project",
-        },
-      });
+      const project = await createTestProject(prisma, { name: "Test Project", path: "/tmp/test-project" });
 
       await prisma.workflowDefinition.create({
         data: {
@@ -495,12 +491,7 @@ describe("scanGlobalWorkflows", () => {
 
     it("should handle same identifier for global and project workflows", async () => {
       // Create project workflow with identifier "shared"
-      const project = await prisma.project.create({
-        data: {
-          name: "Test Project",
-          path: "/tmp/test-project",
-        },
-      });
+      const project = await createTestProject(prisma, { name: "Test Project", path: "/tmp/test-project" });
 
       await prisma.workflowDefinition.create({
         data: {

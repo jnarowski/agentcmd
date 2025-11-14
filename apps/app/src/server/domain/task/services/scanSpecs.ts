@@ -64,7 +64,7 @@ export async function scanSpecs(projectPath: string, projectId: string): Promise
       specTasks.push({
         id,
         name: displayName,
-        specPath: `.agent/specs/${entry.path}`,
+        specPath: entry.path,
         projectId, // Set from parameter
         status: entry.status,
         spec_type: entry.spec_type ?? "feature", // Default to "feature" for legacy specs

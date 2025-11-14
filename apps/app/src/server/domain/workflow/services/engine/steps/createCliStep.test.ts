@@ -89,34 +89,8 @@ describe("createCliStep", () => {
       }
     );
 
-    const user = await prisma.user.create({
-      data: {
-        email: "test@example.com",
-        password_hash: "hash",
-      },
-    });
-    const project = await prisma.project.create({
-      data: { name: "Test Project", path: "/tmp/test" },
-    });
-    const workflow = await prisma.workflowDefinition.create({
-      data: {
-        project_id: project.id,
-        name: "test-workflow",
-        identifier: "test-workflow",
-        type: "code",
-        path: "/tmp/test.ts",
-        phases: []
-      },
-    });
-    const execution = await prisma.workflowRun.create({
-      data: {
-        project_id: project.id,
-        user_id: user.id,
-        workflow_definition_id: workflow.id,
-        name: "Test Execution",
-        args: {},
-        status: "running",
-      },
+    const { run: execution } = await createTestWorkflowContext(prisma, {
+      run: { name: "Test Execution", status: "running", args: {} }
     });
 
     const context: RuntimeContext = {
@@ -168,34 +142,8 @@ describe("createCliStep", () => {
       }
     );
 
-    const user = await prisma.user.create({
-      data: {
-        email: "test@example.com",
-        password_hash: "hash",
-      },
-    });
-    const project = await prisma.project.create({
-      data: { name: "Test Project", path: "/tmp/test" },
-    });
-    const workflow = await prisma.workflowDefinition.create({
-      data: {
-        project_id: project.id,
-        name: "test-workflow",
-        identifier: "test-workflow",
-        type: "code",
-        path: "/tmp/test.ts",
-        phases: []
-      },
-    });
-    const execution = await prisma.workflowRun.create({
-      data: {
-        project_id: project.id,
-        user_id: user.id,
-        workflow_definition_id: workflow.id,
-        name: "Test Execution",
-        args: {},
-        status: "running",
-      },
+    const { run: execution } = await createTestWorkflowContext(prisma, {
+      run: { name: "Test Execution", status: "running", args: {} }
     });
 
     const context: RuntimeContext = {

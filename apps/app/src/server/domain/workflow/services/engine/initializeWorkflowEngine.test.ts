@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach, vi, beforeEach } from "vitest";
 import { prisma } from "@/shared/prisma";
 import { cleanTestDB } from "@/server/test-utils/db";
+import { createTestProject } from "@/server/test-utils/fixtures";
 import { initializeWorkflowEngine } from "./initializeWorkflowEngine";
 import * as loadProjectWorkflowsModule from "./loadProjectWorkflows";
 import * as loadGlobalWorkflowsModule from "./loadGlobalWorkflows";
@@ -69,12 +70,7 @@ describe("initializeWorkflowEngine", () => {
   describe("workflow loading optimization", () => {
     it("should load project workflows only once per project", async () => {
       // Create test project
-      const project = await prisma.project.create({
-        data: {
-          name: "Test Project",
-          path: "/tmp/test-project",
-        },
-      });
+      const project = await createTestProject(prisma, { name: "Test Project", path: "/tmp/test-project" });
 
       // Create 3 workflow definitions for the same project
       const workflow1 = await prisma.workflowDefinition.create({
@@ -164,13 +160,9 @@ describe("initializeWorkflowEngine", () => {
 
     it("should load workflows once per project when multiple projects exist", async () => {
       // Create 2 projects
-      const project1 = await prisma.project.create({
-        data: { name: "Project 1", path: "/tmp/project-1" },
-      });
+      const project1 = await createTestProject(prisma, { name: "Project 1", path: "/tmp/project-1" });
 
-      const project2 = await prisma.project.create({
-        data: { name: "Project 2", path: "/tmp/project-2" },
-      });
+      const project2 = await createTestProject(prisma, { name: "Project 2", path: "/tmp/project-2" });
 
       // Create 2 workflows for project1
       await prisma.workflowDefinition.create({
@@ -388,9 +380,7 @@ describe("initializeWorkflowEngine", () => {
 
     it("should register all workflows from a single load", async () => {
       // Create project with 5 workflows
-      const project = await prisma.project.create({
-        data: { name: "Multi Workflow Project", path: "/tmp/multi" },
-      });
+      const project = await createTestProject(prisma, { name: "Multi Workflow Project", path: "/tmp/multi" });
 
       const workflows = [];
       for (let i = 1; i <= 5; i++) {
@@ -460,9 +450,7 @@ describe("initializeWorkflowEngine", () => {
       });
 
       // Create project with workflows
-      const project = await prisma.project.create({
-        data: { name: "Test Project", path: "/tmp/test" },
-      });
+      const project = await createTestProject(prisma, { name: "Test Project", path: "/tmp/test" });
 
       await prisma.workflowDefinition.create({
         data: {
