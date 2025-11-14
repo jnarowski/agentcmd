@@ -56,6 +56,11 @@ export function GlobalOnboardingSuggestions() {
   const allInstalled = suggestions.every((s) => s.isInstalled);
   const installedCount = suggestions.filter((s) => s.isInstalled).length;
 
+  // Hide if all setup complete
+  if (allInstalled) {
+    return null;
+  }
+
   const handleDismiss = () => {
     updateSettings.mutate({ onboarding_dismissed: true });
   };

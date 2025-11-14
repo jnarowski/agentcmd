@@ -69,14 +69,9 @@ export function NavActivities() {
   const filter: ActivityFilter =
     settings?.userPreferences?.activity_filter || "all";
 
-  // Get project filter: use setting if explicitly set (including null), otherwise use activeProjectId
-  const projectFilter =
-    settings?.userPreferences?.active_project_filter !== undefined
-      ? settings.userPreferences.active_project_filter
-      : activeProjectId;
-
+  // Use activeProjectId from navigationStore for filtering
   const { data: sessions } = useSessions({
-    projectId: projectFilter || undefined,
+    projectId: activeProjectId || undefined,
     limit: 20,
     orderBy: 'created_at',
     order: 'desc',
@@ -85,7 +80,7 @@ export function NavActivities() {
   // Fetch only active/in-progress runs from backend
   const { data: allWorkflowRuns } = useAllWorkflowRuns(
     ['pending', 'running', 'failed'],
-    projectFilter
+    activeProjectId
   );
 
   // Map sessions to Activity type, join with project names
@@ -207,18 +202,18 @@ export function NavActivities() {
             Workflows
           </ToggleGroupItem>
         </ToggleGroup>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="ml-auto h-6 w-6 p-0 flex items-center justify-center"
-              aria-label="Create new session or workflow"
-              disabled={!activeProjectId}
-            >
-              <Plus className="size-3.5" />
-            </Button>
-          </DropdownMenuTrigger>
+        {activeProjectId && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="ml-auto h-6 w-6 p-0 flex items-center justify-center"
+                aria-label="Create new session or workflow"
+              >
+                <Plus className="size-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem
               onClick={() => {
@@ -256,7 +251,8 @@ export function NavActivities() {
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>
-        </DropdownMenu>
+          </DropdownMenu>
+        )}
         <Button
           size="sm"
           variant="ghost"
@@ -271,7 +267,7 @@ export function NavActivities() {
       <div className="flex-1 overflow-y-auto px-2">
         {filteredActivities.length === 0 ? (
           <div className="py-4 text-center text-sm text-muted-foreground">
-            {projectFilter ? "No items in this project" : "No recent activity"}
+            {activeProjectId ? "No items in this project" : "No recent activity"}
           </div>
         ) : (
           <SidebarMenu>

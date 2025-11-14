@@ -28,9 +28,7 @@ interface UserPreferences {
   default_agent: AgentType;
   onboarding_dismissed?: boolean;
   activity_filter?: 'all' | 'sessions' | 'workflows';
-  projects_view?: 'all' | 'favorites' | 'hidden';
-  sidebar_active_tab?: 'projects' | 'activities' | 'tasks';
-  active_project_filter?: string | null;
+  sidebar_active_tab?: 'activities' | 'tasks';
 }
 
 interface Settings {

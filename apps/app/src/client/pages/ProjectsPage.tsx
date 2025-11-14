@@ -1,20 +1,7 @@
-import { useNavigate } from "react-router-dom";
 import { useProjects, useSyncProjects } from "@/client/pages/projects/hooks/useProjects";
+import { AppHeader } from "@/client/components/AppHeader";
 import { Skeleton } from "@/client/components/ui/skeleton";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/client/components/ui/card";
 import { Button } from "@/client/components/ui/button";
-import { Badge } from "@/client/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/client/components/ui/tooltip";
 import {
   Empty,
   EmptyContent,
@@ -23,16 +10,15 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/client/components/ui/empty";
-import { FolderOpen, Plus, Calendar, FolderGit2, Loader2 } from "lucide-react";
+import { Plus, FolderGit2, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { ProjectDialog } from "@/client/pages/projects/components/ProjectDialog";
 import { GlobalOnboardingSuggestions } from "@/client/pages/projects/components/GlobalOnboardingSuggestions";
+import { ProjectsList } from "@/client/pages/projects/components/ProjectsList";
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
-import { truncatePath } from "@/client/utils/cn";
 
 export default function ProjectsPage() {
   useDocumentTitle("Projects | Agent Workflows");
-  const navigate = useNavigate();
   const { data: projects, isLoading } = useProjects();
   const { isLoading: isSyncing } = useSyncProjects();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -105,79 +91,34 @@ export default function ProjectsPage() {
 
   // Projects list
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Projects</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage and organize your AI workflow projects
-          </p>
+    <>
+      <AppHeader title="Projects" />
+
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="hidden md:block">
+            <h1 className="text-3xl font-bold">Projects</h1>
+            <p className="text-muted-foreground mt-1">
+              Manage and organize your AI workflow projects
+            </p>
+          </div>
+          <Button onClick={() => setIsCreateDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Project
+          </Button>
         </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Project
-        </Button>
-      </div>
 
       {/* Global Setup Suggestions */}
       <GlobalOnboardingSuggestions />
 
-      {/* Projects Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {projects.map((project) => (
-          <Card
-            key={project.id}
-            className="cursor-pointer hover:bg-accent/50 transition-colors"
-            onClick={() => navigate(`/projects/${project.id}`)}
-          >
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <FolderOpen className="h-8 w-8 text-muted-foreground" />
-                {project.is_hidden && (
-                  <Badge variant="outline" className="text-xs">
-                    Hidden
-                  </Badge>
-                )}
-              </div>
-              <CardTitle className="mt-3">{project.name}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Calendar className="h-3 w-3" />
-                <span>
-                  {new Date(project.created_at).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </span>
-              </div>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="mt-2 text-xs text-muted-foreground font-mono truncate cursor-help">
-                      {truncatePath(
-                        project.path,
-                        typeof window !== "undefined" && window.innerWidth < 768
-                          ? 30
-                          : 50
-                      )}
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="max-w-md break-all">
-                    <p className="font-mono text-xs">{project.path}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {/* Projects List */}
+      <ProjectsList projects={projects} />
 
       <ProjectDialog
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
       />
-    </div>
+      </div>
+    </>
   );
 }

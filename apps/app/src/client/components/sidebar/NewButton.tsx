@@ -1,6 +1,5 @@
-import { Plus, Workflow, MessageSquare, FolderPlus } from "lucide-react";
+import { Plus, Workflow, MessageSquare } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useState } from "react";
 import { Button } from "@/client/components/ui/button";
 import {
   DropdownMenu,
@@ -11,13 +10,11 @@ import {
   DropdownMenuLabel,
 } from "@/client/components/ui/dropdown-menu";
 import { useWorkflowDefinitions } from "@/client/pages/projects/workflows/hooks/useWorkflowDefinitions";
-import { ProjectDialog } from "@/client/pages/projects/components/ProjectDialog";
 
 export function NewButton() {
   const navigate = useNavigate();
   const { projectId, id } = useParams();
   const activeProjectId = projectId || id;
-  const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
 
   // Fetch workflow definitions for the active project
   const { data: workflows } = useWorkflowDefinitions(
@@ -39,12 +36,6 @@ export function NewButton() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-72">
-        {/* Projects Section */}
-        <DropdownMenuItem onClick={() => setIsProjectDialogOpen(true)}>
-          <FolderPlus className="size-4" />
-          New Project
-        </DropdownMenuItem>
-
         {/* Sessions Section */}
         <DropdownMenuItem
           onClick={() => {
@@ -90,16 +81,6 @@ export function NewButton() {
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>
-
-      {/* Project Dialog */}
-      <ProjectDialog
-        open={isProjectDialogOpen}
-        onOpenChange={setIsProjectDialogOpen}
-        onProjectCreated={(projectId) => {
-          setIsProjectDialogOpen(false);
-          navigate(`/projects/${projectId}`);
-        }}
-      />
     </DropdownMenu>
   );
 }

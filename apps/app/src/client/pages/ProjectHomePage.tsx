@@ -1,48 +1,28 @@
-import { useState } from "react";
 import { useParams } from "react-router-dom";
-import {
-  useProject,
-  useProjectReadme,
-} from "@/client/pages/projects/hooks/useProjects";
+import { useProject } from "@/client/pages/projects/hooks/useProjects";
 import { useSessions } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
-import { ProjectDialog } from "@/client/pages/projects/components/ProjectDialog";
+import { AppHeader } from "@/client/components/AppHeader";
 import { ProjectOnboardingSuggestions } from "@/client/pages/projects/components/ProjectOnboardingSuggestions";
 import { ProjectHomeSessions } from "@/client/pages/projects/components/ProjectHomeSessions";
+import { ProjectReadme } from "@/client/pages/projects/components/ProjectReadme";
 import { Skeleton } from "@/client/components/ui/skeleton";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/client/components/ui/card";
-import { Button } from "@/client/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/client/components/ui/tooltip";
-import { MessageSquare, FileText, Pencil } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { MessageSquare } from "lucide-react";
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
-import { truncatePath } from "@/client/utils/cn";
 
 export default function ProjectHomePage() {
   const { id } = useParams<{ id: string }>();
   const { data: project, isLoading } = useProject(id!);
   const { data: sessions = [] } = useSessions({ projectId: id });
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   useDocumentTitle(
     project?.name ? `${project.name} | Agent Workflows` : undefined
   );
-  const {
-    data: readme,
-    isLoading: isLoadingReadme,
-    error: readmeError,
-  } = useProjectReadme(id!);
 
   if (isLoading) {
     return (
@@ -62,36 +42,16 @@ export default function ProjectHomePage() {
   }
 
   return (
-    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
-      <div>
-        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-          <div className="flex-1 min-w-0">
-            <h1 className="text-xl md:text-2xl font-semibold leading-tight break-words">
-              {project.name}
-            </h1>
-          </div>
-          <div className="flex items-stretch gap-1 shrink-0">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setEditDialogOpen(true)}
-                    className="self-stretch"
-                  >
-                    <Pencil className="h-4 w-4 lg:mr-2" />
-                    <span className="hidden lg:inline">Edit</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="lg:hidden">
-                  <p>Edit project</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
+    <>
+      <AppHeader title={project.name} />
+
+      <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+        {/* Desktop header */}
+        <div className="hidden md:block">
+          <h1 className="text-xl md:text-2xl font-semibold leading-tight break-words">
+            {project.name}
+          </h1>
         </div>
-      </div>
 
       {/* Project Setup */}
       {!project.capabilities.workflow_sdk.installed && (
@@ -112,62 +72,8 @@ export default function ProjectHomePage() {
       </Card>
 
       {/* README Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-            <FileText className="h-5 w-5 shrink-0" />
-            <span className="truncate">Project README</span>
-          </CardTitle>
-          {readme?.path && project && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <CardDescription className="font-mono text-xs cursor-help break-all">
-                    {truncatePath(
-                      `${project.path}/${readme.path}`,
-                      typeof window !== "undefined" && window.innerWidth < 768
-                        ? 35
-                        : 70
-                    )}
-                  </CardDescription>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-md break-all">
-                  <p className="font-mono text-xs">
-                    {project.path}/{readme.path}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-        </CardHeader>
-        <CardContent>
-          {isLoadingReadme ? (
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-4 w-5/6" />
-            </div>
-          ) : readmeError ? (
-            <div className="py-8 text-center">
-              <p className="text-sm text-muted-foreground">
-                No README.md found in this project.
-              </p>
-            </div>
-          ) : readme ? (
-            <div className="prose prose-sm dark:prose-invert max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {readme.content}
-              </ReactMarkdown>
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
-
-      <ProjectDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        project={project}
-      />
-    </div>
+      <ProjectReadme project={project} />
+      </div>
+    </>
   );
 }

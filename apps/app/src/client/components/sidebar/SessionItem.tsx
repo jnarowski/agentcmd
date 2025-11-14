@@ -10,6 +10,7 @@ import { AgentIcon } from "@/client/components/AgentIcon";
 import { SessionDropdownMenu } from "@/client/pages/projects/sessions/components/SessionDropdownMenu";
 import { SessionStateBadge } from "@/client/pages/projects/sessions/components/SessionStateBadge";
 import { getSessionDisplayName } from "@/client/utils/getSessionDisplayName";
+import { useNavigationStore } from "@/client/stores";
 import type { SessionResponse } from "@/shared/types";
 import type { AgentType } from "@/shared/types/agent.types";
 import { format } from "date-fns";
@@ -34,6 +35,7 @@ export function SessionItem({
 }: SessionItemProps) {
   const navigate = useNavigate();
   const { isMobile, setOpenMobile } = useSidebar();
+  const activeProjectId = useNavigationStore((s) => s.activeProjectId);
   const [hoveredActivityId, setHoveredActivityId] = useState<string | null>(
     null
   );
@@ -70,8 +72,12 @@ export function SessionItem({
             <div className="text-xs text-muted-foreground tabular-nums">
               {timeAgo}
             </div>
-            <div className="text-xs text-muted-foreground">•</div>
-            <div className="text-xs text-muted-foreground">{projectName}</div>
+            {!activeProjectId && (
+              <>
+                <div className="text-xs text-muted-foreground">•</div>
+                <div className="text-xs text-muted-foreground">{projectName}</div>
+              </>
+            )}
           </div>
           <div className="flex items-center gap-1.5">
             {session.permission_mode === "plan" && (

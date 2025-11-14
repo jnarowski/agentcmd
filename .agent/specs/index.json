@@ -3,10 +3,10 @@
   "specs": {
     "251114081340": {
       "path": "todo/251114081340-sidebar-project-combobox/spec.md",
-      "status": "draft",
+      "status": "review",
       "spec_type": "feature",
       "created": "2025-11-14T08:13:40.000Z",
-      "updated": "2025-11-14T08:13:40.000Z"
+      "updated": "2025-11-14T08:30:00.000Z"
     },
     "251113152245": {
       "path": "todo/251113152245-test-suite-optimization/spec.md",

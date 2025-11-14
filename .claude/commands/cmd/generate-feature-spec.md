@@ -413,7 +413,7 @@ Reuses folder, uses explicit context, adds: `.agent/specs/todo/251113150000-oaut
 
 ## Report
 
-**IMPORTANT**: After completing all steps (1-8), output this JSON as your final message to the user:
+**IMPORTANT**: After completing all steps (1-8), output ONLY raw JSON (see `.agent/docs/slash-command-json-output-format.md`).
 
 <json_output>
 {
@@ -445,3 +445,13 @@ Reuses folder, uses explicit context, adds: `.agent/specs/todo/251113150000-oaut
 - `files_to_create`: Array of new files to be created
 - `files_to_modify`: Array of existing files to be modified
 - `next_command`: Suggested next command to run
+
+**Output Examples:**
+
+❌ BAD:
+Perfect! Spec generated. Here's the summary:
+{ "success": true, ... }
+Ready to implement!
+
+✅ GOOD:
+{ "success": true, ... }

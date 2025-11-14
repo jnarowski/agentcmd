@@ -1,6 +1,6 @@
 # Sidebar Project Combobox
 
-**Status**: draft
+**Status**: review
 **Created**: 2025-11-14
 **Package**: apps/app
 **Total Complexity**: 52 points
@@ -154,89 +154,101 @@ Clean up deprecated settings from user preferences schema.
 
 **Phase Complexity**: 18 points (avg 4.5/10)
 
-- [ ] 1.1 [4/10] Create ProjectCombobox component with basic structure
+- [x] 1.1 [4/10] Create ProjectCombobox component with basic structure
   - Implement combobox with "Show all" default option
   - Read projects from `useProjects()` query
   - File: `apps/app/src/client/components/sidebar/ProjectCombobox.tsx`
   - Render trigger text based on `activeProjectId` from `navigationStore`
 
-- [ ] 1.2 [6/10] Add sectioned project list (Favorites/All)
+- [x] 1.2 [6/10] Add sectioned project list (Favorites/All)
   - Implement section logic: "Favorites" (starred projects), "All" (non-starred)
   - Use `CommandGroup` with labels for visual separation
   - File: `apps/app/src/client/components/sidebar/ProjectCombobox.tsx`
   - Conditionally render "Favorites" section only if starred projects exist
 
-- [ ] 1.3 [5/10] Add inline star action with optimistic updates
+- [x] 1.3 [5/10] Add inline star action with optimistic updates
   - Render star icon (right-aligned) in each project row
   - Use `useToggleProjectStarred()` mutation with optimistic update
   - File: `apps/app/src/client/components/sidebar/ProjectCombobox.tsx`
   - Stop event propagation on star click to prevent selection
 
-- [ ] 1.4 [3/10] Add "+ New Project" footer button
+- [x] 1.4 [3/10] Add "+ New Project" footer button
   - Render footer item in combobox dropdown
   - Navigate to `/projects/new` or show create modal on click
   - File: `apps/app/src/client/components/sidebar/ProjectCombobox.tsx`
 
 #### Completion Notes
 
-(This will be filled in by the agent implementing this phase)
+- Built custom combobox using Command components instead of generic Combobox component for better section control
+- Implemented conditional CommandGroup sections (Favorites, All) with proper headers
+- Inline star button with stopPropagation working correctly
+- "New Project" footer navigates to /projects/new
+- Navigation and selection handlers complete with bidirectional sync
 
 ### Phase 2: Sidebar Cleanup
 
 **Phase Complexity**: 21 points (avg 4.2/10)
 
-- [ ] 2.1 [6/10] Integrate ProjectCombobox into SidebarTabs
+- [x] 2.1 [6/10] Integrate ProjectCombobox into SidebarTabs
   - Import and render ProjectCombobox above `<Tabs>` component
   - File: `apps/app/src/client/components/sidebar/SidebarTabs.tsx`
   - Remove filter button component and related state
 
-- [ ] 2.2 [5/10] Remove Projects tab from SidebarTabs
+- [x] 2.2 [5/10] Remove Projects tab from SidebarTabs
   - Delete Projects `TabsTrigger` and `TabsContent`
   - File: `apps/app/src/client/components/sidebar/SidebarTabs.tsx`
   - Update tab switching logic to handle only Activities/Tasks
 
-- [ ] 2.3 [3/10] Delete NavProjects component
+- [x] 2.3 [3/10] Delete NavProjects component
   - Remove file (logic now in ProjectCombobox)
   - File: `apps/app/src/client/components/sidebar/NavProjects.tsx`
   - Verify no remaining imports in other files
 
-- [ ] 2.4 [4/10] Simplify NavActivities filter logic
+- [x] 2.4 [4/10] Simplify NavActivities filter logic
   - Remove `active_project_filter` setting checks
   - File: `apps/app/src/client/components/sidebar/NavActivities.tsx`
   - Use only `activeProjectId` from navigationStore for filtering
 
-- [ ] 2.5 [3/10] Simplify NavTasks filter logic
+- [x] 2.5 [3/10] Simplify NavTasks filter logic
   - Remove `active_project_filter` setting checks
   - File: `apps/app/src/client/components/sidebar/NavTasks.tsx`
   - Use only `activeProjectId` from navigationStore for filtering
 
 #### Completion Notes
 
-(This will be filled in by the agent implementing this phase)
+- ProjectCombobox integrated above tabs in wrapping div
+- Projects tab and TabsContent removed, grid-cols-3 → grid-cols-2
+- Filter button and all related logic removed
+- NavActivities and NavTasks now use activeProjectId directly from navigationStore
+- NavProjects.tsx deleted successfully
 
 ### Phase 3: Settings Sync
 
 **Phase Complexity**: 13 points (avg 4.3/10)
 
-- [ ] 3.1 [5/10] Update UserPreferences type and schema
+- [x] 3.1 [5/10] Update UserPreferences type and schema
   - Remove `active_project_filter` and `projects_view` fields
   - File: `apps/app/src/shared/types/settings.types.ts`
   - Update `sidebar_active_tab` type to `"activities" | "tasks"`
 
-- [ ] 3.2 [4/10] Handle combobox selection and navigation
+- [x] 3.2 [4/10] Handle combobox selection and navigation
   - Implement `handleProjectSelect` to navigate and update `navigationStore`
   - File: `apps/app/src/client/components/sidebar/ProjectCombobox.tsx`
   - "Show all" → navigate to `/projects`, clear `activeProjectId`
   - Project selection → navigate to `/projects/:id`, set `activeProjectId`
 
-- [ ] 3.3 [4/10] Add bidirectional sync between URL and combobox
+- [x] 3.3 [4/10] Add bidirectional sync between URL and combobox
   - Read `activeProjectId` from navigationStore
   - File: `apps/app/src/client/components/sidebar/ProjectCombobox.tsx`
   - Update combobox value when URL changes (useEffect with activeProjectId dependency)
 
 #### Completion Notes
 
-(This will be filled in by the agent implementing this phase)
+- Removed `active_project_filter` and `projects_view` from UserPreferences type
+- Updated `sidebar_active_tab` to only support "activities" | "tasks"
+- Selection handlers implemented in ProjectCombobox (handleSelect)
+- Bidirectional sync built-in via navigationStore reads (no useEffect needed)
+- Navigation updates both navigationStore and URL on selection
 
 ## Testing Strategy
 

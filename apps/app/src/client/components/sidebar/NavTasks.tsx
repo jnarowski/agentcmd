@@ -9,7 +9,6 @@ import { useTasks } from "@/client/hooks/useTasks";
 import { useRescanTasks } from "@/client/hooks/useRescanTasks";
 import { useNavigate } from "react-router-dom";
 import { RefreshCw, Loader2, FileText } from "lucide-react";
-import { useSettings } from "@/client/hooks/useSettings";
 import { useProjects } from "@/client/pages/projects/hooks/useProjects";
 import { useSessions } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
 import { useNavigationStore } from "@/client/stores";
@@ -20,16 +19,13 @@ import { formatDistanceToNow } from "date-fns";
 
 export function NavTasks() {
   const navigate = useNavigate();
-  const { data: settings } = useSettings();
   const { data: projects } = useProjects();
   const activeSessionId = useNavigationStore((s) => s.activeSessionId);
+  const activeProjectId = useNavigationStore((s) => s.activeProjectId);
 
-  // Get project filter: only use if explicitly set
-  const projectFilter =
-    settings?.userPreferences?.active_project_filter || undefined;
-
-  const { data, isLoading, error } = useTasks(projectFilter);
-  const { data: allSessions } = useSessions({ projectId: projectFilter });
+  // Use activeProjectId from navigationStore for filtering
+  const { data, isLoading, error } = useTasks(activeProjectId || undefined);
+  const { data: allSessions } = useSessions({ projectId: activeProjectId || undefined });
   const rescanMutation = useRescanTasks();
 
   const handleRescan = () => {
@@ -186,7 +182,7 @@ export function NavTasks() {
               data.tasks.length === 0 &&
               data.planningSessions.length === 0 && (
                 <div className="py-4 text-center text-sm text-muted-foreground">
-                  {projectFilter
+                  {activeProjectId
                     ? "No tasks in this project"
                     : "No pending tasks or planning sessions"}
                 </div>
