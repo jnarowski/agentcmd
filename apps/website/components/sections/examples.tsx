@@ -12,97 +12,85 @@ interface FeatureOption {
 const featureOptions: FeatureOption[] = [
   {
     id: 1,
-    title: "Implement & Review Workflow",
-    description: "Automated workflow that implements a spec and reviews the implementation.",
-    code: `import {
-  buildSlashCommand,
-  defineWorkflow,
-  type CmdImplementSpecResponse,
-  type CmdReviewSpecImplementationResponse,
-} from "agentcmd-workflows";
+    title: "Complete SDLC Automation",
+    description: "Stop babysitting - fully automate your development cycle from spec to implementation to review.",
+    code: `import { defineWorkflow, buildSlashCommand } from "agentcmd-workflows";
 
-export default defineWorkflow(
-  {
-    id: "implement-review-workflow",
-    name: "Implement Review Workflow",
-    description: "Implements a spec file and reviews the implementation",
-    phases: [
-      { id: "setup", label: "Setup" },
-      { id: "implement", label: "Implement" },
-      { id: "review", label: "Review" },
-    ],
-  },
-  async ({ event, step }) => {
-    const { workingDir, specFile } = event.data;
+export default defineWorkflow({
+  id: "full-sdlc",
+  name: "Spec → Implement → Review → Fix",
+  description: "Stop babysitting - fully automate your development cycle"
+}, async ({ event, step }) => {
+  const { specFile } = event.data;
 
-    await step.phase("implement", async () => {
-      const response = await step.agent<CmdImplementSpecResponse>(
-        "implement-spec",
-        {
-          agent: "claude",
-          json: true,
-          prompt: buildSlashCommand("/cmd:implement-spec", {
-            specIdOrNameOrPath: specFile,
-            format: "json",
-          }),
-          workingDir,
-        }
-      );
+  // Generate spec
+  await step.agent("generate-spec", {
+    agent: "claude",
+    prompt: buildSlashCommand("/cmd:generate-feature-spec", {
+      context: specFile
+    })
+  });
 
-      return response;
-    });
+  // Implement
+  const impl = await step.agent("implement", {
+    agent: "claude",
+    json: true,
+    prompt: buildSlashCommand("/cmd:implement-spec", {
+      specIdOrNameOrPath: specFile
+    })
+  });
 
-    await step.phase("review", async () => {
-      const response = await step.agent<CmdReviewSpecImplementationResponse>(
-        "review-spec-implementation",
-        {
-          agent: "claude",
-          json: true,
-          prompt: buildSlashCommand("/cmd:review-spec-implementation", {
-            specIdOrNameOrPath: specFile,
-            format: "json",
-          }),
-          workingDir,
-        }
-      );
+  // Review implementation
+  const review = await step.agent("review", {
+    agent: "codex",
+    json: true,
+    prompt: buildSlashCommand("/cmd:review-spec-implementation", {
+      specIdOrNameOrPath: specFile
+    })
+  });
 
-      return response;
+  // Fix issues if found
+  if (review.issuesFound > 0) {
+    await step.annotate("Fixing issues found in review...");
+
+    await step.agent("fix-issues", {
+      agent: "claude",
+      prompt: \`Fix these issues: \${JSON.stringify(review.issues)}\`
     });
   }
-);`,
+});`,
   },
   {
     id: 2,
-    title: "Simple Agent Workflow",
-    description: "Create a basic AI agent workflow with multiple agents.",
-    code: `import { Swarm, Agent } from 'ai-agent-sdk';
+    title: "Your Process, Your Commands",
+    description: "Build workflows that match your team's exact process. Create custom slash commands and orchestrate them.",
+    code: `// 1. Create custom slash command in .claude/commands/
+// File: .claude/commands/your-company-deploy.md
+/*
+# /your-company-deploy
 
-const client = new Swarm();
+Run your company's specific deployment process:
+1. Run YOUR test suite
+2. Check YOUR code standards
+3. Update YOUR changelog format
+4. Deploy to YOUR infrastructure
+*/
 
-const transferToAgentB = (): Agent => {
-    return agentB;
-};
+// 2. Orchestrate it in a workflow
+import { defineWorkflow } from "agentcmd-workflows";
 
-const agentA = new Agent({
-    name: "Agent A",
-    instructions: "You are a helpful agent.",
-    functions: [transferToAgentB],
-});
+export default defineWorkflow({
+  id: "custom-deploy",
+  name: "Your Company Deploy Process"
+}, async ({ step }) => {
+  // Use your custom slash command
+  await step.agent("deploy", {
+    agent: "claude",
+    prompt: "/your-company-deploy"
+  });
 
-const agentB = new Agent({
-    name: "Agent B",
-    instructions: "Only speak in Haikus.",
-});
-
-const run = async () => {
-    const response = await client.run({
-        agent: agentA,
-        messages: [{ role: "user", content: "I want to talk to agent B." }],
-    });
-    console.log('Response:', response);
-};
-
-run();`,
+  await step.annotate("Deployed using YOUR process");
+});`,
   },
   {
     id: 3,
