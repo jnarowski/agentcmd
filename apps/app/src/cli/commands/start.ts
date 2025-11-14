@@ -51,6 +51,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
     process.env.JWT_SECRET = mergedConfig.jwtSecret;
     process.env.LOG_LEVEL = mergedConfig.logLevel;
     process.env.ALLOWED_ORIGINS = mergedConfig.allowedOrigins;
+    process.env.INNGEST_DEV_PORT = inngestPort.toString();
 
     if (mergedConfig.anthropicApiKey) {
       process.env.ANTHROPIC_API_KEY = mergedConfig.anthropicApiKey;
@@ -134,7 +135,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
         "inngest-cli@latest",
         "dev",
         "-u",
-        `http://localhost:${port}/api/workflows/inngest`,
+        `http://${host}:${port}/api/workflows/inngest`,
         "--port",
         inngestPort.toString(),
       ],

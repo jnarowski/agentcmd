@@ -1,3 +1,5 @@
+import { config } from "@/server/config";
+
 export interface InngestRunStatusData {
   run_id: string;
   run_started_at: string;
@@ -27,9 +29,7 @@ export async function getInngestRunStatus(
   inngestRunId: string
 ): Promise<InngestRunStatusResult> {
   try {
-    // Default Inngest dev server port is 8288
-    // TODO: Make this configurable via env var if needed
-    const inngestPort = 8288;
+    const inngestPort = config.workflow.inngestDevPort;
     const url = `http://localhost:${inngestPort}/v1/runs/${inngestRunId}`;
 
     const response = await fetch(url);

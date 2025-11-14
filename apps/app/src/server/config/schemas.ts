@@ -61,6 +61,7 @@ const WorkflowConfigSchema = z.object({
   devMode: z.coerce.boolean().default(true),
   memoizationDbPath: z.string().default('./prisma/workflows.db'),
   servePath: z.string().default('/api/workflows/inngest'),
+  inngestDevPort: z.coerce.number().int().positive().default(8288),
 });
 
 /**
