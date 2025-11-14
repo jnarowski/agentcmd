@@ -1,7 +1,6 @@
 import ClientSection from "@/components/landing/client-section";
 import CallToActionSection from "@/components/landing/cta-section";
 import HeroSection from "@/components/landing/hero-section";
-import PricingSection from "@/components/landing/pricing-section";
 import Particles from "@/components/magicui/particles";
 import { SphereMask } from "@/components/magicui/sphere-mask";
 import { Blog } from "@/components/sections/blog";
@@ -13,7 +12,6 @@ import { Footer } from "@/components/sections/footer";
 import { Header } from "@/components/sections/header";
 import { Hero } from "@/components/sections/hero";
 import { Logos } from "@/components/sections/logos";
-import { Pricing } from "@/components/sections/pricing";
 import { Statistics } from "@/components/sections/statistics";
 import { Testimonials } from "@/components/sections/testimonials";
 import { UseCases } from "@/components/sections/use-cases";
@@ -25,7 +23,6 @@ export default async function Page() {
       <HeroSection />
       <ClientSection />
       <SphereMask />
-      <PricingSection />
       <CallToActionSection />
       <Particles
         className="absolute inset-0 -z-10"
@@ -45,7 +42,6 @@ export default async function Page() {
       <Features />
       <Statistics />
       <Testimonials />
-      <Pricing />
       <Community />
       <Blog />
       <CTA />
