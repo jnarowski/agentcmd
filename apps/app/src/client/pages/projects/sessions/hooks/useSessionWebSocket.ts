@@ -178,25 +178,40 @@ export function useSessionWebSocket({
           const data = event.data;
           console.log("[useSessionWebSocket] session.updated received:", data);
 
+          // Prepare update object
+          const updates = {
+            ...(data.state && { state: data.state }),
+            ...(data.error_message !== undefined && { error_message: data.error_message || undefined }),
+            ...(data.name && { name: data.name }),
+            ...(data.updated_at && { updated_at: new Date(data.updated_at) }),
+          };
+
           // Update session detail cache directly (optimistic update)
           // Note: useSession returns unwrapped SessionResponse, not { data: SessionResponse }
           queryClient.setQueryData<SessionResponse>(
             sessionKeys.detail(sessionIdRef.current, projectIdRef.current),
             (old) => {
               if (!old) return old;
-              return {
-                ...old,
-                ...(data.state && { state: data.state }),
-                ...(data.error_message !== undefined && { error_message: data.error_message || undefined }),
-                ...(data.name && { name: data.name }),
-                ...(data.updated_at && { updated_at: new Date(data.updated_at) }),
-              };
+              return { ...old, ...updates };
             }
           );
 
-          // Invalidate all session lists to update sidebar
+          // Update session list caches directly (sidebar Activities)
+          queryClient.setQueryData<SessionResponse[]>(
+            sessionKeys.byProject(projectIdRef.current),
+            (old) => {
+              if (!old) return old;
+              return old.map((session) =>
+                session.id === sessionIdRef.current
+                  ? { ...session, ...updates }
+                  : session
+              );
+            }
+          );
+
+          // Invalidate all session queries (not just lists)
           queryClient.invalidateQueries({
-            queryKey: sessionKeys.lists(),
+            queryKey: sessionKeys.all,
           });
 
           // Sync sessionStore with database state
