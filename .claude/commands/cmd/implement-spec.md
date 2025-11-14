@@ -108,6 +108,26 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
    - Write updated index back to `.agent/specs/index.json`
    - This indicates implementation is complete and ready for review
 
+## Success/Failure Criteria
+
+**Success (`success: true`)**:
+
+- All tasks completed (`tasks.completed === tasks.total`)
+- All critical validation checks passed (build, type-check)
+- No critical errors during implementation
+- Spec file updated to `status: "review"`
+- `implementation_status: "completed"`
+
+**Failure (`success: false`)**:
+
+- Any task not completed (`tasks.completed < tasks.total`)
+- Critical validation failed (build or type-check errors)
+- Process interrupted or error thrown
+- Spec file remains in `status: "in-progress"`
+- `implementation_status: "partial"` or `"failed"`
+
+**Partial Completion**: When some tasks complete but others fail, set `success: false` with `implementation_status: "partial"` and populate `error` field.
+
 ## Report
 
 ### JSON
@@ -117,36 +137,96 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 <json_output>
 {
 "success": true,
-"spec_path": ".agent/specs/feature-name-spec.md",
+"spec_id": "251113152201",
+"spec_file": ".agent/specs/todo/251113152201-feature-name/spec.md",
 "feature_name": "feature-name",
-"status": "review",
-"total_tasks": 15,
-"completed_tasks": 15,
-"files_modified": 8,
-"files_created": 3,
+"implementation_status": "completed",
+"tasks": {
+"total": 15,
+"completed": 15,
+"failed": 0,
+"skipped": 0
+},
+"complexity": {
+"total_points": 42,
+"avg_per_task": 2.8
+},
+"files": {
+"created": 3,
+"modified": 8,
+"deleted": 0,
+"paths": {
+"created": ["apps/app/src/client/pages/NewFeature.tsx", "apps/app/src/server/routes/feature.ts"],
+"modified": ["apps/app/src/server/routes/api.ts", "apps/app/src/client/App.tsx"]
+}
+},
+"changes": {
 "total_lines_changed": 450,
 "lines_added": 320,
-"lines_removed": 130,
-"validation_passed": true,
-"git_diff_stat": "11 files changed, 450 insertions(+), 130 deletions(-)"
+"lines_removed": 130
+},
+"validation": {
+"passed": true,
+"checks": {
+"build": true,
+"type_check": true,
+"lint": true,
+"tests": true
+},
+"failures": []
+},
+"git": {
+"diff_stat": "11 files changed, 450 insertions(+), 130 deletions(-)",
+"commits": 1
+},
+"error": null
 }
 </json_output>
 
 **JSON Field Descriptions:**
 
-- `success`: Always true if implementation completed
-- `spec_path`: Path to the spec file that was implemented
-- `feature_name`: Normalized feature name (lowercase, hyphenated)
-- `status`: Status after implementation ("review")
-- `total_tasks`: Total number of tasks in the spec
-- `completed_tasks`: Number of tasks completed (should equal total_tasks)
-- `files_modified`: Number of existing files modified
-- `files_created`: Number of new files created
-- `total_lines_changed`: Total lines added + removed
-- `lines_added`: Number of lines added
-- `lines_removed`: Number of lines removed
-- `validation_passed`: True if all validation steps passed
-- `git_diff_stat`: Output from git diff --stat
+- `success`: Boolean - true if all tasks completed successfully, false if any tasks failed or were skipped
+- `spec_id`: String - Timestamp-based spec ID (e.g., "251113152201")
+- `spec_file`: String - Full path to the spec file that was implemented
+- `feature_name`: String - Normalized feature name (lowercase, hyphenated)
+- `implementation_status`: Enum - "completed" | "partial" | "failed"
+  - "completed": All tasks done, all validations passed
+  - "partial": Some tasks done, some failed/skipped
+  - "failed": Critical error or no tasks completed
+- `tasks`: Object - Task completion metrics
+  - `total`: Number - Total number of tasks in the spec
+  - `completed`: Number - Number of tasks successfully completed
+  - `failed`: Number - Number of tasks that failed
+  - `skipped`: Number - Number of tasks intentionally skipped
+- `complexity`: Object - Complexity metrics from spec
+  - `total_points`: Number - Sum of all task complexity points
+  - `avg_per_task`: Number - Average complexity per task
+- `files`: Object - File change statistics
+  - `created`: Number - Count of new files created
+  - `modified`: Number - Count of existing files modified
+  - `deleted`: Number - Count of files deleted
+  - `paths`: Object - Arrays of file paths
+    - `created`: Array<string> - List of created file paths
+    - `modified`: Array<string> - List of modified file paths
+- `changes`: Object - Line change statistics
+  - `total_lines_changed`: Number - Total lines added + removed
+  - `lines_added`: Number - Number of lines added
+  - `lines_removed`: Number - Number of lines removed
+- `validation`: Object - Validation results
+  - `passed`: Boolean - True if all critical checks passed
+  - `checks`: Object - Individual check results
+    - `build`: Boolean - Build succeeded
+    - `type_check`: Boolean - Type checking passed
+    - `lint`: Boolean - Linting passed
+    - `tests`: Boolean - Tests passed
+  - `failures`: Array<string> - Error messages from failed checks (empty if all passed)
+- `git`: Object - Git statistics
+  - `diff_stat`: String - Output from git diff --stat
+  - `commits`: Number - Number of commits created
+- `error`: Object | null - Error details if implementation failed
+  - `message`: String - Error message
+  - `phase`: String - Which phase failed
+  - `task`: String - Which task failed (if applicable)
 
 ### Text
 
