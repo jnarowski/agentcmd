@@ -87,10 +87,10 @@ export async function startCommand(options: StartOptions): Promise<void> {
     console.log("Generating Prisma client...");
     const generateResult = spawnSync(
       "npx",
-      ["prisma", "generate", `--schema=${schemaPath}`],
+      ["prisma", "generate", "--no-hints", `--schema=${schemaPath}`],
       {
         stdio: "inherit",
-        env: process.env,
+        env: { ...process.env, PRISMA_HIDE_UPDATE_MESSAGE: "true" },
       }
     );
 
