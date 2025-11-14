@@ -28,7 +28,28 @@ pnpm start            # Production server
 # Quality
 pnpm lint             # Lint
 pnpm check-types      # Type check
-pnpm test             # Run tests
+pnpm test             # Run tests (parallel execution)
+pnpm test:clean       # Clean stuck test worker databases
+```
+
+## Testing
+
+**Parallel Test Execution**: Tests run in parallel using Vitest 4's worker pool with database-per-worker isolation.
+
+- **Worker databases**: Each test worker gets isolated SQLite database (`test-worker-1.db`, `test-worker-2.db`, etc.)
+- **VITEST_POOL_ID**: Stable worker ID used for database naming (1 to maxWorkers)
+- **Worker count**: 4 workers locally, 2 in CI (configurable via `maxWorkers` in vitest.config.ts)
+- **Database setup**: `vitest.global-setup.ts` creates all worker databases at start
+- **Per-worker config**: `vitest.setup.ts` sets `DATABASE_URL` before imports using `VITEST_POOL_ID`
+- **Cleanup**: Global teardown removes all worker databases and WAL/SHM files automatically
+- **Manual cleanup**: `pnpm test:clean` removes stuck databases if needed
+
+**Key files**:
+- `vitest.config.ts` - Enables fileParallelism, sets maxWorkers
+- `vitest.global-setup.ts` - Creates worker databases
+- `vitest.setup.ts` - Sets DATABASE_URL per worker
+- `.gitignore` - Ignores test-worker-*.db* files
+
 ```
 
 ## Critical Rules

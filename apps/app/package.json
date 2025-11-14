@@ -23,7 +23,6 @@
     "dev:server": "tsx watch --env-file=.env src/server/index.ts",
     "inngest": "npx inngest-cli@latest dev -u http://localhost:3456/api/workflows/inngest",
     "lint": "eslint .",
-    "postinstall": "prisma generate",
     "prepublishOnly": "pnpm build",
     "preview": "vite preview",
     "prisma:generate": "prisma generate",
@@ -37,6 +36,7 @@
     "start": "pnpm build && tsx --env-file=.env src/server/index.ts",
     "start:prod": "node --env-file=.env dist/server/index.js",
     "test": "vitest run",
+    "test:clean": "rm -f test-worker-*.db*",
     "test:ui": "vitest --ui",
     "test:watch": "vitest"
   },

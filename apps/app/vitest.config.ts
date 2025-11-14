@@ -2,6 +2,9 @@ import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
+// Max workers for test execution (2 in CI, 6 locally)
+export const MAX_WORKERS = process.env.CI ? 2 : 10;
+
 const resolveConfig = {
   alias: {
     "@": path.resolve(__dirname, "./src"),
@@ -45,6 +48,7 @@ export default defineConfig({
           include: [
             "src/client/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}",
           ],
+          maxWorkers: MAX_WORKERS,
         },
         resolve: resolveConfig,
       },
@@ -59,7 +63,9 @@ export default defineConfig({
           ],
           // Pool options for server tests
           pool: "forks", // Use forks for native modules
-          fileParallelism: false,
+          fileParallelism: true, // Enable parallel execution
+          maxWorkers: MAX_WORKERS,
+          //isolate: true, // Isolate test files
         },
         resolve: resolveConfig,
       },
@@ -71,6 +77,7 @@ export default defineConfig({
           include: [
             "src/shared/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}",
           ],
+          maxWorkers: MAX_WORKERS,
         },
         resolve: resolveConfig,
       },
@@ -81,7 +88,9 @@ export default defineConfig({
           setupFiles: ["./vitest.setup.ts"],
           include: ["src/cli/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
           pool: "forks", // Use forks for filesystem operations
-          fileParallelism: false,
+          fileParallelism: true, // Enable parallel execution
+          maxWorkers: MAX_WORKERS,
+          isolate: true, // Isolate test files
         },
         resolve: resolveConfig,
       },

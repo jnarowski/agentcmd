@@ -32,4 +32,12 @@ prisma/*.db
 prisma/*.db-journal
 *.sqlite
 *.sqlite3
+
+# Test databases
+test-template.db
+test-template.db-wal
+test-template.db-shm
+test-worker-*.db
+test-worker-*.db-wal
+test-worker-*.db-shm
 .npmrc

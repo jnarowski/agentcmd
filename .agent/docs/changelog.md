@@ -2,6 +2,46 @@
 
 Technical decisions and architectural changes for agentcmd.
 
+## 2025-11-14 - Fix npx postinstall Failure
+
+### Problem
+
+`npx agentcmd install` was silently failing because `package.json` had `"postinstall": "prisma generate"` which ran DURING `npm install agentcmd`. However, Prisma wasn't installed yet when postinstall ran, causing the install to abort before creating the bin symlink.
+
+**Symptoms:**
+- `npx agentcmd` showed exit code 127 ("command not found")
+- No error visible to user - silent failure
+- CLI worked fine when extracted manually
+
+**Root cause:** npm install lifecycle:
+1. Download package
+2. Install dependencies
+3. Run postinstall → FAILS (prisma not found)
+4. Abort install → no bin symlink created
+
+### Decision
+
+**Remove `postinstall` hook entirely.**
+
+For distributed CLI packages, postinstall is unnecessary because:
+- Prisma client is generated at build time (before publish)
+- Generated client is already in the published package
+- End users don't need to regenerate it
+
+### Changes
+
+- Removed `"postinstall": "prisma generate"` from `apps/app/package.json`
+- Kept `prisma:generate` script for local development
+- Build process already runs prisma generate via `prepublishOnly`
+
+### Impact
+
+- ✅ `npx agentcmd install` now works
+- ✅ No silent failures
+- ✅ Clean install without errors
+
+---
+
 ## 2025-11-14 - Fix npx agentcmd Support
 
 ### Problem

@@ -1,10 +1,14 @@
+// CRITICAL: Set DATABASE_URL BEFORE any imports
+// Each worker gets isolated database using VITEST_POOL_ID (stable worker ID)
+const workerId = process.env.VITEST_POOL_ID || '1';
+process.env.DATABASE_URL = `file:./test-worker-${workerId}.db`;
+
 import { expect, beforeAll } from 'vitest';
 import * as matchers from '@testing-library/jest-dom/matchers';
 
-// Set required environment variables for tests FIRST
-// IMPORTANT: This must happen before any imports that use Configuration
+// Set required environment variables for tests
+// IMPORTANT: JWT_SECRET must be set before any imports that use Configuration
 process.env.JWT_SECRET = 'test-jwt-secret-for-vitest';
-// DATABASE_URL is set in vitest.global-setup.ts (runs before this file)
 
 // Reset Configuration after imports to ensure it reads test JWT_SECRET
 beforeAll(async () => {

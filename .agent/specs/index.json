@@ -10,10 +10,10 @@
     },
     "251114000000": {
       "path": "todo/251114000000-parallel-test-execution/spec.md",
-      "status": "draft",
+      "status": "review",
       "spec_type": "feature",
       "created": "2025-11-14T00:00:00.000Z",
-      "updated": "2025-11-14T00:00:00.000Z"
+      "updated": "2025-11-14T14:00:00.000Z"
     },
     "251113152245": {
       "path": "todo/251113152245-test-suite-optimization/spec.md",

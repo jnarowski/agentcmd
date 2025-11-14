@@ -1,44 +1,45 @@
 import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";
+import { MAX_WORKERS } from "./vitest.config";
 
 /**
  * Vitest globalSetup - runs ONCE before all test suites
  *
  * Responsibilities:
- * - Set test DATABASE_URL
- * - Apply Prisma schema to test database
+ * - Create worker-specific test databases
+ * - Apply Prisma schema to each worker database
  * - Verify database connectivity
  *
- * Note: This runs BEFORE vitest.setup.ts, so we must set DATABASE_URL here
- *
- * File-based DB approach (current):
- * - Uses temp file for SQLite database
- * - Allows parallel test execution across multiple workers
- * - Tests run concurrently on multi-core systems
- * - Trade-off: File I/O overhead (minimal on SSD)
+ * Worker-per-database approach:
+ * - Creates separate SQLite database per worker (test-worker-1.db, test-worker-2.db, etc.)
+ * - Enables true parallel test execution without SQLITE_BUSY errors
+ * - Each worker gets isolated database using VITEST_POOL_ID
+ * - Worker count matches maxWorkers from vitest.config.ts (2 in CI, 4 locally)
  */
 export default async function globalSetup() {
-  console.log("🔧 Global Setup: Applying Prisma schema to test database...");
+  console.log("🔧 Global Setup: Creating worker databases...");
 
-  // File-based DB for parallel test execution
-  const testDbPath = "file:./test-temp.db";
-  process.env.DATABASE_URL = testDbPath;
+  const workerCount = MAX_WORKERS;
+  const cwd = process.cwd();
+
+  // Switch between approaches here:
+  // - 'individual' = simpler, run prisma push N times (default)
+  // - 'template' = create once + copy (may be slower with many workers)
+  const USE_APPROACH = process.env.TEST_DB_APPROACH || "template";
 
   try {
-    // Apply schema (skip generate - client already generated during install)
-    // Use --accept-data-loss since this is a test database
-    execSync("pnpm prisma db push --skip-generate --accept-data-loss", {
-      stdio: "inherit",
-      cwd: process.cwd(),
-      env: { ...process.env, DATABASE_URL: testDbPath },
-    });
+    if (USE_APPROACH === "individual") {
+      await createDatabasesIndividually(workerCount, cwd);
+    } else {
+      await createDatabasesFromTemplate(workerCount, cwd);
+    }
 
-    console.log("✅ Global Setup: Schema applied successfully");
+    console.log("✅ Global Setup: All worker databases ready");
   } catch (error) {
-    console.error("❌ Global Setup: Failed to apply schema");
+    console.error("❌ Global Setup: Failed to create worker databases");
     throw new Error(
-      `Failed to setup test database: ${
+      `Failed to setup test databases: ${
         error instanceof Error ? error.message : String(error)
       }`
     );
@@ -52,22 +53,39 @@ export default async function globalSetup() {
     const { prisma } = await import("./src/shared/prisma");
     await prisma.$disconnect();
 
-    // Clean up test database file
-    const dbFilePath = path.resolve(process.cwd(), "test-temp.db");
-    const dbFilePathWal = path.resolve(process.cwd(), "test-temp.db-wal");
-    const dbFilePathShm = path.resolve(process.cwd(), "test-temp.db-shm");
+    const workerCount = MAX_WORKERS;
+    const cwd = process.cwd();
 
     try {
-      if (fs.existsSync(dbFilePath)) {
-        fs.unlinkSync(dbFilePath);
-        console.log("✅ Removed test database file");
+      // Clean up template database
+      const templateFiles = [
+        path.resolve(cwd, "test-template.db"),
+        path.resolve(cwd, "test-template.db-wal"),
+        path.resolve(cwd, "test-template.db-shm"),
+      ];
+      for (const file of templateFiles) {
+        if (fs.existsSync(file)) {
+          fs.unlinkSync(file);
+        }
       }
-      if (fs.existsSync(dbFilePathWal)) {
-        fs.unlinkSync(dbFilePathWal);
+
+      // Clean up all worker database files
+      for (let i = 1; i <= workerCount; i++) {
+        const dbFilePath = path.resolve(cwd, `test-worker-${i}.db`);
+        const dbFilePathWal = path.resolve(cwd, `test-worker-${i}.db-wal`);
+        const dbFilePathShm = path.resolve(cwd, `test-worker-${i}.db-shm`);
+
+        if (fs.existsSync(dbFilePath)) {
+          fs.unlinkSync(dbFilePath);
+        }
+        if (fs.existsSync(dbFilePathWal)) {
+          fs.unlinkSync(dbFilePathWal);
+        }
+        if (fs.existsSync(dbFilePathShm)) {
+          fs.unlinkSync(dbFilePathShm);
+        }
       }
-      if (fs.existsSync(dbFilePathShm)) {
-        fs.unlinkSync(dbFilePathShm);
-      }
+      console.log("✅ Removed all database files");
     } catch (error) {
       console.warn(
         "⚠️  Failed to clean up test database files:",
@@ -75,4 +93,50 @@ export default async function globalSetup() {
       );
     }
   };
+}
+
+/**
+ * Approach 1: Create databases individually (original approach)
+ * Runs `prisma db push` N times (once per worker)
+ */
+async function createDatabasesIndividually(workerCount: number, cwd: string) {
+  console.log(`   Creating ${workerCount} databases individually...`);
+
+  for (let i = 1; i <= workerCount; i++) {
+    const workerDbPath = `file:./test-worker-${i}.db`;
+
+    execSync("pnpm prisma db push --skip-generate --accept-data-loss", {
+      stdio: "pipe",
+      cwd,
+      env: { ...process.env, DATABASE_URL: workerDbPath },
+    });
+  }
+}
+
+/**
+ * Approach 2: Create from template (optimized approach)
+ * Runs `prisma db push` once, then copies the file N times
+ */
+async function createDatabasesFromTemplate(workerCount: number, cwd: string) {
+  console.log(`   Creating template database...`);
+  const templateFile = path.resolve(cwd, "test-template.db");
+  const templateDbPath = `file:${templateFile}`;
+
+  execSync("pnpm prisma db push --skip-generate --accept-data-loss", {
+    stdio: "pipe",
+    cwd,
+    env: { ...process.env, DATABASE_URL: templateDbPath },
+  });
+
+  // Verify template was created
+  if (!fs.existsSync(templateFile)) {
+    throw new Error(`Template database not created at ${templateFile}`);
+  }
+  console.log(`   ✅ Template created, copying to ${workerCount} workers...`);
+
+  // Copy template to all worker databases
+  for (let i = 1; i <= workerCount; i++) {
+    const workerFile = path.resolve(cwd, `test-worker-${i}.db`);
+    fs.copyFileSync(templateFile, workerFile);
+  }
 }
