@@ -4,6 +4,9 @@ import type { ActiveSessionsManager } from '@/server/websocket/infrastructure/ac
 import type { ReconnectionManager } from '@/server/websocket/infrastructure/reconnection';
 import { killProcess } from 'agent-cli-sdk';
 
+// Guard to prevent multiple concurrent shutdowns
+let isShuttingDown = false;
+
 /**
  * Setup graceful shutdown handlers for SIGINT and SIGTERM signals.
  * Ensures clean shutdown of WebSocket connections, server, and database.
@@ -27,6 +30,12 @@ export async function setupGracefulShutdown(
   reconnectionManager: ReconnectionManager
 ): Promise<void> {
   const shutdown = async (signal: string) => {
+    // Prevent multiple concurrent shutdowns
+    if (isShuttingDown) {
+      return;
+    }
+    isShuttingDown = true;
+
     fastify.log.info({ signal }, 'Received shutdown signal, starting graceful shutdown...');
 
     try {
@@ -102,7 +111,8 @@ export async function setupGracefulShutdown(
       await prisma.$disconnect();
       console.log('Prisma disconnected');
 
-      console.log('Graceful shutdown complete - process will exit naturally');
+      console.log('Graceful shutdown complete');
+      process.exit(0);
     } catch (error) {
       console.error('Error during graceful shutdown:', error);
       process.exit(1);
