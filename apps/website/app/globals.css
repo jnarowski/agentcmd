@@ -5,6 +5,8 @@
 
 @theme inline {
   --navigation-height: 3.5rem;
+  --container-max-width: 80rem;
+  --header-height: 3.5rem;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -135,6 +137,8 @@
 }
 
 :root {
+  --container-max-width: 80rem;
+  --header-height: 3.5rem;
   --radius: 0.625rem;
   --background: oklch(100% 0 0);
   --foreground: oklch(15% 0 0);
