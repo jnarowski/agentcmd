@@ -95,7 +95,7 @@ export default function NewSessionPage() {
 
       // Invalidate all session lists to update sidebar immediately
       queryClient.invalidateQueries({
-        queryKey: sessionKeys.lists(),
+        queryKey: sessionKeys.all,
       });
 
       // No image upload for now - files parameter not used

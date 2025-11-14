@@ -162,7 +162,7 @@ export function NavActivities() {
     syncProjectsMutation.mutate(undefined, {
       onSuccess: () => {
         // Invalidate sessions lists
-        queryClient.invalidateQueries({ queryKey: sessionKeys.lists() });
+        queryClient.invalidateQueries({ queryKey: sessionKeys.all });
 
         // Invalidate all workflow runs
         queryClient.invalidateQueries({ queryKey: workflowKeys.allRuns() });

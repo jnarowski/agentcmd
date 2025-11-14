@@ -119,7 +119,7 @@ export function useUpdateSession() {
     onSuccess: () => {
       // Invalidate all session lists to update sidebar
       queryClient.invalidateQueries({
-        queryKey: sessionKeys.lists(),
+        queryKey: sessionKeys.all,
       });
     },
     onError: (error) => {
@@ -143,7 +143,7 @@ export function useArchiveSession() {
     onSuccess: () => {
       // Invalidate all session lists to update sidebar
       queryClient.invalidateQueries({
-        queryKey: sessionKeys.lists(),
+        queryKey: sessionKeys.all,
       });
 
       toast.success("Session archived successfully");
@@ -169,7 +169,7 @@ export function useUnarchiveSession() {
     onSuccess: () => {
       // Invalidate all session lists to update sidebar
       queryClient.invalidateQueries({
-        queryKey: sessionKeys.lists(),
+        queryKey: sessionKeys.all,
       });
 
       toast.success("Session unarchived successfully");
