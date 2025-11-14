@@ -1,6 +1,6 @@
 {
   "name": "agentcmd",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "type": "module",
   "main": "src/server/index.ts",
   "bin": {

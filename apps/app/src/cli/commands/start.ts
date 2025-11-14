@@ -46,6 +46,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
     // 3. Set environment variables from config
     process.env.PORT = port.toString();
     process.env.HOST = host;
+    process.env.NODE_ENV = "production"; // Use production logger (no pino-pretty)
     process.env.DATABASE_URL = `file:${dbPath}`;
     process.env.JWT_SECRET = mergedConfig.jwtSecret;
     process.env.LOG_LEVEL = mergedConfig.logLevel;
