@@ -2,147 +2,174 @@
 
 Guidance for Claude Code when working with this repository.
 
+## Documentation Map
+
+### CLAUDE.md Files
+- **Root** (this file) - Monorepo essentials + critical rules
+- `apps/app/CLAUDE.md` - Full-stack app integration
+- `apps/app/src/client/CLAUDE.md` - Frontend patterns
+- `apps/website/CLAUDE.md` - Marketing site
+- `packages/agent-cli-sdk/CLAUDE.md` - AI CLI SDK
+- `packages/agentcmd-workflows/CLAUDE.md` - Workflow SDK
+
+### .agent/docs/ Reference Guides
+- `backend-patterns.md` - Domain services, routes, error handling
+- `frontend-patterns.md` - React patterns, state management
+- `workflow-system.md` - Workflow engine, Inngest integration
+- `websocket-architecture.md` - WebSocket patterns, EventBus
+- `database-guide.md` - Prisma patterns, migrations
+- `troubleshooting.md` - Common issues and solutions
+- `deployment.md` - Build, deploy, production
+- `architecture-decisions.md` - Why we chose these technologies
+- `testing-best-practices.md` - Testing patterns
+- `branding.md` - Project identity, design system
+
 ## Project Overview
 
 **Turborepo monorepo** for AI agent workflow tools:
 
-- **`apps/app`**: Full-stack application (React + Vite frontend, Fastify backend) for managing AI agent workflows with chat, file editor, terminal, and visual workflow builder
-- **`agent-cli-sdk`**: TypeScript SDK for orchestrating AI CLI tools (Claude Code, OpenAI Codex, Gemini)
-- **`agentcmd-workflows`**: Workflow utilities library with state persistence, logging, error handling
+- **`apps/app`**: Full-stack application (React + Vite frontend, Fastify backend)
+- **`apps/website`**: Marketing site (Next.js)
+- **`packages/agent-cli-sdk`**: TypeScript SDK for AI CLI orchestration
+- **`packages/agentcmd-workflows`**: Workflow utilities library
+
+**Tech Stack:**
+- Frontend: React 19, Vite, TanStack Query, Zustand, Tailwind v4
+- Backend: Fastify, Prisma (SQLite), Inngest, WebSocket
+- Build: Turborepo, pnpm, TypeScript 5.9
 
 ## Critical Rules
 
 ### Import Conventions
 
-**NO file extensions in imports**:
+✅ **DO** - No file extensions, @/ aliases only:
+```typescript
+import { foo } from "./bar"
+import { getProjectById } from "@/server/domain/project/services/getProjectById"
+```
 
-- ✅ `import { foo } from "./bar"`
-- ❌ `import { foo } from "./bar.js"`
+❌ **DON'T** - File extensions, relative paths:
+```typescript
+import { foo } from "./bar.js"
+import { getProjectById } from "../../../domain/project/services/getProjectById"
+```
 
-**Always use `@/` aliases, never relative imports**:
+✅ **DO** - Top-level imports:
+```typescript
+import type { PhaseDefinition } from "agentcmd-workflows"
+```
 
-- ✅ `@/client/*`, `@/server/*`, `@/shared/*`
-- ❌ `../../../components/Foo`
-
-**NO inline imports - always import at top of file**:
-
-- ✅ `import type { PhaseDefinition } from "agentcmd-workflows"`
-- ❌ `<T extends import("agentcmd-workflows").PhaseDefinition>`
-- ✅ `import { getCurrentBranch } from "@/server/domain/git/services/getCurrentBranch"`
-- ❌ `const { getCurrentBranch } = await import("@/server/domain/git/services/getCurrentBranch")`
+❌ **DON'T** - Inline imports:
+```typescript
+function foo(phase: import("agentcmd-workflows").PhaseDefinition) {}
+```
 
 ### React Best Practices
 
-**useEffect Dependencies - Only Primitives**:
-
+✅ **DO** - Primitives only in useEffect deps:
 ```typescript
-// ❌ BAD - Objects cause infinite loops
-useEffect(() => { ... }, [user, project, data]);
-
-// ✅ GOOD - Only primitives
-useEffect(() => { ... }, [userId, projectId, isEnabled]);
-
-// ✅ GOOD - Omit stable functions with eslint-disable
+const { userId, projectId } = project;
 useEffect(() => {
-  fetchData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [id]);
+  fetchData(userId, projectId);
+}, [userId, projectId]);
 ```
 
-**Zustand State - Always Immutable**:
-
+❌ **DON'T** - Objects cause infinite loops:
 ```typescript
-// ❌ BAD - Mutation
-set((state) => {
-  state.messages.push(newMsg);
-  return { messages: state.messages };
-});
+useEffect(() => {
+  fetchData(project);
+}, [project]);
+```
 
-// ✅ GOOD - Immutable
+✅ **DO** - Immutable Zustand updates:
+```typescript
 set((state) => ({
-  messages: [...state.messages, newMsg],
+  messages: [...state.messages, newMessage],
 }));
 ```
 
-**Null vs Undefined**:
-
-- Database fields (Prisma): `value: string | null`
-- React props: `value?: string`
-- Never mix: ❌ `value: string | null | undefined`
+❌ **DON'T** - Mutations:
+```typescript
+set((state) => {
+  state.messages.push(newMessage);
+  return { messages: state.messages };
+});
+```
 
 ### Backend Architecture
 
-**Domain-Driven Structure**:
-
+✅ **DO** - Domain services (one function per file):
 ```
-server/domain/
-├── workflow/          # Workflow engine domain
-│   ├── services/      # One function per file
-│   ├── schemas/       # Zod validation
-│   ├── types/         # Domain types
-│   └── utils/         # Domain utilities
-├── session/           # Agent sessions
-├── project/           # Project management
-├── file/              # File operations
-├── git/               # Git operations
-└── shell/             # Terminal
+domain/
+├── project/services/
+│   ├── getProjectById.ts       # One function
+│   ├── createProject.ts        # One function
+│   └── updateProject.ts        # One function
 ```
 
-**Key Principles**:
-
-- ✅ One function per file in `domain/*/services/`
-- ✅ Pure functions - pass dependencies as params, no classes
-- ✅ Routes are thin - delegate to domain services
-- ✅ Centralized config - never access `process.env` directly, always use `import { config } from '@/server/config'`
-- ❌ Never import from old `services/` directory
-
-**Import Pattern**:
-
+✅ **DO** - Pure functions with explicit parameters:
 ```typescript
-// ✅ GOOD - Domain services
-import { getProjectById } from "@/server/domain/project/services/getProjectById";
+export async function getProjectById({
+  projectId,
+  userId,
+}: {
+  projectId: string;
+  userId: string;
+}) {
+  return await prisma.project.findUnique({
+    where: { id: projectId, userId },
+  });
+}
+```
 
-// ✅ GOOD - Config access
-import { config } from '@/server/config';
-const port = config.server.port;
-const apiKey = config.apiKeys.anthropicApiKey;
-
-// ❌ BAD
+❌ **DON'T** - Old services/ directory (deprecated):
+```typescript
 import { getProjectById } from "@/server/services/project.service";
 ```
 
 ### Schema Organization
 
-**Hybrid Approach** - Share validation schemas, keep model interfaces separate:
+**Hybrid approach** - share validation schemas, keep model interfaces separate:
 
 ```typescript
-// ✅ Share enums and validation schemas
+// ✅ Share enums and validation
 // apps/app/src/shared/schemas/workflow.schemas.ts
 export const workflowStatusSchema = z.enum(["pending", "running", "completed"]);
 export type WorkflowStatus = z.infer<typeof workflowStatusSchema>;
 
-// ✅ Backend uses Prisma types directly
+// ✅ Backend uses Prisma types
 import { prisma } from "@/shared/prisma";
 const run = await prisma.workflowRun.findUnique({ where: { id } });
 
-// ✅ Frontend defines custom interfaces with UI needs
+// ✅ Frontend defines custom interfaces
 export interface WorkflowRun {
   id: string;
-  status: WorkflowStatus; // ← Uses shared enum
-  // ... other fields frontend needs
-}
-
-// ❌ Don't derive full model interfaces from schemas
-export interface WorkflowRun extends z.infer<typeof workflowResponseSchema> {
-  // This couples frontend to backend response shape
+  status: WorkflowStatus;
 }
 ```
 
-**Schema Locations**:
+### Type Conventions
 
-- Cross-cutting: `apps/app/src/shared/schemas/` (workflows, events)
-- Domain-specific: `apps/app/src/server/domain/{domain}/schemas/`
-- Legacy: `apps/app/src/server/schemas/` (deprecated, DO NOT use)
+✅ **DO** - Database fields use `null`:
+```typescript
+interface Project {
+  description: string | null; // Prisma field
+}
+```
+
+✅ **DO** - React props use `undefined`:
+```typescript
+interface Props {
+  description?: string; // Optional prop
+}
+```
+
+❌ **DON'T** - Mix both:
+```typescript
+interface Project {
+  description: string | null | undefined;
+}
+```
 
 ## Essential Commands
 
@@ -182,362 +209,141 @@ pnpm test                # Unit tests
 pnpm test:e2e            # E2E tests with real CLI
 ```
 
-## Architecture
+## Architecture Overview
 
-### Monorepo Structure
-
+**Monorepo Structure:**
 ```
 .
 ├── apps/
-│   ├── app/                    # Main full-stack app (agentcmd)
+│   ├── app/                    # Main full-stack app
 │   │   ├── src/
-│   │   │   ├── client/         # React frontend (Vite)
-│   │   │   │   ├── components/ # Shared components
-│   │   │   │   │   ├── ui/     # shadcn/ui (kebab-case)
-│   │   │   │   │   └── ai-elements/ # AI chat components
-│   │   │   │   ├── pages/      # Feature-based organization
-│   │   │   │   │   ├── auth/
-│   │   │   │   │   └── projects/
-│   │   │   │   │       ├── workflows/  # Workflow builder UI
-│   │   │   │   │       ├── sessions/   # Chat/agents
-│   │   │   │   │       ├── files/      # File editor
-│   │   │   │   │       └── shell/      # Terminal
-│   │   │   │   ├── hooks/
-│   │   │   │   └── stores/     # Zustand stores
-│   │   │   │
+│   │   │   ├── client/         # React frontend
 │   │   │   ├── server/         # Fastify backend
-│   │   │   │   ├── domain/     # Business logic
-│   │   │   │   │   ├── workflow/   # NEW: Workflow engine
-│   │   │   │   │   ├── session/
-│   │   │   │   │   ├── project/
-│   │   │   │   │   ├── file/
-│   │   │   │   │   ├── git/
-│   │   │   │   │   └── shell/
-│   │   │   │   ├── routes/     # Thin HTTP handlers
-│   │   │   │   ├── websocket/  # WebSocket infrastructure
-│   │   │   │   └── config/     # Centralized config
-│   │   │   │
-│   │   │   ├── shared/         # Client + server
-│   │   │   │   ├── types/
-│   │   │   │   ├── schemas/    # Cross-cutting validation
-│   │   │   │   └── prisma.ts
-│   │   │   │
-│   │   │   └── cli/            # CLI tool distribution
-│   │   │
-│   │   ├── prisma/             # Database
-│   │   │   ├── schema.prisma
-│   │   │   └── dev.db
-│   │   │
-│   │   └── logs/app.log        # Server logs
-│   │
+│   │   │   │   └── domain/     # Business logic
+│   │   │   │       ├── workflow/   # Workflow engine
+│   │   │   │       ├── session/    # Agent sessions
+│   │   │   │       ├── project/    # Projects
+│   │   │   │       └── */          # Other domains
+│   │   │   └── shared/         # Client + server
+│   │   └── prisma/             # Database
 │   └── website/                # Marketing site
-│
 ├── packages/
 │   ├── agent-cli-sdk/          # AI CLI SDK
-│   ├── agentcmd-workflows/     # Workflow utilities
-│   ├── ui/                     # Shared UI components
-│   ├── eslint-config/
-│   └── typescript-config/
-│
+│   └── agentcmd-workflows/     # Workflow utilities
 ├── .agent/
-│   ├── generated/              # Auto-generated (DO NOT edit)
-│   │   └── slash-commands.ts
 │   ├── docs/                   # Extended docs
 │   └── specs/                  # Feature specs
-│
-├── .claude/commands/           # Slash command definitions
-├── turbo.json                  # Turborepo config
-└── pnpm-workspace.yaml
+└── .claude/commands/           # Slash commands
 ```
 
-### Key Technologies
+**See:** `.agent/docs/architecture-decisions.md` for rationale behind key choices.
 
-**Frontend**: React 19, Vite, React Router, TanStack Query, Zustand, Tailwind CSS v4, shadcn/ui, @xyflow/react (workflow visualization)
+## Common Patterns
 
-**Backend**: Fastify, WebSocket, Prisma (SQLite), JWT auth, Inngest (workflows), node-pty (terminals)
-
-**Build**: Turborepo, pnpm, TypeScript 5.9, ESBuild, Bunchee
-
-**AI**: Vercel AI SDK, Claude Code, OpenAI Codex, Gemini (via agent-cli-sdk)
-
-### Workflow Engine (NEW)
-
-**Visual workflow builder** with drag-and-drop interface:
-
-**Domain**: `apps/app/src/server/domain/workflow/`
-
-- `services/` - Workflow execution engine, step runners
-- `services/engine/` - Core runtime engine (createWorkflowRuntime.ts)
-- `types/` - Workflow definitions, execution context, step types
-- `schemas/` - Zod validation
-
-**Frontend**: `apps/app/src/client/pages/projects/workflows/`
-
-- Drag-drop workflow builder (@xyflow/react)
-- Real-time execution monitoring
-- Step configuration UI
-
-**Database**: WorkflowDefinition, WorkflowRun, WorkflowRunStep tables
-
-**Execution**:
-
-- Runs via Inngest (background jobs)
-- WebSocket streaming for live updates
-- Step types: AI (Claude/Codex/Gemini), Bash, Conditional, Loop
-
-### Feature-Based Frontend Organization
-
-```
-pages/
-└── projects/
-    ├── workflows/           # Workflow builder feature
-    │   ├── components/      # Feature-specific
-    │   ├── hooks/
-    │   ├── stores/
-    │   ├── types/
-    │   └── ProjectWorkflows.tsx
-    │
-    ├── sessions/            # Chat feature
-    │   ├── components/
-    │   ├── hooks/
-    │   ├── stores/
-    │   └── ProjectSession.tsx
-    │
-    └── files/               # File editor feature
-        ├── components/
-        ├── hooks/
-        └── ProjectFiles.tsx
-```
-
-**Naming**:
-
-- PascalCase: All components except shadcn/ui
-- kebab-case: Only `components/ui/` (shadcn/ui)
-- **Page components**: Must use `XXXPage` suffix with default exports (route-mounted only)
-  - ✅ `export default function ProjectsPage()`
-  - ✅ `export default function LoginPage()`
-  - ❌ `export function Projects()` or `export { Projects }`
-
-## Workflow System Best Practices
-
-### Workflow Definitions
+### Parallel Operations
 
 ```typescript
-// Define workflow with typed steps
-const workflow: WorkflowDefinition = {
-  name: "AI Code Review",
-  steps: [
-    {
-      type: "ai",
-      name: "Review Code",
-      agentType: "claude",
-      prompt: "Review this PR and suggest improvements",
-    },
-    {
-      type: "bash",
-      name: "Run Tests",
-      command: "pnpm test",
-    },
-    {
-      type: "conditional",
-      name: "Check Results",
-      condition: "{{ steps.runTests.exitCode === 0 }}",
-      onTrue: { ... },
-      onFalse: { ... },
-    },
-  ],
-};
+// ✅ DO - Parallel
+const [project, sessions] = await Promise.all([
+  getProjectById({ projectId }),
+  getProjectSessions({ projectId }),
+]);
+
+// ❌ DON'T - Sequential
+const project = await getProjectById({ projectId });
+const sessions = await getProjectSessions({ projectId });
 ```
 
-### Step Types
-
-**AI Step**: Executes Claude/Codex/Gemini with prompt
-**Bash Step**: Runs shell command
-**Conditional Step**: Branch based on condition
-**Loop Step**: Iterate over array/range
-
-### Execution Context
+### Config Access
 
 ```typescript
-interface StepExecutionContext {
-  workflow: WorkflowDefinition;
-  run: WorkflowRun;
-  step: WorkflowDefinitionStep;
-  projectPath: string;
-  variables: Record<string, unknown>;
-  stepOutputs: Record<string, StepOutput>;
-  onEvent: (event: WorkflowEvent) => void;
-}
+// ✅ DO - Centralized config
+import { config } from "@/server/config";
+const port = config.server.port;
+
+// ❌ DON'T - Direct env access
+const port = process.env.PORT;
 ```
 
-### Event Streaming
-
-Workflows emit real-time events via WebSocket:
-
-- `workflow.*.started`
-- `workflow.*.step.*.progress`
-- `workflow.*.step.*.completed`
-- `workflow.*.completed`
-- `workflow.*.failed`
-
-Frontend subscribes via `useWorkflowWebSocket()` hook.
-
-## Database Best Practices
-
-**Prisma Client Singleton**:
+### Prisma Client
 
 ```typescript
-// ✅ GOOD
+// ✅ DO - Import singleton
 import { prisma } from "@/shared/prisma";
 
-// ❌ BAD - Creates connection leak
+// ❌ DON'T - Create new instance
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 ```
 
-**Pre-1.0 Migration Reset** (dev only):
-
-```bash
-# Collapse migrations when accumulating too many
-pnpm prisma:reset  # = rm migrations/ && prisma migrate dev --name init
-```
-
-**Production**:
-
-```bash
-# Apply migrations (no dev mode)
-prisma migrate deploy
-```
-
-## WebSocket Patterns
-
-**Event Naming**: Dot notation for events, colons for channels
-
-```typescript
-// ✅ GOOD - Events use dots
-"workflow.run.updated";
-"session.stream_output";
-"shell.output";
-
-// ✅ GOOD - Channels use colons
-"session:123";
-"project:abc";
-
-// ❌ BAD - Don't mix conventions
-"workflow:run:updated"; // Events should use dots
-```
-
-**Naming Conventions:**
-
-- **Channels**: Use colons for namespacing (`session:123`, `project:abc`) - Phoenix Channels pattern
-- **Events**: Use dots for hierarchy (`session.stream_output`, `workflow.run.updated`) - JavaScript/WebSocket standard
-
-**Message Structure**:
-
-```typescript
-interface WebSocketMessage<T = unknown> {
-  type: string; // Event type (dot notation)
-  data: T; // Payload
-}
-```
-
-## Debugging
-
-**Server Logs**: `apps/app/logs/app.log`
-
-```bash
-# Watch logs
-tail -f apps/app/logs/app.log | jq .
-
-# Filter errors
-tail -f apps/app/logs/app.log | jq 'select(.level >= 50)'
-
-# Search workflows
-grep "workflow" apps/app/logs/app.log | jq .
-```
-
-**Health Check**:
-
-```bash
-curl http://localhost:3456/api/health
-```
-
-**Log Levels**: `trace`, `debug`, `info`, `warn`, `error`, `fatal` (default: `info`)
-
-## Common Issues
-
-**WebSocket not connecting**: Check JWT token, verify server running, check CORS
-
-**Database locked**: Kill node processes, restart `pnpm dev`
-
-**Agent not streaming**: Verify CLI installed (`which claude`), check logs
-
-**TypeScript errors**: `pnpm prisma:generate`, clear node_modules, `pnpm install`
-
-**Infinite re-renders**: Check useEffect deps (use only primitives, not objects)
-
-## Environment Variables
-
-```bash
-# Required
-JWT_SECRET=<openssl rand -base64 32>
-DATABASE_URL=file:./dev.db
-
-# Optional (with defaults)
-PORT=3456
-HOST=127.0.0.1
-LOG_LEVEL=info
-ANTHROPIC_API_KEY=<for AI features>
-```
-
-See `.env.example` for full template.
-
 ## Quick Reference
 
-**Ports**:
-
+**Ports:**
 - Frontend: 5173
 - Backend: 3456
 - Inngest UI: 8288
 
-**File Locations**:
-
+**File Locations:**
 - Logs: `apps/app/logs/app.log`
 - Database: `apps/app/prisma/dev.db`
-- Generated files: `.agent/generated/` (DO NOT edit)
+- Generated: `.agent/generated/` (DO NOT edit)
 
-**Key Packages**:
+**Key Commands:**
+- Dev: `pnpm dev`
+- Build: `pnpm build`
+- Check: `pnpm check`
+- Migrate: `pnpm prisma:migrate`
 
-- `agentcmd`: Main app (published to npm)
-- `agent-cli-sdk`: AI CLI orchestration
-- `agentcmd-workflows`: Workflow utilities
+## Debugging
 
-## Additional Resources
+**Server Logs:**
+```bash
+tail -f apps/app/logs/app.log | jq .
+```
 
-- **App Guide**: `apps/app/CLAUDE.md` (detailed architecture)
-- **CLI Guide**: `apps/app/CLI.md` (CLI tool usage)
-- **Workflow Docs**: `.agent/docs/workflow-engine.md`
-- **WebSocket Docs**: `.agent/docs/websockets.md`
-- **Tool Patterns**: `.agent/docs/claude-tool-result-patterns.md`
-- **SDK Guide**: `packages/agent-cli-sdk/CLAUDE.md`
+**Health Check:**
+```bash
+curl http://localhost:3456/api/health
+```
 
-## Important
-
-- Be extremely concise in all interactions and commit messages - sacrifice grammar for concision.
+**See:** `.agent/docs/troubleshooting.md` for common issues.
 
 ## Plans
 
-- At end of plans, list unresolved questions (extremely concise)
-- Use `prisma:reset` to flatten migrations
+- Ultrathink - analyze deeply before executing
 - Ask clarifying questions ONE AT A TIME if implementation approach is unclear:
-  - Don't use the AskUserQuestion tool
+  - Don't use AskUserQuestion tool
   - Use this template:
-
     ```md
     **Question**: [Your question]
     **Suggestions**:
-
     1. [Option 1] (recommended - why)
     2. [Option 2]
     3. Other - user specifies
     ```
+
+## Be Extremely Concise
+
+Sacrifice grammar for concision in all interactions and commit messages.
+
+## Additional Resources
+
+### .agent/docs/ (Detailed Guides)
+- `backend-patterns.md` - Routes, services, error handling, WebSocket handlers
+- `frontend-patterns.md` - React components, hooks, state, WebSocket client
+- `workflow-system.md` - Workflow engine architecture, Inngest, step types
+- `websocket-architecture.md` - EventBus, channels, events, real-time
+- `database-guide.md` - Prisma patterns, migrations, queries, transactions
+- `troubleshooting.md` - Common errors, type issues, runtime problems
+- `deployment.md` - Production build, environment, migrations, monitoring
+- `architecture-decisions.md` - Why domain-driven, Zustand, SQLite, Inngest
+- `testing-best-practices.md` - Testing patterns, fixtures, mocking
+
+### App-Specific Guides
+- `apps/app/CLAUDE.md` - Full-stack app integration patterns
+- `apps/app/src/client/CLAUDE.md` - Frontend development guide
+- `apps/website/CLAUDE.md` - Marketing site (Next.js)
+
+### Package Docs
+- `packages/agent-cli-sdk/CLAUDE.md` - AI CLI SDK usage
+- `packages/agentcmd-workflows/CLAUDE.md` - Workflow SDK API

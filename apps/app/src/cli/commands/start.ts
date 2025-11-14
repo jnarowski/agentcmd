@@ -1,11 +1,17 @@
 import { spawn, type ChildProcess } from "child_process";
 import { spawnSync } from "child_process";
 import { existsSync } from "node:fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 import type { FastifyInstance } from "fastify";
 import { loadConfig, mergeWithFlags } from "../utils/config";
 import { ensurePortAvailable } from "../utils/portCheck";
 import { getDbPath, getConfigPath, getLogFilePath } from "../utils/paths";
 import { checkPendingMigrations, createBackup, cleanupOldBackups } from "../utils/backup";
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 interface StartOptions {
   port?: number;
@@ -50,7 +56,8 @@ export async function startCommand(options: StartOptions): Promise<void> {
     }
 
     // 4. Check for pending migrations and create backup if needed
-    const schemaPath = "./dist/prisma/schema.prisma";
+    // Calculate absolute path to schema (relative to bundled CLI location)
+    const schemaPath = join(__dirname, 'prisma/schema.prisma');
     if (existsSync(dbPath)) {
       console.log("Checking for pending migrations...");
       const pendingMigrations = checkPendingMigrations(schemaPath);
@@ -74,11 +81,11 @@ export async function startCommand(options: StartOptions): Promise<void> {
       }
     }
 
-    // 5. Run Prisma migrations
-    console.log("Running database migrations...");
+    // 5. Sync database schema
+    console.log("Syncing database schema...");
     const migrateResult = spawnSync(
       "npx",
-      ["prisma", "migrate", "deploy", "--schema=./dist/prisma/schema.prisma"],
+      ["prisma", "db", "push", "--skip-generate", `--schema=${schemaPath}`],
       {
         stdio: "inherit",
         env: process.env,
@@ -99,7 +106,8 @@ export async function startCommand(options: StartOptions): Promise<void> {
 
     // 6. Import and start Fastify server
     console.log("Starting Fastify server...");
-    const { startServer } = await import("../../server/index.js");
+    const serverPath = join(__dirname, 'server/index.js');
+    const { startServer } = await import(serverPath);
     fastifyServer = await startServer({ port, host });
     serverStartTime = new Date();
 

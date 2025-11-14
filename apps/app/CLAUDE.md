@@ -1,477 +1,289 @@
-# CLAUDE.md
+# apps/app/CLAUDE.md
 
-Project guidance for Claude Code when working in this web app.
+Full-stack application development guide for agentcmd.
 
 ## Overview
 
-**Turborepo monorepo** - Full-stack React + Vite frontend, Fastify backend for managing AI agent workflows with Inngest orchestration.
+**Tech Stack:**
+- **Frontend**: React 19, Vite, React Router, TanStack Query, Zustand, Tailwind v4
+- **Backend**: Fastify, Prisma (SQLite), Inngest, WebSocket, JWT auth
+- **AI**: Claude Code, OpenAI Codex, Gemini (via agent-cli-sdk)
 
-## Commands
+## Development Workflow
+
+### Start Development
 
 ```bash
-# Development
-pnpm dev              # Start all (migrations, Inngest, server, client)
-pnpm dev:server       # Backend only (port 3456)
-pnpm dev:client       # Frontend only (port 5173)
-pnpm inngest          # Inngest dev UI (port 8288)
+# From apps/app/ - runs client + server + inngest
+pnpm dev
 
-# Database
-pnpm prisma:generate  # Generate Prisma client
-pnpm prisma:migrate   # Create/run migrations
-pnpm prisma:studio    # Database GUI
-pnpm prisma:reset     # Reset DB + flatten migrations (pre-1.0 only)
+# Auto-runs: prisma migrate deploy on start
+# Starts:
+# - Frontend: http://localhost:5173
+# - Backend: http://localhost:3456
+# - Inngest: http://localhost:8288
 
-# Build & Deploy
-pnpm build            # Build all (client + server + CLI)
-pnpm start            # Production server
+# Or run separately:
+pnpm dev:client     # Frontend only
+pnpm dev:server     # Backend only
+```
 
-# Quality
-pnpm lint             # Lint
-pnpm check-types      # Type check
-pnpm test             # Run tests (parallel execution)
-pnpm test:clean       # Clean stuck test worker databases
+### Database Commands
+
+```bash
+pnpm prisma:generate   # Regenerate Prisma client
+pnpm prisma:migrate    # Create migration (prompts for name)
+pnpm prisma:studio     # Open database GUI (http://localhost:5555)
+pnpm prisma:reset      # Reset database (dev only, destructive)
+```
+
+### Quality Commands
+
+```bash
+pnpm check-types    # TypeScript type checking
+pnpm lint           # ESLint
+pnpm test           # Vitest tests (parallel execution)
+pnpm build          # Production build
 ```
 
 ## Testing
 
 **Parallel Test Execution**: Tests run in parallel using Vitest 4's worker pool with database-per-worker isolation.
 
-- **Worker databases**: Each test worker gets isolated SQLite database (`test-worker-1.db`, `test-worker-2.db`, etc.)
-- **VITEST_POOL_ID**: Stable worker ID used for database naming (1 to maxWorkers)
-- **Worker count**: 4 workers locally, 2 in CI (configurable via `maxWorkers` in vitest.config.ts)
-- **Database setup**: `vitest.global-setup.ts` creates all worker databases at start
-- **Per-worker config**: `vitest.setup.ts` sets `DATABASE_URL` before imports using `VITEST_POOL_ID`
-- **Cleanup**: Global teardown removes all worker databases and WAL/SHM files automatically
-- **Manual cleanup**: `pnpm test:clean` removes stuck databases if needed
+- **Worker databases**: Each worker gets isolated SQLite (`test-worker-1.db`, `test-worker-2.db`, etc.)
+- **VITEST_POOL_ID**: Stable worker ID for database naming (1 to maxWorkers)
+- **Worker count**: 4 workers locally, 2 in CI
+- **Database setup**: `vitest.global-setup.ts` creates all worker databases
+- **Per-worker config**: `vitest.setup.ts` sets `DATABASE_URL` using `VITEST_POOL_ID`
+- **Cleanup**: Global teardown removes all worker databases
 
-**Key files**:
-- `vitest.config.ts` - Enables fileParallelism, sets maxWorkers
-- `vitest.global-setup.ts` - Creates worker databases
-- `vitest.setup.ts` - Sets DATABASE_URL per worker
-- `.gitignore` - Ignores test-worker-*.db* files
+**Gold Standard Tests:**
+- `src/server/domain/project/services/__tests__/createProject.test.ts`
+- `src/server/routes/__tests__/projects.test.ts`
 
-```
-
-## Critical Rules
-
-### Import Paths
-
-- ✅ **Always use `@/` aliases** - Never relative imports beyond same directory
-  - `@/client/*` - Client code
-  - `@/server/*` - Server code
-  - `@/shared/*` - Shared code
-- ❌ **No file extensions** in imports - `import { foo } from "./bar"` not `"./bar.js"`
-
-### React Hooks
-
-- **useEffect deps**: Only primitives (`id`, `userId`), never objects/arrays from React Query
-- **Zustand**: Always immutable updates - `set((s) => ({ messages: [...s.messages, new] }))`
-- **Store functions stable** - Safe to omit from useEffect deps with eslint-disable comment
-
-### Types
-
-- **Database fields**: `| null` (Prisma convention)
-- **React props**: `?` optional syntax (undefined when omitted)
-- **Never mix**: `| null | undefined` always wrong
-
-### Backend
-
-- **Domain-driven architecture** - One function per file in `domain/*/services/`
-- **Pure functions** - No classes, explicit params
-- **Routes are thin** - Delegate to domain services
-- **Return null for "not found"** - Routes decide HTTP status
+**See:** `.agent/docs/testing-best-practices.md` for comprehensive guide.
 
 ## Architecture
 
-### Monorepo Structure
+### Client ↔ Server Integration
 
-```
-apps/web/                      # This app
-  src/
-    cli/                       # CLI tool (npx agentcmd)
-      commands/                # install, start, config
-      utils/                   # Config management, path helpers
-    client/                    # React frontend
-      components/              # Shared components
-        ui/                    # shadcn/ui (kebab-case)
-        ai-elements/           # Chat UI components
-      pages/                   # Feature-based organization
-        auth/                  # Login, signup
-        projects/              # Projects + nested features
-          sessions/            # Chat/agents (stores, hooks, components)
-          files/               # File editor
-          shell/               # Terminal
-          workflows/           # Workflow runs
-      stores/                  # Global Zustand stores
-    server/                    # Fastify backend
-      domain/                  # Business logic by domain
-        auth/services/         # Authentication functions
-        project/services/      # Project CRUD
-        sessions/services/      # Agent sessions
-        file/services/         # File operations
-        git/services/          # Git operations
-        shell/services/        # Terminal
-        workflow/services/     # Workflow orchestration (Inngest)
-          engine/              # Workflow runtime + step implementations
-          runs/                # Run management
-          events/              # Event tracking
-          artifacts/           # Artifact storage
-      routes/                  # Thin HTTP handlers
-      websocket/               # WebSocket infrastructure
-        handlers/              # Session, shell, global handlers
-        infrastructure/        # EventBus, subscriptions, metrics
-      config/                  # Configuration management
-      plugins/                 # Fastify plugins (auth)
-    shared/                    # Client + server shared code
-      types/                   # Shared types
-      schemas/                 # Zod validation schemas
-      prisma.ts                # Prisma singleton
-  prisma/                      # Database
-    schema.prisma              # Schema definition
-    migrations/                # Migration files
-    dev.db                     # SQLite database
-  logs/                        # Server logs
-    app.log                    # Primary log file
+**REST APIs:**
+- Fastify routes at `/api/*`
+- JWT authentication via headers
+- Type-safe with shared types from `@/shared/types`
 
-packages/
-  agent-cli-sdk/               # SDK for AI CLI tools (Claude, Codex, Gemini)
-  agentcmd-workflows/          # Workflow SDK (used by Inngest integration)
-```
+**WebSocket (Real-time):**
+- Socket.IO for bidirectional communication
+- EventBus for decoupled event handling
+- Channels: `domain:id` (e.g., `session:123`)
+- Events: `domain.action` (e.g., `session.stream_output`)
 
-### Backend Domain Pattern
-
-**One function per file** - File name matches function name:
-
+**Example:**
 ```typescript
-// ✅ domain/project/services/getProjectById.ts
-export async function getProjectById(id: string): Promise<Project | null> {
-  return await prisma.project.findUnique({ where: { id } });
-}
+// Backend emits event
+eventBus.emit("session.stream_output", {
+  sessionId: "123",
+  content: "Hello",
+});
 
-// ✅ domain/project/services/createProject.ts
-export async function createProject(userId: string, data: CreateData) {
-  return await prisma.project.create({ data: { ...data, userId } });
+// Frontend subscribes via WebSocket
+socket.emit("subscribe", "session:123");
+socket.on("session.stream_output", (data) => {
+  setMessages((prev) => [...prev, data.content]);
+});
+```
+
+**See:** `.agent/docs/websocket-architecture.md` for comprehensive patterns.
+
+### Shared Types
+
+Types shared between client and server live in `src/shared/`:
+
+```
+shared/
+├── types/           # TypeScript interfaces
+├── schemas/         # Zod validation (cross-cutting)
+└── prisma.ts        # Prisma client singleton
+```
+
+**Pattern:**
+```typescript
+// Share enums and validation
+// src/shared/schemas/workflow.schemas.ts
+export const statusSchema = z.enum(["pending", "running", "completed"]);
+export type WorkflowStatus = z.infer<typeof statusSchema>;
+
+// Backend uses Prisma types
+import { prisma } from "@/shared/prisma";
+
+// Frontend defines custom interfaces
+export interface WorkflowRun {
+  id: string;
+  status: WorkflowStatus; // Uses shared enum
 }
 ```
 
-**Import from domain:**
+## Feature Organization
 
+### Frontend - Feature-Based
+
+All related code lives together:
+
+```
+pages/projects/sessions/    # Feature
+├── components/             # Feature-specific
+├── hooks/                  # Feature-specific
+├── stores/                 # Feature-specific
+├── types/                  # Feature-specific
+└── ProjectSession.tsx
+```
+
+**See:** `apps/app/src/client/CLAUDE.md` for frontend patterns.
+
+### Backend - Domain-Driven
+
+Business logic organized by domain:
+
+```
+server/domain/
+├── project/services/
+│   ├── getProjectById.ts       # One function per file
+│   ├── createProject.ts
+│   └── updateProject.ts
+├── session/services/
+├── workflow/services/
+└── */services/
+```
+
+**See:** `.agent/docs/backend-patterns.md` for comprehensive patterns.
+
+## Workflow System
+
+Workflows execute via **Inngest** (background jobs) with real-time updates via WebSocket.
+
+**Key Features:**
+- Visual workflow builder (@xyflow/react)
+- Step types: AI (Claude/Codex/Gemini), Bash, Conditional, Loop
+- Real-time execution monitoring
+- WebSocket streaming for live updates
+
+**Example Workflow:**
 ```typescript
-import { getProjectById } from "@/server/domain/project/services/getProjectById";
-```
-
-### Frontend Feature Organization
-
-**Feature-based structure** - All related code together:
-
-```
-pages/{feature}/
-  components/       # Feature UI components
-  hooks/            # Feature hooks
-  stores/           # Feature Zustand stores
-  utils/            # Feature utilities
-  {Feature}.tsx     # Main page component
-```
-
-**Only truly shared code** goes in top-level `components/`, `hooks/`, `utils/`
-
-### Workflow Engine (Inngest)
-
-**Key concepts:**
-
-- Workflows defined in project `.workflows/` directory
-- Inngest orchestrates execution with durable steps
-- Custom step methods: `phase`, `agent`, `git`, `cli`, `artifact`, `ai`
-- All steps tracked in database with events
-- WebSocket broadcasts real-time updates
-
-**Custom step types:**
-
-```typescript
-step.phase(); // Phase marker (no Inngest wrapping)
-step.agent(); // Execute AI agent
-step.git(); // Git operations
-step.cli(); // Shell commands
-step.artifact(); // Store artifacts
-step.ai(); // AI SDK calls
-step.setupWorkspace(); // Temp workspace
-step.cleanupWorkspace(); // Cleanup
-```
-
-## Key Patterns
-
-### Error Handling
-
-```typescript
-import {
-  NotFoundError,
-  ValidationError,
-  ForbiddenError,
-} from "@/server/errors";
-
-// Services return null
-export async function getItem(id: string): Promise<Item | null> {
-  return await prisma.item.findUnique({ where: { id } });
-}
-
-// Routes throw errors
-const item = await getItem(id);
-if (!item) throw new NotFoundError("Item not found"); // → 404
-```
-
-### Route Template
-
-```typescript
-import { z } from "zod";
-import type { FastifyInstance } from "fastify";
-
-const ParamsSchema = z.object({ id: z.string().uuid() });
-const BodySchema = z.object({ name: z.string().min(1) });
-
-export async function registerRoutes(fastify: FastifyInstance) {
-  fastify.get<{ Params: z.infer<typeof ParamsSchema> }>(
-    "/api/items/:id",
+const workflow = {
+  name: "AI Code Review",
+  steps: [
     {
-      schema: { params: ParamsSchema },
-      preHandler: fastify.authenticate, // JWT required
+      type: "ai",
+      agentType: "claude",
+      prompt: "Review this PR",
     },
-    async (request, reply) => {
-      const { id } = request.params;
-      const userId = request.user!.id;
-
-      const item = await getItemById(id, userId);
-      if (!item) throw new NotFoundError("Item not found");
-
-      return reply.send({ data: item });
-    }
-  );
-}
+    {
+      type: "bash",
+      command: "pnpm test",
+    },
+  ],
+};
 ```
 
-### WebSocket Pattern
+**Inngest Dev Server:** http://localhost:8288
 
-**EventBus for broadcasting:**
+**See:** `.agent/docs/workflow-system.md` for comprehensive guide.
 
-```typescript
-import { webSocketEventBus } from "@/server/websocket/infrastructure";
+## CLI Tool Distribution
 
-// Broadcast to project channel (channels use colons)
-webSocketEventBus.emit("project:123", {
-  type: "workflow.run.updated", // Events use dot notation
-  data: { run_id: "456", changes: { status: "completed" } },
-});
-
-// Client subscribes in handler
-webSocketEventBus.subscribe("project:123", (msg) => {
-  socket.send(JSON.stringify(msg));
-});
-```
-
-**Event naming conventions:**
-
-- **Channels**: Use colons for namespacing (`session:123`, `project:abc`) - Phoenix Channels pattern
-- **Events**: Use dots for hierarchy (`session.stream_output`, `workflow.run.updated`) - JavaScript/WebSocket standard
-
-### State Management
-
-**Zustand for client state:**
-
-```typescript
-// Store definition
-export const useSessionStore = create<SessionStore>((set) => ({
-  messages: [],
-  addMessage: (msg) =>
-    set((s) => ({
-      messages: [...s.messages, msg], // ✅ Immutable
-    })),
-}));
-
-// Usage with selector
-const messages = useSessionStore((s) => s.messages); // ✅ Only re-renders when messages change
-```
-
-**TanStack Query for server state:**
-
-```typescript
-const { data: projects } = useQuery({
-  queryKey: ["projects"],
-  queryFn: async () => {
-    const res = await apiClient.get("/api/projects");
-    return res.data.data;
-  },
-});
-```
-
-## CLI Tool
-
-**Production distribution** via `npx agentcmd`:
+App published as `agentcmd` npm package:
 
 ```bash
-# First-time install
-npx agentcmd install   # Creates ~/.agentcmd/ with config, DB, logs
+# Run without installing
+npx agentcmd
 
-# Start server
-npx agentcmd start     # Ports: 3456 (main), 8288 (Inngest)
-npx agentcmd start --port 8080 --inngest-port 9000
-
-# Config management
-npx agentcmd config --show
-npx agentcmd config --edit
-npx agentcmd config --get port
-npx agentcmd config --set port=7000
+# Or install globally
+npm install -g agentcmd
+agentcmd
 ```
 
-**Rebranding:** Change `CLI_NAME` in `src/cli/utils/constants.ts`
-
-**Config priority:** CLI flags > config.json > defaults
+**CLI Source:** `src/cli/`
 
 ## Environment Variables
 
-**Required:**
-
-- `JWT_SECRET` - Generate: `openssl rand -base64 32`
-
-**Optional:**
-
-- `PORT=3456` - Backend port
-- `HOST=127.0.0.1` - Server host
-- `LOG_LEVEL=info` - Logging level (trace, debug, info, warn, error, fatal)
-- `ANTHROPIC_API_KEY` - For AI features
-- `NODE_ENV=development` - Environment
-
-**Config Access:**
-
-All config accessed via centralized module with Zod validation:
-
-```typescript
-import { config } from '@/server/config';
-
-const port = config.server.port;
-const jwtSecret = config.jwt.secret;
-const apiKey = config.apiKeys.anthropicApiKey;
-const workflowAppId = config.workflow.appId;
-```
-
-## Database
-
-**SQLite with Prisma ORM**
-
-**Key models:**
-
-- `User` - Authentication
-- `Project` - Project management
-- `AgentSession` - Chat sessions
-- `WorkflowRun` - Workflow executions
-- `WorkflowRunStep` - Step tracking
-- `WorkflowEvent` - Event log
-- `WorkflowArtifact` - Artifacts
-
-**Migrations:**
-
-- Auto-apply on `pnpm dev`
-- Create new: `pnpm prisma:migrate`
-- Pre-1.0 reset: `pnpm prisma:reset` (flattens all migrations)
-
-## Debugging
-
-**Server logs:** `logs/app.log`
+### Required
 
 ```bash
-tail -f logs/app.log | jq .                    # Pretty-print
-tail -f logs/app.log | jq 'select(.level >= 50)' # Errors only
+JWT_SECRET=<openssl rand -base64 32>
+DATABASE_URL=file:./dev.db
 ```
 
-**Common issues:**
-
-- WebSocket fails → Check JWT token, restart server
-- DB locked → Kill node processes, restart
-- Agent not streaming → Verify Claude CLI installed
-- Type errors → Run `pnpm prisma:generate`, restart TS server
-
-**Health check:**
+### Optional
 
 ```bash
-curl http://localhost:3456/api/health
+PORT=3456
+HOST=127.0.0.1
+NODE_ENV=development
+LOG_LEVEL=info
+
+# AI API Keys (for workflow features)
+ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
+
+# Inngest
+INNGEST_EVENT_KEY=...
+INNGEST_SIGNING_KEY=...
 ```
 
-## Best Practices
+**See:** `.env.example` for complete template.
 
-### Backend
+## Deployment
 
-1. **One function per file** in `domain/*/services/`
-2. **Pure functions** - No classes, explicit params
-3. **Thin routes** - Delegate to domain services
-4. **Return null for "not found"** - Routes decide errors
-5. **Structured logging** - `fastify.log.info({ context }, 'message')`
-6. **Custom error classes** - `throw new NotFoundError()`
-7. **Prisma** - Don't add migrations. Instead use prisma:reset and then prisma:seed after modifying prisma.schema directly
+```bash
+# Build
+pnpm build
 
-### Frontend
+# Apply migrations (production)
+pnpm prisma migrate deploy
 
-7. **Feature-based organization** - Keep related code together
-8. **Immutable Zustand updates** - Always return new objects/arrays
-9. **Primitive useEffect deps** - Never objects from queries
-10. **TanStack Query for server state** - Zustand for client state
-
-### General
-
-11. **No import extensions** - Let bundler add them
-12. **Always `@/` aliases** - Never relative imports
-13. **PascalCase components** - Except shadcn/ui (kebab-case)
-14. **Database `| null`** - Props `?` optional
-
-## Tech Stack
-
-**Frontend:** React 19, Vite, React Router, TanStack Query, Zustand, Tailwind v4, shadcn/ui, CodeMirror, xterm.js
-**Backend:** Fastify, WebSocket, Prisma (SQLite), JWT, Inngest, node-pty
-**AI:** Vercel AI SDK, agent-cli-sdk (Claude/Codex/Gemini)
-**Build:** Turborepo, pnpm, tsx, ESBuild
-
-## Shared Schemas
-
-**Hybrid approach** - Share validation schemas and enums, NOT model interfaces:
-
-✅ **Share:**
-
-- Zod validation schemas (`createProjectSchema`, etc.)
-- Enum types (`WorkflowStatus`, `StepStatus`)
-- Request/response validation
-
-❌ **Don't share:**
-
-- Model interfaces (WorkflowRun, etc.)
-- Prisma types (backend only)
-- UI types (frontend only)
-
-**Location:** `src/shared/schemas/` (cross-cutting) or `src/server/domain/*/schemas/` (domain-specific)
-
-**Usage:**
-
-```typescript
-// ✅ Backend - Import schemas for validation
-import { createProjectSchema } from "@/shared/schemas";
-
-// ✅ Frontend - Import enum types only
-import type { WorkflowStatus } from "@/shared/schemas";
-
-// ✅ Backend - Use Prisma types directly
-const run = await prisma.workflowRun.findUnique({ where: { id } });
+# Start server (with PM2 or Docker)
+pm2 start dist/server/index.js --name agentcmd
 ```
+
+**See:** `.agent/docs/deployment.md` for comprehensive guide.
 
 ## Quick Reference
 
-**Import paths:**
+**Ports:**
+- Frontend: 5173
+- Backend: 3456
+- Inngest: 8288
+- Prisma Studio: 5555
 
-```typescript
-import { prisma } from "@/shared/prisma";
-import { NotFoundError } from "@/server/errors";
-import { config } from "@/server/config";
-import { getProjectById } from "@/server/domain/project/services/getProjectById";
-import { webSocketEventBus } from "@/server/websocket/infrastructure";
-```
+**File Locations:**
+- Database: `prisma/dev.db`
+- Logs: `logs/app.log`
+- Migrations: `prisma/migrations/`
 
-**HTTP status codes:**
+**Key Patterns:**
+- Import from `@/server/`, `@/client/`, `@/shared/`
+- One function per file in `domain/*/services/`
+- Feature-based frontend organization
+- Immutable state updates (Zustand)
+- Primitives only in useEffect deps
 
-- 200 OK, 201 Created, 204 No Content
-- 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found
-- 409 Conflict, 500 Internal Server Error
+## Detailed Documentation
+
+### Architecture & Patterns
+- `.agent/docs/backend-patterns.md` - Domain services, routes, errors
+- `.agent/docs/frontend-patterns.md` - React, state management, hooks
+- `.agent/docs/architecture-decisions.md` - Why we chose these technologies
+
+### Systems & Integration
+- `.agent/docs/workflow-system.md` - Workflow engine, Inngest
+- `.agent/docs/websocket-architecture.md` - Real-time communication
+- `.agent/docs/database-guide.md` - Prisma patterns, migrations
+
+### Operations
+- `.agent/docs/testing-best-practices.md` - Testing patterns
+- `.agent/docs/troubleshooting.md` - Common issues
+- `.agent/docs/deployment.md` - Production deployment
+
+### Component Guides
+- `apps/app/src/client/CLAUDE.md` - Frontend development
+- Root `CLAUDE.md` - Critical rules (imports, React, backend)
