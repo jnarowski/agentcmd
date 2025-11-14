@@ -130,18 +130,16 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
 
     try {
       const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      // In development, Vite runs on :5173 but backend is on :3456
-      const isDev = import.meta.env.DEV;
 
       // Allow override via VITE_WS_HOST for VPN/remote access
       // Examples: "10.0.1.100:3456", "vpn.example.com:3456"
+      // In dev, Vite proxy forwards /ws to backend port
       const wsHost =
         import.meta.env.VITE_WS_HOST ||
-        (isDev ? "localhost:3456" : window.location.host);
+        window.location.host;
       const wsUrl = `${wsProtocol}//${wsHost}/ws?token=${token}`;
 
       console.log("[WebSocket] 🌐 Creating new WebSocket connection:", {
-        isDev,
         wsHost,
         protocol: wsProtocol,
         override: import.meta.env.VITE_WS_HOST,

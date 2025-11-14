@@ -76,6 +76,11 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     const defaultConfig = getDefaultConfig();
     const configWithSecret = {
       ...defaultConfig,
+      // Override with env vars if present
+      port: process.env.PORT ? parseInt(process.env.PORT) : defaultConfig.port,
+      inngestPort: process.env.INNGEST_PORT ? parseInt(process.env.INNGEST_PORT) : defaultConfig.inngestPort,
+      host: process.env.HOST || defaultConfig.host,
+      logLevel: process.env.LOG_LEVEL as typeof defaultConfig.logLevel || defaultConfig.logLevel,
       jwtSecret,
     };
     saveConfig(configWithSecret);
@@ -145,9 +150,9 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     console.log(`  1. (Optional) Edit ${configPath} to customize settings`);
     console.log("  2. Run: agentcmd start");
     console.log("");
-    console.log("Default configuration:");
-    console.log("  Server Port:    3456");
-    console.log("  Inngest Port:   8288");
+    console.log("Configuration:");
+    console.log(`  Server Port:    ${configWithSecret.port}`);
+    console.log(`  Inngest Port:   ${configWithSecret.inngestPort}`);
     console.log(`  Database:       ${dbPath}`);
     console.log(`  Logs:           ${logsDir}/app.log`);
   } catch (error) {

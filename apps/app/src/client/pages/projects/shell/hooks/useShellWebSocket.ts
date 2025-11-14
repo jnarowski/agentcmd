@@ -82,9 +82,8 @@ export function useShellWebSocket({
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 
       // Allow override via VITE_WS_HOST for VPN/remote access
-      const isDev = import.meta.env.DEV;
-      const wsHost = import.meta.env.VITE_WS_HOST ||
-                     (isDev ? 'localhost:3456' : `${window.location.hostname}:3456`);
+      // In dev, Vite proxy forwards /shell to backend port
+      const wsHost = import.meta.env.VITE_WS_HOST || window.location.host;
       const wsUrl = `${protocol}//${wsHost}/shell?token=${encodeURIComponent(token)}`;
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
