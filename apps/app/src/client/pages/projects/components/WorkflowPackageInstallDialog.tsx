@@ -4,7 +4,7 @@
  */
 
 import { useState } from "react";
-import { Loader2, Copy, Check } from "lucide-react";
+import { Loader2, Copy, Check, CheckCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -81,25 +81,33 @@ export function WorkflowPackageInstallDialog({
         <div className="space-y-4">
           {installResult ? (
             <div className="space-y-4">
-              <Alert
-                variant={installResult.success ? "default" : "destructive"}
-              >
-                <AlertDescription>{installResult.message}</AlertDescription>
-              </Alert>
+              {!installResult.success && (
+                <Alert variant="destructive">
+                  <AlertDescription>{installResult.message}</AlertDescription>
+                </Alert>
+              )}
 
               {installResult.output && (
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Installation Output</p>
                   <div className="max-h-64 overflow-y-auto rounded border bg-muted/50 p-3">
                     <pre className="text-xs whitespace-pre-wrap font-mono">
-                      {installResult.output}
+                      {installResult.output.trim()}
                     </pre>
                   </div>
                 </div>
               )}
 
-              <div className="flex justify-end">
-                <Button onClick={handleClose}>Done</Button>
+              <div className="flex items-center justify-between">
+                {installResult.success && (
+                  <div className="flex items-center gap-2 text-sm text-green-600">
+                    <CheckCircle className="h-4 w-4" />
+                    <span>{installResult.message}</span>
+                  </div>
+                )}
+                <Button onClick={handleClose} className="ml-auto">
+                  Done
+                </Button>
               </div>
             </div>
           ) : (

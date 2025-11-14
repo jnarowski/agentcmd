@@ -113,18 +113,12 @@ export async function installWorkflowPackage({ projectPath }: InstallWorkflowPac
   message: string;
   output?: string;
 }> {
-  console.log("[installWorkflowPackage] Starting install for project:", projectPath);
-
   try {
     // Step 1: Ensure package.json exists
-    console.log("[installWorkflowPackage] Step 1: Ensuring package.json exists");
     await ensurePackageJson(projectPath);
-    console.log("[installWorkflowPackage] package.json verified");
 
     // Step 2: Detect package manager
-    console.log("[installWorkflowPackage] Step 2: Detecting package manager");
     const packageManager = await detectPackageManager(projectPath);
-    console.log("[installWorkflowPackage] Detected package manager:", packageManager);
 
     // Step 3: Install agentcmd-workflows
     const installArgs: Record<string, string[]> = {
@@ -133,16 +127,11 @@ export async function installWorkflowPackage({ projectPath }: InstallWorkflowPac
       npm: ["install", "--save-dev", "agentcmd-workflows"],
     };
 
-    console.log("[installWorkflowPackage] Step 3: Installing package");
-    console.log("[installWorkflowPackage] Running command:", packageManager, installArgs[packageManager].join(" "));
-
     const { stdout: installOutput } = await runCommand(
       packageManager,
       installArgs[packageManager],
       projectPath
     );
-
-    console.log("[installWorkflowPackage] Install completed successfully");
 
     // Step 4: Run agentcmd-workflows init
     try {
@@ -153,16 +142,11 @@ export async function installWorkflowPackage({ projectPath }: InstallWorkflowPac
 
       const initArgs = ["agentcmd-workflows", "init"];
 
-      console.log("[installWorkflowPackage] Step 4: Running init");
-      console.log("[installWorkflowPackage] Running command:", initCommand, initArgs.join(" "));
-
       const { stdout: initOutput } = await runCommand(
         initCommand,
         initArgs,
         projectPath
       );
-
-      console.log("[installWorkflowPackage] Init completed successfully");
 
       return {
         success: true,
@@ -171,7 +155,6 @@ export async function installWorkflowPackage({ projectPath }: InstallWorkflowPac
       };
     } catch (initError) {
       // Init failed, but install succeeded
-      console.error("[installWorkflowPackage] Init failed:", initError);
       return {
         success: false,
         message:
@@ -180,7 +163,6 @@ export async function installWorkflowPackage({ projectPath }: InstallWorkflowPac
       };
     }
   } catch (error) {
-    console.error("[installWorkflowPackage] Install failed:", error);
     return {
       success: false,
       message:

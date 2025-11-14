@@ -598,10 +598,6 @@ export async function projectRoutes(fastify: FastifyInstance) {
       preHandler: fastify.authenticate,
       schema: {
         params: projectIdSchema,
-        response: {
-          200: workflowSdkInstallResponseSchema,
-          404: errorResponse,
-        },
       },
     },
     async (request, reply) => {
