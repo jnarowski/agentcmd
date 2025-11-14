@@ -386,7 +386,7 @@ export function useInstallWorkflowPackage(): UseMutationResult<
 > {
   return useMutation({
     mutationFn: (projectId) => installWorkflowPackage(projectId),
-    onSuccess: (_data, _projectId) => {
+    onSuccess: () => {
       // Note: Query invalidation removed - dialog handles refresh timing
       // The dialog will trigger refresh when user closes it
     },

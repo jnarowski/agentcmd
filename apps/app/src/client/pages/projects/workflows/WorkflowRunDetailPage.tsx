@@ -9,7 +9,7 @@ import { useWorkflowDefinition } from "./hooks/useWorkflowDefinition";
 import { useWorkflowWebSocket } from "./hooks/useWorkflowWebSocket";
 import { useWorkflowDetailPanel } from "./hooks/useWorkflowDetailPanel";
 
-export function WorkflowRunDetail() {
+function WorkflowRunDetailPage() {
   const { projectId, definitionId, runId } = useParams<{
     projectId: string;
     definitionId: string;
@@ -155,3 +155,5 @@ export function WorkflowRunDetail() {
     </div>
   );
 }
+
+export default WorkflowRunDetailPage;

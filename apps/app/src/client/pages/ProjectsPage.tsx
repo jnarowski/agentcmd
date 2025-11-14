@@ -30,7 +30,7 @@ import { GlobalOnboardingSuggestions } from "@/client/pages/projects/components/
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
 import { truncatePath } from "@/client/utils/cn";
 
-export default function Projects() {
+export default function ProjectsPage() {
   useDocumentTitle("Projects | Agent Workflows");
   const navigate = useNavigate();
   const { data: projects, isLoading } = useProjects();

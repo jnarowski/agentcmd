@@ -76,7 +76,7 @@ describe("installWorkflowPackage", () => {
 
     expect(child_process.spawn).toHaveBeenCalledWith(
       "pnpm",
-      ["agentcmd-workflows", "init", "--yes"],
+      ["agentcmd-workflows", "init"],
       expect.objectContaining({ cwd: mockProjectPath })
     );
 
@@ -110,8 +110,8 @@ describe("installWorkflowPackage", () => {
     // When: installWorkflowPackage()
     const result = await installWorkflowPackage({ projectPath: mockProjectPath });
 
-    // Then: Returns success=true with warning message
-    expect(result.success).toBe(true);
+    // Then: Returns success=false with warning message
+    expect(result.success).toBe(false);
     expect(result.message).toContain("initialization failed");
     expect(result.message).toContain("manually");
   });

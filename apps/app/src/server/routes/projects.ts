@@ -26,7 +26,6 @@ import {
   starProjectSchema,
   projectResponseSchema,
   projectSyncResponseSchema,
-  workflowSdkInstallResponseSchema,
 } from "@/server/domain/project/schemas";
 import {
   fileTreeResponseSchema,

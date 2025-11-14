@@ -8,7 +8,7 @@ import { useWorkflowRuns } from "./hooks/useWorkflowRuns";
 import { useWorkflowWebSocket } from "./hooks/useWorkflowWebSocket";
 import { getPhaseId, getPhaseLabel } from "@/shared/utils/phase.utils";
 
-export function WorkflowDefinitionView() {
+function WorkflowDefinitionPage() {
   const { projectId, definitionId } = useParams<{
     projectId: string;
     definitionId: string;
@@ -141,3 +141,5 @@ export function WorkflowDefinitionView() {
     </div>
   );
 }
+
+export default WorkflowDefinitionPage;

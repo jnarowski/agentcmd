@@ -6,7 +6,7 @@ import { WorkflowPackageInstallDialog } from "@/client/pages/projects/components
 import { workflowKeys } from "@/client/pages/projects/workflows/hooks/queryKeys";
 import { useState } from "react";
 
-export function ProjectWorkflowsOnboarding() {
+function ProjectWorkflowsOnboardingPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const queryClient = useQueryClient();
   const { data: project } = useProject(projectId!);
@@ -172,3 +172,5 @@ export default defineWorkflow({
     </>
   );
 }
+
+export default ProjectWorkflowsOnboardingPage;

@@ -17,7 +17,7 @@ export interface ProjectWorkflowsViewProps {
   projectId?: string;
 }
 
-export function ProjectWorkflowsView({
+function ProjectWorkflowsPage({
   projectId: propProjectId,
 }: ProjectWorkflowsViewProps) {
   const { projectId: paramProjectId } = useParams<{ projectId: string }>();
@@ -184,3 +184,5 @@ export function ProjectWorkflowsView({
     </div>
   );
 }
+
+export default ProjectWorkflowsPage;

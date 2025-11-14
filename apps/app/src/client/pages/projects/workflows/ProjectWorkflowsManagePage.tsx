@@ -11,7 +11,7 @@ import { useUnarchiveWorkflowDefinition } from "./hooks/useUnarchiveWorkflowDefi
 import { useResyncWorkflows } from "./hooks/useResyncWorkflows";
 import type { WorkflowDefinition } from "@/client/pages/projects/workflows/types";
 
-export function ProjectWorkflowsManage() {
+function ProjectWorkflowsManagePage() {
   const { projectId } = useParams<{ projectId: string }>();
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
   const [unarchiveDialogOpen, setUnarchiveDialogOpen] = useState(false);
@@ -136,3 +136,5 @@ export function ProjectWorkflowsManage() {
     </div>
   );
 }
+
+export default ProjectWorkflowsManagePage;

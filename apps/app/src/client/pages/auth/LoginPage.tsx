@@ -6,7 +6,7 @@ import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
 import { RandomBackground } from "@/client/components/backgrounds/RandomBackground";
 import type { FormEvent } from "react";
 
-function Login() {
+function LoginPage() {
   useDocumentTitle("Login | Agent Workflows");
   // TODO: Remove prefilled credentials before production
   const [email, setEmail] = useState("admin@example.com");
@@ -59,4 +59,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default LoginPage;

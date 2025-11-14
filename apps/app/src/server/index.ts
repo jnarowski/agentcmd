@@ -47,6 +47,56 @@ import { initializeWorkflowEngine } from "@/server/domain/workflow/services/engi
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+/**
+ * Setup process-level error handlers for uncaught exceptions and unhandled rejections.
+ * These handlers prevent silent crashes by logging errors before graceful shutdown.
+ *
+ * Best practice: Crash on uncaught errors to prevent memory/file descriptor leaks.
+ */
+function setupProcessErrorHandlers(fastify: ReturnType<typeof Fastify>) {
+  process.on('uncaughtException', (error: Error) => {
+    fastify.log.fatal(
+      {
+        err: error,
+        stack: error.stack
+      },
+      'Uncaught Exception - process will exit'
+    );
+
+    // Attempt graceful shutdown
+    fastify.close(() => {
+      process.exit(1);
+    });
+
+    // Force exit after 10s if graceful shutdown hangs
+    setTimeout(() => {
+      fastify.log.fatal('Force exiting after shutdown timeout');
+      process.exit(1);
+    }, 10000).unref();
+  });
+
+  process.on('unhandledRejection', (reason: unknown, promise: Promise<unknown>) => {
+    fastify.log.fatal(
+      {
+        reason,
+        promise: String(promise)
+      },
+      'Unhandled Promise Rejection - process will exit'
+    );
+
+    // Attempt graceful shutdown
+    fastify.close(() => {
+      process.exit(1);
+    });
+
+    // Force exit after 10s if graceful shutdown hangs
+    setTimeout(() => {
+      fastify.log.fatal('Force exiting after shutdown timeout');
+      process.exit(1);
+    }, 10000).unref();
+  });
+}
+
 export async function createServer() {
   // Validate configuration on startup (will throw if invalid)
   const serverConfig = config.server;
@@ -115,6 +165,9 @@ export async function createServer() {
           },
   }).withTypeProvider<ZodTypeProvider>();
 
+  // Setup process-level error handlers
+  setupProcessErrorHandlers(fastify);
+
   // Intercept console.log/error/warn and redirect to Pino logger
   // This captures console.log calls from dependencies like agent-cli-sdk
   const originalConsoleLog = console.log;
@@ -171,6 +224,28 @@ export async function createServer() {
           code: "VALIDATION_ERROR",
           details: error.validation,
           statusCode: 400,
+        },
+      });
+    }
+
+    // Handle response serialization errors (prevents silent crashes)
+    if (error.name === 'ResponseSerializationError' ||
+        error.code === 'FST_ERR_REP_INVALID_PAYLOAD_TYPE') {
+      fastify.log.error(
+        {
+          err: error,
+          url: request.url,
+          method: request.method,
+          userId: request.user?.id,
+        },
+        'Response serialization error - likely invalid response schema'
+      );
+
+      return reply.status(500).send({
+        error: {
+          message: 'Internal server error',
+          statusCode: 500,
+          code: 'SERIALIZATION_ERROR',
         },
       });
     }

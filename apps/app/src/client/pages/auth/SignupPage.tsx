@@ -5,7 +5,7 @@ import { useAuthStore } from "@/client/stores/index";
 import { SignupForm } from "@/client/pages/auth/components/SignupForm";
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
 
-function Signup() {
+function SignupPage() {
   useDocumentTitle("Sign Up | Agent Workflows");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -70,4 +70,4 @@ function Signup() {
   );
 }
 
-export default Signup;
+export default SignupPage;

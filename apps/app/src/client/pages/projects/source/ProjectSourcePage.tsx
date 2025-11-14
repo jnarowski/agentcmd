@@ -11,7 +11,7 @@ import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
 import { useActiveProject } from "@/client/hooks/navigation";
 
-export default function ProjectSource() {
+export default function ProjectSourcePage() {
   const { projectId } = useActiveProject();
   const { data: project } = useProject(projectId!);
   const navigate = useNavigate();

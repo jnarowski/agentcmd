@@ -6,22 +6,22 @@ import ProtectedLayout from "@/client/layouts/ProtectedLayout";
 import AuthLayout from "@/client/layouts/AuthLayout";
 import ProjectDetailLayout from "@/client/layouts/ProjectDetailLayout";
 import WorkflowLayout from "@/client/layouts/WorkflowLayout";
-import Projects from "@/client/pages/Projects";
-import ProjectHome from "@/client/pages/ProjectHome";
-import NewSession from "@/client/pages/projects/sessions/NewSession";
-import ProjectSession from "@/client/pages/projects/sessions/ProjectSession";
-import ProjectShell from "@/client/pages/projects/shell/ProjectShell";
-import ProjectSource from "@/client/pages/projects/source/ProjectSource";
-import { ProjectWorkflowsView } from "@/client/pages/projects/workflows/ProjectWorkflowsView";
-import { ProjectWorkflowsListView } from "@/client/pages/projects/workflows/ProjectWorkflowsListView";
-import { ProjectWorkflowsManage } from "@/client/pages/projects/workflows/ProjectWorkflowsManage";
-import { ProjectWorkflowsOnboarding } from "@/client/pages/projects/workflows/ProjectWorkflowsOnboarding";
-import { WorkflowDefinitionView } from "@/client/pages/projects/workflows/WorkflowDefinitionView";
-import { WorkflowRunDetail } from "@/client/pages/projects/workflows/WorkflowRunDetail";
-import NewWorkflowRun from "@/client/pages/projects/workflows/NewWorkflowRun";
-import Login from "@/client/pages/auth/Login";
-import Signup from "@/client/pages/auth/Signup";
-import Components from "@/client/pages/Components";
+import ProjectsPage from "@/client/pages/ProjectsPage";
+import ProjectHomePage from "@/client/pages/ProjectHomePage";
+import NewSessionPage from "@/client/pages/projects/sessions/NewSessionPage";
+import ProjectSessionPage from "@/client/pages/projects/sessions/ProjectSessionPage";
+import ProjectShellPage from "@/client/pages/projects/shell/ProjectShellPage";
+import ProjectSourcePage from "@/client/pages/projects/source/ProjectSourcePage";
+import ProjectWorkflowsPage from "@/client/pages/projects/workflows/ProjectWorkflowsPage";
+import ProjectWorkflowsListPage from "@/client/pages/projects/workflows/ProjectWorkflowsListPage";
+import ProjectWorkflowsManagePage from "@/client/pages/projects/workflows/ProjectWorkflowsManagePage";
+import ProjectWorkflowsOnboardingPage from "@/client/pages/projects/workflows/ProjectWorkflowsOnboardingPage";
+import WorkflowDefinitionPage from "@/client/pages/projects/workflows/WorkflowDefinitionPage";
+import WorkflowRunDetailPage from "@/client/pages/projects/workflows/WorkflowRunDetailPage";
+import NewWorkflowRunPage from "@/client/pages/projects/workflows/NewWorkflowRunPage";
+import LoginPage from "@/client/pages/auth/LoginPage";
+import SignupPage from "@/client/pages/auth/SignupPage";
+import ComponentsPage from "@/client/pages/ComponentsPage";
 
 function AppContent() {
   return (
@@ -29,12 +29,12 @@ function AppContent() {
       <ShellProvider>
         <Routes>
           {/* Public routes */}
-          <Route path="/components" element={<Components />} />
+          <Route path="/components" element={<ComponentsPage />} />
 
           {/* Auth routes */}
           <Route element={<AuthLayout />}>
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
           </Route>
 
           {/* Protected routes with sidebar */}
@@ -43,34 +43,34 @@ function AppContent() {
             <Route index element={<Navigate to="/projects" replace />} />
 
             {/* Projects list */}
-            <Route path="/projects" element={<Projects />} />
+            <Route path="/projects" element={<ProjectsPage />} />
 
             {/* Project detail with nested routes */}
             <Route path="/projects/:id" element={<ProjectDetailLayout />}>
-              <Route index element={<ProjectHome />} />
+              <Route index element={<ProjectHomePage />} />
               <Route
                 path="chat"
                 element={<Navigate to="sessions/new" replace />}
               />
-              <Route path="sessions/new" element={<NewSession />} />
-              <Route path="sessions/:sessionId" element={<ProjectSession />} />
-              <Route path="shell" element={<ProjectShell />} />
+              <Route path="sessions/new" element={<NewSessionPage />} />
+              <Route path="sessions/:sessionId" element={<ProjectSessionPage />} />
+              <Route path="shell" element={<ProjectShellPage />} />
               <Route path="source" element={<Navigate to="source/files" replace />} />
-              <Route path="source/files" element={<ProjectSource />} />
-              <Route path="source/git" element={<ProjectSource />} />
+              <Route path="source/files" element={<ProjectSourcePage />} />
+              <Route path="source/git" element={<ProjectSourcePage />} />
             </Route>
           </Route>
 
           {/* Workflow routes with dedicated layout (no sidebar) */}
           <Route path="/projects/:projectId" element={<WorkflowLayout />}>
-            <Route path="workflows" element={<ProjectWorkflowsView />} />
-            <Route path="workflows/list" element={<ProjectWorkflowsListView />} />
-            <Route path="workflows/onboarding" element={<ProjectWorkflowsOnboarding />} />
-            <Route path="workflows/manage" element={<ProjectWorkflowsManage />} />
-            <Route path="workflows/new" element={<NewWorkflowRun />} />
-            <Route path="workflows/:definitionId/new" element={<NewWorkflowRun />} />
-            <Route path="workflows/:definitionId" element={<WorkflowDefinitionView />} />
-            <Route path="workflows/:definitionId/runs/:runId" element={<WorkflowRunDetail />} />
+            <Route path="workflows" element={<ProjectWorkflowsPage />} />
+            <Route path="workflows/list" element={<ProjectWorkflowsListPage />} />
+            <Route path="workflows/onboarding" element={<ProjectWorkflowsOnboardingPage />} />
+            <Route path="workflows/manage" element={<ProjectWorkflowsManagePage />} />
+            <Route path="workflows/new" element={<NewWorkflowRunPage />} />
+            <Route path="workflows/:definitionId/new" element={<NewWorkflowRunPage />} />
+            <Route path="workflows/:definitionId" element={<WorkflowDefinitionPage />} />
+            <Route path="workflows/:definitionId/runs/:runId" element={<WorkflowRunDetailPage />} />
           </Route>
         </Routes>
       </ShellProvider>

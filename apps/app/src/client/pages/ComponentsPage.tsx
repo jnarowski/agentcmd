@@ -9,7 +9,7 @@ import { AgentLoadingIndicator } from "@/client/pages/projects/sessions/componen
 import { Button } from "@/client/components/ui/button";
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
 
-export default function Components() {
+export default function ComponentsPage() {
   useDocumentTitle("Components | Agent Workflows");
   const [isLoadingIndicatorActive, setIsLoadingIndicatorActive] =
     useState(false);

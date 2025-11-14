@@ -17,7 +17,7 @@ import { generateUUID } from "@/client/utils/cn";
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
 
-export default function ProjectSession() {
+export default function ProjectSessionPage() {
   const navigate = useNavigate();
   const params = useParams<{ sessionId: string }>();
   const { projectId } = useActiveProject();

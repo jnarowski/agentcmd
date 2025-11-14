@@ -5,7 +5,7 @@ import { useActiveProject } from "@/client/hooks/navigation";
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
 
-export default function ProjectShell() {
+export default function ProjectShellPage() {
   const { projectId } = useActiveProject();
   const { data: project } = useProject(projectId!);
 

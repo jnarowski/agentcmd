@@ -20,7 +20,7 @@ import { SessionEventTypes } from "@/shared/types/websocket.types";
 import { useSettings } from "@/client/hooks/useSettings";
 import type { PermissionMode } from "agent-cli-sdk";
 
-export default function NewSession() {
+export default function NewSessionPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { projectId } = useActiveProject();

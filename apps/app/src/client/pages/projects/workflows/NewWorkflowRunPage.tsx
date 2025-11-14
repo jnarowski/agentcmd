@@ -5,7 +5,7 @@ import { useWorkflowDefinitions } from "./hooks/useWorkflowDefinitions";
 import { NewRunForm } from "./components/NewRunForm";
 import type { WorkflowRun } from "./types";
 
-export default function NewWorkflowRun() {
+export default function NewWorkflowRunPage() {
   const navigate = useNavigate();
   const { projectId, id, definitionId } = useParams();
   const [searchParams] = useSearchParams();

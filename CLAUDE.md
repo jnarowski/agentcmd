@@ -313,6 +313,10 @@ pages/
 
 - PascalCase: All components except shadcn/ui
 - kebab-case: Only `components/ui/` (shadcn/ui)
+- **Page components**: Must use `XXXPage` suffix with default exports (route-mounted only)
+  - ✅ `export default function ProjectsPage()`
+  - ✅ `export default function LoginPage()`
+  - ❌ `export function Projects()` or `export { Projects }`
 
 ## Workflow System Best Practices
 

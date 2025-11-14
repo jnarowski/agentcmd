@@ -29,7 +29,7 @@ import remarkGfm from "remark-gfm";
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
 import { truncatePath } from "@/client/utils/cn";
 
-export default function ProjectHome() {
+export default function ProjectHomePage() {
   const { id } = useParams<{ id: string }>();
   const { data: project, isLoading } = useProject(id!);
   const { data: sessions = [] } = useSessions({ projectId: id });
