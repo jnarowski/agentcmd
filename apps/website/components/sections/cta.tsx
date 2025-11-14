@@ -5,8 +5,11 @@ export function CTA() {
   return (
     <Section id="cta">
       <div className="border overflow-hidden relative text-center py-16 mx-auto">
-        <p className="max-w-3xl text-foreground mb-6 text-balance mx-auto font-medium text-3xl">
-          Ready to build your next AI agent?
+        <p className="max-w-3xl text-foreground mb-2 text-balance mx-auto font-medium text-3xl">
+          Build Workflows That Match Your Process
+        </p>
+        <p className="text-muted-foreground mb-6 text-balance mx-auto text-lg">
+          Not the other way around.
         </p>
 
         <div className="flex justify-center">

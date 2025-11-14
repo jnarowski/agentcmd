@@ -94,144 +94,121 @@ export default defineWorkflow({
   },
   {
     id: 3,
-    title: "Multi-Agent Collaboration",
+    title: "Parallel Testing with Worktrees",
     description:
-      "Set up multiple AI agents to work together on a complex task.",
-    code: `import { Agent, MultiAgentSystem } from 'ai-agent-sdk';
+      "Test multiple features in parallel using git worktrees. Run workflows simultaneously without conflicts.",
+    code: `import { defineWorkflow } from "agentcmd-workflows";
 
-const researchAgent = new Agent('Researcher');
-const analysisAgent = new Agent('Analyst');
-const reportAgent = new Agent('Reporter');
+export default defineWorkflow({
+  id: "parallel-tests",
+  name: "Multi-Branch Testing",
+  description: "Test multiple features in parallel using git worktrees"
+}, async ({ step }) => {
 
-const system = new MultiAgentSystem('MarketResearch');
+  const branches = ["feature-auth", "feature-payments", "feature-analytics"];
 
-system.addAgent(researchAgent, {
-  task: 'collectData',
-  output: 'rawData'
-});
+  // Run tests in parallel across worktrees
+  const results = await Promise.all(
+    branches.map(branch =>
+      step.cli(\`test-\${branch}\`, {
+        command: \`git worktree add ../test-\${branch} \${branch} && cd ../test-\${branch} && pnpm test\`,
+        workingDir: process.cwd()
+      })
+    )
+  );
 
-system.addAgent(analysisAgent, {
-  task: 'analyzeData',
-  input: 'rawData',
-  output: 'analysisResults'
-});
+  // Aggregate results with AI
+  const summary = await step.ai("summarize", {
+    model: "gpt-4o",
+    prompt: \`Summarize these test results: \${JSON.stringify(results)}\`
+  });
 
-system.addAgent(reportAgent, {
-  task: 'generateReport',
-  input: 'analysisResults',
-  output: 'finalReport'
-});
-
-const runResearch = async () => {
-  const finalReport = await system.run();
-  console.log('Research completed:', finalReport);
-};
-
-runResearch();`,
+  await step.annotate(\`Test Summary: \${summary}\`);
+});`,
   },
   {
     id: 4,
-    title: "Tool Integration",
-    description: "Integrate external tools and APIs into an AI agent workflow.",
-    code: `import { Agent, Tool } from 'ai-agent-sdk';
-import { Configuration, OpenAIApi } from 'openai';
+    title: "E2E Testing with Visual Artifacts",
+    description: "Run Playwright tests and capture screenshots for AI analysis. Automatically detect and fix visual bugs.",
+    code: `import { defineWorkflow } from "agentcmd-workflows";
 
-const agent = new Agent('ResearchAssistant');
+export default defineWorkflow({
+  id: "e2e-visual-testing",
+  name: "E2E Tests + Visual Regression",
+  description: "Run tests and capture screenshots for AI analysis"
+}, async ({ step }) => {
 
-const openaiTool = new Tool('OpenAI', {
-  action: async (prompt: string) => {
-    const configuration = new Configuration({
-      apiKey: process.env.OPENAI_API_KEY,
+  // Run E2E tests
+  await step.cli("run-playwright", {
+    command: "pnpm playwright test --headed"
+  });
+
+  // Capture screenshots
+  await step.artifact("test-screenshots", {
+    path: "./test-results/screenshots/*.png",
+    description: "E2E test screenshots"
+  });
+
+  // AI analyzes screenshots for issues
+  const analysis = await step.ai("analyze-visuals", {
+    model: "gpt-4o",
+    prompt: "Analyze these test screenshots. Are there any visual bugs or UI issues?",
+    attachments: ["./test-results/screenshots/*.png"]
+  });
+
+  if (analysis.issuesFound) {
+    await step.annotate(\`⚠️ Visual issues detected: \${analysis.summary}\`);
+
+    // Auto-fix with agent
+    await step.agent("fix-ui-issues", {
+      agent: "claude",
+      prompt: \`Fix these UI issues: \${analysis.issues}\`
     });
-    const openai = new OpenAIApi(configuration);
-    const response = await openai.createCompletion({
-      model: "text-davinci-002",
-      prompt,
-    });
-    return response.data.choices[0].text;
   }
-});
-
-const searchTool = new Tool('GoogleSearch', {
-  action: async (query: string) => {
-    const url = new URL('https://www.googleapis.com/customsearch/v1');
-    url.searchParams.append('key', process.env.GOOGLE_API_KEY);
-    url.searchParams.append('cx', process.env.GOOGLE_SEARCH_ENGINE_ID);
-    url.searchParams.append('q', query);
-
-    const response = await fetch(url);
-    const data = await response.json();
-    return data.items.slice(0, 5);
-  }
-});
-
-agent.addTool(openaiTool);
-agent.addTool(searchTool);
-
-const performResearch = async (topic: string) => {
-  const researchResult = await agent.performResearch(topic);
-  console.log('Research results:', researchResult);
-};
-
-performResearch('AI advancements in 2023');`,
+});`,
   },
   {
     id: 5,
-    title: "Customizable Agent Behavior",
+    title: "Multi-Agent Code Review",
     description:
-      "Design a specialized AI agent with custom decision-making logic.",
-    code: `import { Agent, KnowledgeBase } from 'ai-agent-sdk';
+      "Get different AI perspectives on your code. Claude focuses on architecture, Codex on bugs, GPT on readability.",
+    code: `import { defineWorkflow } from "agentcmd-workflows";
 
-class CustomerSupportAgent extends Agent {
-  private knowledgeBase: KnowledgeBase;
+export default defineWorkflow({
+  id: "multi-agent-review",
+  name: "360° Code Review",
+  description: "Get different AI perspectives on your code"
+}, async ({ step }) => {
 
-  constructor(name: string) {
-    super(name);
-    this.knowledgeBase = new KnowledgeBase('support-docs.json');
-  }
+  // Claude focuses on architecture
+  const architectureReview = await step.agent("claude-architecture", {
+    agent: "claude",
+    prompt: "Review this PR focusing on architecture and design patterns"
+  });
 
-  async decideAction(input: string): Promise<string> {
-    if (this.isSimpleQuery(input)) {
-      return this.provideDirectAnswer(input);
-    } else if (this.needsEscalation(input)) {
-      return this.escalateToHuman(input);
-    } else {
-      return this.generateDetailedResponse(input);
-    }
-  }
+  // Codex focuses on bugs and edge cases
+  const bugReview = await step.agent("codex-bugs", {
+    agent: "codex",
+    prompt: "Review this PR focusing on potential bugs and edge cases"
+  });
 
-  private isSimpleQuery(input: string): boolean {
-    // Custom logic to determine if the query is simple
-    return input.split(' ').length < 5;
-  }
+  // GPT-4 focuses on readability
+  const readabilityReview = await step.ai("gpt-readability", {
+    model: "gpt-4o",
+    prompt: "Review this PR focusing on code readability and documentation"
+  });
 
-  private needsEscalation(input: string): boolean {
-    // Custom logic to decide if human intervention is needed
-    return input.toLowerCase().includes('urgent') || input.toLowerCase().includes('complaint');
-  }
+  // Synthesize reviews
+  const synthesis = await step.ai("synthesize", {
+    model: "gpt-4o",
+    prompt: \`Synthesize these reviews into actionable feedback:
+    Architecture: \${architectureReview}
+    Bugs: \${bugReview}
+    Readability: \${readabilityReview}\`
+  });
 
-  private async provideDirectAnswer(input: string): Promise<string> {
-    return this.knowledgeBase.getQuickAnswer(input);
-  }
-
-  private async escalateToHuman(input: string): Promise<string> {
-    // Logic to forward the query to a human support agent
-    return "Your query has been escalated to our human support team. They will contact you shortly.";
-  }
-
-  private async generateDetailedResponse(input: string): Promise<string> {
-    // Use AI to generate a detailed response
-    return this.generateResponse(input);
-  }
-}
-
-const handleCustomerQuery = async (query: string) => {
-  const supportAgent = new CustomerSupportAgent('HelpDesk');
-  const response = await supportAgent.handleQuery(query);
-  console.log('Agent response:', response);
-};
-
-handleCustomerQuery("How do I reset my password?");`,
+  await step.annotate(\`📋 Final Review:\\n\${synthesis}\`);
+});`,
   },
 ];
 

@@ -73,10 +73,11 @@ export async function installCommand(options: InstallOptions): Promise<void> {
       throw new Error(`Prisma client generation failed with exit code ${generateResult.status}`);
     }
 
-    // Use db push for initial setup (no migrations needed)
+    // Apply migrations for initial setup
+    console.log("Applying database migrations...");
     const result = spawnSync(
       "npx",
-      ["prisma", "db", "push", "--skip-generate", `--schema=${schemaPath}`],
+      ["prisma", "migrate", "deploy", `--schema=${schemaPath}`],
       {
         stdio: "inherit",
         env: process.env,
