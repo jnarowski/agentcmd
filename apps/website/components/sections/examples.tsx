@@ -12,6 +12,67 @@ interface FeatureOption {
 const featureOptions: FeatureOption[] = [
   {
     id: 1,
+    title: "Implement & Review Workflow",
+    description: "Automated workflow that implements a spec and reviews the implementation.",
+    code: `import {
+  buildSlashCommand,
+  defineWorkflow,
+  type CmdImplementSpecResponse,
+  type CmdReviewSpecImplementationResponse,
+} from "agentcmd-workflows";
+
+export default defineWorkflow(
+  {
+    id: "implement-review-workflow",
+    name: "Implement Review Workflow",
+    description: "Implements a spec file and reviews the implementation",
+    phases: [
+      { id: "setup", label: "Setup" },
+      { id: "implement", label: "Implement" },
+      { id: "review", label: "Review" },
+    ],
+  },
+  async ({ event, step }) => {
+    const { workingDir, specFile } = event.data;
+
+    await step.phase("implement", async () => {
+      const response = await step.agent<CmdImplementSpecResponse>(
+        "implement-spec",
+        {
+          agent: "claude",
+          json: true,
+          prompt: buildSlashCommand("/cmd:implement-spec", {
+            specIdOrNameOrPath: specFile,
+            format: "json",
+          }),
+          workingDir,
+        }
+      );
+
+      return response;
+    });
+
+    await step.phase("review", async () => {
+      const response = await step.agent<CmdReviewSpecImplementationResponse>(
+        "review-spec-implementation",
+        {
+          agent: "claude",
+          json: true,
+          prompt: buildSlashCommand("/cmd:review-spec-implementation", {
+            specIdOrNameOrPath: specFile,
+            format: "json",
+          }),
+          workingDir,
+        }
+      );
+
+      return response;
+    });
+  }
+);`,
+  },
+  {
+    id: 2,
     title: "Simple Agent Workflow",
     description: "Create a basic AI agent workflow with multiple agents.",
     code: `import { Swarm, Agent } from 'ai-agent-sdk';
@@ -29,7 +90,7 @@ const agentA = new Agent({
 });
 
 const agentB = new Agent({
-    name: "Agent B", 
+    name: "Agent B",
     instructions: "Only speak in Haikus.",
 });
 
@@ -44,7 +105,7 @@ const run = async () => {
 run();`,
   },
   {
-    id: 2,
+    id: 3,
     title: "Multi-Agent Collaboration",
     description:
       "Set up multiple AI agents to work together on a complex task.",
@@ -81,7 +142,7 @@ const runResearch = async () => {
 runResearch();`,
   },
   {
-    id: 3,
+    id: 4,
     title: "Tool Integration",
     description: "Integrate external tools and APIs into an AI agent workflow.",
     code: `import { Agent, Tool } from 'ai-agent-sdk';
@@ -127,7 +188,7 @@ const performResearch = async (topic: string) => {
 performResearch('AI advancements in 2023');`,
   },
   {
-    id: 4,
+    id: 5,
     title: "Customizable Agent Behavior",
     description:
       "Design a specialized AI agent with custom decision-making logic.",

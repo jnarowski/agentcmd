@@ -52,12 +52,16 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     // 3. Generate JWT secret
     const jwtSecret = randomBytes(32).toString("base64");
 
-    // 4. Run Prisma migrations
+    // 4. Initialize database with Prisma
     process.env.DATABASE_URL = `file:${dbPath}`;
 
+    // Calculate absolute path to schema (relative to bundled CLI location)
+    const schemaPath = join(__dirname, 'prisma/schema.prisma');
+
+    // Use db push for initial setup (no migrations needed)
     const result = spawnSync(
       "npx",
-      ["prisma", "migrate", "deploy", "--schema=./dist/prisma/schema.prisma"],
+      ["prisma", "db", "push", "--skip-generate", `--schema=${schemaPath}`],
       {
         stdio: "inherit",
         env: process.env,
@@ -65,11 +69,11 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     );
 
     if (result.error) {
-      throw new Error(`Failed to run Prisma migrations: ${result.error.message}`);
+      throw new Error(`Failed to initialize database: ${result.error.message}`);
     }
 
     if (result.status !== 0) {
-      throw new Error(`Prisma migrations failed with exit code ${result.status}`);
+      throw new Error(`Database initialization failed with exit code ${result.status}`);
     }
 
     // 5. Create config file with generated JWT secret
@@ -135,8 +139,7 @@ export async function installCommand(options: InstallOptions): Promise<void> {
 
     // 7. Success messaging
     console.log(`✓ Created ${homeDir}/`);
-    console.log(`✓ Created database at ${dbPath}`);
-    console.log(`✓ Applied database migrations`);
+    console.log(`✓ Initialized database at ${dbPath}`);
     console.log(`✓ Created config at ${configPath}`);
     console.log(`✓ Generated JWT secret`);
     if (installResult.status === 0) {
