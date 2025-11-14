@@ -10,13 +10,18 @@ import { useRescanTasks } from "@/client/hooks/useRescanTasks";
 import { useNavigate } from "react-router-dom";
 import { RefreshCw, Loader2, FileText } from "lucide-react";
 import { useSettings } from "@/client/hooks/useSettings";
-import { SessionListItem } from "@/client/pages/projects/sessions/components/SessionListItem";
+import { useProjects } from "@/client/pages/projects/hooks/useProjects";
+import { useNavigationStore } from "@/client/stores";
+import { SessionItem } from "@/client/components/sidebar/SessionItem";
 import type { SessionResponse } from "@/shared/types";
+import type { AgentType } from "@/shared/types/agent.types";
 import { formatDistanceToNow } from "date-fns";
 
 export function NavTasks() {
   const navigate = useNavigate();
   const { data: settings } = useSettings();
+  const { data: projects } = useProjects();
+  const activeSessionId = useNavigationStore((s) => s.activeSessionId);
 
   // Get project filter: only use if explicitly set
   const projectFilter =
@@ -128,14 +133,46 @@ export function NavTasks() {
                   </span>
                 </div>
                 <SidebarMenu>
-                  {data.planningSessions.map((session) => (
-                    <SidebarMenuItem key={session.id}>
-                      <SessionListItem
-                        session={session as SessionResponse}
+                  {data.planningSessions.map((session) => {
+                    const project = projects?.find((p) => p.id === session.projectId);
+                    const projectName = project?.name ?? session.projectId;
+
+                    // Convert PlanningSessionSummary to SessionResponse-compatible object
+                    const sessionResponse: SessionResponse = {
+                      id: session.id,
+                      projectId: session.projectId,
+                      userId: session.userId,
+                      name: session.name,
+                      agent: session.agent as AgentType,
+                      type: session.type as "chat" | "workflow",
+                      permission_mode: "plan", // All planning sessions have plan mode
+                      state: session.state as "idle" | "working" | "error",
+                      is_archived: session.is_archived,
+                      archived_at: null,
+                      created_at: session.created_at,
+                      updated_at: session.updated_at,
+                      metadata: {
+                        totalTokens: 0,
+                        messageCount: 0,
+                        lastMessageAt: new Date(session.updated_at).toISOString(),
+                        firstMessagePreview: "",
+                      },
+                    };
+
+                    return (
+                      <SessionItem
+                        key={session.id}
+                        id={session.id}
+                        name={session.name || `Session ${session.id.slice(0, 8)}`}
                         projectId={session.projectId}
+                        projectName={projectName}
+                        status={session.state}
+                        agent={session.agent as AgentType}
+                        session={sessionResponse}
+                        isActive={session.id === activeSessionId}
                       />
-                    </SidebarMenuItem>
-                  ))}
+                    );
+                  })}
                 </SidebarMenu>
               </>
             )}

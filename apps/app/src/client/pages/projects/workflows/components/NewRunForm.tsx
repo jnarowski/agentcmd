@@ -13,7 +13,6 @@ import { CodeEditor } from "@/client/components/CodeEditor";
 import { useCreateWorkflow } from "@/client/pages/projects/workflows/hooks/useWorkflowMutations";
 import { useProjectSpecs } from "@/client/pages/projects/hooks/useProjectSpecs";
 import { useProjectBranches } from "@/client/pages/projects/hooks/useProjectBranches";
-import { useSessions } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
 import { useTasks } from "@/client/hooks/useTasks";
 import { api } from "@/client/utils/api";
 import { cn } from "@/client/utils/cn";
@@ -23,6 +22,7 @@ import type {
 } from "@/client/pages/projects/workflows/types";
 import { NewRunFormDialogArgSchemaFields } from "./NewRunFormDialogArgSchemaFields";
 import { SpecTypeSelect } from "./SpecTypeSelect";
+import { PlanningSessionSelect } from "./PlanningSessionSelect";
 
 interface NewRunFormProps {
   projectId: string;
@@ -140,9 +140,6 @@ export function NewRunForm({
   // Fetch available branches
   const { data: branches } = useProjectBranches(projectId, true);
 
-  // Fetch planning sessions (permission_mode === 'plan')
-  const { data: sessions } = useSessions({ projectId });
-
   // Transform branches to combobox options
   const branchOptions = useMemo(() => {
     if (!branches) return [];
@@ -162,18 +159,6 @@ export function NewRunForm({
       description: task.specPath,
     }));
   }, [specFiles]);
-
-  // Transform planning sessions to combobox options
-  const planningSessionOptions = useMemo(() => {
-    if (!sessions) return [];
-    return sessions
-      .filter((session) => session.permission_mode === "plan")
-      .map((session) => ({
-        value: session.id,
-        label: session.name || `Session ${session.id.slice(0, 8)}`,
-        description: new Date(session.updated_at).toLocaleDateString(),
-      }));
-  }, [sessions]);
 
   // Transform definitions to combobox options with scope grouping
   const definitionOptions = useMemo(() => {
@@ -440,13 +425,10 @@ export function NewRunForm({
             </TabsContent>
 
             <TabsContent value="planning" className="space-y-2 p-3 m-0">
-              <Combobox
+              <PlanningSessionSelect
+                projectId={projectId}
                 value={planningSessionId}
                 onValueChange={setPlanningSessionId}
-                options={planningSessionOptions}
-                placeholder="Select planning session..."
-                searchPlaceholder="Search sessions..."
-                emptyMessage="No planning sessions found"
                 disabled={createWorkflow.isPending}
               />
             </TabsContent>
