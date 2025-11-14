@@ -1,76 +1,64 @@
 import { Icons } from "@/components/icons";
 import {
-  BrainIcon,
   CodeIcon,
-  GlobeIcon,
-  PlugIcon,
-  UsersIcon,
-  ZapIcon,
+  SettingsIcon,
+  SmartphoneIcon,
+  DollarSignIcon,
 } from "lucide-react";
 
 export const BLUR_FADE_DELAY = 0.15;
 
 export const siteConfig = {
-  name: "AI Agent SDK",
-  description: "Create AI Agents with just a few lines of code.",
+  name: "agentcmd",
+  description: "Build workflows that match YOUR SDLC. Fully customizable orchestration for Claude Code and Codex.",
   cta: "Get Started",
   url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
   keywords: [
-    "AI Agent SDK",
-    "Multi-Agent Systems",
-    "Tool Integration",
-    "Workflow Automation",
+    "agentcmd",
+    "AI Workflow Automation",
+    "Claude Code",
+    "OpenAI Codex",
+    "Custom Slash Commands",
+    "SDLC Automation",
   ],
   links: {
-    email: "support@aiagentsdk.com",
-    twitter: "https://twitter.com/aiagentsdk",
-    discord: "https://discord.gg/aiagentsdk",
-    github: "https://github.com/aiagentsdk",
-    instagram: "https://instagram.com/aiagentsdk",
+    email: "support@agentcmd.dev",
+    twitter: "https://twitter.com/agentcmd",
+    discord: "https://discord.gg/agentcmd",
+    github: "https://github.com/agentcmd/agentcmd", // TODO: Update with real URL
+    instagram: "https://instagram.com/agentcmd",
   },
   hero: {
-    title: "AI Agent SDK",
+    title: "Stop Babysitting Your AI Coding Agents",
     description:
-      "Create powerful AI agent workflows with just a few lines of code, enabling complex task automation and decision-making processes.",
+      "Build workflows that match YOUR SDLC. Your slash commands. Your processes. Fully customizable orchestration for Claude Code and Codex.",
     cta: "Get Started",
-    ctaDescription: "Available for all major programming languages",
+    ctaDescription: "Fully customizable & open source",
   },
   features: [
     {
-      name: "Simple Agent Workflows",
+      name: "Your Workflows, Your Way",
       description:
-        "Easily create and manage AI agent workflows with intuitive APIs.",
-      icon: <BrainIcon className="h-6 w-6" />,
+        "Every team is different - build exactly what you need. Create custom slash commands for your process. No forced methodologies or rigid frameworks.",
+      icon: <SettingsIcon className="h-6 w-6" />,
     },
     {
-      name: "Multi-Agent Systems",
+      name: "Orchestrate Everything",
       description:
-        "Build complex systems with multiple AI agents working together.",
-      icon: <UsersIcon className="h-6 w-6" />,
-    },
-    {
-      name: "Tool Integration",
-      description:
-        "Seamlessly integrate external tools and APIs into your agent workflows.",
-      icon: <PlugIcon className="h-6 w-6" />,
-    },
-    {
-      name: "Cross-Language Support",
-      description:
-        "Available in all major programming languages for maximum flexibility.",
-      icon: <GlobeIcon className="h-6 w-6" />,
-    },
-    {
-      name: "Customizable Agents",
-      description:
-        "Design and customize agents to fit your specific use case and requirements.",
+        "Chain your custom commands together. Run workflows in parallel with worktrees. Automate your entire SDLC - however you define it.",
       icon: <CodeIcon className="h-6 w-6" />,
     },
     {
-      name: "Efficient Execution",
+      name: "Code from Anywhere",
       description:
-        "Optimize agent performance with built-in efficiency and scalability features.",
-      icon: <ZapIcon className="h-6 w-6" />,
+        "Mobile-friendly web interface. Run on your local machine. Access remotely via Tailscale.",
+      icon: <SmartphoneIcon className="h-6 w-6" />,
+    },
+    {
+      name: "Free & Open Source",
+      description:
+        "Run locally, no cloud costs. Extend and customize the codebase. No vendor lock-in.",
+      icon: <DollarSignIcon className="h-6 w-6" />,
     },
   ],
   pricing: [
@@ -123,19 +111,19 @@ export const siteConfig = {
     socialLinks: [
       {
         icon: <Icons.github className="h-5 w-5" />,
-        url: "#",
+        url: "https://github.com/agentcmd/agentcmd", // TODO: Update with real URL
       },
       {
         icon: <Icons.twitter className="h-5 w-5" />,
-        url: "#",
+        url: "https://twitter.com/agentcmd",
       },
     ],
     links: [
-      { text: "Pricing", url: "#" },
-      { text: "Contact", url: "#" },
+      { text: "Docs", url: "#" },
+      { text: "GitHub", url: "https://github.com/agentcmd/agentcmd" }, // TODO: Update
     ],
     bottomText: "All rights reserved.",
-    brandText: "AGENT SDK",
+    brandText: "agentcmd",
   },
 
   testimonials: [

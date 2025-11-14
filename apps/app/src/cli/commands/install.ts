@@ -58,6 +58,21 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     // Calculate absolute path to schema (relative to bundled CLI location)
     const schemaPath = join(__dirname, 'prisma/schema.prisma');
 
+    // Generate Prisma client first
+    console.log("Generating Prisma client...");
+    const generateResult = spawnSync(
+      "npx",
+      ["prisma", "generate", `--schema=${schemaPath}`],
+      {
+        stdio: "inherit",
+        env: process.env,
+      }
+    );
+
+    if (generateResult.status !== 0) {
+      throw new Error(`Prisma client generation failed with exit code ${generateResult.status}`);
+    }
+
     // Use db push for initial setup (no migrations needed)
     const result = spawnSync(
       "npx",

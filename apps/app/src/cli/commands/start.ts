@@ -81,7 +81,21 @@ export async function startCommand(options: StartOptions): Promise<void> {
       }
     }
 
-    // 5. Sync database schema
+    // 5. Generate Prisma client and sync database schema
+    console.log("Generating Prisma client...");
+    const generateResult = spawnSync(
+      "npx",
+      ["prisma", "generate", `--schema=${schemaPath}`],
+      {
+        stdio: "inherit",
+        env: process.env,
+      }
+    );
+
+    if (generateResult.status !== 0) {
+      throw new Error(`Prisma client generation failed with exit code ${generateResult.status}`);
+    }
+
     console.log("Syncing database schema...");
     const migrateResult = spawnSync(
       "npx",
