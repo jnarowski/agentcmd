@@ -28,17 +28,19 @@ async function buildCLI() {
       define: {
         '__CLI_VERSION__': `"${VERSION}"`,
       },
-      // External all node_modules except workspace packages
-      // This allows npm dependencies to resolve naturally
+      // Bundle all dependencies except native bindings and server code
+      // This makes the CLI work with npx (no global install needed)
       external: [
-        '@prisma/client',
-        'prisma',
-        '.prisma/client',
-        'node-pty',
-        // Externalize node_modules but bundle workspace packages
-        './node_modules/*',
+        '@prisma/client',  // Native bindings
+        'prisma',          // CLI tool with migrations
+        '.prisma/client',  // Generated at runtime
+        'node-pty',        // Native bindings
+        '../../server/index.js',  // Server code (shipped in dist/, loaded via dynamic import)
       ],
-      packages: 'external',  // Don't bundle node_modules
+      // packages: 'external' removed - bundle everything else for npx compatibility
+      banner: {
+        js: `import { createRequire } from 'module';const require = createRequire(import.meta.url);`,
+      },
       sourcemap: true,
       minify: false,
       logLevel: 'info',
