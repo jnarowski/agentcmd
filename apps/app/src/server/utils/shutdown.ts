@@ -68,39 +68,43 @@ export async function setupGracefulShutdown(
       // 3. Close Fastify server (stops accepting new connections)
       fastify.log.info('Closing Fastify server...');
       await fastify.close();
-      fastify.log.info('Fastify server closed');
+
+      // Restore original console to stop logging through pino
+      // This allows pino WriteStreams to close and process to exit cleanly
+      const originalConsole = (fastify as any)._originalConsole;
+      if (originalConsole) {
+        console.log = originalConsole.log;
+        console.error = originalConsole.error;
+        console.warn = originalConsole.warn;
+      }
+
+      console.log('Fastify server closed');
 
       // 4. Cleanup WebSocket sessions and temp image directories
       const sessionCount = activeSessions.size;
 
       if (sessionCount > 0) {
-        fastify.log.info({ count: sessionCount }, 'Cleaning up active sessions...');
+        console.log(`Cleaning up ${sessionCount} active sessions...`);
 
         for (const [sessionId] of activeSessions.entries()) {
           try {
-            await activeSessions.cleanup(sessionId, fastify.log);
+            await activeSessions.cleanup(sessionId);
           } catch (err) {
-            fastify.log.warn({ sessionId, err }, 'Error cleaning up session');
+            console.warn(`Error cleaning up session ${sessionId}:`, err);
           }
         }
 
-        fastify.log.info('All sessions cleaned up');
+        console.log('All sessions cleaned up');
       }
 
       // 5. Disconnect Prisma
-      fastify.log.info('Disconnecting Prisma...');
+      console.log('Disconnecting Prisma...');
       await prisma.$disconnect();
-      fastify.log.info('Prisma disconnected');
+      console.log('Prisma disconnected');
 
-      fastify.log.info('Graceful shutdown complete - process will exit naturally');
-
-      // Set timeout fallback in case something keeps event loop alive
-      setTimeout(() => {
-        fastify.log.warn('Force exiting after 2s timeout');
-        process.exit(0);
-      }, 2000).unref(); // unref() so it doesn't prevent exit
+      console.log('Graceful shutdown complete - process will exit naturally');
     } catch (error) {
-      fastify.log.error({ error }, 'Error during graceful shutdown');
+      console.error('Error during graceful shutdown:', error);
       process.exit(1);
     }
   };
