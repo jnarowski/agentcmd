@@ -163,7 +163,6 @@ export function NavTasks() {
                       <SessionItem
                         key={session.id}
                         id={session.id}
-                        name={session.name || `Session ${session.id.slice(0, 8)}`}
                         projectId={session.projectId}
                         projectName={projectName}
                         status={session.state}

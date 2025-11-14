@@ -6,6 +6,7 @@ import { AgentIcon } from "@/client/components/AgentIcon";
 import { SessionStateBadge } from "@/client/pages/projects/sessions/components/SessionStateBadge";
 import { useSessions } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
+import { getSessionDisplayName } from "@/client/utils/getSessionDisplayName";
 import type { SessionResponse } from "@/shared/types";
 
 interface PlanningSessionOption extends ComboboxOption<string> {
@@ -35,7 +36,7 @@ export function PlanningSessionSelect({
       .filter((session) => session.permission_mode === "plan")
       .map((session) => ({
         value: session.id,
-        label: session.name || `Session ${session.id.slice(0, 8)}`,
+        label: getSessionDisplayName(session),
         session,
       }));
   }, [sessions]);
@@ -54,6 +55,7 @@ export function PlanningSessionSelect({
         const session = planningOption.session;
         if (!session) return <span>{planningOption.label}</span>;
 
+        const displayName = getSessionDisplayName(session);
         const timeAgo = format(new Date(session.created_at), "MM/dd 'at' h:mma");
 
         return (
@@ -64,7 +66,7 @@ export function PlanningSessionSelect({
             <div className="flex flex-1 flex-col gap-1 min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="truncate text-sm font-medium">
-                  {session.name || `Session ${session.id.slice(0, 8)}`}
+                  {displayName}
                 </span>
               </div>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

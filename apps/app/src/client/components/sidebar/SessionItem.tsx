@@ -9,13 +9,13 @@ import { Badge } from "@/client/components/ui/badge";
 import { AgentIcon } from "@/client/components/AgentIcon";
 import { SessionDropdownMenu } from "@/client/pages/projects/sessions/components/SessionDropdownMenu";
 import { SessionStateBadge } from "@/client/pages/projects/sessions/components/SessionStateBadge";
+import { getSessionDisplayName } from "@/client/utils/getSessionDisplayName";
 import type { SessionResponse } from "@/shared/types";
 import type { AgentType } from "@/shared/types/agent.types";
 import { format } from "date-fns";
 
 interface SessionItemProps {
   id: string;
-  name: string;
   projectId: string;
   projectName: string;
   status: string;
@@ -26,7 +26,6 @@ interface SessionItemProps {
 
 export function SessionItem({
   id,
-  name,
   projectId,
   projectName,
   agent,
@@ -41,6 +40,7 @@ export function SessionItem({
   const [menuOpenActivityId, setMenuOpenActivityId] = useState<string | null>(
     null
   );
+  const displayName = getSessionDisplayName(session);
   const timeAgo = format(new Date(session.created_at), "MM/dd 'at' h:mma");
   const handleActivityClick = () => {
     if (isMobile) {
@@ -64,7 +64,7 @@ export function SessionItem({
         {agent && <AgentIcon agent={agent} className="size-4 shrink-0 mr-1" />}
         <div className="flex flex-1 flex-col gap-0.5 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="truncate text-sm">{name}</span>
+            <span className="truncate text-sm">{displayName}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="text-xs text-muted-foreground tabular-nums">

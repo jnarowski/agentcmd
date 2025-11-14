@@ -24,7 +24,6 @@ import { sessionKeys } from "@/client/pages/projects/sessions/hooks/queryKeys";
 import { workflowKeys } from "@/client/pages/projects/workflows/hooks/queryKeys";
 import { useAllWorkflowRuns } from "@/client/pages/projects/workflows/hooks/useAllWorkflowRuns";
 import { useWorkflowDefinitions } from "@/client/pages/projects/workflows/hooks/useWorkflowDefinitions";
-import { getSessionDisplayName } from "@/client/utils/getSessionDisplayName";
 import { SessionItem } from "@/client/components/sidebar/SessionItem";
 import { WorkflowItem } from "@/client/components/sidebar/WorkflowItem";
 import type { AgentType } from "@/shared/types/agent.types";
@@ -97,15 +96,11 @@ export function NavActivities() {
     for (const session of sessions) {
       const project = projects?.find(p => p.id === session.projectId);
 
-      const displayName = getSessionDisplayName(session);
       const projectName = project?.name ?? session.projectId;
       activities.push({
         id: session.id,
         type: "session",
-        name:
-          displayName.length > 37
-            ? displayName.slice(0, 37) + "..."
-            : displayName,
+        name: "", // Not used for sessions - SessionItem computes internally
         projectId: session.projectId,
         projectName:
           projectName.length > 30
@@ -286,7 +281,6 @@ export function NavActivities() {
                   <SessionItem
                     key={activity.id}
                     id={activity.id}
-                    name={activity.name}
                     projectId={activity.projectId}
                     projectName={activity.projectName}
                     status={activity.status}
