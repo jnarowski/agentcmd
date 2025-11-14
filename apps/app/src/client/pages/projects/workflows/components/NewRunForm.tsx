@@ -522,7 +522,7 @@ export function NewRunForm({
 
               {/* Spec Type */}
               <div className="space-y-2">
-                <Label htmlFor="spec-type">Spec Type</Label>
+                <Label htmlFor="spec-type">Type</Label>
                 <SpecTypeSelect
                   projectId={projectId}
                   value={specType}
