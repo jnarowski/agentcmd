@@ -53,6 +53,16 @@ export async function startCommand(options: StartOptions): Promise<void> {
     process.env.ALLOWED_ORIGINS = mergedConfig.allowedOrigins;
     process.env.INNGEST_DEV_PORT = inngestPort.toString();
 
+    // Log JWT_SECRET presence/length (secure)
+    if (!mergedConfig.jwtSecret) {
+      console.error("❌ ERROR: JWT_SECRET is empty or missing!");
+      console.error(`Config loaded from: ${configPath}`);
+      console.error("Run 'agentcmd install' to initialize configuration");
+      throw new Error("JWT_SECRET is required");
+    }
+    const maskedSecret = `${mergedConfig.jwtSecret.slice(0, 4)}...${mergedConfig.jwtSecret.slice(-4)}`;
+    console.log(`✓ JWT_SECRET loaded: ${maskedSecret} (length: ${mergedConfig.jwtSecret.length})`);
+
     if (mergedConfig.anthropicApiKey) {
       process.env.ANTHROPIC_API_KEY = mergedConfig.anthropicApiKey;
     }
@@ -127,7 +137,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
     fastifyServer = await startServer({ port, host });
     serverStartTime = new Date();
 
-    // 7. Spawn Inngest dev UI
+    // 7. Spawn Inngest dev UI (immediately - built-in retry handles connection timing)
     console.log("Starting Inngest dev UI...");
     inngestProcess = spawn(
       "npx",

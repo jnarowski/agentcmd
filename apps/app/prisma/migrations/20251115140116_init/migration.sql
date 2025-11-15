@@ -1,8 +1,7 @@
 -- CreateTable
 CREATE TABLE "workflow_definitions" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    "scope" TEXT NOT NULL DEFAULT 'project',
-    "project_id" TEXT,
+    "project_id" TEXT NOT NULL,
     "identifier" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
@@ -30,6 +29,7 @@ CREATE TABLE "workflow_runs" (
     "args" JSONB NOT NULL,
     "spec_file" TEXT,
     "spec_content" TEXT,
+    "spec_type" TEXT,
     "planning_session_id" TEXT,
     "mode" TEXT,
     "branch_name" TEXT,
@@ -160,9 +160,6 @@ CREATE INDEX "workflow_definitions_project_id_idx" ON "workflow_definitions"("pr
 
 -- CreateIndex
 CREATE INDEX "workflow_definitions_status_idx" ON "workflow_definitions"("status");
-
--- CreateIndex
-CREATE INDEX "workflow_definitions_scope_idx" ON "workflow_definitions"("scope");
 
 -- CreateIndex
 CREATE INDEX "workflow_definitions_project_id_status_idx" ON "workflow_definitions"("project_id", "status");

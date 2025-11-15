@@ -300,7 +300,7 @@ Reuses folder, uses explicit context, adds: `.agent/specs/todo/251113150000-expo
 
 ## Report
 
-**IMPORTANT**: Output this JSON as final message:
+**IMPORTANT**: Output ONLY raw JSON (see `.agent/docs/slash-command-json-output-format.md`).
 
 <json_output>
 {

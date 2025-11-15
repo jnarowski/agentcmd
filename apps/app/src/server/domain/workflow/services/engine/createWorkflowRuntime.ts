@@ -107,13 +107,13 @@ const SYSTEM_PHASES = {
  * ```
  *
  * @param inngest - Inngest client instance for workflow orchestration
- * @param projectId - Project ID for event scoping and WebSocket channels (null for global workflows)
+ * @param projectId - Project ID for event scoping and WebSocket channels
  * @param logger - Fastify logger for structured logging throughout workflow execution
  * @returns WorkflowRuntime implementation with createInngestFunction method
  */
 export function createWorkflowRuntime(
   inngest: Inngest,
-  projectId: string | null,
+  projectId: string,
   logger: FastifyBaseLogger
 ): WorkflowRuntime {
   return {
@@ -359,13 +359,13 @@ async function emitLifecycleEvent(
  * Updates database status to 'running', emits lifecycle event for UI, and logs start.
  *
  * @param runId - Workflow run ID
- * @param projectId - Project ID (null for global workflows)
+ * @param projectId - Project ID
  * @param inngestRunId - Inngest execution run ID for tracking
  * @param logger - Logger instance
  */
 async function handleWorkflowStart(
   runId: string,
-  projectId: string | null,
+  projectId: string,
   inngestRunId: string,
   logger: FastifyBaseLogger
 ): Promise<void> {
@@ -400,12 +400,12 @@ async function handleWorkflowStart(
  * Updates database status to 'completed', emits success event for UI, and logs completion.
  *
  * @param runId - Workflow run ID
- * @param projectId - Project ID (null for global workflows)
+ * @param projectId - Project ID
  * @param logger - Logger instance
  */
 async function handleWorkflowCompletion(
   runId: string,
-  projectId: string | null,
+  projectId: string,
   logger: FastifyBaseLogger
 ): Promise<void> {
   const completedAt = new Date();
@@ -439,13 +439,13 @@ async function handleWorkflowCompletion(
  * This function is made extra robust to ensure at least the DB update succeeds.
  *
  * @param runId - Workflow run ID
- * @param projectId - Project ID (null for global workflows)
+ * @param projectId - Project ID
  * @param error - Error that caused failure (converted to Error instance if needed)
  * @param logger - Logger instance
  */
 async function handleWorkflowFailure(
   runId: string,
-  projectId: string | null,
+  projectId: string,
   error: unknown,
   logger: FastifyBaseLogger
 ): Promise<void> {

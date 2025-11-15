@@ -1,24 +1,3 @@
-#!/usr/bin/env tsx
-// Type augmentation loaded automatically via tsconfig
-
-// DEBUG: Verify pino cleanup fix
-process.on('beforeExit', () => {
-  console.log('\n[DEBUG] beforeExit triggered - checking active handles...');
-  const proc = process as unknown as { _getActiveHandles?: () => unknown[] };
-  if (typeof proc._getActiveHandles === 'function') {
-    const handles = proc._getActiveHandles();
-    console.log(`[DEBUG] Active handles: ${handles.length}`);
-    if (handles.length > 0) {
-      handles.forEach((h: unknown, i: number) => {
-        const handle = h as { constructor: { name: string } };
-        console.log(`[DEBUG]   ${i + 1}. ${handle.constructor.name}`);
-      });
-    } else {
-      console.log('[DEBUG] No active handles - clean exit!');
-    }
-  }
-});
-
 import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
 import fastifyWebsocket from "@fastify/websocket";
@@ -58,13 +37,13 @@ const __dirname = dirname(__filename);
  * Best practice: Crash on uncaught errors to prevent memory/file descriptor leaks.
  */
 function setupProcessErrorHandlers(fastify: ReturnType<typeof Fastify>) {
-  process.on('uncaughtException', (error: Error) => {
+  process.on("uncaughtException", (error: Error) => {
     fastify.log.fatal(
       {
         err: error,
-        stack: error.stack
+        stack: error.stack,
       },
-      'Uncaught Exception - process will exit'
+      "Uncaught Exception - process will exit"
     );
 
     // Attempt graceful shutdown
@@ -74,31 +53,34 @@ function setupProcessErrorHandlers(fastify: ReturnType<typeof Fastify>) {
 
     // Force exit after 10s if graceful shutdown hangs
     setTimeout(() => {
-      fastify.log.fatal('Force exiting after shutdown timeout');
+      fastify.log.fatal("Force exiting after shutdown timeout");
       process.exit(1);
     }, 10000).unref();
   });
 
-  process.on('unhandledRejection', (reason: unknown, promise: Promise<unknown>) => {
-    fastify.log.fatal(
-      {
-        reason,
-        promise: String(promise)
-      },
-      'Unhandled Promise Rejection - process will exit'
-    );
+  process.on(
+    "unhandledRejection",
+    (reason: unknown, promise: Promise<unknown>) => {
+      fastify.log.fatal(
+        {
+          reason,
+          promise: String(promise),
+        },
+        "Unhandled Promise Rejection - process will exit"
+      );
 
-    // Attempt graceful shutdown
-    fastify.close(() => {
-      process.exit(1);
-    });
+      // Attempt graceful shutdown
+      fastify.close(() => {
+        process.exit(1);
+      });
 
-    // Force exit after 10s if graceful shutdown hangs
-    setTimeout(() => {
-      fastify.log.fatal('Force exiting after shutdown timeout');
-      process.exit(1);
-    }, 10000).unref();
-  });
+      // Force exit after 10s if graceful shutdown hangs
+      setTimeout(() => {
+        fastify.log.fatal("Force exiting after shutdown timeout");
+        process.exit(1);
+      }, 10000).unref();
+    }
+  );
 }
 
 export async function createServer() {
@@ -172,48 +154,6 @@ export async function createServer() {
   // Setup process-level error handlers
   setupProcessErrorHandlers(fastify);
 
-  // Intercept console.log/error/warn and redirect to Pino logger
-  // This captures console.log calls from dependencies like agent-cli-sdk
-  const originalConsoleLog = console.log;
-  const originalConsoleError = console.error;
-  const originalConsoleWarn = console.warn;
-
-  console.log = (...args: unknown[]) => {
-    const message = args
-      .map((arg) =>
-        typeof arg === "object" ? JSON.stringify(arg) : String(arg)
-      )
-      .join(" ");
-    fastify.log.info(message);
-  };
-
-  console.error = (...args: unknown[]) => {
-    const message = args
-      .map((arg) =>
-        typeof arg === "object" ? JSON.stringify(arg) : String(arg)
-      )
-      .join(" ");
-    fastify.log.error(message);
-  };
-
-  console.warn = (...args: unknown[]) => {
-    const message = args
-      .map((arg) =>
-        typeof arg === "object" ? JSON.stringify(arg) : String(arg)
-      )
-      .join(" ");
-    fastify.log.warn(message);
-  };
-
-  // Store originals for potential restoration
-  (
-    fastify as typeof fastify & { _originalConsole?: Pick<Console, 'log' | 'error' | 'warn'> }
-  )._originalConsole = {
-    log: originalConsoleLog,
-    error: originalConsoleError,
-    warn: originalConsoleWarn,
-  };
-
   // Set up Zod validation
   fastify.setValidatorCompiler(validatorCompiler);
   fastify.setSerializerCompiler(serializerCompiler);
@@ -233,8 +173,10 @@ export async function createServer() {
     }
 
     // Handle response serialization errors (prevents silent crashes)
-    if (error.name === 'ResponseSerializationError' ||
-        error.code === 'FST_ERR_REP_INVALID_PAYLOAD_TYPE') {
+    if (
+      error.name === "ResponseSerializationError" ||
+      error.code === "FST_ERR_REP_INVALID_PAYLOAD_TYPE"
+    ) {
       fastify.log.error(
         {
           err: error,
@@ -242,14 +184,14 @@ export async function createServer() {
           method: request.method,
           userId: request.user?.id,
         },
-        'Response serialization error - likely invalid response schema'
+        "Response serialization error - likely invalid response schema"
       );
 
       return reply.status(500).send({
         error: {
-          message: 'Internal server error',
+          message: "Internal server error",
           statusCode: 500,
-          code: 'SERIALIZATION_ERROR',
+          code: "SERIALIZATION_ERROR",
         },
       });
     }
@@ -406,7 +348,15 @@ export async function createServer() {
 
     // Build response based on environment
     const isDevelopment = config.server.nodeEnv === "development";
-    const errorResponse: { error: { message: string; statusCode: number; code?: string; stack?: string; details?: unknown } } = {
+    const errorResponse: {
+      error: {
+        message: string;
+        statusCode: number;
+        code?: string;
+        stack?: string;
+        details?: unknown;
+      };
+    } = {
       error: {
         message:
           statusCode === 500
@@ -421,7 +371,7 @@ export async function createServer() {
       errorResponse.error.details = {
         type: error.constructor.name,
         message: error.message,
-        stack: error.stack?.split('\n').slice(0, 5), // First 5 lines of stack
+        stack: error.stack?.split("\n").slice(0, 5), // First 5 lines of stack
         url: request.url,
         method: request.method,
       };

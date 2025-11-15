@@ -46,7 +46,6 @@ export function WorkflowDefinitionsTable({
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Description</TableHead>
-            <TableHead>Scope</TableHead>
             <TableHead className="text-center">Runs</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>

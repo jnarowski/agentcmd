@@ -23,7 +23,6 @@ export function WorkflowDefinitionRow({
   onUnarchive,
   isArchived,
 }: WorkflowDefinitionRowProps) {
-  const isGlobal = definition.scope === 'global';
   const runCount = definition._count?.runs ?? 0;
 
   return (
@@ -49,13 +48,6 @@ export function WorkflowDefinitionRow({
       <TableCell className="max-w-md truncate">
         {definition.description || '—'}
       </TableCell>
-      <TableCell>
-        {isGlobal ? (
-          <Badge variant="secondary">Global</Badge>
-        ) : (
-          <Badge variant="outline">Project</Badge>
-        )}
-      </TableCell>
       <TableCell className="text-center">{runCount}</TableCell>
       <TableCell className="text-right">
         {isArchived ? (
@@ -63,8 +55,7 @@ export function WorkflowDefinitionRow({
             variant="ghost"
             size="sm"
             onClick={() => onUnarchive?.(definition)}
-            disabled={isGlobal}
-            title={isGlobal ? 'Global workflows cannot be unarchived' : 'Unarchive workflow'}
+            title="Unarchive workflow"
           >
             <ArchiveRestore className="w-4 h-4 mr-2" />
             Unarchive
@@ -74,8 +65,7 @@ export function WorkflowDefinitionRow({
             variant="ghost"
             size="sm"
             onClick={() => onArchive?.(definition)}
-            disabled={isGlobal}
-            title={isGlobal ? 'Global workflows cannot be archived' : 'Archive workflow'}
+            title="Archive workflow"
           >
             <Archive className="w-4 h-4 mr-2" />
             Archive

@@ -3,10 +3,11 @@ import type { FastifyInstance } from "fastify";
 import { createWorkflowClient } from "./createWorkflowClient";
 import { createWorkflowRuntime } from "./createWorkflowRuntime";
 import { loadProjectWorkflows } from "./loadProjectWorkflows";
-import { loadGlobalWorkflows } from "./loadGlobalWorkflows";
 import { scanAllProjectWorkflows } from "./scanAllProjectWorkflows";
-import { scanGlobalWorkflows } from "./scanGlobalWorkflows";
-import { rescanAndLoadWorkflows, type ResyncDiff } from "./rescanAndLoadWorkflows";
+import {
+  rescanAndLoadWorkflows,
+  type ResyncDiff,
+} from "./rescanAndLoadWorkflows";
 import { prisma } from "@/shared/prisma";
 import { config } from "@/server/config";
 
@@ -44,20 +45,6 @@ export async function initializeWorkflowEngine(
 
   // Store Inngest client on fastify instance for later access
   fastify.decorate("workflowClient", inngestClient);
-
-  // Scan global workflows first (no project dependency)
-  logger.info("Scanning global workflows...");
-  const globalRuntime = createWorkflowRuntime(inngestClient, null, logger);
-  const globalWorkflowsCount = await scanGlobalWorkflows(globalRuntime, logger);
-
-  if (globalWorkflowsCount > 0) {
-    logger.info(
-      { workflowsDiscovered: globalWorkflowsCount },
-      `Discovered ${globalWorkflowsCount} global workflow(s)`
-    );
-  } else {
-    logger.info("No global workflows found");
-  }
 
   // Scan all projects for workflows BEFORE loading from database
   // This ensures database is populated with workflow definitions
@@ -97,65 +84,27 @@ export async function initializeWorkflowEngine(
       identifier: true,
       name: true,
       path: true,
-      scope: true,
       project_id: true,
     },
   });
 
-  logger.info({ count: definitions.length }, `\nRegistering ${definitions.length} workflow definition(s)...`);
+  logger.info(
+    { count: definitions.length },
+    `\nRegistering ${definitions.length} workflow definition(s)...`
+  );
 
   // Collect Inngest functions
   const inngestFunctions = [];
 
-  // Group definitions by scope and project to avoid reloading workflows multiple times
-  const globalDefinitions = definitions.filter(d => d.scope === "global");
+  // Group definitions by project to avoid reloading workflows multiple times
   const projectDefinitionsMap = new Map<string, typeof definitions>();
 
   for (const definition of definitions) {
-    if (definition.scope === "project" && definition.project_id) {
+    if (definition.project_id) {
       if (!projectDefinitionsMap.has(definition.project_id)) {
         projectDefinitionsMap.set(definition.project_id, []);
       }
       projectDefinitionsMap.get(definition.project_id)!.push(definition);
-    }
-  }
-
-  // Load global workflows once
-  if (globalDefinitions.length > 0) {
-    try {
-      const runtime = createWorkflowRuntime(inngestClient, null, logger);
-      const { workflows } = await loadGlobalWorkflows(runtime, logger);
-
-      for (const definition of globalDefinitions) {
-        const workflow = workflows.find(
-          (w) => w.definition.config.id === definition.identifier
-        );
-
-        if (workflow) {
-          inngestFunctions.push(workflow.inngestFunction);
-          logger.info(
-            { workflowId: definition.identifier, workflowName: definition.name, scope: "global" },
-            "Registered global workflow"
-          );
-        } else {
-          logger.warn(
-            { definitionId: definition.id, identifier: definition.identifier, path: definition.path },
-            `    ✗ ${definition.name} (${definition.identifier}) - file no longer exports matching definition`
-          );
-
-          await prisma.workflowDefinition.update({
-            where: { id: definition.id },
-            data: {
-              status: "archived",
-              file_exists: false,
-              load_error: "Workflow file no longer exports matching definition",
-              archived_at: new Date(),
-            },
-          });
-        }
-      }
-    } catch (error) {
-      logger.error({ error: (error as Error).message }, "Failed to load global workflows");
     }
   }
 
@@ -169,7 +118,10 @@ export async function initializeWorkflowEngine(
       });
 
       if (!project) {
-        logger.warn({ projectId }, "Project not found for workflow definitions");
+        logger.warn(
+          { projectId },
+          "Project not found for workflow definitions"
+        );
         continue;
       }
 
@@ -177,7 +129,11 @@ export async function initializeWorkflowEngine(
       const runtime = createWorkflowRuntime(inngestClient, projectId, logger);
 
       // Load all workflows from project ONCE
-      const { workflows } = await loadProjectWorkflows(project.path, runtime, logger);
+      const { workflows } = await loadProjectWorkflows(
+        project.path,
+        runtime,
+        logger
+      );
 
       // Match and register all definitions from this project
       for (const definition of projectDefinitions) {
@@ -188,12 +144,20 @@ export async function initializeWorkflowEngine(
         if (workflow) {
           inngestFunctions.push(workflow.inngestFunction);
           logger.info(
-            { workflowId: definition.identifier, workflowName: definition.name, projectId },
+            {
+              workflowId: definition.identifier,
+              workflowName: definition.name,
+              projectId,
+            },
             "Registered project workflow"
           );
         } else {
           logger.warn(
-            { definitionId: definition.id, identifier: definition.identifier, path: definition.path },
+            {
+              definitionId: definition.id,
+              identifier: definition.identifier,
+              path: definition.path,
+            },
             `    ✗ ${definition.name} (${definition.identifier}) - file no longer exports matching definition`
           );
 
@@ -230,6 +194,15 @@ export async function initializeWorkflowEngine(
     }
   }
 
+  // Log function array for debugging
+  logger.info(
+    {
+      functionsCount: inngestFunctions.length,
+      functionIds: inngestFunctions.map((f) => f.id()),
+    },
+    "Inngest functions collected"
+  );
+
   // Register Inngest endpoint using serve() directly instead of fastifyPlugin
   // This allows us to swap the handler at runtime for hot-reloading
   // See: https://github.com/inngest/inngest-js/blob/main/packages/inngest/src/fastify.ts#L17-L36
@@ -237,13 +210,36 @@ export async function initializeWorkflowEngine(
   currentHandler = serve({
     client: inngestClient,
     functions: inngestFunctions,
+    // Pass custom logger to capture Inngest errors with full details
+    // Use INNGEST_LOG_LEVEL env var or default to debug
+    logLevel:
+      (process.env.INNGEST_LOG_LEVEL as "debug" | "info" | "warn" | "error") ||
+      "debug",
   });
 
   // Register route that delegates to currentHandler
   fastify.route({
     method: ["GET", "POST", "PUT"],
     url: config.workflow.servePath,
-    handler: async (req, reply) => currentHandler(req, reply),
+    handler: async (req, reply) => {
+      try {
+        return await currentHandler(req, reply);
+      } catch (error) {
+        // Serialize error properly for logging
+        const errorDetails = {
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          name: error instanceof Error ? error.name : undefined,
+          cause: error instanceof Error ? error.cause : undefined,
+          url: req.url,
+          method: req.method,
+          headers: req.headers,
+          body: req.body,
+        };
+        logger.error(errorDetails, "Inngest handler error");
+        throw error;
+      }
+    },
   });
 
   // Expose reloadWorkflowEngine decorator for hot-reloading

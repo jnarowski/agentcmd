@@ -1,6 +1,6 @@
 {
   "name": "agentcmd",
-  "version": "1.0.26",
+  "version": "1.0.35",
   "type": "module",
   "main": "src/server/index.ts",
   "bin": {
@@ -13,7 +13,7 @@
   "scripts": {
     "build": "vite build && pnpm build:server && pnpm build:cli",
     "build:server": "node scripts/build-server.js",
-    "build:cli": "node scripts/build-cli.js && node scripts/copy-prisma-schema.js",
+    "build:cli": "node scripts/build-cli.js && node scripts/build-server-cli.js && node scripts/copy-prisma-schema.js",
     "check": "pnpm lint && pnpm check-types && pnpm test",
     "check-types": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.server.json && tsc --noEmit -p tsconfig.shared.json && tsc --noEmit -p tsconfig.cli.json && tsc --noEmit -p tsconfig.node.json",
     "dev": "prisma migrate deploy && concurrently --kill-others \"pnpm inngest\" \"pnpm dev:server\" \"pnpm dev:client\"",

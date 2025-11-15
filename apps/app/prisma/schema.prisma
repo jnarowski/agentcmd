@@ -10,8 +10,7 @@ generator client {
 // Workflow orchestration models
 model WorkflowDefinition {
   id          String         @id @default(cuid())
-  scope       WorkflowScope  @default(project) // 'project' or 'global'
-  project_id  String?        // Nullable for global workflows
+  project_id  String         // Project ID (required)
   identifier  String         // Workflow identifier from code definition (e.g., "example-text-workflow")
   name        String         // Display name (e.g., "Example Text Workflow")
   description String?
@@ -27,7 +26,7 @@ model WorkflowDefinition {
   created_at  DateTime       @default(now())
   updated_at  DateTime       @updatedAt
 
-  project Project?           @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  project Project            @relation(fields: [project_id], references: [id], onDelete: Cascade)
   runs    WorkflowRun[]
 
   @@unique([project_id, identifier], name: "project_id_identifier")
@@ -35,7 +34,6 @@ model WorkflowDefinition {
   @@index([is_template])
   @@index([project_id])
   @@index([status])
-  @@index([scope])
   @@index([project_id, status])
   @@map("workflow_definitions")
 }
@@ -200,11 +198,6 @@ enum SessionState {
   idle      // Ready for new messages
   working   // Agent actively processing
   error     // Last execution failed
-}
-
-enum WorkflowScope {
-  project   // Project-specific workflow
-  global    // Global workflow (shared across all projects)
 }
 
 enum WorkflowStatus {

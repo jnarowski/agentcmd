@@ -160,44 +160,15 @@ export function NewRunForm({
     }));
   }, [specFiles]);
 
-  // Transform definitions to combobox options with scope grouping
+  // Transform definitions to combobox options
   const definitionOptions = useMemo(() => {
     if (!definitions) return [];
 
-    const projectDefs = definitions.filter((def) => def.scope === "project");
-    const globalDefs = definitions.filter((def) => def.scope === "global");
-
-    const options: Array<{
-      value: string;
-      label: string;
-      description?: string;
-      disabled?: boolean;
-    }> = [
-      ...projectDefs.map((def) => ({
-        value: def.id,
-        label: def.name,
-        description: def.description || undefined,
-      })),
-    ];
-
-    // Only add global section if there are global workflows
-    if (globalDefs.length > 0) {
-      options.push(
-        {
-          value: "__separator__",
-          label: "──────── Global Templates ────────",
-          description: undefined,
-          disabled: true,
-        },
-        ...globalDefs.map((def) => ({
-          value: def.id,
-          label: def.name,
-          description: def.description || undefined,
-        }))
-      );
-    }
-
-    return options;
+    return definitions.map((def) => ({
+      value: def.id,
+      label: def.name,
+      description: def.description || undefined,
+    }));
   }, [definitions]);
 
   // Auto-generate names from spec file using AI (only if name not pre-filled)

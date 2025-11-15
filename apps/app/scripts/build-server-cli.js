@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = join(__dirname, '..');
 
-console.log('Building server with esbuild...');
+console.log('Building CLI server bundle with esbuild...');
 
 try {
   await build({
@@ -15,7 +15,7 @@ try {
     platform: 'node',
     target: 'node22',
     format: 'esm',
-    outfile: join(rootDir, 'dist/server/index.js'),
+    outfile: join(rootDir, 'package/dist/server/index.js'),
     // External dependencies that must stay external (native modules, binaries)
     external: [
       '@prisma/client',     // Binary database driver
@@ -23,13 +23,13 @@ try {
       '.prisma/client',     // Generated Prisma client
       'node-pty',           // Native terminal module
     ],
-    packages: 'external',  // Don't bundle node_modules (prevents dynamic require errors)
+    // NOTE: NO 'packages: external' - bundle everything for CLI distribution
     sourcemap: true,
     minify: false,  // Keep readable for debugging
     logLevel: 'info',
   });
 
-  console.log('✓ Server bundle created: dist/server/index.js');
+  console.log('✓ CLI server bundle created: package/dist/server/index.js');
 } catch (error) {
   console.error('Server build failed:', error);
   process.exit(1);

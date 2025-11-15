@@ -39,6 +39,9 @@ export function SignupForm({
 }: SignupFormProps) {
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
+      <div className="text-center mb-2">
+        <h1 className="text-4xl font-bold tracking-tight">agentcmd</h1>
+      </div>
       <AuthFormCard
         title="Create an account"
         description="Enter your information below to create your account"

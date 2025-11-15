@@ -50,6 +50,7 @@ export function ProjectDialog({
     watch,
     reset,
   } = useForm<ProjectFormData>({
+    // @ts-ignore - Zod version mismatch with @hookform/resolvers
     resolver: zodResolver(projectFormSchema),
     defaultValues: project
       ? {

@@ -31,7 +31,7 @@ export async function registerWorkflowDefinitionRoutes(
 ): Promise<void> {
   /**
    * GET /api/projects/:projectId/workflow-definitions
-   * List workflow templates for a specific project (includes global workflows)
+   * List workflow templates for a specific project
    * Supports optional status filter (active/archived)
    */
   fastify.get<{

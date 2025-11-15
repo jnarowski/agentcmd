@@ -4,9 +4,7 @@ import type { WorkflowDefinition as WorkflowDefinitionRecord } from "@prisma/cli
 import { createWorkflowClient } from "./createWorkflowClient";
 import { createWorkflowRuntime } from "./createWorkflowRuntime";
 import { loadProjectWorkflows } from "./loadProjectWorkflows";
-import { loadGlobalWorkflows } from "./loadGlobalWorkflows";
 import { scanAllProjectWorkflows } from "./scanAllProjectWorkflows";
-import { scanGlobalWorkflows } from "./scanGlobalWorkflows";
 import { prisma } from "@/shared/prisma";
 
 export interface ResyncDiff {
@@ -42,11 +40,6 @@ export async function rescanAndLoadWorkflows(
 
   logger.info("=== WORKFLOW RESYNC STARTING ===");
 
-  // Scan global workflows first (no project dependency)
-  logger.info("Rescanning global workflows...");
-  const globalRuntime = createWorkflowRuntime(inngestClient, null, logger);
-  await scanGlobalWorkflows(globalRuntime, logger);
-
   // Scan all projects for workflows
   logger.info("Rescanning projects for workflows...");
   const scanResults = await scanAllProjectWorkflows(fastify);
@@ -66,7 +59,6 @@ export async function rescanAndLoadWorkflows(
       identifier: true,
       name: true,
       path: true,
-      scope: true,
       project_id: true,
       file_exists: true,
       load_error: true,
@@ -84,7 +76,6 @@ export async function rescanAndLoadWorkflows(
       identifier: true,
       name: true,
       path: true,
-      scope: true,
       project_id: true,
     },
   });
@@ -97,101 +88,15 @@ export async function rescanAndLoadWorkflows(
   // Collect Inngest functions
   const inngestFunctions: InngestFunction.Any[] = [];
 
-  // Group definitions by scope and project
-  const globalDefinitions = definitions.filter((d) => d.scope === "global");
+  // Group definitions by project
   const projectDefinitionsMap = new Map<string, typeof definitions>();
 
   for (const definition of definitions) {
-    if (definition.scope === "project" && definition.project_id) {
+    if (definition.project_id) {
       if (!projectDefinitionsMap.has(definition.project_id)) {
         projectDefinitionsMap.set(definition.project_id, []);
       }
       projectDefinitionsMap.get(definition.project_id)!.push(definition);
-    }
-  }
-
-  // Load global workflows once
-  if (globalDefinitions.length > 0) {
-    try {
-      const runtime = createWorkflowRuntime(inngestClient, null, logger);
-      const { workflows, errors } = await loadGlobalWorkflows(runtime, logger);
-
-      // Process errors first
-      for (const error of errors) {
-        const definition = globalDefinitions.find(
-          (d) => d.path === error.filePath
-        );
-        if (definition) {
-          await prisma.workflowDefinition.update({
-            where: { id: definition.id },
-            data: { load_error: error.error },
-          });
-          diff.errors.push({
-            id: definition.id,
-            name: definition.name,
-            error: error.error,
-          });
-          logger.error(
-            { workflowId: definition.identifier, error: error.error },
-            `Failed to load global workflow: ${definition.name}`
-          );
-        }
-      }
-
-      for (const definition of globalDefinitions) {
-        const workflow = workflows.find(
-          (w) => w.definition.config.id === definition.identifier
-        );
-
-        if (workflow) {
-          seenIdentifiers.add(definition.identifier);
-          inngestFunctions.push(workflow.inngestFunction);
-
-          // Check if this was previously errored
-          const previousDef = definitionsBeforeSync.find(
-            (d) => d.id === definition.id
-          );
-          if (previousDef?.load_error) {
-            // Clear error on successful load
-            await prisma.workflowDefinition.update({
-              where: { id: definition.id },
-              data: { load_error: null },
-            });
-            diff.updated.push(definition as WorkflowDefinitionRecord);
-            logger.info(
-              { workflowId: definition.identifier, workflowName: definition.name },
-              "Reloaded global workflow (cleared error)"
-            );
-          } else {
-            diff.updated.push(definition as WorkflowDefinitionRecord);
-            logger.info(
-              { workflowId: definition.identifier, workflowName: definition.name },
-              "Reloaded global workflow"
-            );
-          }
-        } else {
-          // Workflow file no longer exports matching definition
-          await prisma.workflowDefinition.update({
-            where: { id: definition.id },
-            data: {
-              status: "archived",
-              file_exists: false,
-              load_error: "Workflow file no longer exports matching definition",
-              archived_at: new Date(),
-            },
-          });
-          diff.archived.push(definition as WorkflowDefinitionRecord);
-          logger.warn(
-            { definitionId: definition.id, identifier: definition.identifier },
-            `Archived global workflow: ${definition.name}`
-          );
-        }
-      }
-    } catch (error) {
-      logger.error(
-        { error: (error as Error).message },
-        "Failed to load global workflows"
-      );
     }
   }
 

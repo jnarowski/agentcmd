@@ -50,13 +50,6 @@ export function getLogFilePath(): string {
 }
 
 /**
- * Returns the global workflows directory path
- */
-export function getGlobalWorkflowsDir(): string {
-  return join(getHomeDir(), "workflows");
-}
-
-/**
  * Creates directory if it doesn't exist
  */
 export function ensureDirectoryExists(dirPath: string): void {

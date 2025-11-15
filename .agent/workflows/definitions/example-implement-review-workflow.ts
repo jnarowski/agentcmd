@@ -3,7 +3,7 @@ import {
   defineWorkflow,
   type CmdImplementSpecResponse,
   type CmdReviewSpecImplementationResponse,
-} from "../../../packages/agentcmd-workflows/dist";
+} from "agentcmd-workflows";
 
 /**
  * Example workflow demonstrating automatic workspace lifecycle.

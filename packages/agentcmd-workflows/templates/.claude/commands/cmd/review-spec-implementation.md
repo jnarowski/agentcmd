@@ -331,7 +331,7 @@ If the review finds zero HIGH or MEDIUM priority issues, use this simplified tem
 
 ### JSON
 
-**IMPORTANT**: If $format is "json", return ONLY the JSON from the output tags below:
+**IMPORTANT**: If $format is "json", output ONLY raw JSON (see `.agent/docs/slash-command-json-output-format.md`).
 
 <json_output>
 {

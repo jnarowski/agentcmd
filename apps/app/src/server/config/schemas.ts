@@ -4,19 +4,19 @@
  * Zod schemas for validating environment variables and configuration
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Server configuration schema
  */
 const ServerConfigSchema = z.object({
   port: z.coerce.number().int().positive().default(3456),
-  host: z.string().default('127.0.0.1'),
-  nodeEnv: z.enum(['development', 'production', 'test']).default('development'),
+  host: z.string().default("127.0.0.1"),
+  nodeEnv: z.enum(["development", "production", "test"]).default("development"),
   logLevel: z
-    .enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal'])
-    .default('info'),
-  logFile: z.string().default('./logs/app.log'),
+    .enum(["trace", "debug", "info", "warn", "error", "fatal"])
+    .default("info"),
+  logFile: z.string().default("./logs/app.log"),
 });
 
 /**
@@ -25,15 +25,15 @@ const ServerConfigSchema = z.object({
 const CorsConfigSchema = z.object({
   allowedOrigins: z
     .string()
-    .default('http://localhost:5173')
-    .transform((val) => val.split(',')),
+    .default("http://localhost:5173")
+    .transform((val) => val.split(",")),
 });
 
 /**
  * JWT configuration schema
  */
 const JwtConfigSchema = z.object({
-  secret: z.string().min(1, 'JWT_SECRET is required'),
+  secret: z.string().min(1, "JWT_SECRET is required"),
 });
 
 /**
@@ -56,11 +56,11 @@ const ApiKeysConfigSchema = z.object({
  */
 const WorkflowConfigSchema = z.object({
   enabled: z.coerce.boolean().default(true),
-  appId: z.string().default('sourceborn-workflows'),
+  appId: z.string().default("agentcmd"),
   eventKey: z.string().optional(),
   devMode: z.coerce.boolean().default(true),
-  memoizationDbPath: z.string().default('./prisma/workflows.db'),
-  servePath: z.string().default('/api/workflows/inngest'),
+  memoizationDbPath: z.string().default("./prisma/workflows.db"),
+  servePath: z.string().default("/api/workflows/inngest"),
   inngestDevPort: z.coerce.number().int().positive().default(8288),
 });
 

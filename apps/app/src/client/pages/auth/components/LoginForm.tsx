@@ -34,6 +34,9 @@ export function LoginForm({
 }: LoginFormProps) {
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
+      <div className="text-center mb-2">
+        <h1 className="text-4xl font-bold tracking-tight">agentcmd</h1>
+      </div>
       <AuthFormCard
         title="Login to your account"
         description="Enter your email below to login to your account"

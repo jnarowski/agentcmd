@@ -4,7 +4,5 @@ export { initializeWorkflowEngine } from "./initializeWorkflowEngine";
 export { findWorkflowFiles } from "./findWorkflowFiles";
 export { extractWorkflowDefinition } from "./extractWorkflowDefinition";
 export { loadProjectWorkflows } from "./loadProjectWorkflows";
-export { loadGlobalWorkflows } from "./loadGlobalWorkflows";
 export { scanProjectWorkflows } from "./scanProjectWorkflows";
-export { scanGlobalWorkflows } from "./scanGlobalWorkflows";
 export { scanAllProjectWorkflows } from "./scanAllProjectWorkflows";

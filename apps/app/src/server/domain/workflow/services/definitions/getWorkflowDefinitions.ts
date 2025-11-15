@@ -11,7 +11,7 @@ export type WorkflowDefinitionWithCount = WorkflowDefinition & {
 /**
  * Get workflow definitions with optional status filtering
  * Includes run counts for each definition (total and active/pending)
- * Returns project workflows first, then global workflows (sorted by name within each group)
+ * Returns workflows sorted by name
  */
 export async function getWorkflowDefinitions(
   projectId: string,
@@ -19,10 +19,7 @@ export async function getWorkflowDefinitions(
 ): Promise<WorkflowDefinitionWithCount[]> {
   const definitions = await prisma.workflowDefinition.findMany({
     where: {
-      OR: [
-        { project_id: projectId },
-        { scope: "global" }
-      ],
+      project_id: projectId,
       ...(status && { status }),
     },
     include: {
@@ -44,25 +41,17 @@ export async function getWorkflowDefinitions(
     },
   });
 
-  // Transform to include activeRuns count
-  const definitionsWithCounts = definitions.map((def) => ({
-    ...def,
-    _count: {
-      runs: def._count.runs,
-      activeRuns: def.runs.length,
-    },
-    runs: undefined, // Remove the runs array from response
-  })) as WorkflowDefinitionWithCount[];
+  // Transform to include activeRuns count and sort by name
+  const definitionsWithCounts = definitions
+    .map((def) => ({
+      ...def,
+      _count: {
+        runs: def._count.runs,
+        activeRuns: def.runs.length,
+      },
+      runs: undefined, // Remove the runs array from response
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name)) as WorkflowDefinitionWithCount[];
 
-  // Sort: project workflows first (by name), then global workflows (by name)
-  const sorted = definitionsWithCounts.sort((a, b) => {
-    // Project workflows come before global
-    if (a.project_id === projectId && b.scope === "global") return -1;
-    if (a.scope === "global" && b.project_id === projectId) return 1;
-
-    // Within same scope, sort by name
-    return a.name.localeCompare(b.name);
-  });
-
-  return sorted;
+  return definitionsWithCounts;
 }

@@ -7,7 +7,6 @@ import {
   createAuthenticatedUser,
   createTestProject,
   createTestWorkflowDefinition,
-  createTestGlobalWorkflowDefinition,
 } from "@/server/test-utils/fixtures";
 import { parseResponse } from "@/server/test-utils/requests";
 import { WorkflowDefinitionsResponseSchema } from "@/server/domain/workflow/schemas";
@@ -31,7 +30,7 @@ describe("GET /api/projects/:projectId/workflow-definitions", () => {
     await closeTestApp(app);
   });
 
-  it("should return 200 with workflow definitions including scope field", async () => {
+  it("should return 200 with workflow definitions", async () => {
     // Arrange: Create test user and project
     const { headers } = await createAuthenticatedUser(prisma, app, {
       email: "test@example.com",
@@ -43,8 +42,7 @@ describe("GET /api/projects/:projectId/workflow-definitions", () => {
     });
 
     // Create project-scoped workflow
-    const projectWorkflow = await createTestWorkflowDefinition(prisma, {
-      project_id: project.id,
+    const projectWorkflow = await createTestWorkflowDefinition(prisma, project.id, {
       name: "Project Workflow",
       identifier: "project-workflow",
     });
@@ -65,63 +63,12 @@ describe("GET /api/projects/:projectId/workflow-definitions", () => {
     });
     expect(body.data.length).toBeGreaterThan(0);
 
-    // Verify scope field is present
+    // Verify workflow is returned
     const workflow = body.data.find((w) => w.id === projectWorkflow.id);
     expect(workflow).toBeDefined();
-    expect(workflow!.scope).toBe("project");
     expect(workflow!.name).toBe("Project Workflow");
   });
 
-  it("should return both project and global workflows", async () => {
-    // Arrange: Create test user and project
-    const { headers } = await createAuthenticatedUser(prisma, app, {
-      email: "test@example.com",
-    });
-
-    const project = await createTestProject(prisma, {
-      name: "Test Project",
-      path: "/tmp/test-project",
-    });
-
-    // Create project-scoped workflow
-    const projectWorkflow = await createTestWorkflowDefinition(prisma, {
-      project_id: project.id,
-      name: "Project Workflow",
-      identifier: "project-workflow",
-    });
-
-    // Create global workflow
-    const globalWorkflow = await createTestGlobalWorkflowDefinition(prisma, {
-      name: "Global Workflow",
-      identifier: "global-workflow",
-    });
-
-    // Act: Make request
-    const response = await app.inject({
-      method: "GET",
-      url: `/api/projects/${project.id}/workflow-definitions`,
-      headers,
-    });
-
-    // Assert: Verify both workflows are returned
-    expect(response.statusCode).toBe(200);
-
-    const body = parseResponse({
-      response,
-      schema: WorkflowDefinitionsResponseSchema,
-    });
-    expect(body.data.length).toBe(2);
-
-    // Find workflows by scope
-    const projectWorkflows = body.data.filter((w) => w.scope === "project");
-    const globalWorkflows = body.data.filter((w) => w.scope === "global");
-
-    expect(projectWorkflows.length).toBe(1);
-    expect(globalWorkflows.length).toBe(1);
-
-    expect(projectWorkflows[0].id).toBe(projectWorkflow.id);
-    expect(globalWorkflows[0].id).toBe(globalWorkflow.id);
-  });
 
   it("should filter by status (active/archived)", async () => {
     // Arrange: Create test user and project
@@ -135,15 +82,13 @@ describe("GET /api/projects/:projectId/workflow-definitions", () => {
     });
 
     // Create active and archived workflows
-    const activeWorkflow = await createTestWorkflowDefinition(prisma, {
-      project_id: project.id,
+    const activeWorkflow = await createTestWorkflowDefinition(prisma, project.id, {
       name: "Active Workflow",
       identifier: "active-workflow",
       status: "active",
     });
 
-    const archivedWorkflow = await createTestWorkflowDefinition(prisma, {
-      project_id: project.id,
+    const archivedWorkflow = await createTestWorkflowDefinition(prisma, project.id, {
       name: "Archived Workflow",
       identifier: "archived-workflow",
       status: "archived",
@@ -206,7 +151,7 @@ describe("GET /api/projects/:projectId/workflow-definitions", () => {
     expect(body.error).toHaveProperty("statusCode", 401);
   });
 
-  it("should validate response schema includes scope field", async () => {
+  it("should validate response schema", async () => {
     // Arrange: Create test user and project
     const { headers } = await createAuthenticatedUser(prisma, app, {
       email: "test@example.com",
@@ -218,8 +163,7 @@ describe("GET /api/projects/:projectId/workflow-definitions", () => {
     });
 
     // Create workflow with all fields
-    await createTestWorkflowDefinition(prisma, {
-      project_id: project.id,
+    await createTestWorkflowDefinition(prisma, project.id, {
       name: "Complete Workflow",
       identifier: "complete-workflow",
       description: "Test description",
@@ -250,8 +194,8 @@ describe("GET /api/projects/:projectId/workflow-definitions", () => {
 
     // Verify we can access typed fields
     const workflow = body.data[0];
-    expect(workflow.scope).toMatch(/^(project|global)$/);
     expect(workflow.name).toBe("Complete Workflow");
+    expect(workflow.description).toBe("Test description");
   });
 
   it("should only return workflows for the specified project", async () => {
@@ -271,14 +215,12 @@ describe("GET /api/projects/:projectId/workflow-definitions", () => {
     });
 
     // Create workflow for each project
-    const workflow1 = await createTestWorkflowDefinition(prisma, {
-      project_id: project1.id,
+    const workflow1 = await createTestWorkflowDefinition(prisma, project1.id, {
       name: "Project 1 Workflow",
       identifier: "project-1-workflow",
     });
 
-    const workflow2 = await createTestWorkflowDefinition(prisma, {
-      project_id: project2.id,
+    const workflow2 = await createTestWorkflowDefinition(prisma, project2.id, {
       name: "Project 2 Workflow",
       identifier: "project-2-workflow",
     });
@@ -290,17 +232,16 @@ describe("GET /api/projects/:projectId/workflow-definitions", () => {
       headers,
     });
 
-    // Assert: Only project 1 workflow returned (plus any global workflows)
+    // Assert: Only project 1 workflow returned
     expect(response.statusCode).toBe(200);
 
     const body = parseResponse({
       response,
       schema: WorkflowDefinitionsResponseSchema,
     });
-    const projectWorkflows = body.data.filter((w) => w.scope === "project");
 
-    expect(projectWorkflows.length).toBe(1);
-    expect(projectWorkflows[0].id).toBe(workflow1.id);
+    expect(body.data.length).toBe(1);
+    expect(body.data[0].id).toBe(workflow1.id);
 
     // Project 2 workflow should NOT be in results
     const hasProject2Workflow = body.data.some((w) => w.id === workflow2.id);

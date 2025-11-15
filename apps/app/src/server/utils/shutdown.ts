@@ -80,6 +80,7 @@ export async function setupGracefulShutdown(
 
       // Restore original console to stop logging through pino
       // This allows pino WriteStreams to close and process to exit cleanly
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const originalConsole = (fastify as any)._originalConsole;
       if (originalConsole) {
         console.log = originalConsole.log;

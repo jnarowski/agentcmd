@@ -142,10 +142,11 @@ export async function createTestWorkflowContext(
   const project = await createTestProject(prisma, overrides?.project);
 
   // Create workflow definition
-  const workflow = await createTestWorkflowDefinition(prisma, {
-    ...overrides?.workflow,
-    project_id: project.id,
-  });
+  const workflow = await createTestWorkflowDefinition(
+    prisma,
+    project.id,
+    overrides?.workflow
+  );
 
   // Create workflow run
   const run = await createTestWorkflowRun(prisma, {

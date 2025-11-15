@@ -26,7 +26,6 @@ export const GetWorkflowDefinitionsQuerySchema = z.object({
  */
 export const WorkflowDefinitionResponseSchema = z.object({
   id: z.string(),
-  scope: z.enum(['project', 'global']),
   name: z.string(),
   description: z.string().nullable(),
   type: z.string(),
