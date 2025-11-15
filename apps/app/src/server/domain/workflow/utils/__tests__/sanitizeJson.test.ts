@@ -21,7 +21,7 @@ describe("sanitizeJson", () => {
   });
 
   it("handles circular references", () => {
-    const circular: any = { foo: "bar" };
+    const circular: Record<string, unknown> = { foo: "bar" };
     circular.self = circular;
 
     const result = sanitizeJson(circular) as Record<string, unknown>;
