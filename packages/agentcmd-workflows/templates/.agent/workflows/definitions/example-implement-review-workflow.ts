@@ -1,4 +1,9 @@
-import { buildSlashCommand, defineWorkflow, type CmdImplementSpecResponse, type CmdReviewSpecImplementationResponse } from "agentcmd-workflows";
+import {
+  buildSlashCommand,
+  defineWorkflow,
+  type CmdImplementSpecResponse,
+  type CmdReviewSpecImplementationResponse,
+} from "agentcmd-workflows";
 
 /**
  * Example workflow demonstrating automatic workspace lifecycle.
