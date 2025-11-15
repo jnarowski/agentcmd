@@ -8,6 +8,7 @@ import { loadConfig, mergeWithFlags } from "../utils/config";
 import { ensurePortAvailable } from "../utils/portCheck";
 import { getDbPath, getConfigPath, getLogFilePath } from "../utils/paths";
 import { checkPendingMigrations, createBackup, cleanupOldBackups } from "../utils/backup";
+import { setInngestEnvironment } from "@/shared/utils/inngestEnv";
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -51,8 +52,9 @@ export async function startCommand(options: StartOptions): Promise<void> {
     process.env.JWT_SECRET = mergedConfig.jwtSecret;
     process.env.LOG_LEVEL = mergedConfig.logLevel;
     process.env.ALLOWED_ORIGINS = mergedConfig.allowedOrigins;
-    process.env.INNGEST_DEV_PORT = inngestPort.toString();
-    process.env.INNGEST_DEV_SERVER_URL = `http://127.0.0.1:${inngestPort}`;
+
+    // Configure Inngest before any SDK imports
+    setInngestEnvironment({ port: inngestPort });
 
     // Validate JWT_SECRET
     if (!mergedConfig.jwtSecret) {
@@ -144,7 +146,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
     fastifyServer = await startServer({ port, host });
     serverStartTime = new Date();
 
-    // 7. Spawn Inngest dev UI (immediately - built-in retry handles connection timing)
+    // 7. Spawn Inngest dev UI (uses INNGEST_PORT env var)
     console.log("Starting Inngest dev UI...");
     inngestProcess = spawn(
       "npx",
@@ -153,8 +155,6 @@ export async function startCommand(options: StartOptions): Promise<void> {
         "dev",
         "-u",
         `http://${host}:${port}/api/workflows/inngest`,
-        "--port",
-        inngestPort.toString(),
       ],
       {
         stdio: "inherit",

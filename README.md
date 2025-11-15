@@ -111,7 +111,7 @@ Or manually edit `~/.agentcmd/config.json`.
 | --------------- | ------- | ----------------------------------------------------- |
 | Fastify Server  | 3456    | `PORT` env var or `--port` flag                       |
 | Vite Dev Server | 5173    | `VITE_PORT` env var (dev only)                        |
-| Inngest Dev UI  | 8288    | `inngestPort` in config.json or `--inngest-port` flag |
+| Inngest Dev UI  | 8288    | `inngestPort` in config.json, `INNGEST_PORT` env var, or `--inngest-port` flag |
 
 **Priority:** CLI flags > config.json > .env > defaults
 

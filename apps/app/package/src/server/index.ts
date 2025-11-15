@@ -1,3 +1,7 @@
+// Configure Inngest environment BEFORE any imports (must run before Inngest SDK imports)
+import { setInngestEnvironment } from "@/shared/utils/inngestEnv";
+setInngestEnvironment();
+
 import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
 import fastifyWebsocket from "@fastify/websocket";
@@ -490,9 +494,6 @@ export async function createServer() {
 
   // Register Shell WebSocket handler
   await registerShellRoute(fastify);
-
-  // Set Inngest Dev Server URL (always use dev mode)
-  process.env.INNGEST_DEV_SERVER_URL = `http://127.0.0.1:${config.workflow.inngestDevPort}`;
 
   // Initialize workflow engine (includes project scanning)
   await initializeWorkflowEngine(fastify);

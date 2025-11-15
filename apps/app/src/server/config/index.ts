@@ -39,7 +39,7 @@ const rawConfig = {
     devMode: process.env.INNGEST_DEV_MODE,
     memoizationDbPath: process.env.INNGEST_MEMOIZATION_DB_PATH,
     servePath: process.env.INNGEST_SERVE_PATH,
-    inngestDevPort: process.env.INNGEST_DEV_PORT,
+    inngestDevPort: process.env.INNGEST_PORT,
   },
 };
 

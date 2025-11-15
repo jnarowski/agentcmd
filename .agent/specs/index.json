@@ -1,6 +1,13 @@
 {
-  "lastId": 251115095452,
+  "lastId": 251115143849,
   "specs": {
+    "251115143849": {
+      "path": "todo/251115143849-workflow-logging/spec.md",
+      "status": "draft",
+      "spec_type": "feature",
+      "created": "2025-11-15T14:38:49.000Z",
+      "updated": "2025-11-15T14:38:49.000Z"
+    },
     "251115095452": {
       "path": "todo/251115095452-workflow-engine-refactor/spec.md",
       "status": "review",
