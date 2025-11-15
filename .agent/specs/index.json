@@ -3,10 +3,10 @@
   "specs": {
     "251115143849": {
       "path": "todo/251115143849-workflow-logging/spec.md",
-      "status": "draft",
+      "status": "completed",
       "spec_type": "feature",
       "created": "2025-11-15T14:38:49.000Z",
-      "updated": "2025-11-15T14:38:49.000Z"
+      "updated": "2025-11-15T22:12:40Z"
     },
     "251115095452": {
       "path": "todo/251115095452-workflow-engine-refactor/spec.md",

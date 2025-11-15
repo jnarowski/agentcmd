@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 const STORAGE_KEY = "workflowRunDetail.activeTab";
 const DEFAULT_TAB = "details";
 
-export type WorkflowTab = "details" | "session" | "artifacts";
+export type WorkflowTab = "details" | "session" | "logs" | "artifacts";
 
 export function useWorkflowDetailPanel() {
   const [activeTab, setActiveTabState] = useState<WorkflowTab>(() => {

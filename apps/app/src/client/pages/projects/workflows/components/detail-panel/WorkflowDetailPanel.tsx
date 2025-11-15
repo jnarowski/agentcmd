@@ -3,6 +3,7 @@ import type { WorkflowTab } from "@/client/pages/projects/workflows/hooks/useWor
 import { DetailsTab } from "./DetailsTab";
 import { SessionTab } from "./SessionTab";
 import { ArtifactsTab } from "./ArtifactsTab";
+import { LogsTab } from "./LogsTab";
 import type { WorkflowRun } from "@/client/pages/projects/workflows/types";
 
 interface WorkflowDetailPanelProps {
@@ -23,6 +24,7 @@ export function WorkflowDetailPanel({ run, projectId, activeTab, setActiveTab, s
           <TabsList className="w-full">
             <TabsTrigger value="details">Details</TabsTrigger>
             <TabsTrigger value="session">Session</TabsTrigger>
+            <TabsTrigger value="logs">Logs</TabsTrigger>
             <TabsTrigger value="artifacts">Artifacts</TabsTrigger>
           </TabsList>
         </Tabs>
@@ -37,6 +39,10 @@ export function WorkflowDetailPanel({ run, projectId, activeTab, setActiveTab, s
 
           <TabsContent value="session" className="p-6 mt-0 h-full overflow-y-auto">
             <SessionTab projectId={projectId} selectedSessionId={selectedSessionId} />
+          </TabsContent>
+
+          <TabsContent value="logs" className="p-6 mt-0 h-full overflow-y-auto">
+            <LogsTab run={run} />
           </TabsContent>
 
           <TabsContent value="artifacts" className="p-6 mt-0 h-full overflow-y-auto">

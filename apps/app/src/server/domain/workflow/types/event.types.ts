@@ -62,6 +62,11 @@ export interface EventDataMap {
     stepId: string;
     error?: string;
   };
+  step_log: {
+    level: "info" | "warn" | "error";
+    message: string;
+    args: unknown[];
+  };
   command_executed: BaseEventData & {
     command: string;
     args?: string[];

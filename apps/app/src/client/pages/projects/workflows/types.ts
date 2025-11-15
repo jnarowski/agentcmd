@@ -117,6 +117,11 @@ export interface EventDataMap {
     step_id: string;
     step_name: string;
   };
+  step_log: {
+    level: "info" | "warn" | "error";
+    message: string;
+    args: unknown[];
+  };
 }
 
 // WorkflowEvent interface (replaces WorkflowComment)

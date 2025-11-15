@@ -426,4 +426,14 @@ export interface WorkflowStep<TPhaseId extends string = string> extends InngestS
     config: AiStepConfig,
     options?: StepOptions
   ): Promise<AiStepResult<T>>;
+
+  /**
+   * Log a message during workflow execution
+   * @param args - Values to log (strings or objects)
+   */
+  log: {
+    (...args: unknown[]): void;
+    warn(...args: unknown[]): void;
+    error(...args: unknown[]): void;
+  };
 }

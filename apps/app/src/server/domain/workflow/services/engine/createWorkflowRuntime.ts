@@ -23,12 +23,12 @@ import {
   createCliStep,
   createArtifactStep,
   createAnnotationStep,
-  createRunStep,
   createAiStep,
 } from "./steps";
 import { setupWorkspace } from "./setupWorkspace";
 import { setupSpec } from "./setupSpec";
 import { finalizeWorkspace } from "./finalizeWorkspace";
+import { sanitizeJson } from "@/server/domain/workflow/utils/sanitizeJson";
 
 /**
  * @fileoverview Workflow Runtime Adapter
@@ -313,8 +313,80 @@ function extendInngestSteps<TPhases extends PhasesConstraint>(
         : string
     : string
 > {
+  // Track current step ID for log() method
+  let currentStepId: string | null = null;
+
+  // Helper to serialize log arguments
+  function serializeLogArgs(args: unknown[]): string {
+    return args
+      .map((arg) =>
+        typeof arg === "string"
+          ? arg
+          : JSON.stringify(sanitizeJson(arg), null, 2)
+      )
+      .join(" ");
+  }
+
+  // Create log methods
+  function createLogMethod(level: "info" | "warn" | "error") {
+    return (...args: unknown[]): void => {
+      if (!currentStepId) {
+        throw new Error(
+          "step.log() can only be called inside step.run() execution"
+        );
+      }
+
+      const message = serializeLogArgs(args);
+
+      // Create workflow event (fire and forget - don't block execution)
+      createWorkflowEvent({
+        workflow_run_id: context.runId,
+        event_type: "step_log",
+        event_data: {
+          level,
+          message,
+          args,
+        },
+        inngest_step_id: currentStepId,
+        phase: context.currentPhase ?? undefined,
+        logger: context.logger,
+      }).catch((error) => {
+        context.logger.error(
+          { error, stepId: currentStepId, level },
+          "Failed to create step_log event"
+        );
+      });
+    };
+  }
+
+  // Create the log function with variants
+  const log = createLogMethod("info") as {
+    (...args: unknown[]): void;
+    warn(...args: unknown[]): void;
+    error(...args: unknown[]): void;
+  };
+  log.warn = createLogMethod("warn");
+  log.error = createLogMethod("error");
+
+  // Wrap the run method to track current step ID
+  const originalRun = inngestStep.run.bind(inngestStep);
+  const wrappedRun = <T>(
+    name: string,
+    fn: () => Promise<T>
+  ) => {
+    return originalRun(name, async () => {
+      currentStepId = name;
+      try {
+        return await fn();
+      } finally {
+        currentStepId = null;
+      }
+    });
+  };
+
   return {
     ...inngestStep,
+    run: wrappedRun,
     agent: createAgentStep(context, inngestStep),
     ai: createAiStep(context, inngestStep),
     annotation: createAnnotationStep(context, inngestStep),
@@ -322,7 +394,7 @@ function extendInngestSteps<TPhases extends PhasesConstraint>(
     cli: createCliStep(context, inngestStep),
     git: createGitStep(context, inngestStep),
     phase: createPhaseStep(context),
-    run: createRunStep(context, inngestStep),
+    log,
   } as WorkflowStep;
 }
 

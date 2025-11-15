@@ -146,7 +146,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
     fastifyServer = await startServer({ port, host });
     serverStartTime = new Date();
 
-    // 7. Spawn Inngest dev UI (uses INNGEST_PORT env var)
+    // 7. Spawn Inngest dev UI (server already ready - awaited above)
     console.log("Starting Inngest dev UI...");
     inngestProcess = spawn(
       "npx",
@@ -154,7 +154,9 @@ export async function startCommand(options: StartOptions): Promise<void> {
         "inngest-cli@latest",
         "dev",
         "-u",
-        `http://${host}:${port}/api/workflows/inngest`,
+        `http://localhost:${port}/api/workflows/inngest`,
+        "-p",
+        inngestPort.toString(),
       ],
       {
         stdio: "inherit",
