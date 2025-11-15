@@ -155,7 +155,18 @@ server/domain/
 └── */services/
 ```
 
-**See:** `.agent/docs/backend-patterns.md` for comprehensive patterns.
+**CRUD Gold Standard:** Workflow definitions follow Prisma naming pattern:
+- `get{Entity}` → findUnique (O(1), by id or unique key)
+- `get{Entity}By` → findFirst (O(n), any filter)
+- `get{Entity}s` → findMany (O(n), with pagination)
+- `create{Entity}` → create
+- `update{Entity}` → update (replaces archive/unarchive)
+- `upsert{Entity}` → upsert (atomic create-or-update)
+- `delete{Entity}` → delete (prefer soft delete via update)
+
+**Reference:** `apps/app/src/server/domain/workflow/services/definitions/`
+
+**See:** `.agent/docs/backend-patterns.md` for comprehensive CRUD patterns and examples.
 
 ## Workflow System
 

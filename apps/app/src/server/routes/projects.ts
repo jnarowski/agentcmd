@@ -82,6 +82,13 @@ export async function projectRoutes(fastify: FastifyInstance) {
 
         const syncResults = await syncFromClaudeProjects({ userId });
 
+        // Trigger workflow rescan to detect workflows in newly synced projects
+        if (fastify.reloadWorkflowEngine) {
+          await fastify.reloadWorkflowEngine().catch(() => {
+            // Error already logged by decorator, don't break sync flow
+          });
+        }
+
         return reply.send({ data: syncResults });
       } catch (error) {
         fastify.log.error({ error }, "Error syncing projects");
@@ -620,6 +627,13 @@ export async function projectRoutes(fastify: FastifyInstance) {
           { projectId: project.id, success: installResult.success },
           "Install workflow package result"
         );
+
+        // Trigger workflow rescan to detect newly installed workflows
+        if (installResult.success && fastify.reloadWorkflowEngine) {
+          await fastify.reloadWorkflowEngine().catch(() => {
+            // Error already logged by decorator, don't break installation flow
+          });
+        }
 
         if (!installResult.success) {
           fastify.log.error(

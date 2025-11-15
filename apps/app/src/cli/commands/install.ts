@@ -56,12 +56,17 @@ export async function installCommand(options: InstallOptions): Promise<void> {
 
     // Generate Prisma client first
     console.log("Generating Prisma client...");
+    const nullDevice = process.platform === "win32" ? "NUL" : "/dev/null";
     const generateResult = spawnSync(
       "npx",
       ["prisma", "generate", "--no-hints", `--schema=${schemaPath}`],
       {
         stdio: "inherit",
-        env: { ...process.env, PRISMA_HIDE_UPDATE_MESSAGE: "true" },
+        env: {
+          ...process.env,
+          PRISMA_HIDE_UPDATE_MESSAGE: "true",
+          DOTENV_CONFIG_PATH: nullDevice, // Prevent .env loading
+        },
       }
     );
 
@@ -76,7 +81,10 @@ export async function installCommand(options: InstallOptions): Promise<void> {
       ["prisma", "migrate", "deploy", `--schema=${schemaPath}`],
       {
         stdio: "inherit",
-        env: process.env,
+        env: {
+          ...process.env,
+          DOTENV_CONFIG_PATH: nullDevice, // Prevent .env loading
+        },
       }
     );
 
@@ -105,7 +113,6 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     console.log(`✓ Created ${homeDir}/`);
     console.log(`✓ Initialized database at ${dbPath}`);
     console.log(`✓ Created config at ${configPath}`);
-    console.log(`✓ Generated JWT secret`);
     console.log("");
     console.log("Next steps:");
     console.log(`  1. (Optional) Edit ${configPath} to customize settings`);

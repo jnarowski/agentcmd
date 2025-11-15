@@ -32,7 +32,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
     "check": "turbo run check",
-    "start": "concurrently --kill-others \"pnpm --filter=agentcmd start:prod\" \"pnpm --filter=agentcmd inngest\""
+    "start": "pnpm --filter=agentcmd start"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",

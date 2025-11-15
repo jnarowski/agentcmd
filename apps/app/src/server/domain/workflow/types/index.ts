@@ -13,6 +13,15 @@ export * from "./CancelWorkflowOptions";
 export * from "./UpdateWorkflowRunOptions";
 export * from "./DetachArtifactFromWorkflowEventOptions";
 
+// Workflow definition CRUD options (gold standard)
+export * from "./GetWorkflowDefinitionOptions";
+export * from "./GetWorkflowDefinitionByOptions";
+export * from "./GetWorkflowDefinitionsOptions";
+export * from "./CreateWorkflowDefinitionOptions";
+export * from "./UpdateWorkflowDefinitionOptions";
+export * from "./UpsertWorkflowDefinitionOptions";
+export * from "./DeleteWorkflowDefinitionOptions";
+
 /**
  * Configuration for workflow engine
  */

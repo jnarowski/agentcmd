@@ -5,8 +5,7 @@ import { buildSuccessResponse } from '@/server/utils/response';
 import { NotFoundError } from '@/server/errors';
 import {
   getWorkflowDefinitions,
-  archiveWorkflowDefinition,
-  unarchiveWorkflowDefinition,
+  updateWorkflowDefinition,
 } from '@/server/domain/workflow/services';
 import {
   GetWorkflowDefinitionsQuerySchema,
@@ -62,7 +61,15 @@ export async function registerWorkflowDefinitionRoutes(
       fastify.log.info({ userId, projectId, status }, 'Fetching workflow definitions for project');
 
       // Use service function with status filter
-      const definitions = await getWorkflowDefinitions(projectId, status);
+      const definitions = await getWorkflowDefinitions({
+        where: {
+          project_id: projectId,
+          ...(status && { status }),
+        },
+        orderBy: {
+          name: 'asc',
+        },
+      });
 
       // Parse JSON fields (Prisma stores JSON as strings in SQLite)
       const parsedDefinitions = definitions.map((def) => ({
@@ -188,7 +195,13 @@ export async function registerWorkflowDefinitionRoutes(
 
       fastify.log.info({ userId, definitionId: id }, 'Archiving workflow definition');
 
-      const definition = await archiveWorkflowDefinition(id);
+      const definition = await updateWorkflowDefinition({
+        id,
+        data: {
+          status: 'archived',
+          archived_at: new Date(),
+        },
+      });
 
       if (!definition) {
         throw new NotFoundError('Workflow definition not found');
@@ -227,7 +240,13 @@ export async function registerWorkflowDefinitionRoutes(
 
       fastify.log.info({ userId, definitionId: id }, 'Unarchiving workflow definition');
 
-      const definition = await unarchiveWorkflowDefinition(id);
+      const definition = await updateWorkflowDefinition({
+        id,
+        data: {
+          status: 'active',
+          archived_at: null,
+        },
+      });
 
       if (!definition) {
         throw new NotFoundError('Workflow definition not found');
@@ -265,26 +284,17 @@ export async function registerWorkflowDefinitionRoutes(
         throw new Error('Workflow engine not initialized');
       }
 
-      const diff = await fastify.reloadWorkflowEngine();
+      const result = await fastify.reloadWorkflowEngine();
 
       // Build summary
       const summary = {
-        total: diff.new.length + diff.updated.length + diff.archived.length + diff.errors.length,
-        new: diff.new.length,
-        updated: diff.updated.length,
-        archived: diff.archived.length,
-        errors: diff.errors.length,
+        total: result.total,
+        message: `Reloaded ${result.total} workflow(s)`,
       };
 
       return reply.send(
         buildSuccessResponse({
           summary,
-          workflows: {
-            new: diff.new,
-            updated: diff.updated,
-            archived: diff.archived,
-            errors: diff.errors,
-          },
         })
       );
     }

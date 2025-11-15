@@ -8,7 +8,7 @@ export const CLI_NAME = "agentcmd";
 // Default port configuration
 export const DEFAULT_PORT = 3456;
 export const DEFAULT_INNGEST_PORT = 8288;
-export const DEFAULT_HOST = "127.0.0.1";
+export const DEFAULT_HOST = "0.0.0.0";
 
 // Default logging configuration
 export const DEFAULT_LOG_LEVEL = "info";

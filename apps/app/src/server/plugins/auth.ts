@@ -7,10 +7,6 @@ import { buildErrorResponse } from "@/server/errors";
 import { config } from "@/server/config";
 
 async function authPluginFunction(fastify: FastifyInstance) {
-  // Log JWT secret being used for verification (secure masking)
-  const masked = `${config.jwt.secret.slice(0, 4)}...${config.jwt.secret.slice(-4)}`;
-  fastify.log.info({ jwtSecretMasked: masked, jwtSecretLength: config.jwt.secret.length }, 'Registering JWT plugin');
-
   // Register JWT plugin using config service
   await fastify.register(fastifyJwt, {
     secret: config.jwt.secret,

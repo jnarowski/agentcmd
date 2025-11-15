@@ -166,7 +166,7 @@
     "dev:kill": "bash ./scripts/kill-ports.sh",
     "dev:setup": "prisma migrate deploy && node scripts/setup-env.js",
     "dev:server": "tsx watch --env-file=.env src/server/index.ts",
-    "inngest": "npx inngest-cli@latest dev -u http://localhost:3456/api/workflows/inngest",
+    "inngest": "node scripts/start-inngest.js",
     "lint": "eslint .",
     "postinstall": "PRISMA_HIDE_UPDATE_MESSAGE=true prisma generate --no-hints",
     "preview": "vite preview",

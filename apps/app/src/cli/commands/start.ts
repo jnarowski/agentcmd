@@ -52,16 +52,15 @@ export async function startCommand(options: StartOptions): Promise<void> {
     process.env.LOG_LEVEL = mergedConfig.logLevel;
     process.env.ALLOWED_ORIGINS = mergedConfig.allowedOrigins;
     process.env.INNGEST_DEV_PORT = inngestPort.toString();
+    process.env.INNGEST_DEV_SERVER_URL = `http://127.0.0.1:${inngestPort}`;
 
-    // Log JWT_SECRET presence/length (secure)
+    // Validate JWT_SECRET
     if (!mergedConfig.jwtSecret) {
       console.error("❌ ERROR: JWT_SECRET is empty or missing!");
       console.error(`Config loaded from: ${configPath}`);
       console.error("Run 'agentcmd install' to initialize configuration");
       throw new Error("JWT_SECRET is required");
     }
-    const maskedSecret = `${mergedConfig.jwtSecret.slice(0, 4)}...${mergedConfig.jwtSecret.slice(-4)}`;
-    console.log(`✓ JWT_SECRET loaded: ${maskedSecret} (length: ${mergedConfig.jwtSecret.length})`);
 
     if (mergedConfig.anthropicApiKey) {
       process.env.ANTHROPIC_API_KEY = mergedConfig.anthropicApiKey;
@@ -95,12 +94,17 @@ export async function startCommand(options: StartOptions): Promise<void> {
 
     // 5. Generate Prisma client and apply migrations
     console.log("Generating Prisma client...");
+    const nullDevice = process.platform === "win32" ? "NUL" : "/dev/null";
     const generateResult = spawnSync(
       "npx",
       ["prisma", "generate", "--no-hints", `--schema=${schemaPath}`],
       {
         stdio: "inherit",
-        env: { ...process.env, PRISMA_HIDE_UPDATE_MESSAGE: "true" },
+        env: {
+          ...process.env,
+          PRISMA_HIDE_UPDATE_MESSAGE: "true",
+          DOTENV_CONFIG_PATH: nullDevice, // Prevent .env loading
+        },
       }
     );
 
@@ -114,7 +118,10 @@ export async function startCommand(options: StartOptions): Promise<void> {
       ["prisma", "migrate", "deploy", `--schema=${schemaPath}`],
       {
         stdio: "inherit",
-        env: process.env,
+        env: {
+          ...process.env,
+          DOTENV_CONFIG_PATH: nullDevice, // Prevent .env loading
+        },
       }
     );
 

@@ -429,6 +429,9 @@ export async function createServer() {
   // Register Shell WebSocket handler
   await registerShellRoute(fastify);
 
+  // Set Inngest Dev Server URL (always use dev mode)
+  process.env.INNGEST_DEV_SERVER_URL = `http://127.0.0.1:${config.workflow.inngestDevPort}`;
+
   // Initialize workflow engine (includes project scanning)
   await initializeWorkflowEngine(fastify);
 
@@ -469,7 +472,7 @@ export async function createServer() {
           message: "Development mode: Frontend not built",
           hint: 'Run "pnpm dev" to start both frontend (Vite) and backend servers',
           viteUrl: "http://localhost:5173",
-          apiUrl: "http://localhost:3456/api",
+          apiUrl: `http://${config.server.host}:${config.server.port}/api`,
         });
       }
     });

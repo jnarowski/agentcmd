@@ -1,8 +1,16 @@
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 
+// ============================================================================
+// PUBLIC API
+// ============================================================================
+
 /**
  * Find all workflow files in a directory (recursive)
+ *
+ * Recursively searches directory for TypeScript and JavaScript files.
+ * Skips directories that aren't readable or don't exist.
+ *
  * @param dir - Directory to search
  * @returns Array of file paths
  */

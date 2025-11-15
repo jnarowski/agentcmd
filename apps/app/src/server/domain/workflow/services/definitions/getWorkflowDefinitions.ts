@@ -1,57 +1,42 @@
 import { prisma } from "@/shared/prisma";
-import type { WorkflowDefinition } from "@prisma/client";
-
-export type WorkflowDefinitionWithCount = WorkflowDefinition & {
-  _count: {
-    runs: number;
-    activeRuns: number;
-  };
-};
+import type { GetWorkflowDefinitionsOptions } from "../../types/GetWorkflowDefinitionsOptions";
 
 /**
- * Get workflow definitions with optional status filtering
- * Includes run counts for each definition (total and active/pending)
- * Returns workflows sorted by name
+ * Get multiple workflow definitions with full Prisma API support
+ * Supports filtering, selection, sorting, and pagination
+ * Replaces both getWorkflowDefinitions and getAllWorkflowDefinitions
  */
 export async function getWorkflowDefinitions(
-  projectId: string,
-  status?: "active" | "archived"
-): Promise<WorkflowDefinitionWithCount[]> {
-  const definitions = await prisma.workflowDefinition.findMany({
-    where: {
-      project_id: projectId,
-      ...(status && { status }),
-    },
-    include: {
-      _count: {
-        select: {
-          runs: true,
-        },
-      },
-      runs: {
-        where: {
-          status: {
-            in: ['pending', 'running', 'paused']
-          }
-        },
-        select: {
-          id: true,
-        },
+  options: GetWorkflowDefinitionsOptions = {}
+) {
+  const { where, select, include, orderBy, skip, take } = options;
+
+  // Prisma doesn't allow both select and include
+  // If select is provided, use it and ignore include
+  // If neither provided, use default include with _count.runs
+  if (select) {
+    return await prisma.workflowDefinition.findMany({
+      where,
+      select,
+      orderBy,
+      skip,
+      take,
+    });
+  }
+
+  const includeConfig = include ?? {
+    _count: {
+      select: {
+        runs: true,
       },
     },
+  };
+
+  return await prisma.workflowDefinition.findMany({
+    where,
+    include: includeConfig,
+    orderBy,
+    skip,
+    take,
   });
-
-  // Transform to include activeRuns count and sort by name
-  const definitionsWithCounts = definitions
-    .map((def) => ({
-      ...def,
-      _count: {
-        runs: def._count.runs,
-        activeRuns: def.runs.length,
-      },
-      runs: undefined, // Remove the runs array from response
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name)) as WorkflowDefinitionWithCount[];
-
-  return definitionsWithCounts;
 }

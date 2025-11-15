@@ -1,6 +1,20 @@
 {
-  "lastId": 251114081340,
+  "lastId": 251115095452,
   "specs": {
+    "251115095452": {
+      "path": "todo/251115095452-workflow-engine-refactor/spec.md",
+      "status": "review",
+      "spec_type": "feature",
+      "created": "2025-11-15T16:54:52.000Z",
+      "updated": "2025-11-15T17:11:00.495Z"
+    },
+    "251115093309": {
+      "path": "done/251115093309-workflow-definition-crud-standard/spec.md",
+      "status": "completed",
+      "spec_type": "feature",
+      "created": "2025-11-15T16:35:09.000Z",
+      "updated": "2025-11-15T17:06:25.124Z"
+    },
     "251114081340": {
       "path": "todo/251114081340-sidebar-project-combobox/spec.md",
       "status": "review",

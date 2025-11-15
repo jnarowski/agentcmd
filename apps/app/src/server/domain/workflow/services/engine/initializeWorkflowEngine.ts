@@ -1,14 +1,7 @@
 import { serve } from "inngest/fastify";
 import type { FastifyInstance } from "fastify";
 import { createWorkflowClient } from "./createWorkflowClient";
-import { createWorkflowRuntime } from "./createWorkflowRuntime";
-import { loadProjectWorkflows } from "./loadProjectWorkflows";
-import { scanAllProjectWorkflows } from "./scanAllProjectWorkflows";
-import {
-  rescanAndLoadWorkflows,
-  type ResyncDiff,
-} from "./rescanAndLoadWorkflows";
-import { prisma } from "@/shared/prisma";
+import { loadWorkflows } from "./definitions/loadWorkflows";
 import { config } from "@/server/config";
 
 // Module-level mutable handler reference for hot-reloading
@@ -16,15 +9,21 @@ import { config } from "@/server/config";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let currentHandler: (req: any, reply: any) => Promise<unknown>;
 
+// ============================================================================
+// PUBLIC API
+// ============================================================================
+
 /**
  * Initialize workflow engine and register Inngest endpoint
  *
- * - Creates Inngest client with SQLite memoization
- * - Creates workflow runtime adapter
- * - Loads all WorkflowDefinition records from database
- * - Dynamically imports workflow files
- * - Creates Inngest functions with runtime
- * - Registers /api/workflows/inngest endpoint (bypasses JWT auth)
+ * Orchestrates the following steps:
+ * 1. Creates Inngest client with SQLite memoization
+ * 2. Loads workflows (scan → load → register)
+ * 3. Creates Inngest handler and registers Fastify route
+ * 4. Sets up hot-reload decorator for runtime updates
+ *
+ * The resulting endpoint at /api/workflows/inngest bypasses JWT auth
+ * and uses Inngest signing key validation instead.
  *
  * @param fastify - Fastify instance
  */
@@ -35,7 +34,7 @@ export async function initializeWorkflowEngine(
 
   logger.info("=== WORKFLOW ENGINE INITIALIZATION ===");
 
-  // Create Inngest client
+  // Step 1: Create Inngest client and attach to Fastify
   const inngestClient = createWorkflowClient({
     appId: config.workflow.appId,
     eventKey: config.workflow.eventKey,
@@ -43,158 +42,48 @@ export async function initializeWorkflowEngine(
     memoizationDbPath: config.workflow.memoizationDbPath,
   });
 
-  // Store Inngest client on fastify instance for later access
   fastify.decorate("workflowClient", inngestClient);
 
-  // Scan all projects for workflows BEFORE loading from database
-  // This ensures database is populated with workflow definitions
-  logger.info("Scanning projects for workflows...");
-  const scanResults = await scanAllProjectWorkflows(fastify);
+  // Step 2: Load workflows (scan → load → register)
+  const { functions: inngestFunctions } = await loadWorkflows(fastify);
 
-  if (scanResults.discovered > 0) {
-    logger.info(
-      {
-        projectsScanned: scanResults.scanned,
-        workflowsDiscovered: scanResults.discovered,
-        errors: scanResults.errors.length,
-      },
-      `Discovered ${scanResults.discovered} workflow(s) in ${scanResults.scanned} project(s)`
-    );
-  } else {
-    logger.info(
-      { projectsScanned: scanResults.scanned },
-      `No workflows found in ${scanResults.scanned} project(s)`
-    );
-  }
+  // Step 3: Create Inngest handler and register route
+  currentHandler = createInngestHandler(
+    inngestClient,
+    inngestFunctions,
+    logger
+  );
+  registerInngestRoute(fastify, logger);
 
-  if (scanResults.errors.length > 0) {
-    logger.warn(
-      { errors: scanResults.errors },
-      `Encountered ${scanResults.errors.length} error(s) during workflow scanning`
-    );
-  }
-
-  // Load all active workflow definitions from database (now populated by scan)
-  const definitions = await prisma.workflowDefinition.findMany({
-    where: {
-      status: "active",
-    },
-    select: {
-      id: true,
-      identifier: true,
-      name: true,
-      path: true,
-      project_id: true,
-    },
-  });
+  // Step 4: Setup hot-reload decorator
+  setupReloadDecorator(fastify, inngestClient, logger);
 
   logger.info(
-    { count: definitions.length },
-    `\nRegistering ${definitions.length} workflow definition(s)...`
+    {
+      endpoint: config.workflow.servePath,
+      functions: inngestFunctions.length,
+      memoization: config.workflow.memoizationDbPath,
+    },
+    `\nRegistered ${inngestFunctions.length} total workflow function(s)\n=== WORKFLOW ENGINE READY ===`
   );
+}
 
-  // Collect Inngest functions
-  const inngestFunctions = [];
+// ============================================================================
+// PRIVATE HELPERS
+// ============================================================================
 
-  // Group definitions by project to avoid reloading workflows multiple times
-  const projectDefinitionsMap = new Map<string, typeof definitions>();
-
-  for (const definition of definitions) {
-    if (definition.project_id) {
-      if (!projectDefinitionsMap.has(definition.project_id)) {
-        projectDefinitionsMap.set(definition.project_id, []);
-      }
-      projectDefinitionsMap.get(definition.project_id)!.push(definition);
-    }
-  }
-
-  // Load project workflows once per project
-  for (const [projectId, projectDefinitions] of projectDefinitionsMap) {
-    try {
-      // Get project path
-      const project = await prisma.project.findUnique({
-        where: { id: projectId },
-        select: { path: true, name: true },
-      });
-
-      if (!project) {
-        logger.warn(
-          { projectId },
-          "Project not found for workflow definitions"
-        );
-        continue;
-      }
-
-      // Create project-scoped runtime
-      const runtime = createWorkflowRuntime(inngestClient, projectId, logger);
-
-      // Load all workflows from project ONCE
-      const { workflows } = await loadProjectWorkflows(
-        project.path,
-        runtime,
-        logger
-      );
-
-      // Match and register all definitions from this project
-      for (const definition of projectDefinitions) {
-        const workflow = workflows.find(
-          (w) => w.definition.config.id === definition.identifier
-        );
-
-        if (workflow) {
-          inngestFunctions.push(workflow.inngestFunction);
-          logger.info(
-            {
-              workflowId: definition.identifier,
-              workflowName: definition.name,
-              projectId,
-            },
-            "Registered project workflow"
-          );
-        } else {
-          logger.warn(
-            {
-              definitionId: definition.id,
-              identifier: definition.identifier,
-              path: definition.path,
-            },
-            `    ✗ ${definition.name} (${definition.identifier}) - file no longer exports matching definition`
-          );
-
-          await prisma.workflowDefinition.update({
-            where: { id: definition.id },
-            data: {
-              status: "archived",
-              file_exists: false,
-              load_error: "Workflow file no longer exports matching definition",
-              archived_at: new Date(),
-            },
-          });
-        }
-      }
-    } catch (error) {
-      const errorMessage = (error as Error).message;
-      logger.error(
-        { projectId, error: errorMessage },
-        "Failed to load workflows for project"
-      );
-
-      // Mark all definitions from this project as archived
-      for (const definition of projectDefinitions) {
-        await prisma.workflowDefinition.update({
-          where: { id: definition.id },
-          data: {
-            status: "archived",
-            file_exists: false,
-            load_error: errorMessage,
-            archived_at: new Date(),
-          },
-        });
-      }
-    }
-  }
-
-  // Log function array for debugging
+/**
+ * Create Inngest handler using serve()
+ * Supports hot-reloading by returning handler that can be swapped at module level
+ * Logs function details for debugging
+ */
+function createInngestHandler(
+  inngestClient: ReturnType<typeof createWorkflowClient>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  inngestFunctions: any[],
+  logger: FastifyInstance["log"]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): (req: any, reply: any) => Promise<unknown> {
   logger.info(
     {
       functionsCount: inngestFunctions.length,
@@ -203,11 +92,11 @@ export async function initializeWorkflowEngine(
     "Inngest functions collected"
   );
 
-  // Register Inngest endpoint using serve() directly instead of fastifyPlugin
+  // Create handler using serve() directly instead of fastifyPlugin
   // This allows us to swap the handler at runtime for hot-reloading
   // See: https://github.com/inngest/inngest-js/blob/main/packages/inngest/src/fastify.ts#L17-L36
   // This endpoint bypasses JWT auth and uses Inngest signing key validation
-  currentHandler = serve({
+  return serve({
     client: inngestClient,
     functions: inngestFunctions,
     // Pass custom logger to capture Inngest errors with full details
@@ -216,8 +105,13 @@ export async function initializeWorkflowEngine(
       (process.env.INNGEST_LOG_LEVEL as "debug" | "info" | "warn" | "error") ||
       "debug",
   });
+}
 
-  // Register route that delegates to currentHandler
+/**
+ * Register Fastify route that delegates to Inngest handler
+ * Wraps handler with error logging for debugging
+ */
+function registerInngestRoute(fastify: FastifyInstance, logger: FastifyInstance["log"]): void {
   fastify.route({
     method: ["GET", "POST", "PUT"],
     url: config.workflow.servePath,
@@ -241,52 +135,55 @@ export async function initializeWorkflowEngine(
       }
     },
   });
+}
 
-  // Expose reloadWorkflowEngine decorator for hot-reloading
-  fastify.decorate("reloadWorkflowEngine", async (): Promise<ResyncDiff> => {
-    logger.info("Reloading workflow engine...");
+/**
+ * Setup hot-reload decorator on Fastify instance
+ *
+ * Allows reloading workflow engine without server restart.
+ * Uses loadWorkflows orchestrator and swaps handler atomically.
+ */
+function setupReloadDecorator(
+  fastify: FastifyInstance,
+  inngestClient: ReturnType<typeof createWorkflowClient>,
+  logger: FastifyInstance["log"]
+): void {
+  fastify.decorate("reloadWorkflowEngine", async (): Promise<{ total: number }> => {
+    try {
+      logger.info("Reloading workflow engine...");
 
-    // Rescan and load workflows with cache busting
-    const { functions, diff } = await rescanAndLoadWorkflows(
-      fastify,
-      inngestClient,
-      logger
-    );
+      // Load workflows (scan → load → register)
+      const { functions, stats } = await loadWorkflows(fastify);
 
-    // Swap handler atomically
-    currentHandler = serve({
-      client: inngestClient,
-      functions,
-    });
+      // Swap handler atomically
+      currentHandler = serve({
+        client: inngestClient,
+        functions,
+      });
 
-    logger.info(
-      {
-        total: functions.length,
-        new: diff.new.length,
-        updated: diff.updated.length,
-        archived: diff.archived.length,
-        errors: diff.errors.length,
-      },
-      "Workflow engine reloaded successfully"
-    );
+      logger.info(
+        { total: stats.total },
+        "Workflow engine reloaded successfully"
+      );
 
-    return diff;
+      return { total: stats.total };
+    } catch (error) {
+      logger.warn(
+        {
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+        },
+        "Failed to reload workflow engine"
+      );
+      throw error;
+    }
   });
-
-  logger.info(
-    {
-      endpoint: config.workflow.servePath,
-      functions: inngestFunctions.length,
-      memoization: config.workflow.memoizationDbPath,
-    },
-    `\nRegistered ${inngestFunctions.length} total workflow function(s)\n=== WORKFLOW ENGINE READY ===`
-  );
 }
 
 // Type augmentation for Fastify decorators
 declare module "fastify" {
   interface FastifyInstance {
     workflowClient?: ReturnType<typeof createWorkflowClient>;
-    reloadWorkflowEngine?: () => Promise<ResyncDiff>;
+    reloadWorkflowEngine?: () => Promise<{ total: number }>;
   }
 }

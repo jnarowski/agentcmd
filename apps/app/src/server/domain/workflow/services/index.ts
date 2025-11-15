@@ -20,7 +20,11 @@ export * from "./events/createWorkflowEvent";
 export * from "./events/findOrCreateWorkflowEvent";
 export * from "./generateRunNames";
 export * from "./engine/getInngestRunStatus";
-export * from "./definitions/archiveWorkflowDefinition";
-export * from "./definitions/unarchiveWorkflowDefinition";
+// New CRUD services (gold standard pattern)
+export * from "./definitions/getWorkflowDefinition";
+export * from "./definitions/getWorkflowDefinitionBy";
 export * from "./definitions/getWorkflowDefinitions";
-export * from "./definitions/getAllWorkflowDefinitions";
+export * from "./definitions/createWorkflowDefinition";
+export * from "./definitions/updateWorkflowDefinition";
+export * from "./definitions/upsertWorkflowDefinition";
+export * from "./definitions/deleteWorkflowDefinition";

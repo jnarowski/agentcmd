@@ -107,17 +107,80 @@ set((state) => {
 });
 ```
 
-### Backend Architecture
+### Code Organization
 
-✅ **DO** - Domain services (one function per file):
+**One export per file:**
+- **Services** - server-side only (`domain/*/services/*.ts`)
+- **Utils** - everywhere (client and server utils)
+- File name matches export: `createProject.ts` → `export function createProject()`
+- **Shared types** - import from `.types.ts` files
+- **Private types** - keep in file (not exported)
+- **Non-shared exported types** - can stay in file
 
 ```
 domain/
 ├── project/services/
-│   ├── getProjectById.ts       # One function
-│   ├── createProject.ts        # One function
-│   └── updateProject.ts        # One function
+│   ├── getProjectById.ts       # exports getProjectById only
+│   ├── createProject.ts        # exports createProject + non-shared types
+│   └── types.ts                # shared types used by multiple services
 ```
+
+**CRUD Gold Standard:** Follow Prisma naming patterns for domain services:
+- `get{Entity}` (findUnique), `get{Entity}By` (findFirst), `get{Entity}s` (findMany)
+- `create{Entity}`, `update{Entity}`, `upsert{Entity}`, `delete{Entity}`
+- See `.agent/docs/backend-patterns.md` for comprehensive patterns
+- Reference: `apps/app/src/server/domain/workflow/services/definitions/`
+
+**File structure** - public export first, private helpers below:
+
+```typescript
+// Imports
+import { prisma } from "@/shared/prisma";
+import type { SharedType } from "./types"; // Import shared types
+
+// Module-level constants, variables, private types
+const RETRY_LIMIT = 3;
+type HelperType = { ... }; // Private internal type - stays here
+
+// ============================================================================
+// PUBLIC API
+// ============================================================================
+
+/**
+ * Create a new project
+ */
+export async function createProject({ name, userId }: CreateProjectInput) {
+  validateInput(name);
+  return await saveProject(name, userId);
+}
+
+// Export type only if not shared with other files
+export type CreateProjectInput = {
+  name: string;
+  userId: string;
+};
+
+// ============================================================================
+// PRIVATE HELPERS
+// ============================================================================
+
+function validateInput(name: string): void {
+  if (!name) throw new Error("Name required");
+}
+```
+
+**Required:**
+- One function export per file
+- File name matches function export
+- Public exports before private functions
+- Separators: `// ============================================================================`
+- JSDoc on all public functions
+- Shared types imported from `.types.ts`
+- Private internal types stay in file (not exported)
+
+**Does NOT apply to:**
+- Route files (`routes/*.ts`) - no exports
+- Type definition files (`*.types.ts`) - multiple type exports OK
 
 ✅ **DO** - Pure functions with explicit parameters:
 
@@ -140,6 +203,8 @@ export async function getProjectById({
 ```typescript
 import { getProjectById } from "@/server/services/project.service";
 ```
+
+**See:** `apps/app/src/server/domain/workflow/services/engine/initializeWorkflowEngine.ts`
 
 ### Schema Organization
 
@@ -376,3 +441,4 @@ Sacrifice grammar for concision in all interactions and commit messages.
 
 - `packages/agent-cli-sdk/CLAUDE.md` - AI CLI SDK usage
 - `packages/agentcmd-workflows/CLAUDE.md` - Workflow SDK API
+- Tests go right alongside files, no __tests__ directory

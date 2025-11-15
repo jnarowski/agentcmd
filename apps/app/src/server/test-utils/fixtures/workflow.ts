@@ -158,3 +158,73 @@ export async function createTestWorkflowContext(
 
   return { user, project, workflow, run };
 }
+
+/**
+ * Workflow file templates for testing workflow loading
+ */
+export const WORKFLOW_FILE_TEMPLATES = {
+  /**
+   * Valid workflow with default export
+   */
+  validWorkflow: `import { defineWorkflow } from "agentcmd-workflows";
+
+/**
+ * Minimal valid workflow for testing
+ */
+export default defineWorkflow(
+  {
+    id: "test-valid-workflow",
+    name: "Test Valid Workflow",
+    description: "A minimal valid workflow for testing",
+    phases: [],
+  },
+  async () => {
+    // Empty workflow function for testing
+  }
+);
+`,
+
+  /**
+   * Valid workflow with named export
+   */
+  namedExportWorkflow: `import { defineWorkflow } from "agentcmd-workflows";
+
+/**
+ * Valid workflow with named export for testing
+ */
+export const workflow = defineWorkflow(
+  {
+    id: "test-named-workflow",
+    name: "Test Named Workflow",
+    description: "A valid workflow with named export",
+    phases: [],
+  },
+  async () => {
+    // Empty workflow function for testing
+  }
+);
+`,
+
+  /**
+   * Invalid workflow (not a proper workflow definition)
+   */
+  invalidWorkflow: `/**
+ * Invalid workflow for testing - not a proper workflow definition
+ */
+export default {
+  id: "test-invalid-workflow",
+  name: "Test Invalid Workflow",
+  // Missing __type and createInngestFunction
+};
+`,
+
+  /**
+   * Workflow that throws an error on import
+   */
+  errorWorkflow: `/**
+ * Workflow that throws an error on import for testing
+ */
+
+throw new Error("Test import error - this workflow cannot be loaded");
+`,
+};
