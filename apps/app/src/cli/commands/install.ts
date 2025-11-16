@@ -35,6 +35,9 @@ interface InstallOptions {
  */
 function showWelcomeBanner(): void {
   const width = 59; // Total content width
+  const emerald = "\x1b[38;2;5;150;105m"; // #059669
+  const reset = "\x1b[0m";
+
   const pad = (text: string) => {
     // Remove ANSI codes to count actual visible characters
     const visible = text.replace(/\u001b\[[0-9;]*m/g, '');
@@ -60,14 +63,14 @@ function showWelcomeBanner(): void {
   console.log(pc.cyan("   ║") + center(pc.bold(pc.blue("██║  ██║╚██████╔╝███████╗██║ ╚████║   ██║   "))) + pc.cyan("║"));
   console.log(pc.cyan("   ║") + center(pc.bold(pc.blue("╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝   ╚═╝   "))) + pc.cyan("║"));
   console.log(pc.cyan("   ║") + center("") + pc.cyan("║"));
-  console.log(pc.cyan("   ║") + center(pc.bold(pc.green("██████╗███╗   ███╗██████╗ "))) + pc.cyan("║"));
-  console.log(pc.cyan("   ║") + center(pc.bold(pc.green("██╔════╝████╗ ████║██╔══██╗"))) + pc.cyan("║"));
-  console.log(pc.cyan("   ║") + center(pc.bold(pc.green("██║     ██╔████╔██║██║  ██║"))) + pc.cyan("║"));
-  console.log(pc.cyan("   ║") + center(pc.bold(pc.green("██║     ██║╚██╔╝██║██║  ██║"))) + pc.cyan("║"));
-  console.log(pc.cyan("   ║") + center(pc.bold(pc.green("╚██████╗██║ ╚═╝ ██║██████╔╝"))) + pc.cyan("║"));
-  console.log(pc.cyan("   ║") + center(pc.bold(pc.green(" ╚═════╝╚═╝     ╚═╝╚═════╝ "))) + pc.cyan("║"));
+  console.log(pc.cyan("   ║") + center(pc.bold(`${emerald}██████╗███╗   ███╗██████╗ ${reset}`)) + pc.cyan("║"));
+  console.log(pc.cyan("   ║") + center(pc.bold(`${emerald}██╔════╝████╗ ████║██╔══██╗${reset}`)) + pc.cyan("║"));
+  console.log(pc.cyan("   ║") + center(pc.bold(`${emerald}██║     ██╔████╔██║██║  ██║${reset}`)) + pc.cyan("║"));
+  console.log(pc.cyan("   ║") + center(pc.bold(`${emerald}██║     ██║╚██╔╝██║██║  ██║${reset}`)) + pc.cyan("║"));
+  console.log(pc.cyan("   ║") + center(pc.bold(`${emerald}╚██████╗██║ ╚═╝ ██║██████╔╝${reset}`)) + pc.cyan("║"));
+  console.log(pc.cyan("   ║") + center(pc.bold(`${emerald} ╚═════╝╚═╝     ╚═╝╚═════╝ ${reset}`)) + pc.cyan("║"));
   console.log(pc.cyan("   ║") + center("") + pc.cyan("║"));
-  console.log(pc.cyan("   ║") + center(pc.dim("AI Coding Agent Orchestration")) + pc.cyan("║"));
+  console.log(pc.cyan("   ║") + center(`${emerald}[>]${reset} ` + pc.dim("AI Coding Agent Orchestration")) + pc.cyan("║"));
   console.log(pc.cyan("   ║") + center("") + pc.cyan("║"));
   console.log(pc.cyan("   ╚═══════════════════════════════════════════════════════════╝"));
   console.log("");

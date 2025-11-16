@@ -7,6 +7,7 @@ import {
   FieldLabel,
 } from "@/client/components/ui/field";
 import { Input } from "@/client/components/ui/input";
+import { Logo } from "@/client/components/Logo";
 import type { FormEvent, ComponentProps } from "react";
 
 interface LoginFormProps extends ComponentProps<"div"> {
@@ -34,8 +35,8 @@ export function LoginForm({
 }: LoginFormProps) {
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <div className="text-center mb-2">
-        <h1 className="text-4xl font-bold tracking-tight">agentcmd</h1>
+      <div className="flex justify-center mb-2">
+        <Logo size="lg" />
       </div>
       <AuthFormCard
         title="Login to your account"

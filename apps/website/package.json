@@ -9,6 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "fumadocs-core": "^16.0.12",
+    "fumadocs-mdx": "^14.0.0",
+    "fumadocs-ui": "^16.0.12",
     "next": "16.0.3",
     "react": "19.2.0",
     "react-dom": "19.2.0"
