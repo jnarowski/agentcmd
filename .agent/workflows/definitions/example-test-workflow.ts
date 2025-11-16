@@ -3,7 +3,6 @@ import {
   defineWorkflow,
   type CmdImplementSpecResponse,
 } from "../../../packages/agentcmd-workflows/dist";
-import { z } from "zod";
 
 /**
  * Kitchen Sink Example - demonstrates all available step capabilities
@@ -71,23 +70,6 @@ export default defineWorkflow(
       });
       step.log("Generated text:", textResult.data.text);
       step.log("Token usage:", textResult.result?.usage);
-
-      // Structured output with Zod schema
-      const analysisSchema = z.object({
-        complexity: z.number().describe("Complexity score 1-10"),
-        risks: z.array(z.string()).describe("List of potential risks"),
-        recommendations: z.array(z.string()).describe("Recommendations"),
-      });
-
-      const structuredResult = await step.ai<typeof analysisSchema>(
-        "analyze-code",
-        {
-          prompt: "Analyze the complexity of implementing a new authentication system",
-          schema: analysisSchema,
-          systemPrompt: "You are a senior software architect",
-        }
-      );
-      step.log("Structured output:", structuredResult.data);
     });
 
     // ========================================================================
@@ -119,7 +101,8 @@ export default defineWorkflow(
 
       const jsonResult = await step.agent<CodeAnalysis>("agent-json", {
         agent: "claude",
-        prompt: "Analyze codebase and return JSON: { files: string[], totalLines: number }",
+        prompt:
+          "Analyze codebase and return JSON: { files: string[], totalLines: number }",
         workingDir,
         json: true,
       });
@@ -204,7 +187,10 @@ export default defineWorkflow(
         branch: "feature/another-feature",
         baseBranch: "main",
       });
-      step.log("Had uncommitted changes:", commitBranchResult.data.hadUncommittedChanges);
+      step.log(
+        "Had uncommitted changes:",
+        commitBranchResult.data.hadUncommittedChanges
+      );
       step.log("Already on branch:", commitBranchResult.data.alreadyOnBranch);
 
       // Create pull request
@@ -273,7 +259,7 @@ export default defineWorkflow(
 
       // Do some work...
       await step.run("some-work", async () => {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
         return { done: true };
       });
 
@@ -332,22 +318,24 @@ export default defineWorkflow(
     // FINAL SUMMARY
     // ========================================================================
 
+    await step.run("final-summary", async () => {
+      step.log("=".repeat(60));
+      step.log("Workflow complete!");
+      step.log("Demonstrated steps:");
+      step.log("  ✓ step.log() - Logging");
+      step.log("  ✓ step.ai() - AI text/structured generation");
+      step.log("  ✓ step.agent() - Agent execution");
+      step.log("  ✓ step.cli() - CLI commands");
+      step.log("  ✓ step.git() - Git operations");
+      step.log("  ✓ step.artifact() - Artifact uploads");
+      step.log("  ✓ step.annotation() - Progress notes");
+      step.log("  ✓ step.run() - Native Inngest run");
+      step.log("  ✓ step.sleep() - Native Inngest sleep");
+      step.log("=".repeat(60));
+    });
+
     await step.annotation("workflow-complete", {
       message: "Kitchen sink workflow completed - all step types demonstrated",
     });
-
-    step.log("=".repeat(60));
-    step.log("Workflow complete!");
-    step.log("Demonstrated steps:");
-    step.log("  ✓ step.log() - Logging");
-    step.log("  ✓ step.ai() - AI text/structured generation");
-    step.log("  ✓ step.agent() - Agent execution");
-    step.log("  ✓ step.cli() - CLI commands");
-    step.log("  ✓ step.git() - Git operations");
-    step.log("  ✓ step.artifact() - Artifact uploads");
-    step.log("  ✓ step.annotation() - Progress notes");
-    step.log("  ✓ step.run() - Native Inngest run");
-    step.log("  ✓ step.sleep() - Native Inngest sleep");
-    step.log("=".repeat(60));
   }
 );

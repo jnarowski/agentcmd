@@ -29,6 +29,7 @@ interface UserPreferences {
   onboarding_dismissed?: boolean;
   activity_filter?: 'all' | 'sessions' | 'workflows';
   sidebar_active_tab?: 'activities' | 'tasks';
+  project_home_active_tab?: 'activities' | 'tasks';
 }
 
 interface Settings {

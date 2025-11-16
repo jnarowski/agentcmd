@@ -5,23 +5,18 @@ import {
   useToggleProjectStarred,
   useToggleProjectHidden,
 } from "@/client/pages/projects/hooks/useProjects";
-import { useSessions } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
 import { AppHeader } from "@/client/components/AppHeader";
 import { ProjectOnboardingSuggestions } from "@/client/pages/projects/components/ProjectOnboardingSuggestions";
-import { ProjectHomeSessions } from "@/client/pages/projects/components/ProjectHomeSessions";
+import { ProjectHomeContent } from "@/client/pages/projects/components/ProjectHomeContent";
 import { ProjectReadme } from "@/client/pages/projects/components/ProjectReadme";
 import { ProjectDialog } from "@/client/pages/projects/components/ProjectDialog";
 import { Skeleton } from "@/client/components/ui/skeleton";
 import { Button } from "@/client/components/ui/button";
-import {
-  ButtonGroup,
-  ButtonGroupSeparator,
-} from "@/client/components/ui/button-group";
+import { ButtonGroup } from "@/client/components/ui/button-group";
+import { Badge } from "@/client/components/ui/badge";
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
 } from "@/client/components/ui/card";
 import {
   DropdownMenu,
@@ -35,15 +30,13 @@ import {
   Archive,
   ArchiveRestore,
   Star,
-  MoreVertical,
-  MessageSquare,
+  ChevronDown,
 } from "lucide-react";
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
 
 export default function ProjectHomePage() {
   const { id } = useParams<{ id: string }>();
   const { data: project, isLoading } = useProject(id!);
-  const { data: sessions = [] } = useSessions({ projectId: id });
   const [editingProject, setEditingProject] = useState(false);
   const toggleStarred = useToggleProjectStarred();
   const toggleHidden = useToggleProjectHidden();
@@ -90,20 +83,28 @@ export default function ProjectHomePage() {
       <div className="p-4 md:p-6 space-y-4 md:space-y-6">
         {/* Desktop header */}
         <div className="hidden md:flex items-center justify-between gap-4">
-          <h1 className="text-xl md:text-2xl font-semibold leading-tight break-words">
-            {project.name}
-          </h1>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl md:text-2xl font-semibold leading-tight break-words">
+                {project.name}
+              </h1>
+              {project.is_starred && (
+                <Star className="h-5 w-5 fill-yellow-500 text-yellow-500 shrink-0" />
+              )}
+            </div>
+            {project.is_hidden && (
+              <Badge variant="secondary">Hidden</Badge>
+            )}
+          </div>
           <ButtonGroup>
-            <Button onClick={handleEdit} className="flex-1">
+            <Button variant="outline" onClick={handleEdit}>
               <Edit className="h-4 w-4" />
               Edit
             </Button>
-            <ButtonGroupSeparator />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="h-full">
-                  <MoreVertical className="h-4 w-4" />
-                  <span className="sr-only">More actions</span>
+                <Button variant="outline" size="icon" aria-label="More Options">
+                  <ChevronDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -135,16 +136,10 @@ export default function ProjectHomePage() {
         <ProjectOnboardingSuggestions project={project} />
       )}
 
-      {/* Sessions Section */}
+      {/* Activities & Tasks */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-            <MessageSquare className="h-5 w-5 shrink-0" />
-            <span className="truncate">Sessions</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <ProjectHomeSessions sessions={sessions} projectId={id!} />
+        <CardContent className="pt-4 pb-4">
+          <ProjectHomeContent projectId={id!} />
         </CardContent>
       </Card>
 
