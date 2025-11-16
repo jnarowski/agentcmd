@@ -1,0 +1,201 @@
+---
+title: Slash Commands
+description: Built-in slash commands for workflow automation
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+AgentCmd includes powerful slash commands for common workflow automation tasks.
+
+## Overview
+
+Slash commands are pre-built workflows accessible via CLI or custom commands.
+
+{/* AUTO-GENERATED:slash-commands-start */}
+
+## Available Commands
+
+### `/generate-feature-spec`
+
+Generate feature implementation spec with tasks and complexity estimates.
+
+**Usage**:
+```bash
+/generate-feature-spec [context]
+```
+
+**Arguments**:
+- `context` - Feature description or requirements (optional if continuing conversation)
+
+**What it does**:
+1. Analyzes feature requirements
+2. Breaks down into tasks
+3. Estimates complexity per task
+4. Writes spec to `.agent/specs/todo/`
+5. Updates spec index
+
+**Example**:
+```bash
+/generate-feature-spec "Add dark mode toggle to settings"
+```
+
+---
+
+### `/implement-spec`
+
+Implement feature from spec file.
+
+**Usage**:
+```bash
+/implement-spec <spec-id-or-name-or-path>
+```
+
+**Arguments**:
+- `spec-id-or-name-or-path` - Spec ID, feature name, or full path
+
+**What it does**:
+1. Reads spec file
+2. Updates status to "in-progress"
+3. Implements each task in order
+4. Checks off tasks as completed
+5. Updates status to "review"
+
+**Example**:
+```bash
+/implement-spec 251116105638
+/implement-spec dark-mode
+/implement-spec .agent/specs/todo/251116105638-dark-mode/spec.md
+```
+
+---
+
+### `/review-spec-implementation`
+
+Review implementation against spec.
+
+**Usage**:
+```bash
+/review-spec-implementation <spec-id-or-name-or-path>
+```
+
+**What it does**:
+1. Reads spec and implementation
+2. Verifies all tasks completed
+3. Checks for deviations
+4. Runs validation (tests, build)
+5. Documents findings
+
+**Example**:
+```bash
+/review-spec-implementation 251116105638
+```
+
+---
+
+### `/commit-and-push`
+
+Create commit, push, and optionally create PR.
+
+**Usage**:
+```bash
+/commit-and-push [base-branch]
+```
+
+**What it does**:
+1. Runs git status and diff
+2. Analyzes changes
+3. Creates descriptive commit message
+4. Commits changes
+5. Pushes to remote
+6. Creates PR if on feature branch
+
+**Example**:
+```bash
+/commit-and-push main
+```
+
+---
+
+### `/pull-request`
+
+Create pull request with detailed description.
+
+**Usage**:
+```bash
+/pull-request [title]
+```
+
+**What it does**:
+1. Analyzes branch changes
+2. Generates PR title and description
+3. Creates test plan
+4. Creates PR via GitHub CLI
+
+**Example**:
+```bash
+/pull-request "Add dark mode feature"
+```
+
+{/* END AUTO-GENERATED:slash-commands-end */}
+
+## Creating Custom Commands
+
+Create your own slash commands in `.claude/commands/`:
+
+```bash
+# Create command file
+echo "Generate comprehensive test suite for the current file" > .claude/commands/gen-tests.md
+
+# Use it
+/gen-tests
+```
+
+**See**: [Custom Slash Commands](/examples/custom-slash-command) for full tutorial.
+
+## Command Best Practices
+
+### Chaining Commands
+
+Combine commands for complete workflows:
+
+```bash
+# Generate spec → implement → review → commit
+/generate-feature-spec "Add user authentication"
+/implement-spec user-authentication
+/review-spec-implementation user-authentication
+/commit-and-push main
+```
+
+### Iterative Development
+
+Use commands iteratively:
+
+```bash
+# Start implementation
+/implement-spec my-feature
+
+# Review progress
+/review-spec-implementation my-feature
+
+# Continue if issues found
+/implement-spec my-feature
+
+# Final review
+/review-spec-implementation my-feature
+```
+
+### CI/CD Integration
+
+Use commands in CI pipelines:
+
+```bash
+# In CI script
+/review-spec-implementation $SPEC_ID
+/pull-request "Automated implementation of $FEATURE"
+```
+
+## Related
+
+- [CLI Reference](/reference/cli) - Command-line interface
+- [Custom Commands](/examples/custom-slash-command) - Create your own
+- [Workflow Definition](/guides/workflow-definition) - Build custom workflows

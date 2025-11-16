@@ -1,0 +1,399 @@
+---
+title: Steps
+description: 8 step types for building workflows
+---
+
+import { Card, Cards } from 'fumadocs-ui/components/card';
+
+Steps are the building blocks of workflows. AgentCmd provides 8 step types to handle different automation tasks.
+
+## Step Types Overview
+
+| Step Type | Purpose | Timeout | Use When |
+|-----------|---------|---------|----------|
+| **agent** | Run AI CLI tools (Claude, Codex, Gemini) | 30 min | Need interactive AI with file editing |
+| **ai** | Non-interactive AI text/structured generation | 5 min | Need quick AI response without tool use |
+| **cli** | Execute shell commands | 5 min | Run builds, tests, scripts |
+| **git** | Git operations (commit, branch, PR) | 2 min | Manage version control |
+| **artifact** | Upload files/images/directories | 5 min | Save outputs for review |
+| **annotation** | Progress notes for timeline | Instant | Mark milestones, explain steps |
+| **phase** | Group related steps | N/A | Organize workflow stages |
+| **log** | Log messages (info/warn/error) | Instant | Debug, track execution |
+
+## Quick Examples
+
+### Agent Step
+
+Run AI CLI tools with full file access:
+
+```typescript
+await step.agent("implement-feature", {
+  agent: "claude",
+  prompt: "Implement user authentication system",
+  workingDir: "/path/to/project",
+  permissionMode: "acceptEdits", // Auto-approve file edits
+});
+```
+
+**When to use**: Complex tasks requiring file editing, multiple iterations, tool use
+
+### AI Step
+
+Fast AI text or structured generation:
+
+```typescript
+const analysis = await step.ai("analyze-code", {
+  prompt: "Analyze this codebase for security issues",
+  provider: "anthropic",
+  schema: z.object({
+    issues: z.array(z.object({
+      severity: z.enum(["high", "medium", "low"]),
+      description: z.string(),
+    })),
+  }),
+});
+```
+
+**When to use**: Quick AI responses, structured data extraction, no file editing needed
+
+### CLI Step
+
+Execute shell commands:
+
+```typescript
+await step.cli("run-tests", {
+  command: "pnpm test --coverage",
+  cwd: projectPath,
+  env: { NODE_ENV: "test" },
+});
+```
+
+**When to use**: Build, test, deploy, any shell command
+
+### Git Step
+
+Git operations:
+
+```typescript
+await step.git("create-feature-branch", {
+  operation: "commit-and-branch",
+  commitMessage: "feat: Add user authentication",
+  branch: "feat/auth-system",
+});
+```
+
+**When to use**: Commit changes, create branches, open PRs
+
+### Artifact Step
+
+Upload outputs for review:
+
+```typescript
+await step.artifact("test-results", {
+  name: "coverage-report.html",
+  type: "file",
+  file: "./coverage/index.html",
+  description: "Test coverage report",
+});
+```
+
+**When to use**: Save build outputs, reports, images, generated files
+
+### Annotation Step
+
+Mark progress in timeline:
+
+```typescript
+await step.annotation("planning-complete", {
+  message: "Feature design complete ✓ Starting implementation...",
+});
+```
+
+**When to use**: Explain what's happening, mark phase transitions, celebrate wins
+
+### Phase Step
+
+Organize related steps:
+
+```typescript
+await step.phase("test", async () => {
+  await step.cli("unit", { command: "pnpm test:unit" });
+  await step.cli("e2e", { command: "pnpm test:e2e" });
+});
+```
+
+**When to use**: Group steps into logical stages (plan, build, test, deploy)
+
+### Log Step
+
+Debug and tracking:
+
+```typescript
+step.log("Starting deployment...");
+step.log.warn("API rate limit approaching");
+step.log.error("Deployment failed", error);
+```
+
+**When to use**: Development, debugging, monitoring
+
+## Step Execution Model
+
+### Sequential by Default
+
+Steps run one after another:
+
+```typescript
+await step.cli("step-1", { ... });  // Runs first
+await step.cli("step-2", { ... });  // Then this
+await step.cli("step-3", { ... });  // Finally this
+```
+
+### Parallel with Promise.all()
+
+Run steps concurrently:
+
+```typescript
+await Promise.all([
+  step.cli("lint", { command: "pnpm lint" }),
+  step.cli("test", { command: "pnpm test" }),
+  step.cli("typecheck", { command: "pnpm check-types" }),
+]);
+```
+
+**All three run simultaneously**
+
+### Conditional Execution
+
+Skip steps based on logic:
+
+```typescript
+if (needsSetup) {
+  await step.cli("setup", { command: "pnpm install" });
+}
+
+await step.cli("build", { command: "pnpm build" });
+
+if (shouldDeploy) {
+  await step.git("deploy", { operation: "commit" });
+}
+```
+
+## Step Return Values
+
+Most steps return results:
+
+### Agent Step Returns
+
+```typescript
+const result = await step.agent("code", {
+  agent: "claude",
+  json: true, // Extract JSON from response
+  prompt: "Generate API spec",
+});
+
+// result.data contains extracted JSON
+console.log(result.data.endpoints);
+```
+
+### AI Step Returns
+
+```typescript
+const analysis = await step.ai("analyze", {
+  prompt: "Analyze code quality",
+  schema: mySchema,
+});
+
+// Typed result based on schema
+analysis.data.score; // Type-safe!
+```
+
+### CLI Step Returns
+
+```typescript
+const output = await step.cli("version", {
+  command: "node --version",
+});
+
+console.log(output.stdout); // "v18.17.0"
+console.log(output.exitCode); // 0
+```
+
+## Error Handling
+
+### Try/Catch
+
+Handle step failures:
+
+```typescript
+try {
+  await step.cli("deploy", {
+    command: "deploy-to-prod",
+  });
+} catch (error) {
+  await step.annotation("deploy-failed", {
+    message: `Deployment failed: ${error}. Rolling back...`,
+  });
+
+  await step.cli("rollback", {
+    command: "rollback-deployment",
+  });
+}
+```
+
+### Timeout Configuration
+
+Override default timeouts:
+
+```typescript
+await step.cli("long-build", {
+  command: "pnpm build",
+}, {
+  timeout: 600000, // 10 minutes
+});
+```
+
+### Retries
+
+Some steps retry automatically on transient failures (network errors, rate limits):
+
+```typescript
+await step.ai("generate", {
+  prompt: "Generate code",
+  // Automatically retries on API rate limits
+});
+```
+
+## Choosing the Right Step
+
+### Agent vs AI
+
+| Use `step.agent()` | Use `step.ai()` |
+|--------------------|-----------------|
+| Need file editing | Just need text/data |
+| Interactive conversation | One-shot generation |
+| Complex multi-step task | Simple analysis |
+| Tool use required | Structured output |
+| 30 min timeout OK | Need fast response (5 min) |
+
+### CLI vs Git
+
+| Use `step.cli()` | Use `step.git()` |
+|------------------|------------------|
+| Any shell command | Git-specific operations |
+| Build, test, deploy | Commit, branch, PR |
+| Custom scripts | Version control |
+| Full flexibility | Type-safe git API |
+
+### Artifact vs Annotation
+
+| Use `step.artifact()` | Use `step.annotation()` |
+|-----------------------|-------------------------|
+| Save files for review | Mark progress |
+| Build outputs, reports | Explain what's happening |
+| Images, code, data | Celebrate milestones |
+| Downloadable | Timeline UI only |
+
+## Common Patterns
+
+### Agent → Git Flow
+
+```typescript
+// Generate code with AI
+const result = await step.agent("implement", {
+  agent: "claude",
+  prompt: "Implement feature X",
+});
+
+// Commit changes
+await step.git("save-work", {
+  operation: "commit-and-branch",
+  commitMessage: "feat: Implement X",
+  branch: "feat/x",
+});
+```
+
+### CLI Chain
+
+```typescript
+await step.cli("install", { command: "pnpm install" });
+await step.cli("build", { command: "pnpm build" });
+await step.cli("test", { command: "pnpm test" });
+await step.cli("deploy", { command: "pnpm deploy" });
+```
+
+### Multi-Agent Collaboration
+
+```typescript
+// Claude plans
+const plan = await step.agent("plan", {
+  agent: "claude",
+  prompt: "Design authentication system",
+  permissionMode: "plan", // Read-only
+});
+
+// Codex implements
+await step.agent("code", {
+  agent: "codex",
+  prompt: "Implement the auth plan from previous session",
+  resume: plan.data.sessionId,
+});
+```
+
+### Parallel Quality Checks
+
+```typescript
+await step.phase("quality", async () => {
+  const [lintResult, testResult, typeCheck] = await Promise.all([
+    step.cli("lint", { command: "pnpm lint" }),
+    step.cli("test", { command: "pnpm test" }),
+    step.cli("types", { command: "pnpm check-types" }),
+  ]);
+
+  if (lintResult.exitCode !== 0) {
+    throw new Error("Lint failed");
+  }
+});
+```
+
+## Step Naming
+
+Use descriptive, action-oriented names:
+
+✅ **Good**:
+```typescript
+await step.cli("install-dependencies", { ... });
+await step.agent("implement-authentication", { ... });
+await step.git("create-feature-branch", { ... });
+```
+
+❌ **Bad**:
+```typescript
+await step.cli("step1", { ... });
+await step.agent("do-stuff", { ... });
+await step.git("git", { ... });
+```
+
+Names appear in:
+- Timeline UI
+- Logs
+- Inngest dashboard
+- Error messages
+
+Make them clear and searchable!
+
+## Next Steps
+
+<Cards>
+  <Card title="Agent Step Reference" href="/docs/reference/steps/agent">
+    Complete API for agent steps
+  </Card>
+  <Card title="All Step Types" href="/docs/reference/steps">
+    Detailed docs for all 8 step types
+  </Card>
+  <Card title="Workflow Examples" href="/docs/examples">
+    Real workflows using steps
+  </Card>
+  <Card title="Error Handling" href="/docs/guides/error-handling">
+    Handle failures gracefully
+  </Card>
+</Cards>

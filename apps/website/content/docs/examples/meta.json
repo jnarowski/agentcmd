@@ -1,0 +1,9 @@
+{
+  "title": "Examples",
+  "pages": [
+    "basic-automation",
+    "spec-implementation",
+    "data-processing",
+    "custom-slash-command"
+  ]
+}

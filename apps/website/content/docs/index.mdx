@@ -1,38 +1,249 @@
 ---
-title: Welcome to AgentCmd
-description: AI-powered CLI workflow automation
+title: Welcome to agentcmd
+description: AI workflow automation powered by Claude, Codex, and Gemini
 ---
 
-# Welcome to AgentCmd
+import { Card, Cards } from "fumadocs-ui/components/card";
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import { AgentCMD } from "@/components/<AgentCMD />";
+import { Shield, Users, Activity, RotateCcw, FolderOpen, Smartphone } from "lucide-react";
 
-AgentCmd is a powerful AI-driven CLI workflow automation tool that helps you orchestrate complex tasks with ease.
+Build multi-step AI workflows with <<AgentCMD /> /> that orchestrate Claude, OpenAI Codex, and Google Gemini to automate complex development tasks. Define workflows once, run them anywhere.
 
-## Features
+## What is <<AgentCMD /> />?
 
-- **AI-Powered Workflows**: Leverage AI agents to automate complex CLI tasks
-- **Workflow Engine**: Build and manage sophisticated workflow pipelines
-- **Real-time Updates**: WebSocket-based real-time status updates
-- **Extensible**: Easy to extend with custom commands and integrations
+Think of it as **GitHub Actions for AI agents**. You define workflows with phases and steps, then <<AgentCMD /> /> handles execution, monitoring, and artifact management.
 
-## Getting Started
+```typescript
+// Simple 3-step workflow
+defineWorkflow(
+  {
+    id: "deploy-feature",
+    phases: ["plan", "implement", "deploy"],
+  },
+  async ({ step }) => {
+    await step.phase("plan", async () => {
+      await step.agent("architect", {
+        agent: "claude",
+        prompt: "Design the authentication system",
+      });
+    });
 
-Ready to get started? Check out the [Getting Started](/docs/getting-started) guide.
+    await step.phase("implement", async () => {
+      await step.agent("code", {
+        agent: "codex",
+        prompt: "Implement the design from the planning phase",
+      });
+    });
+
+    await step.phase("deploy", async () => {
+      await step.git("push", {
+        operation: "commit-and-branch",
+        message: "feat: Add authentication system",
+      });
+    });
+  }
+);
+```
+
+## Why <<AgentCMD /> />?
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
+  <div className="flex gap-3">
+    <Shield className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
+    <div>
+      <div className="font-semibold mb-1">Type-safe workflows</div>
+      <div className="text-muted-foreground text-sm">
+        Full TypeScript support with schema validation
+      </div>
+    </div>
+  </div>
+  <div className="flex gap-3">
+    <Users className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
+    <div>
+      <div className="font-semibold mb-1">Multi-agent</div>
+      <div className="text-muted-foreground text-sm">
+        Combine Claude's planning with Codex's implementation
+      </div>
+    </div>
+  </div>
+  <div className="flex gap-3">
+    <Activity className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
+    <div>
+      <div className="font-semibold mb-1">Real-time monitoring</div>
+      <div className="text-muted-foreground text-sm">
+        WebSocket updates show live progress
+      </div>
+    </div>
+  </div>
+  <div className="flex gap-3">
+    <RotateCcw className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
+    <div>
+      <div className="font-semibold mb-1">Resumable</div>
+      <div className="text-muted-foreground text-sm">
+        Continue previous agent conversations across steps
+      </div>
+    </div>
+  </div>
+  <div className="flex gap-3">
+    <FolderOpen className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
+    <div>
+      <div className="font-semibold mb-1">Artifact management</div>
+      <div className="text-muted-foreground text-sm">
+        Upload files, images, directories for review
+      </div>
+    </div>
+  </div>
+  <div className="flex gap-3">
+    <Smartphone className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
+    <div>
+      <div className="font-semibold mb-1">Mobile friendly</div>
+      <div className="text-muted-foreground text-sm">
+        Responsive UI works on all devices
+      </div>
+    </div>
+  </div>
+</div>
+
+## Core Concepts
+
+<Cards>
+  <Card title="Workflows" href="/docs/concepts/workflows">
+    Multi-step processes orchestrated by Inngest
+  </Card>
+  <Card title="Phases" href="/docs/concepts/phases">
+    Organize work into logical stages (plan → implement → review)
+  </Card>
+  <Card title="Steps" href="/docs/reference/steps">
+    8 step types: agent, AI, CLI, git, artifact, annotation, phase, log
+  </Card>
+  <Card title="Sessions" href="/docs/concepts/sessions">
+    Resume agent conversations across workflow steps
+  </Card>
+</Cards>
 
 ## Quick Example
 
-```bash
-# Install AgentCmd
-pnpm install
+Here's a complete workflow that generates a feature spec, implements it, and creates a PR:
 
-# Start the application
-pnpm dev
+```typescript
+import { defineWorkflow, buildSlashCommand } from "agentcmd-workflows";
 
-# Access the UI
-open http://localhost:5173
+export default defineWorkflow(
+  {
+    id: "ship-feature",
+    phases: ["spec", "implement", "review", "ship"],
+  },
+  async ({ event, step }) => {
+    const { featureName } = event.data.args;
+
+    // Generate spec
+    await step.phase("spec", async () => {
+      await step.agent("generate-spec", {
+        agent: "claude",
+        json: true,
+        prompt: buildSlashCommand("/cmd:generate-feature-spec", {
+          context: featureName,
+        }),
+      });
+    });
+
+    // Implement
+    await step.phase("implement", async () => {
+      await step.agent("implement", {
+        agent: "codex",
+        prompt: buildSlashCommand("/cmd:implement-spec", {
+          specIdOrNameOrPath: featureName,
+        }),
+      });
+    });
+
+    // Create PR
+    await step.phase("ship", async () => {
+      await step.git("create-pr", {
+        operation: "pr",
+        title: `feat: ${featureName}`,
+        body: "Auto-generated by <AgentCMD /> workflow",
+      });
+    });
+  }
+);
 ```
 
-## Resources
+## Get Started in 5 Minutes
 
-- [GitHub Repository](https://github.com/sourceborn/agentcmd)
-- [API Documentation](/docs/api)
-- [Examples](/docs/examples)
+<Steps>
+  <Step>
+    ### Install <<AgentCMD /> />
+
+    ```bash
+    npx agentcmd install
+    ```
+
+  </Step>
+
+  <Step>
+    ### Start the server
+
+    ```bash
+    npx agentcmd start
+    ```
+
+  </Step>
+
+  <Step>
+    ### Open the UI
+
+    ```bash
+    open http://localhost:5173
+    ```
+
+  </Step>
+
+  <Step>
+    ### Create your first project
+
+    Add your codebase, run an example workflow, and see AI agents in action.
+
+  </Step>
+</Steps>
+
+## What You'll Build
+
+<Cards>
+  <Card
+    title="Spec → Implement → Review"
+    href="/docs/examples/spec-implementation"
+  >
+    Complete feature development pipeline
+  </Card>
+  <Card
+    title="Multi-Agent Workflows"
+    href="/docs/advanced/multi-phase-workflows"
+  >
+    Claude for planning, Codex for implementation
+  </Card>
+  <Card
+    title="Custom Slash Commands"
+    href="/docs/examples/custom-slash-command"
+  >
+    Reusable prompts with type-safe args
+  </Card>
+  <Card title="CI/CD Integration" href="/docs/advanced/ci-cd-integration">
+    Trigger workflows from GitHub Actions
+  </Card>
+</Cards>
+
+## Ready to Start?
+
+Jump into the [Getting Started](/docs/getting-started/installation) guide to install <<AgentCMD /> /> and build your first workflow in under 30 minutes.
+
+Or explore:
+
+- [Core Concepts](/docs/concepts/workflows) - Understand workflows, phases, and steps
+- [Step Types Reference](/docs/reference/steps) - Complete API for all 8 step types
+- [Examples](/docs/examples) - Real-world workflow templates
+
+---
+
+**Need Help?** Check the [Troubleshooting](/docs/troubleshooting/common-errors) guide or [open an issue](https://github.com/sourceborn/agentcmd/issues).

@@ -1,0 +1,614 @@
+---
+title: Multi-Agent Workflows
+description: Orchestrate multiple AI agents (Claude, GPT, Gemini) in coordinated workflows
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+
+AgentCmd supports orchestrating multiple AI agents within a single workflow. Different agents excel at different tasks - combine them strategically for optimal results.
+
+## Supported Agents
+
+| Agent | Provider | Best For | Strengths |
+|-------|----------|----------|-----------|
+| **Claude** | Anthropic | Code generation, analysis | Long context, reasoning, safety |
+| **GPT-4** | OpenAI | General tasks, creativity | Fast, versatile, JSON mode |
+| **Gemini** | Google | Multimodal tasks | Vision, large files, speed |
+| **Codex** | OpenAI | Code completion | Autocomplete, small edits |
+
+## Agent Configuration
+
+### Default Agent
+
+Set default agent for all steps:
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+
+export const claudeWorkflow = defineWorkflow({
+  id: "claude-default",
+  name: "Claude Workflow",
+  defaultAgent: "claude", // All steps use Claude unless overridden
+  phases: [
+    {
+      name: "Implementation",
+      steps: [
+        {
+          type: "agent",
+          instruction: "Implement user authentication", // Uses Claude
+        },
+      ],
+    },
+  ],
+});
+```
+
+### Per-Step Agent
+
+Override agent for specific steps:
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+
+export const multiAgentWorkflow = defineWorkflow({
+  id: "multi-agent",
+  name: "Multi-Agent Workflow",
+  defaultAgent: "claude",
+  phases: [
+    {
+      name: "Analysis",
+      steps: [
+        {
+          type: "agent",
+          agent: "claude", // Best for complex analysis
+          instruction: "Analyze architecture and identify refactoring opportunities",
+        },
+      ],
+    },
+    {
+      name: "Implementation",
+      steps: [
+        {
+          type: "agent",
+          agent: "gpt-4", // Faster for straightforward tasks
+          instruction: "Generate boilerplate code for API endpoints",
+        },
+      ],
+    },
+    {
+      name: "Vision",
+      steps: [
+        {
+          type: "agent",
+          agent: "gemini", // Best for image analysis
+          instruction: "Analyze UI screenshot and generate component structure",
+          attachments: ["screenshots/dashboard.png"],
+        },
+      ],
+    },
+  ],
+});
+```
+
+## Agent Specialization Patterns
+
+### Parallel Agent Execution
+
+Run multiple agents in parallel for comparison:
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+
+export const parallelAgents = defineWorkflow({
+  id: "parallel-comparison",
+  name: "Parallel Agent Comparison",
+  phases: [
+    {
+      name: "Generate Solutions",
+      steps: [
+        {
+          type: "agent",
+          agent: "claude",
+          instruction: "Design API architecture for user service",
+          outputKey: "claudeSolution",
+        },
+        {
+          type: "agent",
+          agent: "gpt-4",
+          instruction: "Design API architecture for user service",
+          outputKey: "gptSolution",
+        },
+      ],
+    },
+    {
+      name: "Compare",
+      steps: [
+        {
+          type: "agent",
+          agent: "claude",
+          instruction: (ctx) => `Compare these two API designs and recommend best:
+
+            Claude's Design:
+            ${ctx.claudeSolution}
+
+            GPT-4's Design:
+            ${ctx.gptSolution}`,
+          outputKey: "comparison",
+        },
+      ],
+    },
+  ],
+});
+```
+
+### Sequential Refinement
+
+Chain agents for iterative improvement:
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+
+export const refinementWorkflow = defineWorkflow({
+  id: "sequential-refinement",
+  name: "Sequential Agent Refinement",
+  phases: [
+    {
+      name: "Draft",
+      steps: [
+        {
+          type: "agent",
+          agent: "gpt-4", // Fast initial draft
+          instruction: "Write a blog post about AI workflows (500 words)",
+          outputKey: "draft",
+        },
+      ],
+    },
+    {
+      name: "Enhance",
+      steps: [
+        {
+          type: "agent",
+          agent: "claude", // Deep analysis and improvement
+          instruction: (ctx) => `Improve this blog post:
+            - Add technical depth
+            - Include code examples
+            - Enhance clarity
+
+            Draft: ${ctx.draft}`,
+          outputKey: "enhanced",
+        },
+      ],
+    },
+    {
+      name: "Finalize",
+      steps: [
+        {
+          type: "artifact",
+          name: "blog-post.md",
+          content: (ctx) => ctx.enhanced,
+        },
+      ],
+    },
+  ],
+});
+```
+
+### Specialist Delegation
+
+Delegate subtasks to specialized agents:
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+
+export const delegationWorkflow = defineWorkflow({
+  id: "delegation",
+  name: "Agent Delegation Workflow",
+  phases: [
+    {
+      name: "Planning",
+      steps: [
+        {
+          type: "agent",
+          agent: "claude", // Best for planning
+          instruction: "Break down feature into subtasks",
+          outputKey: "plan",
+        },
+      ],
+    },
+    {
+      name: "Implementation",
+      steps: [
+        {
+          type: "agent",
+          agent: "codex", // Best for code completion
+          instruction: (ctx) => `Generate boilerplate code:
+            ${ctx.plan.subtasks[0]}`,
+          outputKey: "boilerplate",
+        },
+        {
+          type: "agent",
+          agent: "claude", // Best for complex logic
+          instruction: (ctx) => `Implement business logic:
+            ${ctx.plan.subtasks[1]}`,
+          outputKey: "logic",
+        },
+        {
+          type: "agent",
+          agent: "gpt-4", // Best for tests
+          instruction: (ctx) => `Generate test cases:
+            ${ctx.plan.subtasks[2]}`,
+          outputKey: "tests",
+        },
+      ],
+    },
+  ],
+});
+```
+
+## Agent-Specific Features
+
+### Claude: Long Context Analysis
+
+Leverage Claude's 200k token context:
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+
+export const largeCodebaseAnalysis = defineWorkflow({
+  id: "large-analysis",
+  name: "Large Codebase Analysis",
+  phases: [
+    {
+      name: "Analyze",
+      steps: [
+        {
+          type: "agent",
+          agent: "claude", // Can handle entire codebase
+          instruction: `Analyze all TypeScript files in src/ and:
+            1. Identify architectural patterns
+            2. Find code duplication
+            3. Suggest refactoring opportunities
+            4. Generate dependency graph`,
+          context: {
+            includeFiles: "src/**/*.ts", // Loads all files into context
+          },
+        },
+      ],
+    },
+  ],
+});
+```
+
+### GPT-4: Structured Output
+
+Use GPT-4's reliable JSON mode:
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+import { z } from "zod";
+
+export const structuredExtraction = defineWorkflow({
+  id: "structured-extract",
+  name: "Structured Data Extraction",
+  phases: [
+    {
+      name: "Extract",
+      steps: [
+        {
+          type: "ai",
+          agent: "gpt-4", // Reliable JSON mode
+          instruction: "Extract all API endpoints from Express routes",
+          jsonMode: {
+            enabled: true,
+            schema: z.object({
+              endpoints: z.array(
+                z.object({
+                  method: z.enum(["GET", "POST", "PUT", "DELETE"]),
+                  path: z.string(),
+                  handler: z.string(),
+                })
+              ),
+            }),
+          },
+          outputKey: "endpoints",
+        },
+      ],
+    },
+  ],
+});
+```
+
+### Gemini: Multimodal Analysis
+
+Analyze images and documents:
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+
+export const uiAnalysis = defineWorkflow({
+  id: "ui-analysis",
+  name: "UI Screenshot Analysis",
+  phases: [
+    {
+      name: "Analyze UI",
+      steps: [
+        {
+          type: "agent",
+          agent: "gemini", // Best for vision tasks
+          instruction: `Analyze this UI screenshot and generate:
+            1. Component hierarchy
+            2. Tailwind CSS classes
+            3. React component structure`,
+          attachments: [
+            "designs/dashboard.png",
+            "designs/mobile-view.png",
+          ],
+          outputKey: "uiAnalysis",
+        },
+      ],
+    },
+    {
+      name: "Generate Code",
+      steps: [
+        {
+          type: "agent",
+          agent: "claude", // Switch to Claude for code generation
+          instruction: (ctx) => `Generate React components based on:
+            ${ctx.uiAnalysis}`,
+        },
+      ],
+    },
+  ],
+});
+```
+
+## Cost Optimization
+
+### Agent Selection by Cost
+
+Choose agents based on task complexity and cost:
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+
+export const costOptimizedWorkflow = defineWorkflow({
+  id: "cost-optimized",
+  name: "Cost-Optimized Workflow",
+  phases: [
+    {
+      name: "Simple Tasks",
+      steps: [
+        {
+          type: "agent",
+          agent: "gpt-3.5-turbo", // Cheapest for simple tasks
+          instruction: "Format code with Prettier",
+        },
+      ],
+    },
+    {
+      name: "Medium Tasks",
+      steps: [
+        {
+          type: "agent",
+          agent: "gpt-4", // Balanced cost/performance
+          instruction: "Generate unit tests",
+        },
+      ],
+    },
+    {
+      name: "Complex Tasks",
+      steps: [
+        {
+          type: "agent",
+          agent: "claude", // Best for complex reasoning
+          instruction: "Refactor architecture",
+        },
+      ],
+    },
+  ],
+});
+```
+
+### Token Usage Tracking
+
+Monitor token consumption per agent:
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+
+export const trackedWorkflow = defineWorkflow({
+  id: "tracked",
+  name: "Token Usage Tracking",
+  phases: [
+    {
+      name: "Analysis",
+      steps: [
+        {
+          type: "agent",
+          agent: "claude",
+          instruction: "Analyze codebase",
+          trackTokens: true, // Enable tracking
+          outputKey: "analysis",
+        },
+        {
+          type: "log",
+          message: (ctx) => `Tokens used: ${ctx.analysis.tokenUsage}`,
+        },
+      ],
+    },
+  ],
+});
+```
+
+## Best Practices
+
+### Match Agent to Task
+
+Use each agent's strengths:
+
+```typescript
+// ✅ Good - Agent matched to task
+export const wellMatched = defineWorkflow({
+  id: "well-matched",
+  phases: [
+    {
+      name: "Tasks",
+      steps: [
+        {
+          type: "agent",
+          agent: "claude",
+          instruction: "Perform deep architectural analysis", // Claude's strength
+        },
+        {
+          type: "agent",
+          agent: "gpt-4",
+          instruction: "Generate config boilerplate", // GPT-4's speed
+        },
+        {
+          type: "agent",
+          agent: "gemini",
+          instruction: "Analyze UI mockup image", // Gemini's vision
+        },
+      ],
+    },
+  ],
+});
+
+// ❌ Avoid - Agent mismatched to task
+export const mismatched = defineWorkflow({
+  id: "mismatched",
+  phases: [
+    {
+      name: "Tasks",
+      steps: [
+        {
+          type: "agent",
+          agent: "codex",
+          instruction: "Write detailed architectural analysis", // Wrong agent
+        },
+      ],
+    },
+  ],
+});
+```
+
+### Fallback Chains
+
+Implement fallbacks for reliability:
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+
+export const resilientWorkflow = defineWorkflow({
+  id: "resilient",
+  name: "Resilient Multi-Agent",
+  phases: [
+    {
+      name: "Primary",
+      steps: [
+        {
+          type: "agent",
+          agent: "claude",
+          instruction: "Implement feature",
+          onError: {
+            continueToPhase: "Fallback",
+          },
+        },
+      ],
+    },
+    {
+      name: "Fallback",
+      steps: [
+        {
+          type: "agent",
+          agent: "gpt-4", // Try different agent
+          instruction: "Implement feature (simplified approach)",
+        },
+      ],
+    },
+  ],
+});
+```
+
+### Context Handoff
+
+Pass context cleanly between agents:
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+
+export const cleanHandoff = defineWorkflow({
+  id: "clean-handoff",
+  name: "Clean Agent Handoff",
+  phases: [
+    {
+      name: "Plan",
+      steps: [
+        {
+          type: "agent",
+          agent: "claude",
+          instruction: "Analyze requirements and create detailed plan",
+          outputKey: "plan",
+        },
+      ],
+    },
+    {
+      name: "Implement",
+      steps: [
+        {
+          type: "agent",
+          agent: "gpt-4",
+          instruction: (ctx) => `Execute this plan exactly:
+            ${JSON.stringify(ctx.plan, null, 2)}
+
+            Follow each step and track progress.`,
+        },
+      ],
+    },
+  ],
+});
+```
+
+## Agent Comparison
+
+### When to Use Each Agent
+
+**Claude (Anthropic)**:
+- ✅ Complex reasoning and planning
+- ✅ Large codebases (200k context)
+- ✅ Safety-critical tasks
+- ✅ Detailed explanations
+- ❌ Speed (slower than GPT-4)
+- ❌ Vision tasks
+
+**GPT-4 (OpenAI)**:
+- ✅ Fast execution
+- ✅ Reliable JSON mode
+- ✅ General-purpose tasks
+- ✅ Cost-effective
+- ❌ Smaller context (128k)
+- ❌ Deep reasoning
+
+**Gemini (Google)**:
+- ✅ Multimodal (images, video)
+- ✅ Large file analysis
+- ✅ Fast inference
+- ✅ Cost-effective
+- ❌ Code generation quality
+- ❌ Complex reasoning
+
+**Codex (OpenAI)**:
+- ✅ Code completion
+- ✅ Fast, small edits
+- ✅ Autocomplete-style
+- ❌ Complex tasks
+- ❌ Reasoning
+- ❌ Planning
+
+## Related
+
+- [Agent Steps](/reference/steps/agent) - Configure agent behavior
+- [AI Steps](/reference/steps/ai) - AI-specific step configuration
+- [JSON Mode](/agents/json-mode) - Structured agent outputs
+- [Permission Modes](/agents/permission-modes) - Control agent autonomy

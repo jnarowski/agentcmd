@@ -1,0 +1,343 @@
+---
+title: Type-Safe Arguments
+description: Define and validate workflow inputs with JSON Schema
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+## Overview
+
+Workflows can accept typed arguments using `argsSchema` and `defineSchema()`. This provides:
+
+- Runtime validation via JSON Schema
+- Automatic TypeScript type inference
+- IDE autocomplete for event.data.args
+- Clear documentation of required inputs
+
+## Basic Usage
+
+```typescript
+import { defineWorkflow, defineSchema } from "agentcmd-workflows";
+
+const argsSchema = defineSchema({
+  type: "object",
+  properties: {
+    featureName: { type: "string" },
+    priority: { enum: ["high", "medium", "low"] },
+  },
+  required: ["featureName"],
+});
+
+export default defineWorkflow(
+  {
+    id: "my-workflow",
+    argsSchema,
+  },
+  async ({ event, step }) => {
+    // Fully typed!
+    const { featureName, priority } = event.data.args;
+    //      ^string       ^"high" | "medium" | "low" | undefined
+  }
+);
+```
+
+## Schema Definition
+
+{/* AUTO-GENERATED:schema-builder-api */}
+### defineSchema() API
+
+The `defineSchema()` function captures literal types automatically (no `as const` needed):
+
+```typescript
+const schema = defineSchema({
+  type: "object",
+  properties: {
+    buildType: { enum: ["production", "development"] },
+    verbose: { type: "boolean" },
+  },
+  required: ["buildType"],
+});
+
+type Inferred = InferSchemaType<typeof schema>;
+// { buildType: "production" | "development", verbose?: boolean }
+```
+
+### Supported JSON Schema Types
+
+| Type | JSON Schema | TypeScript Type |
+|------|-------------|-----------------|
+| String | `{ type: "string" }` | `string` |
+| Number | `{ type: "number" }` | `number` |
+| Boolean | `{ type: "boolean" }` | `boolean` |
+| Enum | `{ enum: ["a", "b"] }` | `"a" \| "b"` |
+| Object | `{ type: "object", properties: {...} }` | `{ ... }` |
+| Array | `{ type: "array", items: {...} }` | `T[]` |
+
+{/* /AUTO-GENERATED:schema-builder-api */}
+
+## Examples
+
+<Tabs items={['Simple', 'Enums', 'Nested', 'Complex']}>
+  <Tab value="Simple">
+    ```typescript
+    const argsSchema = defineSchema({
+      type: "object",
+      properties: {
+        name: { type: "string" },
+        count: { type: "number" },
+      },
+      required: ["name"],
+    });
+
+    // Inferred type:
+    // { name: string, count?: number }
+    ```
+  </Tab>
+
+  <Tab value="Enums">
+    ```typescript
+    const argsSchema = defineSchema({
+      type: "object",
+      properties: {
+        environment: { enum: ["dev", "staging", "prod"] },
+        region: { enum: ["us-east", "us-west", "eu"] },
+      },
+      required: ["environment"],
+    });
+
+    // Inferred type:
+    // {
+    //   environment: "dev" | "staging" | "prod",
+    //   region?: "us-east" | "us-west" | "eu"
+    // }
+    ```
+  </Tab>
+
+  <Tab value="Nested">
+    ```typescript
+    const argsSchema = defineSchema({
+      type: "object",
+      properties: {
+        config: {
+          type: "object",
+          properties: {
+            timeout: { type: "number" },
+            retries: { type: "number" },
+          },
+          required: ["timeout"],
+        },
+      },
+      required: ["config"],
+    });
+
+    // Inferred type:
+    // {
+    //   config: {
+    //     timeout: number,
+    //     retries?: number
+    //   }
+    // }
+    ```
+  </Tab>
+
+  <Tab value="Complex">
+    ```typescript
+    const argsSchema = defineSchema({
+      type: "object",
+      properties: {
+        specFile: { type: "string" },
+        buildType: { enum: ["production", "development"] },
+        features: {
+          type: "array",
+          items: { type: "string" },
+        },
+        options: {
+          type: "object",
+          properties: {
+            skipTests: { type: "boolean" },
+            verbose: { type: "boolean" },
+          },
+        },
+      },
+      required: ["specFile", "buildType"],
+    });
+
+    // Inferred type:
+    // {
+    //   specFile: string,
+    //   buildType: "production" | "development",
+    //   features?: string[],
+    //   options?: {
+    //     skipTests?: boolean,
+    //     verbose?: boolean
+    //   }
+    // }
+    ```
+  </Tab>
+</Tabs>
+
+## Validation
+
+Arguments are validated at runtime before the workflow executes:
+
+```typescript
+// ✅ Valid
+await inngest.send({
+  name: "workflow/my-workflow",
+  data: {
+    args: {
+      featureName: "auth",
+      priority: "high",
+    },
+  },
+});
+
+// ❌ Invalid - missing required field
+await inngest.send({
+  name: "workflow/my-workflow",
+  data: {
+    args: {
+      priority: "high", // featureName is required!
+    },
+  },
+});
+// Throws validation error before workflow runs
+```
+
+## No `as const` Required
+
+Unlike typical TypeScript patterns, `defineSchema()` automatically captures literal types:
+
+```typescript
+// ❌ Old pattern (other libraries)
+const schema = {
+  type: "object",
+  properties: {
+    env: { enum: ["dev", "prod"] },
+  },
+} as const;
+
+// ✅ AgentCmd pattern (automatic)
+const schema = defineSchema({
+  type: "object",
+  properties: {
+    env: { enum: ["dev", "prod"] }, // Automatically literal!
+  },
+});
+```
+
+This works because `defineSchema()` uses const generic parameters to preserve literal types.
+
+## Accessing Arguments
+
+Arguments are available via `event.data.args`:
+
+```typescript
+export default defineWorkflow(
+  {
+    id: "deploy",
+    argsSchema: defineSchema({
+      type: "object",
+      properties: {
+        environment: { enum: ["staging", "production"] },
+        version: { type: "string" },
+      },
+      required: ["environment"],
+    }),
+  },
+  async ({ event, step }) => {
+    // Destructure with full type safety
+    const { environment, version } = event.data.args;
+
+    await step.annotation("start", {
+      message: `Deploying to ${environment}${version ? ` (v${version})` : ""}`,
+    });
+
+    // Use arguments in step configs
+    await step.cli("deploy", {
+      command: `npm run deploy:${environment}`,
+      env: {
+        VERSION: version || "latest",
+      },
+    });
+  }
+);
+```
+
+## Best Practices
+
+### Use Enums for Fixed Choices
+
+```typescript
+// ✅ Good - type-safe enum
+properties: {
+  mode: { enum: ["auto", "manual"] }
+}
+
+// ❌ Avoid - loose string
+properties: {
+  mode: { type: "string" }
+}
+```
+
+### Mark Required Fields Explicitly
+
+```typescript
+// ✅ Clear
+{
+  properties: {
+    name: { type: "string" },
+    email: { type: "string" },
+  },
+  required: ["name", "email"]
+}
+
+// ❌ Ambiguous
+{
+  properties: {
+    name: { type: "string" },
+    email: { type: "string" },
+  }
+}
+```
+
+### Provide Defaults in Code
+
+JSON Schema doesn't support defaults well, so handle them in your workflow:
+
+```typescript
+async ({ event, step }) => {
+  const { priority = "medium", verbose = false } = event.data.args;
+  // Now priority and verbose have defaults
+}
+```
+
+## Type Inference Utilities
+
+{/* AUTO-GENERATED:type-utilities-api */}
+### InferSchemaType
+
+Extract TypeScript types from schema:
+
+```typescript
+import type { InferSchemaType } from "agentcmd-workflows";
+
+const schema = defineSchema({
+  type: "object",
+  properties: {
+    name: { type: "string" },
+  },
+  required: ["name"],
+});
+
+type Args = InferSchemaType<typeof schema>;
+// { name: string }
+```
+
+{/* /AUTO-GENERATED:type-utilities-api */}
+
+## Next Steps
+
+- [Context Sharing](/docs/guides/context-sharing) - Share data between phases
+- [Error Handling](/docs/guides/error-handling) - Handle validation failures
+- [Workflow Definition](/docs/guides/workflow-definition) - Back to basics

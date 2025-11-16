@@ -1,0 +1,160 @@
+---
+title: Installation
+description: Install <AgentCMD /> and verify your setup
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+
+Get <AgentCMD /> running on your machine in under 2 minutes.
+
+## Prerequisites
+
+Before installing, ensure you have:
+
+- **Node.js 18+** - [Download here](https://nodejs.org/)
+- **AI CLI tool** - At least one of:
+  - [Claude Code](https://code.claude.com/) (recommended)
+  - [OpenAI Codex](https://openai.com/codex)
+  - [Google Gemini](https://ai.google.dev/)
+
+<Callout type="info">
+**New to AI CLIs?** Claude Code is the most mature option. Install it first, then add others later.
+</Callout>
+
+## Install <AgentCMD />
+
+Run the installer which sets up the database, config, and CLI:
+
+```bash
+npx agentcmd install
+```
+
+This will:
+1. Create `~/.agentcmd/` directory
+2. Initialize SQLite database
+3. Generate JWT secret for authentication
+4. Create default config file
+
+**Output**:
+
+```text title="Installation Output"
+✓ Created ~/.agentcmd directory
+✓ Initialized database at ~/.agentcmd/agentcmd.db
+✓ Generated JWT secret
+✓ Created config at ~/.agentcmd/config.json
+
+<AgentCMD /> installed successfully!
+
+Next steps:
+  1. Start the server: npx agentcmd start
+  2. Open UI: http://localhost:5173
+```
+
+## Verify Installation
+
+Check that <AgentCMD /> is installed correctly:
+
+```bash
+npx agentcmd config --show
+```
+
+You should see your configuration:
+
+```json title="~/.agentcmd/config.json"
+{
+  "server": {
+    "port": 3456,
+    "host": "0.0.0.0"
+  },
+  "inngest": {
+    "port": 8288,
+    "devMode": true
+  },
+  "database": {
+    "path": "~/.agentcmd/agentcmd.db"
+  }
+}
+```
+
+## Configure AI CLI Tools
+
+<AgentCMD /> needs API keys to run AI agents:
+
+### Claude Code
+
+Already installed? <AgentCMD /> will use your existing API key automatically.
+
+Need to set it up?
+
+```bash
+# Set Claude API key
+export ANTHROPIC_API_KEY="sk-ant-..."
+```
+
+### OpenAI Codex (Optional)
+
+```bash
+# Set OpenAI API key
+export OPENAI_API_KEY="sk-..."
+```
+
+### Google Gemini (Optional, Experimental)
+
+```bash
+# Set Gemini API key
+export GOOGLE_API_KEY="..."
+```
+
+<Callout type="tip">
+**Pro tip**: Add API keys to your shell profile (`~/.zshrc` or `~/.bashrc`) to persist them across sessions.
+</Callout>
+
+## Troubleshooting
+
+### Port Already in Use
+
+If port 3456 is taken, change it:
+
+```bash
+npx agentcmd config --set server.port=3457
+```
+
+### Database Permission Errors
+
+Ensure `~/.agentcmd/` is writable:
+
+```bash
+chmod -R 755 ~/.agentcmd
+```
+
+### Missing Node.js
+
+Install Node.js 18+ from [nodejs.org](https://nodejs.org/) or use [nvm](https://github.com/nvm-sh/nvm):
+
+```bash title="Install Node.js with nvm"
+# Install nvm
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+
+# Install Node 18
+nvm install 18
+nvm use 18
+```
+
+## Next Steps
+
+<Cards>
+  <Card title="Quick Start" href="/docs/getting-started/quick-start">
+    Launch the UI and create your first project
+  </Card>
+  <Card title="First Workflow" href="/docs/getting-started/first-workflow">
+    Build a simple 10-line workflow
+  </Card>
+  <Card title="Configuration" href="/docs/reference/configuration">
+    Customize ports, logging, and more
+  </Card>
+</Cards>
+
+---
+
+**Installation complete!** Continue to [Quick Start](/docs/getting-started/quick-start) to launch the UI and create your first project.

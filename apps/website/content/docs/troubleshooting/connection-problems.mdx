@@ -1,0 +1,1049 @@
+---
+title: Connection Problems
+description: Fix WebSocket disconnections, Inngest connection issues, and network errors
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+## Overview
+
+Real-time features in AgentCmd rely on WebSocket connections and Inngest integration. This guide helps diagnose and fix connection issues affecting live updates, workflow monitoring, and event streaming.
+
+## WebSocket Connection Issues
+
+### WebSocket Connection Failed
+
+**Symptoms**:
+- `WebSocket connection failed`
+- No real-time updates in UI
+- Connection status shows "disconnected"
+- Browser console: `WebSocket is closed before the connection is established`
+
+**Diagnosis**:
+```bash
+# Check if backend server is running
+curl http://localhost:3456/api/health
+
+# Verify WebSocket endpoint
+curl -i -N -H "Connection: Upgrade" \
+  -H "Upgrade: websocket" \
+  -H "Sec-WebSocket-Version: 13" \
+  -H "Sec-WebSocket-Key: test" \
+  http://localhost:3456/socket.io/
+
+# Check browser console for errors
+# Open DevTools → Console → Look for WebSocket errors
+
+# Verify JWT token exists
+# In browser console:
+localStorage.getItem('auth-token')
+```
+
+**Solution**:
+
+<Tabs items={['Check Server', 'Fix Authentication', 'CORS Issues']}>
+  <Tab value="Check Server">
+    ```bash
+    # Ensure backend is running
+    cd apps/app
+    pnpm dev:server
+
+    # Check server logs
+    tail -f logs/app.log | grep -i websocket
+
+    # Verify Socket.IO is initialized
+    grep "WebSocket server" logs/app.log
+
+    # Test health endpoint
+    curl http://localhost:3456/api/health
+    ```
+  </Tab>
+
+  <Tab value="Fix Authentication">
+    ```typescript
+    // In browser console, check auth state
+    console.log(localStorage.getItem('auth-token'));
+
+    // If missing, log in again
+    // Navigate to /login and authenticate
+
+    // Verify token is passed to WebSocket
+    // In apps/app/src/client/hooks/useWebSocket.ts
+    import { useAuthStore } from "@/client/stores/authStore";
+
+    const token = useAuthStore((state) => state.token);
+
+    const socket = io("http://localhost:3456", {
+      auth: { token }, // Ensure token is passed
+      transports: ["websocket", "polling"]
+    });
+    ```
+  </Tab>
+
+  <Tab value="CORS Issues">
+    ```typescript
+    // Verify CORS configuration
+    // In apps/app/src/server/index.ts
+
+    import cors from '@fastify/cors';
+
+    await fastify.register(cors, {
+      origin: ["http://localhost:5173"], // Frontend URL
+      credentials: true,
+    });
+
+    // For production, use environment variable
+    await fastify.register(cors, {
+      origin: process.env.FRONTEND_URL || "http://localhost:5173",
+      credentials: true,
+    });
+    ```
+  </Tab>
+</Tabs>
+
+<Callout type="error">
+**Authentication Required**: WebSocket connections require valid JWT token. Ensure user is logged in and token exists in localStorage.
+</Callout>
+
+**Prevention**:
+- Always start backend before frontend
+- Verify JWT token exists before connecting
+- Configure CORS for all environments
+- Monitor server logs on startup
+
+---
+
+### WebSocket Disconnects Frequently
+
+**Symptoms**:
+- Connection drops every few minutes
+- Constant reconnecting in UI
+- Browser console shows repeated disconnect/connect cycles
+
+**Diagnosis**:
+```bash
+# Check for network issues
+ping localhost
+
+# Monitor connection stability
+# In browser DevTools → Network → WS tab
+# Watch WebSocket connection for disconnects
+
+# Check server logs for errors
+tail -f apps/app/logs/app.log | grep -E "(disconnect|error)"
+
+# Verify no firewall blocking
+# macOS:
+sudo pfctl -s all | grep 3456
+
+# Linux:
+sudo iptables -L | grep 3456
+```
+
+**Solution**:
+
+<Tabs items={['Increase Timeout', 'Fix Network', 'Implement Reconnection']}>
+  <Tab value="Increase Timeout">
+    ```typescript
+    // Adjust Socket.IO timeout settings
+    // In apps/app/src/server/websocket/index.ts
+
+    const io = new Server(fastify.server, {
+      pingTimeout: 60000,     // 60 seconds (default: 20s)
+      pingInterval: 25000,    // 25 seconds (default: 25s)
+      cors: {
+        origin: ["http://localhost:5173"],
+        credentials: true,
+      }
+    });
+
+    // On client side
+    // In apps/app/src/client/hooks/useWebSocket.ts
+    const socket = io("http://localhost:3456", {
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 10,
+      timeout: 60000,
+    });
+    ```
+  </Tab>
+
+  <Tab value="Fix Network">
+    ```bash
+    # Check for network interference
+    # Disable VPN temporarily
+    # Disable antivirus/firewall temporarily
+
+    # Use localhost instead of 127.0.0.1
+    # In apps/app/.env:
+    HOST=localhost
+
+    # Restart server
+    pnpm dev
+
+    # Test direct connection
+    telnet localhost 3456
+    ```
+  </Tab>
+
+  <Tab value="Implement Reconnection">
+    ```typescript
+    // Add robust reconnection logic
+    // In apps/app/src/client/hooks/useWebSocket.ts
+
+    export function useWebSocket() {
+      const [socket, setSocket] = useState<Socket | null>(null);
+      const [isConnected, setIsConnected] = useState(false);
+
+      useEffect(() => {
+        const token = useAuthStore.getState().token;
+        if (!token) return;
+
+        const newSocket = io("http://localhost:3456", {
+          auth: { token },
+          reconnectionDelay: 1000,
+          reconnectionAttempts: Infinity, // Keep trying
+        });
+
+        newSocket.on("connect", () => {
+          console.log("✅ WebSocket connected");
+          setIsConnected(true);
+        });
+
+        newSocket.on("disconnect", (reason) => {
+          console.log("❌ WebSocket disconnected:", reason);
+          setIsConnected(false);
+
+          // Reconnect if server initiated disconnect
+          if (reason === "io server disconnect") {
+            newSocket.connect();
+          }
+        });
+
+        newSocket.on("connect_error", (error) => {
+          console.error("WebSocket connection error:", error);
+        });
+
+        setSocket(newSocket);
+
+        return () => {
+          newSocket.disconnect();
+        };
+      }, []);
+
+      return { socket, isConnected };
+    }
+    ```
+  </Tab>
+</Tabs>
+
+**Prevention**:
+- Configure appropriate ping timeouts
+- Implement exponential backoff for reconnection
+- Show connection status in UI
+- Handle reconnection gracefully in components
+
+---
+
+### Events Not Reaching Frontend
+
+**Symptoms**:
+- WebSocket connected but no events received
+- Real-time updates don't appear
+- Agent streaming doesn't show
+
+**Diagnosis**:
+```bash
+# Enable debug logging on backend
+# In apps/app/.env:
+LOG_LEVEL=debug
+
+# Watch event emission
+tail -f apps/app/logs/app.log | grep -i "eventbus\|websocket"
+
+# Check channel subscriptions
+# In browser console:
+socket.emit('subscribe', 'session:123');
+socket.on('message', (data) => console.log('Received:', data));
+
+# Verify event handler is registered
+# In apps/app/src/server/websocket/handlers/
+ls -la
+```
+
+**Solution**:
+
+<Tabs items={['Check Subscription', 'Verify Handler', 'Debug Events']}>
+  <Tab value="Check Subscription">
+    ```typescript
+    // Ensure proper channel subscription
+    // In feature hooks (e.g., useSessionWebSocket.ts)
+
+    export function useSessionWebSocket(sessionId: string) {
+      const { socket, isConnected } = useWebSocket();
+      const [messages, setMessages] = useState([]);
+
+      useEffect(() => {
+        if (!socket || !isConnected || !sessionId) return;
+
+        // Subscribe to channel
+        const channel = `session:${sessionId}`;
+        socket.emit('subscribe', channel);
+        console.log(`📡 Subscribed to ${channel}`);
+
+        // Listen for messages
+        const handleMessage = (message: WebSocketMessage) => {
+          console.log('📨 Received message:', message);
+
+          if (message.type === 'session.stream_output') {
+            setMessages(prev => [...prev, message.data]);
+          }
+        };
+
+        socket.on('message', handleMessage);
+
+        // Cleanup
+        return () => {
+          socket.emit('unsubscribe', channel);
+          socket.off('message', handleMessage);
+          console.log(`🔌 Unsubscribed from ${channel}`);
+        };
+      }, [socket, isConnected, sessionId]);
+
+      return { messages, isConnected };
+    }
+    ```
+  </Tab>
+
+  <Tab value="Verify Handler">
+    ```typescript
+    // Check event handler is registered
+    // In apps/app/src/server/websocket/handlers/session.handler.ts
+
+    import { eventBus } from "../eventBus";
+
+    export function setupSessionHandler(eventBus: EventBus) {
+      console.log("✅ Setting up session handler");
+
+      // Subscribe to domain events
+      eventBus.on("session.stream_output", (data) => {
+        console.log("📤 Broadcasting session output:", data.sessionId);
+
+        eventBus.broadcast(`session:${data.sessionId}`, {
+          type: "session.stream_output",
+          data,
+        });
+      });
+
+      // More event subscriptions...
+    }
+
+    // Verify handler is called in websocket/index.ts
+    import { setupSessionHandler } from "./handlers/session.handler";
+
+    export function setupWebSocket(server: FastifyInstance) {
+      // ...
+      setupSessionHandler(eventBus);
+      // ...
+    }
+    ```
+  </Tab>
+
+  <Tab value="Debug Events">
+    ```typescript
+    // Add debug logging to EventBus
+    // In apps/app/src/server/websocket/eventBus.ts
+
+    class EventBus {
+      async emit<T>(event: string, data: T): Promise<void> {
+        console.log(`🔔 EventBus.emit: ${event}`, data);
+
+        const handlers = this.handlers.get(event);
+        if (!handlers || handlers.size === 0) {
+          console.warn(`⚠️  No handlers for event: ${event}`);
+          return;
+        }
+
+        console.log(`📢 Broadcasting to ${handlers.size} handlers`);
+        // ... rest of emit logic
+      }
+
+      broadcast(channel: string, message: WebSocketMessage): void {
+        console.log(`📡 Broadcasting to channel: ${channel}`, message);
+        io.to(channel).emit("message", message);
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+<Callout type="info">
+**Channel Naming**: Use colon notation for channels (`session:123`), dot notation for events (`session.stream_output`). Mixing them causes subscription failures.
+</Callout>
+
+**Prevention**:
+- Always subscribe to channels before expecting events
+- Unsubscribe on component unmount
+- Use consistent naming (colons for channels, dots for events)
+- Test event flow with debug logging
+
+---
+
+### CORS Errors in WebSocket
+
+**Symptoms**:
+- `Access to XMLHttpRequest blocked by CORS policy`
+- `Cross-Origin Request Blocked`
+- WebSocket connection fails with CORS error
+
+**Diagnosis**:
+```bash
+# Check browser console for CORS errors
+# DevTools → Console
+
+# Verify CORS headers
+curl -H "Origin: http://localhost:5173" \
+  -H "Access-Control-Request-Method: GET" \
+  -H "Access-Control-Request-Headers: X-Requested-With" \
+  -X OPTIONS \
+  http://localhost:3456/api/health \
+  -v
+
+# Check server CORS configuration
+grep -A 10 "cors" apps/app/src/server/index.ts
+```
+
+**Solution**:
+```typescript
+// Configure CORS properly in Fastify
+// In apps/app/src/server/index.ts
+
+import cors from '@fastify/cors';
+
+await fastify.register(cors, {
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      process.env.FRONTEND_URL,
+    ].filter(Boolean);
+
+    // Allow requests with no origin (mobile apps, Postman)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'), false);
+    }
+  },
+  credentials: true, // Allow cookies and auth headers
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+});
+
+// Also configure Socket.IO CORS
+import { Server } from 'socket.io';
+
+const io = new Server(fastify.server, {
+  cors: {
+    origin: [
+      'http://localhost:5173',
+      process.env.FRONTEND_URL,
+    ].filter(Boolean),
+    credentials: true,
+  }
+});
+```
+
+**Prevention**:
+- Configure CORS before other middleware
+- Allow credentials for authenticated requests
+- Use environment variables for different origins
+- Test CORS with different client origins
+
+---
+
+## Inngest Connection Problems
+
+### Inngest Dev Server Not Starting
+
+**Symptoms**:
+- `Cannot connect to Inngest dev server`
+- http://localhost:8288 not accessible
+- Workflows don't execute
+
+**Diagnosis**:
+```bash
+# Check if Inngest is running
+curl http://localhost:8288
+
+# Check if port is in use
+lsof -i :8288
+
+# Verify Inngest installation
+npx inngest-cli --version
+
+# Check server startup logs
+grep -i inngest apps/app/logs/app.log
+```
+
+**Solution**:
+
+<Tabs items={['Start Inngest', 'Fix Port Conflict', 'Manual Start']}>
+  <Tab value="Start Inngest">
+    ```bash
+    # Use pnpm dev (includes Inngest)
+    cd apps/app
+    pnpm dev
+
+    # Verify Inngest started
+    curl http://localhost:8288
+
+    # Check logs
+    tail -f logs/app.log | grep inngest
+    ```
+  </Tab>
+
+  <Tab value="Fix Port Conflict">
+    ```bash
+    # Find process using port 8288
+    lsof -i :8288
+
+    # Kill process
+    kill -9 <PID>
+
+    # Or use different port
+    # In apps/app/.env:
+    INNGEST_PORT=8300
+
+    # Update Inngest configuration
+    # In apps/app/package.json scripts:
+    "inngest": "npx inngest-cli@latest dev -u http://localhost:3456/api/inngest --port 8300"
+    ```
+  </Tab>
+
+  <Tab value="Manual Start">
+    ```bash
+    # Start Inngest manually
+    cd apps/app
+    npx inngest-cli@latest dev \
+      -u http://localhost:3456/api/inngest \
+      --port 8288
+
+    # In another terminal, start server
+    pnpm dev:server
+
+    # Verify connection
+    curl http://localhost:8288
+    curl http://localhost:3456/api/inngest
+    ```
+  </Tab>
+</Tabs>
+
+**Prevention**:
+- Always use `pnpm dev` to start all services
+- Check Inngest UI loads at http://localhost:8288
+- Verify port 8288 is available before starting
+- Monitor Inngest logs on startup
+
+---
+
+### Inngest Not Receiving Events
+
+**Symptoms**:
+- Events sent but not appearing in Inngest UI
+- Functions not triggered
+- No error messages
+
+**Diagnosis**:
+```bash
+# Test event ingestion directly
+curl -X POST http://localhost:8288/e/agentcmd \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "test/event",
+    "data": {"test": true}
+  }'
+
+# Check Inngest UI for events
+open http://localhost:8288
+
+# Verify event key configuration
+grep INNGEST apps/app/.env
+
+# Check function registration
+curl http://localhost:3456/api/inngest | jq .
+```
+
+**Solution**:
+
+<Tabs items={['Fix Event Key', 'Verify Endpoint', 'Check Function']}>
+  <Tab value="Fix Event Key">
+    ```bash
+    # Ensure event key matches
+    # In apps/app/.env:
+    INNGEST_EVENT_KEY=agentcmd
+    INNGEST_SIGNING_KEY=<your-signing-key>
+
+    # Use same key when sending events
+    await inngest.send({
+      name: "workflow/execute",
+      data: { workflowId: "123" }
+    });
+
+    # Restart server
+    pnpm dev
+    ```
+  </Tab>
+
+  <Tab value="Verify Endpoint">
+    ```typescript
+    // Check Inngest serve endpoint is registered
+    // In apps/app/src/server/routes/inngest.ts
+
+    import { inngest } from "@/server/inngest";
+    import { functions } from "@/server/domain/workflow/inngest/functions";
+
+    export default async function inngestRoutes(fastify: FastifyInstance) {
+      // POST endpoint for Inngest
+      fastify.all("/api/inngest", async (request, reply) => {
+        const result = await serve({
+          client: inngest,
+          functions,
+          streaming: "allow",
+        })(request.raw, reply.raw);
+
+        return result;
+      });
+    }
+
+    // Ensure route is registered in index.ts
+    import inngestRoutes from "./routes/inngest";
+    await fastify.register(inngestRoutes);
+    ```
+  </Tab>
+
+  <Tab value="Check Function">
+    ```typescript
+    // Verify function is exported and registered
+    // In apps/app/src/server/domain/workflow/inngest/functions.ts
+
+    import { executeWorkflow } from "./execute-workflow";
+    import { cleanupOldRuns } from "./cleanup-old-runs";
+
+    export const functions = [
+      executeWorkflow,
+      cleanupOldRuns,
+      // Add new functions here
+    ];
+
+    // In execute-workflow.ts
+    export const executeWorkflow = inngest.createFunction(
+      { id: "execute-workflow" },
+      { event: "workflow/execute" }, // Event name
+      async ({ event, step }) => {
+        // Function implementation
+      }
+    );
+    ```
+  </Tab>
+</Tabs>
+
+**Prevention**:
+- Use consistent event naming across project
+- Verify function registration on server start
+- Test event flow with Inngest UI
+- Monitor function execution logs
+
+---
+
+### Inngest Functions Timing Out
+
+**Symptoms**:
+- `Function execution timeout`
+- Long-running workflows fail
+- Steps complete but function times out
+
+**Diagnosis**:
+```bash
+# Check function timeout in Inngest UI
+open http://localhost:8288
+
+# View function run → Check duration
+
+# Check step execution times
+# In Inngest UI → Run details → Step timeline
+
+# Review function configuration
+grep -A 10 "createFunction" apps/app/src/server/domain/workflow/inngest/
+```
+
+**Solution**:
+```typescript
+// Increase function timeout
+export const executeWorkflow = inngest.createFunction(
+  {
+    id: "execute-workflow",
+    timeout: 3600000, // 60 minutes (default: 5 min)
+  },
+  { event: "workflow/execute" },
+  async ({ event, step }) => {
+    // Long-running workflow
+
+    // Break into smaller steps for better timeout handling
+    await step.run("phase-1", async () => {
+      // Each step.run gets independent timeout
+    });
+
+    await step.run("phase-2", async () => {
+      // Another step with separate timeout
+    });
+  }
+);
+
+// For very long workflows, chain functions
+export const longWorkflow = inngest.createFunction(
+  { id: "long-workflow-part-1" },
+  { event: "workflow/start" },
+  async ({ event, step }) => {
+    // Part 1
+    await step.run("part-1", async () => {
+      // Execute first part
+    });
+
+    // Trigger next part
+    await inngest.send({
+      name: "workflow/continue",
+      data: { runId: event.data.runId, phase: 2 }
+    });
+  }
+);
+
+export const longWorkflowPart2 = inngest.createFunction(
+  { id: "long-workflow-part-2" },
+  { event: "workflow/continue" },
+  async ({ event, step }) => {
+    // Part 2
+  }
+);
+```
+
+<Callout type="warn">
+**Free Tier Limits**: Inngest free tier has 5-minute function timeout. Paid plans support up to 1 hour. Use `step.run` or chain functions for longer workflows.
+</Callout>
+
+**Prevention**:
+- Configure appropriate timeouts for functions
+- Use `step.run` to break into manageable chunks
+- Chain functions for very long workflows
+- Monitor execution times in development
+
+---
+
+## Network Timeout Errors
+
+### Request Timeout
+
+**Symptoms**:
+- `Request timeout after 120000ms`
+- API calls fail with timeout
+- Long-running operations hang
+
+**Diagnosis**:
+```bash
+# Test API endpoint directly
+curl -X POST http://localhost:3456/api/workflows/execute \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"workflowId":"123"}' \
+  --max-time 5
+
+# Check server timeout configuration
+grep -i timeout apps/app/src/server/config/
+
+# Monitor request duration
+tail -f apps/app/logs/app.log | jq 'select(.responseTime > 10000)'
+```
+
+**Solution**:
+
+<Tabs items={['Increase Timeout', 'Async Processing', 'Optimize Query']}>
+  <Tab value="Increase Timeout">
+    ```typescript
+    // Increase Fastify timeout
+    // In apps/app/src/server/index.ts
+
+    const fastify = Fastify({
+      logger: true,
+      requestTimeout: 300000, // 5 minutes (default: 0 = disabled)
+    });
+
+    // For specific routes
+    fastify.post(
+      '/api/workflows/execute',
+      {
+        config: {
+          timeout: 600000, // 10 minutes for this route
+        }
+      },
+      async (request, reply) => {
+        // Long-running operation
+      }
+    );
+
+    // On client side (TanStack Query)
+    const { data } = useQuery({
+      queryKey: ['workflow', workflowId],
+      queryFn: () => executeWorkflow(workflowId),
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 10, // 10 minutes
+    });
+    ```
+  </Tab>
+
+  <Tab value="Async Processing">
+    ```typescript
+    // Use async pattern for long operations
+    // Don't wait for workflow to complete
+
+    // ❌ Synchronous - times out
+    fastify.post('/api/workflows/execute', async (request, reply) => {
+      const result = await executeEntireWorkflow(); // Takes 30 minutes
+      return result;
+    });
+
+    // ✅ Asynchronous - returns immediately
+    fastify.post('/api/workflows/execute', async (request, reply) => {
+      // Create workflow run
+      const run = await createWorkflowRun({ workflowId });
+
+      // Trigger async execution via Inngest
+      await inngest.send({
+        name: "workflow/execute",
+        data: { runId: run.id }
+      });
+
+      // Return immediately
+      return { runId: run.id, status: "pending" };
+    });
+
+    // Client polls for status or uses WebSocket
+    ```
+  </Tab>
+
+  <Tab value="Optimize Query">
+    ```typescript
+    // Optimize slow database queries
+    // Add indexes to frequently queried fields
+
+    // In prisma/schema.prisma
+    model WorkflowRun {
+      id         String   @id @default(cuid())
+      workflowId String
+      status     String
+      createdAt  DateTime @default(now())
+
+      @@index([workflowId])
+      @@index([status])
+      @@index([createdAt])
+    }
+
+    // Run migration
+    pnpm prisma migrate dev
+
+    // Use select to limit fields
+    const runs = await prisma.workflowRun.findMany({
+      where: { workflowId },
+      select: {
+        id: true,
+        status: true,
+        // Don't fetch large fields
+      }
+    });
+    ```
+  </Tab>
+</Tabs>
+
+**Prevention**:
+- Use async patterns for long operations
+- Return immediately and notify via WebSocket
+- Optimize database queries with indexes
+- Monitor request durations in logs
+
+---
+
+### DNS Resolution Failures
+
+**Symptoms**:
+- `getaddrinfo ENOTFOUND`
+- Cannot resolve hostname
+- API calls to external services fail
+
+**Diagnosis**:
+```bash
+# Test DNS resolution
+nslookup api.anthropic.com
+dig api.anthropic.com
+
+# Check hosts file
+cat /etc/hosts | grep localhost
+
+# Test network connectivity
+ping 8.8.8.8
+curl https://api.anthropic.com
+
+# Check DNS servers
+cat /etc/resolv.conf
+```
+
+**Solution**:
+```bash
+# Use IP addresses if DNS fails
+# In apps/app/.env (temporary fix)
+API_URL=http://127.0.0.1:3456
+
+# Fix DNS configuration
+# macOS: System Preferences → Network → Advanced → DNS
+# Add 8.8.8.8 and 8.8.4.4
+
+# Linux: Edit /etc/resolv.conf
+nameserver 8.8.8.8
+nameserver 8.8.4.4
+
+# Restart network
+sudo systemctl restart NetworkManager
+
+# Test resolution
+nslookup localhost
+```
+
+**Prevention**:
+- Use reliable DNS servers (Google, Cloudflare)
+- Configure fallback DNS servers
+- Use IP addresses for critical internal services
+- Monitor DNS resolution in health checks
+
+---
+
+## Firewall and Network Issues
+
+### Ports Blocked by Firewall
+
+**Symptoms**:
+- Connection refused
+- Timeout connecting to ports
+- Works on localhost but not from other machines
+
+**Diagnosis**:
+```bash
+# Check firewall status
+# macOS:
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate
+
+# Linux:
+sudo ufw status
+sudo iptables -L
+
+# Test port accessibility
+telnet localhost 3456
+nc -zv localhost 3456
+
+# From another machine
+telnet <your-ip> 3456
+```
+
+**Solution**:
+
+<Tabs items={['macOS', 'Linux', 'Docker']}>
+  <Tab value="macOS">
+    ```bash
+    # Allow port through firewall
+    sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /usr/local/bin/node
+
+    # Or disable firewall (development only)
+    sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate off
+
+    # Verify
+    sudo /usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate
+    ```
+  </Tab>
+
+  <Tab value="Linux">
+    ```bash
+    # Allow ports through UFW
+    sudo ufw allow 3456/tcp
+    sudo ufw allow 5173/tcp
+    sudo ufw allow 8288/tcp
+
+    # Or allow from specific IP
+    sudo ufw allow from 192.168.1.0/24 to any port 3456
+
+    # Enable firewall
+    sudo ufw enable
+
+    # Verify
+    sudo ufw status
+    ```
+  </Tab>
+
+  <Tab value="Docker">
+    ```yaml
+    # In docker-compose.yml
+    services:
+      agentcmd:
+        ports:
+          - "3456:3456"   # Backend
+          - "5173:5173"   # Frontend
+          - "8288:8288"   # Inngest
+        networks:
+          - agentcmd-network
+
+    networks:
+      agentcmd-network:
+        driver: bridge
+    ```
+  </Tab>
+</Tabs>
+
+**Prevention**:
+- Configure firewall rules for development ports
+- Use VPN or secure tunnel for remote access
+- Document required ports in README
+- Test port accessibility from different networks
+
+---
+
+## Quick Connection Checklist
+
+```bash
+# 1. Verify all services running
+ps aux | grep -E "(node|inngest)"
+
+# 2. Check ports are listening
+lsof -i :3456 -i :5173 -i :8288
+
+# 3. Test health endpoints
+curl http://localhost:3456/api/health
+curl http://localhost:8288
+
+# 4. Check WebSocket in browser console
+socket.connected // should be true
+
+# 5. Verify JWT token
+localStorage.getItem('auth-token')
+
+# 6. Check server logs
+tail -f apps/app/logs/app.log | grep -E "(error|websocket|inngest)"
+
+# 7. Test CORS
+curl -H "Origin: http://localhost:5173" http://localhost:3456/api/health
+
+# 8. Verify no firewall blocking
+telnet localhost 3456
+```
+
+## Next Steps
+
+- [Common Errors](/docs/troubleshooting/common-errors) - Database, ports, installation
+- [Workflow Failures](/docs/troubleshooting/workflow-failures) - Workflow execution issues
+- [WebSocket Architecture](/.agent/docs/websocket-architecture.md) - Deep dive into WebSocket patterns
+- [Backend Patterns](/.agent/docs/backend-patterns.md) - Server architecture

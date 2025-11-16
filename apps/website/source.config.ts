@@ -5,5 +5,7 @@ export const docs = defineDocs({
 });
 
 export default defineConfig({
-  docs,
+  mdxOptions: {
+    providerImportSource: "@/components/MdxComponents",
+  },
 });

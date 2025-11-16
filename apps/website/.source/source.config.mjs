@@ -4,7 +4,9 @@ var docs = defineDocs({
   dir: "content/docs"
 });
 var source_config_default = defineConfig({
-  docs
+  mdxOptions: {
+    providerImportSource: "@/components/MdxComponents"
+  }
 });
 export {
   source_config_default as default,

@@ -1,0 +1,45 @@
+---
+title: Annotation Step
+description: Add progress notes to workflow timeline
+---
+
+Add human-readable progress notes to the workflow timeline.
+
+## Configuration
+
+{/* AUTO-GENERATED:annotation-step-config START */}
+{/* Source: packages/agentcmd-workflows/src/types/steps.ts
+{/* Last updated: 2025-11-16 */}
+
+```typescript
+interface AnnotationStepConfig {
+  message: string;
+}
+```
+
+**Timeout**: Instant
+
+{/* AUTO-GENERATED:annotation-step-config END */}
+
+## Usage
+
+```typescript
+await step.annotation("start", {
+  message: "Starting deployment to production 🚀",
+});
+
+await step.annotation("progress", {
+  message: "Build completed. Running tests...",
+});
+
+await step.annotation("complete", {
+  message: "Deployment successful! ✓",
+});
+```
+
+## Best Practices
+
+- Use at phase transitions
+- Explain what's happening
+- Celebrate wins with emoji
+- Mark errors clearly

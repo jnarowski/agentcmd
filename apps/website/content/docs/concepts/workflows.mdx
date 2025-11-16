@@ -1,0 +1,344 @@
+---
+title: Workflows
+description: Multi-step AI orchestration powered by Inngest
+---
+
+import { Card, Cards } from 'fumadocs-ui/components/card';
+
+Workflows are the heart of AgentCmd - multi-step processes that orchestrate AI agents, CLI commands, git operations, and more.
+
+## What is a Workflow?
+
+A workflow is a TypeScript function that defines a sequence of steps to automate a task. Think of it as a recipe:
+
+```typescript
+defineWorkflow({
+  id: "deploy-feature",
+  name: "Deploy Feature",
+  phases: ["plan", "code", "test", "ship"]
+}, async ({ event, step }) => {
+  // Your automation logic here
+});
+```
+
+## Execution Lifecycle
+
+```mermaid
+graph LR
+    A[Define Workflow] --> B[Trigger Event]
+    B --> C[Inngest Queue]
+    C --> D[Execute Steps]
+    D --> E[WebSocket Updates]
+    E --> F{Success?}
+    F -->|Yes| G[Complete]
+    F -->|No| H[Retry/Fail]
+    H --> D
+```
+
+**Flow**:
+1. **Define** - Write workflow in `.agent/workflows/definitions/`
+2. **Trigger** - User clicks "Run" in UI or API call triggers event
+3. **Queue** - Inngest queues the workflow function
+4. **Execute** - Steps run sequentially, streaming output via WebSocket
+5. **Update** - UI shows live progress on timeline
+6. **Complete** - Success/failure recorded, artifacts saved
+
+## Anatomy of a Workflow
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+
+export default defineWorkflow(
+  // 1. Configuration
+  {
+    id: "my-workflow",              // Unique identifier
+    name: "My Workflow",            // Display name
+    description: "What it does",    // Shown in library
+    phases: ["setup", "work", "cleanup"], // Optional phases
+  },
+
+  // 2. Implementation
+  async ({ event, step }) => {
+    // event.data contains trigger data (projectPath, args, etc.)
+    const { projectPath } = event.data;
+
+    // 3. Steps
+    await step.cli("install-deps", {
+      command: "pnpm install",
+      cwd: projectPath,
+    });
+
+    await step.agent("generate-code", {
+      agent: "claude",
+      prompt: "Write a feature",
+    });
+
+    // 4. Return value
+    return { success: true };
+  }
+);
+```
+
+### 1. Configuration
+
+**Required**:
+- `id` - Unique workflow identifier (kebab-case)
+- `name` - Human-readable name for UI
+
+**Optional**:
+- `description` - Explain what the workflow does
+- `phases` - Array of phase names (or objects with `{ id, label }`)
+- `argsSchema` - JSON schema for type-safe arguments
+
+### 2. Implementation Function
+
+Receives two parameters:
+
+**`event`** - Trigger event data:
+```typescript
+{
+  data: {
+    projectPath: string;      // Project directory
+    projectId: string;        // Database ID
+    userId: string;           // User who triggered
+    args?: Record<string, unknown>; // Custom arguments
+  }
+}
+```
+
+**`step`** - Step execution API:
+- `step.agent()` - Run AI CLI tools
+- `step.ai()` - Non-interactive AI generation
+- `step.cli()` - Shell commands
+- `step.git()` - Git operations
+- `step.artifact()` - Upload files
+- `step.annotation()` - Progress notes
+- `step.phase()` - Group steps
+- `step.log()` - Logging
+
+### 3. Steps
+
+Steps run sequentially by default:
+
+```typescript
+await step.cli("step-1", { ... });  // Runs first
+await step.cli("step-2", { ... });  // Then this
+await step.cli("step-3", { ... });  // Finally this
+```
+
+**Parallel execution** with `Promise.all()`:
+
+```typescript
+await Promise.all([
+  step.cli("lint", { command: "pnpm lint" }),
+  step.cli("test", { command: "pnpm test" }),
+  step.cli("build", { command: "pnpm build" }),
+]);
+```
+
+### 4. Return Value
+
+Return an object indicating success/failure:
+
+```typescript
+return {
+  success: true,
+  summary: { /* optional metadata */ }
+};
+```
+
+## How Workflows Execute
+
+### Inngest Integration
+
+AgentCmd uses [Inngest](https://www.inngest.com/) for workflow execution:
+
+- **Durable** - Steps are checkpointed, failures can retry from last step
+- **Observable** - Inngest Dev UI shows step-by-step execution
+- **Scalable** - Handles long-running workflows (hours/days)
+- **Type-safe** - Full TypeScript support
+
+### Step Execution
+
+Each step:
+1. Checkpoints state before running
+2. Executes (CLI command, agent call, etc.)
+3. Streams output via WebSocket
+4. Saves result to database
+5. Checkpoints state after completion
+
+**On failure**:
+- Step retries automatically (configurable)
+- Workflow pauses, shows error in UI
+- User can cancel or wait for retry
+
+### Real-Time Updates
+
+WebSocket events stream to UI:
+
+```typescript
+// Backend emits
+socket.emit("session.stream_output", {
+  sessionId,
+  output: "Step output...",
+});
+
+// Frontend receives
+socket.on("session.stream_output", (data) => {
+  // Update timeline UI
+});
+```
+
+## Workflow Discovery
+
+AgentCmd auto-discovers workflows on startup:
+
+```
+.agent/workflows/definitions/
+├── my-workflow.ts          ✓ Loaded
+├── another-workflow.ts     ✓ Loaded
+├── disabled.ts.bak         ✗ Skipped (not .ts)
+└── example-*.ts            ✓ Loaded (examples)
+```
+
+**Requirements**:
+- File must export `default defineWorkflow(...)`
+- Must be in `.agent/workflows/definitions/`
+- Must have `.ts` extension
+
+## Best Practices
+
+### Keep Steps Focused
+
+✅ **Good** - Each step does one thing:
+```typescript
+await step.cli("install", { command: "pnpm install" });
+await step.cli("build", { command: "pnpm build" });
+await step.cli("test", { command: "pnpm test" });
+```
+
+❌ **Bad** - Kitchen sink step:
+```typescript
+await step.cli("everything", {
+  command: "pnpm install && pnpm build && pnpm test"
+});
+```
+
+### Use Annotations
+
+Help users understand progress:
+
+```typescript
+await step.annotation("planning-complete", {
+  message: "Feature design complete. Starting implementation..."
+});
+```
+
+### Handle Errors Gracefully
+
+```typescript
+try {
+  await step.cli("risky-operation", { ... });
+} catch (error) {
+  await step.annotation("error-recovery", {
+    message: `Operation failed, trying alternative: ${error}`
+  });
+  await step.cli("fallback", { ... });
+}
+```
+
+### Share Context via Closures
+
+```typescript
+const ctx: { specFile?: string } = {};
+
+await step.phase("plan", async () => {
+  const result = await step.agent("plan", { ... });
+  ctx.specFile = result.data.specPath; // Save for later
+});
+
+await step.phase("implement", async () => {
+  // Use saved context
+  await step.agent("code", {
+    prompt: `Implement ${ctx.specFile}`
+  });
+});
+```
+
+## Common Patterns
+
+### Spec → Implement → Review
+
+```typescript
+defineWorkflow({
+  phases: ["spec", "implement", "review", "ship"]
+}, async ({ event, step }) => {
+  const ctx: { specId?: string; branch?: string } = {};
+
+  await step.phase("spec", async () => {
+    const result = await step.agent("generate-spec", { ... });
+    ctx.specId = result.data.specId;
+  });
+
+  await step.phase("implement", async () => {
+    const result = await step.agent("implement", {
+      prompt: `Implement spec ${ctx.specId}`
+    });
+    ctx.branch = result.data.branch;
+  });
+
+  await step.phase("review", async () => {
+    await step.agent("review", {
+      prompt: `Review implementation on ${ctx.branch}`
+    });
+  });
+
+  await step.phase("ship", async () => {
+    await step.git("create-pr", {
+      operation: "pr",
+      branch: ctx.branch,
+      title: `feat: ${ctx.specId}`,
+    });
+  });
+});
+```
+
+### Multi-Agent Collaboration
+
+```typescript
+await step.phase("plan", async () => {
+  // Claude excels at planning
+  const plan = await step.agent("architect", {
+    agent: "claude",
+    prompt: "Design authentication system",
+    permissionMode: "plan", // Read-only
+  });
+  ctx.sessionId = plan.data.sessionId;
+});
+
+await step.phase("implement", async () => {
+  // Codex excels at coding
+  await step.agent("code", {
+    agent: "codex",
+    prompt: "Implement the authentication plan from previous session",
+    resume: ctx.sessionId, // Continue Claude's conversation
+  });
+});
+```
+
+## Next Steps
+
+<Cards>
+  <Card title="Phases" href="/docs/concepts/phases">
+    Organize steps into logical stages
+  </Card>
+  <Card title="Steps" href="/docs/concepts/steps">
+    8 step types you can use
+  </Card>
+  <Card title="Step Reference" href="/docs/reference/steps">
+    Complete API for all step types
+  </Card>
+  <Card title="Building Workflows" href="/docs/guides/workflow-definition">
+    In-depth guide with advanced patterns
+  </Card>
+</Cards>

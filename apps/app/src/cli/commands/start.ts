@@ -100,7 +100,6 @@ export async function startCommand(options: StartOptions): Promise<void> {
 
     // 5. Generate Prisma client and apply migrations
     console.log("Generating Prisma client...");
-    const nullDevice = process.platform === "win32" ? "NUL" : "/dev/null";
     const generateResult = spawnSync(
       "npx",
       ["prisma", "generate", "--no-hints", `--schema=${schemaPath}`],
@@ -109,7 +108,6 @@ export async function startCommand(options: StartOptions): Promise<void> {
         env: {
           ...process.env,
           PRISMA_HIDE_UPDATE_MESSAGE: "true",
-          DOTENV_CONFIG_PATH: nullDevice, // Prevent .env loading
         },
       }
     );
@@ -126,7 +124,6 @@ export async function startCommand(options: StartOptions): Promise<void> {
         stdio: "inherit",
         env: {
           ...process.env,
-          DOTENV_CONFIG_PATH: nullDevice, // Prevent .env loading
         },
       }
     );

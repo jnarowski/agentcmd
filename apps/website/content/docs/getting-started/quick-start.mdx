@@ -1,0 +1,205 @@
+---
+title: Quick Start
+description: Launch <AgentCMD /> and run your first workflow in 5 minutes
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+Get from zero to your first AI workflow in 5 minutes.
+
+## Start the Server
+
+Launch both the backend and frontend:
+
+```bash
+npx agentcmd start
+```
+
+This starts three services:
+
+| Service | Port | Purpose |
+|---------|------|---------|
+| **Frontend** | 5173 | Web UI for managing projects and workflows |
+| **Backend** | 3456 | API server and WebSocket |
+| **Inngest UI** | 8288 | Workflow execution dashboard |
+
+**Output**:
+```text title="Server Output"
+✓ Backend running on http://localhost:3456
+✓ Frontend running on http://localhost:5173
+✓ Inngest Dev UI on http://localhost:8288
+
+<AgentCMD /> is ready! Open http://localhost:5173
+```
+
+<Callout type="tip">
+**Keep this terminal open** - It shows live logs from workflow executions. Open a new tab for other commands.
+</Callout>
+
+## Open the UI
+
+Navigate to the web interface:
+
+```bash
+open http://localhost:5173
+```
+
+You'll see the **<AgentCMD /> Dashboard** with:
+- **Projects** (empty for now)
+- **Workflows** library
+- **Sessions** history
+
+## Create Your First Project
+
+A project connects <AgentCMD /> to your codebase.
+
+<Steps>
+  <Step>
+    ### Click "New Project"
+
+    In the top right of the dashboard
+  </Step>
+
+  <Step>
+    ### Enter Project Details
+
+    - **Name**: "My First Project"
+    - **Path**: `/path/to/your/codebase`
+
+    <Callout type="info">
+    Use an existing codebase you want to automate, or create a test directory with `mkdir ~/agentcmd-test && cd ~/agentcmd-test && git init`
+    </Callout>
+  </Step>
+
+  <Step>
+    ### Click "Create Project"
+
+    <AgentCMD /> scans the directory and creates the project
+  </Step>
+</Steps>
+
+You should see your project in the dashboard:
+
+```text title="Project Display"
+My First Project
+/path/to/your/codebase
+0 workflows run | 0 sessions
+```
+
+## Run an Example Workflow
+
+<AgentCMD /> includes example workflows to test your setup.
+
+<Steps>
+  <Step>
+    ### Click into your project
+
+    Select "My First Project" from the dashboard
+  </Step>
+
+  <Step>
+    ### Navigate to Workflows tab
+
+    See the built-in example workflows:
+    - **Example Basic Workflow** - CLI commands, git, artifacts
+    - **Example Implement Review** - Multi-phase with AI agents
+    - **Example Kitchen Sink** - All 8 step types
+  </Step>
+
+  <Step>
+    ### Click "Run" on Example Basic Workflow
+
+    This workflow doesn't require AI agents - perfect for testing!
+  </Step>
+
+  <Step>
+    ### Watch Live Execution
+
+    The timeline shows:
+    - ✓ Phase: Setup
+    - ✓ Phase: Build
+    - ✓ Phase: Test
+    - ✓ Phase: Deploy
+
+    Each step streams output in real-time via WebSocket
+  </Step>
+</Steps>
+
+**Timeline view** shows:
+- Step status (pending/running/completed/failed)
+- Live output from CLI commands
+- Annotations marking progress
+- Artifacts generated
+
+## View Inngest Dashboard
+
+See workflow execution under the hood:
+
+```bash
+open http://localhost:8288
+```
+
+The **Inngest Dev UI** shows:
+- Function runs (your workflows)
+- Step-by-step execution
+- Retry logic and errors
+- Event history
+
+This is helpful for debugging failed workflows.
+
+## Explore the UI
+
+### Projects Tab
+- **Overview** - Stats, recent workflows
+- **Workflows** - Available workflows to run
+- **Sessions** - AI agent conversation history
+- **Settings** - Project configuration
+
+### Workflow Run Page
+- **Timeline** - Visual step-by-step progress
+- **Logs** - Full output from each step
+- **Artifacts** - Files/images generated
+- **Events** - WebSocket event stream
+
+### Sessions Tab
+- **Session List** - All AI conversations
+- **Resume** - Continue previous sessions in new workflows
+- **Messages** - Full conversation history
+
+## Next Steps
+
+<Cards>
+  <Card title="Build Your First Workflow" href="/docs/getting-started/first-workflow">
+    Write a simple 10-line workflow from scratch
+  </Card>
+  <Card title="Understand Workflows" href="/docs/concepts/workflows">
+    Learn how workflows, phases, and steps work
+  </Card>
+  <Card title="Explore Step Types" href="/docs/reference/steps">
+    Deep dive into all 8 step types
+  </Card>
+  <Card title="Browse Examples" href="/docs/examples">
+    Real-world workflow templates
+  </Card>
+</Cards>
+
+## Stopping the Server
+
+When you're done:
+
+```bash
+# Press Ctrl+C in the terminal running `npx agentcmd start`
+```
+
+Or:
+
+```bash
+# From another terminal
+pkill -f agentcmd
+```
+
+---
+
+**UI tour complete!** Continue to [Build Your First Workflow](/docs/getting-started/first-workflow) to write a workflow from scratch.

@@ -1,0 +1,368 @@
+---
+title: CLI Reference
+description: Complete reference for AgentCmd command-line interface
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+
+Complete command-line reference for the `agentcmd` CLI tool.
+
+## Installation
+
+```bash
+# Run without installing
+npx agentcmd [command]
+
+# Install globally
+npm install -g agentcmd
+agentcmd [command]
+```
+
+## Global Options
+
+Available on all commands:
+
+| Option | Description |
+|--------|-------------|
+| `-V, --version` | Output the version number |
+| `-h, --help` | Display help for command |
+
+## Commands
+
+{/* AUTO-GENERATED:cli-commands */}
+
+### `agentcmd install`
+
+Initialize database and configuration for AgentCmd.
+
+**Usage**:
+```bash
+agentcmd install [options]
+```
+
+**Options**:
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--force` | Overwrite existing database | `false` |
+
+**Examples**:
+```bash
+# First-time installation
+agentcmd install
+
+# Reinstall and reset database
+agentcmd install --force
+```
+
+**What it does**:
+1. Creates SQLite database at `~/.agentcmd/agentcmd.db`
+2. Runs Prisma migrations
+3. Initializes configuration file at `~/.agentcmd/config.json`
+4. Sets up default workflow templates
+
+<Callout type="warn">
+**Warning**: `--force` flag will delete your existing database and all data. Use with caution.
+</Callout>
+
+---
+
+### `agentcmd start`
+
+Start the AgentCmd server (frontend, backend, and Inngest dev server).
+
+**Usage**:
+```bash
+agentcmd start [options]
+```
+
+**Options**:
+| Option | Description | Default |
+|--------|-------------|---------|
+| `-p, --port <number>` | Backend API server port | `3456` |
+| `--inngest-port <number>` | Inngest dev UI port | `8288` |
+| `--host <address>` | Server host address | `127.0.0.1` |
+
+**Examples**:
+```bash
+# Start with default ports
+agentcmd start
+
+# Custom backend port
+agentcmd start --port 4000
+
+# Custom Inngest port
+agentcmd start --inngest-port 9000
+
+# Bind to all interfaces
+agentcmd start --host 0.0.0.0
+```
+
+**Services Started**:
+| Service | Default Port | Access |
+|---------|--------------|--------|
+| **Frontend** | 5173 | http://localhost:5173 |
+| **Backend** | 3456 | http://localhost:3456 |
+| **Inngest Dev UI** | 8288 | http://localhost:8288 |
+
+**Environment Variables**:
+The `start` command respects these environment variables:
+- `PORT` - Backend port (overridden by `--port`)
+- `HOST` - Server host (overridden by `--host`)
+- `INNGEST_DEV_PORT` - Inngest port (overridden by `--inngest-port`)
+- `DATABASE_URL` - Custom database location
+- `LOG_LEVEL` - Logging verbosity (`debug`, `info`, `warn`, `error`)
+
+<Callout type="tip">
+Keep the terminal open to see live logs from workflows. Open a new tab for other commands.
+</Callout>
+
+---
+
+### `agentcmd config`
+
+Manage AgentCmd configuration.
+
+**Usage**:
+```bash
+agentcmd config [options]
+```
+
+**Options**:
+| Option | Description |
+|--------|-------------|
+| `--show` | Display current configuration |
+| `--edit` | Open config file in $EDITOR |
+| `--get <key>` | Get value of specific key |
+| `--set <key=value>` | Set value of specific key |
+| `--path` | Print config file path |
+
+**Examples**:
+
+<Tabs items={['Show Config', 'Get Value', 'Set Value', 'Edit']}>
+<Tab value="Show Config">
+```bash
+# Display all configuration
+agentcmd config --show
+
+# Output:
+```text title="Config Display"
+{
+  "database": {
+    "url": "file:/Users/you/.agentcmd/agentcmd.db"
+  },
+  "server": {
+    "port": 3456,
+    "host": "127.0.0.1"
+  },
+  "inngest": {
+    "devPort": 8288
+  }
+}
+```
+</Tab>
+<Tab value="Get Value">
+```bash
+# Get specific value
+agentcmd config --get server.port
+
+# Output:
+```text title="Config Value Output"
+3456
+```
+</Tab>
+<Tab value="Set Value">
+```bash
+# Set server port
+agentcmd config --set server.port=4000
+
+# Set multiple values
+agentcmd config --set server.port=4000
+agentcmd config --set server.host=0.0.0.0
+```
+</Tab>
+<Tab value="Edit">
+```bash
+# Open in default editor
+agentcmd config --edit
+
+# Set custom editor first
+export EDITOR=vim
+agentcmd config --edit
+```
+</Tab>
+</Tabs>
+
+**Config File Location**:
+```bash
+# Print config path
+agentcmd config --path
+
+# Typical locations:
+# macOS/Linux: ~/.agentcmd/config.json
+# Windows: %USERPROFILE%\.agentcmd\config.json
+```
+
+{/* END AUTO-GENERATED:cli-commands */}
+
+## Configuration File
+
+### Default Configuration
+
+The default config file at `~/.agentcmd/config.json`:
+
+```json title="~/.agentcmd/config.json"
+{
+  "database": {
+    "url": "file:~/.agentcmd/agentcmd.db"
+  },
+  "server": {
+    "port": 3456,
+    "host": "127.0.0.1"
+  },
+  "inngest": {
+    "devPort": 8288,
+    "signingKey": "",
+    "eventKey": ""
+  },
+  "ai": {
+    "defaultProvider": "claude",
+    "providers": {
+      "claude": {
+        "apiKey": ""
+      },
+      "openai": {
+        "apiKey": ""
+      },
+      "gemini": {
+        "apiKey": ""
+      }
+    }
+  },
+  "workflows": {
+    "templatesPath": "~/.agentcmd/workflows",
+    "maxConcurrent": 5
+  }
+}
+```
+
+### Configuration Schema
+
+{/* AUTO-GENERATED:config-schema */}
+
+**Database Configuration** (`database`):
+| Key | Type | Description | Default |
+|-----|------|-------------|---------|
+| `url` | string | SQLite database file path | `file:~/.agentcmd/agentcmd.db` |
+
+**Server Configuration** (`server`):
+| Key | Type | Description | Default |
+|-----|------|-------------|---------|
+| `port` | number | Backend API port | `3456` |
+| `host` | string | Server bind address | `127.0.0.1` |
+
+**Inngest Configuration** (`inngest`):
+| Key | Type | Description | Default |
+|-----|------|-------------|---------|
+| `devPort` | number | Inngest dev UI port | `8288` |
+| `signingKey` | string | Inngest signing key (optional) | `""` |
+| `eventKey` | string | Inngest event key (optional) | `""` |
+
+**AI Provider Configuration** (`ai`):
+| Key | Type | Description | Default |
+|-----|------|-------------|---------|
+| `defaultProvider` | string | Default AI provider | `"claude"` |
+| `providers.claude.apiKey` | string | Anthropic API key | `""` |
+| `providers.openai.apiKey` | string | OpenAI API key | `""` |
+| `providers.gemini.apiKey` | string | Google Gemini API key | `""` |
+
+**Workflow Configuration** (`workflows`):
+| Key | Type | Description | Default |
+|-----|------|-------------|---------|
+| `templatesPath` | string | Custom workflow templates directory | `~/.agentcmd/workflows` |
+| `maxConcurrent` | number | Max concurrent workflow executions | `5` |
+
+{/* END AUTO-GENERATED:config-schema */}
+
+## Environment Variables
+
+### Development
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NODE_ENV` | Environment mode | `development` |
+| `LOG_LEVEL` | Logging verbosity | `info` |
+| `PORT` | Backend server port | `3456` |
+| `HOST` | Server host address | `127.0.0.1` |
+| `DATABASE_URL` | Database connection string | `file:~/.agentcmd/agentcmd.db` |
+
+### Inngest
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `INNGEST_DEV_PORT` | Inngest dev UI port | No |
+| `INNGEST_SIGNING_KEY` | Inngest signing key (prod) | Production only |
+| `INNGEST_EVENT_KEY` | Inngest event key (prod) | Production only |
+
+### AI Providers
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `ANTHROPIC_API_KEY` | Claude API key | For Claude agents |
+| `OPENAI_API_KEY` | OpenAI API key | For GPT/Codex agents |
+| `GOOGLE_AI_API_KEY` | Gemini API key | For Gemini agents |
+
+<Callout type="info">
+API keys can be set via environment variables or in the config file. Environment variables take precedence.
+</Callout>
+
+## Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | General error |
+| `2` | Invalid arguments |
+| `3` | Database error |
+| `4` | Port already in use |
+| `5` | Missing dependencies |
+
+## Troubleshooting
+
+### Port Already in Use
+
+```bash
+# Error: Port 3456 is already in use
+
+# Solution: Use different port
+agentcmd start --port 4000
+```
+
+### Database Lock Error
+
+```bash
+# Error: database is locked
+
+# Solution: Stop other AgentCmd instances
+pkill -f agentcmd
+agentcmd start
+```
+
+### Inngest Not Starting
+
+```bash
+# Error: Inngest dev server failed to start
+
+# Solution: Check if port is available
+lsof -i :8288
+
+# Or use different port
+agentcmd start --inngest-port 9000
+```
+
+## Related
+
+- [Configuration Reference](/reference/configuration) - Detailed configuration guide
+- [Environment Variables](/reference/configuration#environment-variables) - All env vars
+- [Installation](/getting-started/installation) - Getting started guide
+- [Troubleshooting](/troubleshooting/common-errors) - Common issues

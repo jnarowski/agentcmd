@@ -1,0 +1,301 @@
+---
+title: Projects
+description: Connect AgentCmd to your codebases
+---
+
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+Projects connect AgentCmd to your codebases, providing isolated environments for workflows and sessions.
+
+## What is a Project?
+
+A project is a registered codebase in AgentCmd:
+
+```typescript
+interface Project {
+  id: string;
+  name: string;
+  path: string;           // Absolute path to repository
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+**Each project has**:
+- Unique database entry
+- Dedicated workflow runs
+- Isolated sessions
+- Own file tree
+- Separate settings
+
+## Creating Projects
+
+### Via UI
+
+<Steps>
+  <Step>
+    Click "New Project" in dashboard
+  </Step>
+  <Step>
+    Enter name and path:
+    - **Name**: "My App"
+    - **Path**: `/Users/you/code/my-app`
+  </Step>
+  <Step>
+    Click "Create Project"
+  </Step>
+</Steps>
+
+### Via API
+
+```bash
+curl -X POST http://localhost:3456/api/projects \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "My App", "path": "/path/to/project"}'
+```
+
+## Project Structure
+
+When you add a project, AgentCmd:
+
+1. **Validates path** - Ensures directory exists
+2. **Checks git** - Verifies it's a git repository (optional but recommended)
+3. **Scans workflows** - Loads `.agent/workflows/definitions/*.ts`
+4. **Creates database entry** - Saves project metadata
+
+Your project remains untouched - AgentCmd only reads/writes when workflows execute
+
+## Workflows per Project
+
+Each project has its own workflow definitions:
+
+```text title="Project Workflows Structure"
+/path/to/project/
+├── .agent/
+│   └── workflows/
+│       └── definitions/
+│           ├── deploy.ts           // Project-specific workflows
+│           ├── run-tests.ts
+│           └── update-deps.ts
+```
+
+**Why per-project?**
+- Different projects have different automation needs
+- Workflows access project-specific files
+- Isolated configuration (package manager, build system)
+
+## Sessions per Project
+
+AI agent sessions are scoped to projects:
+
+**Claude Code sessions**:
+```text title="Claude Sessions Directory"
+~/.claude/projects/{base64-encoded-path}/
+├── session-abc123.jsonl
+├── session-def456.jsonl
+└── session-ghi789.jsonl
+```
+
+The path is base64-encoded to create valid filenames:
+
+```typescript
+const encodedPath = Buffer.from("/path/to/project").toString("base64");
+// L3BhdGgvdG8vcHJvamVjdA==
+```
+
+## Project Isolation
+
+Projects are **fully isolated**:
+
+| Aspect | Isolated? | Why |
+|--------|-----------|-----|
+| Workflows | ✓ Yes | Different automation per project |
+| Sessions | ✓ Yes | Conversations don't leak between projects |
+| File access | ✓ Yes | Workflows can't access other projects |
+| Database | ✓ Yes | Separate workflow runs, artifacts |
+| Users | ✓ Yes | Multi-user support, privacy |
+
+## Multi-Project Workflows
+
+Can't run a workflow across multiple projects directly. Instead:
+
+**Option 1**: Monorepo with single project
+```text title="Monorepo Structure"
+my-monorepo/              ← One project
+├── apps/
+│   ├── web/
+│   └── api/
+├── packages/
+│   └── shared/
+└── .agent/workflows/     ← Workflows access all apps
+```
+
+**Option 2**: Separate projects, orchestrate externally
+```typescript
+// External script
+await triggerWorkflow("project-1", "deploy");
+await triggerWorkflow("project-2", "deploy");
+await triggerWorkflow("project-3", "deploy");
+```
+
+## Project Settings
+
+Each project can have custom settings (future feature):
+
+```json
+{
+  "project": {
+    "packageManager": "pnpm",
+    "nodeVersion": "18",
+    "buildCommand": "pnpm build",
+    "testCommand": "pnpm test"
+  }
+}
+```
+
+Currently, workflows access project settings via:
+- Environment variables
+- Config files in repo (`.agentcmdrc`, etc.)
+- Workflow args
+
+## Common Patterns
+
+### Multiple Environments
+
+Use different projects for same codebase:
+
+```
+Projects:
+- my-app-staging    → /path/to/staging
+- my-app-production → /path/to/production
+```
+
+Run workflows in different environments without conflicts.
+
+### Microservices
+
+One project per service:
+
+```
+Projects:
+- auth-service    → /path/to/auth
+- api-gateway     → /path/to/api
+- user-service    → /path/to/users
+```
+
+Each has its own workflows, sessions, deployment logic.
+
+### Client Projects
+
+Agencies/freelancers managing multiple clients:
+
+```
+Projects:
+- client-a-website
+- client-b-app
+- client-c-backend
+```
+
+Keep client work isolated, separate billing/tracking.
+
+## Best Practices
+
+### Use Descriptive Names
+
+✅ **Good**:
+- "My SaaS App - Frontend"
+- "Acme Corp API"
+- "Personal Blog"
+
+❌ **Bad**:
+- "Project 1"
+- "test"
+- "asdf"
+
+### Absolute Paths
+
+Always use absolute paths, not relative:
+
+✅ **Good**: `/Users/you/code/my-app`
+❌ **Bad**: `~/code/my-app` (tilde not expanded)
+❌ **Bad**: `../my-app` (relative)
+
+### Git Repositories
+
+Workflows often use git operations:
+
+```typescript
+await step.git("commit", {
+  operation: "commit",
+  message: "feat: Add feature"
+});
+```
+
+Ensure projects are git repositories.
+
+### Initialize Workflow Structure
+
+After creating project, initialize `.agent/` structure:
+
+```bash
+cd /path/to/project
+npx agentcmd-workflows init
+```
+
+Creates:
+```
+.agent/
+├── workflows/definitions/
+├── specs/
+└── logs/
+```
+
+## Troubleshooting
+
+### Project Path Not Found
+
+```
+Error: Project path /path/to/project does not exist
+```
+
+**Fix**: Verify path exists and is absolute:
+```bash
+ls -la /path/to/project
+```
+
+### Permission Denied
+
+```
+Error: EACCES: permission denied
+```
+
+**Fix**: Ensure AgentCmd can read/write:
+```bash
+chmod -R 755 /path/to/project
+```
+
+### Workflows Not Loading
+
+If `.agent/workflows/definitions/*.ts` files aren't showing:
+
+1. Restart AgentCmd server
+2. Check file extensions (must be `.ts`, not `.ts.bak`)
+3. Verify files export `default defineWorkflow(...)`
+4. Check server logs for errors
+
+## Next Steps
+
+<Cards>
+  <Card title="Workflows" href="/docs/concepts/workflows">
+    Build automation for your project
+  </Card>
+  <Card title="Sessions" href="/docs/concepts/sessions">
+    Understand AI conversations
+  </Card>
+  <Card title="First Workflow" href="/docs/getting-started/first-workflow">
+    Create your first workflow
+  </Card>
+</Cards>

@@ -1,0 +1,193 @@
+---
+title: AI Step
+description: Fast non-interactive AI text and structured generation
+---
+
+import { Card, Cards } from 'fumadocs-ui/components/card';
+
+Generate AI text or structured data without interactive tool use. Faster and simpler than agent steps.
+
+## Overview
+
+The AI step calls AI models directly for text or structured generation. Unlike [agent steps](/docs/reference/steps/agent), AI steps don't support file editing or tool use.
+
+**Use when**:
+- Need quick AI response (< 5 min)
+- Want structured data with schema validation
+- Don't need file editing
+- Single-shot generation (not interactive)
+
+**Don't use when**:
+- Need file editing → Use [agent step](/docs/reference/steps/agent)
+- Need tool use → Use [agent step](/docs/reference/steps/agent)
+- Task requires >5 minutes → Use [agent step](/docs/reference/steps/agent)
+
+## Configuration
+
+{/* AUTO-GENERATED:ai-step-config START */}
+{/* Source: packages/agentcmd-workflows/src/types/steps.ts
+{/* Last updated: 2025-11-16 */}
+
+```typescript
+interface AiStepConfig<TSchema = unknown> {
+  prompt: string;
+  provider?: "anthropic" | "openai";
+  model?: string;
+  systemPrompt?: string;
+  temperature?: number;
+  maxTokens?: number;
+  schema?: TSchema;
+}
+```
+
+**Timeout**: 5 minutes (300,000ms)
+
+{/* AUTO-GENERATED:ai-step-config END */}
+
+### Parameters
+
+**`prompt`** (required) - Your instruction/question
+**`provider`** (optional) - `"anthropic"` (default) or `"openai"`
+**`model`** (optional) - Model name (defaults: `claude-sonnet-4-5-20250929`, `gpt-4`)
+**`systemPrompt`** (optional) - System instructions
+**`temperature`** (optional) - 0-2, creativity level (default: 0.7)
+**`maxTokens`** (optional) - Max response length
+**`schema`** (optional) - Zod schema for structured output
+
+## Basic Usage
+
+### Simple Text Generation
+
+```typescript
+const result = await step.ai("generate-docs", {
+  prompt: "Write documentation for this authentication module",
+  provider: "anthropic",
+});
+
+console.log(result.data.text);
+```
+
+### Structured Output with Schema
+
+```typescript
+import { z } from "zod";
+
+const schema = z.object({
+  complexity: z.number().min(1).max(10),
+  issues: z.array(z.object({
+    severity: z.enum(["high", "medium", "low"]),
+    description: z.string(),
+  })),
+  recommendations: z.array(z.string()),
+});
+
+const result = await step.ai("analyze-code", {
+  prompt: "Analyze this codebase for issues",
+  schema,
+});
+
+// result.data is fully typed!
+console.log(result.data.complexity);      // number
+console.log(result.data.issues[0].severity); // "high" | "medium" | "low"
+```
+
+### With System Prompt
+
+```typescript
+await step.ai("generate-tests", {
+  prompt: "Generate unit tests for the auth service",
+  systemPrompt: "You are an expert test engineer. Write comprehensive tests with edge cases.",
+  temperature: 0.3, // More focused
+});
+```
+
+## Return Value
+
+```typescript
+interface AiStepResult<T> {
+  data: T;              // Structured data (if schema) or { text: string }
+  provider: string;
+  model: string;
+}
+```
+
+## Common Patterns
+
+### Code Analysis
+
+```typescript
+const analysis = await step.ai("security-scan", {
+  prompt: `Analyze this code for security vulnerabilities:
+${code}`,
+  schema: z.object({
+    vulnerabilities: z.array(z.object({
+      type: z.string(),
+      severity: z.enum(["critical", "high", "medium", "low"]),
+      line: z.number(),
+      fix: z.string(),
+    })),
+  }),
+});
+```
+
+### Data Extraction
+
+```typescript
+const extracted = await step.ai("extract-info", {
+  prompt: `Extract key information from this document:
+${document}`,
+  schema: z.object({
+    title: z.string(),
+    author: z.string(),
+    date: z.string(),
+    tags: z.array(z.string()),
+  }),
+});
+```
+
+### Content Generation
+
+```typescript
+await step.ai("write-release-notes", {
+  prompt: `Write release notes for version 2.0 based on these commits:
+${commits}`,
+  temperature: 0.8, // More creative
+  maxTokens: 2000,
+});
+```
+
+## Best Practices
+
+**Use schemas for structured data**:
+```typescript
+// ✅ Good - typed output
+schema: z.object({ score: z.number(), issues: z.array(...) })
+
+// ❌ Bad - parse JSON manually
+prompt: "Return JSON with score and issues"
+```
+
+**Set appropriate temperature**:
+- 0-0.3: Factual, focused (analysis, extraction)
+- 0.5-0.7: Balanced (general tasks)
+- 0.8-1.5: Creative (writing, brainstorming)
+
+**Keep prompts focused**:
+```typescript
+// ✅ Good - specific task
+prompt: "Extract user ID and email from this API response"
+
+// ❌ Bad - multiple tasks
+prompt: "Extract data, analyze it, generate report, and suggest improvements"
+```
+
+## Next Steps
+
+<Cards>
+  <Card title="Agent Step" href="/docs/reference/steps/agent">
+    For interactive AI with file editing
+  </Card>
+  <Card title="JSON Mode" href="/docs/agents/json-mode">
+    Structured output patterns
+  </Card>
+</Cards>

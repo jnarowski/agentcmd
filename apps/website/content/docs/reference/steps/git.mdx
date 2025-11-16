@@ -1,0 +1,179 @@
+---
+title: Git Step
+description: Git operations (commit, branch, PR)
+---
+
+import { Card, Cards } from 'fumadocs-ui/components/card';
+
+Perform git operations as part of your workflow.
+
+## Overview
+
+Type-safe git operations: commit, branch, create PR.
+
+**Use for**: Committing AI-generated code, creating feature branches, opening pull requests
+
+## Configuration
+
+{/* AUTO-GENERATED:git-step-config START */}
+{/* Source: packages/agentcmd-workflows/src/types/steps.ts
+{/* Last updated: 2025-11-16 */}
+
+```typescript
+interface GitStepConfig {
+  name?: string;
+  operation: "commit" | "branch" | "pr" | "commit-and-branch";
+  message?: string;
+  commitMessage?: string;
+  branch?: string;
+  baseBranch?: string;
+  title?: string;
+  body?: string;
+  autoCommit?: boolean;
+}
+```
+
+**Timeout**: 2 minutes (120,000ms)
+
+{/* AUTO-GENERATED:git-step-config END */}
+
+### Operations
+
+**`commit`** - Create git commit
+**`branch`** - Create/switch branch
+**`pr`** - Create pull request (requires `gh` CLI)
+**`commit-and-branch`** - Commit + create branch in one step
+
+## Basic Usage
+
+### Commit Changes
+
+```typescript
+await step.git("save-changes", {
+  operation: "commit",
+  message: "feat: Add user authentication",
+});
+```
+
+### Create Branch
+
+```typescript
+await step.git("feature-branch", {
+  operation: "branch",
+  branch: "feat/authentication",
+  baseBranch: "main",
+});
+```
+
+### Create Pull Request
+
+```typescript
+await step.git("open-pr", {
+  operation: "pr",
+  title: "feat: Add authentication system",
+  body: "Implements JWT-based authentication with refresh tokens",
+  baseBranch: "main",
+});
+```
+
+### Commit and Branch (Atomic)
+
+```typescript
+await step.git("commit-and-branch", {
+  operation: "commit-and-branch",
+  commitMessage: "feat: Add feature X",
+  branch: "feat/x",
+});
+```
+
+## Common Patterns
+
+### Agent → Git Flow
+
+```typescript
+// AI generates code
+await step.agent("implement", {
+  agent: "claude",
+  prompt: "Implement authentication",
+});
+
+// Commit changes
+await step.git("save", {
+  operation: "commit-and-branch",
+  commitMessage: "feat: Add authentication 🤖",
+  branch: "feat/auth",
+});
+
+// Open PR
+await step.git("pr", {
+  operation: "pr",
+  title: "feat: Authentication system",
+  body: "AI-generated implementation",
+});
+```
+
+### Workflow with Review
+
+```typescript
+const ctx: { branch?: string } = {};
+
+// Implement
+await step.agent("code", { ... });
+
+// Commit to branch
+await step.git("commit", {
+  operation: "commit-and-branch",
+  commitMessage: "feat: Implement X",
+  branch: "feat/x",
+});
+ctx.branch = "feat/x";
+
+// Review
+await step.agent("review", {
+  prompt: `Review code on branch ${ctx.branch}`,
+  permissionMode: "plan",
+});
+
+// If approved, create PR
+await step.git("pr", {
+  operation: "pr",
+  title: "feat: X",
+  baseBranch: "main",
+});
+```
+
+## Best Practices
+
+**Use conventional commits**:
+```typescript
+message: "feat: Add authentication"
+message: "fix: Resolve login bug"
+message: "docs: Update API reference"
+```
+
+**Include emoji** (optional but fun):
+```typescript
+message: "feat: Add auth 🔐"
+message: "fix: Resolve bug 🐛"
+```
+
+**Auto-commit option**:
+```typescript
+autoCommit: true  // Commits all changes automatically
+```
+
+## Requirements
+
+**For PR creation**: Install [GitHub CLI](https://cli.github.com/):
+```bash
+brew install gh  # macOS
+# or visit https://cli.github.com/
+```
+
+## Next Steps
+
+<Cards>
+  <Card title="CLI Step" href="/docs/reference/steps/cli">
+    For general shell commands
+  </Card>
+</Cards>

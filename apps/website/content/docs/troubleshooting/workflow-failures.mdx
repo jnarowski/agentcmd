@@ -1,0 +1,862 @@
+---
+title: Workflow Failures
+description: Debug workflow execution failures, stuck steps, and agent timeout errors
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+## Overview
+
+Workflows can fail for many reasons: agent timeouts, permission errors, invalid definitions, or Inngest function issues. This guide helps you diagnose and fix workflow execution failures.
+
+## Workflow Stuck in Pending
+
+### Never Starts Execution
+
+**Symptoms**:
+- Workflow status remains "pending"
+- No steps execute
+- No progress in UI or Inngest dashboard
+
+**Diagnosis**:
+```bash
+# Check Inngest dev server is running
+curl http://localhost:8288
+
+# Check server logs for Inngest errors
+cd apps/app
+tail -f logs/app.log | grep -i inngest
+
+# Verify Inngest function registration
+curl http://localhost:3456/api/inngest
+
+# Check database for workflow run
+cd apps/app
+pnpm prisma studio
+# Navigate to WorkflowRun table
+```
+
+**Solution**:
+
+<Tabs items={['Restart Inngest', 'Trigger Manually', 'Check Logs']}>
+  <Tab value="Restart Inngest">
+    ```bash
+    # Stop all servers
+    pkill node
+
+    # Restart with Inngest dev server
+    cd apps/app
+    pnpm dev
+
+    # Verify Inngest UI is accessible
+    open http://localhost:8288
+
+    # Retry workflow execution
+    ```
+  </Tab>
+
+  <Tab value="Trigger Manually">
+    ```bash
+    # Send event directly to Inngest
+    curl -X POST http://localhost:8288/e/agentcmd \
+      -H "Content-Type: application/json" \
+      -d '{
+        "name": "workflow/execute",
+        "data": {
+          "workflowId": "workflow-123",
+          "runId": "run-456"
+        }
+      }'
+    ```
+  </Tab>
+
+  <Tab value="Check Logs">
+    ```bash
+    # Watch for workflow events
+    tail -f apps/app/logs/app.log | jq 'select(.msg | contains("workflow"))'
+
+    # Check for Inngest connection errors
+    grep "Inngest" apps/app/logs/app.log | jq .
+
+    # Enable debug logging
+    # In apps/app/.env:
+    LOG_LEVEL=debug
+
+    # Restart and check logs
+    pnpm dev
+    ```
+  </Tab>
+</Tabs>
+
+**Prevention**:
+- Always start server with `pnpm dev` (includes Inngest)
+- Verify Inngest UI loads at http://localhost:8288
+- Check logs immediately after starting workflow
+- Set up monitoring for Inngest function failures
+
+---
+
+### Stuck on Specific Step
+
+**Symptoms**:
+- Workflow starts but freezes on one step
+- Step status shows "running" indefinitely
+- No error message or timeout
+
+**Diagnosis**:
+```bash
+# Check which step is stuck
+# Open Inngest UI: http://localhost:8288
+# View function run → see which step is in progress
+
+# Check for agent process
+ps aux | grep claude
+ps aux | grep node
+
+# Check step timeout configuration
+# In your workflow definition:
+grep -A 5 "timeout" .agent/workflows/definitions/
+```
+
+**Solution**:
+```typescript
+// Add explicit timeouts to steps
+await step.agent("review", {
+  agent: "claude",
+  prompt: "Review the code"
+}, {
+  timeout: 300000 // 5 minutes (default: 30 min)
+});
+
+// For long-running steps, increase timeout
+await step.agent("deep-analysis", {
+  agent: "claude",
+  prompt: "Analyze entire codebase"
+}, {
+  timeout: 1800000 // 30 minutes
+});
+
+// For quick steps, decrease timeout to fail fast
+await step.cli("lint", {
+  command: "npm run lint"
+}, {
+  timeout: 30000 // 30 seconds
+});
+```
+
+<Callout type="warn">
+**Default Timeouts**: Agent steps default to 30 minutes, CLI steps to 5 minutes. Adjust based on expected duration.
+</Callout>
+
+**Prevention**:
+- Set realistic timeouts for each step type
+- Monitor step execution times in development
+- Use annotations to track progress within long steps
+- Implement heartbeat logging for long operations
+
+---
+
+## Agent Execution Failures
+
+### Agent Timeout
+
+**Symptoms**:
+- `Agent execution timeout after 30 minutes`
+- Agent step fails with timeout error
+- No response from AI model
+
+**Diagnosis**:
+```bash
+# Check if agent CLI is accessible
+which claude
+
+# Test agent manually
+claude --version
+
+# Check API key configuration
+cd apps/app
+grep ANTHROPIC_API_KEY .env
+
+# Verify agent process isn't stuck
+ps aux | grep claude
+
+# Check network connectivity to API
+curl -I https://api.anthropic.com
+```
+
+**Solution**:
+
+<Tabs items={['Increase Timeout', 'Check API Key', 'Simplify Prompt']}>
+  <Tab value="Increase Timeout">
+    ```typescript
+    // For complex tasks, increase timeout
+    await step.agent("complex-task", {
+      agent: "claude",
+      prompt: "Analyze and refactor entire codebase"
+    }, {
+      timeout: 3600000 // 60 minutes
+    });
+
+    // Or break into smaller steps
+    await step.phase("refactor", async () => {
+      await step.agent("analyze", {
+        agent: "claude",
+        prompt: "Analyze codebase structure"
+      });
+
+      await step.agent("plan", {
+        agent: "claude",
+        prompt: "Create refactoring plan"
+      });
+
+      await step.agent("execute", {
+        agent: "codex",
+        prompt: "Implement refactoring plan"
+      });
+    });
+    ```
+  </Tab>
+
+  <Tab value="Check API Key">
+    ```bash
+    # Verify API key is set
+    cd apps/app
+    cat .env | grep ANTHROPIC_API_KEY
+
+    # Test API key
+    curl https://api.anthropic.com/v1/messages \
+      -H "x-api-key: $ANTHROPIC_API_KEY" \
+      -H "anthropic-version: 2023-06-01" \
+      -H "content-type: application/json" \
+      -d '{"model":"claude-3-sonnet-20240229","max_tokens":10,"messages":[{"role":"user","content":"hi"}]}'
+
+    # If invalid, regenerate key at console.anthropic.com
+    ```
+  </Tab>
+
+  <Tab value="Simplify Prompt">
+    ```typescript
+    // ❌ Too complex - likely to timeout
+    await step.agent("everything", {
+      agent: "claude",
+      prompt: `
+        1. Analyze codebase
+        2. Write tests
+        3. Fix all bugs
+        4. Refactor everything
+        5. Update documentation
+      `
+    });
+
+    // ✅ Break into focused steps
+    await step.agent("analyze", {
+      agent: "claude",
+      prompt: "Analyze codebase structure and identify issues"
+    });
+
+    await step.agent("fix-bugs", {
+      agent: "claude",
+      prompt: "Fix the top 3 critical bugs identified in analysis"
+    });
+
+    await step.agent("update-docs", {
+      agent: "claude",
+      prompt: "Update README based on code changes"
+    });
+    ```
+  </Tab>
+</Tabs>
+
+**Prevention**:
+- Break complex prompts into smaller, focused steps
+- Set appropriate timeouts based on task complexity
+- Test prompts manually before adding to workflow
+- Monitor API rate limits and quotas
+
+---
+
+### Agent Permission Denied
+
+**Symptoms**:
+- `Permission denied` in agent output
+- Agent can't read/write files
+- Git operations fail within agent step
+
+**Diagnosis**:
+```bash
+# Check file permissions in project
+ls -la /path/to/project
+
+# Verify agent runs with correct user
+ps aux | grep claude
+
+# Check if files are readonly
+find /path/to/project -type f ! -perm -u+w
+
+# Test file access manually
+claude --help
+```
+
+**Solution**:
+```bash
+# Fix file permissions
+chmod -R u+w /path/to/project
+
+# Ensure agent has access to project directory
+# In workflow definition, verify projectPath:
+export default defineWorkflow({
+  id: "my-workflow",
+  phases: ["implement"]
+}, async ({ event, step }) => {
+  const projectPath = event.data.projectPath;
+
+  // Verify path is accessible
+  await step.cli("check-access", {
+    command: `test -w ${projectPath} && echo "writable" || echo "not writable"`
+  });
+
+  await step.agent("code", {
+    agent: "claude",
+    prompt: "Make changes to code",
+    // projectPath passed automatically
+  });
+});
+```
+
+<Callout type="error">
+**Docker/VM Users**: Permission issues often occur when project is mounted from host. Use proper UID/GID mapping.
+</Callout>
+
+**Prevention**:
+- Ensure workflow has write access to project
+- Don't run workflows on readonly filesystems
+- Configure proper permissions in CI/CD environments
+- Test file access before running agent steps
+
+---
+
+### Agent Returns Invalid Output
+
+**Symptoms**:
+- Agent step completes but output is malformed
+- JSON parsing fails on agent response
+- Unexpected format in step output
+
+**Diagnosis**:
+```bash
+# Check agent output in database
+cd apps/app
+pnpm prisma studio
+# Navigate to WorkflowRunStep → check output field
+
+# Review agent response in logs
+tail -f apps/app/logs/app.log | grep -A 10 "agent.*output"
+
+# Check Inngest function logs
+# Open http://localhost:8288 → View run → Check step output
+```
+
+**Solution**:
+```typescript
+// Use json: true for structured output
+await step.agent("generate-spec", {
+  agent: "claude",
+  json: true, // Forces JSON response
+  prompt: buildSlashCommand("/cmd:generate-feature-spec", {
+    context: "authentication"
+  })
+});
+
+// Validate output before using
+await step.run("validate-output", async () => {
+  const result = await step.agent("analyze", {
+    agent: "claude",
+    prompt: "Analyze code and return JSON"
+  });
+
+  // Validate structure
+  if (!result.output || typeof result.output !== 'object') {
+    throw new Error("Invalid agent output format");
+  }
+
+  return result;
+});
+
+// Add error handling for parsing
+try {
+  const output = JSON.parse(agentOutput);
+} catch (error) {
+  await step.annotation("parse-error", {
+    message: `Failed to parse agent output: ${error}`
+  });
+  throw new Error("Agent output is not valid JSON");
+}
+```
+
+**Prevention**:
+- Use `json: true` for structured responses
+- Validate agent output before using in subsequent steps
+- Include output format requirements in prompts
+- Test agent responses in development
+
+---
+
+## Workflow Definition Errors
+
+### Invalid Workflow Configuration
+
+**Symptoms**:
+- `Workflow validation failed`
+- TypeScript errors in workflow file
+- Workflow doesn't appear in UI
+
+**Diagnosis**:
+```bash
+# Check workflow file syntax
+cd .agent/workflows/definitions
+npx tsc --noEmit my-workflow.ts
+
+# Validate workflow schema
+node -e "
+  const wf = require('./.agent/workflows/definitions/my-workflow.ts');
+  console.log(JSON.stringify(wf.default, null, 2));
+"
+
+# Check for registration errors in logs
+grep "workflow.*register" apps/app/logs/app.log
+```
+
+**Solution**:
+```typescript
+// ✅ Correct workflow definition
+import { defineWorkflow } from "agentcmd-workflows";
+
+export default defineWorkflow({
+  id: "my-workflow", // Required: unique ID
+  phases: ["plan", "implement"], // Required: phase names
+  argsSchema: { // Optional: JSON schema for validation
+    type: "object",
+    properties: {
+      feature: { type: "string" }
+    },
+    required: ["feature"]
+  }
+}, async ({ event, step }) => {
+  // Workflow implementation
+  await step.phase("plan", async () => {
+    // Phase steps
+  });
+});
+
+// ❌ Common mistakes
+export default defineWorkflow({
+  // Missing id
+  phases: ["plan"]
+}, async ({ event, step }) => { /* ... */ });
+
+export default defineWorkflow({
+  id: "my-workflow"
+  // Missing phases
+}, async ({ event, step }) => { /* ... */ });
+
+// Missing export default
+const workflow = defineWorkflow({ /* ... */ });
+```
+
+<Callout type="info">
+**TypeScript Tip**: Enable strict mode to catch definition errors early. See workflow definition guide for complete schema.
+</Callout>
+
+**Prevention**:
+- Use TypeScript for workflow definitions
+- Validate schema before deploying
+- Follow workflow definition guide
+- Test workflows in development environment
+
+---
+
+### Context Variable Undefined
+
+**Symptoms**:
+- `Cannot read property 'x' of undefined`
+- Step fails accessing previous step output
+- Variable interpolation errors
+
+**Diagnosis**:
+```typescript
+// Add debug logging to workflow
+await step.phase("debug", async () => {
+  await step.annotation("context-check", {
+    message: `Available context: ${JSON.stringify(event.data, null, 2)}`
+  });
+
+  // Check step outputs
+  const outputs = {}; // Track step outputs manually
+  await step.run("check-output", async () => {
+    return outputs;
+  });
+});
+```
+
+**Solution**:
+```typescript
+// ✅ Proper context access
+export default defineWorkflow({
+  id: "context-workflow",
+  phases: ["analyze", "implement"]
+}, async ({ event, step }) => {
+  // Access workflow arguments
+  const { feature } = event.data.args;
+
+  let analysisResult; // Track step outputs
+
+  await step.phase("analyze", async () => {
+    analysisResult = await step.agent("analyze", {
+      agent: "claude",
+      prompt: `Analyze ${feature}`
+    });
+  });
+
+  await step.phase("implement", async () => {
+    // Ensure variable is defined before using
+    if (!analysisResult) {
+      throw new Error("Analysis result not available");
+    }
+
+    await step.agent("implement", {
+      agent: "codex",
+      prompt: `Implement based on: ${JSON.stringify(analysisResult)}`
+    });
+  });
+});
+
+// ❌ Common mistakes
+await step.phase("implement", async () => {
+  // Using variable before it's set
+  await step.agent("implement", {
+    prompt: `Use ${analysisResult}` // undefined!
+  });
+});
+```
+
+**Prevention**:
+- Declare context variables at workflow level
+- Check variable is defined before using
+- Use TypeScript for type safety
+- Pass context explicitly between phases
+
+---
+
+## Inngest Function Failures
+
+### Function Not Receiving Events
+
+**Symptoms**:
+- Workflow triggered but nothing happens
+- Inngest UI shows no function runs
+- Events sent but not processed
+
+**Diagnosis**:
+```bash
+# Check Inngest event ingestion
+curl http://localhost:8288/e/agentcmd \
+  -H "Content-Type: application/json" \
+  -d '{"name":"workflow/execute","data":{"test":true}}'
+
+# Verify function registration
+curl http://localhost:3456/api/inngest | jq .
+
+# Check Inngest logs
+tail -f apps/app/logs/app.log | grep -i inngest
+
+# Verify Inngest dev server
+ps aux | grep inngest
+```
+
+**Solution**:
+
+<Tabs items={['Restart Inngest', 'Verify Registration', 'Check Event Name']}>
+  <Tab value="Restart Inngest">
+    ```bash
+    # Stop all servers
+    pkill node
+
+    # Clear Inngest cache
+    rm -rf .inngest
+
+    # Restart with Inngest
+    cd apps/app
+    pnpm dev
+
+    # Verify Inngest UI
+    open http://localhost:8288
+    ```
+  </Tab>
+
+  <Tab value="Verify Registration">
+    ```typescript
+    // Check function is properly exported
+    // In apps/app/src/server/domain/workflow/inngest/functions.ts
+
+    import { executeWorkflow } from "./execute-workflow";
+
+    export const functions = [
+      executeWorkflow, // Ensure function is in array
+      // Other functions...
+    ];
+
+    // Verify serve endpoint
+    // In apps/app/src/server/routes/inngest.ts
+    import { inngest } from "@/server/inngest";
+    import { functions } from "@/server/domain/workflow/inngest/functions";
+
+    export default async function (fastify: FastifyInstance) {
+      fastify.post("/api/inngest", async (request, reply) => {
+        return inngest.serve({
+          client: inngest,
+          functions,
+        });
+      });
+    }
+    ```
+  </Tab>
+
+  <Tab value="Check Event Name">
+    ```typescript
+    // Ensure event name matches
+    export const executeWorkflow = inngest.createFunction(
+      { id: "execute-workflow" },
+      { event: "workflow/execute" }, // Must match exactly
+      async ({ event, step }) => {
+        // Function body
+      }
+    );
+
+    // When triggering:
+    await inngest.send({
+      name: "workflow/execute", // Must match above
+      data: {
+        workflowId: "...",
+        runId: "..."
+      }
+    });
+    ```
+  </Tab>
+</Tabs>
+
+**Prevention**:
+- Use consistent event naming (workflow/action format)
+- Verify function registration on server start
+- Test event flow with Inngest UI
+- Monitor function execution in development
+
+---
+
+### Inngest Function Timeout
+
+**Symptoms**:
+- Function run exceeds 5-minute limit
+- Steps fail with timeout error
+- Workflow never completes
+
+**Diagnosis**:
+```bash
+# Check function run in Inngest UI
+open http://localhost:8288
+
+# Look for timeout errors in logs
+grep "timeout" apps/app/logs/app.log
+
+# Check step durations
+# In Inngest UI → View run → Check step execution times
+```
+
+**Solution**:
+```typescript
+// Break long-running workflow into smaller steps
+export const executeWorkflow = inngest.createFunction(
+  {
+    id: "execute-workflow",
+    // Increase function timeout (max: 1 hour)
+    timeout: 3600000, // 60 minutes
+  },
+  { event: "workflow/execute" },
+  async ({ event, step }) => {
+    // Use step.run to break into manageable chunks
+    await step.run("phase-1", async () => {
+      // This runs as separate step with own timeout
+    });
+
+    await step.run("phase-2", async () => {
+      // Another independent step
+    });
+
+    // Each step.run gets fresh timeout
+  }
+);
+```
+
+<Callout type="warn">
+**Inngest Limits**: Free tier has 5-minute function timeout. Paid plans support up to 1 hour. Use `step.run` for longer workflows.
+</Callout>
+
+**Prevention**:
+- Use `step.run` to break into sub-steps
+- Each `step.run` gets independent timeout
+- Configure appropriate timeout for function
+- Monitor step durations in development
+
+---
+
+### Workflow Run Resumed Incorrectly
+
+**Symptoms**:
+- Workflow restarts from beginning on retry
+- Steps execute multiple times
+- Context lost between retries
+
+**Diagnosis**:
+```bash
+# Check workflow run status
+cd apps/app
+pnpm prisma studio
+# View WorkflowRun and WorkflowRunStep tables
+
+# Check for duplicate step executions
+# In Inngest UI → View run → Check step count
+
+# Review step idempotency
+grep "step.run" .agent/workflows/definitions/my-workflow.ts
+```
+
+**Solution**:
+```typescript
+// Use stable step IDs for idempotency
+await step.run("load-config", async () => {
+  // This step won't re-run on retry
+  return loadConfig();
+});
+
+// ❌ Don't use dynamic IDs
+let counter = 0;
+await step.run(`step-${counter++}`, async () => {
+  // Will create new step on retry!
+});
+
+// ✅ Use static IDs
+await step.run("fetch-data", async () => {
+  // Inngest memoizes by step ID
+});
+
+// For loops, use stable IDs
+for (const item of items) {
+  await step.run(`process-${item.id}`, async () => {
+    // Uses item.id for stability
+  });
+}
+```
+
+**Prevention**:
+- Use stable, predictable step IDs
+- Leverage Inngest's step memoization
+- Design steps to be idempotent
+- Test retry behavior in development
+
+---
+
+## Session Management Issues
+
+### Session Not Found
+
+**Symptoms**:
+- `Session not found` error
+- Cannot resume agent conversation
+- Session ID invalid or missing
+
+**Diagnosis**:
+```bash
+# Check if session exists in database
+cd apps/app
+pnpm prisma studio
+# Navigate to Session table, search by ID
+
+# Verify session ID in workflow arguments
+# Check event.data in Inngest UI
+
+# Check session creation logs
+grep "session.*create" apps/app/logs/app.log
+```
+
+**Solution**:
+```typescript
+// Create session before using
+await step.phase("setup", async () => {
+  const session = await step.run("create-session", async () => {
+    return await createSession({
+      projectId: event.data.projectId,
+      agentType: "claude",
+      name: "Workflow Session"
+    });
+  });
+
+  // Use session in subsequent steps
+  await step.agent("chat", {
+    agent: "claude",
+    sessionId: session.id, // Pass session ID
+    prompt: "Continue conversation"
+  });
+});
+
+// Or resume existing session
+const existingSessionId = event.data.sessionId;
+
+await step.agent("resume", {
+  agent: "claude",
+  sessionId: existingSessionId,
+  prompt: "Continue from where we left off"
+});
+```
+
+**Prevention**:
+- Create sessions explicitly in workflow
+- Store session IDs in workflow context
+- Verify session exists before resuming
+- Clean up old sessions periodically
+
+---
+
+## Quick Debugging Checklist
+
+```bash
+# 1. Check Inngest dev server
+curl http://localhost:8288
+
+# 2. Verify workflow definition
+npx tsc --noEmit .agent/workflows/definitions/my-workflow.ts
+
+# 3. Check logs for errors
+tail -f apps/app/logs/app.log | jq 'select(.level >= 50)'
+
+# 4. Inspect workflow run in Inngest UI
+open http://localhost:8288
+
+# 5. Check database state
+cd apps/app && pnpm prisma studio
+
+# 6. Test agent manually
+claude --version
+
+# 7. Verify environment variables
+cat apps/app/.env | grep -E "(ANTHROPIC|INNGEST|JWT)"
+
+# 8. Check for stuck processes
+ps aux | grep -E "(node|claude)"
+```
+
+## Next Steps
+
+- [Common Errors](/docs/troubleshooting/common-errors) - General troubleshooting
+- [Connection Problems](/docs/troubleshooting/connection-problems) - WebSocket and network issues
+- [Error Handling Guide](/docs/guides/error-handling) - Implement robust error handling
+- [Workflow System](/.agent/docs/workflow-system.md) - Deep dive into workflow architecture

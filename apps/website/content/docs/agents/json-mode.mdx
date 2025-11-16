@@ -1,0 +1,532 @@
+---
+title: JSON Mode
+description: Extract structured data from agent outputs using JSON mode
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+
+JSON mode enables agents to return structured, type-safe data instead of free-form text. This is essential for extracting information, validating outputs, and chaining agent results programmatically.
+
+## Overview
+
+When an agent step uses JSON mode, the agent's response is constrained to valid JSON matching a provided schema. This ensures predictable, parseable outputs.
+
+**Use Cases**:
+- Extract structured data from code/docs
+- Generate config files with validation
+- Return decision trees for conditional logic
+- Produce artifacts with known schema
+
+## Basic JSON Mode
+
+### Simple Extraction
+
+Extract structured data from unstructured sources:
+
+<Tabs items={['Schema First', 'Inline Schema']}>
+<Tab value="Schema First">
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+import { z } from "zod";
+
+// Define schema
+const packageSchema = z.object({
+  name: z.string(),
+  version: z.string(),
+  dependencies: z.array(z.string()),
+  hasTests: z.boolean(),
+});
+
+export const extractPackageInfo = defineWorkflow({
+  id: "extract-package",
+  name: "Extract Package Info",
+  phases: [
+    {
+      name: "Extract",
+      steps: [
+        {
+          type: "ai",
+          instruction: "Read package.json and extract key information",
+          jsonMode: {
+            enabled: true,
+            schema: packageSchema,
+          },
+          outputKey: "packageInfo",
+        },
+      ],
+    },
+  ],
+});
+
+// Access typed result
+type PackageInfo = z.infer<typeof packageSchema>;
+// packageInfo: { name: string, version: string, dependencies: string[], hasTests: boolean }
+```
+</Tab>
+<Tab value="Inline Schema">
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+import { z } from "zod";
+
+export const analyzeCode = defineWorkflow({
+  id: "analyze-code",
+  name: "Analyze Code Quality",
+  phases: [
+    {
+      name: "Analysis",
+      steps: [
+        {
+          type: "ai",
+          instruction: "Analyze code quality and return metrics",
+          jsonMode: {
+            enabled: true,
+            schema: z.object({
+              score: z.number().min(0).max(100),
+              issues: z.array(
+                z.object({
+                  severity: z.enum(["low", "medium", "high"]),
+                  message: z.string(),
+                  file: z.string(),
+                  line: z.number().optional(),
+                })
+              ),
+              recommendations: z.array(z.string()),
+            }),
+          },
+          outputKey: "analysisResult",
+        },
+      ],
+    },
+  ],
+});
+```
+</Tab>
+</Tabs>
+
+### Config Generation
+
+Generate validated configuration files:
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+import { z } from "zod";
+
+const dockerConfigSchema = z.object({
+  image: z.string(),
+  ports: z.array(z.number()),
+  environment: z.record(z.string()),
+  volumes: z.array(z.string()),
+});
+
+export const generateDockerConfig = defineWorkflow({
+  id: "gen-docker-config",
+  name: "Generate Docker Config",
+  phases: [
+    {
+      name: "Generate",
+      steps: [
+        {
+          type: "ai",
+          instruction: `Analyze the Node.js app and generate Docker config with:
+            - Appropriate Node image
+            - Exposed ports
+            - Environment variables
+            - Volume mounts for node_modules`,
+          jsonMode: {
+            enabled: true,
+            schema: dockerConfigSchema,
+          },
+          outputKey: "dockerConfig",
+        },
+        {
+          type: "artifact",
+          name: "docker-compose.yml",
+          content: (ctx) => {
+            const config = ctx.dockerConfig;
+            return `
+version: '3.8'
+services:
+  app:
+    image: ${config.image}
+    ports:
+      ${config.ports.map((p) => `- "${p}:${p}"`).join("\n      ")}
+    environment:
+      ${Object.entries(config.environment)
+        .map(([k, v]) => `${k}: ${v}`)
+        .join("\n      ")}
+    volumes:
+      ${config.volumes.map((v) => `- ${v}`).join("\n      ")}
+            `.trim();
+          },
+        },
+      ],
+    },
+  ],
+});
+```
+
+## Advanced Patterns
+
+### Multi-Step Data Pipeline
+
+Chain JSON outputs through multiple steps:
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+import { z } from "zod";
+
+const fileAnalysisSchema = z.object({
+  totalFiles: z.number(),
+  languages: z.record(z.number()),
+  largestFiles: z.array(z.string()),
+});
+
+const securitySchema = z.object({
+  vulnerabilities: z.array(
+    z.object({
+      severity: z.enum(["critical", "high", "medium", "low"]),
+      description: z.string(),
+      file: z.string(),
+    })
+  ),
+  secretsFound: z.boolean(),
+});
+
+const reportSchema = z.object({
+  summary: z.string(),
+  fileStats: fileAnalysisSchema,
+  security: securitySchema,
+  recommendations: z.array(z.string()),
+});
+
+export const comprehensiveAudit = defineWorkflow({
+  id: "comprehensive-audit",
+  name: "Comprehensive Codebase Audit",
+  phases: [
+    {
+      name: "Analysis",
+      steps: [
+        {
+          type: "ai",
+          instruction: "Analyze codebase file structure",
+          jsonMode: { enabled: true, schema: fileAnalysisSchema },
+          outputKey: "fileStats",
+        },
+        {
+          type: "ai",
+          instruction: "Scan for security vulnerabilities",
+          jsonMode: { enabled: true, schema: securitySchema },
+          outputKey: "securityResults",
+        },
+      ],
+    },
+    {
+      name: "Report",
+      steps: [
+        {
+          type: "ai",
+          instruction: (ctx) => `Generate final report combining:
+            File Stats: ${JSON.stringify(ctx.fileStats)}
+            Security: ${JSON.stringify(ctx.securityResults)}`,
+          jsonMode: { enabled: true, schema: reportSchema },
+          outputKey: "finalReport",
+        },
+        {
+          type: "artifact",
+          name: "audit-report.json",
+          content: (ctx) => JSON.stringify(ctx.finalReport, null, 2),
+        },
+      ],
+    },
+  ],
+});
+```
+
+### Conditional Branching
+
+Use JSON output for workflow decisions:
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+import { z } from "zod";
+
+const decisionSchema = z.object({
+  shouldProceed: z.boolean(),
+  reason: z.string(),
+  suggestedAction: z.enum(["fix", "skip", "abort"]),
+});
+
+export const smartWorkflow = defineWorkflow({
+  id: "smart-decision",
+  name: "Smart Decision Workflow",
+  phases: [
+    {
+      name: "Analysis",
+      steps: [
+        {
+          type: "ai",
+          instruction: "Analyze test failures and decide if we should proceed",
+          jsonMode: { enabled: true, schema: decisionSchema },
+          outputKey: "decision",
+        },
+      ],
+    },
+    {
+      name: "Action",
+      condition: (ctx) => ctx.decision.shouldProceed,
+      steps: [
+        {
+          type: "agent",
+          instruction: (ctx) => {
+            const action = ctx.decision.suggestedAction;
+            if (action === "fix") return "Fix the failing tests";
+            if (action === "skip") return "Skip tests and proceed";
+            return "Abort workflow";
+          },
+        },
+      ],
+    },
+  ],
+});
+```
+
+### Validation with Refinements
+
+Add custom validation logic:
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+import { z } from "zod";
+
+const migrationSchema = z
+  .object({
+    tableName: z.string(),
+    columns: z.array(
+      z.object({
+        name: z.string(),
+        type: z.enum(["string", "number", "boolean", "date"]),
+        nullable: z.boolean(),
+        default: z.any().optional(),
+      })
+    ),
+    indexes: z.array(z.string()),
+  })
+  .refine(
+    (data) => {
+      // Ensure id column exists
+      return data.columns.some((col) => col.name === "id");
+    },
+    { message: "Migration must include an 'id' column" }
+  )
+  .refine(
+    (data) => {
+      // Ensure indexed columns exist
+      return data.indexes.every((idx) =>
+        data.columns.some((col) => col.name === idx)
+      );
+    },
+    { message: "All indexes must reference existing columns" }
+  );
+
+export const generateMigration = defineWorkflow({
+  id: "gen-migration",
+  name: "Generate Database Migration",
+  phases: [
+    {
+      name: "Generate",
+      steps: [
+        {
+          type: "ai",
+          instruction: "Analyze the User model and generate migration schema",
+          jsonMode: { enabled: true, schema: migrationSchema },
+          outputKey: "migration",
+        },
+      ],
+    },
+  ],
+});
+```
+
+## Error Handling
+
+### Schema Validation Failures
+
+Handle invalid JSON outputs gracefully:
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+import { z } from "zod";
+
+export const robustExtraction = defineWorkflow({
+  id: "robust-extract",
+  name: "Robust Data Extraction",
+  phases: [
+    {
+      name: "Extract",
+      steps: [
+        {
+          type: "ai",
+          instruction: "Extract package info from package.json",
+          jsonMode: {
+            enabled: true,
+            schema: z.object({
+              name: z.string(),
+              version: z.string(),
+            }),
+          },
+          outputKey: "packageInfo",
+          onError: {
+            retry: true,
+            maxRetries: 3,
+            onFailure: {
+              type: "log",
+              message: "Failed to extract valid package info after 3 attempts",
+            },
+          },
+        },
+      ],
+    },
+  ],
+});
+```
+
+### Fallback to Text Mode
+
+Switch to text mode if JSON parsing fails:
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+import { z } from "zod";
+
+export const flexibleWorkflow = defineWorkflow({
+  id: "flexible-output",
+  name: "Flexible Output Workflow",
+  phases: [
+    {
+      name: "Try JSON",
+      steps: [
+        {
+          type: "ai",
+          instruction: "Extract structured data",
+          jsonMode: { enabled: true, schema: z.object({ data: z.string() }) },
+          outputKey: "structuredData",
+        },
+      ],
+      onError: {
+        continueToPhase: "Fallback",
+      },
+    },
+    {
+      name: "Fallback",
+      steps: [
+        {
+          type: "ai",
+          instruction: "Return data as plain text",
+          outputKey: "textData",
+        },
+      ],
+    },
+  ],
+});
+```
+
+## Best Practices
+
+### Keep Schemas Simple
+
+Complex schemas increase failure rate. Start simple:
+
+```typescript
+// ✅ Good - Simple, clear schema
+const schema = z.object({
+  title: z.string(),
+  priority: z.enum(["low", "medium", "high"]),
+  tags: z.array(z.string()),
+});
+
+// ❌ Avoid - Overly complex nested schema
+const complexSchema = z.object({
+  metadata: z.object({
+    author: z.object({
+      name: z.string(),
+      email: z.string().email(),
+      social: z.array(
+        z.object({
+          platform: z.string(),
+          url: z.string().url(),
+        })
+      ),
+    }),
+  }),
+});
+```
+
+### Provide Examples in Instructions
+
+Help the agent understand the expected format:
+
+```typescript
+{
+  type: "ai",
+  instruction: `Extract bug info. Example output:
+    {
+      "title": "Login button not working",
+      "severity": "high",
+      "steps": ["Go to /login", "Click submit", "Observe error"]
+    }`,
+  jsonMode: { enabled: true, schema: bugSchema },
+}
+```
+
+### Use Optional Fields
+
+Make fields optional when data might not exist:
+
+```typescript
+const flexibleSchema = z.object({
+  required: z.string(),
+  optional: z.string().optional(),
+  withDefault: z.string().default("N/A"),
+});
+```
+
+### Validate Early
+
+Test JSON schemas with sample data before using in workflows:
+
+```typescript
+import { z } from "zod";
+
+const schema = z.object({
+  name: z.string(),
+  count: z.number(),
+});
+
+// Test with sample data
+const testData = { name: "Test", count: 42 };
+const result = schema.safeParse(testData);
+
+if (!result.success) {
+  console.error("Schema validation failed:", result.error);
+}
+```
+
+## Comparison: JSON vs Text Mode
+
+| Aspect | JSON Mode | Text Mode |
+|--------|-----------|-----------|
+| **Output Format** | Structured, validated JSON | Free-form text |
+| **Type Safety** | Full TypeScript support | String only |
+| **Parsing** | Automatic | Manual parsing required |
+| **Validation** | Schema-enforced | None |
+| **Flexibility** | Constrained to schema | Unlimited |
+| **Error Rate** | Higher (strict format) | Lower (any text valid) |
+| **Best For** | Data extraction, configs | Explanations, analysis |
+
+## Related
+
+- [AI Steps](/reference/steps/ai) - Configure AI agent behavior
+- [Type-Safe Arguments](/guides/type-safe-arguments) - Schema validation patterns
+- [Context Sharing](/guides/context-sharing) - Pass JSON between steps
+- [Error Handling](/guides/error-handling) - Handle validation failures

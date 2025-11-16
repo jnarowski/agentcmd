@@ -104,6 +104,33 @@ function showProgress(message: string): void {
 }
 
 /**
+ * Display output in a styled box with title
+ */
+function showBoxedOutput(title: string, content: string): void {
+  const emerald = "\x1b[38;2;5;150;105m"; // #059669
+  const reset = "\x1b[0m";
+  const dim = "\x1b[2m";
+
+  const lines = content.trim().split('\n');
+  const maxWidth = Math.max(
+    title.length + 4,
+    ...lines.map(line => line.replace(/\u001b\[[0-9;]*m/g, '').length)
+  );
+  const boxWidth = Math.min(maxWidth + 4, 75);
+
+  console.log("");
+  console.log(`   ${emerald}┌─ ${pc.bold(title)} ${"─".repeat(Math.max(0, boxWidth - title.length - 4))}┐${reset}`);
+
+  for (const line of lines) {
+    // Indent each line slightly
+    console.log(`   ${emerald}│${reset} ${dim}${line}${reset}`);
+  }
+
+  console.log(`   ${emerald}└${"─".repeat(boxWidth)}┘${reset}`);
+  console.log("");
+}
+
+/**
  * Validate Anthropic API key format
  */
 function validateAnthropicKeyFormat(key: string): boolean {
@@ -284,35 +311,37 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     const schemaPath = join(__dirname, 'prisma/schema.prisma');
 
     // Generate Prisma client first
-    console.log(pc.cyan("   ⚙  Generating Prisma client..."));
-    const nullDevice = process.platform === "win32" ? "NUL" : "/dev/null";
     const generateResult = spawnSync(
       "npx",
       ["prisma", "generate", "--no-hints", `--schema=${schemaPath}`],
       {
-        stdio: "inherit",
+        stdio: "pipe",
         env: {
           ...process.env,
           PRISMA_HIDE_UPDATE_MESSAGE: "true",
-          DOTENV_CONFIG_PATH: nullDevice, // Prevent .env loading
         },
       }
     );
 
     if (generateResult.status !== 0) {
+      const errorOutput = generateResult.stderr?.toString() || generateResult.stdout?.toString() || "Unknown error";
+      showBoxedOutput("Generating Prisma Client - Failed", errorOutput);
       throw new Error(`Prisma client generation failed with exit code ${generateResult.status}`);
     }
 
+    const generateOutput = (generateResult.stdout?.toString() || "") + (generateResult.stderr?.toString() || "");
+    if (generateOutput.trim()) {
+      showBoxedOutput("Generating Prisma Client", generateOutput);
+    }
+
     // Apply migrations for initial setup
-    console.log(pc.cyan("   🗄  Applying database migrations..."));
     const result = spawnSync(
       "npx",
       ["prisma", "migrate", "deploy", `--schema=${schemaPath}`],
       {
-        stdio: "inherit",
+        stdio: "pipe",
         env: {
           ...process.env,
-          DOTENV_CONFIG_PATH: nullDevice, // Prevent .env loading
         },
       }
     );
@@ -322,7 +351,14 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     }
 
     if (result.status !== 0) {
+      const errorOutput = result.stderr?.toString() || result.stdout?.toString() || "Unknown error";
+      showBoxedOutput("Applying Database Migrations - Failed", errorOutput);
       throw new Error(`Database initialization failed with exit code ${result.status}`);
+    }
+
+    const migrateOutput = (result.stdout?.toString() || "") + (result.stderr?.toString() || "");
+    if (migrateOutput.trim()) {
+      showBoxedOutput("Applying Database Migrations", migrateOutput);
     }
 
     // 5. Prompt for API keys (optional)

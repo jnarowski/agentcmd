@@ -1,0 +1,38 @@
+---
+title: Phase Step
+description: Group related steps into logical stages
+---
+
+Organize steps into named phases for better workflow structure.
+
+## Configuration
+
+{/* AUTO-GENERATED:phase-step-config START */}
+{/* Source: packages/agentcmd-workflows/src/types/steps.ts
+{/* Last updated: 2025-11-16 */}
+
+```typescript
+interface PhaseOptions {
+  description?: string;
+}
+```
+
+**Timeout**: N/A (wraps other steps)
+
+{/* AUTO-GENERATED:phase-step-config END */}
+
+## Usage
+
+```typescript
+await step.phase("build", async () => {
+  await step.cli("install", { command: "pnpm install" });
+  await step.cli("compile", { command: "pnpm build" });
+});
+
+await step.phase("test", async () => {
+  await step.cli("unit", { command: "pnpm test:unit" });
+  await step.cli("e2e", { command: "pnpm test:e2e" });
+});
+```
+
+See [Phases Concept](/docs/concepts/phases) for details.
