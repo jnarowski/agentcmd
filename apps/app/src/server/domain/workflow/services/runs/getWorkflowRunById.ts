@@ -53,17 +53,34 @@ export async function getWorkflowRunById({ id }: GetWorkflowRunByIdOptions): Pro
 
   // Parse JSON fields (Prisma stores JSON as strings in SQLite)
   // Transform field names to match frontend types
+  let phases = run.workflow_definition?.phases
+    ? (typeof run.workflow_definition.phases === 'string'
+        ? JSON.parse(run.workflow_definition.phases)
+        : run.workflow_definition.phases)
+    : [];
+
+  // Conditionally inject system phases if they have steps/events
+  const hasSystemSetup = run.steps.some(step => step.phase === '_system_setup') ||
+                         allEvents.some(event => event.phase === '_system_setup');
+  const hasSystemFinalize = run.steps.some(step => step.phase === '_system_finalize') ||
+                            allEvents.some(event => event.phase === '_system_finalize');
+
+  if (hasSystemSetup) {
+    phases = [{ id: '_system_setup', label: 'System Setup' }, ...phases];
+  }
+  if (hasSystemFinalize) {
+    phases = [...phases, { id: '_system_finalize', label: 'System Finalize' }];
+  }
+
   const parsedRun = {
     ...run,
     args: run.args && typeof run.args === 'string'
       ? JSON.parse(run.args)
       : run.args,
-    workflowDefinition: run.workflow_definition ? {
+    workflow_definition: run.workflow_definition ? {
       ...run.workflow_definition,
-      phases: typeof run.workflow_definition.phases === 'string'
-        ? JSON.parse(run.workflow_definition.phases)
-        : run.workflow_definition.phases,
-      argsSchema: run.workflow_definition.args_schema && typeof run.workflow_definition.args_schema === 'string'
+      phases,
+      args_schema: run.workflow_definition.args_schema && typeof run.workflow_definition.args_schema === 'string'
         ? JSON.parse(run.workflow_definition.args_schema)
         : run.workflow_definition.args_schema,
     } : run.workflow_definition,

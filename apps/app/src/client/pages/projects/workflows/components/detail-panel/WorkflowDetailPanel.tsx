@@ -41,7 +41,7 @@ export function WorkflowDetailPanel({ run, projectId, activeTab, setActiveTab, s
             <SessionTab projectId={projectId} selectedSessionId={selectedSessionId} />
           </TabsContent>
 
-          <TabsContent value="logs" className="p-6 mt-0 h-full overflow-y-auto">
+          <TabsContent value="logs" className="p-0 mt-0 h-full">
             <LogsTab run={run} />
           </TabsContent>
 

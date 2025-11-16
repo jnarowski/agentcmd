@@ -192,8 +192,8 @@ export function PhaseCard({
     }
   };
 
-  // Detect system phases
-  const isSystemPhase = phaseName.startsWith("_system_");
+  // Detect system phases (check phaseId, not phaseName)
+  const isSystemPhase = phaseId.startsWith("_system_");
 
   return (
     <div className="border-b bg-card">
