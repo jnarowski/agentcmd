@@ -10,6 +10,7 @@ import { getGitStatus } from "@/server/domain/git/services/getGitStatus";
 import { executeStep } from "@/server/domain/workflow/services/engine/steps/utils/executeStep";
 import { withTimeout } from "@/server/domain/workflow/services/engine/steps/utils/withTimeout";
 import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
+import { prisma } from "@/shared/prisma";
 
 const DEFAULT_GIT_TIMEOUT = 120000; // 2 minutes
 
@@ -50,6 +51,17 @@ export function createGitStep(
         return operation;
       },
     });
+
+    // Update workflow_run with PR URL if PR was created successfully
+    if (config.operation === "pr" && result.success) {
+      // Type guard: check if result has prUrl
+      if ("prUrl" in result.data && result.data.prUrl) {
+        await prisma.workflowRun.update({
+          where: { id: context.runId },
+          data: { pr_url: result.data.prUrl },
+        });
+      }
+    }
 
     return result;
   };
@@ -210,6 +222,7 @@ async function executeGitOperation(
     }
 
     default:
-      throw new Error(`Unknown git operation: ${config.operation}`);
+      // This should never happen with correct types, but handle it for runtime safety
+      throw new Error(`Unknown git operation: ${(config as GitStepConfig).operation}`);
   }
 }

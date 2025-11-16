@@ -67,28 +67,67 @@ export interface AgentStepResult<T = string> {
 }
 
 /**
- * Configuration for git operation step
+ * Base configuration shared by all git operations
  */
-export interface GitStepConfig {
+interface BaseGitStepConfig {
   /** Display name for the step (defaults to step ID) */
   name?: string;
-  /** Git operation type */
-  operation: "commit" | "branch" | "pr" | "commit-and-branch";
-  /** Commit message (for commit operation) */
-  message?: string;
-  /** Commit message (for commit-and-branch operation, defaults to "WIP: Auto-commit before branching") */
-  commitMessage?: string;
-  /** Branch name (for branch/pr/commit-and-branch operation) */
-  branch?: string;
-  /** Base branch for PR or branch creation (default: main) */
+}
+
+/**
+ * Configuration for git commit operation
+ */
+export interface GitCommitConfig extends BaseGitStepConfig {
+  operation: "commit";
+  /** Commit message */
+  message: string;
+}
+
+/**
+ * Configuration for git branch operation
+ */
+export interface GitBranchConfig extends BaseGitStepConfig {
+  operation: "branch";
+  /** Branch name to create */
+  branch: string;
+  /** Base branch to create from (default: main) */
   baseBranch?: string;
+}
+
+/**
+ * Configuration for git pull request operation
+ */
+export interface GitPrConfig extends BaseGitStepConfig {
+  operation: "pr";
   /** PR title */
-  title?: string;
+  title: string;
   /** PR body/description */
   body?: string;
-  /** Auto-commit staged changes before operation */
-  autoCommit?: boolean;
+  /** Base branch for PR (default: main) */
+  baseBranch?: string;
 }
+
+/**
+ * Configuration for atomic commit-and-branch operation
+ */
+export interface GitCommitAndBranchConfig extends BaseGitStepConfig {
+  operation: "commit-and-branch";
+  /** Branch name to create */
+  branch: string;
+  /** Commit message (defaults to "WIP: Auto-commit before branching") */
+  commitMessage?: string;
+  /** Base branch to create from (default: main) */
+  baseBranch?: string;
+}
+
+/**
+ * Type-safe discriminated union for git operation configurations
+ */
+export type GitStepConfig =
+  | GitCommitConfig
+  | GitBranchConfig
+  | GitPrConfig
+  | GitCommitAndBranchConfig;
 
 /**
  * Configuration for workspace setup step
@@ -113,24 +152,9 @@ export interface CleanupWorkspaceConfig {
 }
 
 /**
- * Result from git operation
+ * Base result shared by all git operations
  */
-export interface GitStepResult {
-  /** Result data */
-  data: {
-    /** Commit SHA */
-    commitSha?: string;
-    /** Branch name */
-    branch?: string;
-    /** PR number */
-    prNumber?: number;
-    /** PR URL */
-    prUrl?: string;
-    /** Whether there were uncommitted changes (commit-and-branch only) */
-    hadUncommittedChanges?: boolean;
-    /** Whether already on target branch (commit-and-branch only) */
-    alreadyOnBranch?: boolean;
-  };
+interface BaseGitStepResult {
   /** Success status */
   success: boolean;
   /** Error message if failed */
@@ -138,6 +162,63 @@ export interface GitStepResult {
   /** Execution trace */
   trace: TraceEntry[];
 }
+
+/**
+ * Result from git commit operation
+ */
+export interface GitCommitResult extends BaseGitStepResult {
+  data: {
+    /** Commit SHA */
+    commitSha: string;
+  };
+}
+
+/**
+ * Result from git branch operation
+ */
+export interface GitBranchResult extends BaseGitStepResult {
+  data: {
+    /** Branch name created */
+    branch: string;
+  };
+}
+
+/**
+ * Result from git pull request operation
+ */
+export interface GitPrResult extends BaseGitStepResult {
+  data: {
+    /** PR URL */
+    prUrl?: string;
+    /** PR number (if available from gh CLI) */
+    prNumber?: number;
+  };
+}
+
+/**
+ * Result from git commit-and-branch operation
+ */
+export interface GitCommitAndBranchResult extends BaseGitStepResult {
+  data: {
+    /** Branch name created */
+    branch: string;
+    /** Commit SHA (if changes were committed) */
+    commitSha?: string;
+    /** Whether there were uncommitted changes */
+    hadUncommittedChanges: boolean;
+    /** Whether already on target branch */
+    alreadyOnBranch: boolean;
+  };
+}
+
+/**
+ * Type-safe discriminated union for git operation results
+ */
+export type GitStepResult =
+  | GitCommitResult
+  | GitBranchResult
+  | GitPrResult
+  | GitCommitAndBranchResult;
 
 /**
  * Result from workspace setup operation
@@ -373,10 +454,58 @@ export interface WorkflowStep<TPhaseId extends string = string> extends InngestS
   ): Promise<AgentStepResult<T>>;
 
   /**
-   * Execute a git operation
+   * Execute a git commit operation
    * @param id - Step ID
-   * @param config - Git configuration (includes optional name field)
-   * @param options - Step options (timeout, continueOnError)
+   * @param config - Commit configuration
+   * @param options - Step options (timeout)
+   */
+  git(
+    id: string,
+    config: GitCommitConfig,
+    options?: StepOptions
+  ): Promise<GitCommitResult>;
+
+  /**
+   * Execute a git branch operation
+   * @param id - Step ID
+   * @param config - Branch configuration
+   * @param options - Step options (timeout)
+   */
+  git(
+    id: string,
+    config: GitBranchConfig,
+    options?: StepOptions
+  ): Promise<GitBranchResult>;
+
+  /**
+   * Execute a git pull request operation
+   * @param id - Step ID
+   * @param config - PR configuration
+   * @param options - Step options (timeout)
+   */
+  git(
+    id: string,
+    config: GitPrConfig,
+    options?: StepOptions
+  ): Promise<GitPrResult>;
+
+  /**
+   * Execute a git commit-and-branch operation
+   * @param id - Step ID
+   * @param config - Commit-and-branch configuration
+   * @param options - Step options (timeout)
+   */
+  git(
+    id: string,
+    config: GitCommitAndBranchConfig,
+    options?: StepOptions
+  ): Promise<GitCommitAndBranchResult>;
+
+  /**
+   * Execute a git operation (general overload)
+   * @param id - Step ID
+   * @param config - Git configuration
+   * @param options - Step options (timeout)
    */
   git(
     id: string,

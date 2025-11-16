@@ -2,8 +2,13 @@
   "title": "Examples",
   "pages": [
     "basic-automation",
-    "spec-implementation",
+    "context-sharing",
+    "custom-slash-command",
     "data-processing",
-    "custom-slash-command"
+    "error-handling",
+    "spec-implementation",
+    "type-safe-arguments",
+    "workflow-definition",
+    "advanced"
   ]
 }

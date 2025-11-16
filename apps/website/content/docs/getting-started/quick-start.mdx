@@ -12,27 +12,25 @@ Get from zero to your first AI workflow in 5 minutes.
 
 ## Start the Server
 
-Launch both the backend and frontend:
+Launch the <AgentCmd /> server:
 
 ```bash
 npx agentcmd start
 ```
 
-This starts three services:
+This starts two services:
 
 | Service | Port | Purpose |
 |---------|------|---------|
-| **Frontend** | 5173 | Web UI for managing projects and workflows |
-| **Backend** | 3456 | API server and WebSocket |
-| **Inngest UI** | 8288 | Workflow execution dashboard |
+| **AgentCmd Server** | 3456 | Web UI, API server, and WebSocket |
+| **Inngest Dev UI** | 8288 | Workflow execution dashboard |
 
 **Output**:
 ```text title="Server Output"
-✓ Backend running on http://localhost:3456
-✓ Frontend running on http://localhost:5173
+✓ Server running on http://localhost:3456
 ✓ Inngest Dev UI on http://localhost:8288
 
-<AgentCMD /> is ready! Open http://localhost:5173
+agentcmd is ready! Open http://localhost:3456
 ```
 
 <Callout type="tip">
@@ -44,7 +42,7 @@ This starts three services:
 Navigate to the web interface:
 
 ```bash
-open http://localhost:5173
+open http://localhost:3456
 ```
 
 You'll see the **<AgentCmd /> Dashboard** with:
@@ -172,16 +170,16 @@ This is helpful for debugging failed workflows.
 ## Next Steps
 
 <Cards>
+  <Card title="Running Workflows" href="/docs/getting-started/running-workflows">
+    Learn the 3 ways to create and run workflows from the UI
+  </Card>
   <Card title="Build Your First Workflow" href="/docs/getting-started/first-workflow">
     Write a simple 10-line workflow from scratch
   </Card>
-  <Card title="Understand Workflows" href="/docs/concepts/workflows">
-    Learn how workflows, phases, and steps work
+  <Card title="Understand Agents" href="/docs/concepts/agents">
+    How AI agents are orchestrated with slash commands
   </Card>
-  <Card title="Explore Step Types" href="/docs/reference/steps">
-    Deep dive into all 8 step types
-  </Card>
-  <Card title="Browse Examples" href="/docs/examples">
+  <Card title="Explore Examples" href="/docs/examples">
     Real-world workflow templates
   </Card>
 </Cards>

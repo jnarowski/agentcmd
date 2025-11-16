@@ -1,7 +1,9 @@
 // CRITICAL: Set DATABASE_URL BEFORE any imports
 // Each worker gets isolated database using VITEST_POOL_ID (stable worker ID)
+import path from 'path';
 const workerId = process.env.VITEST_POOL_ID || '1';
-process.env.DATABASE_URL = `file:./test-worker-${workerId}.db`;
+const workerDbFile = path.resolve(process.cwd(), `test-worker-${workerId}.db`);
+process.env.DATABASE_URL = `file:${workerDbFile}`;
 
 import { expect, beforeAll } from 'vitest';
 import * as matchers from '@testing-library/jest-dom/matchers';

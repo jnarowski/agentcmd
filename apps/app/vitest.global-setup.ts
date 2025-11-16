@@ -103,12 +103,19 @@ async function createDatabasesIndividually(workerCount: number, cwd: string) {
   console.log(`   Creating ${workerCount} databases individually...`);
 
   for (let i = 1; i <= workerCount; i++) {
-    const workerDbPath = `file:./test-worker-${i}.db`;
+    const workerFile = path.resolve(cwd, `test-worker-${i}.db`);
+    const workerDbPath = `file:${workerFile}`;
+
+    // Don't spread process.env to avoid .env file interference
+    const env = { ...process.env };
+    delete env.DATABASE_URL; // Remove any existing DATABASE_URL
+    env.DATABASE_URL = workerDbPath; // Set our test database URL
+    env.DOTENV_CONFIG_PATH = "/dev/null"; // Prevent Prisma from loading .env file
 
     execSync("pnpm prisma db push --skip-generate --accept-data-loss", {
       stdio: "pipe",
       cwd,
-      env: { ...process.env, DATABASE_URL: workerDbPath },
+      env,
     });
   }
 }
@@ -122,10 +129,16 @@ async function createDatabasesFromTemplate(workerCount: number, cwd: string) {
   const templateFile = path.resolve(cwd, "test-template.db");
   const templateDbPath = `file:${templateFile}`;
 
+  // Don't spread process.env to avoid .env file interference
+  const env = { ...process.env };
+  delete env.DATABASE_URL; // Remove any existing DATABASE_URL
+  env.DATABASE_URL = templateDbPath; // Set our test database URL
+  env.DOTENV_CONFIG_PATH = "/dev/null"; // Prevent Prisma from loading .env file
+
   execSync("pnpm prisma db push --skip-generate --accept-data-loss", {
     stdio: "pipe",
     cwd,
-    env: { ...process.env, DATABASE_URL: templateDbPath },
+    env,
   });
 
   // Verify template was created

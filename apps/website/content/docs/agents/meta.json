@@ -1,9 +1,0 @@
-{
-  "title": "Agent Integration",
-  "pages": [
-    "permission-modes",
-    "json-mode",
-    "session-resumption",
-    "multi-agent"
-  ]
-}

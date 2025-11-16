@@ -6,13 +6,143 @@ description: AI workflow automation powered by Claude, Codex, and Gemini
 import { Card, Cards } from "fumadocs-ui/components/card";
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import { AgentCmd } from "@/components/AgentCmd";
-import { Shield, Users, Activity, RotateCcw, FolderOpen, Smartphone } from "lucide-react";
+import {
+  Shield,
+  Users,
+  Activity,
+  RotateCcw,
+  FolderOpen,
+  Smartphone,
+  FileCheck,
+  LayoutGrid,
+} from "lucide-react";
+import Link from "next/link";
 
-Build multi-step AI workflows with <AgentCmd /> that orchestrate Claude, OpenAI Codex, and Google Gemini to automate complex development tasks. Define workflows once, run them anywhere.
+Build multi-step AI workflows with <AgentCmd /> that orchestrate Claude, OpenAI Codex, and Google Gemini to automate complex development tasks.
+
+Think of it as **GitHub Actions for AI agents**. You define workflows with phases and steps, then <AgentCmd /> handles execution, monitoring, and artifact management.
 
 ## What is <AgentCmd />?
 
-Think of it as **GitHub Actions for AI agents**. You define workflows with phases and steps, then <AgentCmd /> handles execution, monitoring, and artifact management.
+<AgentCmd /> is a platform for automating development workflows with AI agents.
+It consists of three components:
+
+1. **Web Application** - Visual workflow management, real-time monitoring, and run history
+2. **Workflow SDK** (`agentcmd-workflows`) - TypeScript library for defining workflows
+3. **Agent CLI SDK** (`agent-cli-sdk`) - Programmatic access to AI CLI tools
+
+## Why <AgentCmd />?
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
+  {" "}
+  <Link
+    href="/docs/reference/slash-commands"
+    className="flex gap-3 no-underline hover:opacity-80 transition-opacity"
+  >
+    <LayoutGrid className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
+    <div>
+      <div className="font-semibold mb-1">Built for your workflow</div>
+      <div className="text-muted-foreground text-sm">
+        {
+          "Your code, your slash commands, your process - define what your project needs"
+        }
+      </div>
+    </div>
+  </Link>
+  <Link
+    href="/docs/concepts/specs"
+    className="flex gap-3 no-underline hover:opacity-80 transition-opacity"
+  >
+    <FileCheck className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
+    <div>
+      <div className="font-semibold mb-1">Spec-driven development</div>
+      <div className="text-muted-foreground text-sm">
+        {"Generate specs, implement with AI, review - repeatable workflow"}
+      </div>
+    </div>
+  </Link>
+  <Link
+    href="/docs/reference/agentcmd-workflows"
+    className="flex gap-3 no-underline hover:opacity-80 transition-opacity"
+  >
+    <Shield className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
+    <div>
+      <div className="font-semibold mb-1">Type-safe workflows</div>
+      <div className="text-muted-foreground text-sm">
+        {"Full TypeScript support with schema validation"}
+      </div>
+    </div>
+  </Link>
+  <Link
+    href="/docs/concepts/agents"
+    className="flex gap-3 no-underline hover:opacity-80 transition-opacity"
+  >
+    <Users className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
+    <div>
+      <div className="font-semibold mb-1">Multi-agent</div>
+      <div className="text-muted-foreground text-sm">
+        {"Combine Claude's planning with Codex's implementation"}
+      </div>
+    </div>
+  </Link>
+  <Link
+    href="/docs/concepts/workflows"
+    className="flex gap-3 no-underline hover:opacity-80 transition-opacity"
+  >
+    <Activity className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
+    <div>
+      <div className="font-semibold mb-1">Real-time monitoring</div>
+      <div className="text-muted-foreground text-sm">
+        {"WebSocket updates show live progress"}
+      </div>
+    </div>
+  </Link>
+  <Link
+    href="/docs/concepts/agents"
+    className="flex gap-3 no-underline hover:opacity-80 transition-opacity"
+  >
+    <RotateCcw className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
+    <div>
+      <div className="font-semibold mb-1">Resumable</div>
+      <div className="text-muted-foreground text-sm">
+        {"Continue previous agent conversations across steps"}
+      </div>
+    </div>
+  </Link>
+  <Link
+    href="/docs/reference/steps"
+    className="flex gap-3 no-underline hover:opacity-80 transition-opacity"
+  >
+    <FolderOpen className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
+    <div>
+      <div className="font-semibold mb-1">Artifact management</div>
+      <div className="text-muted-foreground text-sm">
+        {"Upload files, images, directories for review"}
+      </div>
+    </div>
+  </Link>
+  <Link
+    href="/docs/getting-started/quick-start"
+    className="flex gap-3 no-underline hover:opacity-80 transition-opacity"
+  >
+    <Smartphone className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
+    <div>
+      <div className="font-semibold mb-1">Mobile friendly</div>
+      <div className="text-muted-foreground text-sm">
+        {"Responsive UI works on all devices"}
+      </div>
+    </div>
+  </Link>
+</div>
+
+### How It Works
+
+```
+Web App ↔ Workflow Definitions → Inngest → AI Agents (Claude/Codex/Gemini)
+   ↓           ↓                     ↓            ↓
+  UI      TypeScript files      Durable       File edits,
+         (.agent/workflows/)    execution     commits, PRs
+```
 
 ```typescript
 // Simple 3-step workflow
@@ -46,79 +176,26 @@ defineWorkflow(
 );
 ```
 
-## Why <AgentCmd />?
-
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
-  <div className="flex gap-3">
-    <Shield className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
-    <div>
-      <div className="font-semibold mb-1">Type-safe workflows</div>
-      <div className="text-muted-foreground text-sm">
-        Full TypeScript support with schema validation
-      </div>
-    </div>
-  </div>
-  <div className="flex gap-3">
-    <Users className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
-    <div>
-      <div className="font-semibold mb-1">Multi-agent</div>
-      <div className="text-muted-foreground text-sm">
-        Combine Claude's planning with Codex's implementation
-      </div>
-    </div>
-  </div>
-  <div className="flex gap-3">
-    <Activity className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
-    <div>
-      <div className="font-semibold mb-1">Real-time monitoring</div>
-      <div className="text-muted-foreground text-sm">
-        WebSocket updates show live progress
-      </div>
-    </div>
-  </div>
-  <div className="flex gap-3">
-    <RotateCcw className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
-    <div>
-      <div className="font-semibold mb-1">Resumable</div>
-      <div className="text-muted-foreground text-sm">
-        Continue previous agent conversations across steps
-      </div>
-    </div>
-  </div>
-  <div className="flex gap-3">
-    <FolderOpen className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
-    <div>
-      <div className="font-semibold mb-1">Artifact management</div>
-      <div className="text-muted-foreground text-sm">
-        Upload files, images, directories for review
-      </div>
-    </div>
-  </div>
-  <div className="flex gap-3">
-    <Smartphone className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
-    <div>
-      <div className="font-semibold mb-1">Mobile friendly</div>
-      <div className="text-muted-foreground text-sm">
-        Responsive UI works on all devices
-      </div>
-    </div>
-  </div>
-</div>
-
 ## Core Concepts
 
 <Cards>
+  <Card title="Agents" href="/docs/concepts/agents">
+    AI CLI tools (Claude/Codex/Gemini) orchestrated with slash commands
+  </Card>
   <Card title="Workflows" href="/docs/concepts/workflows">
     Multi-step processes orchestrated by Inngest
   </Card>
-  <Card title="Phases" href="/docs/concepts/phases">
-    Organize work into logical stages (plan → implement → review)
+  <Card title="Specs" href="/docs/concepts/specs">
+    Feature specifications that drive implementation workflows
   </Card>
   <Card title="Steps" href="/docs/reference/steps">
-    8 step types: agent, AI, CLI, git, artifact, annotation, phase, log
+    8 step types: agent, ai, bash, git, artifact, annotation, phase, webhook
   </Card>
-  <Card title="Sessions" href="/docs/concepts/sessions">
-    Resume agent conversations across workflow steps
+  <Card title="Planning Sessions" href="/docs/concepts/planning-sessions">
+    Read-only AI exploration that generates specs
+  </Card>
+  <Card title="Phases" href="/docs/concepts/phases">
+    Organize work into logical stages (plan → implement → review)
   </Card>
 </Cards>
 
@@ -219,7 +296,7 @@ export default defineWorkflow(
   </Card>
   <Card
     title="Multi-Agent Workflows"
-    href="/docs/advanced/multi-phase-workflows"
+    href="/docs/examples/advanced/multi-agent-workflows"
   >
     Claude for planning, Codex for implementation
   </Card>
@@ -229,8 +306,8 @@ export default defineWorkflow(
   >
     Reusable prompts with type-safe args
   </Card>
-  <Card title="CI/CD Integration" href="/docs/advanced/ci-cd-integration">
-    Trigger workflows from GitHub Actions
+  <Card title="Data Processing Pipeline" href="/docs/examples/data-processing">
+    Automate complex data workflows
   </Card>
 </Cards>
 

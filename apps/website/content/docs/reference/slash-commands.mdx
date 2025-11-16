@@ -1,143 +1,278 @@
 ---
 title: Slash Commands
-description: Built-in slash commands for workflow automation
+description: Built-in /cmd:* commands for spec-driven workflow automation
 ---
 
 import { Callout } from 'fumadocs-ui/components/callout';
 import { AgentCmd } from '@/components/AgentCmd';
 
-<AgentCmd /> includes powerful slash commands for common workflow automation tasks.
+<AgentCmd /> includes powerful `/cmd:*` slash commands for spec-driven workflow automation.
 
-## Overview
+## How Slash Commands Orchestrate Agents
 
-Slash commands are pre-built workflows accessible via CLI or custom commands.
+Slash commands are **pre-built agent instructions** that tell AI agents what to do. When you run a slash command, agentcmd:
 
-{/* AUTO-GENERATED:slash-commands-start */}
+1. Loads the command definition from `.claude/commands/cmd/`
+2. Sends the instructions to an AI agent (Claude Code, Codex, or Gemini)
+3. The agent executes the workflow defined in the command
+4. Returns structured results (often JSON)
+
+**Example: `/cmd:generate-feature-spec`**
+
+When you run:
+```bash
+/cmd:generate-feature-spec "Add dark mode support"
+```
+
+agentcmd orchestrates Claude to:
+- Analyze your codebase for existing patterns
+- Research similar implementations
+- Generate comprehensive feature spec with tasks
+- Create spec folder in `.agent/specs/todo/`
+- Update spec index
+- Return spec ID for implementation
+
+**You issued one command. The agent did the work.**
+
+See [Agents](/docs/concepts/agents) for more on agent orchestration.
+
+## Command Namespace
+
+<Callout type="info">
+This reference only documents **`/cmd:*` namespace commands** - the official agentcmd workflow commands. Custom commands in your project (like `/commit-and-push`, `/pull-request`) are project-specific and documented separately.
+</Callout>
+
+All agentcmd workflow commands use the `/cmd:` prefix to distinguish them from custom project commands.
 
 ## Available Commands
 
-### `/generate-feature-spec`
+### Spec Generation
+
+#### `/cmd:generate-feature-spec`
 
 Generate feature implementation spec with tasks and complexity estimates.
 
 **Usage**:
 ```bash
-/generate-feature-spec [context]
+/cmd:generate-feature-spec [context]
 ```
 
 **Arguments**:
-- `context` - Feature description or requirements (optional if continuing conversation)
+- `context` (optional) - Feature description or requirements. If omitted, uses conversation history.
 
 **What it does**:
 1. Analyzes feature requirements
-2. Breaks down into tasks
-3. Estimates complexity per task
-4. Writes spec to `.agent/specs/todo/`
-5. Updates spec index
+2. Researches codebase for patterns
+3. Breaks down into phased tasks
+4. Assigns complexity scores (1-10 per task)
+5. Writes spec to `.agent/specs/todo/{timestamp}-{name}/spec.md`
+6. Updates `.agent/specs/index.json`
 
 **Example**:
 ```bash
-/generate-feature-spec "Add dark mode toggle to settings"
+/cmd:generate-feature-spec "Add OAuth authentication with Google and GitHub"
+```
+
+**Returns**: JSON with `spec_id`, `spec_path`, `complexity`, `next_command`
+
+---
+
+#### `/cmd:generate-bug-spec`
+
+Generate bug fix spec with reproduction steps and investigation workflow.
+
+**Usage**:
+```bash
+/cmd:generate-bug-spec [context]
+```
+
+**Arguments**:
+- `context` (optional) - Bug description or reproduction steps
+
+**What it does**:
+1. Documents reproduction steps
+2. Analyzes root cause
+3. Proposes fix strategy
+4. Creates test cases for regression
+5. Writes spec to `.agent/specs/todo/`
+
+**Example**:
+```bash
+/cmd:generate-bug-spec "Login page crashes on mobile Safari when clicking 'Remember me'"
 ```
 
 ---
 
-### `/implement-spec`
+#### `/cmd:generate-issue-spec`
+
+Generate general issue/refactoring spec.
+
+**Usage**:
+```bash
+/cmd:generate-issue-spec [context]
+```
+
+**Arguments**:
+- `context` (optional) - Issue description
+
+**What it does**:
+1. Documents problem statement
+2. Proposes solution approach
+3. Analyzes impact
+4. Defines success criteria
+5. Writes spec to `.agent/specs/todo/`
+
+**Example**:
+```bash
+/cmd:generate-issue-spec "Refactor auth service to improve testability and reduce coupling"
+```
+
+---
+
+### Spec Implementation
+
+#### `/cmd:implement-spec`
 
 Implement feature from spec file.
 
 **Usage**:
 ```bash
-/implement-spec <spec-id-or-name-or-path>
+/cmd:implement-spec <spec-id-or-name-or-path>
 ```
 
 **Arguments**:
-- `spec-id-or-name-or-path` - Spec ID, feature name, or full path
+- `spec-id-or-name-or-path` - Spec ID (12 digits), feature name, or full path
 
 **What it does**:
-1. Reads spec file
+1. Reads spec file from `.agent/specs/`
 2. Updates status to "in-progress"
 3. Implements each task in order
 4. Checks off tasks as completed
-5. Updates status to "review"
+5. Runs validation (build, tests, lint)
+6. Updates status to "review"
 
 **Example**:
 ```bash
-/implement-spec 251116105638
-/implement-spec dark-mode
-/implement-spec .agent/specs/todo/251116105638-dark-mode/spec.md
+/cmd:implement-spec 251116105638                        # By ID
+/cmd:implement-spec oauth-authentication                # By name
+/cmd:implement-spec .agent/specs/todo/251116105638-oauth/spec.md  # By path
 ```
 
 ---
 
-### `/review-spec-implementation`
+#### `/cmd:review-spec-implementation`
 
-Review implementation against spec.
+Review implementation against spec and document findings.
 
 **Usage**:
 ```bash
-/review-spec-implementation <spec-id-or-name-or-path>
+/cmd:review-spec-implementation <spec-id-or-name-or-path>
 ```
+
+**Arguments**:
+- `spec-id-or-name-or-path` - Spec identifier
 
 **What it does**:
 1. Reads spec and implementation
 2. Verifies all tasks completed
-3. Checks for deviations
-4. Runs validation (tests, build)
-5. Documents findings
+3. Checks for deviations from spec
+4. Runs validation (tests, build, lint)
+5. Documents findings in review file
+6. Suggests fixes if needed
 
 **Example**:
 ```bash
-/review-spec-implementation 251116105638
+/cmd:review-spec-implementation 251116105638
 ```
 
 ---
 
-### `/commit-and-push`
+### Spec Management
 
-Create commit, push, and optionally create PR.
+#### `/cmd:list-specs`
+
+List all specs by folder and/or filter by status.
 
 **Usage**:
 ```bash
-/commit-and-push [base-branch]
+/cmd:list-specs [folder] [--search keyword] [--sort field]
 ```
 
-**What it does**:
-1. Runs git status and diff
-2. Analyzes changes
-3. Creates descriptive commit message
-4. Commits changes
-5. Pushes to remote
-6. Creates PR if on feature branch
+**Arguments**:
+- `folder` (optional) - Filter by folder: `todo`, `in-progress`, `done`, `backlog`
+- `--search` (optional) - Search specs by keyword
+- `--sort` (optional) - Sort by field: `complexity`, `created`, `updated`
 
 **Example**:
 ```bash
-/commit-and-push main
+/cmd:list-specs todo                          # All todo specs
+/cmd:list-specs todo --search "auth"          # Todo specs with "auth"
+/cmd:list-specs --sort complexity             # All specs by complexity
 ```
 
 ---
 
-### `/pull-request`
+#### `/cmd:move-spec`
 
-Create pull request with detailed description.
+Move spec between workflow folders (backlog → todo → in-progress → done).
 
 **Usage**:
 ```bash
-/pull-request [title]
+/cmd:move-spec <spec-id-or-name> <target-folder>
 ```
 
+**Arguments**:
+- `spec-id-or-name` - Spec identifier
+- `target-folder` - Destination: `backlog`, `todo`, `in-progress`, or `done`
+
 **What it does**:
-1. Analyzes branch changes
-2. Generates PR title and description
-3. Creates test plan
-4. Creates PR via GitHub CLI
+1. Moves spec folder to target directory
+2. Updates status in spec file
+3. Updates `.agent/specs/index.json`
 
 **Example**:
 ```bash
-/pull-request "Add dark mode feature"
+/cmd:move-spec 251116105638 in-progress
+/cmd:move-spec oauth-auth done
 ```
 
-{/* END AUTO-GENERATED:slash-commands-end */}
+---
+
+#### `/cmd:remove-spec`
+
+Delete spec folder and remove from index.
+
+**Usage**:
+```bash
+/cmd:remove-spec <spec-id-or-name-or-path>
+```
+
+**Caution**: This permanently deletes the spec folder.
+
+**Example**:
+```bash
+/cmd:remove-spec 251116105638
+```
+
+---
+
+## Using Commands in Workflows
+
+Slash commands can be called programmatically from workflows:
+
+```typescript
+import { buildSlashCommand } from "agentcmd-workflows";
+
+await step.agent("generate-spec", {
+  agent: "claude",
+  json: true,
+  prompt: buildSlashCommand("/cmd:generate-feature-spec", {
+    context: "Add dark mode support"
+  })
+});
+```
+
+The `buildSlashCommand` helper formats slash commands with proper argument structure.
 
 ## Creating Custom Commands
 
@@ -145,58 +280,78 @@ Create your own slash commands in `.claude/commands/`:
 
 ```bash
 # Create command file
-echo "Generate comprehensive test suite for the current file" > .claude/commands/gen-tests.md
+cat > .claude/commands/analyze-security.md << 'EOF'
+Analyze codebase for security vulnerabilities.
+
+Steps:
+1. Scan for common vulnerabilities (SQL injection, XSS, etc.)
+2. Check dependencies for known issues
+3. Review authentication/authorization code
+4. Generate security report
+EOF
 
 # Use it
-/gen-tests
+/analyze-security
 ```
 
-**See**: [Custom Slash Commands](/examples/custom-slash-command) for full tutorial.
+**See**: [Custom Slash Commands](/docs/examples/custom-slash-command) for full tutorial.
 
 ## Command Best Practices
 
-### Chaining Commands
+### Spec-Driven Workflow
 
-Combine commands for complete workflows:
+Use commands to follow the spec-driven development flow:
 
 ```bash
-# Generate spec → implement → review → commit
-/generate-feature-spec "Add user authentication"
-/implement-spec user-authentication
-/review-spec-implementation user-authentication
-/commit-and-push main
+# 1. Generate spec
+/cmd:generate-feature-spec "Add user authentication"
+
+# 2. Implement
+/cmd:implement-spec 251116105638
+
+# 3. Review
+/cmd:review-spec-implementation 251116105638
+
+# 4. Move to done
+/cmd:move-spec 251116105638 done
 ```
 
 ### Iterative Development
 
-Use commands iteratively:
+Use commands iteratively for complex features:
 
 ```bash
 # Start implementation
-/implement-spec my-feature
+/cmd:implement-spec my-feature
 
-# Review progress
-/review-spec-implementation my-feature
+# Review progress (finds issues)
+/cmd:review-spec-implementation my-feature
 
-# Continue if issues found
-/implement-spec my-feature
+# Continue implementation (fixes issues)
+/cmd:implement-spec my-feature
 
-# Final review
-/review-spec-implementation my-feature
+# Final review (passes)
+/cmd:review-spec-implementation my-feature
 ```
 
-### CI/CD Integration
+### Batch Operations
 
-Use commands in CI pipelines:
+Process multiple specs:
 
 ```bash
-# In CI script
-/review-spec-implementation $SPEC_ID
-/pull-request "Automated implementation of $FEATURE"
+# List all todo specs
+/cmd:list-specs todo
+
+# Implement each
+/cmd:implement-spec spec-1
+/cmd:implement-spec spec-2
+/cmd:implement-spec spec-3
 ```
 
 ## Related
 
-- [CLI Reference](/reference/cli) - Command-line interface
-- [Custom Commands](/examples/custom-slash-command) - Create your own
-- [Workflow Definition](/guides/workflow-definition) - Build custom workflows
+- [Agents](/docs/concepts/agents) - How agents execute slash commands
+- [Specs](/docs/concepts/specs) - Understanding spec structure
+- [Custom Commands](/docs/examples/custom-slash-command) - Create your own
+- [Workflow Definition](/docs/examples/workflow-definition) - Build custom workflows
+- [CLI Reference](/docs/reference/cli) - Command-line interface

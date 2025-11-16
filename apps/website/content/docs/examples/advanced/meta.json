@@ -1,0 +1,9 @@
+{
+  "title": "Advanced Examples",
+  "pages": [
+    "artifact-management",
+    "multi-agent-workflows",
+    "multi-phase-workflows",
+    "workspace-management"
+  ]
+}

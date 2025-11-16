@@ -166,6 +166,107 @@ describe("createGitStep", () => {
       description: "This PR adds a new feature",
       baseBranch: "main",
     });
+
+    // Verify workflow_run.pr_url was updated
+    const updatedRun = await prisma.workflowRun.findUnique({
+      where: { id: execution.id },
+    });
+    expect(updatedRun?.pr_url).toBe("https://github.com/org/repo/pull/123");
+  });
+
+  it("does not update pr_url when PR creation fails", async () => {
+    // Arrange
+    const mockCreatePullRequest = vi.mocked(
+      createPullRequestModule.createPullRequest,
+    );
+    mockCreatePullRequest.mockResolvedValue({
+      success: false,
+      error: "Failed to create PR",
+      useGhCli: true,
+      commands: ["gh pr create --title \"Add feature\" --body \"Description\" --base main"],
+    });
+
+    const { run: execution } = await createTestWorkflowContext(prisma, {
+      run: { name: "Test Execution", status: "running", args: {} }
+    });
+
+    const context: RuntimeContext = {
+      runId: execution.id,
+      projectId: "project-123",
+      projectPath: "/tmp/test",
+      userId: "user-123",
+      currentPhase: "release",
+      logger: console as unknown as RuntimeContext["logger"],
+    };
+
+    const mockInngestStep = {
+      run: vi.fn(<T>(id: string, fn: () => T) => fn()),
+    };
+
+    const gitStepFn = createGitStep(
+      context,
+      mockInngestStep as RuntimeContext["inngestStep"],
+    );
+
+    // Act
+    const result = await gitStepFn("create-pr", {
+      operation: "pr",
+      title: "Add feature",
+      body: "Description",
+    });
+
+    // Assert
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
+
+    // Verify workflow_run.pr_url was NOT updated
+    const updatedRun = await prisma.workflowRun.findUnique({
+      where: { id: execution.id },
+    });
+    expect(updatedRun?.pr_url).toBeNull();
+  });
+
+  it("does not update pr_url for commit operations", async () => {
+    // Arrange
+    const mockCommitChanges = vi.mocked(commitChangesModule.commitChanges);
+    mockCommitChanges.mockResolvedValue({
+      commitSha: "abc123",
+      commands: ["git add .", "git commit -m \"feat: add feature\""],
+    });
+
+    const { run: execution } = await createTestWorkflowContext(prisma, {
+      run: { name: "Test Execution", status: "running", args: {} }
+    });
+
+    const context: RuntimeContext = {
+      runId: execution.id,
+      projectId: "project-123",
+      projectPath: "/tmp/test",
+      userId: "user-123",
+      currentPhase: "release",
+      logger: console as unknown as RuntimeContext["logger"],
+    };
+
+    const mockInngestStep = {
+      run: vi.fn(<T>(id: string, fn: () => T) => fn()),
+    };
+
+    const gitStepFn = createGitStep(
+      context,
+      mockInngestStep as RuntimeContext["inngestStep"],
+    );
+
+    // Act
+    await gitStepFn("commit-changes", {
+      operation: "commit",
+      message: "feat: add feature",
+    });
+
+    // Assert - Verify pr_url was NOT updated
+    const updatedRun = await prisma.workflowRun.findUnique({
+      where: { id: execution.id },
+    });
+    expect(updatedRun?.pr_url).toBeNull();
   });
 
   it("accepts sentence case and converts to kebab-case ID", async () => {

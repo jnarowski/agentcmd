@@ -1,11 +1,11 @@
 {
   "title": "Reference",
   "pages": [
-    "steps",
+    "agent-cli-sdk",
+    "agentcmd-workflows",
     "cli",
     "configuration",
-    "sdk-api",
-    "agent-cli-sdk",
-    "slash-commands"
+    "slash-commands",
+    "steps"
   ]
 }

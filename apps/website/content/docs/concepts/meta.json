@@ -1,4 +1,13 @@
 {
-  "title": "Core Concepts",
-  "pages": ["workflows", "phases", "steps", "sessions", "projects", "specs"]
+  "title": "Concepts",
+  "pages": [
+    "agents",
+    "phases",
+    "planning-sessions",
+    "projects",
+    "sessions",
+    "specs",
+    "steps",
+    "workflows"
+  ]
 }

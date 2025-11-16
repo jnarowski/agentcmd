@@ -1,0 +1,218 @@
+---
+title: Planning Sessions
+description: Use AI planning conversations to generate implementation specs
+---
+
+A **planning session** is an AI agent conversation run in "plan" mode (read-only) that analyzes requirements and designs solutions without making changes. You can later convert planning sessions into implementation specs.
+
+## What is a Planning Session?
+
+Planning sessions let you:
+
+- Explore requirements with AI in read-only mode
+- Analyze architecture decisions safely
+- Design features without touching code
+- Capture planning context for later implementation
+- Generate specs from planning conversations
+
+Think of it as "thinking out loud" with an AI agent that saves the conversation for future use.
+
+## Creating a Planning Session
+
+Run an agent with `permissionMode: "plan"`:
+
+```typescript
+await step.agent("plan-auth-system", {
+  agent: "claude",
+  prompt: "Design OAuth authentication with Google and GitHub",
+  permissionMode: "plan", // Read-only mode
+});
+```
+
+Or from CLI:
+
+```bash
+claude --mode plan "Design OAuth authentication"
+```
+
+The agent will:
+
+1. Analyze your codebase
+2. Research existing patterns
+3. Suggest architecture
+4. Identify challenges
+5. Propose solutions
+6. **Not make any changes**
+
+The entire conversation is saved as a session.
+
+## Planning → Spec → Implementation Flow
+
+### Step 1: Plan with AI
+
+Run planning session to explore requirements:
+
+```typescript
+const planning = await step.agent("plan", {
+  agent: "claude",
+  prompt: "Design dark mode feature for the app",
+  permissionMode: "plan",
+});
+```
+
+Agent explores codebase, suggests approach, saves session.
+
+### Step 2: Generate Spec from Planning
+
+Use the planning session to create a spec:
+
+```typescript
+await step.agent("generate-spec", {
+  agent: "claude",
+  prompt: buildSlashCommand("/cmd:generate-feature-spec", {
+    context: "dark mode feature",
+  }),
+  resume: planning.sessionId, // Use planning context
+});
+```
+
+The spec generation agent:
+
+- Resumes the planning conversation
+- Has full context from planning session
+- Generates comprehensive spec
+- Saves to `.agent/specs/todo/`
+
+### Step 3: Implement from Spec
+
+Run implementation workflow:
+
+```typescript
+await step.agent("implement", {
+  agent: "claude",
+  prompt: buildSlashCommand("/cmd:implement-spec", {
+    specId: "251113152201",
+  }),
+});
+```
+
+## Using Planning Sessions in the UI
+
+The web app's "Create Workflow Run" interface has a **"From Planning Session"** tab:
+
+### How It Works:
+
+1. Click "New Workflow Run"
+2. Select **"From Planning Session"** tab
+3. Choose a previous planning session from dropdown
+4. Select spec type (feature/bug/issue)
+5. Click "Run"
+
+The system will:
+
+- Resume the planning session
+- Run `/cmd:generate-*-spec` with planning context
+- Create spec in `.agent/specs/todo/`
+- Execute implementation workflow
+
+This converts your exploratory planning conversation into an actionable spec automatically.
+
+## Planning Session Storage
+
+Planning sessions are stored as regular agent sessions:
+
+```
+~/.claude/projects/{project-id}/
+└── {session-id}.jsonl
+```
+
+Session metadata includes:
+
+```json
+{
+  "permission_mode": "plan",
+  "created_at": "2025-11-16T...",
+  "agent": "claude",
+  "project_id": "..."
+}
+```
+
+The UI filters sessions by `permission_mode === "plan"` to show only planning conversations.
+
+## When to Use Planning Sessions
+
+**Use planning sessions when:**
+
+- Exploring new feature requirements
+- Designing architecture for complex changes
+- Researching implementation approaches
+- Analyzing multiple solution options
+- Need AI context for spec generation
+
+**Skip planning sessions when:**
+
+- Requirements are crystal clear
+- Simple, well-understood changes
+- Following existing patterns exactly
+- Already have detailed spec
+
+## Benefits
+
+**Safety**: Plan mode prevents accidental changes while exploring
+
+**Context**: Planning conversation provides rich context for spec generation
+
+**Iteration**: Explore multiple approaches before committing
+
+**Documentation**: Planning sessions become project knowledge base
+
+**Efficiency**: Generate better specs with full planning context
+
+## Example: Complete Planning Workflow
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+
+export default defineWorkflow("plan-and-implement", {
+  async run({ step }) {
+    // Phase 1: Planning
+    const planning = await step.agent("planning-session", {
+      agent: "claude",
+      prompt: "Design user authentication with OAuth",
+      permissionMode: "plan",
+    });
+
+    // Phase 2: Generate Spec
+    const spec = await step.agent("generate-spec", {
+      agent: "claude",
+      prompt: buildSlashCommand("/cmd:generate-feature-spec", {
+        context: "OAuth authentication from planning",
+      }),
+      resume: planning.sessionId,
+    });
+
+    // Phase 3: Implement
+    await step.agent("implement", {
+      agent: "claude",
+      prompt: buildSlashCommand("/cmd:implement-spec", {
+        specId: spec.data.spec_id,
+      }),
+    });
+
+    // Phase 4: Review
+    await step.agent("review", {
+      agent: "claude",
+      prompt: buildSlashCommand("/cmd:review-spec-implementation", {
+        specId: spec.data.spec_id,
+      }),
+    });
+  },
+});
+```
+
+## Next Steps
+
+- [Agents](/docs/concepts/agents) - Understanding AI agents
+- [Specs](/docs/concepts/specs) - Spec structure and lifecycle
+- [Running Workflows](/docs/getting-started/running-workflows) - Using planning sessions in UI
+- [Agent Step Reference](/docs/reference/steps/agent) - Permission modes API

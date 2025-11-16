@@ -1,9 +1,0 @@
-{
-  "title": "Advanced",
-  "pages": [
-    "multi-phase-workflows",
-    "workspace-management",
-    "artifact-management",
-    "ci-cd-integration"
-  ]
-}

@@ -103,9 +103,71 @@ Standard sections:
 **Files to Create/Modify** - Changed files list
 **Success Criteria** - How do we know it's done?
 
-## Generating Specs
+## Spec Types
 
-### Via Slash Commands
+agentcmd supports three spec types, each with a specific purpose:
+
+| Type | Purpose | Generated Content | Use Case |
+|------|---------|-------------------|----------|
+| **Feature** | New functionality | User stories, architecture, phased tasks, integration points | New features, enhancements, capabilities |
+| **Bug** | Bug fixes | Reproduction steps, root cause analysis, fix strategy, regression tests | Error corrections, defect fixes, issue resolutions |
+| **Issue** | General issues | Problem statement, solution approach, impact analysis, success criteria | Refactoring, tech debt, performance, documentation |
+
+### Which Spec Type to Use?
+
+**Choose Feature when:**
+- Adding new functionality
+- Enhancing existing features
+- Building new UI components
+- Adding API endpoints
+- Implementing new capabilities
+
+**Choose Bug when:**
+- Fixing errors or crashes
+- Correcting incorrect behavior
+- Resolving defects
+- Need reproduction steps
+- Regression testing required
+
+**Choose Issue when:**
+- Refactoring code
+- Improving performance
+- Resolving tech debt
+- Updating documentation
+- General improvements
+
+## Creating Specs
+
+There are **four ways** to create specs:
+
+### 1. From Planning Session (UI)
+
+Convert a planning conversation into a spec:
+
+1. Run planning session with `permissionMode: "plan"`
+2. In UI, click "New Workflow Run"
+3. Select "From Planning Session" tab
+4. Choose your planning session
+5. Select spec type
+6. Click "Run"
+
+See [Planning Sessions](/docs/concepts/planning-sessions) and [Running Workflows](/docs/getting-started/running-workflows).
+
+### 2. Write It (UI)
+
+Create spec inline with markdown editor:
+
+1. In UI, click "New Workflow Run"
+2. Select "Write It" tab
+3. Select spec type
+4. Write spec content in markdown
+5. Click "Run"
+
+The agent generates full spec from your content.
+
+### 3. Via Slash Commands
+
+Generate specs directly from CLI:
 
 **Feature Spec**:
 ```bash
@@ -129,18 +191,18 @@ Generates:
 - Fix approach
 - Test cases
 
-**PRD (Product Requirements)**:
+**Issue Spec**:
 ```bash
-/cmd:generate-prd "Social sharing features"
+/cmd:generate-issue-spec "Refactor auth service for better testability"
 ```
 
 Generates:
-- High-level product spec
-- User stories
-- Technical overview
-- No implementation details
+- Problem statement
+- Refactoring approach
+- Impact analysis
+- Success criteria
 
-### Via Workflows
+### 4. Via Workflows (Programmatic)
 
 ```typescript
 await step.agent("generate-spec", {
@@ -315,7 +377,7 @@ Built-in commands for spec management:
 
 - `/cmd:generate-feature-spec` - Full implementation spec
 - `/cmd:generate-bug-spec` - Bug fix spec with reproduction
-- `/cmd:generate-prd` - Product requirements document
+- `/cmd:generate-issue-spec` - General issue/refactor spec
 
 ### Manage
 

@@ -1,4 +1,10 @@
 {
   "title": "Getting Started",
-  "pages": ["installation", "quick-start", "first-workflow"]
+  "pages": [
+    "installation",
+    "quick-start",
+    "workflow-concepts",
+    "running-workflows",
+    "first-workflow"
+  ]
 }

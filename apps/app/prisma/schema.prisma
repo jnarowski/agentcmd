@@ -52,6 +52,7 @@ model WorkflowRun {
   mode                   String?        // Workspace mode: "stay" | "branch" | "worktree"
   branch_name            String?        // New branch name for execution
   base_branch            String?        // Branch to create new branch from
+  pr_url                 String?        // Pull request URL (set by step.git operation: "pr")
   current_phase          String?        // Current phase name
   current_step_index     Int            @default(0)
   status                 WorkflowStatus @default(pending)
