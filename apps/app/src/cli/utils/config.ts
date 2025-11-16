@@ -22,6 +22,7 @@ export const configSchema = z.object({
   host: z.string(),
   logLevel: z.enum(["trace", "debug", "info", "warn", "error", "fatal"]),
   anthropicApiKey: z.string().optional(),
+  openaiApiKey: z.string().optional(),
   jwtSecret: z.string(),
   allowedOrigins: z.string(),
 });
@@ -38,6 +39,7 @@ export function getDefaultConfig(): Config {
     host: DEFAULT_HOST,
     logLevel: DEFAULT_LOG_LEVEL,
     anthropicApiKey: "",
+    openaiApiKey: "",
     jwtSecret: "", // Generated during install
     allowedOrigins: DEFAULT_ALLOWED_ORIGINS,
   };

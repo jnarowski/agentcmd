@@ -68,6 +68,10 @@ export async function startCommand(options: StartOptions): Promise<void> {
       process.env.ANTHROPIC_API_KEY = mergedConfig.anthropicApiKey;
     }
 
+    if (mergedConfig.openaiApiKey) {
+      process.env.OPENAI_API_KEY = mergedConfig.openaiApiKey;
+    }
+
     // 4. Check for pending migrations and create backup if needed
     // Calculate absolute path to schema (relative to bundled CLI location)
     const schemaPath = join(__dirname, 'prisma/schema.prisma');
