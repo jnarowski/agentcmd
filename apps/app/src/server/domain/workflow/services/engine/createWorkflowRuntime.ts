@@ -330,12 +330,6 @@ function extendInngestSteps<TPhases extends PhasesConstraint>(
   // Create log methods
   function createLogMethod(level: "info" | "warn" | "error") {
     return (...args: unknown[]): void => {
-      if (!currentStepId) {
-        throw new Error(
-          "step.log() can only be called inside step.run() execution"
-        );
-      }
-
       const message = serializeLogArgs(args);
 
       // Create workflow event (fire and forget - don't block execution)
@@ -347,7 +341,7 @@ function extendInngestSteps<TPhases extends PhasesConstraint>(
           message,
           args,
         },
-        inngest_step_id: currentStepId,
+        inngest_step_id: currentStepId ?? undefined,
         phase: context.currentPhase ?? undefined,
         logger: context.logger,
       }).catch((error) => {

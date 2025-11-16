@@ -1,6 +1,13 @@
 {
-  "lastId": 251115173840,
+  "lastId": 251115185426,
   "specs": {
+    "251115185426": {
+      "path": "todo/251115185426-chronological-unified-logs/spec.md",
+      "status": "draft",
+      "spec_type": "feature",
+      "created": "2025-11-15T18:54:26.000Z",
+      "updated": "2025-11-15T18:54:26.000Z"
+    },
     "251115173840": {
       "path": "todo/251115173840-project-home-tabs/spec.md",
       "status": "draft",

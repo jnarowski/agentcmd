@@ -1,7 +1,10 @@
-import { useState } from "react";
-import { ChevronDown, ChevronRight, Terminal } from "lucide-react";
 import type { WorkflowRun } from "@/client/pages/projects/workflows/types";
-import { mergeLogsChronologically, type UnifiedLogEntry } from "./types";
+import {
+  eventToLogEntry,
+  traceToLogEntry,
+  type UnifiedLogEntry,
+  type TraceEntry,
+} from "./types";
 
 interface LogsTabProps {
   run: WorkflowRun;
@@ -11,34 +14,36 @@ export function LogsTab({ run }: LogsTabProps) {
   const steps = run.steps || [];
   const events = run.events || [];
 
-  // Track which steps are expanded (default: all expanded)
-  const [expandedSteps, setExpandedSteps] = useState<Set<string>>(
-    new Set(steps.map((s) => s.id))
-  );
+  // Collect ALL logs (with step context when available)
+  const allLogs: Array<UnifiedLogEntry & { stepName?: string }> = [];
 
-  const toggleStep = (stepId: string) => {
-    setExpandedSteps((prev) => {
-      const next = new Set(prev);
-      if (next.has(stepId)) {
-        next.delete(stepId);
-      } else {
-        next.add(stepId);
-      }
-      return next;
+  // Add traces from all steps
+  steps.forEach((step) => {
+    const output = step.output as { trace?: TraceEntry[] } | null;
+    const traces = output?.trace || [];
+    traces.forEach((trace, index) => {
+      allLogs.push({
+        ...traceToLogEntry(trace, step.started_at, index),
+        stepName: step.name,
+      });
     });
-  };
-
-  // Filter steps that have logs (either trace or step_log events)
-  const stepsWithLogs = steps.filter((step) => {
-    const output = step.output as { trace?: unknown[] } | null;
-    const hasTrace = output?.trace && Array.isArray(output.trace) && output.trace.length > 0;
-    const hasEvents = events.some(
-      (e) => e.event_type === "step_log" && e.inngest_step_id === step.inngest_step_id
-    );
-    return hasTrace || hasEvents;
   });
 
-  if (stepsWithLogs.length === 0) {
+  // Add all step_log events (with or without step context)
+  events
+    .filter((e) => e.event_type === "step_log")
+    .forEach((event) => {
+      const step = steps.find((s) => s.inngest_step_id === event.inngest_step_id);
+      allLogs.push({
+        ...eventToLogEntry(event),
+        stepName: step?.name,
+      });
+    });
+
+  // Sort chronologically
+  allLogs.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+  if (allLogs.length === 0) {
     return (
       <div className="text-sm text-muted-foreground text-center py-8">
         No logs available
@@ -47,50 +52,20 @@ export function LogsTab({ run }: LogsTabProps) {
   }
 
   return (
-    <div className="space-y-2">
-      {stepsWithLogs.map((step) => {
-        const logs = mergeLogsChronologically(step, events);
-        const isExpanded = expandedSteps.has(step.id);
-
-        return (
-          <div key={step.id} className="border rounded">
-            {/* Step Header */}
-            <button
-              onClick={() => toggleStep(step.id)}
-              className="w-full px-4 py-3 flex items-center gap-2 hover:bg-muted/50 transition-colors text-left"
-            >
-              {isExpanded ? (
-                <ChevronDown className="h-4 w-4 flex-shrink-0" />
-              ) : (
-                <ChevronRight className="h-4 w-4 flex-shrink-0" />
-              )}
-              <Terminal className="h-4 w-4 flex-shrink-0" />
-              <span className="font-medium text-sm">{step.name}</span>
-              <span className="text-xs text-muted-foreground ml-auto">
-                {logs.length} {logs.length === 1 ? "entry" : "entries"}
-              </span>
-            </button>
-
-            {/* Step Logs */}
-            {isExpanded && (
-              <div className="border-t bg-muted/20 p-4 space-y-2">
-                {logs.map((log, index) => (
-                  <LogEntry key={`${step.id}-${index}`} log={log} />
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })}
+    <div className="bg-muted/20 p-4 space-y-2 border rounded">
+      {allLogs.map((log, index) => (
+        <LogEntry key={index} log={log} stepName={log.stepName} />
+      ))}
     </div>
   );
 }
 
 interface LogEntryProps {
   log: UnifiedLogEntry;
+  stepName?: string;
 }
 
-function LogEntry({ log }: LogEntryProps) {
+function LogEntry({ log, stepName }: LogEntryProps) {
   // Color code by log level
   const levelColors = {
     info: "text-foreground",
@@ -102,11 +77,16 @@ function LogEntry({ log }: LogEntryProps) {
 
   return (
     <div className="text-xs font-mono space-y-1">
-      {/* Timestamp + Command/Level */}
+      {/* Timestamp + Step + Command/Level */}
       <div className="flex items-baseline gap-2 text-muted-foreground">
         <span className="flex-shrink-0">
           {log.timestamp.toLocaleTimeString()}
         </span>
+        {stepName && (
+          <span className="text-xs bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
+            {stepName}
+          </span>
+        )}
         {log.command && (
           <span className="font-semibold text-foreground">$ {log.command}</span>
         )}
