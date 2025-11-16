@@ -41,21 +41,6 @@ export default defineWorkflow(
     const { workingDir, specFile } = event.data;
 
     // ========================================================================
-    // LOGGING EXAMPLES
-    // ========================================================================
-
-    await step.phase("logging", async () => {
-      step.log("Regular log message");
-      step.log("Multiple", "arguments", { foo: "bar" });
-      step.log.warn("Warning message");
-      step.log.error("Error message");
-
-      await step.annotation("logging-done", {
-        message: "Logging examples completed",
-      });
-    });
-
-    // ========================================================================
     // AI GENERATION (step.ai)
     // ========================================================================
 
@@ -115,6 +100,21 @@ export default defineWorkflow(
       //   workingDir,
       //   resume: "session-id-from-previous-step",
       // });
+    });
+
+    // ========================================================================
+    // LOGGING EXAMPLES
+    // ========================================================================
+
+    await step.phase("logging", async () => {
+      step.log("Regular log message");
+      step.log("Multiple", "arguments", { foo: "bar" });
+      step.log.warn("Warning message");
+      step.log.error("Error message");
+
+      await step.annotation("logging-done", {
+        message: "Logging examples completed",
+      });
     });
 
     // ========================================================================

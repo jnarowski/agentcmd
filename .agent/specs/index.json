@@ -1,6 +1,13 @@
 {
-  "lastId": 251116051340,
+  "lastId": 251116055018,
   "specs": {
+    "251116055018": {
+      "path": "todo/251116055018-workflow-step-logging-v2/spec.md",
+      "status": "draft",
+      "spec_type": "feature",
+      "created": "2025-11-16T05:50:18.000Z",
+      "updated": "2025-11-16T05:50:18.000Z"
+    },
     "251116051340": {
       "path": "todo/251116051340-workflow-logs-tab-merge-conflict/spec.md",
       "status": "draft",

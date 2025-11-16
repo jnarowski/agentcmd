@@ -77,7 +77,7 @@ function LogEntry({ log, stepName }: LogEntryProps) {
 
   return (
     <div className="text-xs font-mono space-y-1">
-      {/* Timestamp + Step + Command/Level */}
+      {/* Timestamp + Step + Level */}
       <div className="flex items-baseline gap-2 text-muted-foreground">
         <span className="flex-shrink-0">
           {log.timestamp.toLocaleTimeString()}
@@ -87,15 +87,20 @@ function LogEntry({ log, stepName }: LogEntryProps) {
             {stepName}
           </span>
         )}
-        {log.command && (
-          <span className="font-semibold text-foreground">$ {log.command}</span>
-        )}
         {log.level && log.level !== "info" && (
           <span className={`font-semibold uppercase ${levelColor}`}>
             [{log.level}]
           </span>
         )}
+        {log.command && !stepName && (
+          <span className="font-semibold text-foreground">$ {log.command}</span>
+        )}
       </div>
+
+      {/* Command on separate line when there's step context */}
+      {log.command && stepName && (
+        <div className="font-semibold text-foreground">$ {log.command}</div>
+      )}
 
       {/* Log Content */}
       <pre className={`whitespace-pre-wrap ${levelColor} pl-4 border-l-2 border-muted`}>

@@ -135,6 +135,14 @@ export function createAgentStep(
             logger,
           });
 
+          // Mark session as idle on successful completion
+          await updateSession({
+            id: session.id,
+            data: {
+              state: "idle",
+            },
+          });
+
           // Wrap result in new format
           const wrappedResult: AgentStepResult = {
             sessionId: result.sessionId || session.id,
