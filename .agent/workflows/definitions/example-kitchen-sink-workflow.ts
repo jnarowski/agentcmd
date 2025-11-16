@@ -228,17 +228,6 @@ export default defineWorkflow(
         description: "Package configuration",
       });
 
-      // Directory artifact
-      const dirArtifact = await step.artifact("dir-artifact", {
-        name: "src-files",
-        type: "directory",
-        directory: `${workingDir}/src`,
-        pattern: "**/*.ts",
-        description: "All TypeScript source files",
-      });
-      step.log("Directory artifact count:", dirArtifact.data.count);
-      step.log("Total size:", dirArtifact.data.totalSize);
-
       // Image artifact (if you have an image file)
       // const imageArtifact = await step.artifact("screenshot", {
       //   name: "app-screenshot.png",
