@@ -151,7 +151,7 @@ export function createAgentStep(
             success: result.success,
             error: result.error,
             trace: [{
-              command: `Agent ${config.agent}`,
+              command: config.prompt,
               output: result.error || 'Agent execution completed',
               exitCode: result.exitCode,
             }],

@@ -163,14 +163,14 @@ function LogEntry({ log }: LogEntryProps) {
 
       {/* Log Content (skip for lifecycle entries - status badge is enough) */}
       {log.content && log.content !== "Started" && log.content !== "Completed" && !log.content.startsWith("Failed") && (
-        <pre className={`whitespace-pre-wrap ${levelColor} pl-4 border-l-2 border-muted`}>
+        <pre className={`whitespace-pre-wrap break-words ${levelColor} pl-4 border-l-2 border-muted`}>
           {log.content}
         </pre>
       )}
 
       {/* Failed message (only show error, not "Failed:" prefix) */}
       {log.content && log.content.startsWith("Failed") && (
-        <pre className={`whitespace-pre-wrap ${levelColor} pl-4 border-l-2 border-muted`}>
+        <pre className={`whitespace-pre-wrap break-words ${levelColor} pl-4 border-l-2 border-muted`}>
           {log.content.replace(/^Failed: /, '')}
         </pre>
       )}
@@ -178,24 +178,38 @@ function LogEntry({ log }: LogEntryProps) {
       {/* Step args (only shown when step starts) */}
       {log.stepArgs && (
         <div className="pl-4">
-          <div className="font-semibold mb-1 text-muted-foreground text-xs">Args:</div>
-          <SyntaxHighlighter
-            code={JSON.stringify(log.stepArgs, null, 2)}
-            language="json"
-            className="text-xs [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_pre]:max-w-full"
-          />
+          <details className="group">
+            <summary className="cursor-pointer text-xs font-semibold text-muted-foreground hover:text-foreground list-none flex items-center gap-1">
+              <span className="inline-block transition-transform group-open:rotate-90">▶</span>
+              Args
+            </summary>
+            <div className="mt-1">
+              <SyntaxHighlighter
+                code={JSON.stringify(log.stepArgs, null, 2)}
+                language="json"
+                className="text-xs [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_pre]:max-w-full"
+              />
+            </div>
+          </details>
         </div>
       )}
 
       {/* Step output (only shown when step completes) */}
       {log.stepOutput && (
         <div className="pl-4">
-          <div className="font-semibold mb-1 text-muted-foreground text-xs">Output:</div>
-          <SyntaxHighlighter
-            code={JSON.stringify(log.stepOutput, null, 2)}
-            language="json"
-            className="text-xs [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_pre]:max-w-full"
-          />
+          <details className="group">
+            <summary className="cursor-pointer text-xs font-semibold text-muted-foreground hover:text-foreground list-none flex items-center gap-1">
+              <span className="inline-block transition-transform group-open:rotate-90">▶</span>
+              Output
+            </summary>
+            <div className="mt-1">
+              <SyntaxHighlighter
+                code={JSON.stringify(log.stepOutput, null, 2)}
+                language="json"
+                className="text-xs [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_pre]:max-w-full"
+              />
+            </div>
+          </details>
         </div>
       )}
 
