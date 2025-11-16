@@ -162,49 +162,49 @@ export default defineWorkflow(
     // GIT OPERATIONS (step.git)
     // ========================================================================
 
-    await step.phase("git-operations", async () => {
-      // Commit changes
-      const commitResult = await step.git("git-commit", {
-        name: "Commit Changes",
-        operation: "commit",
-        message: "feat: add new feature",
-      });
-      step.log("Commit SHA:", commitResult.data.commitSha);
+    // await step.phase("git-operations", async () => {
+    //   // Commit changes
+    //   const commitResult = await step.git("git-commit", {
+    //     name: "Commit Changes",
+    //     operation: "commit",
+    //     message: "feat: add new feature",
+    //   });
+    //   step.log("Commit SHA:", commitResult.data.commitSha);
 
-      // Create branch
-      const branchResult = await step.git("git-branch", {
-        name: "Create Branch",
-        operation: "branch",
-        branch: "feature/new-feature",
-        baseBranch: "main",
-      });
-      step.log("Branch:", branchResult.data.branch);
+    //   // Create branch
+    //   const branchResult = await step.git("git-branch", {
+    //     name: "Create Branch",
+    //     operation: "branch",
+    //     branch: "feature/new-feature",
+    //     baseBranch: "main",
+    //   });
+    //   step.log("Branch:", branchResult.data.branch);
 
-      // Commit + branch (atomic operation)
-      const commitBranchResult = await step.git("git-commit-and-branch", {
-        operation: "commit-and-branch",
-        commitMessage: "WIP: work in progress",
-        branch: "feature/another-feature",
-        baseBranch: "main",
-      });
-      step.log(
-        "Had uncommitted changes:",
-        commitBranchResult.data.hadUncommittedChanges
-      );
-      step.log("Already on branch:", commitBranchResult.data.alreadyOnBranch);
+    //   // Commit + branch (atomic operation)
+    //   const commitBranchResult = await step.git("git-commit-and-branch", {
+    //     operation: "commit-and-branch",
+    //     commitMessage: "WIP: work in progress",
+    //     branch: "feature/another-feature",
+    //     baseBranch: "main",
+    //   });
+    //   step.log(
+    //     "Had uncommitted changes:",
+    //     commitBranchResult.data.hadUncommittedChanges
+    //   );
+    //   step.log("Already on branch:", commitBranchResult.data.alreadyOnBranch);
 
-      // Create pull request
-      const prResult = await step.git("git-pr", {
-        name: "Create PR",
-        operation: "pr",
-        title: "Add new feature",
-        body: "This PR adds a new feature\n\n## Changes\n- Feature X\n- Feature Y",
-        branch: "feature/new-feature",
-        baseBranch: "main",
-      });
-      step.log("PR URL:", prResult.data.prUrl);
-      step.log("PR Number:", prResult.data.prNumber);
-    });
+    //   // Create pull request
+    //   const prResult = await step.git("git-pr", {
+    //     name: "Create PR",
+    //     operation: "pr",
+    //     title: "Add new feature",
+    //     body: "This PR adds a new feature\n\n## Changes\n- Feature X\n- Feature Y",
+    //     branch: "feature/new-feature",
+    //     baseBranch: "main",
+    //   });
+    //   step.log("PR URL:", prResult.data.prUrl);
+    //   step.log("PR Number:", prResult.data.prNumber);
+    // });
 
     // ========================================================================
     // ARTIFACTS (step.artifact)

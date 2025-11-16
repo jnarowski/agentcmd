@@ -96,12 +96,13 @@ async function validateWorkflowDefinition(
 
   // Check if workflow definition is archived
   if (definition.status === "archived") {
-    const errorMessage =
-      "Cannot execute archived workflow definition (file was deleted or marked inactive)";
+    const errorMessage = `Cannot execute archived workflow "${definition.name}" (${definition.path}). The workflow file was deleted or marked inactive. Restore the file or select a different workflow.`;
     logger?.error(
       {
         runId,
         workflowDefinitionId: definition.id,
+        workflowName: definition.name,
+        filePath: definition.path,
         status: definition.status,
       },
       "Workflow definition is archived"
@@ -122,11 +123,12 @@ async function validateWorkflowDefinition(
 
   // Check if file_exists flag is false
   if (definition.file_exists === false) {
-    const errorMessage = `Workflow definition file not found: ${definition.path}. The file may have been deleted or moved. Check if the file was deleted or if you switched git branches.`;
+    const errorMessage = `Workflow "${definition.name}" file not found: ${definition.path}. The file may have been deleted or moved. Check if you switched git branches or restore the file.`;
     logger?.error(
       {
         runId,
         workflowDefinitionId: definition.id,
+        workflowName: definition.name,
         filePath: definition.path,
         file_exists: definition.file_exists,
       },
@@ -149,11 +151,12 @@ async function validateWorkflowDefinition(
   // Verify file actually exists on disk
   const fileExists = await validateWorkflowFile(definition.path);
   if (!fileExists) {
-    const errorMessage = `Workflow definition file not found: ${definition.path}. The file may have been deleted or moved. Check if the file was deleted or if you switched git branches.`;
+    const errorMessage = `Workflow "${definition.name}" file not found: ${definition.path}. The file may have been deleted or moved. Check if you switched git branches or restore the file.`;
     logger?.error(
       {
         runId,
         workflowDefinitionId: definition.id,
+        workflowName: definition.name,
         filePath: definition.path,
       },
       "Workflow definition file missing on disk"

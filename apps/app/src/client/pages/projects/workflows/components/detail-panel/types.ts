@@ -38,12 +38,19 @@ export interface UnifiedLogEntry {
  */
 export function traceToLogEntry(
   trace: TraceEntry,
-  stepStartedAt: Date | null,
+  stepStartedAt: Date | string | null,
   index: number
 ): UnifiedLogEntry {
   // Estimate timestamp: step start + (index * 100ms)
-  const timestamp = stepStartedAt
-    ? new Date(stepStartedAt.getTime() + index * 100)
+  // Handle both Date objects and ISO strings from API
+  const startDate = stepStartedAt
+    ? stepStartedAt instanceof Date
+      ? stepStartedAt
+      : new Date(stepStartedAt)
+    : null;
+
+  const timestamp = startDate
+    ? new Date(startDate.getTime() + index * 100)
     : new Date();
 
   return {
@@ -65,9 +72,14 @@ export function eventToLogEntry(event: WorkflowEvent): UnifiedLogEntry {
     message?: string;
   };
 
+  // Handle both Date objects and ISO strings from API
+  const timestamp = event.created_at instanceof Date
+    ? event.created_at
+    : new Date(event.created_at);
+
   return {
     source: "event",
-    timestamp: event.created_at,
+    timestamp,
     content: eventData.message || "(empty log)",
     level: eventData.level || "info",
     eventId: event.id,
