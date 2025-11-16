@@ -7,13 +7,16 @@ import {
 } from "lucide-react";
 import { useDebugMode } from "@/client/hooks/useDebugMode";
 import type { WorkflowRunStep, StepOutput } from "@/shared/types/workflow-step.types";
+import type { WorkflowTab } from "@/client/pages/projects/workflows/hooks/useWorkflowDetailPanel";
 import { TimelineRow } from "./TimelineRow";
 
 interface StepGitRowProps {
   step: WorkflowRunStep;
+  onSelectStep?: (stepId: string) => void;
+  onSetActiveTab?: (tab: WorkflowTab) => void;
 }
 
-export function StepGitRow({ step }: StepGitRowProps) {
+export function StepGitRow({ step, onSelectStep, onSetActiveTab }: StepGitRowProps) {
   const debugMode = useDebugMode();
 
   // Type-safe output access
@@ -75,6 +78,10 @@ export function StepGitRow({ step }: StepGitRowProps) {
           {tooltipLabel}
         </span>
       }
+      onClick={() => {
+        onSelectStep?.(step.id);
+        onSetActiveTab?.("logs");
+      }}
     >
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-3">

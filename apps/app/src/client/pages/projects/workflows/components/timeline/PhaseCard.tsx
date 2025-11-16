@@ -19,6 +19,7 @@ interface PhaseCardProps {
   currentPhase: string | null;
   projectId: string;
   onSelectSession?: (sessionId: string) => void;
+  onSelectStep?: (stepId: string) => void;
   onSetActiveTab?: (tab: WorkflowTab) => void;
 }
 
@@ -41,6 +42,7 @@ export function PhaseCard({
   currentPhase,
   projectId,
   onSelectSession,
+  onSelectStep,
   onSetActiveTab,
 }: PhaseCardProps) {
   const [isExpanded, setIsExpanded] = useState(phaseId === currentPhase);
@@ -257,6 +259,7 @@ export function PhaseCard({
                       step={item.data}
                       projectId={projectId}
                       onSelectSession={onSelectSession}
+                      onSelectStep={onSelectStep}
                       onSetActiveTab={onSetActiveTab}
                     />
                   )}

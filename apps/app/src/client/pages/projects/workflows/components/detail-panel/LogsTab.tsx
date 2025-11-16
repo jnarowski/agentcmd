@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import type { WorkflowRun, WorkflowRunStep } from "@/client/pages/projects/workflows/types";
 import {
   eventToLogEntry,
@@ -12,10 +13,12 @@ import { SyntaxHighlighter } from "@/client/utils/syntaxHighlighter";
 
 interface LogsTabProps {
   run: WorkflowRun;
+  selectedStepId: string | null;
 }
 
 // Extended log entry with step lifecycle support
 interface ExtendedLogEntry extends UnifiedLogEntry {
+  stepId?: string;
   stepName?: string;
   stepStatus?: WorkflowRunStep["status"];
   stepType?: WorkflowRunStep["step_type"];
@@ -24,7 +27,7 @@ interface ExtendedLogEntry extends UnifiedLogEntry {
   stepDuration?: number;
 }
 
-export function LogsTab({ run }: LogsTabProps) {
+export function LogsTab({ run, selectedStepId }: LogsTabProps) {
   const steps = run.steps || [];
   const events = run.events || [];
 
@@ -39,6 +42,7 @@ export function LogsTab({ run }: LogsTabProps) {
         source: "trace",
         timestamp: new Date(step.started_at),
         content: "Started",
+        stepId: step.id,
         stepName: step.name,
         stepStatus: "running",
         stepType: step.step_type,
@@ -59,6 +63,7 @@ export function LogsTab({ run }: LogsTabProps) {
           ? `Failed${step.error_message ? `: ${step.error_message}` : ""}`
           : "Completed",
         level: step.status === "failed" ? "error" : "info",
+        stepId: step.id,
         stepName: step.name,
         stepStatus: step.status,
         stepType: step.step_type,
@@ -77,12 +82,23 @@ export function LogsTab({ run }: LogsTabProps) {
       const step = steps.find((s) => s.inngest_step_id === event.inngest_step_id);
       allLogs.push({
         ...eventToLogEntry(event),
+        stepId: step?.id,
         stepName: step?.name,
       });
     });
 
   // Sort chronologically
   allLogs.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+  // Scroll to selected step's first log when selectedStepId changes
+  useEffect(() => {
+    if (selectedStepId) {
+      const firstLogElement = document.querySelector(`[data-step-id="${selectedStepId}"]`);
+      if (firstLogElement) {
+        firstLogElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  }, [selectedStepId]);
 
   if (allLogs.length === 0) {
     return (
@@ -97,7 +113,7 @@ export function LogsTab({ run }: LogsTabProps) {
       <ConversationContent className="p-6">
         <div className="bg-muted/20 p-4 space-y-2 border rounded">
           {allLogs.map((log, index) => (
-            <LogEntry key={index} log={log} />
+            <LogEntry key={index} log={log} selectedStepId={selectedStepId} />
           ))}
         </div>
       </ConversationContent>
@@ -108,9 +124,10 @@ export function LogsTab({ run }: LogsTabProps) {
 
 interface LogEntryProps {
   log: ExtendedLogEntry;
+  selectedStepId: string | null;
 }
 
-function LogEntry({ log }: LogEntryProps) {
+function LogEntry({ log, selectedStepId }: LogEntryProps) {
   // Color code by log level
   const levelColors = {
     info: "text-foreground",
@@ -129,8 +146,13 @@ function LogEntry({ log }: LogEntryProps) {
     skipped: "bg-gray-500/20 text-gray-600 dark:text-gray-400",
   };
 
+  const isSelected = log.stepId && log.stepId === selectedStepId;
+
   return (
-    <div className="text-xs font-mono space-y-1">
+    <div
+      className={`text-xs font-mono space-y-1 ${isSelected ? 'bg-blue-500/10 -mx-2 px-2 py-1 rounded' : ''}`}
+      data-step-id={log.stepId}
+    >
       {/* Timestamp + Step + Level + Status */}
       <div className="flex items-baseline gap-2 text-muted-foreground">
         <span className="flex-shrink-0">
@@ -146,7 +168,7 @@ function LogEntry({ log }: LogEntryProps) {
             {log.stepStatus}
           </span>
         )}
-        {log.level && log.level !== "info" && (
+        {log.level && (
           <span className={`font-semibold uppercase ${levelColor}`}>
             [{log.level}]
           </span>

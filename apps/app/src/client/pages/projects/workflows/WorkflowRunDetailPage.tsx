@@ -18,7 +18,7 @@ function WorkflowRunDetailPage() {
   const navigate = useNavigate();
 
   // Detail panel state
-  const { activeTab, setActiveTab, selectedSessionId, setSelectedSession, clearSelection } = useWorkflowDetailPanel();
+  const { activeTab, setActiveTab, selectedSessionId, setSelectedSession, selectedStepId, setSelectedStep, clearSelection } = useWorkflowDetailPanel();
 
   // Fetch data
   const {
@@ -136,6 +136,7 @@ function WorkflowRunDetailPage() {
               run={run}
               projectId={projectId!}
               onSelectSession={setSelectedSession}
+              onSelectStep={setSelectedStep}
               onSetActiveTab={setActiveTab}
             />
           </div>
@@ -149,6 +150,7 @@ function WorkflowRunDetailPage() {
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             selectedSessionId={selectedSessionId}
+            selectedStepId={selectedStepId}
           />
         </div>
       </div>

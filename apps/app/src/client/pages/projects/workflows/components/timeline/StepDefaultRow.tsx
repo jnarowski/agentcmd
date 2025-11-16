@@ -18,10 +18,11 @@ interface StepDefaultRowProps {
   step: WorkflowRunStep;
   projectId: string;
   onSelectSession?: (sessionId: string) => void;
+  onSelectStep?: (stepId: string) => void;
   onSetActiveTab?: (tab: WorkflowTab) => void;
 }
 
-export function StepDefaultRow({ step, projectId, onSelectSession, onSetActiveTab }: StepDefaultRowProps) {
+export function StepDefaultRow({ step, projectId, onSelectSession, onSelectStep, onSetActiveTab }: StepDefaultRowProps) {
   const [showSessionModal, setShowSessionModal] = useState(false);
   const isMobile = useIsMobile();
   const debugMode = useDebugMode();
@@ -83,6 +84,10 @@ export function StepDefaultRow({ step, projectId, onSelectSession, onSetActiveTa
             {tooltipLabel}
           </span>
         }
+        onClick={() => {
+          onSelectStep?.(step.id);
+          onSetActiveTab?.("logs");
+        }}
       >
         <div className="flex items-center gap-2">
           <span className="font-medium">{step.name}</span>
@@ -93,7 +98,8 @@ export function StepDefaultRow({ step, projectId, onSelectSession, onSetActiveTa
           )}
           {step.agent_session_id && (
             <button
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 if (isMobile) {
                   setShowSessionModal(true);
                 } else {

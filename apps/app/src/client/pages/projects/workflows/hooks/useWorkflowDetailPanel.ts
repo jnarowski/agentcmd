@@ -12,6 +12,7 @@ export function useWorkflowDetailPanel() {
   });
 
   const [selectedSessionId, setSelectedSessionIdState] = useState<string | null>(null);
+  const [selectedStepId, setSelectedStepIdState] = useState<string | null>(null);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, activeTab);
@@ -25,8 +26,13 @@ export function useWorkflowDetailPanel() {
     setSelectedSessionIdState(sessionId);
   };
 
+  const setSelectedStep = (stepId: string | null) => {
+    setSelectedStepIdState(stepId);
+  };
+
   const clearSelection = () => {
     setSelectedSessionIdState(null);
+    setSelectedStepIdState(null);
   };
 
   return {
@@ -34,6 +40,8 @@ export function useWorkflowDetailPanel() {
     setActiveTab,
     selectedSessionId,
     setSelectedSession,
+    selectedStepId,
+    setSelectedStep,
     clearSelection,
   };
 }

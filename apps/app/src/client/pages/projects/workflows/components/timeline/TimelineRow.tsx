@@ -6,11 +6,15 @@ interface TimelineRowProps {
   tooltipLabel: string;
   children: ReactNode;
   rightContent?: ReactNode;
+  onClick?: () => void;
 }
 
-export function TimelineRow({ icon, tooltipLabel, children, rightContent }: TimelineRowProps) {
+export function TimelineRow({ icon, tooltipLabel, children, rightContent, onClick }: TimelineRowProps) {
   return (
-    <div className="flex items-start gap-3 p-3 hover:bg-accent/50 transition-colors">
+    <div
+      className={`flex items-start gap-3 p-3 hover:bg-accent/50 transition-colors ${onClick ? 'cursor-pointer' : ''}`}
+      onClick={onClick}
+    >
       {/* Fixed 40px Icon Container with Tooltip */}
       <Tooltip>
         <TooltipTrigger asChild>

@@ -12,9 +12,10 @@ interface WorkflowDetailPanelProps {
   activeTab: WorkflowTab;
   setActiveTab: (tab: WorkflowTab) => void;
   selectedSessionId: string | null;
+  selectedStepId: string | null;
 }
 
-export function WorkflowDetailPanel({ run, projectId, activeTab, setActiveTab, selectedSessionId }: WorkflowDetailPanelProps) {
+export function WorkflowDetailPanel({ run, projectId, activeTab, setActiveTab, selectedSessionId, selectedStepId }: WorkflowDetailPanelProps) {
 
   return (
     <div className="flex flex-col h-full">
@@ -42,7 +43,7 @@ export function WorkflowDetailPanel({ run, projectId, activeTab, setActiveTab, s
           </TabsContent>
 
           <TabsContent value="logs" className="p-0 mt-0 h-full">
-            <LogsTab run={run} />
+            <LogsTab run={run} selectedStepId={selectedStepId} />
           </TabsContent>
 
           <TabsContent value="artifacts" className="p-6 mt-0 h-full overflow-y-auto">

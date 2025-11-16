@@ -7,19 +7,20 @@ interface StepRowProps {
   step: WorkflowRunStep;
   projectId: string;
   onSelectSession?: (sessionId: string) => void;
+  onSelectStep?: (stepId: string) => void;
   onSetActiveTab?: (tab: WorkflowTab) => void;
 }
 
 /**
  * Step row wrapper that delegates to specific component based on step_type
  */
-export function StepRow({ step, projectId, onSelectSession, onSetActiveTab }: StepRowProps) {
+export function StepRow({ step, projectId, onSelectSession, onSelectStep, onSetActiveTab }: StepRowProps) {
   // Discriminate by step_type for different display styles
   switch (step.step_type) {
     case "git":
     case "cli":
       // Compact display for git/cli operations
-      return <StepGitRow step={step} />;
+      return <StepGitRow step={step} onSelectStep={onSelectStep} onSetActiveTab={onSetActiveTab} />;
 
     case "agent":
     case "ai":
@@ -34,6 +35,7 @@ export function StepRow({ step, projectId, onSelectSession, onSetActiveTab }: St
           step={step}
           projectId={projectId}
           onSelectSession={onSelectSession}
+          onSelectStep={onSelectStep}
           onSetActiveTab={onSetActiveTab}
         />
       );
