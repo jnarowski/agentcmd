@@ -5,12 +5,13 @@ description: Create reusable slash commands for common workflow operations
 
 import { Callout } from 'fumadocs-ui/components/callout';
 import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+import { AgentCmd } from '@/components/AgentCmd';
 
 Create custom slash commands that encapsulate common operations, making workflows more maintainable and reusable across your team.
 
 ## Overview
 
-Slash commands are markdown files in `.claude/commands/` that define reusable workflows. AgentCmd automatically discovers and loads these commands.
+Slash commands are markdown files in `.claude/commands/` that define reusable workflows. <AgentCmd /> automatically discovers and loads these commands.
 
 **Benefits**:
 - Consistent operations across team

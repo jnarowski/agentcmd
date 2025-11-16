@@ -5,6 +5,7 @@ description: Build a simple workflow from scratch in 10 lines
 
 import { Card, Cards } from 'fumadocs-ui/components/card';
 import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { AgentCmd } from '@/components/AgentCmd';
 
 Build a complete workflow in 10 lines that runs a CLI command and creates a git commit.
 
@@ -20,7 +21,7 @@ A workflow that:
 
 ## Initialize Workflow Structure
 
-AgentCmd workflows live in `.agent/workflows/definitions/`. Initialize the structure:
+<AgentCmd /> workflows live in `.agent/workflows/definitions/`. Initialize the structure:
 
 ```bash
 # Navigate to your project
@@ -100,7 +101,7 @@ async ({ event, step }) => {
   const projectPath = event.data.projectPath || process.cwd();
 ```
 
-AgentCmd passes the project path when triggering the workflow. Falls back to current directory.
+<AgentCmd /> passes the project path when triggering the workflow. Falls back to current directory.
 
 ### Step Types
 
@@ -133,7 +134,7 @@ await step.artifact("summary", {
 
 <Steps>
   <Step>
-    ### Restart AgentCmd
+    ### Restart <AgentCmd />
 
     Workflows are loaded on startup:
     ```bash

@@ -5,14 +5,15 @@ description: Run AgentCmd workflows in GitHub Actions, GitLab CI, and other CI/C
 
 import { Callout } from 'fumadocs-ui/components/callout';
 import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+import { AgentCmd } from '@/components/AgentCmd';
 
-Run AgentCmd workflows in continuous integration and deployment pipelines for automated code generation, testing, and deployment.
+Run <AgentCmd /> workflows in continuous integration and deployment pipelines for automated code generation, testing, and deployment.
 
 ## Overview
 
-AgentCmd workflows integrate seamlessly with CI/CD platforms:
+<AgentCmd /> workflows integrate seamlessly with CI/CD platforms:
 
-- **GitHub Actions** - Most popular, excellent AgentCmd support
+- **GitHub Actions** - Most popular, excellent <AgentCmd /> support
 - **GitLab CI** - Comprehensive pipeline features
 - **CircleCI** - Fast execution, caching support
 - **Jenkins** - Self-hosted, highly customizable
@@ -22,7 +23,7 @@ AgentCmd workflows integrate seamlessly with CI/CD platforms:
 
 ### Basic Workflow
 
-Run AgentCmd workflows on push or PR:
+Run <AgentCmd /> workflows on push or PR:
 
 ```yaml
 # .github/workflows/agentcmd.yml
@@ -556,7 +557,7 @@ workflows:
 
 ### Environment Variables
 
-Required environment variables for AgentCmd:
+Required environment variables for <AgentCmd />:
 
 ```bash
 # API Keys

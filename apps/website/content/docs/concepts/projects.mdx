@@ -5,12 +5,13 @@ description: Connect AgentCmd to your codebases
 
 import { Card, Cards } from 'fumadocs-ui/components/card';
 import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { AgentCmd } from '@/components/AgentCmd';
 
-Projects connect AgentCmd to your codebases, providing isolated environments for workflows and sessions.
+Projects connect <AgentCmd /> to your codebases, providing isolated environments for workflows and sessions.
 
 ## What is a Project?
 
-A project is a registered codebase in AgentCmd:
+A project is a registered codebase in <AgentCmd />:
 
 ```typescript
 interface Project {
@@ -59,14 +60,14 @@ curl -X POST http://localhost:3456/api/projects \
 
 ## Project Structure
 
-When you add a project, AgentCmd:
+When you add a project, <AgentCmd />:
 
 1. **Validates path** - Ensures directory exists
 2. **Checks git** - Verifies it's a git repository (optional but recommended)
 3. **Scans workflows** - Loads `.agent/workflows/definitions/*.ts`
 4. **Creates database entry** - Saves project metadata
 
-Your project remains untouched - AgentCmd only reads/writes when workflows execute
+Your project remains untouched - <AgentCmd /> only reads/writes when workflows execute
 
 ## Workflows per Project
 
@@ -272,7 +273,7 @@ ls -la /path/to/project
 Error: EACCES: permission denied
 ```
 
-**Fix**: Ensure AgentCmd can read/write:
+**Fix**: Ensure <AgentCmd /> can read/write:
 ```bash
 chmod -R 755 /path/to/project
 ```
@@ -281,7 +282,7 @@ chmod -R 755 /path/to/project
 
 If `.agent/workflows/definitions/*.ts` files aren't showing:
 
-1. Restart AgentCmd server
+1. Restart <AgentCmd /> server
 2. Check file extensions (must be `.ts`, not `.ts.bak`)
 3. Verify files export `default defineWorkflow(...)`
 4. Check server logs for errors

@@ -5,10 +5,11 @@ description: Handle failures gracefully with try/catch, retries, and recovery
 
 import { Callout } from 'fumadocs-ui/components/callout';
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { AgentCmd } from '@/components/AgentCmd';
 
 ## Overview
 
-Workflow steps can fail for many reasons: network timeouts, command failures, validation errors, etc. AgentCmd provides multiple strategies for handling failures:
+Workflow steps can fail for many reasons: network timeouts, command failures, validation errors, etc. <AgentCmd /> provides multiple strategies for handling failures:
 
 - **Try/catch blocks** - Handle errors at the phase level
 - **Step retries** - Automatic retry with configurable timeout

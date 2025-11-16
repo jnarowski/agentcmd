@@ -5,8 +5,9 @@ description: Configure AgentCmd behavior, AI providers, and workflow settings
 
 import { Callout } from 'fumadocs-ui/components/callout';
 import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+import { AgentCmd } from '@/components/AgentCmd';
 
-AgentCmd configuration via config file and environment variables.
+<AgentCmd /> configuration via config file and environment variables.
 
 ## Config File
 
@@ -316,7 +317,7 @@ export JWT_SECRET=<generated-secret>
 
 ## Validation
 
-AgentCmd validates configuration on startup:
+<AgentCmd /> validates configuration on startup:
 
 ```bash
 # Valid config

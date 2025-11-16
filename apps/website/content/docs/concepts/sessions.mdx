@@ -4,8 +4,9 @@ description: AI agent conversation history and resumption
 ---
 
 import { Card, Cards } from 'fumadocs-ui/components/card';
+import { AgentCmd } from '@/components/AgentCmd';
 
-Sessions are AI agent conversations stored by CLI tools. AgentCmd lets you resume these conversations across workflow steps.
+Sessions are AI agent conversations stored by CLI tools. <AgentCmd /> lets you resume these conversations across workflow steps.
 
 ## What is a Session?
 
@@ -92,7 +93,7 @@ await step.agent("implement", {
 
 ### Location
 
-AgentCmd doesn't store sessions itself - it uses the CLI tool's native storage:
+<AgentCmd /> doesn't store sessions itself - it uses the CLI tool's native storage:
 
 | CLI Tool | Session Path |
 |----------|--------------|
@@ -191,7 +192,7 @@ await step.agent("refactor", {
 
 ## Session Metadata
 
-AgentCmd tracks sessions in database:
+<AgentCmd /> tracks sessions in database:
 
 ```typescript
 interface Session {

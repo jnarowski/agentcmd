@@ -4,8 +4,9 @@ description: Multi-step AI orchestration powered by Inngest
 ---
 
 import { Card, Cards } from 'fumadocs-ui/components/card';
+import { AgentCmd } from '@/components/AgentCmd';
 
-Workflows are the heart of AgentCmd - multi-step processes that orchestrate AI agents, CLI commands, git operations, and more.
+Workflows are the heart of <AgentCmd /> - multi-step processes that orchestrate AI agents, CLI commands, git operations, and more.
 
 ## What is a Workflow?
 
@@ -151,7 +152,7 @@ return {
 
 ### Inngest Integration
 
-AgentCmd uses [Inngest](https://www.inngest.com/) for workflow execution:
+<AgentCmd /> uses [Inngest](https://www.inngest.com/) for workflow execution:
 
 - **Durable** - Steps are checkpointed, failures can retry from last step
 - **Observable** - Inngest Dev UI shows step-by-step execution
@@ -191,7 +192,7 @@ socket.on("session.stream_output", (data) => {
 
 ## Workflow Discovery
 
-AgentCmd auto-discovers workflows on startup:
+<AgentCmd /> auto-discovers workflows on startup:
 
 ```
 .agent/workflows/definitions/

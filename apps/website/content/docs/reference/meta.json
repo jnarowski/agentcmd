@@ -5,6 +5,7 @@
     "cli",
     "configuration",
     "sdk-api",
+    "agent-cli-sdk",
     "slash-commands"
   ]
 }
