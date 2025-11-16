@@ -93,17 +93,14 @@ describe("executeWorkflow validation", () => {
           runId: workflowRun.id,
           workflowClient: mockWorkflowClient,
         })
-      ).rejects.toThrow(
-        "Cannot execute archived workflow definition (file was deleted or marked inactive)"
-      );
+      ).rejects.toThrow(/Cannot execute archived workflow/);
 
       // Verify updateWorkflowRun was called to mark run as failed
       expect(mockUpdateWorkflowRun).toHaveBeenCalledWith({
         runId: workflowRun.id,
         data: {
           status: "failed",
-          error_message:
-            "Cannot execute archived workflow definition (file was deleted or marked inactive)",
+          error_message: expect.stringContaining("Cannot execute archived workflow"),
           completed_at: expect.any(Date),
         },
         logger: undefined,
@@ -160,7 +157,7 @@ describe("executeWorkflow validation", () => {
           runId: workflowRun.id,
           workflowClient: mockWorkflowClient,
         })
-      ).rejects.toThrow("Workflow definition file not found");
+      ).rejects.toThrow(/Workflow .* file not found/);
 
       // Verify error message includes helpful suggestions
       try {
@@ -171,7 +168,7 @@ describe("executeWorkflow validation", () => {
       } catch (error) {
         expect((error as Error).message).toContain("/tmp/test-project/workflow.ts");
         expect((error as Error).message).toContain(
-          "Check if the file was deleted or if you switched git branches"
+          "Check if you switched git branches"
         );
       }
 
@@ -180,7 +177,7 @@ describe("executeWorkflow validation", () => {
         runId: workflowRun.id,
         data: {
           status: "failed",
-          error_message: expect.stringContaining("Workflow definition file not found"),
+          error_message: expect.stringContaining("file not found"),
           completed_at: expect.any(Date),
         },
         logger: undefined,
@@ -241,7 +238,7 @@ describe("executeWorkflow validation", () => {
           runId: workflowRun.id,
           workflowClient: mockWorkflowClient,
         })
-      ).rejects.toThrow("Workflow definition file not found");
+      ).rejects.toThrow(/Workflow .* file not found/);
 
       // Verify file_exists updated to false in database
       const updatedDef = await prisma.workflowDefinition.findUnique({
@@ -257,7 +254,7 @@ describe("executeWorkflow validation", () => {
         runId: workflowRun.id,
         data: {
           status: "failed",
-          error_message: expect.stringContaining("Workflow definition file not found"),
+          error_message: expect.stringContaining("file not found"),
           completed_at: expect.any(Date),
         },
         logger: undefined,

@@ -34,7 +34,7 @@ describe("createStepLog", () => {
       logger: console as unknown as RuntimeContext["logger"],
     };
 
-    let currentStepId: string | null = "build:test-step";
+    const currentStepId: string | null = "build:test-step";
     const log = createStepLog(context, () => currentStepId);
 
     // Act
@@ -72,7 +72,7 @@ describe("createStepLog", () => {
       logger: console as unknown as RuntimeContext["logger"],
     };
 
-    let currentStepId: string | null = "test:validation";
+    const currentStepId: string | null = "test:validation";
     const log = createStepLog(context, () => currentStepId);
 
     // Act
@@ -108,7 +108,7 @@ describe("createStepLog", () => {
       logger: console as unknown as RuntimeContext["logger"],
     };
 
-    let currentStepId: string | null = "deploy:publish";
+    const currentStepId: string | null = "deploy:publish";
     const log = createStepLog(context, () => currentStepId);
 
     // Act
@@ -144,7 +144,7 @@ describe("createStepLog", () => {
       logger: console as unknown as RuntimeContext["logger"],
     };
 
-    let currentStepId: string | null = null;
+    const currentStepId: string | null = null;
     const log = createStepLog(context, () => currentStepId);
 
     const testObject = { foo: "bar", count: 42 };
@@ -185,7 +185,7 @@ describe("createStepLog", () => {
       logger: console as unknown as RuntimeContext["logger"],
     };
 
-    let currentStepId: string | null = null;
+    const currentStepId: string | null = null;
     const log = createStepLog(context, () => currentStepId);
 
     // Act
@@ -261,7 +261,7 @@ describe("createStepLog", () => {
       logger: console as unknown as RuntimeContext["logger"],
     };
 
-    let currentStepId: string | null = null;
+    const currentStepId: string | null = null;
     const log = createStepLog(context, () => currentStepId);
 
     // Act
@@ -283,7 +283,7 @@ describe("createStepLog", () => {
 
   it("does not block execution on event creation failure", async () => {
     // Arrange
-    const { run: execution } = await createTestWorkflowContext(prisma, {
+    await createTestWorkflowContext(prisma, {
       run: { name: "Test Execution", status: "running", args: {} },
     });
 
@@ -306,7 +306,7 @@ describe("createStepLog", () => {
       logger: mockLogger as unknown as RuntimeContext["logger"],
     };
 
-    let currentStepId: string | null = "build:test";
+    const currentStepId: string | null = "build:test";
     const log = createStepLog(context, () => currentStepId);
 
     // Act - should not throw

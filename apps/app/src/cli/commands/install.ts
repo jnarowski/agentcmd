@@ -8,6 +8,7 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import * as readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
+import pc from "picocolors";
 import {
   getDbPath,
   getHomeDir,
@@ -28,6 +29,76 @@ interface InstallOptions {
 // ============================================================================
 // PRIVATE HELPERS
 // ============================================================================
+
+/**
+ * Display welcome banner
+ */
+function showWelcomeBanner(): void {
+  const width = 59; // Total content width
+  const pad = (text: string) => {
+    // Remove ANSI codes to count actual visible characters
+    const visible = text.replace(/\u001b\[[0-9;]*m/g, '');
+    const spaces = width - visible.length;
+    return text + ' '.repeat(Math.max(0, spaces));
+  };
+
+  const center = (text: string) => {
+    const visible = text.replace(/\u001b\[[0-9;]*m/g, '');
+    const spaces = width - visible.length;
+    const leftPad = Math.floor(spaces / 2);
+    const rightPad = spaces - leftPad;
+    return ' '.repeat(leftPad) + text + ' '.repeat(rightPad);
+  };
+
+  console.log("");
+  console.log(pc.cyan("   ╔═══════════════════════════════════════════════════════════╗"));
+  console.log(pc.cyan("   ║") + center("") + pc.cyan("║"));
+  console.log(pc.cyan("   ║") + center(pc.bold(pc.blue("█████╗  ██████╗ ███████╗███╗   ██╗████████╗"))) + pc.cyan("║"));
+  console.log(pc.cyan("   ║") + center(pc.bold(pc.blue("██╔══██╗██╔════╝ ██╔════╝████╗  ██║╚══██╔══╝"))) + pc.cyan("║"));
+  console.log(pc.cyan("   ║") + center(pc.bold(pc.blue("███████║██║  ███╗█████╗  ██╔██╗ ██║   ██║   "))) + pc.cyan("║"));
+  console.log(pc.cyan("   ║") + center(pc.bold(pc.blue("██╔══██║██║   ██║██╔══╝  ██║╚██╗██║   ██║   "))) + pc.cyan("║"));
+  console.log(pc.cyan("   ║") + center(pc.bold(pc.blue("██║  ██║╚██████╔╝███████╗██║ ╚████║   ██║   "))) + pc.cyan("║"));
+  console.log(pc.cyan("   ║") + center(pc.bold(pc.blue("╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝   ╚═╝   "))) + pc.cyan("║"));
+  console.log(pc.cyan("   ║") + center("") + pc.cyan("║"));
+  console.log(pc.cyan("   ║") + center(pc.bold(pc.green("██████╗███╗   ███╗██████╗ "))) + pc.cyan("║"));
+  console.log(pc.cyan("   ║") + center(pc.bold(pc.green("██╔════╝████╗ ████║██╔══██╗"))) + pc.cyan("║"));
+  console.log(pc.cyan("   ║") + center(pc.bold(pc.green("██║     ██╔████╔██║██║  ██║"))) + pc.cyan("║"));
+  console.log(pc.cyan("   ║") + center(pc.bold(pc.green("██║     ██║╚██╔╝██║██║  ██║"))) + pc.cyan("║"));
+  console.log(pc.cyan("   ║") + center(pc.bold(pc.green("╚██████╗██║ ╚═╝ ██║██████╔╝"))) + pc.cyan("║"));
+  console.log(pc.cyan("   ║") + center(pc.bold(pc.green(" ╚═════╝╚═╝     ╚═╝╚═════╝ "))) + pc.cyan("║"));
+  console.log(pc.cyan("   ║") + center("") + pc.cyan("║"));
+  console.log(pc.cyan("   ║") + center(pc.dim("AI Coding Agent Orchestration")) + pc.cyan("║"));
+  console.log(pc.cyan("   ║") + center("") + pc.cyan("║"));
+  console.log(pc.cyan("   ╚═══════════════════════════════════════════════════════════╝"));
+  console.log("");
+
+  // Animated welcome message
+  const messages = [
+    pc.cyan("   ⚡ Initializing installation..."),
+  ];
+
+  for (const msg of messages) {
+    console.log(msg);
+  }
+  console.log("");
+}
+
+/**
+ * Show loading animation
+ */
+function showProgress(message: string): void {
+  const frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+  let i = 0;
+  const interval = setInterval(() => {
+    output.write(`\r   ${pc.cyan(frames[i])} ${message}...`);
+    i = (i + 1) % frames.length;
+  }, 80);
+
+  return () => {
+    clearInterval(interval);
+    output.write("\r");
+  };
+}
 
 /**
  * Validate Anthropic API key format
@@ -93,36 +164,37 @@ async function promptForAnthropicKey(): Promise<string> {
   const rl = readline.createInterface({ input, output });
 
   console.log("");
-  console.log("Configure API Keys (optional)");
-  console.log("");
-  console.log("Anthropic API Key:");
-  console.log("Required for workflow step.ai features using the Anthropic model");
-  console.log("Get yours at: https://console.anthropic.com/settings/keys");
-  console.log("");
+  console.log(pc.bold(pc.cyan("┌─ Configure API Keys (optional)")));
+  console.log(pc.cyan("│"));
+  console.log(pc.cyan("│") + "  " + pc.bold("Anthropic API Key"));
+  console.log(pc.cyan("│") + "  " + pc.dim("Required for workflow step.ai features using the Anthropic model"));
+  console.log(pc.cyan("│") + "  " + pc.blue("https://console.anthropic.com/settings/keys"));
+  console.log(pc.cyan("│"));
 
-  const apiKey = await rl.question("Enter key (or press Enter to skip): ");
+  const apiKey = await rl.question(pc.cyan("└─ ") + "Enter key (or press Enter to skip): ");
   rl.close();
 
   const trimmed = apiKey.trim();
   if (!trimmed) {
+    console.log(pc.yellow("   ⚠ Skipped Anthropic") + pc.dim(" - add later by editing ~/.agentcmd/config.json"));
     return "";
   }
 
   // Validate format
   if (!validateAnthropicKeyFormat(trimmed)) {
-    console.log("⚠ Invalid format (expected sk-ant-...)");
+    console.log(pc.yellow("   ⚠ Invalid Anthropic format") + pc.dim(" (expected sk-ant-...)"));
     return "";
   }
 
   // Test API key
-  output.write("⠋ Validating...");
+  output.write(pc.cyan("   ⠋ Validating..."));
   const isValid = await testAnthropicKey(trimmed);
   output.write("\r");
 
   if (isValid) {
-    console.log("✓ Anthropic API key verified");
+    console.log(pc.green("   ✓ Anthropic API key verified"));
   } else {
-    console.log("✗ Anthropic API key validation failed (continuing anyway)");
+    console.log(pc.yellow("   ✗ Anthropic API key validation failed") + pc.dim(" (continuing anyway)"));
   }
 
   return trimmed;
@@ -135,35 +207,36 @@ async function promptForOpenAIKey(): Promise<string> {
   const rl = readline.createInterface({ input, output });
 
   console.log("");
-  console.log("OpenAI API Key:");
-  console.log("Required for workflow step.ai features using the OpenAI model");
-  console.log("Get yours at: https://platform.openai.com/api-keys");
-  console.log("");
+  console.log(pc.bold(pc.cyan("┌─ OpenAI API Key")));
+  console.log(pc.cyan("│"));
+  console.log(pc.cyan("│") + "  " + pc.dim("Required for workflow step.ai features using the OpenAI model"));
+  console.log(pc.cyan("│") + "  " + pc.blue("https://platform.openai.com/api-keys"));
+  console.log(pc.cyan("│"));
 
-  const apiKey = await rl.question("Enter key (or press Enter to skip): ");
+  const apiKey = await rl.question(pc.cyan("└─ ") + "Enter key (or press Enter to skip): ");
   rl.close();
 
   const trimmed = apiKey.trim();
   if (!trimmed) {
-    console.log("⚠ Skipped OpenAI configuration");
+    console.log(pc.yellow("   ⚠ Skipped OpenAI") + pc.dim(" - add later by editing ~/.agentcmd/config.json"));
     return "";
   }
 
   // Validate format
   if (!validateOpenAIKeyFormat(trimmed)) {
-    console.log("⚠ Invalid format (expected sk-...)");
+    console.log(pc.yellow("   ⚠ Invalid OpenAI format") + pc.dim(" (expected sk-...)"));
     return "";
   }
 
   // Test API key
-  output.write("⠋ Validating...");
+  output.write(pc.cyan("   ⠋ Validating..."));
   const isValid = await testOpenAIKey(trimmed);
   output.write("\r");
 
   if (isValid) {
-    console.log("✓ OpenAI API key verified");
+    console.log(pc.green("   ✓ OpenAI API key verified"));
   } else {
-    console.log("✗ OpenAI API key validation failed (continuing anyway)");
+    console.log(pc.yellow("   ✗ OpenAI API key validation failed") + pc.dim(" (continuing anyway)"));
   }
 
   return trimmed;
@@ -175,6 +248,9 @@ async function promptForOpenAIKey(): Promise<string> {
 
 export async function installCommand(options: InstallOptions): Promise<void> {
   try {
+    // Show welcome banner
+    showWelcomeBanner();
+
     const homeDir = getHomeDir();
     const dbPath = getDbPath();
     const configPath = getConfigPath();
@@ -205,7 +281,7 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     const schemaPath = join(__dirname, 'prisma/schema.prisma');
 
     // Generate Prisma client first
-    console.log("Generating Prisma client...");
+    console.log(pc.cyan("   ⚙  Generating Prisma client..."));
     const nullDevice = process.platform === "win32" ? "NUL" : "/dev/null";
     const generateResult = spawnSync(
       "npx",
@@ -225,7 +301,7 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     }
 
     // Apply migrations for initial setup
-    console.log("Applying database migrations...");
+    console.log(pc.cyan("   🗄  Applying database migrations..."));
     const result = spawnSync(
       "npx",
       ["prisma", "migrate", "deploy", `--schema=${schemaPath}`],
@@ -266,22 +342,55 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     saveConfig(configWithSecret);
 
     // 7. Success messaging
+    const boxWidth = 61; // Content width for success box
+    const padBox = (text: string) => {
+      const visible = text.replace(/\u001b\[[0-9;]*m/g, '');
+      const spaces = boxWidth - visible.length;
+      return text + ' '.repeat(Math.max(0, spaces));
+    };
+
     console.log("");
-    console.log(`✓ Created ${homeDir}/`);
-    console.log(`✓ Initialized database at ${dbPath}`);
-    console.log(`✓ Created config at ${configPath}`);
+    console.log(pc.green("┌─────────────────────────────────────────────────────────────┐"));
+    console.log(pc.green("│") + padBox(" " + pc.bold(pc.green("✓ Installation Complete!"))) + pc.green("│"));
+    console.log(pc.green("├─────────────────────────────────────────────────────────────┤"));
+    console.log(pc.green("│") + padBox("") + pc.green("│"));
+    console.log(pc.green("│") + padBox("  " + pc.green("✓") + " Created " + pc.cyan(homeDir + "/")) + pc.green("│"));
+    console.log(pc.green("│") + padBox("  " + pc.green("✓") + " Database initialized") + pc.green("│"));
+    console.log(pc.green("│") + padBox("  " + pc.green("✓") + " Configuration saved") + pc.green("│"));
+    console.log(pc.green("│") + padBox("") + pc.green("│"));
+    console.log(pc.green("├─────────────────────────────────────────────────────────────┤"));
+    console.log(pc.green("│") + padBox(" " + pc.bold("Next Steps")) + pc.green("│"));
+    console.log(pc.green("│") + padBox("") + pc.green("│"));
+    console.log(pc.green("│") + padBox("  " + pc.dim("1.") + " " + pc.dim("(Optional) Edit") + " " + pc.cyan("~/.agentcmd/config.json")) + pc.green("│"));
+    console.log(pc.green("│") + padBox("  " + pc.dim("2.") + " " + pc.bold("Run:") + " " + pc.yellow("agentcmd start")) + pc.green("│"));
+    console.log(pc.green("│") + padBox("") + pc.green("│"));
+    console.log(pc.green("├─────────────────────────────────────────────────────────────┤"));
+    console.log(pc.green("│") + padBox(" " + pc.bold("Configuration")) + pc.green("│"));
+    console.log(pc.green("│") + padBox("") + pc.green("│"));
+    console.log(pc.green("│") + padBox("  " + pc.dim("Server Port:") + "  " + pc.cyan(configWithSecret.port)) + pc.green("│"));
+    console.log(pc.green("│") + padBox("  " + pc.dim("Inngest Port:") + " " + pc.cyan(configWithSecret.inngestPort)) + pc.green("│"));
+    console.log(pc.green("│") + padBox("  " + pc.dim("Database:") + "     " + pc.cyan(dbPath)) + pc.green("│"));
+    console.log(pc.green("│") + padBox("  " + pc.dim("Logs:") + "         " + pc.cyan(logsDir + "/app.log")) + pc.green("│"));
+    console.log(pc.green("│") + padBox("") + pc.green("│"));
+    console.log(pc.green("└─────────────────────────────────────────────────────────────┘"));
     console.log("");
-    console.log("Next steps:");
-    console.log(`  1. (Optional) Edit ${configPath} to customize settings`);
-    console.log("  2. Run: agentcmd start");
-    console.log("");
-    console.log("Configuration:");
-    console.log(`  Server Port:    ${configWithSecret.port}`);
-    console.log(`  Inngest Port:   ${configWithSecret.inngestPort}`);
-    console.log(`  Database:       ${dbPath}`);
-    console.log(`  Logs:           ${logsDir}/app.log`);
   } catch (error) {
-    console.error("Installation failed:", error instanceof Error ? error.message : error);
+    const boxWidth = 61;
+    const padError = (text: string) => {
+      const visible = text.replace(/\u001b\[[0-9;]*m/g, '');
+      const spaces = boxWidth - visible.length;
+      return text + ' '.repeat(Math.max(0, spaces));
+    };
+
+    console.log("");
+    console.log(pc.red("┌─────────────────────────────────────────────────────────────┐"));
+    console.log(pc.red("│") + padError(" " + pc.bold(pc.red("✗ Installation Failed"))) + pc.red("│"));
+    console.log(pc.red("├─────────────────────────────────────────────────────────────┤"));
+    console.log(pc.red("│") + padError("") + pc.red("│"));
+    console.log(pc.red("│") + padError("  " + (error instanceof Error ? error.message : error)) + pc.red("│"));
+    console.log(pc.red("│") + padError("") + pc.red("│"));
+    console.log(pc.red("└─────────────────────────────────────────────────────────────┘"));
+    console.log("");
     process.exit(1);
   }
 }
