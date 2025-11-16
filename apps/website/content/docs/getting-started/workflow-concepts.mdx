@@ -49,11 +49,18 @@ The `index.json` file tracks all specs:
 
 ### How to Generate Specs
 
-There are three ways to create specs:
+There are four ways to create specs:
 
-1. **From Planning Session** - AI explores your codebase in read-only mode, then generates a detailed spec
-2. **Write It Inline** - You write markdown describing what you want, AI expands it into a full spec
-3. **Manual Creation** - Write `spec.md` files directly in `.agent/specs/todo/`
+1. **Slash Commands** - Run spec generation commands directly with AI agents:
+   - **`/cmd:generate-feature-spec`** - Feature specs with architecture, implementation phases, user stories
+   - **`/cmd:generate-bug-spec`** - Bug fix specs with reproduction steps, root cause analysis, fix strategy
+   - **`/cmd:generate-issue-spec`** - Issue specs for refactors, tech debt, improvements
+
+2. **From Planning Session** - AI explores your codebase in read-only mode, then generates a detailed spec
+
+3. **Write It Inline** - You write markdown describing what you want, AI expands it into a full spec
+
+4. **Manual Creation** - Write `spec.md` files directly in `.agent/specs/todo/`
 
 <Callout type="info">
 Planning sessions are the most thorough approach - the AI explores your codebase first, understanding context before generating the spec.
@@ -123,6 +130,12 @@ The spec type determines what gets generated:
 **Issue**
 - Refactors, tech debt, general improvements
 - Generates: problem statement, solution approach, impact analysis
+
+### Custom Spec Types
+
+You can create your own spec types by adding custom slash commands following the pattern `/cmd:generate-[type]-spec`.
+
+For example, create `/cmd:generate-refactor-spec` and it will automatically appear in the spec types dropdown in the UI. Your custom spec type can generate whatever structure makes sense for your project.
 
 ## What Happens During a Run
 

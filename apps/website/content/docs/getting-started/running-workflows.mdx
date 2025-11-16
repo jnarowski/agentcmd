@@ -13,7 +13,13 @@ New to workflows? Start with [Workflow Concepts](/docs/getting-started/workflow-
 
 ## Workflow
 
-A **workflow run** executes a workflow with a spec in a git workspace.
+A **workflow run** is a single execution of a workflow. When you create a workflow run, you're asking agentcmd to:
+
+1. Take a spec (what to build)
+2. Execute a workflow (how to build it)
+3. Make changes in a git workspace (where to build it)
+
+The workflow run ties these three pieces together.
 
 When you create a workflow run, the system determines which workflow to execute based on **spec type**:
 
