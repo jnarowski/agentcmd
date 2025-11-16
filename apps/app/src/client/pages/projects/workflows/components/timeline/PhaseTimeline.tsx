@@ -95,10 +95,18 @@ export function PhaseTimeline({ run, projectId, onSelectSession, onSelectStep, o
       const isSystemPhase = group.phaseId.startsWith("_system_");
       if (!isSystemPhase) return true;
 
-      // Show if has any content (steps, events, or artifacts)
+      // Count only meaningful events (exclude phase lifecycle events)
+      const meaningfulEvents = group.events.filter(
+        (event) =>
+          !["phase_started", "phase_completed", "phase_retry", "phase_failed"].includes(
+            event.event_type
+          )
+      );
+
+      // Show if has any content (steps, meaningful events, or artifacts)
       return (
         group.steps.length > 0 ||
-        group.events.length > 0 ||
+        meaningfulEvents.length > 0 ||
         group.artifacts.length > 0
       );
     });
