@@ -3,11 +3,11 @@
   "pages": [
     "agents",
     "phases",
-    "planning-sessions",
     "projects",
     "sessions",
     "specs",
     "steps",
-    "workflows"
+    "workflow-definitions",
+    "workflow-runs"
   ]
 }

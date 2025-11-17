@@ -3,8 +3,8 @@
   "pages": [
     "installation",
     "quick-start",
-    "workflow-concepts",
-    "running-workflows",
-    "first-workflow"
+    "how-it-works",
+    "first-workflow",
+    "access-anywhere"
   ]
 }

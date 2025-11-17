@@ -35,146 +35,24 @@ agentcmd is ready! Open http://localhost:3456
 
 <Callout type="tip">
 **Keep this terminal open** - It shows live logs from workflow executions. Open a new tab for other commands.
+
+For production use, run with pm2: `pm2 start "npx agentcmd start" --name agentcmd`. See [Deployment](/docs/deployment) for full setup.
 </Callout>
 
-## Open the UI
+## Importing Projects
 
-Navigate to the web interface:
+<AgentCmd /> automatically imports projects from your Claude Code sessions.
 
-```bash
-open http://localhost:3456
-```
-
-You'll see the **<AgentCmd /> Dashboard** with:
-- **Projects** (empty for now)
-- **Workflows** library
-- **Sessions** history
-
-## Create Your First Project
-
-A project connects <AgentCmd /> to your codebase.
-
-<Steps>
-  <Step>
-    ### Click "New Project"
-
-    In the top right of the dashboard
-  </Step>
-
-  <Step>
-    ### Enter Project Details
-
-    - **Name**: "My First Project"
-    - **Path**: `/path/to/your/codebase`
-
-    <Callout type="info">
-    Use an existing codebase you want to automate, or create a test directory with `mkdir ~/agentcmd-test && cd ~/agentcmd-test && git init`
-    </Callout>
-  </Step>
-
-  <Step>
-    ### Click "Create Project"
-
-    <AgentCmd /> scans the directory and creates the project
-  </Step>
-</Steps>
-
-You should see your project in the dashboard:
-
-```text title="Project Display"
-My First Project
-/path/to/your/codebase
-0 workflows run | 0 sessions
-```
-
-## Run an Example Workflow
-
-<AgentCmd /> includes example workflows to test your setup.
-
-<Steps>
-  <Step>
-    ### Click into your project
-
-    Select "My First Project" from the dashboard
-  </Step>
-
-  <Step>
-    ### Navigate to Workflows tab
-
-    See the built-in example workflows:
-    - **Example Basic Workflow** - CLI commands, git, artifacts
-    - **Example Implement Review** - Multi-phase with AI agents
-    - **Example Kitchen Sink** - All 8 step types
-  </Step>
-
-  <Step>
-    ### Click "Run" on Example Basic Workflow
-
-    This workflow doesn't require AI agents - perfect for testing!
-  </Step>
-
-  <Step>
-    ### Watch Live Execution
-
-    The timeline shows:
-    - ✓ Phase: Setup
-    - ✓ Phase: Build
-    - ✓ Phase: Test
-    - ✓ Phase: Deploy
-
-    Each step streams output in real-time via WebSocket
-  </Step>
-</Steps>
-
-**Timeline view** shows:
-- Step status (pending/running/completed/failed)
-- Live output from CLI commands
-- Annotations marking progress
-- Artifacts generated
-
-## View Inngest Dashboard
-
-See workflow execution under the hood:
-
-```bash
-open http://localhost:8288
-```
-
-The **Inngest Dev UI** shows:
-- Function runs (your workflows)
-- Step-by-step execution
-- Retry logic and errors
-- Event history
-
-This is helpful for debugging failed workflows.
-
-## Explore the UI
-
-### Projects Tab
-- **Overview** - Stats, recent workflows
-- **Workflows** - Available workflows to run
-- **Sessions** - AI agent conversation history
-- **Settings** - Project configuration
-
-### Workflow Run Page
-- **Timeline** - Visual step-by-step progress
-- **Logs** - Full output from each step
-- **Artifacts** - Files/images generated
-- **Events** - WebSocket event stream
-
-### Sessions Tab
-- **Session List** - All AI conversations
-- **Resume** - Continue previous sessions in new workflows
-- **Messages** - Full conversation history
+When you start the server, it scans your Claude Code session history and creates projects for each codebase you've worked on. This means you can immediately start running workflows on your existing projects without manual setup.
 
 ## Next Steps
 
 <Cards>
-  <Card title="Running Workflows" href="/docs/getting-started/running-workflows">
-    Learn the 3 ways to create and run workflows from the UI
-  </Card>
   <Card title="Build Your First Workflow" href="/docs/getting-started/first-workflow">
     Write a simple 10-line workflow from scratch
+  </Card>
+  <Card title="Running Workflows" href="/docs/getting-started/running-workflows">
+    Learn the 3 ways to create and run workflows from the UI
   </Card>
   <Card title="Understand Agents" href="/docs/concepts/agents">
     How AI agents are orchestrated with slash commands
@@ -183,21 +61,6 @@ This is helpful for debugging failed workflows.
     Real-world workflow templates
   </Card>
 </Cards>
-
-## Stopping the Server
-
-When you're done:
-
-```bash
-# Press Ctrl+C in the terminal running `npx agentcmd start`
-```
-
-Or:
-
-```bash
-# From another terminal
-pkill -f agentcmd
-```
 
 ---
 

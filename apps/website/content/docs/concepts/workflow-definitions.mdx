@@ -1,5 +1,5 @@
 ---
-title: Workflows
+title: Workflow Definitions
 description: Multi-step AI orchestration powered by Inngest
 ---
 
@@ -21,28 +21,6 @@ defineWorkflow({
   // Your automation logic here
 });
 ```
-
-## Execution Lifecycle
-
-```mermaid
-graph LR
-    A[Define Workflow] --> B[Trigger Event]
-    B --> C[Inngest Queue]
-    C --> D[Execute Steps]
-    D --> E[WebSocket Updates]
-    E --> F{Success?}
-    F -->|Yes| G[Complete]
-    F -->|No| H[Retry/Fail]
-    H --> D
-```
-
-**Flow**:
-1. **Define** - Write workflow in `.agent/workflows/definitions/`
-2. **Trigger** - User clicks "Run" in UI or API call triggers event
-3. **Queue** - Inngest queues the workflow function
-4. **Execute** - Steps run sequentially, streaming output via WebSocket
-5. **Update** - UI shows live progress on timeline
-6. **Complete** - Success/failure recorded, artifacts saved
 
 ## Anatomy of a Workflow
 
@@ -148,9 +126,7 @@ return {
 };
 ```
 
-## How Workflows Execute
-
-### Inngest Integration
+## Why Inngest?
 
 <AgentCmd /> uses [Inngest](https://www.inngest.com/) for workflow execution:
 
@@ -159,36 +135,9 @@ return {
 - **Scalable** - Handles long-running workflows (hours/days)
 - **Type-safe** - Full TypeScript support
 
-### Step Execution
+This means you can write workflows that run for hours without worrying about crashes, and users can monitor execution in real-time.
 
-Each step:
-1. Checkpoints state before running
-2. Executes (CLI command, agent call, etc.)
-3. Streams output via WebSocket
-4. Saves result to database
-5. Checkpoints state after completion
-
-**On failure**:
-- Step retries automatically (configurable)
-- Workflow pauses, shows error in UI
-- User can cancel or wait for retry
-
-### Real-Time Updates
-
-WebSocket events stream to UI:
-
-```typescript
-// Backend emits
-socket.emit("session.stream_output", {
-  sessionId,
-  output: "Step output...",
-});
-
-// Frontend receives
-socket.on("session.stream_output", (data) => {
-  // Update timeline UI
-});
-```
+Want to understand how workflows execute at runtime? See [Workflow Runs](/docs/concepts/workflow-runs).
 
 ## Workflow Discovery
 
@@ -330,6 +279,9 @@ await step.phase("implement", async () => {
 ## Next Steps
 
 <Cards>
+  <Card title="Workflow Runs" href="/docs/concepts/workflow-runs">
+    Understand execution, tasks, and git workspaces
+  </Card>
   <Card title="Phases" href="/docs/concepts/phases">
     Organize steps into logical stages
   </Card>
@@ -338,8 +290,5 @@ await step.phase("implement", async () => {
   </Card>
   <Card title="Step Reference" href="/docs/reference/steps">
     Complete API for all step types
-  </Card>
-  <Card title="Building Workflows" href="/docs/guides/workflow-definition">
-    In-depth guide with advanced patterns
   </Card>
 </Cards>

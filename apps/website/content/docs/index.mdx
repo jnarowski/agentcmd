@@ -135,47 +135,6 @@ It consists of three components:
   </Link>
 </div>
 
-### How It Works
-
-```
-Web App ↔ Workflow Definitions → Inngest → AI Agents (Claude/Codex/Gemini)
-   ↓           ↓                     ↓            ↓
-  UI      TypeScript files      Durable       File edits,
-         (.agent/workflows/)    execution     commits, PRs
-```
-
-```typescript
-// Simple 3-step workflow
-defineWorkflow(
-  {
-    id: "deploy-feature",
-    phases: ["plan", "implement", "deploy"],
-  },
-  async ({ step }) => {
-    await step.phase("plan", async () => {
-      await step.agent("architect", {
-        agent: "claude",
-        prompt: "Design the authentication system",
-      });
-    });
-
-    await step.phase("implement", async () => {
-      await step.agent("code", {
-        agent: "codex",
-        prompt: "Implement the design from the planning phase",
-      });
-    });
-
-    await step.phase("deploy", async () => {
-      await step.git("push", {
-        operation: "commit-and-branch",
-        message: "feat: Add authentication system",
-      });
-    });
-  }
-);
-```
-
 ## Core Concepts
 
 <Cards>
@@ -190,9 +149,6 @@ defineWorkflow(
   </Card>
   <Card title="Steps" href="/docs/reference/steps">
     8 step types: agent, ai, bash, git, artifact, annotation, phase, webhook
-  </Card>
-  <Card title="Planning Sessions" href="/docs/concepts/planning-sessions">
-    Read-only AI exploration that generates specs
   </Card>
   <Card title="Phases" href="/docs/concepts/phases">
     Organize work into logical stages (plan → implement → review)
@@ -273,7 +229,9 @@ export default defineWorkflow(
 
     ```bash
     open http://localhost:5173
-    ```
+    open http://localhost:8288
+
+```
 
   </Step>
 
@@ -324,3 +282,4 @@ Or explore:
 ---
 
 **Need Help?** Check the [Troubleshooting](/docs/troubleshooting/common-errors) guide or [open an issue](https://github.com/sourceborn/agentcmd/issues).
+```

@@ -1,0 +1,135 @@
+---
+title: Access Anywhere
+description: The only AI workflow tool you can monitor from your phone
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { AgentCmd } from '@/components/AgentCmd';
+
+Unlike desktop-only AI coding tools, <AgentCmd /> runs in your browser - making it the **only AI workflow orchestrator you can access from your phone, tablet, or any device**.
+
+## Why It Matters
+
+**Start workflows on your laptop. Monitor on your phone. Review on your tablet.**
+
+- Long-running refactors? Check progress from your phone while getting coffee
+- Multi-hour test suites? Monitor from the couch
+- Client demo? Pull up live workflow execution on any device
+- Late-night deployment? Watch from bed without opening your laptop
+
+## Mobile-First Design
+
+Built responsive from day one:
+
+- ✓ Real-time workflow timeline on mobile
+- ✓ Stream logs and outputs
+- ✓ Browse sessions and artifacts
+- ✓ Touch-optimized controls
+- ✓ Full feature parity with desktop
+
+The entire UI adapts to your screen - no separate mobile app needed.
+
+## Remote Access with Tailscale
+
+Access your local <AgentCmd /> server from anywhere with [Tailscale's](https://tailscale.com) zero-config VPN:
+
+<Steps>
+  <Step>
+    ### Install Tailscale
+
+    On your development machine:
+
+    ```bash
+    # macOS
+    brew install tailscale
+
+    # Linux
+    curl -fsSL https://tailscale.com/install.sh | sh
+    ```
+
+    Download the [Tailscale app](https://tailscale.com/download) for your phone/tablet (100% free for personal use).
+  </Step>
+
+  <Step>
+    ### Connect to your Tailnet
+
+    ```bash
+    tailscale up
+    ```
+
+    Follow the prompt to authenticate.
+  </Step>
+
+  <Step>
+    ### Configure WebSocket host
+
+    Set the WebSocket host environment variable before starting <AgentCmd />:
+
+    ```bash
+    export VITE_WS_HOST=your-machine-name.tail-scale-name.ts.net:3456
+    npx agentcmd start
+    ```
+
+    This ensures WebSocket connections work when accessing remotely.
+  </Step>
+
+  <Step>
+    ### Access from any device
+
+    On your phone/tablet (with Tailscale app connected):
+
+    ```
+    http://your-machine-name.tail-scale-name.ts.net:3456
+    ```
+
+    Your machine name appears in the Tailscale admin console.
+  </Step>
+</Steps>
+
+<Callout type="tip">
+**2-minute setup, lifetime access.** Once configured, your <AgentCmd /> server is accessible on any device connected to your Tailnet - phone, tablet, or another laptop.
+</Callout>
+
+## Alternative Remote Access Options
+
+### VPN
+
+Connect to your home/office network via VPN and access:
+
+```
+http://localhost:3456
+```
+
+Works with any VPN: WireGuard, OpenVPN, corporate VPN, etc.
+
+### Cloud Deployment
+
+Run <AgentCmd /> on a Mac Mini, home server, or always-on desktop for persistent access. Or deploy to a VPS for always-on remote access:
+
+```bash
+pm2 start "npx agentcmd start" --name agentcmd
+```
+
+See [Deployment](/docs/deployment) for production setup with HTTPS and authentication.
+
+### SSH Tunnel
+
+Quick one-off access via SSH port forwarding:
+
+```bash
+ssh -L 3456:localhost:3456 your-dev-machine
+```
+
+Then access `http://localhost:3456` on your local machine.
+
+## Security Considerations
+
+When enabling remote access:
+
+- **Tailscale** encrypts all traffic automatically
+- **VPN** provides network-level security
+- **Cloud deployments** should use HTTPS and authentication
+- **SSH tunnels** are encrypted by default
+
+For production use, consider adding authentication middleware to the <AgentCmd /> server.
