@@ -169,394 +169,52 @@ Use Prisma's naming pattern for consistency and predictable performance:
 
 **Reference Implementation:** `apps/app/src/server/domain/workflow/services/definitions/`
 
-### Get Single Record (findUnique)
+### CRUD Implementation Patterns
 
-Use `get{Entity}` for O(1) indexed lookups by unique constraint.
+Each CRUD operation follows consistent patterns with options objects, default includes, and proper error handling.
 
-```typescript
-// apps/app/src/server/domain/workflow/services/definitions/getWorkflowDefinition.ts
+**get{Entity}** (findUnique):
+- O(1) indexed lookup by id or unique constraint
+- Returns `null` if not found
+- Example: `getWorkflowDefinition({ where: { id } })`
 
-import { prisma } from "@/shared/prisma";
-import type { GetWorkflowDefinitionOptions } from "../../types/GetWorkflowDefinitionOptions";
+**get{Entity}By** (findFirst):
+- O(n) query with any filter combination
+- Supports `orderBy` for first match
+- Example: `getWorkflowDefinitionBy({ where: { path, status }, orderBy: { created_at: "desc" } })`
 
-/**
- * Get single workflow definition by unique constraint (O(1) indexed lookup)
- * Supports id OR project_id_identifier compound key
- * Returns null if not found (routes handle error throwing)
- */
-export async function getWorkflowDefinition(
-  options: GetWorkflowDefinitionOptions
-): Promise<WorkflowDefinition | null> {
-  const { where, include } = options;
+**get{Entity}s** (findMany):
+- Bulk queries with full Prisma API support
+- Supports filtering, selection, sorting, pagination
+- Example: `getWorkflowDefinitions({ where: { status: "active" }, skip: 20, take: 10 })`
 
-  const includeConfig = include ?? {
-    _count: { select: { runs: true } },
-  };
+**create{Entity}**:
+- Returns created record or `null` on foreign key constraint failure
+- Default includes applied
+- Example: `createWorkflowDefinition({ data: { name, project_id } })`
 
-  return await prisma.workflowDefinition.findUnique({
-    where,
-    include: includeConfig,
-  });
-}
-```
+**update{Entity}**:
+- Generic update for any fields (replaces specialized functions like archive/unarchive)
+- Returns updated record or `null` if not found (Prisma error P2025)
+- Example: `updateWorkflowDefinition({ id, data: { status: "archived" } })`
 
-**Type Definition:**
-```typescript
-// apps/app/src/server/domain/workflow/types/GetWorkflowDefinitionOptions.ts
+**upsert{Entity}**:
+- Atomic create-or-update using unique constraint
+- Perfect for filesystem sync operations
+- Example: `upsertWorkflowDefinition({ where: { project_id_identifier }, create: {...}, update: {...} })`
 
-export type GetWorkflowDefinitionOptions = {
-  where:
-    | { id: string }
-    | {
-        project_id_identifier: {
-          project_id: string;
-          identifier: string;
-        };
-      };
-  include?: Prisma.WorkflowDefinitionInclude;
-};
-```
-
-**Usage:**
-```typescript
-// By id (fastest)
-const def = await getWorkflowDefinition({ where: { id: "def-123" } });
-
-// By compound unique key
-const def = await getWorkflowDefinition({
-  where: {
-    project_id_identifier: {
-      project_id: "proj-1",
-      identifier: "workflow-1",
-    },
-  },
-});
-```
-
-### Get Single Record (findFirst)
-
-Use `get{Entity}By` for O(n) queries with any filter combination.
-
-```typescript
-// apps/app/src/server/domain/workflow/services/definitions/getWorkflowDefinitionBy.ts
-
-/**
- * Get single workflow definition by any filter combination (O(n) query)
- * Uses findFirst for flexible non-unique lookups
- * Returns null if not found
- */
-export async function getWorkflowDefinitionBy(
-  options: GetWorkflowDefinitionByOptions
-): Promise<WorkflowDefinition | null> {
-  const { where, orderBy, include } = options;
-
-  const includeConfig = include ?? {
-    _count: { select: { runs: true } },
-  };
-
-  return await prisma.workflowDefinition.findFirst({
-    where,
-    orderBy,
-    include: includeConfig,
-  });
-}
-```
-
-**Usage:**
-```typescript
-// By any filter
-const def = await getWorkflowDefinitionBy({
-  where: { path: "/workflows/main.ts", status: "active" },
-  orderBy: { created_at: "desc" },
-});
-```
-
-### Get Multiple Records (findMany)
-
-Use `get{Entity}s` for bulk queries with full Prisma API support.
-
-```typescript
-// apps/app/src/server/domain/workflow/services/definitions/getWorkflowDefinitions.ts
-
-/**
- * Get multiple workflow definitions with full Prisma API support
- * Supports filtering, selection, sorting, and pagination
- */
-export async function getWorkflowDefinitions(
-  options: GetWorkflowDefinitionsOptions = {}
-) {
-  const { where, select, include, orderBy, skip, take } = options;
-
-  const includeConfig = include ?? (select ? undefined : {
-    _count: { select: { runs: true } },
-  });
-
-  return await prisma.workflowDefinition.findMany({
-    where,
-    select,
-    include: includeConfig,
-    orderBy,
-    skip,
-    take,
-  });
-}
-```
-
-**Usage:**
-```typescript
-// All active definitions
-const defs = await getWorkflowDefinitions({
-  where: { status: "active" },
-  orderBy: { name: "asc" },
-});
-
-// Project-scoped with pagination
-const defs = await getWorkflowDefinitions({
-  where: { project_id: "proj-1", status: "active" },
-  skip: 20,
-  take: 10,
-});
-
-// Field selection for performance
-const defs = await getWorkflowDefinitions({
-  where: { status: "active" },
-  select: { id: true, name: true, identifier: true },
-});
-```
-
-### Create Record
-
-```typescript
-// apps/app/src/server/domain/workflow/services/definitions/createWorkflowDefinition.ts
-
-/**
- * Create new workflow definition with validation
- * Returns created definition or null if project not found
- */
-export async function createWorkflowDefinition(
-  options: CreateWorkflowDefinitionOptions
-): Promise<WorkflowDefinition | null> {
-  const { data, include } = options;
-
-  const includeConfig = include ?? {
-    _count: { select: { runs: true } },
-  };
-
-  try {
-    return await prisma.workflowDefinition.create({
-      data,
-      include: includeConfig,
-    });
-  } catch (error) {
-    // Foreign key constraint failure
-    if (error instanceof Error && error.message.includes("Foreign key constraint")) {
-      return null;
-    }
-    throw error;
-  }
-}
-```
-
-### Update Record
-
-```typescript
-// apps/app/src/server/domain/workflow/services/definitions/updateWorkflowDefinition.ts
-
-/**
- * Generic update for any workflow definition fields
- * Replaces specialized functions (archive, unarchive, etc.)
- * Returns updated definition or null if not found
- */
-export async function updateWorkflowDefinition(
-  options: UpdateWorkflowDefinitionOptions
-): Promise<WorkflowDefinition | null> {
-  const { id, data, include } = options;
-
-  const includeConfig = include ?? {
-    _count: { select: { runs: true } },
-  };
-
-  try {
-    return await prisma.workflowDefinition.update({
-      where: { id },
-      data,
-      include: includeConfig,
-    });
-  } catch (error) {
-    // Handle record not found (P2025)
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
-      return null;
-    }
-    throw error;
-  }
-}
-```
-
-**Usage (replaces archive/unarchive):**
-```typescript
-// Archive definition (soft delete)
-const archived = await updateWorkflowDefinition({
-  id: "def-123",
-  data: {
-    status: "archived",
-    archived_at: new Date(),
-  },
-});
-
-// Unarchive definition
-const unarchived = await updateWorkflowDefinition({
-  id: "def-123",
-  data: {
-    status: "active",
-    archived_at: null,
-  },
-});
-```
-
-### Upsert Record
-
-```typescript
-// apps/app/src/server/domain/workflow/services/definitions/upsertWorkflowDefinition.ts
-
-/**
- * Atomic create-or-update using compound unique key
- * Perfect for workflow scanning (sync filesystem → DB)
- */
-export async function upsertWorkflowDefinition(
-  options: UpsertWorkflowDefinitionOptions
-): Promise<WorkflowDefinition> {
-  const { where, create, update, include } = options;
-
-  const includeConfig = include ?? {
-    _count: { select: { runs: true } },
-  };
-
-  return await prisma.workflowDefinition.upsert({
-    where,
-    create,
-    update,
-    include: includeConfig,
-  });
-}
-```
-
-**Usage:**
-```typescript
-// Sync workflow from filesystem
-const def = await upsertWorkflowDefinition({
-  where: {
-    project_id_identifier: {
-      project_id: "proj-1",
-      identifier: "workflow-1",
-    },
-  },
-  create: {
-    name: "New Workflow",
-    path: "/workflows/new.ts",
-    project_id: "proj-1",
-    identifier: "workflow-1",
-    // ... other fields
-  },
-  update: {
-    name: "Updated Workflow",
-    path: "/workflows/new.ts",
-  },
-});
-```
-
-### Delete Record
-
-```typescript
-// apps/app/src/server/domain/workflow/services/definitions/deleteWorkflowDefinition.ts
-
-/**
- * Hard delete workflow definition (use sparingly)
- * Prefer updateWorkflowDefinition with status: "archived" for soft delete
- */
-export async function deleteWorkflowDefinition(
-  options: DeleteWorkflowDefinitionOptions
-): Promise<WorkflowDefinition | null> {
-  const { id, include } = options;
-
-  const includeConfig = include ?? {
-    _count: { select: { runs: true } },
-  };
-
-  try {
-    return await prisma.workflowDefinition.delete({
-      where: { id },
-      include: includeConfig,
-    });
-  } catch (error) {
-    // Handle record not found (P2025)
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
-      return null;
-    }
-    throw error;
-  }
-}
-```
+**delete{Entity}**:
+- Hard delete (use sparingly - prefer soft delete via update)
+- Returns deleted record or `null` if not found
+- Example: `deleteWorkflowDefinition({ id })`
 
 ### Key Design Principles
 
-**1. Options Pattern**
-All services use options object with Prisma's API:
-```typescript
-type GetWorkflowDefinitionsOptions = {
-  where?: Prisma.WorkflowDefinitionWhereInput;
-  select?: Prisma.WorkflowDefinitionSelect;
-  include?: Prisma.WorkflowDefinitionInclude;
-  orderBy?: Prisma.WorkflowDefinitionOrderByWithRelationInput;
-  skip?: number;
-  take?: number;
-};
-```
-
-**2. Prisma Field Names**
-Use snake_case field names matching database schema:
-```typescript
-// ✅ DO
-where: { project_id: "proj-1", is_template: true }
-
-// ❌ DON'T
-where: { projectId: "proj-1", isTemplate: true }
-```
-
-**3. Return null for Not Found**
-Services return `null`, routes throw errors:
-```typescript
-// Service
-const project = await getProjectById({ projectId });
-if (!project) return null;
-
-// Route
-const project = await getProjectById({ projectId });
-if (!project) {
-  throw new NotFoundError("Project not found");
-}
-```
-
-**4. Default Includes**
-Provide sensible defaults, allow override:
-```typescript
-const includeConfig = include ?? {
-  _count: { select: { runs: true } },
-};
-```
-
-**5. Error Handling**
-Handle Prisma errors gracefully:
-```typescript
-try {
-  return await prisma.entity.update({ ... });
-} catch (error) {
-  // P2025 = Record not found
-  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
-    return null;
-  }
-  throw error;
-}
-```
+1. **Options Pattern**: All services accept options object with Prisma's API (`where`, `select`, `include`, `orderBy`, `skip`, `take`)
+2. **snake_case Fields**: Use Prisma field names (`project_id`, not `projectId`)
+3. **Return null for Not Found**: Services return `null`, routes throw errors (`NotFoundError`)
+4. **Default Includes**: Provide sensible defaults (e.g., `_count: { select: { runs: true } }`), allow override
+5. **Error Handling**: Catch Prisma errors gracefully (P2025 = not found, foreign key = constraint failure)
 
 ### When to Use Each Pattern
 

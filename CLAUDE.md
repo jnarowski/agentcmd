@@ -9,7 +9,6 @@ Guidance for Claude Code when working with this repository.
 - **Root** (this file) - Monorepo essentials + critical rules
 - `apps/app/CLAUDE.md` - Full-stack app integration
 - `apps/app/src/client/CLAUDE.md` - Frontend patterns
-- `apps/website/CLAUDE.md` - Marketing site
 - `packages/agent-cli-sdk/CLAUDE.md` - AI CLI SDK
 - `packages/agentcmd-workflows/CLAUDE.md` - Workflow SDK
 
@@ -131,80 +130,13 @@ domain/
 - See `.agent/docs/backend-patterns.md` for comprehensive patterns
 - Reference: `apps/app/src/server/domain/workflow/services/definitions/`
 
-**File structure** - public export first, private helpers below:
+**File structure:**
+- Imports → Module constants/private types → `// PUBLIC API` separator → Public exports with JSDoc → `// PRIVATE HELPERS` separator → Private functions
+- One function export per file, file name matches export
+- Shared types from `.types.ts`, private types stay in file
+- Route files and `*.types.ts` files are exceptions
 
-```typescript
-// Imports
-import { prisma } from "@/shared/prisma";
-import type { SharedType } from "./types"; // Import shared types
-
-// Module-level constants, variables, private types
-const RETRY_LIMIT = 3;
-type HelperType = { ... }; // Private internal type - stays here
-
-// ============================================================================
-// PUBLIC API
-// ============================================================================
-
-/**
- * Create a new project
- */
-export async function createProject({ name, userId }: CreateProjectInput) {
-  validateInput(name);
-  return await saveProject(name, userId);
-}
-
-// Export type only if not shared with other files
-export type CreateProjectInput = {
-  name: string;
-  userId: string;
-};
-
-// ============================================================================
-// PRIVATE HELPERS
-// ============================================================================
-
-function validateInput(name: string): void {
-  if (!name) throw new Error("Name required");
-}
-```
-
-**Required:**
-- One function export per file
-- File name matches function export
-- Public exports before private functions
-- Separators: `// ============================================================================`
-- JSDoc on all public functions
-- Shared types imported from `.types.ts`
-- Private internal types stay in file (not exported)
-
-**Does NOT apply to:**
-- Route files (`routes/*.ts`) - no exports
-- Type definition files (`*.types.ts`) - multiple type exports OK
-
-✅ **DO** - Pure functions with explicit parameters:
-
-```typescript
-export async function getProjectById({
-  projectId,
-  userId,
-}: {
-  projectId: string;
-  userId: string;
-}) {
-  return await prisma.project.findUnique({
-    where: { id: projectId, userId },
-  });
-}
-```
-
-❌ **DON'T** - Old services/ directory (deprecated):
-
-```typescript
-import { getProjectById } from "@/server/services/project.service";
-```
-
-**See:** `apps/app/src/server/domain/workflow/services/engine/initializeWorkflowEngine.ts`
+**See:** `.agent/docs/backend-patterns.md` for detailed examples and patterns
 
 ### Schema Organization
 
@@ -252,6 +184,31 @@ interface Project {
   description: string | null | undefined;
 }
 ```
+
+### WebSocket Conventions
+
+✅ **DO** - Colon notation for channels:
+
+```typescript
+"project:123"
+"workflow:abc:step:xyz"
+```
+
+✅ **DO** - Dot notation for events:
+
+```typescript
+"workflow.started"
+"step.completed"
+```
+
+❌ **DON'T** - Mix notations:
+
+```typescript
+"project.123"  // Wrong - use colon
+"workflow:started"  // Wrong - use dot
+```
+
+**See:** `.agent/docs/websocket-architecture.md` for comprehensive patterns
 
 ## Essential Commands
 
@@ -321,45 +278,13 @@ pnpm test:e2e            # E2E tests with real CLI
 
 **See:** `.agent/docs/architecture-decisions.md` for rationale behind key choices.
 
-## Common Patterns
-
-### Parallel Operations
-
-```typescript
-// ✅ DO - Parallel
-const [project, sessions] = await Promise.all([
-  getProjectById({ projectId }),
-  getProjectSessions({ projectId }),
-]);
-
-// ❌ DON'T - Sequential
-const project = await getProjectById({ projectId });
-const sessions = await getProjectSessions({ projectId });
-```
-
-### Config Access
-
-```typescript
-// ✅ DO - Centralized config
-import { config } from "@/server/config";
-const port = config.server.port;
-
-// ❌ DON'T - Direct env access
-const port = process.env.PORT;
-```
-
-### Prisma Client
-
-```typescript
-// ✅ DO - Import singleton
-import { prisma } from "@/shared/prisma";
-
-// ❌ DON'T - Create new instance
-import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient();
-```
-
 ## Quick Reference
+
+**Common Patterns:**
+- Parallel operations: `Promise.all()` for independent async calls
+- Config: Use `@/server/config`, not `process.env` directly
+- Prisma: Import singleton from `@/shared/prisma`
+- See `.agent/docs/backend-patterns.md` for comprehensive patterns
 
 **Ports:**
 
@@ -434,11 +359,8 @@ Sacrifice grammar for concision in all interactions and commit messages.
 
 - `apps/app/CLAUDE.md` - Full-stack app integration patterns
 - `apps/app/src/client/CLAUDE.md` - Frontend development guide
-- `apps/app/src/server/CLAUDE.md` - Backend development guide
-- `apps/website/CLAUDE.md` - Marketing site (Next.js)
 
 ### Package Docs
 
 - `packages/agent-cli-sdk/CLAUDE.md` - AI CLI SDK usage
 - `packages/agentcmd-workflows/CLAUDE.md` - Workflow SDK API
-- Tests go right alongside files, no __tests__ directory

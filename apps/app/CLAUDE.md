@@ -48,20 +48,9 @@ pnpm build          # Production build
 
 ## Testing
 
-**Parallel Test Execution**: Tests run in parallel using Vitest 4's worker pool with database-per-worker isolation.
+Vitest 4 with parallel execution and database-per-worker isolation (4 workers locally, 2 in CI).
 
-- **Worker databases**: Each worker gets isolated SQLite (`test-worker-1.db`, `test-worker-2.db`, etc.)
-- **VITEST_POOL_ID**: Stable worker ID for database naming (1 to maxWorkers)
-- **Worker count**: 4 workers locally, 2 in CI
-- **Database setup**: `vitest.global-setup.ts` creates all worker databases
-- **Per-worker config**: `vitest.setup.ts` sets `DATABASE_URL` using `VITEST_POOL_ID`
-- **Cleanup**: Global teardown removes all worker databases
-
-**Gold Standard Tests:**
-- `src/server/domain/project/services/__tests__/createProject.test.ts`
-- `src/server/routes/__tests__/projects.test.ts`
-
-**See:** `.agent/docs/testing-best-practices.md` for comprehensive guide.
+**See:** `.agent/docs/testing-best-practices.md` for comprehensive guide and gold standard examples.
 
 ## Architecture
 
@@ -73,27 +62,11 @@ pnpm build          # Production build
 - Type-safe with shared types from `@/shared/types`
 
 **WebSocket (Real-time):**
-- Socket.IO for bidirectional communication
-- EventBus for decoupled event handling
-- Channels: `domain:id` (e.g., `session:123`)
-- Events: `domain.action` (e.g., `session.stream_output`)
+- Socket.IO + EventBus for decoupled event handling
+- Channels: colon notation (`session:123`)
+- Events: dot notation (`session.stream_output`)
 
-**Example:**
-```typescript
-// Backend emits event
-eventBus.emit("session.stream_output", {
-  sessionId: "123",
-  content: "Hello",
-});
-
-// Frontend subscribes via WebSocket
-socket.emit("subscribe", "session:123");
-socket.on("session.stream_output", (data) => {
-  setMessages((prev) => [...prev, data.content]);
-});
-```
-
-**See:** `.agent/docs/websocket-architecture.md` for comprehensive patterns.
+**See:** `.agent/docs/websocket-architecture.md` and Root CLAUDE.md for conventions.
 
 ### Shared Types
 
@@ -155,18 +128,7 @@ server/domain/
 └── */services/
 ```
 
-**CRUD Gold Standard:** Workflow definitions follow Prisma naming pattern:
-- `get{Entity}` → findUnique (O(1), by id or unique key)
-- `get{Entity}By` → findFirst (O(n), any filter)
-- `get{Entity}s` → findMany (O(n), with pagination)
-- `create{Entity}` → create
-- `update{Entity}` → update (replaces archive/unarchive)
-- `upsert{Entity}` → upsert (atomic create-or-update)
-- `delete{Entity}` → delete (prefer soft delete via update)
-
-**Reference:** `apps/app/src/server/domain/workflow/services/definitions/`
-
-**See:** `.agent/docs/backend-patterns.md` for comprehensive CRUD patterns and examples.
+**See:** Root CLAUDE.md for CRUD naming conventions and `.agent/docs/backend-patterns.md` for comprehensive patterns.
 
 ## Workflow System
 
@@ -270,13 +232,6 @@ pm2 start dist/server/index.js --name agentcmd
 - Database: `prisma/dev.db`
 - Logs: `logs/app.log`
 - Migrations: `prisma/migrations/`
-
-**Key Patterns:**
-- Import from `@/server/`, `@/client/`, `@/shared/`
-- One function per file in `domain/*/services/`
-- Feature-based frontend organization
-- Immutable state updates (Zustand)
-- Primitives only in useEffect deps
 
 ## Detailed Documentation
 

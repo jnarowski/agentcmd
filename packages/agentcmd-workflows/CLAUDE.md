@@ -111,33 +111,9 @@ const inngestFn = workflowDef.default.createInngestFunction(runtimeAdapter);
 
 ### Template System
 
-Templates live in `templates/` and are copied during `init`:
+Templates in `templates/` copied during `init`: `.agent/workflows/`, `.agent/specs/`, `.claude/commands/`, `.gitignore` patterns.
 
-```
-templates/
-├── .agent/
-│   ├── workflows/
-│   │   ├── definitions/        # Example workflows
-│   │   └── README.md
-│   ├── specs/                  # Feature specs folder
-│   └── logs/                   # Workflow logs
-│
-├── .claude/
-│   └── commands/
-│       └── cmd/                # Slash command definitions
-│           ├── generate-spec.md
-│           ├── implement-spec.md
-│           ├── review-spec-implementation.md
-│           ├── move-spec.md
-│           ├── list-specs.md
-│           └── audit.md
-│
-└── gitignore.template          # Patterns to append to .gitignore
-```
-
-**Template sync commands** (run before `pnpm ship`):
-- `pnpm sync:commands` - Copy monorepo `.claude/commands/` → `templates/.claude/commands/`
-- `pnpm sync:workflows` - Sync workflow definitions to templates
+**Template sync** (before `pnpm ship`): `pnpm sync:commands`, `pnpm sync:workflows`
 
 ### Slash Command Type Generation
 
@@ -242,116 +218,20 @@ const result: AiStepResult<MySchema> = await step.ai<MySchema>("generate", {
 
 ## Step Methods
 
-### Extended Inngest Steps
+Extended Inngest steps for workflows:
 
-This SDK extends Inngest's native step methods with workflow-specific steps:
-
-**Native Inngest (passthrough):**
-- `step.run()` - Execute function with retry
-- `step.sleep()` - Sleep for duration
-- `step.waitForEvent()` - Wait for external event
+**Native Inngest (passthrough):** `step.run()`, `step.sleep()`, `step.waitForEvent()`
 
 **Workflow-specific:**
+- `step.phase()` - Organize steps into phases
+- `step.agent()` - Execute AI agent (Claude/Codex/Gemini, 30min timeout)
+- `step.git()` - Git operations (commit/branch/pr, 2min timeout)
+- `step.cli()` - Shell commands (5min timeout)
+- `step.artifact()` - Upload files/directories (5min timeout)
+- `step.annotation()` - Progress notes
+- `step.ai()` - AI text/structured generation with Zod schema support (5min timeout)
 
-| Method | Purpose | Default Timeout |
-|--------|---------|----------------|
-| `step.phase()` | Organize steps into phases | None |
-| `step.agent()` | Execute AI agent (Claude/Codex/Gemini) | 30 min |
-| `step.git()` | Git operations (commit/branch/pr) | 2 min |
-| `step.cli()` | Shell command execution | 5 min |
-| `step.artifact()` | Upload files/directories | 5 min |
-| `step.annotation()` | Progress notes | None |
-| `step.ai()` | AI text/structured generation | 5 min |
-
-All timeouts configurable via `options` parameter.
-
-### Git Step Operations
-
-```typescript
-// Commit changes
-await step.git("commit", {
-  operation: "commit",
-  message: "feat: add feature",
-});
-
-// Create branch
-await step.git("branch", {
-  operation: "branch",
-  branch: "feature/new",
-  baseBranch: "main",
-});
-
-// Commit + branch (atomic)
-await step.git("commit-and-branch", {
-  operation: "commit-and-branch",
-  commitMessage: "WIP: progress",
-  branch: "feature/new",
-  baseBranch: "main",
-});
-
-// Create PR
-await step.git("pr", {
-  operation: "pr",
-  title: "Add feature",
-  body: "Description",
-  branch: "feature/new",
-  baseBranch: "main",
-});
-```
-
-### Agent Step Modes
-
-```typescript
-// Standard mode (streaming output)
-await step.agent("task", {
-  agent: "claude",
-  prompt: "Implement feature X",
-  permissionMode: "default",
-});
-
-// Plan mode (non-interactive)
-await step.agent("plan", {
-  agent: "claude",
-  prompt: "Create implementation plan",
-  permissionMode: "plan",
-});
-
-// JSON mode (extract structured data)
-interface Analysis { complexity: number; files: string[] }
-const result = await step.agent<Analysis>("analyze", {
-  agent: "claude",
-  prompt: "Analyze codebase and return JSON: { complexity, files }",
-  json: true,
-});
-// result.data is typed as Analysis
-```
-
-### AI Step (Text/Structured Generation)
-
-```typescript
-// Simple text generation
-const result = await step.ai("generate", {
-  prompt: "Write a commit message for these changes",
-  provider: "anthropic",
-  model: "claude-sonnet-4-5-20250929",
-});
-console.log(result.data.text);
-
-// Structured output with Zod schema
-import { z } from "zod";
-
-const analysisSchema = z.object({
-  complexity: z.number(),
-  risks: z.array(z.string()),
-  recommendations: z.array(z.string()),
-});
-
-const result = await step.ai<typeof analysisSchema>("analyze", {
-  prompt: "Analyze this code for complexity and risks",
-  schema: analysisSchema,
-});
-// result.data is typed as { complexity: number, risks: string[], recommendations: string[] }
-```
+All timeouts configurable. **See README.md for API documentation and examples.**
 
 ## CLI Tool
 

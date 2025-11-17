@@ -255,112 +255,9 @@ await step.bash("long-build", {
 });
 ```
 
-### Retries
-
-Some steps retry automatically on transient failures (network errors, rate limits):
-
-```typescript
-await step.ai("generate", {
-  prompt: "Generate code",
-  // Automatically retries on API rate limits
-});
-```
-
-## Choosing the Right Step
-
-### Agent vs AI
-
-| Use `step.agent()` | Use `step.ai()` |
-|--------------------|-----------------|
-| Need file editing | Just need text/data |
-| Interactive conversation | One-shot generation |
-| Complex multi-step task | Simple analysis |
-| Tool use required | Structured output |
-| 30 min timeout OK | Need fast response (5 min) |
-
-### Bash vs Git
-
-| Use `step.bash()` | Use `step.git()` |
-|------------------|------------------|
-| Any shell command | Git-specific operations |
-| Build, test, deploy | Commit, branch, PR |
-| Custom scripts | Version control |
-| Full flexibility | Type-safe git API |
-
-### Artifact vs Annotation
-
-| Use `step.artifact()` | Use `step.annotation()` |
-|-----------------------|-------------------------|
-| Save files for review | Mark progress |
-| Build outputs, reports | Explain what's happening |
-| Images, code, data | Celebrate milestones |
-| Downloadable | Timeline UI only |
-
-## Common Patterns
-
-### Agent → Git Flow
-
-```typescript
-// Generate code with AI
-const result = await step.agent("implement", {
-  agent: "claude",
-  prompt: "Implement feature X",
-});
-
-// Commit changes
-await step.git("save-work", {
-  operation: "commit-and-branch",
-  commitMessage: "feat: Implement X",
-  branch: "feat/x",
-});
-```
-
-### Bash Chain
-
-```typescript
-await step.bash("install", { command: "pnpm install" });
-await step.bash("build", { command: "pnpm build" });
-await step.bash("test", { command: "pnpm test" });
-await step.bash("deploy", { command: "pnpm deploy" });
-```
-
-### Multi-Agent Collaboration
-
-```typescript
-// Claude plans
-const plan = await step.agent("plan", {
-  agent: "claude",
-  prompt: "Design authentication system",
-  permissionMode: "plan", // Read-only
-});
-
-// Codex implements
-await step.agent("code", {
-  agent: "codex",
-  prompt: "Implement the auth plan from previous session",
-  resume: plan.data.sessionId,
-});
-```
-
-### Parallel Quality Checks
-
-```typescript
-await step.phase("quality", async () => {
-  const [lintResult, testResult, typeCheck] = await Promise.all([
-    step.bash("lint", { command: "pnpm lint" }),
-    step.bash("test", { command: "pnpm test" }),
-    step.bash("types", { command: "pnpm check-types" }),
-  ]);
-
-  if (lintResult.exitCode !== 0) {
-    throw new Error("Lint failed");
-  }
-});
-```
-
 ## Step Naming
 
-Use descriptive, action-oriented names:
+**Each step must have a unique name.** Use descriptive, action-oriented names:
 
 ✅ **Good**:
 ```typescript
@@ -369,20 +266,19 @@ await step.agent("implement-authentication", { ... });
 await step.git("create-feature-branch", { ... });
 ```
 
-❌ **Bad**:
+❌ **Bad** - Generic/duplicate names:
 ```typescript
 await step.bash("step1", { ... });
 await step.agent("do-stuff", { ... });
-await step.git("git", { ... });
+await step.bash("run-command", { ... }); // Too generic
+await step.bash("run-command", { ... }); // Duplicate!
 ```
 
-Names appear in:
-- Timeline UI
-- Logs
-- Inngest dashboard
-- Error messages
-
-Make them clear and searchable!
+**Why unique names matter**:
+- Steps are tracked by name in Inngest
+- Duplicate names cause workflow errors
+- Names appear in Timeline UI, logs, error messages
+- Make them clear and searchable
 
 ## Next Steps
 

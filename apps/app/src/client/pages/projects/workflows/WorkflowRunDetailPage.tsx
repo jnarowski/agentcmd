@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import { ArrowLeft, Plus, XCircle } from "lucide-react";
+import { ArrowLeft, Plus, XCircle, ExternalLink } from "lucide-react";
 import { WorkflowStatusBadge } from "./components/WorkflowStatusBadge";
 import { PhaseTimeline } from "./components/timeline/PhaseTimeline";
 import { WorkflowDetailPanel } from "./components/detail-panel/WorkflowDetailPanel";
@@ -86,6 +86,17 @@ function WorkflowRunDetailPage() {
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold">{run.name}</h1>
             <WorkflowStatusBadge status={run.status} />
+            {run.pr_url && (
+              <a
+                href={run.pr_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm text-blue-500 hover:text-blue-600"
+              >
+                View PR
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            )}
           </div>
 
           {/* Navigation buttons */}

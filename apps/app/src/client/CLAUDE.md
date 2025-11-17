@@ -32,39 +32,12 @@ export default function LoginPage() {
 - Named exports for page components
 - Missing "Page" suffix for route-mounted components
 
-### useEffect Dependencies
+### React State Rules
 
-✅ **Primitives only** - avoid infinite loops:
-```typescript
-const { userId, projectId } = project;
-useEffect(() => {
-  fetchData(userId, projectId);
-}, [userId, projectId]);
-```
+**useEffect**: Primitives only in dependencies (objects cause infinite loops)
+**Zustand**: Immutable updates only (no mutations)
 
-❌ **DON'T** use objects/arrays:
-```typescript
-useEffect(() => {
-  fetchData(project);
-}, [project]); // Infinite loop!
-```
-
-### Zustand Immutability
-
-✅ **Immutable updates** only:
-```typescript
-set((state) => ({
-  messages: [...state.messages, newMessage],
-}));
-```
-
-❌ **DON'T** mutate:
-```typescript
-set((state) => {
-  state.messages.push(newMessage);
-  return { messages: state.messages };
-});
-```
+**See:** Root CLAUDE.md for detailed examples and rules
 
 ## Feature Organization
 
@@ -85,134 +58,31 @@ pages/projects/sessions/    # Feature
 
 ### Zustand (Client State)
 
-For UI state, auth, navigation:
-
-```typescript
-export const useAuthStore = create<AuthState & AuthActions>()(
-  persist(
-    (set) => ({
-      token: null,
-      user: null,
-      isAuthenticated: false,
-
-      login: async (email, password) => {
-        // ...
-        set({ token, user, isAuthenticated: true });
-      },
-
-      logout: () => {
-        set({ token: null, user: null, isAuthenticated: false });
-      },
-    }),
-    { name: "auth-storage" }
-  )
-);
-```
+UI state, auth, navigation with optional persistence.
 
 **Example:** `apps/app/src/client/stores/authStore.ts`
 
 ### TanStack Query (Server State)
 
-For data fetching, caching:
+Data fetching with caching and invalidation.
 
-```typescript
-export function useProject(projectId: string) {
-  return useQuery({
-    queryKey: ["project", projectId],
-    queryFn: async () => {
-      const response = await fetch(`/api/projects/${projectId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      return response.json();
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-}
-```
+**See:** `.agent/docs/frontend-patterns.md` for detailed patterns
 
 ## WebSocket Client
 
-Feature-level WebSocket hooks for real-time updates:
-
-```typescript
-export function useSessionWebSocket(sessionId: string) {
-  const { socket, isConnected } = useWebSocket();
-  const [messages, setMessages] = useState<Message[]>([]);
-
-  useEffect(() => {
-    if (!socket || !isConnected) return;
-
-    socket.emit("subscribe", `session:${sessionId}`);
-
-    socket.on("session.stream_output", (data) => {
-      setMessages((prev) => [...prev, data.content]);
-    });
-
-    return () => {
-      socket.off("session.stream_output");
-      socket.emit("unsubscribe", `session:${sessionId}`);
-    };
-  }, [socket, isConnected, sessionId]);
-
-  return { messages, isConnected };
-}
-```
+Feature-level hooks for real-time updates. Subscribe to channels (colon notation), listen for events (dot notation).
 
 **Example:** `apps/app/src/client/pages/projects/sessions/hooks/useSessionWebSocket.ts`
+**See:** `.agent/docs/websocket-architecture.md` for comprehensive patterns
 
 ## Component Patterns
 
-### Loading States
+- **Loading**: Use Skeleton components
+- **Errors**: Use `sonner` toast
+- **Conditional**: Early returns preferred
+- **API**: Type-safe fetch with shared types from `@/shared/types`
 
-```typescript
-import { Skeleton } from "@/client/components/ui/skeleton";
-
-if (isLoading) {
-  return <Skeleton className="h-8 w-64" />;
-}
-```
-
-### Error Handling
-
-```typescript
-import { toast } from "sonner";
-
-try {
-  await createProject({ name, path });
-  toast.success("Project created");
-} catch (error) {
-  toast.error(error instanceof Error ? error.message : "Failed");
-}
-```
-
-### Conditional Rendering
-
-Use early returns:
-```typescript
-if (projects.length === 0) {
-  return <EmptyState message="No projects yet" />;
-}
-
-return <ProjectList projects={projects} />;
-```
-
-## API Integration
-
-Type-safe fetch with shared types:
-
-```typescript
-import type { Project } from "@/shared/types";
-
-async function fetchProject(id: string): Promise<Project> {
-  const response = await fetch(`/api/projects/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-  if (!response.ok) throw new Error("Failed to fetch");
-
-  return response.json();
-}
-```
+**See:** `.agent/docs/frontend-patterns.md` for comprehensive component patterns
 
 ## Key Examples
 
