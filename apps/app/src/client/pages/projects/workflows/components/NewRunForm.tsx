@@ -670,11 +670,6 @@ export function NewRunForm({
               onChange={setArgs}
               disabled={createWorkflow.isPending}
             />
-            {actualDefinition?.description && (
-              <p className="text-xs text-muted-foreground">
-                {actualDefinition.description}
-              </p>
-            )}
           </div>
         )}
 

@@ -1,0 +1,180 @@
+---
+title: Implement & Review
+description: Orchestrate multiple AI agents to implement and review specifications
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+## Overview
+
+This example demonstrates a workflow that implements a spec file and then reviews the implementation. It showcases automatic workspace lifecycle management where setup and cleanup happen automatically.
+
+## Key Features
+
+- **Automatic workspace setup** - Handled via `_system_setup` phase
+- **Automatic spec resolution** - Spec file path resolved during system setup
+- **Automatic cleanup** - Handled via `_system_finalize` phase
+- **JSON-typed responses** - Type-safe responses from slash commands
+
+## Example Code
+
+```typescript
+import {
+  buildSlashCommand,
+  defineWorkflow,
+  type CmdImplementSpecResponse,
+  type CmdReviewSpecImplementationResponse,
+} from "agentcmd-workflows";
+
+/**
+ * Example workflow demonstrating automatic workspace lifecycle.
+ * Workspace setup and cleanup happen automatically via _system_setup and _system_finalize.
+ * Spec file resolution happens automatically in system setup phase.
+ */
+
+export default defineWorkflow(
+  {
+    id: "implement-review-workflow",
+    name: "Implement Review Workflow",
+    description: "Implements a spec file and reviews the implementation",
+    phases: [
+      { id: "setup", label: "Setup" },
+      { id: "implement", label: "Implement" },
+      { id: "review", label: "Review" },
+    ],
+  },
+  async ({ event, step }) => {
+    const { workingDir, specFile } = event.data;
+
+    await step.phase("implement", async () => {
+      const response = await step.agent<CmdImplementSpecResponse>(
+        "implement-spec",
+        {
+          agent: "claude",
+          json: true,
+          prompt: buildSlashCommand("/cmd:implement-spec", {
+            specIdOrNameOrPath: specFile,
+            format: "json",
+          }),
+          workingDir,
+        }
+      );
+
+      return response;
+    });
+
+    await step.phase("review", async () => {
+      const response = await step.agent<CmdReviewSpecImplementationResponse>(
+        "review-spec-implementation",
+        {
+          agent: "claude",
+          json: true,
+          prompt: buildSlashCommand("/cmd:review-spec-implementation", {
+            specIdOrNameOrPath: specFile,
+            format: "json",
+          }),
+          workingDir,
+        }
+      );
+
+      return response;
+    });
+  }
+);
+```
+
+## How It Works
+
+### 1. Automatic Setup Phase
+
+The workflow system automatically runs a `_system_setup` phase before your custom phases. This phase:
+
+- Creates a temporary workspace if needed
+- Resolves the spec file path from ID, name, or path
+- Prepares the environment for execution
+
+### 2. Implementation Phase
+
+The `implement` phase uses the `step.agent()` function to:
+
+- Execute Claude Code with a slash command (`/cmd:implement-spec`)
+- Pass the resolved spec file path
+- Request JSON output for type-safe parsing
+- Return typed response data
+
+### 3. Review Phase
+
+The `review` phase similarly uses `step.agent()` to:
+
+- Execute the review slash command
+- Analyze the implementation against the spec
+- Return structured feedback
+
+### 4. Automatic Cleanup
+
+After all phases complete (or if an error occurs), the system automatically runs `_system_finalize` to clean up temporary resources.
+
+## Using buildSlashCommand
+
+The `buildSlashCommand` helper constructs properly formatted slash command strings:
+
+```typescript
+buildSlashCommand("/cmd:implement-spec", {
+  specIdOrNameOrPath: specFile,
+  format: "json",
+})
+// Returns: "/cmd:implement-spec spec-123 json"
+```
+
+This ensures:
+- Correct argument order
+- Proper escaping
+- Type-safe command construction
+
+## Type-Safe Responses
+
+The workflow uses TypeScript types for responses:
+
+```typescript
+type CmdImplementSpecResponse = {
+  success: boolean;
+  filesModified: string[];
+  summary: string;
+};
+
+type CmdReviewSpecImplementationResponse = {
+  success: boolean;
+  issues: Array<{
+    severity: "error" | "warning" | "info";
+    message: string;
+    file?: string;
+    line?: number;
+  }>;
+  summary: string;
+};
+```
+
+This provides:
+- Autocomplete in your editor
+- Compile-time type checking
+- Runtime validation when `json: true` is used
+
+## Benefits
+
+<Callout type="info">
+**Automatic workspace management means you don't need to:**
+
+- Manually create temporary directories
+- Explicitly clean up resources
+- Handle spec file path resolution
+- Write setup/teardown code
+
+The workflow system handles all of this for you.
+</Callout>
+
+## Next Steps
+
+- [Resilient Implementation](/docs/examples/recursive-implement-review) - Add automatic retry for resilience
+- [Self-Correcting Workflows](/docs/examples/advanced-recursive-implement-review) - Autonomous implement-review cycles
+- [Context Sharing](/docs/examples/context-sharing) - Share data between phases
+- [Type-Safe Slash Commands](/docs/examples/type-safe-slash-commands) - Build your own commands

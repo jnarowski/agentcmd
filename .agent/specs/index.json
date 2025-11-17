@@ -1,6 +1,13 @@
 {
-  "lastId": 251116145000,
+  "lastId": 251117082626,
   "specs": {
+    "251117082626": {
+      "path": "todo/251117082626-refactor-tasks-to-specs/spec.md",
+      "status": "draft",
+      "spec_type": "feature",
+      "created": "2025-11-17T08:26:26.000Z",
+      "updated": "2025-11-17T08:26:26.000Z"
+    },
     "251116105638": {
       "path": "todo/251116105638-documentation/spec.md",
       "status": "review",

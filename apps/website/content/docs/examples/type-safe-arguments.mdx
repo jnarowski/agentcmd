@@ -22,10 +22,11 @@ import { defineWorkflow, defineSchema } from "agentcmd-workflows";
 const argsSchema = defineSchema({
   type: "object",
   properties: {
-    featureName: { type: "string" },
-    priority: { enum: ["high", "medium", "low"] },
+    priority: { enum: ["critical", "high", "medium", "low"] },
+    createPr: { type: "boolean" },
+    runE2e: { type: "boolean" },
   },
-  required: ["featureName"],
+  required: ["priority"],
 });
 
 export default defineWorkflow(
@@ -35,8 +36,10 @@ export default defineWorkflow(
   },
   async ({ event, step }) => {
     // Fully typed!
-    const { featureName, priority } = event.data.args;
-    //      ^string       ^"high" | "medium" | "low" | undefined
+    const { priority, createPr, runE2e } = event.data.args;
+    //      ^"critical" | "high" | "medium" | "low"
+    //                  ^boolean | undefined
+    //                            ^boolean | undefined
   }
 );
 ```
@@ -77,100 +80,58 @@ type Inferred = InferSchemaType<typeof schema>;
 
 ## Examples
 
-<Tabs items={['Simple', 'Enums', 'Nested', 'Complex']}>
+<Tabs items={['Simple', 'With Booleans', 'Full Example']}>
   <Tab value="Simple">
     ```typescript
     const argsSchema = defineSchema({
       type: "object",
       properties: {
-        name: { type: "string" },
-        count: { type: "number" },
+        priority: { enum: ["critical", "high", "medium", "low"] },
       },
-      required: ["name"],
+      required: ["priority"],
     });
 
     // Inferred type:
-    // { name: string, count?: number }
+    // { priority: "critical" | "high" | "medium" | "low" }
     ```
   </Tab>
 
-  <Tab value="Enums">
+  <Tab value="With Booleans">
     ```typescript
     const argsSchema = defineSchema({
       type: "object",
       properties: {
-        environment: { enum: ["dev", "staging", "prod"] },
-        region: { enum: ["us-east", "us-west", "eu"] },
+        priority: { enum: ["critical", "high", "medium", "low"] },
+        createPr: { type: "boolean" },
       },
-      required: ["environment"],
+      required: ["priority"],
     });
 
     // Inferred type:
     // {
-    //   environment: "dev" | "staging" | "prod",
-    //   region?: "us-east" | "us-west" | "eu"
+    //   priority: "critical" | "high" | "medium" | "low",
+    //   createPr?: boolean
     // }
     ```
   </Tab>
 
-  <Tab value="Nested">
+  <Tab value="Full Example">
     ```typescript
     const argsSchema = defineSchema({
       type: "object",
       properties: {
-        config: {
-          type: "object",
-          properties: {
-            timeout: { type: "number" },
-            retries: { type: "number" },
-          },
-          required: ["timeout"],
-        },
+        priority: { enum: ["critical", "high", "medium", "low"] },
+        createPr: { type: "boolean" },
+        runE2e: { type: "boolean" },
       },
-      required: ["config"],
+      required: ["priority"],
     });
 
     // Inferred type:
     // {
-    //   config: {
-    //     timeout: number,
-    //     retries?: number
-    //   }
-    // }
-    ```
-  </Tab>
-
-  <Tab value="Complex">
-    ```typescript
-    const argsSchema = defineSchema({
-      type: "object",
-      properties: {
-        specFile: { type: "string" },
-        buildType: { enum: ["production", "development"] },
-        features: {
-          type: "array",
-          items: { type: "string" },
-        },
-        options: {
-          type: "object",
-          properties: {
-            skipTests: { type: "boolean" },
-            verbose: { type: "boolean" },
-          },
-        },
-      },
-      required: ["specFile", "buildType"],
-    });
-
-    // Inferred type:
-    // {
-    //   specFile: string,
-    //   buildType: "production" | "development",
-    //   features?: string[],
-    //   options?: {
-    //     skipTests?: boolean,
-    //     verbose?: boolean
-    //   }
+    //   priority: "critical" | "high" | "medium" | "low",
+    //   createPr?: boolean,
+    //   runE2e?: boolean
     // }
     ```
   </Tab>
@@ -186,8 +147,9 @@ await inngest.send({
   name: "workflow/my-workflow",
   data: {
     args: {
-      featureName: "auth",
       priority: "high",
+      createPr: true,
+      runE2e: false,
     },
   },
 });
@@ -197,7 +159,7 @@ await inngest.send({
   name: "workflow/my-workflow",
   data: {
     args: {
-      priority: "high", // featureName is required!
+      createPr: true, // priority is required!
     },
   },
 });
@@ -235,31 +197,44 @@ Arguments are available via `event.data.args`:
 ```typescript
 export default defineWorkflow(
   {
-    id: "deploy",
+    id: "feature-workflow",
     argsSchema: defineSchema({
       type: "object",
       properties: {
-        environment: { enum: ["staging", "production"] },
-        version: { type: "string" },
+        priority: { enum: ["critical", "high", "medium", "low"] },
+        createPr: { type: "boolean" },
+        runE2e: { type: "boolean" },
       },
-      required: ["environment"],
+      required: ["priority"],
     }),
   },
   async ({ event, step }) => {
     // Destructure with full type safety
-    const { environment, version } = event.data.args;
+    const { priority, createPr, runE2e } = event.data.args;
 
     await step.annotation("start", {
-      message: `Deploying to ${environment}${version ? ` (v${version})` : ""}`,
+      message: `Starting ${priority} priority feature implementation`,
     });
 
-    // Use arguments in step configs
-    await step.cli("deploy", {
-      command: `npm run deploy:${environment}`,
-      env: {
-        VERSION: version || "latest",
-      },
+    // Implement the feature
+    await step.cli("implement", {
+      command: "pnpm build",
     });
+
+    // Conditionally create PR
+    if (createPr) {
+      await step.git("create-pr", {
+        operation: "pr",
+        title: `feat: ${priority} priority implementation`,
+      });
+    }
+
+    // Conditionally run E2E tests
+    if (runE2e) {
+      await step.cli("test-e2e", {
+        command: "pnpm test:e2e",
+      });
+    }
   }
 );
 ```
@@ -307,8 +282,8 @@ JSON Schema doesn't support defaults well, so handle them in your workflow:
 
 ```typescript
 async ({ event, step }) => {
-  const { priority = "medium", verbose = false } = event.data.args;
-  // Now priority and verbose have defaults
+  const { priority, createPr = false, runE2e = false } = event.data.args;
+  // Now createPr and runE2e have defaults if not provided
 }
 ```
 
@@ -338,6 +313,6 @@ type Args = InferSchemaType<typeof schema>;
 
 ## Next Steps
 
-- [Context Sharing](/docs/guides/context-sharing) - Share data between phases
-- [Error Handling](/docs/guides/error-handling) - Handle validation failures
-- [Workflow Definition](/docs/guides/workflow-definition) - Back to basics
+- [Context Sharing](/docs/examples/context-sharing) - Share data between phases
+- [Type-Safe Slash Commands](/docs/examples/type-safe-slash-commands) - Build reusable workflow commands
+- [Workflow Definition](/docs/concepts/workflows/workflow-definitions) - Back to basics

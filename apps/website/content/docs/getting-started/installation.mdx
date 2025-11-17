@@ -17,7 +17,7 @@ Get <AgentCmd /> running on your machine in under 2 minutes.
 
 Before installing, ensure you have:
 
-- **Node.js 18+** - [Download here](https://nodejs.org/)
+- **Node.js 22+** - [Download here](https://nodejs.org/)
 - **AI CLI tool** - At least one of:
   - [Claude Code](https://code.claude.com/) (recommended)
   - [OpenAI Codex](https://openai.com/codex)
@@ -80,70 +80,6 @@ You should see your configuration:
     "path": "~/.agentcmd/agentcmd.db"
   }
 }
-```
-
-## Configure AI CLI Tools
-
-<AgentCmd /> needs API keys to run AI agents:
-
-### Claude Code
-
-Already installed? <AgentCmd /> will use your existing API key automatically.
-
-Need to set it up?
-
-```bash
-# Set Claude API key
-export ANTHROPIC_API_KEY="sk-ant-..."
-```
-
-### OpenAI Codex (Optional)
-
-```bash
-# Set OpenAI API key
-export OPENAI_API_KEY="sk-..."
-```
-
-### Google Gemini (Optional, Experimental)
-
-```bash
-# Set Gemini API key
-export GOOGLE_API_KEY="..."
-```
-
-<Callout type="tip">
-**Pro tip**: Add API keys to your shell profile (`~/.zshrc` or `~/.bashrc`) to persist them across sessions.
-</Callout>
-
-## Troubleshooting
-
-### Port Already in Use
-
-If port 3456 is taken, change it:
-
-```bash
-npx agentcmd config --set server.port=3457
-```
-
-### Database Permission Errors
-
-Ensure `~/.agentcmd/` is writable:
-
-```bash
-chmod -R 755 ~/.agentcmd
-```
-
-### Missing Node.js
-
-Install Node.js 18+ from [nodejs.org](https://nodejs.org/) or use [nvm](https://github.com/nvm-sh/nvm):
-
-```bash title="Install Node.js with nvm"
-# Install nvm
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-
-# Install Node 18
-nvm install 18
-nvm use 18
 ```
 
 ## Next Steps

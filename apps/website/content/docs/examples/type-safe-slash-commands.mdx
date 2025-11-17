@@ -1,0 +1,371 @@
+---
+title: Type-Safe Slash Commands
+description: Simple examples of creating and using type-safe slash commands in workflows
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+
+Learn how to create custom slash commands with simple, practical examples.
+
+<Callout type="info">
+See [Slash Commands Concept](/docs/concepts/slash-commands) for detailed explanation of how slash commands work.
+</Callout>
+
+## Example 1: Hello Command
+
+The simplest possible slash command - takes a name and greets them.
+
+### Define Command
+
+Create `.claude/commands/hello.md`:
+
+```markdown
+---
+description: Say hello to someone
+argument-hint: [name]
+---
+
+Say hello to $name with a friendly greeting.
+
+Variables:
+- $name: $1 - Person to greet
+```
+
+### Generate Types
+
+```bash
+npx agentcmd-workflows generate-slash-types
+```
+
+### Use in Workflow
+
+```typescript
+import { defineWorkflow, buildSlashCommand } from "agentcmd-workflows";
+
+export default defineWorkflow({
+  id: "greeting",
+  phases: ["greet"],
+}, async ({ step }) => {
+  await step.phase("greet", async () => {
+    const cmd = buildSlashCommand("/hello", {
+      name: "World",
+    });
+
+    await step.cli("greet", {
+      command: cmd,
+    });
+  });
+});
+```
+
+**Result**: Agent executes command and says hello to "World".
+
+## Example 2: Count Lines (with JSON output)
+
+A practical command that counts lines in a file and returns structured data.
+
+### Define Command
+
+Create `.claude/commands/count-lines.md`:
+
+```markdown
+---
+description: Count lines in a file
+argument-hint: [filePath]
+---
+
+Count the number of lines in the file at $filePath.
+
+Variables:
+- $filePath: $1 - Path to file
+
+Instructions:
+1. Read the file at $filePath
+2. Count total lines, blank lines, and code lines
+3. Return results as JSON
+
+<json_output>
+{
+  "file": "src/app.ts",
+  "total_lines": 150,
+  "blank_lines": 20,
+  "code_lines": 130
+}
+</json_output>
+```
+
+### Generate Types
+
+```bash
+npx agentcmd-workflows generate-slash-types
+```
+
+This generates:
+
+```typescript
+export interface CountLinesArgs {
+  filePath: string;
+}
+
+export interface CountLinesResponse {
+  file: string;
+  total_lines: number;
+  blank_lines: number;
+  code_lines: number;
+}
+```
+
+### Use in Workflow
+
+```typescript
+import { defineWorkflow, buildSlashCommand } from "agentcmd-workflows";
+import type { CountLinesResponse } from "../generated/slash-commands";
+
+export default defineWorkflow({
+  id: "analyze-file",
+  phases: ["count"],
+}, async ({ step }) => {
+  await step.phase("count", async () => {
+    const cmd = buildSlashCommand("/count-lines", {
+      filePath: "src/app.ts",
+    });
+
+    const result = await step.cli<CountLinesResponse>("count", {
+      command: cmd,
+      parseJson: true, // Parse JSON from <json_output>
+    });
+
+    // ✅ Fully typed response
+    if (result.output.total_lines > 200) {
+      console.log(`Large file: ${result.output.code_lines} lines of code`);
+    }
+  });
+});
+```
+
+## Example 3: Optional Arguments
+
+Command with both required and optional arguments.
+
+### Define Command
+
+Create `.claude/commands/search-code.md`:
+
+```markdown
+---
+description: Search for text in code files
+argument-hint: [query, (filePattern)]
+---
+
+Search for $query in code files, optionally filtered by $filePattern.
+
+Variables:
+- $query: $1 - Text to search for
+- $filePattern: $2 (optional) - File pattern (e.g., "*.ts", "*.js")
+
+Instructions:
+1. Search for $query in codebase
+2. If $filePattern is provided, only search matching files
+3. Return matches with file paths and line numbers
+
+<json_output>
+{
+  "query": "useEffect",
+  "matches": [
+    {
+      "file": "src/App.tsx",
+      "line": 42,
+      "content": "useEffect(() => {"
+    }
+  ],
+  "total_matches": 1
+}
+</json_output>
+```
+
+### Use in Workflow
+
+```typescript
+import { defineWorkflow, buildSlashCommand } from "agentcmd-workflows";
+import type { SearchCodeResponse } from "../generated/slash-commands";
+
+export default defineWorkflow({
+  id: "search",
+  phases: ["search"],
+}, async ({ event, step }) => {
+  await step.phase("search", async () => {
+    // Optional argument can be omitted
+    const cmd1 = buildSlashCommand("/search-code", {
+      query: "useEffect",
+    });
+
+    // Or included
+    const cmd2 = buildSlashCommand("/search-code", {
+      query: "useEffect",
+      filePattern: "*.tsx",
+    });
+
+    const result = await step.cli<SearchCodeResponse>("search", {
+      command: cmd2,
+      parseJson: true,
+    });
+
+    console.log(`Found ${result.output.total_matches} matches`);
+  });
+});
+```
+
+## Example 4: Multi-Command Workflow
+
+Chain multiple slash commands together in a workflow.
+
+### Define Commands
+
+`.claude/commands/create-component.md`:
+
+```markdown
+---
+description: Create a new React component
+argument-hint: [componentName]
+---
+
+Create a new React component with TypeScript.
+
+<json_output>
+{
+  "success": true,
+  "files_created": ["src/components/Button.tsx", "src/components/Button.test.tsx"]
+}
+</json_output>
+```
+
+`.claude/commands/run-tests.md`:
+
+```markdown
+---
+description: Run tests for a component
+argument-hint: [componentPath]
+---
+
+Run tests for the component at $componentPath.
+
+<json_output>
+{
+  "success": true,
+  "tests_passed": 5,
+  "tests_failed": 0,
+  "coverage": 95
+}
+</json_output>
+```
+
+### Use in Workflow
+
+```typescript
+import { defineWorkflow, buildSlashCommand } from "agentcmd-workflows";
+import type {
+  CreateComponentResponse,
+  RunTestsResponse,
+} from "../generated/slash-commands";
+
+export default defineWorkflow({
+  id: "component-workflow",
+  phases: ["create", "test"],
+}, async ({ event, step }) => {
+  let componentFiles: string[];
+
+  await step.phase("create", async () => {
+    const cmd = buildSlashCommand("/create-component", {
+      componentName: "Button",
+    });
+
+    const result = await step.cli<CreateComponentResponse>("create", {
+      command: cmd,
+      parseJson: true,
+    });
+
+    componentFiles = result.output.files_created;
+  });
+
+  await step.phase("test", async () => {
+    // Use result from previous phase
+    const testFile = componentFiles.find(f => f.endsWith(".test.tsx"));
+
+    const cmd = buildSlashCommand("/run-tests", {
+      componentPath: testFile!,
+    });
+
+    const result = await step.cli<RunTestsResponse>("test", {
+      command: cmd,
+      parseJson: true,
+    });
+
+    if (result.output.tests_failed > 0) {
+      throw new Error("Tests failed!");
+    }
+  });
+});
+```
+
+## Tips
+
+### Start Simple
+
+Begin with commands that don't have JSON output, then add structure as needed:
+
+```markdown
+# Start here - plain text response
+---
+description: Check if file exists
+argument-hint: [filePath]
+---
+
+Check if file at $filePath exists and report yes/no.
+```
+
+Then evolve to structured output:
+
+```markdown
+# Add structure when you need type safety
+---
+description: Check if file exists
+argument-hint: [filePath]
+---
+
+Check if file at $filePath exists.
+
+<json_output>
+{
+  "exists": true,
+  "path": "src/app.ts",
+  "size_bytes": 1024
+}
+</json_output>
+```
+
+### Use TypeScript Autocomplete
+
+Once types are generated, your IDE will suggest:
+- Available command names
+- Required/optional arguments
+- Response fields
+
+### Regenerate Types Often
+
+Get in the habit of running type generation after changes:
+
+```bash
+# Add to package.json
+{
+  "scripts": {
+    "dev": "agentcmd-workflows generate-slash-types && ..."
+  }
+}
+```
+
+## Related
+
+- [Slash Commands Concept](/docs/concepts/slash-commands) - How slash commands work
+- [CLI Step Reference](/docs/reference/workflow-steps/cli) - CLI step options
+- [Workflow Definition](/docs/concepts/workflows/workflow-definitions) - Define workflows

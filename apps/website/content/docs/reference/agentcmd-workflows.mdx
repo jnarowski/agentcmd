@@ -119,7 +119,7 @@ await step.agent(
 );
 ```
 
-[Full reference →](/docs/reference/steps/agent)
+[Full reference →](/docs/reference/workflow-steps/agent)
 
 ### `step.slash(command, args?, options?)`
 
@@ -156,7 +156,7 @@ await step.git("create-pr", {
 });
 ```
 
-[Full reference →](/docs/reference/steps/git)
+[Full reference →](/docs/reference/workflow-steps/git)
 
 ### `step.cli(name, command, config?, options?)`
 
@@ -174,7 +174,7 @@ await step.cli(
 );
 ```
 
-[Full reference →](/docs/reference/steps/cli)
+[Full reference →](/docs/reference/workflow-steps/cli-step)
 
 ### `step.artifact(name, config)`
 
@@ -204,7 +204,7 @@ await step.artifact("coverage", {
 });
 ```
 
-[Full reference →](/docs/reference/steps/artifact)
+[Full reference →](/docs/reference/workflow-steps/artifact)
 
 ### `step.annotation(message)`
 
@@ -214,7 +214,7 @@ Add progress notes to workflow timeline.
 await step.annotation("Completed analysis phase");
 ```
 
-[Full reference →](/docs/reference/steps/annotation)
+[Full reference →](/docs/reference/workflow-steps/annotation)
 
 ### Native Inngest Methods
 
@@ -243,5 +243,5 @@ await step.cli("build", "npm run build", {}, { timeout: 600000 }); // 10 minutes
 ## Related
 
 - [Workflow Concepts](/docs/concepts/workflows) - Understanding workflows
-- [Step Types Reference](/docs/reference/steps) - Complete step documentation
+- [Step Types Reference](/docs/reference/workflow-steps) - Complete step documentation
 - [Examples](/docs/examples) - Real-world workflow examples

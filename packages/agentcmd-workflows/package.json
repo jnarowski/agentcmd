@@ -51,6 +51,9 @@
   ],
   "author": "Sourceborn",
   "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "peerDependencies": {
     "inngest": "^3.0.0"
   },

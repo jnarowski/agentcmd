@@ -6,6 +6,6 @@
     "cli",
     "configuration",
     "slash-commands",
-    "steps"
+    "workflow-steps"
   ]
 }

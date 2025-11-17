@@ -110,7 +110,7 @@ It consists of three components:
     </div>
   </Link>
   <Link
-    href="/docs/reference/steps"
+    href="/docs/reference/workflow-steps"
     className="flex gap-3 no-underline hover:opacity-80 transition-opacity"
   >
     <FolderOpen className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
@@ -147,10 +147,10 @@ It consists of three components:
   <Card title="Specs" href="/docs/concepts/specs">
     Feature specifications that drive implementation workflows
   </Card>
-  <Card title="Steps" href="/docs/reference/steps">
+  <Card title="Steps" href="/docs/reference/workflow-steps">
     8 step types: agent, ai, bash, git, artifact, annotation, phase, webhook
   </Card>
-  <Card title="Phases" href="/docs/concepts/phases">
+  <Card title="Phases" href="/docs/concepts/workflows/workflow-phases">
     Organize work into logical stages (plan → implement → review)
   </Card>
 </Cards>
@@ -247,25 +247,19 @@ export default defineWorkflow(
 
 <Cards>
   <Card
-    title="Spec → Implement → Review"
-    href="/docs/examples/spec-implementation"
+    title="Recursive Workflows"
+    href="/docs/examples/recursive-implement-review"
   >
-    Complete feature development pipeline
+    Advanced workflows that implement and review recursively
   </Card>
   <Card
-    title="Multi-Agent Workflows"
-    href="/docs/examples/advanced/multi-agent-workflows"
-  >
-    Claude for planning, Codex for implementation
-  </Card>
-  <Card
-    title="Custom Slash Commands"
-    href="/docs/examples/custom-slash-command"
+    title="Type-Safe Slash Commands"
+    href="/docs/examples/type-safe-slash-commands"
   >
     Reusable prompts with type-safe args
   </Card>
-  <Card title="Data Processing Pipeline" href="/docs/examples/data-processing">
-    Automate complex data workflows
+  <Card title="Context Sharing" href="/docs/examples/context-sharing">
+    Share data between workflow steps
   </Card>
 </Cards>
 
@@ -276,10 +270,10 @@ Jump into the [Getting Started](/docs/getting-started/installation) guide to ins
 Or explore:
 
 - [Core Concepts](/docs/concepts/workflows) - Understand workflows, phases, and steps
-- [Step Types Reference](/docs/reference/steps) - Complete API for all 8 step types
+- [Step Types Reference](/docs/reference/workflow-steps) - Complete API for all 8 step types
 - [Examples](/docs/examples) - Real-world workflow templates
 
 ---
 
-**Need Help?** Check the [Troubleshooting](/docs/troubleshooting/common-errors) guide or [open an issue](https://github.com/sourceborn/agentcmd/issues).
+**Need Help?** [Open an issue](https://github.com/sourceborn/agentcmd/issues) on GitHub.
 ```

@@ -1,0 +1,326 @@
+---
+title: Self-Correcting Workflows
+description: Implement → Review → Re-implement cycles until review passes
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+## Overview
+
+This workflow demonstrates the power of **self-correcting AI systems** - where implementation, review, and fixes happen autonomously in a cycle until quality standards are met. No human intervention needed.
+
+**The power:** This is how you build truly autonomous AI development pipelines. The AI implements code, reviews it like a senior engineer would, finds issues, and automatically fixes them - repeating until it passes review. What would take hours of back-and-forth becomes a single automated workflow.
+
+This pattern combines two powerful concepts:
+1. **Recursive implementation** - Never fails due to context limits
+2. **Review-driven refinement** - Automatically improves until quality bar is met
+
+The result: Reliable, high-quality implementations that complete autonomously.
+
+## Key Features
+
+- **Implement-review cycles** - Up to 3 cycles of implement → review → fix
+- **Automatic retry per cycle** - Each implementation retries up to 10 times
+- **Review-driven iterations** - Re-implements based on review feedback
+- **Smart exit conditions** - Stops on success or max iterations
+
+## Example Code
+
+```typescript
+import {
+  buildSlashCommand,
+  defineWorkflow,
+  type CmdImplementSpecResponse,
+  type CmdReviewSpecImplementationResponse,
+} from "agentcmd-workflows";
+
+/**
+ * Advanced recursive workflow with implement → review → implement cycles.
+ *
+ * Features:
+ * - Implements spec with retry (up to 10 attempts per cycle)
+ * - Reviews implementation automatically
+ * - Re-implements if review finds issues (up to 3 review cycles)
+ * - Stops when review passes or max review iterations reached
+ *
+ * Flow:
+ * 1. Implement → Review → Check success
+ * 2. If review fails → Implement again → Review again
+ * 3. Repeat until review passes or 3 review cycles complete
+ */
+
+export default defineWorkflow(
+  {
+    id: "implement-review-advanced-recurisive-workflow",
+    name: "Implement Review Advanced Recursive Workflow",
+    description:
+      "Implements and reviews a spec recursively, re-implementing until review passes",
+    phases: [
+      { id: "setup", label: "Setup" },
+      { id: "implement-review-cycle", label: "Implement & Review Cycle" },
+    ],
+  },
+  async ({ event, step }) => {
+    const { workingDir, specFile } = event.data;
+
+    /**
+     * Implements spec with retry until success (up to 10 attempts).
+     */
+    async function implementUntilComplete(cycle: number) {
+      const MAX_ATTEMPTS = 10;
+      let lastResponse: CmdImplementSpecResponse | undefined;
+
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        const result = await step.agent<CmdImplementSpecResponse>(
+          `implement-c${cycle}-a${attempt}`,
+          {
+            agent: "claude",
+            json: true,
+            prompt: buildSlashCommand("/cmd:implement-spec", {
+              specIdOrNameOrPath: specFile,
+              format: "json",
+            }),
+            workingDir,
+          }
+        );
+
+        lastResponse = result.data;
+
+        if (result.data.success) return result.data;
+      }
+
+      return lastResponse;
+    }
+
+    /**
+     * Reviews implementation and returns findings.
+     */
+    async function reviewImplementation(cycle: number) {
+      const result = await step.agent<CmdReviewSpecImplementationResponse>(
+        `review-c${cycle}`,
+        {
+          agent: "claude",
+          json: true,
+          prompt: buildSlashCommand("/cmd:review-spec-implementation", {
+            specIdOrNameOrPath: specFile,
+            format: "json",
+          }),
+          workingDir,
+        }
+      );
+
+      return result.data;
+    }
+
+    await step.phase("implement-review-cycle", async () => {
+      const MAX_CYCLES = 3;
+
+      for (let cycle = 1; cycle <= MAX_CYCLES; cycle++) {
+        const impl = await implementUntilComplete(cycle);
+        const review = await reviewImplementation(cycle);
+
+        if (review.success) {
+          return { success: true, cycles_completed: cycle, impl, review };
+        }
+
+        if (review.max_iterations_reached) {
+          return {
+            success: false,
+            cycles_completed: cycle,
+            reason: "Max review iterations",
+            impl,
+            review,
+          };
+        }
+      }
+
+      return {
+        success: false,
+        cycles_completed: MAX_CYCLES,
+        reason: "Max cycles completed",
+      };
+    });
+  }
+);
+```
+
+## How It Works
+
+### 1. Implement-Review Cycle
+
+The workflow runs up to 3 cycles, each consisting of:
+
+```typescript
+for (let cycle = 1; cycle <= MAX_CYCLES; cycle++) {
+  // 1. Implement (with up to 10 retries)
+  const impl = await implementUntilComplete(cycle);
+
+  // 2. Review the implementation
+  const review = await reviewImplementation(cycle);
+
+  // 3. Check if review passed
+  if (review.success) {
+    return { success: true, cycles_completed: cycle };
+  }
+
+  // 4. If review failed, loop continues to next cycle
+}
+```
+
+### 2. Multi-Level Retry Strategy
+
+This workflow has two retry levels:
+
+**Level 1: Implementation Retries** (per cycle)
+- Up to 10 attempts per implementation phase
+- Handles context limits and interruptions
+- Each attempt: `implement-c1-a1`, `implement-c1-a2`, etc.
+
+**Level 2: Review Cycles** (outer loop)
+- Up to 3 implement-review cycles
+- Re-implements based on review feedback
+- Each cycle: `implement-c1-*`, `implement-c2-*`, etc.
+
+<Callout type="info">
+**Step naming convention:**
+- `implement-c1-a3` = Cycle 1, Attempt 3
+- `review-c2` = Review for Cycle 2
+
+This dual-indexing ensures unique step IDs and clear tracking.
+</Callout>
+
+### 3. Smart Exit Conditions
+
+The workflow stops when:
+
+**✅ Review passes:**
+```typescript
+if (review.success) {
+  return { success: true, cycles_completed: cycle, impl, review };
+}
+```
+
+**⛔ Review hits max iterations:**
+```typescript
+if (review.max_iterations_reached) {
+  return {
+    success: false,
+    cycles_completed: cycle,
+    reason: "Max review iterations",
+  };
+}
+```
+
+**⛔ Max cycles completed:**
+```typescript
+return {
+  success: false,
+  cycles_completed: MAX_CYCLES,
+  reason: "Max cycles completed",
+};
+```
+
+### 4. Single Phase Design
+
+Unlike the basic pattern with separate implement/review phases, this uses one phase:
+
+```typescript
+phases: [
+  { id: "setup", label: "Setup" },
+  { id: "implement-review-cycle", label: "Implement & Review Cycle" },
+]
+```
+
+This keeps all cycles together in the workflow visualization, making it easier to track the iterative process.
+
+## When to Use This Pattern
+
+<Callout type="warn">
+Use advanced recursive pattern when:
+
+- **Quality critical** - Implementation must pass review
+- **Complex specs** - May need multiple attempts to get right
+- **Automated pipelines** - Want hands-off completion
+- **Large changes** - High chance of issues on first try
+
+Don't use when:
+- Simple implementations unlikely to need revision
+- You want manual control over re-implementation
+- Fast execution more important than quality
+</Callout>
+
+## Return Values
+
+The workflow returns structured data about the execution:
+
+```typescript
+// Success case
+{
+  success: true,
+  cycles_completed: 2,  // Took 2 cycles to pass
+  impl: CmdImplementSpecResponse,
+  review: CmdReviewSpecImplementationResponse
+}
+
+// Failure case
+{
+  success: false,
+  cycles_completed: 3,
+  reason: "Max cycles completed",
+  impl: CmdImplementSpecResponse,  // Last implementation
+  review: CmdReviewSpecImplementationResponse  // Last review
+}
+```
+
+This allows parent workflows or monitoring systems to:
+- Know how many cycles were needed
+- Access final implementation and review details
+- Understand why execution stopped
+
+## Performance Characteristics
+
+| Metric | Worst Case | Best Case |
+|--------|-----------|-----------|
+| Agent calls | 33 (3 cycles × 10 attempts + 3 reviews) | 2 (1 impl + 1 review) |
+| Duration | ~60-90 minutes | ~3-5 minutes |
+| Cost | High (many retries) | Low (quick success) |
+
+<Callout type="warn">
+This pattern can consume significant resources in worst-case scenarios. Consider:
+- Starting with lower MAX_CYCLES (e.g., 2)
+- Adding cost/time limits
+- Monitoring execution metrics
+</Callout>
+
+## Comparison with Simpler Patterns
+
+| Feature | Basic | Recursive | Advanced Recursive |
+|---------|-------|-----------|-------------------|
+| Implementation retries | No | Yes (10x) | Yes (10x per cycle) |
+| Review-driven fixes | No | No | Yes (3 cycles) |
+| Context limit handling | No | Yes | Yes |
+| Quality assurance | Manual | Basic | Automated |
+| Complexity | Simple | Moderate | High |
+| Resource usage | Low | Moderate | High |
+
+## Best Practices
+
+1. **Start conservative** - Begin with 2 cycles, increase if needed
+2. **Monitor costs** - Track agent call counts and duration
+3. **Add logging** - Log cycle results for debugging
+4. **Set timeouts** - Prevent runaway workflows
+5. **Validate specs** - Ensure specs are clear to reduce cycles
+
+## Example Use Cases
+
+- **Large refactors** - Multi-file changes needing review
+- **API integrations** - Complex implementations with test requirements
+- **Database migrations** - Must pass validation checks
+- **Security features** - Need thorough review before completion
+
+## Next Steps
+
+- [Resilient Implementation](/docs/examples/recursive-implement-review) - Simpler version without review cycles
+- [Context Sharing](/docs/examples/context-sharing) - Share data between cycles
+- [Implement and Review](/docs/examples/implement-and-review) - Basic two-phase pattern
+- [Type-Safe Slash Commands](/docs/examples/type-safe-slash-commands) - Build review commands

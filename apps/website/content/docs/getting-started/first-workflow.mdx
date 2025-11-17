@@ -259,14 +259,14 @@ You've built your first workflow! 🎉
 ### Level Up
 
 <Cards>
-  <Card title="Add Phases" href="/docs/concepts/phases">
+  <Card title="Add Phases" href="/docs/concepts/workflows/workflow-phases">
     Organize steps into logical stages (setup → build → deploy)
   </Card>
-  <Card title="Use AI Agents" href="/docs/reference/steps/agent">
+  <Card title="Use AI Agents" href="/docs/reference/workflow-steps/agent">
     Run Claude/Codex/Gemini with step.agent()
   </Card>
-  <Card title="Type-Safe Args" href="/docs/guides/type-safe-arguments">
-    Define workflow arguments with schema validation
+  <Card title="Context Sharing" href="/docs/examples/context-sharing">
+    Share data between workflow steps with artifacts
   </Card>
   <Card title="Real Examples" href="/docs/examples">
     Clone production-ready workflow templates
@@ -286,7 +286,7 @@ You used 3 of 8 step types. Explore the rest:
 - `step.git()` - Git operations ✓
 - `step.artifact()` - Upload files ✓
 
-[View Complete Step Reference](/docs/reference/steps)
+[View Complete Step Reference](/docs/reference/workflow-steps)
 
 ### Common Patterns
 
@@ -295,7 +295,7 @@ You used 3 of 8 step types. Explore the rest:
 - **Resumable agents**: Use `resume` parameter to continue conversations
 - **Parallel execution**: Use `Promise.all()` for concurrent steps
 
-[See Building Workflows Guide](/docs/guides/workflow-definition)
+[See Workflow Definitions](/docs/concepts/workflows/workflow-definitions)
 
 ---
 

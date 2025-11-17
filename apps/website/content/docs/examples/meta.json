@@ -1,14 +1,11 @@
 {
   "title": "Examples",
   "pages": [
-    "basic-automation",
+    "implement-and-review",
+    "recursive-implement-review",
+    "advanced-recursive-implement-review",
     "context-sharing",
-    "custom-slash-command",
-    "data-processing",
-    "error-handling",
-    "spec-implementation",
-    "type-safe-arguments",
-    "workflow-definition",
-    "advanced"
+    "type-safe-slash-commands",
+    "type-safe-arguments"
   ]
 }

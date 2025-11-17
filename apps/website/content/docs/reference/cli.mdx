@@ -328,42 +328,8 @@ API keys can be set via environment variables or in the config file. Environment
 | `4` | Port already in use |
 | `5` | Missing dependencies |
 
-## Troubleshooting
-
-### Port Already in Use
-
-```bash
-# Error: Port 3456 is already in use
-
-# Solution: Use different port
-agentcmd start --port 4000
-```
-
-### Database Lock Error
-
-```bash
-# Error: database is locked
-
-# Solution: Stop other AgentCmd instances
-pkill -f agentcmd
-agentcmd start
-```
-
-### Inngest Not Starting
-
-```bash
-# Error: Inngest dev server failed to start
-
-# Solution: Check if port is available
-lsof -i :8288
-
-# Or use different port
-agentcmd start --inngest-port 9000
-```
-
 ## Related
 
 - [Configuration Reference](/reference/configuration) - Detailed configuration guide
 - [Environment Variables](/reference/configuration#environment-variables) - All env vars
 - [Installation](/getting-started/installation) - Getting started guide
-- [Troubleshooting](/troubleshooting/common-errors) - Common issues

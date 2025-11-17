@@ -2,12 +2,9 @@
   "title": "Concepts",
   "pages": [
     "agents",
-    "phases",
-    "projects",
     "sessions",
+    "slash-commands",
     "specs",
-    "steps",
-    "workflow-definitions",
-    "workflow-runs"
+    "workflows"
   ]
 }

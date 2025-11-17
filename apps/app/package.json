@@ -11,7 +11,7 @@
   ],
   "preferGlobal": true,
   "scripts": {
-    "build": "vite build && pnpm build:server && pnpm build:cli",
+    "build": "pnpm prisma:generate && vite build && pnpm build:server && pnpm build:cli",
     "build:server": "node scripts/build-server.js",
     "build:cli": "node scripts/build-cli.js",
     "check": "pnpm lint && pnpm check-types && pnpm test",
@@ -21,7 +21,7 @@
     "dev": "prisma migrate deploy && concurrently --kill-others \"pnpm inngest\" \"pnpm dev:server\" \"pnpm dev:client\"",
     "dev:client": "vite --host",
     "dev:kill": "bash ./scripts/kill-ports.sh",
-    "dev:setup": "node scripts/setup-env.js && prisma migrate deploy",
+    "dev:setup": "node scripts/setup-env.js && pnpm prisma:generate && prisma migrate deploy",
     "dev:server": "tsx watch --env-file=.env.local src/server/index.ts",
     "inngest": "node scripts/start-inngest.js",
     "lint": "eslint .",
@@ -151,6 +151,9 @@
     "ws": "^8.14.2",
     "zod": "^4.1.12",
     "zustand": "^5.0.8"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",

@@ -71,8 +71,6 @@ interface AgentStepConfig {
 - `"acceptEdits"` - Auto-approve all file edits
 - `"bypassPermissions"` - Skip all permission checks (dangerous!)
 
-See [Permission Modes](/docs/agents/permission-modes) for details.
-
 **`json`** (optional, default: `false`)
 - Extract JSON from agent response
 - Agent must return valid JSON in response
@@ -82,8 +80,6 @@ See [Permission Modes](/docs/agents/permission-modes) for details.
 - Session ID from previous agent step
 - Continues the conversation
 - Context carries forward (files read, decisions made)
-
-See [Session Resumption](/docs/agents/session-resumption) for patterns.
 
 ## Basic Usage
 
@@ -407,66 +403,19 @@ ctx.sessions.plan = result.data.sessionId; // Save it!
 - **Codex**: Pure code generation, implementation
 - **Gemini**: Experimental, cost-sensitive projects
 
-## Troubleshooting
-
-### Agent Not Found
-
-```
-Error: claude command not found
-```
-
-**Fix**: Install Claude Code CLI:
-```bash
-# Visit https://code.claude.com/download
-```
-
-### Timeout Errors
-
-```
-Error: Agent step timeout after 30 minutes
-```
-
-**Fix**: Increase timeout or break into smaller steps:
-```typescript
-await step.agent("task", { ... }, { timeout: 3600000 }); // 60 min
-```
-
-### Permission Denied
-
-```
-Error: EACCES: permission denied
-```
-
-**Fix**: Check file permissions in `workingDir`:
-```bash
-chmod -R 755 /path/to/project
-```
-
-### JSON Extraction Failed
-
-```
-Error: Could not extract JSON from response
-```
-
-**Fix**: Ensure agent returns valid JSON:
-```typescript
-prompt: `Return ONLY valid JSON with this structure: {"result": "..."}`,
-json: true,
-```
-
 ## Next Steps
 
 <Cards>
-  <Card title="Permission Modes" href="/docs/agents/permission-modes">
-    Understand plan vs default vs acceptEdits
+  <Card title="Recursive Workflows" href="/docs/examples/recursive-implement-review">
+    Advanced workflows with multiple agents
   </Card>
-  <Card title="Session Resumption" href="/docs/agents/session-resumption">
-    Continue conversations across steps
+  <Card title="Context Sharing" href="/docs/examples/context-sharing">
+    Share data between workflow steps
   </Card>
-  <Card title="Multi-Agent Workflows" href="/docs/advanced/multi-phase-workflows">
-    Combine Claude + Codex effectively
+  <Card title="Type-Safe Slash Commands" href="/docs/examples/type-safe-slash-commands">
+    Build reusable prompts with type-safe args
   </Card>
-  <Card title="JSON Mode" href="/docs/agents/json-mode">
-    Extract structured data from agents
+  <Card title="AI Step" href="/docs/reference/workflow-steps/ai">
+    Simpler AI step for non-interactive prompts
   </Card>
 </Cards>
