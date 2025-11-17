@@ -81,9 +81,7 @@ async function main() {
   if (runIds.length > 0) {
     await prisma.workflowArtifact.deleteMany({
       where: {
-        step: {
-          workflow_run_id: { in: runIds },
-        },
+        workflow_run_id: { in: runIds },
       },
     });
 
@@ -115,11 +113,16 @@ async function main() {
   const featureWorkflow = await prisma.workflowDefinition.create({
     data: {
       project_id: projectId,
+      identifier: "feature-implementation",
       name: "Feature Implementation Workflow",
       description:
         "Complete workflow for implementing a new feature from research to deployment",
       type: "code",
       path: "./.agent/workflows/templates/feature-implementation.yaml",
+      status: "active",
+      file_exists: true,
+      load_error: null,
+      archived_at: null,
       phases: JSON.stringify([
         {
           name: "Research",
@@ -182,10 +185,15 @@ async function main() {
   const bugFixWorkflow = await prisma.workflowDefinition.create({
     data: {
       project_id: projectId,
+      identifier: "bug-fix",
       name: "Bug Fix Workflow",
       description: "Streamlined workflow for investigating and fixing bugs",
       type: "code",
       path: "./.agent/workflows/templates/bug-fix.yaml",
+      status: "active",
+      file_exists: true,
+      load_error: null,
+      archived_at: null,
       phases: JSON.stringify([
         {
           name: "Investigation",
@@ -225,11 +233,16 @@ async function main() {
   const codeReviewWorkflow = await prisma.workflowDefinition.create({
     data: {
       project_id: projectId,
+      identifier: "code-review",
       name: "Code Review Workflow",
       description:
         "Comprehensive code review process with automated checks and feedback",
       type: "code",
       path: "./.agent/workflows/templates/code-review.yaml",
+      status: "active",
+      file_exists: true,
+      load_error: null,
+      archived_at: null,
       phases: JSON.stringify([
         {
           name: "Analysis",
@@ -280,6 +293,15 @@ async function main() {
           featureName: "User Profile Settings",
           priority: "high",
         }),
+        spec_file: null,
+        spec_content: null,
+        spec_type: null,
+        planning_session_id: null,
+        mode: null,
+        branch_name: null,
+        base_branch: null,
+        pr_url: null,
+        inngest_run_id: null,
         created_at: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
       },
     }),
@@ -292,6 +314,15 @@ async function main() {
         status: "pending",
         current_phase: null,
         args: JSON.stringify({ prNumber: 456, branch: "feature/auth-updates" }),
+        spec_file: null,
+        spec_content: null,
+        spec_type: null,
+        planning_session_id: null,
+        mode: null,
+        branch_name: null,
+        base_branch: null,
+        pr_url: null,
+        inngest_run_id: null,
         created_at: new Date(Date.now() - 1000 * 60 * 30), // 30 min ago
       },
     })
@@ -311,6 +342,15 @@ async function main() {
           featureName: "Dark Mode Support",
           priority: "medium",
         }),
+        spec_file: null,
+        spec_content: null,
+        spec_type: null,
+        planning_session_id: null,
+        mode: null,
+        branch_name: null,
+        base_branch: null,
+        pr_url: null,
+        inngest_run_id: null,
         started_at: new Date(Date.now() - 1000 * 60 * 45), // 45 min ago
         created_at: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
       },
@@ -328,6 +368,15 @@ async function main() {
           severity: "high",
           description: "Validation not triggering on empty password",
         }),
+        spec_file: null,
+        spec_content: null,
+        spec_type: null,
+        planning_session_id: null,
+        mode: null,
+        branch_name: null,
+        base_branch: null,
+        pr_url: null,
+        inngest_run_id: null,
         started_at: new Date(Date.now() - 1000 * 60 * 20), // 20 min ago
         created_at: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
       },
@@ -341,6 +390,15 @@ async function main() {
         status: "running",
         current_phase: "Feedback",
         args: JSON.stringify({ prNumber: 789, branch: "feature/db-migration" }),
+        spec_file: null,
+        spec_content: null,
+        spec_type: null,
+        planning_session_id: null,
+        mode: null,
+        branch_name: null,
+        base_branch: null,
+        pr_url: null,
+        inngest_run_id: null,
         started_at: new Date(Date.now() - 1000 * 60 * 15), // 15 min ago
         created_at: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
       },
@@ -358,6 +416,15 @@ async function main() {
         status: "paused",
         current_phase: "Testing",
         args: JSON.stringify({ featureName: "Export to CSV", priority: "low" }),
+        spec_file: null,
+        spec_content: null,
+        spec_type: null,
+        planning_session_id: null,
+        mode: null,
+        branch_name: null,
+        base_branch: null,
+        pr_url: null,
+        inngest_run_id: null,
         started_at: new Date(Date.now() - 1000 * 60 * 60 * 3), // 3 hours ago
         paused_at: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
         created_at: new Date(Date.now() - 1000 * 60 * 60 * 4), // 4 hours ago
@@ -376,6 +443,15 @@ async function main() {
           severity: "critical",
           description: "Dashboard consuming increasing memory over time",
         }),
+        spec_file: null,
+        spec_content: null,
+        spec_type: null,
+        planning_session_id: null,
+        mode: null,
+        branch_name: null,
+        base_branch: null,
+        pr_url: null,
+        inngest_run_id: null,
         started_at: new Date(Date.now() - 1000 * 60 * 60 * 5), // 5 hours ago
         paused_at: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
         created_at: new Date(Date.now() - 1000 * 60 * 60 * 6), // 6 hours ago
@@ -397,6 +473,15 @@ async function main() {
           featureName: "Notification System",
           priority: "high",
         }),
+        spec_file: null,
+        spec_content: null,
+        spec_type: null,
+        planning_session_id: null,
+        mode: null,
+        branch_name: null,
+        base_branch: null,
+        pr_url: null,
+        inngest_run_id: null,
         started_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
         completed_at: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
         created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3), // 3 days ago
@@ -415,6 +500,15 @@ async function main() {
           severity: "low",
           description: "Dates showing in wrong timezone",
         }),
+        spec_file: null,
+        spec_content: null,
+        spec_type: null,
+        planning_session_id: null,
+        mode: null,
+        branch_name: null,
+        base_branch: null,
+        pr_url: null,
+        inngest_run_id: null,
         started_at: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
         completed_at: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 hours ago
         created_at: new Date(Date.now() - 1000 * 60 * 60 * 30), // 30 hours ago
@@ -433,6 +527,15 @@ async function main() {
           branch: "feature/rate-limiting",
           autoMerge: true,
         }),
+        spec_file: null,
+        spec_content: null,
+        spec_type: null,
+        planning_session_id: null,
+        mode: null,
+        branch_name: null,
+        base_branch: null,
+        pr_url: null,
+        inngest_run_id: null,
         started_at: new Date(Date.now() - 1000 * 60 * 60 * 10), // 10 hours ago
         completed_at: new Date(Date.now() - 1000 * 60 * 60 * 6), // 6 hours ago
         created_at: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 hours ago
@@ -454,6 +557,15 @@ async function main() {
           featureName: "Advanced Search",
           priority: "medium",
         }),
+        spec_file: null,
+        spec_content: null,
+        spec_type: null,
+        planning_session_id: null,
+        mode: null,
+        branch_name: null,
+        base_branch: null,
+        pr_url: null,
+        inngest_run_id: null,
         started_at: new Date(Date.now() - 1000 * 60 * 60 * 8), // 8 hours ago
         error_message:
           "Integration tests failed: 3 tests failed with timeout errors",
@@ -473,6 +585,15 @@ async function main() {
           severity: "critical",
           description: "GET /api/users returns 500",
         }),
+        spec_file: null,
+        spec_content: null,
+        spec_type: null,
+        planning_session_id: null,
+        mode: null,
+        branch_name: null,
+        base_branch: null,
+        pr_url: null,
+        inngest_run_id: null,
         started_at: new Date(Date.now() - 1000 * 60 * 60 * 4), // 4 hours ago
         error_message:
           "Code review failed: Security vulnerability detected in SQL query",
@@ -503,12 +624,14 @@ async function main() {
     for (const stepData of stepsToCreate) {
       const step = await prisma.workflowRunStep.create({
         data: {
-          step_id: `step-${stepData.order}`,
+          inngest_step_id: `step-${stepData.order}`,
           name: stepData.name,
           phase: stepData.phase,
           workflow_run_id: run.id,
           status: stepData.status,
-          log_directory_path: stepData.logs || null,
+          step_type: "system",
+          args: null,
+          output: stepData.logs ? { logs: stepData.logs } : null,
           error_message: stepData.error || null,
           started_at:
             stepData.status !== "pending"

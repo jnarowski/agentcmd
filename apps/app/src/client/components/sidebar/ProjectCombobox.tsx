@@ -16,6 +16,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/client/components/ui/popover";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/client/components/ui/sheet";
+import { useIsMobile } from "@/client/hooks/use-mobile";
 import { useNavigationStore } from "@/client/stores";
 import {
   useProjects,
@@ -26,7 +32,9 @@ import { ProjectDialog } from "@/client/pages/projects/components/ProjectDialog"
 
 export function ProjectCombobox() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const activeProjectId = useNavigationStore((s) => s.activeProjectId);
   const setActiveProject = useNavigationStore((s) => s.setActiveProject);
@@ -71,6 +79,7 @@ export function ProjectCombobox() {
       navigate(`/projects/${value}`);
     }
     setOpen(false);
+    setSheetOpen(false);
   };
 
   const handleToggleStar = (e: React.MouseEvent, project: Project) => {
@@ -83,6 +92,7 @@ export function ProjectCombobox() {
 
   const handleNewProject = () => {
     setOpen(false);
+    setSheetOpen(false);
     setIsProjectDialogOpen(true);
   };
 
@@ -105,87 +115,115 @@ export function ProjectCombobox() {
     </div>
   );
 
+  const renderCommandContent = () => (
+    <Command>
+      <CommandInput placeholder="Search projects..." />
+      <CommandList>
+        <CommandEmpty>No projects found</CommandEmpty>
+        <CommandGroup>
+          <CommandItem
+            value="__show_all__"
+            onSelect={() => handleSelect("__show_all__")}
+          >
+            Show all
+          </CommandItem>
+        </CommandGroup>
+        {starredProjects.length > 0 && (
+          <>
+            <CommandGroup heading="Favorites">
+              {starredProjects.map((project) => (
+                <CommandItem
+                  key={project.id}
+                  value={project.id}
+                  keywords={[project.name]}
+                  onSelect={() => handleSelect(project.id)}
+                >
+                  {/* @ts-ignore - React type version conflict */}
+                  {renderProjectItem(project)}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+        {nonStarredProjects.length > 0 && (
+          <>
+            <CommandGroup heading="All">
+              {nonStarredProjects.map((project) => (
+                <CommandItem
+                  key={project.id}
+                  value={project.id}
+                  keywords={[project.name]}
+                  onSelect={() => handleSelect(project.id)}
+                >
+                  {/* @ts-ignore - React type version conflict */}
+                  {renderProjectItem(project)}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+        <CommandGroup>
+          <CommandItem onSelect={handleNewProject}>
+            <Plus className="size-4 mr-2" />
+            New Project
+          </CommandItem>
+        </CommandGroup>
+      </CommandList>
+    </Command>
+  );
+
   return (
     <div className="px-2 pt-3 pb-2">
       <div className="flex items-center gap-2">
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={open}
-              className="flex-1 justify-between h-9"
+        {isMobile ? (
+          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={sheetOpen}
+                className="flex-1 justify-between h-9"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <FolderOpen className="size-4 shrink-0 opacity-70" />
+                  <span className="truncate">
+                    {selectedProject?.name || "Show all"}
+                  </span>
+                </div>
+                <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="p-0">
+              {renderCommandContent()}
+            </SheetContent>
+          </Sheet>
+        ) : (
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={open}
+                className="flex-1 justify-between h-9"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <FolderOpen className="size-4 shrink-0 opacity-70" />
+                  <span className="truncate">
+                    {selectedProject?.name || "Show all"}
+                  </span>
+                </div>
+                <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-auto p-0 -ml-2"
+              align="start"
+              style={{ width: "var(--radix-popover-trigger-width)" }}
             >
-              <div className="flex items-center gap-2 min-w-0">
-                <FolderOpen className="size-4 shrink-0 opacity-70" />
-                <span className="truncate">
-                  {selectedProject?.name || "Show all"}
-                </span>
-              </div>
-              <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-        <PopoverContent
-          className="w-auto p-0 -ml-2"
-          align="start"
-          style={{ width: "var(--radix-popover-trigger-width)" }}
-        >
-          <Command>
-            <CommandInput placeholder="Search projects..." />
-            <CommandList>
-              <CommandEmpty>No projects found</CommandEmpty>
-              <CommandGroup>
-                <CommandItem
-                  value="__show_all__"
-                  onSelect={() => handleSelect("__show_all__")}
-                >
-                  Show all
-                </CommandItem>
-              </CommandGroup>
-              {starredProjects.length > 0 && (
-                <>
-                  <CommandGroup heading="Favorites">
-                    {starredProjects.map((project) => (
-                      <CommandItem
-                        key={project.id}
-                        value={project.id}
-                        keywords={[project.name]}
-                        onSelect={() => handleSelect(project.id)}
-                      >
-                        {/* @ts-ignore - React type version conflict */}
-                        {renderProjectItem(project)}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </>
-              )}
-              {nonStarredProjects.length > 0 && (
-                <>
-                  <CommandGroup heading="All">
-                    {nonStarredProjects.map((project) => (
-                      <CommandItem
-                        key={project.id}
-                        value={project.id}
-                        keywords={[project.name]}
-                        onSelect={() => handleSelect(project.id)}
-                      >
-                        {/* @ts-ignore - React type version conflict */}
-                        {renderProjectItem(project)}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </>
-              )}
-              <CommandGroup>
-                <CommandItem onSelect={handleNewProject}>
-                  <Plus className="size-4 mr-2" />
-                  New Project
-                </CommandItem>
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+              {renderCommandContent()}
+            </PopoverContent>
+          </Popover>
+        )}
         <Button
           variant="outline"
           size="icon"

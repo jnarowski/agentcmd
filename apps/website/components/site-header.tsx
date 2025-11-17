@@ -14,11 +14,6 @@ const menuItem = [
     label: "Docs",
     href: "/docs",
   },
-  {
-    id: 2,
-    label: "GitHub",
-    href: "https://github.com/agentcmd/agentcmd",
-  },
 ];
 
 export function SiteHeader() {
@@ -97,9 +92,6 @@ export function SiteHeader() {
           <div className="ml-auto flex h-full items-center gap-6">
             <Link className="text-sm hidden md:block" href="/docs">
               Docs
-            </Link>
-            <Link className="text-sm hidden md:block" href="https://github.com/agentcmd/agentcmd">
-              GitHub
             </Link>
             <Link
               className={cn(

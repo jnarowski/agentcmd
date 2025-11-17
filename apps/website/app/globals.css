@@ -223,3 +223,33 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fade-in 1000ms var(--animation-delay, 0ms) ease forwards;
+  }
+
+  .animate-fade-up {
+    animation: fade-up 1000ms var(--animation-delay, 0ms) ease forwards;
+  }
+
+  .animate-shimmer {
+    animation: shimmer 8s infinite;
+  }
+
+  .animate-border-beam {
+    animation: border-beam calc(var(--duration) * 1s) infinite linear;
+  }
+
+  .animate-image-glow {
+    animation: image-glow 4100ms 600ms ease-out forwards;
+  }
+
+  .animate-marquee {
+    animation: marquee var(--duration) infinite linear;
+  }
+
+  .animate-marquee-vertical {
+    animation: marquee-vertical var(--duration) linear infinite;
+  }
+}
