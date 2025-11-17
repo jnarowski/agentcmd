@@ -24,7 +24,7 @@ dist-ssr
 *.sw?
 
 # Environment variables
-.env.local
+.env
 
 # Database files
 prisma/*.db

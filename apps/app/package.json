@@ -22,7 +22,7 @@
     "dev:client": "vite --host",
     "dev:kill": "bash ./scripts/kill-ports.sh",
     "dev:setup": "node scripts/setup-env.js && pnpm prisma:generate && prisma migrate deploy",
-    "dev:server": "tsx watch --env-file=.env.local src/server/index.ts",
+    "dev:server": "tsx watch --env-file=.env src/server/index.ts",
     "inngest": "node scripts/start-inngest.js",
     "lint": "eslint .",
     "prepublishOnly": "pnpm build",
