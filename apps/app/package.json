@@ -21,7 +21,7 @@
     "dev": "prisma migrate deploy && concurrently --kill-others \"pnpm inngest\" \"pnpm dev:server\" \"pnpm dev:client\"",
     "dev:client": "vite --host",
     "dev:kill": "bash ./scripts/kill-ports.sh",
-    "dev:setup": "prisma migrate deploy && node scripts/setup-env.js",
+    "dev:setup": "node scripts/setup-env.js && prisma migrate deploy",
     "dev:server": "tsx watch --env-file=.env.local src/server/index.ts",
     "inngest": "node scripts/start-inngest.js",
     "lint": "eslint .",
