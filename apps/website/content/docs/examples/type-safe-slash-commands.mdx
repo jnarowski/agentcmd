@@ -48,6 +48,7 @@ export default defineWorkflow({
   phases: ["greet"],
 }, async ({ step }) => {
   await step.phase("greet", async () => {
+    // Fully type safe so you don't provide an incorrect slash command name or argument value
     const cmd = buildSlashCommand("/hello", {
       name: "World",
     });
@@ -367,5 +368,5 @@ Get in the habit of running type generation after changes:
 ## Related
 
 - [Slash Commands Concept](/docs/concepts/slash-commands) - How slash commands work
-- [CLI Step Reference](/docs/reference/workflow-steps/cli) - CLI step options
+- [CLI Step Reference](/docs/reference/workflow-steps/cli-step) - CLI step options
 - [Workflow Definition](/docs/concepts/workflows/workflow-definitions) - Define workflows

@@ -1,14 +1,14 @@
 /**
- * Aggregate tasks (specs) and planning sessions with 30s cache
+ * Aggregate specs and planning sessions with 30s cache
  */
 
-import type { TasksResponse } from "@/shared/types/task.types";
-import { scanSpecs } from "@/server/domain/task/services/scanSpecs";
+import type { SpecsResponse } from "@/shared/types/spec.types";
+import { scanSpecs } from "@/server/domain/spec/services/scanSpecs";
 import { getSessions } from "@/server/domain/session/services/getSessions";
 import { prisma } from "@/shared/prisma";
 
 interface CacheEntry {
-  data: TasksResponse;
+  data: SpecsResponse;
   timestamp: number;
   userId: string;
 }
@@ -17,13 +17,13 @@ const CACHE_TTL = 30000; // 30 seconds
 const cache = new Map<string, CacheEntry>();
 
 /**
- * Get all tasks (specs and planning sessions), optionally filtered by project
+ * Get all specs and planning sessions, optionally filtered by project
  * Results are cached per user/project for 30 seconds
  */
-export async function getTasks(
+export async function getSpecs(
   userId: string,
   projectId?: string
-): Promise<TasksResponse> {
+): Promise<SpecsResponse> {
   const now = Date.now();
   const cacheKey = projectId ? `${userId}:${projectId}` : userId;
 
@@ -40,10 +40,10 @@ export async function getTasks(
   });
 
   // Scan specs from projects
-  const allTasks = await Promise.all(
+  const allSpecs = await Promise.all(
     projects.map((project) => scanSpecs(project.path, project.id))
   );
-  const tasks = allTasks.flat();
+  const specs = allSpecs.flat();
 
   // Get planning sessions (filtered by projectId if provided)
   const planningSessions = await getSessions({
@@ -54,8 +54,8 @@ export async function getTasks(
     limit: 50, // Reasonable limit for planning sessions
   });
 
-  const data: TasksResponse = {
-    tasks,
+  const data: SpecsResponse = {
+    specs,
     planningSessions,
   };
 
@@ -72,6 +72,6 @@ export async function getTasks(
 /**
  * Clear cache to force fresh data fetch on next call
  */
-export function clearTasksCache(): void {
+export function clearSpecsCache(): void {
   cache.clear();
 }

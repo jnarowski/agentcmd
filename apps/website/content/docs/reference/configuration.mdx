@@ -1,6 +1,6 @@
 ---
 title: Configuration
-description: Configure AgentCmd behavior, AI providers, and workflow settings
+description: Configure AgentCmd behavior, AI providers, and server settings
 ---
 
 import { Callout } from 'fumadocs-ui/components/callout';
@@ -23,144 +23,84 @@ agentcmd config --show
 agentcmd config --edit
 
 # Get specific value
-agentcmd config --get server.port
+agentcmd config --get port
 
 # Set specific value
-agentcmd config --set server.port=4000
+agentcmd config --set port=4000
 
 # Print config path
 agentcmd config --path
 ```
 
-## Configuration Reference
+## CLI Configuration Reference
 
-{/* AUTO-GENERATED:env-vars-start */}
+The CLI config file (`~/.agentcmd/config.json`) uses a **flat structure**:
 
-### Server Settings
-
-| Key | Type | Description | Default | Env Var |
-|-----|------|-------------|---------|---------|
-| `server.port` | number | Backend API port | `3456` | `PORT` |
-| `server.host` | string | Bind address | `127.0.0.1` | `HOST` |
-| `server.logLevel` | string | Log verbosity | `info` | `LOG_LEVEL` |
-
-**Example**:
-```json title="Server Configuration"
+```json title="~/.agentcmd/config.json"
 {
-  "server": {
-    "port": 3456,
-    "host": "127.0.0.1",
-    "logLevel": "info"
-  }
+  "port": 3456,
+  "inngestPort": 8288,
+  "host": "0.0.0.0",
+  "logLevel": "info",
+  "anthropicApiKey": "",
+  "openaiApiKey": "",
+  "jwtSecret": "",
+  "allowedOrigins": "http://localhost:3456"
 }
 ```
 
-### Database Settings
-
-| Key | Type | Description | Default | Env Var |
-|-----|------|-------------|---------|---------|
-| `database.url` | string | SQLite file path | `file:~/.agentcmd/agentcmd.db` | `DATABASE_URL` |
-
-**Example**:
-```json title="Database Configuration"
-{
-  "database": {
-    "url": "file:~/.agentcmd/agentcmd.db"
-  }
-}
-```
-
-### Inngest Settings
-
-| Key | Type | Description | Default | Env Var |
-|-----|------|-------------|---------|---------|
-| `inngest.devPort` | number | Dev UI port | `8288` | `INNGEST_DEV_PORT` |
-| `inngest.signingKey` | string | Signing key (prod) | `""` | `INNGEST_SIGNING_KEY` |
-| `inngest.eventKey` | string | Event key (prod) | `""` | `INNGEST_EVENT_KEY` |
-
-**Example**:
-```json title="Inngest Configuration"
-{
-  "inngest": {
-    "devPort": 8288,
-    "signingKey": "",
-    "eventKey": ""
-  }
-}
-```
-
-### AI Provider Settings
-
-| Key | Type | Description | Default | Env Var |
-|-----|------|-------------|---------|---------|
-| `ai.defaultProvider` | string | Default AI agent | `"claude"` | - |
-| `ai.providers.claude.apiKey` | string | Anthropic API key | `""` | `ANTHROPIC_API_KEY` |
-| `ai.providers.openai.apiKey` | string | OpenAI API key | `""` | `OPENAI_API_KEY` |
-| `ai.providers.gemini.apiKey` | string | Google Gemini key | `""` | `GOOGLE_AI_API_KEY` |
-
-**Example**:
-```json
-{
-  "ai": {
-    "defaultProvider": "claude",
-    "providers": {
-      "claude": {
-        "apiKey": "sk-ant-..."
-      },
-      "openai": {
-        "apiKey": "sk-..."
-      },
-      "gemini": {
-        "apiKey": "..."
-      }
-    }
-  }
-}
-```
-
-<Callout type="tip">
-**Security**: Store API keys in environment variables, not config file, for production use.
-</Callout>
-
-### Workflow Settings
+### Config Keys
 
 | Key | Type | Description | Default |
 |-----|------|-------------|---------|
-| `workflows.templatesPath` | string | Custom templates dir | `~/.agentcmd/workflows` |
-| `workflows.maxConcurrent` | number | Max concurrent runs | `5` |
-| `workflows.timeout` | number | Max execution time (ms) | `3600000` (1h) |
+| `port` | number | Backend API port | `3456` |
+| `inngestPort` | number | Inngest dev server port | `8288` |
+| `host` | string | Bind address | `0.0.0.0` |
+| `logLevel` | string | Log verbosity | `info` |
+| `anthropicApiKey` | string | Anthropic API key | `""` |
+| `openaiApiKey` | string | OpenAI API key | `""` |
+| `jwtSecret` | string | JWT signing secret | `""` |
+| `allowedOrigins` | string | CORS allowed origins | `http://localhost:3456` |
 
-**Example**:
-```json
-{
-  "workflows": {
-    "templatesPath": "~/.agentcmd/workflows",
-    "maxConcurrent": 5,
-    "timeout": 3600000
-  }
-}
+**Example:**
+```bash
+# Get current port
+agentcmd config --get port
+# 3456
+
+# Change port
+agentcmd config --set port=4000
+
+# View all settings
+agentcmd config --show
 ```
 
-{/* AUTO-GENERATED:env-vars-end */}
+<Callout type="tip">
+**Security**: Store API keys in environment variables instead of config file for production.
+</Callout>
 
 ## Environment Variables
 
-Environment variables override config file values.
+Environment variables override config file values. The server uses additional env vars not available in the CLI config file.
 
 ### Core Settings
 
 ```bash
 # Server
 export PORT=3456
-export HOST=127.0.0.1
+export HOST=0.0.0.0
 export NODE_ENV=development
 export LOG_LEVEL=info
+export LOG_FILE=./logs/app.log
 
 # Database
-export DATABASE_URL=file:~/.agentcmd/agentcmd.db
+export DATABASE_URL=file:./dev.db
 
-# Security
+# Security (required)
 export JWT_SECRET=$(openssl rand -base64 32)
+
+# CORS
+export ALLOWED_ORIGINS=http://localhost:5173
 ```
 
 ### AI Provider Keys
@@ -176,16 +116,34 @@ export OPENAI_API_KEY=sk-...
 export GOOGLE_AI_API_KEY=...
 ```
 
-### Inngest
+### Inngest (Workflow Engine)
 
 ```bash
 # Development
-export INNGEST_DEV_PORT=8288
+export INNGEST_PORT=8288
+export INNGEST_DEV_MODE=true
 
 # Production
-export INNGEST_SIGNING_KEY=signkey-prod-...
+export INNGEST_APP_ID=agentcmd
 export INNGEST_EVENT_KEY=...
+export INNGEST_SERVE_PATH=/api/workflows/inngest
+export INNGEST_MEMOIZATION_DB_PATH=./prisma/workflows.db
+
+# Optional
+export WORKFLOW_ENGINE_ENABLED=true
 ```
+
+## File Locations
+
+Default paths used by <AgentCmd />:
+
+| Resource | Path |
+|----------|------|
+| Config | `~/.agentcmd/config.json` |
+| Database | `~/.agentcmd/database.db` |
+| Logs | `~/.agentcmd/logs/app.log` |
+| Workflows | `.agent/workflows/` |
+| Specs | `.agent/specs/` |
 
 ## Configuration Patterns
 
@@ -198,9 +156,11 @@ export INNGEST_EVENT_KEY=...
 NODE_ENV=development
 LOG_LEVEL=debug
 PORT=3456
+DATABASE_URL=file:./dev.db
 
-# API keys (keep in shell profile)
+# API keys (keep in shell profile or .env)
 export ANTHROPIC_API_KEY=sk-ant-...
+export JWT_SECRET=$(openssl rand -base64 32)
 ```
 </Tab>
 <Tab value="Team Dev">
@@ -208,12 +168,14 @@ export ANTHROPIC_API_KEY=sk-ant-...
 # .env.example (check into git)
 NODE_ENV=development
 PORT=3456
-HOST=127.0.0.1
+HOST=0.0.0.0
 LOG_LEVEL=info
+DATABASE_URL=file:./dev.db
 
 # .env (gitignored, each dev creates)
 ANTHROPIC_API_KEY=<your-key>
 OPENAI_API_KEY=<your-key>
+JWT_SECRET=<generate-with-openssl>
 ```
 </Tab>
 <Tab value="CI/CD">
@@ -225,6 +187,7 @@ DATABASE_URL=file::memory:
 
 # Set in CI secrets
 ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_KEY }}
+JWT_SECRET=${{ secrets.JWT_SECRET }}
 ```
 </Tab>
 </Tabs>
@@ -241,11 +204,11 @@ HOST=0.0.0.0
 # Database (persistent)
 DATABASE_URL=file:/var/lib/agentcmd/production.db
 
-# Security
+# Security (required)
 JWT_SECRET=<long-random-string>
 
 # Inngest (production)
-INNGEST_SIGNING_KEY=signkey-prod-...
+INNGEST_DEV_MODE=false
 INNGEST_EVENT_KEY=...
 
 # AI (from secret manager)
@@ -281,17 +244,14 @@ export ANTHROPIC_API_KEY=sk-ant-...
 agentcmd start
 
 # ✅ Good - Secret manager (production)
-export ANTHROPIC_API_KEY=$(aws secretsmanager get-secret-value --secret-id anthropic-key --query SecretString --output text)
+export ANTHROPIC_API_KEY=$(aws secretsmanager get-secret-value \
+  --secret-id anthropic-key \
+  --query SecretString \
+  --output text)
 
 # ❌ Avoid - Hard-coded in config
 {
-  "ai": {
-    "providers": {
-      "claude": {
-        "apiKey": "sk-ant-hardcoded"  // DON'T DO THIS
-      }
-    }
-  }
+  "anthropicApiKey": "sk-ant-hardcoded"  // DON'T DO THIS
 }
 ```
 
@@ -302,17 +262,40 @@ export ANTHROPIC_API_KEY=$(aws secretsmanager get-secret-value --secret-id anthr
 chmod 600 ~/.agentcmd/config.json
 
 # Secure database
-chmod 600 ~/.agentcmd/agentcmd.db
+chmod 600 ~/.agentcmd/database.db
 ```
 
 ### JWT Secret
 
 ```bash
-# Generate strong secret
+# Generate strong secret (32+ bytes)
 openssl rand -base64 32
 
-# Set in environment (never in config file)
+# Set in environment (never commit to git)
 export JWT_SECRET=<generated-secret>
+```
+
+<Callout type="warning">
+**Required**: `JWT_SECRET` must be set. Server will fail to start without it.
+</Callout>
+
+## Config Precedence
+
+Configuration values are loaded in this order (later overrides earlier):
+
+1. **Default values** (built-in)
+2. **Config file** (`~/.agentcmd/config.json`)
+3. **Environment variables**
+4. **CLI flags** (limited: `--port`, `--host`)
+
+**Example:**
+```bash
+# Config file: port = 3456
+# Environment: PORT=4000
+# CLI flag: --port 5000
+
+agentcmd start --port 5000  # Uses 5000 (CLI wins)
+agentcmd start              # Uses 4000 (env wins)
 ```
 
 ## Validation
@@ -325,32 +308,36 @@ agentcmd start
 ✓ Configuration valid
 ✓ Server starting on port 3456
 
-# Invalid config
+# Invalid config (missing JWT_SECRET)
 agentcmd start
-✗ Configuration error: server.port must be a number
+✗ Configuration error: JWT_SECRET is required
+
+# Invalid config (bad port)
+agentcmd config --set port=99999
+✗ Configuration error: port must be between 1 and 65535
 ```
 
-## Config Precedence
+## Log Levels
 
-Configuration values are loaded in this order (later overrides earlier):
+Available log levels (from most to least verbose):
 
-1. Default values (built-in)
-2. Config file (`~/.agentcmd/config.json`)
-3. Environment variables
-4. CLI flags
+- `trace` - Everything including internal details
+- `debug` - Debugging information
+- `info` - **Default** - General informational messages
+- `warn` - Warning messages
+- `error` - Error messages only
+- `fatal` - Fatal errors only
 
-**Example**:
 ```bash
-# Config file: port = 3456
-# Environment: PORT=4000
-# CLI flag: --port 5000
+# Set via config
+agentcmd config --set logLevel=debug
 
-agentcmd start --port 5000  # Uses 5000 (CLI wins)
-agentcmd start              # Uses 4000 (env wins)
+# Or via environment
+export LOG_LEVEL=debug
+agentcmd start
 ```
 
 ## Related
 
-- [CLI Reference](/reference/cli) - Command-line interface
-- [Installation](/getting-started/installation) - Setup guide
-- [Environment Variables](#environment-variables) - Complete env var list
+- [CLI Reference](/docs/reference/cli) - Command-line interface
+- [Installation](/docs/getting-started/installation) - Setup guide

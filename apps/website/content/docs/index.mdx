@@ -25,11 +25,10 @@ Think of it as **GitHub Actions for AI agents**. You define workflows with phase
 ## What is <AgentCmd />?
 
 <AgentCmd /> is a platform for automating development workflows with AI agents.
-It consists of three components:
+It consists of two components:
 
 1. **Web Application** - Visual workflow management, real-time monitoring, and run history
 2. **Workflow SDK** (`agentcmd-workflows`) - TypeScript library for defining workflows
-3. **Agent CLI SDK** (`agent-cli-sdk`) - Programmatic access to AI CLI tools
 
 ## Why <AgentCmd />?
 
@@ -50,7 +49,7 @@ It consists of three components:
     </div>
   </Link>
   <Link
-    href="/docs/concepts/specs"
+    href="/docs/concepts/spec-driven-development"
     className="flex gap-3 no-underline hover:opacity-80 transition-opacity"
   >
     <FileCheck className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
@@ -62,7 +61,7 @@ It consists of three components:
     </div>
   </Link>
   <Link
-    href="/docs/reference/agentcmd-workflows"
+    href="/docs/getting-started/first-workflow"
     className="flex gap-3 no-underline hover:opacity-80 transition-opacity"
   >
     <Shield className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
@@ -135,73 +134,140 @@ It consists of three components:
   </Link>
 </div>
 
-## Core Concepts
+## How It Works
 
-<Cards>
-  <Card title="Agents" href="/docs/concepts/agents">
-    AI CLI tools (Claude/Codex/Gemini) orchestrated with slash commands
-  </Card>
-  <Card title="Workflows" href="/docs/concepts/workflows">
-    Multi-step processes orchestrated by Inngest
-  </Card>
-  <Card title="Specs" href="/docs/concepts/specs">
-    Feature specifications that drive implementation workflows
-  </Card>
-  <Card title="Steps" href="/docs/reference/workflow-steps">
-    8 step types: agent, ai, bash, git, artifact, annotation, phase, webhook
-  </Card>
-  <Card title="Phases" href="/docs/concepts/workflows/workflow-phases">
-    Organize work into logical stages (plan → implement → review)
-  </Card>
-</Cards>
+```mermaid
+flowchart LR
+    A([Write Spec]) --> B([Run Workflow])
+    B --> C
+
+    subgraph workflow["Example&nbsp;User&nbsp;Defined&nbsp;Workflow"]
+        direction TB
+        C([Setup]) --> D([Implement])
+        D --> E([Review])
+        E --> F([Test])
+        F --> G([Finalize])
+    end
+
+    style A fill:#3b82f6,stroke:#2563eb,color:#fff
+    style B fill:#3b82f6,stroke:#2563eb,color:#fff
+    style C fill:#10B981,stroke:#059669,color:#fff
+    style D fill:#10B981,stroke:#059669,color:#fff
+    style E fill:#10B981,stroke:#059669,color:#fff
+    style F fill:#10B981,stroke:#059669,color:#fff
+    style G fill:#10B981,stroke:#059669,color:#fff
+    style workflow fill:#64748b,stroke:#475569,color:#10B981,font-size:14px
+```
+
+**What happens in each step:**
+
+1. **Write Spec** - Generate feature specification using `/cmd:generate-feature-spec`
+2. **Run Workflow** - Trigger automated workflow execution via UI or CLI
+   - **Setup** (system) - Create git branch/worktree, prepare environment
+   - **Execute Workflow** - A user defined workflow is executed, an example would be:
+     - **Implement** - `step.agent()` calls Claude/Codex with `/cmd:implement-spec` to write code
+     - **Review** - `step.agent()` calls Claude with `/cmd:review-spec-implementation` to validate changes
+     - **Test** - Run tests, type-checks, linting via `step.cli()`
+   - **Finalize** (system) - Create PR with `step.git()`, merge, and deploy
 
 ## Quick Example
 
-Here's a complete workflow that generates a feature spec, implements it, and creates a PR:
+Here's a complete workflow matching the diagram above:
 
 ```typescript
-import { defineWorkflow, buildSlashCommand } from "agentcmd-workflows";
+import {
+  buildSlashCommand,
+  defineWorkflow,
+  type CmdImplementSpecResponse,
+  type CmdReviewSpecImplementationResponse,
+} from "agentcmd-workflows";
 
 export default defineWorkflow(
   {
-    id: "ship-feature",
-    phases: ["spec", "implement", "review", "ship"],
+    id: "implement-review-workflow",
+    name: "Implement Review Workflow",
+    description: "Implements a spec file and reviews the implementation",
+    phases: [
+      { id: "implement", label: "Implement" },
+      { id: "review", label: "Review" },
+      { id: "test", label: "Test" },
+    ],
   },
   async ({ event, step }) => {
-    const { featureName } = event.data.args;
+    const { workingDir, specFile } = event.data;
 
-    // Generate spec
-    await step.phase("spec", async () => {
-      await step.agent("generate-spec", {
-        agent: "claude",
-        json: true,
-        prompt: buildSlashCommand("/cmd:generate-feature-spec", {
-          context: featureName,
-        }),
-      });
-    });
-
-    // Implement
     await step.phase("implement", async () => {
-      await step.agent("implement", {
-        agent: "codex",
-        prompt: buildSlashCommand("/cmd:implement-spec", {
-          specIdOrNameOrPath: featureName,
-        }),
-      });
+      const response = await step.agent<CmdImplementSpecResponse>(
+        "implement-spec",
+        {
+          agent: "claude",
+          json: true,
+          prompt: buildSlashCommand("/cmd:implement-spec", {
+            specIdOrNameOrPath: specFile,
+            format: "json",
+          }),
+          workingDir,
+        }
+      );
+
+      return response;
     });
 
-    // Create PR
-    await step.phase("ship", async () => {
-      await step.git("create-pr", {
-        operation: "pr",
-        title: `feat: ${featureName}`,
-        body: "Auto-generated by agentcmd workflow",
+    await step.phase("review", async () => {
+      const response = await step.agent<CmdReviewSpecImplementationResponse>(
+        "review-spec-implementation",
+        {
+          agent: "claude",
+          json: true,
+          prompt: buildSlashCommand("/cmd:review-spec-implementation", {
+            specIdOrNameOrPath: specFile,
+            format: "json",
+          }),
+          workingDir,
+        }
+      );
+
+      return response;
+    });
+
+    await step.phase("test", async () => {
+      await step.cli("test", {
+        command: "pnpm test && pnpm check-types",
+        workingDir,
       });
     });
   }
 );
 ```
+
+## Core Concepts
+
+<Cards>
+  <Card title="How It Works" href="/docs/getting-started/how-it-works">
+    Understand the agentcmd architecture and workflow execution
+  </Card>
+  <Card
+    title="Workflow Definitions"
+    href="/docs/concepts/workflows/workflow-definitions"
+  >
+    Multi-step processes orchestrated by Inngest
+  </Card>
+  <Card title="Agents" href="/docs/concepts/agents">
+    AI CLI tools (Claude/Codex/Gemini) that execute your workflows
+  </Card>
+  <Card title="Slash Commands" href="/docs/concepts/slash-commands">
+    Reusable type-safe commands that template your engineering
+  </Card>
+  <Card
+    title="Spec-Driven Development"
+    href="/docs/concepts/spec-driven-development"
+  >
+    Feature specifications that drive implementation workflows
+  </Card>
+  <Card title="Sessions" href="/docs/concepts/sessions">
+    Agent conversation history enabling resumable workflows
+  </Card>
+</Cards>
 
 ## Get Started in 5 Minutes
 
@@ -228,7 +294,7 @@ export default defineWorkflow(
     ### Open the UI
 
     ```bash
-    open http://localhost:5173
+    open http://localhost:3456
     open http://localhost:8288
 
 ```

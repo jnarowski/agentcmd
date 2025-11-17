@@ -1,7 +1,7 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/client/components/ui/tabs";
 import { useSettings, useUpdateSettings } from "@/client/hooks/useSettings";
 import { ProjectHomeActivities } from "@/client/pages/projects/components/ProjectHomeActivities";
-import { ProjectHomeTasks } from "@/client/pages/projects/components/ProjectHomeTasks";
+import { ProjectHomeSpecs } from "@/client/pages/projects/components/ProjectHomeSpecs";
 
 interface ProjectHomeContentProps {
   projectId: string;
@@ -11,7 +11,7 @@ type HomeTab = "activities" | "tasks";
 
 /**
  * Main content component for project home page
- * Provides Activities and Tasks tabs with persisted state
+ * Provides Activities and Specs tabs with persisted state
  */
 export function ProjectHomeContent({ projectId }: ProjectHomeContentProps) {
   const { data: settings } = useSettings();
@@ -30,13 +30,13 @@ export function ProjectHomeContent({ projectId }: ProjectHomeContentProps) {
     <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
       <TabsList className="grid w-full grid-cols-2 mb-4">
         <TabsTrigger value="activities">Activities</TabsTrigger>
-        <TabsTrigger value="tasks">Tasks</TabsTrigger>
+        <TabsTrigger value="tasks">Specs</TabsTrigger>
       </TabsList>
       <TabsContent value="activities" className="mt-0">
         <ProjectHomeActivities projectId={projectId} />
       </TabsContent>
       <TabsContent value="tasks" className="mt-0">
-        <ProjectHomeTasks projectId={projectId} />
+        <ProjectHomeSpecs projectId={projectId} />
       </TabsContent>
     </Tabs>
   );

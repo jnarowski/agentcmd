@@ -4,7 +4,7 @@
 
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { SpecTask } from "@/shared/types/task.types";
+import type { Spec } from "@/shared/types/spec.types";
 
 interface SpecIndexEntry {
   path: string;
@@ -20,18 +20,18 @@ interface SpecIndex {
 }
 
 /**
- * Read specs index.json and return SpecTask[] for todo/ folder
+ * Read specs index.json and return Spec[] for todo/ folder
  * @param projectPath - Absolute path to the project directory
- * @param projectId - Project ID to associate with tasks
+ * @param projectId - Project ID to associate with specs
  */
-export async function scanSpecs(projectPath: string, projectId: string): Promise<SpecTask[]> {
+export async function scanSpecs(projectPath: string, projectId: string): Promise<Spec[]> {
   const indexPath = path.join(projectPath, ".agent", "specs", "index.json");
 
   try {
     const fileContent = await fs.readFile(indexPath, "utf-8");
     const index: SpecIndex = JSON.parse(fileContent);
 
-    const specTasks: SpecTask[] = [];
+    const specs: Spec[] = [];
 
     for (const [id, entry] of Object.entries(index.specs)) {
       // Only include specs in todo/ folder
@@ -61,7 +61,7 @@ export async function scanSpecs(projectPath: string, projectId: string): Promise
           .join(" ");
       }
 
-      specTasks.push({
+      specs.push({
         id,
         name: displayName,
         specPath: entry.path,
@@ -72,7 +72,7 @@ export async function scanSpecs(projectPath: string, projectId: string): Promise
       });
     }
 
-    return specTasks;
+    return specs;
   } catch (error) {
     console.error(`Failed to scan specs for project ${projectId}:`, error);
     return [];

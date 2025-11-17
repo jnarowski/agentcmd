@@ -1,8 +1,6 @@
 {
   "title": "Reference",
   "pages": [
-    "agent-cli-sdk",
-    "agentcmd-workflows",
     "cli",
     "configuration",
     "slash-commands",

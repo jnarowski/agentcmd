@@ -1,0 +1,567 @@
+---
+title: Spec System
+description: Technical reference for spec folder structure, metadata, and index
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { AgentCmd } from "@/components/AgentCmd";
+
+Technical reference for the spec system. See [Spec-Driven Development](/docs/concepts/spec-driven-development) for conceptual overview.
+
+## Folder Structure
+
+Specs are organized in `.agent/specs/` with folders representing status:
+
+```text title="Spec Directory Layout"
+.agent/specs/
+├── index.json               # Spec registry (see below)
+├── backlog/                 # Future work
+│   └── {timestamp}-{name}/
+│       └── spec.md
+├── todo/                    # Ready to implement
+│   ├── 251115123456-auth-system/
+│   │   └── spec.md
+│   └── 251116091234-api-rate-limiting/
+│       └── spec.md
+├── in-progress/             # Currently implementing
+│   └── 251114081340-user-dashboard/
+│       └── spec.md
+└── done/                    # Completed
+    └── 251113152245-email-verification/
+        └── spec.md
+```
+
+### Folder Names
+
+- `{timestamp}` - `YYMMDDHHMMSS` format (e.g., `251115123456` = 2025-11-15 12:34:56)
+- `{name}` - Kebab-case feature name (e.g., `user-authentication-jwt`)
+- Full folder: `251115123456-user-authentication-jwt`
+
+### Status Folders
+
+| Folder          | Status        | Description                    |
+| --------------- | ------------- | ------------------------------ |
+| `backlog/`      | `backlog`     | Future work, not prioritized   |
+| `todo/`         | `todo`        | Ready to work on               |
+| `in-progress/`  | `in-progress` | Currently implementing         |
+| `done/`         | `done`        | Completed and merged           |
+
+## Spec File Format
+
+Each spec is a markdown file (`spec.md`) with frontmatter metadata:
+
+```markdown title="spec.md"
+# Feature Title
+
+**Status**: todo | in-progress | done | backlog
+**Created**: YYYY-MM-DD
+**Package**: apps/app | packages/* | etc.
+**Complexity**: 1-100 points
+**Phases**: Number of implementation phases
+
+## Overview
+
+High-level description of the feature.
+
+## User Story
+
+As a [user type], I want [feature], so that [benefit].
+
+## Technical Approach
+
+How the feature will be implemented.
+
+## Tasks
+
+- [ ] Task 1
+- [ ] Task 2
+- [x] Task 3 (completed)
+
+## Files to Create/Modify
+
+- `src/path/to/file.ts` - Description
+- `src/another/file.tsx` - Description
+
+## Success Criteria
+
+- Criterion 1
+- Criterion 2
+```
+
+## Metadata Fields
+
+### Status
+
+**Format**: `**Status**: {value}`
+
+**Values**:
+- `backlog` - Not prioritized
+- `todo` - Ready to implement
+- `in-progress` - Currently implementing
+- `done` - Completed
+
+<Callout type="warn">
+  Status in spec.md must match the folder it's in. Use `/cmd:move-spec` to keep them in sync.
+</Callout>
+
+### Created
+
+**Format**: `**Created**: YYYY-MM-DD`
+
+**Example**: `**Created**: 2025-01-15`
+
+Timestamp when spec was generated.
+
+### Package
+
+**Format**: `**Package**: {path}`
+
+**Examples**:
+- `apps/app`
+- `packages/agent-cli-sdk`
+- `packages/agentcmd-workflows`
+
+Which package/app the spec applies to.
+
+### Complexity
+
+**Format**: `**Complexity**: {1-100} points`
+
+**Example**: `**Complexity**: 35 points`
+
+Estimated implementation complexity (see [Complexity Scoring](#complexity-scoring) below).
+
+### Phases
+
+**Format**: `**Phases**: {number}`
+
+**Example**: `**Phases**: 4`
+
+Number of implementation phases (optional, used by workflows for progress tracking).
+
+## Complexity Scoring
+
+Complexity scores help with prioritization and time estimation:
+
+| Complexity | Description  | Examples                                       | Est. Time |
+| ---------- | ------------ | ---------------------------------------------- | --------- |
+| 1-10       | Trivial      | Update copy, fix typo, add env var             | 15-30 min |
+| 11-25      | Simple       | Add form field, update API response, css tweak | 1-2 hours |
+| 26-50      | Moderate     | New API endpoint, component refactor           | 3-5 hours |
+| 51-75      | Complex      | Authentication system, data migration          | 1-2 days  |
+| 76-100     | Very Complex | Multi-service integration, architecture change | 3-5 days  |
+
+### Usage
+
+**Prioritization**: Sort by complexity to tackle simple specs first
+
+```bash
+/cmd:list-specs todo --sort complexity
+```
+
+**Time Estimation**: 1 complexity point ≈ 5-10 minutes
+
+**Sprint Planning**: Aim for ~100 points per week per developer
+
+**Breaking Down**: If > 75 points, consider splitting into multiple specs
+
+## Index File
+
+`.agent/specs/index.json` tracks all specs for fast lookup and querying:
+
+```json title="index.json"
+{
+  "specs": [
+    {
+      "id": "251115123456",
+      "name": "auth-system",
+      "folder": "in-progress",
+      "status": "in-progress",
+      "complexity": 35,
+      "created": "2025-01-15T10:30:00Z",
+      "updated": "2025-01-16T14:22:00Z"
+    },
+    {
+      "id": "251116091234",
+      "name": "api-rate-limiting",
+      "folder": "todo",
+      "status": "todo",
+      "complexity": 25,
+      "created": "2025-01-16T09:12:00Z",
+      "updated": "2025-01-16T09:12:00Z"
+    }
+  ]
+}
+```
+
+### Index Schema
+
+```typescript
+interface SpecIndex {
+  specs: SpecEntry[];
+}
+
+interface SpecEntry {
+  id: string;           // Timestamp portion (e.g., "251115123456")
+  name: string;         // Kebab-case name (e.g., "auth-system")
+  folder: string;       // Status folder (e.g., "in-progress")
+  status: string;       // Status value (e.g., "in-progress")
+  complexity: number;   // 1-100 points
+  created: string;      // ISO 8601 timestamp
+  updated: string;      // ISO 8601 timestamp
+}
+```
+
+### Why Index?
+
+- **Fast lookup** - Query by ID or name without filesystem scan
+- **Status filtering** - Get all `todo` specs instantly
+- **Search** - Filter by complexity, package, keywords
+- **History tracking** - See when specs were created/updated
+
+<Callout type="info">
+  Index is auto-updated by spec management commands (`/cmd:generate-*-spec`, `/cmd:move-spec`, `/cmd:remove-spec`). If it gets out of sync, run `/refresh-spec-index`.
+</Callout>
+
+## Spec Commands
+
+### Generate Specs
+
+Commands that create new specs:
+
+```bash
+# Feature spec - full implementation plan
+/cmd:generate-feature-spec "User authentication system"
+/cmd:generate-feature-spec context="Add JWT auth" --spec-id="251115123456"
+
+# Bug spec - reproduction + fix strategy
+/cmd:generate-bug-spec "Login page crashes on mobile"
+/cmd:generate-bug-spec context="Fix auth crash" --spec-id="251115123457"
+
+# Issue spec - refactoring, tech debt, docs
+/cmd:generate-issue-spec "Refactor auth service for testability"
+/cmd:generate-issue-spec context="Improve test coverage" --spec-id="251115123458"
+```
+
+**Arguments**:
+- First positional arg = `context` (feature description)
+- `--spec-id` (optional) = Use specific timestamp ID instead of auto-generating
+
+### List & Search
+
+```bash
+# List all specs
+/cmd:list-specs
+
+# List by folder/status
+/cmd:list-specs todo
+/cmd:list-specs in-progress
+/cmd:list-specs done
+/cmd:list-specs backlog
+
+# Search by keyword
+/cmd:list-specs todo --search "authentication"
+/cmd:list-specs --search "api"
+
+# Sort by field
+/cmd:list-specs todo --sort complexity
+/cmd:list-specs --sort created
+/cmd:list-specs --sort name
+```
+
+**Arguments**:
+- First positional arg = folder filter (optional)
+- `--search` = Filter by keyword in name/title
+- `--sort` = Sort by field (complexity, created, name)
+
+### Move Specs
+
+```bash
+# Move by ID
+/cmd:move-spec 251115123456 in-progress
+/cmd:move-spec 251115123456 done
+
+# Move by name
+/cmd:move-spec auth-system todo
+/cmd:move-spec api-rate-limiting backlog
+
+# Move by path
+/cmd:move-spec .agent/specs/todo/251115123456-auth-system done
+```
+
+**Arguments**:
+- First arg = spec ID, name, or path
+- Second arg = target folder (backlog, todo, in-progress, done)
+
+### Remove Specs
+
+```bash
+# Remove by ID
+/cmd:remove-spec 251115123456
+
+# Remove by name
+/cmd:remove-spec auth-system
+
+# Remove by path
+/cmd:remove-spec .agent/specs/backlog/251115123456-auth-system
+```
+
+<Callout type="warn">
+  This deletes the spec folder and removes it from index.json. Cannot be undone (unless in git).
+</Callout>
+
+### Implement & Review
+
+```bash
+# Implement spec
+/cmd:implement-spec 251115123456
+/cmd:implement-spec auth-system
+/cmd:implement-spec .agent/specs/todo/251115123456-auth-system
+
+# Review implementation
+/cmd:review-spec-implementation 251115123456
+/cmd:review-spec-implementation auth-system
+```
+
+### Refresh Index
+
+```bash
+# Sync index.json with filesystem
+/refresh-spec-index
+```
+
+Scans `.agent/specs/` and rebuilds `index.json` from spec files. Use if index gets out of sync.
+
+## Custom Spec Types
+
+<AgentCmd /> auto-discovers spec types from `.claude/commands/cmd/generate-{type}-spec.md` files.
+
+### Built-in Types
+
+- `generate-feature-spec.md` - Full implementation specs
+- `generate-bug-spec.md` - Bug fix specs with reproduction
+- `generate-issue-spec.md` - General issue/refactor specs
+
+### Creating Custom Types
+
+1. Create `.claude/commands/cmd/generate-{type}-spec.md`:
+
+```markdown title=".claude/commands/cmd/generate-migration-spec.md"
+Generate a database migration spec for: {{context}}
+
+Include:
+- Current schema state
+- Target schema changes
+- Data migration strategy
+- Rollback plan
+- Testing approach
+```
+
+2. Use in commands:
+
+```bash
+/cmd:generate-migration-spec "Add user roles table"
+```
+
+3. Use in UI:
+
+Select "migration" from spec type dropdown in "Write It" tab.
+
+### Examples
+
+**API Spec Type**:
+
+```markdown title="generate-api-spec.md"
+Generate an API endpoint spec for: {{context}}
+
+Include:
+- Endpoint path and method
+- Request/response schemas
+- Authentication requirements
+- Error cases
+- Rate limiting
+```
+
+**Security Audit Spec Type**:
+
+```markdown title="generate-security-audit-spec.md"
+Generate a security audit spec for: {{context}}
+
+Include:
+- Attack surface analysis
+- Vulnerability assessment
+- Remediation steps
+- Testing checklist
+```
+
+## Programmatic API
+
+Access specs from workflows:
+
+### Reading Specs
+
+```typescript
+import { readFile } from "fs/promises";
+import { join } from "path";
+
+// Read spec file
+const specPath = ".agent/specs/todo/251115123456-auth-system/spec.md";
+const specContent = await readFile(specPath, "utf-8");
+
+// Parse metadata
+const statusMatch = specContent.match(/\*\*Status\*\*: (.+)/);
+const status = statusMatch?.[1];
+
+const complexityMatch = specContent.match(/\*\*Complexity\*\*: (\d+)/);
+const complexity = complexityMatch ? parseInt(complexityMatch[1]) : 0;
+```
+
+### Reading Index
+
+```typescript
+import { readFile } from "fs/promises";
+
+const indexPath = ".agent/specs/index.json";
+const indexContent = await readFile(indexPath, "utf-8");
+const index = JSON.parse(indexContent);
+
+// Get all todo specs
+const todoSpecs = index.specs.filter((s) => s.status === "todo");
+
+// Sort by complexity
+const sorted = todoSpecs.sort((a, b) => a.complexity - b.complexity);
+
+// Find by ID
+const spec = index.specs.find((s) => s.id === "251115123456");
+```
+
+### Using in Workflows
+
+```typescript
+// List specs via CLI step
+const result = await step.cli("list-specs", {
+  command: "/cmd:list-specs todo",
+});
+
+// Parse result and iterate
+for (const spec of result.specs) {
+  await step.agent(`implement-${spec.id}`, {
+    agent: "codex",
+    prompt: buildSlashCommand("/cmd:implement-spec", {
+      specIdOrNameOrPath: spec.id,
+    }),
+  });
+}
+```
+
+## File Naming Conventions
+
+### Spec Folder Names
+
+**Pattern**: `{YYMMDDHHMMSS}-{kebab-case-name}`
+
+**Examples**:
+- `251115123456-user-authentication-jwt`
+- `251116091234-api-rate-limiting-redis`
+- `251117150032-refactor-auth-service`
+
+**Rules**:
+- Timestamp must be 12 digits (YYMMDDHHMMSS)
+- Name must be kebab-case (lowercase, hyphens)
+- No special characters except hyphens
+- Keep names concise but descriptive
+
+### Spec File Name
+
+Always `spec.md` (lowercase, no variations).
+
+❌ **Don't use**:
+- `Spec.md`
+- `SPEC.md`
+- `specification.md`
+- `feature.md`
+
+✅ **Always use**:
+- `spec.md`
+
+## Best Practices
+
+### Descriptive Names
+
+Include technology/approach in name:
+
+```
+✅ user-authentication-jwt
+✅ api-rate-limiting-redis
+✅ search-elasticsearch-migration
+
+❌ authentication
+❌ rate-limiting
+❌ search-feature
+```
+
+### Consistent Status Flow
+
+Always move through statuses in order:
+
+```
+✅ backlog → todo → in-progress → done
+❌ backlog → done (skip)
+❌ todo → backlog → in-progress (back-and-forth)
+```
+
+### Keep Index in Sync
+
+Use commands instead of manual file operations:
+
+```bash
+✅ /cmd:move-spec auth todo
+❌ mv .agent/specs/backlog/auth .agent/specs/todo/
+```
+
+### Break Down Complex Specs
+
+If complexity > 75, split into multiple specs:
+
+```
+❌ 251115123456-complete-user-system (95 points)
+
+✅ 251115123456-user-authentication (30 points)
+✅ 251115123457-user-profile-crud (25 points)
+✅ 251115123458-user-roles-permissions (35 points)
+```
+
+## Troubleshooting
+
+### Index Out of Sync
+
+**Symptom**: Specs in filesystem don't match index.json
+
+**Fix**:
+```bash
+/refresh-spec-index
+```
+
+### Spec Not Found
+
+**Symptom**: Command can't find spec by name/ID
+
+**Check**:
+1. Verify spec exists: `ls .agent/specs/*/{id}*`
+2. Check index: `cat .agent/specs/index.json | jq '.specs[] | select(.id=="251115123456")'`
+3. Refresh index: `/refresh-spec-index`
+
+### Status Mismatch
+
+**Symptom**: Spec file status doesn't match folder
+
+**Fix**: Move spec to correct folder:
+```bash
+/cmd:move-spec {spec-id} {correct-status}
+```
+
+## Next Steps
+
+- [Spec-Driven Development](/docs/concepts/spec-driven-development) - Conceptual overview
+- [Slash Commands Reference](/docs/reference/slash-commands) - All commands
+- [Workflow Steps Reference](/docs/reference/workflow-steps) - Using specs in workflows

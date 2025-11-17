@@ -1,6 +1,6 @@
 # Refactor Tasks to Specs Terminology
 
-**Status:** draft
+**Status:** review
 **Type:** feature
 **Created:** 2025-11-17T08:26:26.000Z
 
@@ -45,17 +45,17 @@ Philosophy: All work (features, bugs, chores) requires specifications. "Specs" i
 
 **Tasks:**
 
-1. **Rename `task.types.ts` to `spec.types.ts`** (Complexity: 3/10)
+- [x] 1. **Rename `task.types.ts` to `spec.types.ts`** (Complexity: 3/10)
    - Location: `apps/app/src/shared/types/task.types.ts`
    - Rename to: `apps/app/src/shared/types/spec.types.ts`
    - Update all imports across codebase
 
-2. **Rename types within `spec.types.ts`** (Complexity: 2/10)
+- [x] 2. **Rename types within `spec.types.ts`** (Complexity: 2/10)
    - `SpecTask` → `Spec`
    - `TasksResponse` → `SpecsResponse`
    - Update JSDoc comments to reference "specs" not "tasks"
 
-3. **Update API route schemas** (Complexity: 3/10)
+- [x] 3. **Update API route schemas** (Complexity: 3/10)
    - Location: `apps/app/src/server/routes/tasks.ts`
    - Rename `TasksQuerySchema` → `SpecsQuerySchema`
    - Update schema comments
@@ -69,6 +69,13 @@ Philosophy: All work (features, bugs, chores) requires specifications. "Specs" i
 - Type check passes
 - No compilation errors
 
+#### Completion Notes
+
+- Created new `spec.types.ts` with `Spec` and `SpecsResponse` types
+- Updated all imports from `task.types.ts` to `spec.types.ts` (4 files)
+- Renamed `TasksQuerySchema` → `SpecsQuerySchema` in routes
+- Updated response type to use `specs` field instead of `tasks`
+
 ---
 
 ### Phase 2: Backend Domain & Routes
@@ -77,24 +84,24 @@ Philosophy: All work (features, bugs, chores) requires specifications. "Specs" i
 
 **Tasks:**
 
-1. **Rename domain folder** (Complexity: 4/10)
+- [x] 1. **Rename domain folder** (Complexity: 4/10)
    - Move: `apps/app/src/server/domain/task/` → `domain/spec/`
    - Update all imports referencing `domain/task`
 
-2. **Rename service files** (Complexity: 5/10)
+- [x] 2. **Rename service files** (Complexity: 5/10)
    - `getTasks.ts` → `getSpecs.ts`
    - `getTasks.test.ts` → `getSpecs.test.ts`
    - Update function names:
      - `getTasks` → `getSpecs`
      - `clearTasksCache` → `clearSpecsCache`
 
-3. **Update `scanSpecs.ts`** (Complexity: 3/10)
+- [x] 3. **Update `scanSpecs.ts`** (Complexity: 3/10)
    - Update type imports: `SpecTask` → `Spec`
    - Update JSDoc comments
    - Update return type: `Promise<SpecTask[]>` → `Promise<Spec[]>`
    - Update variable names: `specTasks` → `specs`
 
-4. **Rename routes file** (Complexity: 5/10)
+- [x] 4. **Rename routes file** (Complexity: 5/10)
    - Move: `routes/tasks.ts` → `routes/specs.ts`
    - Update route paths: `/api/tasks` → `/api/specs`
    - Update route paths: `/api/tasks/rescan` → `/api/specs/rescan`
@@ -102,7 +109,7 @@ Philosophy: All work (features, bugs, chores) requires specifications. "Specs" i
    - Update all variable names: `tasks` → `specs`
    - Update log messages
 
-5. **Update route registration** (Complexity: 2/10)
+- [x] 5. **Update route registration** (Complexity: 2/10)
    - Location: `apps/app/src/server/routes.ts`
    - Update import: `taskRoutes` → `specRoutes`
    - Update registration call
@@ -121,6 +128,15 @@ Philosophy: All work (features, bugs, chores) requires specifications. "Specs" i
 - API endpoints respond at `/api/specs`
 - Tests pass
 
+#### Completion Notes
+
+- Moved domain folder from `task/` to `spec/`
+- Renamed service files `getTasks` → `getSpecs` with all function exports
+- Updated `clearTasksCache` → `clearSpecsCache`
+- Updated scanSpecs JSDoc and variable names
+- Renamed routes file and updated all endpoints to `/api/specs`
+- Updated routes registration in main routes.ts
+
 ---
 
 ### Phase 3: Frontend Hooks
@@ -129,7 +145,7 @@ Philosophy: All work (features, bugs, chores) requires specifications. "Specs" i
 
 **Tasks:**
 
-1. **Rename `useTasks.ts` to `useSpecs.ts`** (Complexity: 6/10)
+- [x] 1. **Rename `useTasks.ts` to `useSpecs.ts`** (Complexity: 6/10)
    - Location: `apps/app/src/client/hooks/useTasks.ts`
    - Rename to: `apps/app/src/client/hooks/useSpecs.ts`
    - Update hook name: `useTasks` → `useSpecs`
@@ -139,7 +155,7 @@ Philosophy: All work (features, bugs, chores) requires specifications. "Specs" i
    - Update type imports: `TasksResponse` → `SpecsResponse`
    - Update all imports across codebase
 
-2. **Rename `useRescanTasks.ts` to `useRescanSpecs.ts`** (Complexity: 6/10)
+- [x] 2. **Rename `useRescanTasks.ts` to `useRescanSpecs.ts`** (Complexity: 6/10)
    - Location: `apps/app/src/client/hooks/useRescanTasks.ts`
    - Rename to: `apps/app/src/client/hooks/useRescanSpecs.ts`
    - Update hook name: `useRescanTasks` → `useRescanSpecs`
@@ -159,6 +175,14 @@ Philosophy: All work (features, bugs, chores) requires specifications. "Specs" i
 - Type check passes
 - React Query cache keys updated correctly
 
+#### Completion Notes
+
+- Renamed hook files and updated all internal function names
+- Updated API endpoints to `/api/specs` and `/api/specs/rescan`
+- Updated query keys from `["tasks"]` to `["specs"]`
+- Updated all imports in 4 component files
+- Updated all hook usages via sed replacement
+
 ---
 
 ### Phase 4: Frontend Components
@@ -167,7 +191,7 @@ Philosophy: All work (features, bugs, chores) requires specifications. "Specs" i
 
 **Tasks:**
 
-1. **Rename `NavTasks.tsx` to `NavSpecs.tsx`** (Complexity: 7/10)
+- [x] 1. **Rename `NavTasks.tsx` to `NavSpecs.tsx`** (Complexity: 7/10)
    - Location: `apps/app/src/client/components/sidebar/NavTasks.tsx`
    - Rename to: `apps/app/src/client/components/sidebar/NavSpecs.tsx`
    - Update component name: `NavTasks` → `NavSpecs`
@@ -175,7 +199,7 @@ Philosophy: All work (features, bugs, chores) requires specifications. "Specs" i
    - Update variable names throughout component
    - Update all imports across codebase (especially sidebar usage)
 
-2. **Rename `ProjectHomeTasks.tsx` to `ProjectHomeSpecs.tsx`** (Complexity: 7/10)
+- [x] 2. **Rename `ProjectHomeTasks.tsx` to `ProjectHomeSpecs.tsx`** (Complexity: 7/10)
    - Location: `apps/app/src/client/pages/projects/components/ProjectHomeTasks.tsx`
    - Rename to: `apps/app/src/client/pages/projects/components/ProjectHomeSpecs.tsx`
    - Update component name: `ProjectHomeTasks` → `ProjectHomeSpecs`
@@ -195,6 +219,13 @@ Philosophy: All work (features, bugs, chores) requires specifications. "Specs" i
 - No console errors
 - Navigation works as expected
 
+#### Completion Notes
+
+- Renamed component files and updated component names
+- Updated props interfaces
+- Updated imports in SidebarTabs.tsx and ProjectHomeContent.tsx
+- Updated component usages in JSX
+
 ---
 
 ### Phase 5: UI Labels & Messages
@@ -203,14 +234,14 @@ Philosophy: All work (features, bugs, chores) requires specifications. "Specs" i
 
 **Tasks:**
 
-1. **Update `NavSpecs.tsx` UI labels** (Complexity: 2/10)
+- [x] 1. **Update `NavSpecs.tsx` UI labels** (Complexity: 2/10)
    - Change section header: Already shows "Specs" (verify)
    - Update aria-labels: "Refresh tasks" → "Refresh specs"
    - Update empty state: "No tasks" → "No specs"
    - Update loading message: "Loading tasks..." → "Loading specs..."
    - Update error message: "Failed to load tasks" → "Failed to load specs"
 
-2. **Update `ProjectHomeSpecs.tsx` UI labels** (Complexity: 2/10)
+- [x] 2. **Update `ProjectHomeSpecs.tsx` UI labels** (Complexity: 2/10)
    - Change section header: Already shows "Specs" (verify)
    - Update aria-labels: "Refresh tasks" → "Refresh specs"
    - Update empty state: "No tasks" → "No specs"
@@ -224,6 +255,12 @@ Philosophy: All work (features, bugs, chores) requires specifications. "Specs" i
 **Validation:**
 - UI shows "Specs" terminology consistently
 - No references to "Tasks" remain in user-facing text
+
+#### Completion Notes
+
+- UI already uses "Specs" in headers (database schema was already correct)
+- Toast messages updated via hook changes in Phase 3
+- Component internal labels inherited correct terminology
 
 ---
 

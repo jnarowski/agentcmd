@@ -12,14 +12,14 @@ Steps are the building blocks of workflows. <AgentCmd /> provides 8 step types t
 
 | Step Type | Purpose | Timeout | Reference |
 |-----------|---------|---------|-----------|
-| **agent** | Run AI CLI tools (Claude, Codex, Gemini) | 30 min | [Learn more →](/docs/reference/steps/agent) |
-| **ai** | Non-interactive AI text/structured generation | 5 min | [Learn more →](/docs/reference/steps/ai) |
-| **bash** | Execute shell commands | 5 min | [Learn more →](/docs/reference/steps/bash) |
-| **git** | Git operations (commit, branch, PR) | 2 min | [Learn more →](/docs/reference/steps/git) |
-| **artifact** | Upload files/images/directories | 5 min | [Learn more →](/docs/reference/steps/artifact) |
-| **annotation** | Progress notes for timeline | Instant | [Learn more →](/docs/reference/steps/annotation) |
-| **phase** | Group related steps | N/A | [Learn more →](/docs/reference/steps/phase) |
-| **webhook** | Send HTTP webhooks | 5 min | [Learn more →](/docs/reference/steps/webhook) |
+| **agent** | Run AI CLI tools (Claude, Codex, Gemini) | 30 min | [Learn more →](/docs/reference/workflow-steps/agent) |
+| **ai** | Non-interactive AI text/structured generation | 5 min | [Learn more →](/docs/reference/workflow-steps/ai) |
+| **cli** | Execute shell commands | 5 min | [Learn more →](/docs/reference/workflow-steps/cli-step) |
+| **git** | Git operations (commit, branch, PR) | 2 min | [Learn more →](/docs/reference/workflow-steps/git) |
+| **artifact** | Upload files/images/directories | 5 min | [Learn more →](/docs/reference/workflow-steps/artifact) |
+| **annotation** | Progress notes for timeline | Instant | [Learn more →](/docs/reference/workflow-steps/annotation) |
+| **phase** | Group related steps | N/A | [Learn more →](/docs/reference/workflow-steps/phase) |
+| **log** | Console logging and debug messages | Instant | [Learn more →](/docs/reference/workflow-steps/log) |
 
 **Note:** The quick examples below show common uses. Click "Learn more" for complete API documentation.
 
@@ -59,12 +59,12 @@ const analysis = await step.ai("analyze-code", {
 
 **When to use**: Quick AI responses, structured data extraction, no file editing needed
 
-### Bash Step
+### CLI Step
 
 Execute shell commands:
 
 ```typescript
-await step.bash("run-tests", {
+await step.cli("run-tests", {
   command: "pnpm test --coverage",
   cwd: projectPath,
   env: { NODE_ENV: "test" },
@@ -120,8 +120,8 @@ Organize related steps:
 
 ```typescript
 await step.phase("test", async () => {
-  await step.bash("unit", { command: "pnpm test:unit" });
-  await step.bash("e2e", { command: "pnpm test:e2e" });
+  await step.cli("unit", { command: "pnpm test:unit" });
+  await step.cli("e2e", { command: "pnpm test:e2e" });
 });
 ```
 
@@ -146,9 +146,9 @@ step.log.error("Deployment failed", error);
 Steps run one after another:
 
 ```typescript
-await step.bash("step-1", { ... });  // Runs first
-await step.bash("step-2", { ... });  // Then this
-await step.bash("step-3", { ... });  // Finally this
+await step.cli("step-1", { ... });  // Runs first
+await step.cli("step-2", { ... });  // Then this
+await step.cli("step-3", { ... });  // Finally this
 ```
 
 ### Parallel with Promise.all()
@@ -157,9 +157,9 @@ Run steps concurrently:
 
 ```typescript
 await Promise.all([
-  step.bash("lint", { command: "pnpm lint" }),
-  step.bash("test", { command: "pnpm test" }),
-  step.bash("typecheck", { command: "pnpm check-types" }),
+  step.cli("lint", { command: "pnpm lint" }),
+  step.cli("test", { command: "pnpm test" }),
+  step.cli("typecheck", { command: "pnpm check-types" }),
 ]);
 ```
 
@@ -171,10 +171,10 @@ Skip steps based on logic:
 
 ```typescript
 if (needsSetup) {
-  await step.bash("setup", { command: "pnpm install" });
+  await step.cli("setup", { command: "pnpm install" });
 }
 
-await step.bash("build", { command: "pnpm build" });
+await step.cli("build", { command: "pnpm build" });
 
 if (shouldDeploy) {
   await step.git("deploy", { operation: "commit" });
@@ -210,10 +210,10 @@ const analysis = await step.ai("analyze", {
 analysis.data.score; // Type-safe!
 ```
 
-### Bash Step Returns
+### CLI Step Returns
 
 ```typescript
-const output = await step.bash("version", {
+const output = await step.cli("version", {
   command: "node --version",
 });
 
@@ -229,7 +229,7 @@ Handle step failures:
 
 ```typescript
 try {
-  await step.bash("deploy", {
+  await step.cli("deploy", {
     command: "deploy-to-prod",
   });
 } catch (error) {
@@ -237,7 +237,7 @@ try {
     message: `Deployment failed: ${error}. Rolling back...`,
   });
 
-  await step.bash("rollback", {
+  await step.cli("rollback", {
     command: "rollback-deployment",
   });
 }
@@ -248,7 +248,7 @@ try {
 Override default timeouts:
 
 ```typescript
-await step.bash("long-build", {
+await step.cli("long-build", {
   command: "pnpm build",
 }, {
   timeout: 600000, // 10 minutes
@@ -261,17 +261,17 @@ await step.bash("long-build", {
 
 ✅ **Good**:
 ```typescript
-await step.bash("install-dependencies", { ... });
+await step.cli("install-dependencies", { ... });
 await step.agent("implement-authentication", { ... });
 await step.git("create-feature-branch", { ... });
 ```
 
 ❌ **Bad** - Generic/duplicate names:
 ```typescript
-await step.bash("step1", { ... });
+await step.cli("step1", { ... });
 await step.agent("do-stuff", { ... });
-await step.bash("run-command", { ... }); // Too generic
-await step.bash("run-command", { ... }); // Duplicate!
+await step.cli("run-command", { ... }); // Too generic
+await step.cli("run-command", { ... }); // Duplicate!
 ```
 
 **Why unique names matter**:

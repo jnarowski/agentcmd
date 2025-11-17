@@ -53,7 +53,7 @@ This will:
 
 Next steps:
   1. Start the server: npx agentcmd start
-  2. Open UI: http://localhost:5173
+  2. Open UI: http://localhost:3456
 ```
 
 ## Verify Installation
@@ -81,6 +81,72 @@ You should see your configuration:
   }
 }
 ```
+
+---
+
+## Installing Supporting CLI Tools
+
+<AgentCmd /> requires at least one AI CLI tool. Here's how to install the most common options:
+
+### Claude Code (Recommended)
+
+Claude Code is the most mature AI CLI with excellent workflow support.
+
+**macOS/Linux:**
+```bash
+curl -fsSL https://code.claude.com/install.sh | sh
+```
+
+**Manual Installation:**
+1. Visit [code.claude.com](https://code.claude.com/)
+2. Download installer for your OS
+3. Follow setup instructions
+4. Run `claude --version` to verify
+
+### OpenAI Codex
+
+**npm:**
+```bash
+npm install -g openai-codex
+```
+
+**Verify:**
+```bash
+codex --version
+```
+
+### GitHub CLI (gh)
+
+Many workflows use `gh` for PR creation and issue management.
+
+**macOS:**
+```bash
+brew install gh
+```
+
+**Linux:**
+```bash
+# Debian/Ubuntu
+curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+sudo apt update
+sudo apt install gh
+
+# Fedora/RHEL
+sudo dnf install gh
+```
+
+**Windows:**
+```bash
+winget install --id GitHub.cli
+```
+
+**Authenticate:**
+```bash
+gh auth login
+```
+
+---
 
 ## Next Steps
 

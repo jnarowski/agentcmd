@@ -41,8 +41,9 @@ The **task** is the spec - what needs to be built. There are three ways to provi
 
 | Method                    | What Happens                                                                                      | Use When                                                  |
 | ------------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| **Spec File**             | Select existing spec from `.agent/specs/` ([see Specs](/docs/concepts/specs))                     | You already have a spec ready                             |
+| **Spec File**             | Select existing spec from `.agent/specs/` ([see Specs](/docs/concepts/spec-driven-development))                     | You already have a spec ready                             |
 | **Write It**              | Write markdown → AI generates full spec → executes workflow                                       | You have clear requirements and want quick implementation |
+| **Generate from Planning Session** | AI analyzes planning session transcript → generates spec → executes workflow               | You've had a planning discussion and want to proceed     |
 
 **Example "Write It" input:**
 
@@ -201,4 +202,4 @@ tail -f apps/app/logs/app.log | jq .
 ## Next Steps
 
 - [Workflow Definitions](/docs/concepts/workflow-definitions) - Learn how to write workflows
-- [Specs](/docs/concepts/specs) - Spec structure and usage
+- [Spec-Driven Development](/docs/concepts/spec-driven-development) - Spec structure and usage

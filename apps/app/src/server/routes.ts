@@ -3,7 +3,7 @@ import { prisma } from "@/shared/prisma";
 import { authRoutes } from "@/server/routes/auth";
 import { projectRoutes } from "@/server/routes/projects";
 import { sessionRoutes } from "@/server/routes/sessions";
-import { taskRoutes } from "@/server/routes/tasks";
+import { specRoutes } from "@/server/routes/specs";
 import { slashCommandsRoutes } from "@/server/routes/slash-commands";
 import { gitRoutes } from "@/server/routes/git";
 import { settingsRoutes } from "@/server/routes/settings";
@@ -24,8 +24,8 @@ export async function registerRoutes(fastify: FastifyInstance) {
   // Register session routes
   await fastify.register(sessionRoutes);
 
-  // Register task routes
-  await fastify.register(taskRoutes);
+  // Register spec routes
+  await fastify.register(specRoutes);
 
   // Register slash commands routes
   await fastify.register(slashCommandsRoutes);

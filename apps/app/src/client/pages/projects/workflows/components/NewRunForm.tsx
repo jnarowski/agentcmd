@@ -13,7 +13,7 @@ import { CodeEditor } from "@/client/components/CodeEditor";
 import { useCreateWorkflow } from "@/client/pages/projects/workflows/hooks/useWorkflowMutations";
 import { useProjectSpecs } from "@/client/pages/projects/hooks/useProjectSpecs";
 import { useProjectBranches } from "@/client/pages/projects/hooks/useProjectBranches";
-import { useTasks } from "@/client/hooks/useTasks";
+import { useSpecs } from "@/client/hooks/useSpecs";
 import { api } from "@/client/utils/api";
 import { cn } from "@/client/utils/cn";
 import type {
@@ -70,7 +70,7 @@ export function NewRunForm({
     definition || definitions?.find((d) => d.id === selectedDefinitionId);
 
   // Fetch tasks to get spec metadata (for auto-populating spec_type)
-  const { data: tasksData } = useTasks(projectId);
+  const { data: specsData } = useSpecs(projectId);
 
   // Auto-select definition: use definitionId prop if provided, else first definition
   useEffect(() => {
@@ -107,17 +107,17 @@ export function NewRunForm({
 
   // Auto-populate spec type when spec file is selected
   useEffect(() => {
-    if (!specFile || !tasksData?.tasks) return;
+    if (!specFile || !specsData?.specs) return;
 
     // Find matching task by spec path
-    const matchingTask = tasksData.tasks.find(
+    const matchingTask = specsData.specs.find(
       (task) => task.specPath === specFile
     );
 
     if (matchingTask) {
       setSpecType(matchingTask.spec_type);
     }
-  }, [specFile, tasksData]);
+  }, [specFile, specsData]);
 
   // Reset dependent state when definition changes (but preserve initialSpecFile and initialName)
   useEffect(() => {
@@ -320,7 +320,7 @@ export function NewRunForm({
 
       {/* Spec input type selection */}
       <div>
-        <Label className="mb-2 block">Task</Label>
+        <Label className="mb-2 block">Spec</Label>
         <div className="rounded-lg border bg-card">
           <Tabs
             value={specInputType}

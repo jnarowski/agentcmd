@@ -7,7 +7,7 @@ import { Card, Cards } from "fumadocs-ui/components/card";
 import { Callout } from "fumadocs-ui/components/callout";
 import { AgentCmd } from "@/components/AgentCmd";
 
-Specs (specifications) are structured markdown documents that define what to build. In <AgentCmd />'s architecture, specs are the requirements layer that AI agents use to implement features—they're the **"what"** that connects to [workflows](/docs/concepts/workflows) (the "how") and [agents](/docs/concepts/agents) (the "who").
+Spec-driven development uses structured markdown documents to define what to build before building it. In <AgentCmd />, specs are the requirements layer that AI agents use to implement features—they're the **"what"** that connects to [workflows](/docs/concepts/workflows) (the "how") and [agents](/docs/concepts/agents) (the "who").
 
 ## Why Specs?
 
@@ -54,7 +54,7 @@ Implement JWT-based authentication...
 - [ ] Implement token validation
 ```
 
-**Location**: `.agent/specs/{folder}/{timestamp-id}-{name}/spec.md`
+Specs live in `.agent/specs/{folder}/{timestamp-id}-{name}/spec.md` and are organized by status folder (backlog, todo, in-progress, done).
 
 ## Generating Specs
 
@@ -66,7 +66,7 @@ Create spec inline with markdown editor:
 
 1. In UI, click "New Workflow Run"
 2. Select "Write It" tab
-3. Select spec type
+3. Select spec type (feature, bug, issue)
 4. Write spec content in markdown
 5. Click "Run"
 
@@ -76,21 +76,14 @@ The agent generates full spec from your content.
 
 Generate specs directly from CLI:
 
-**Feature Spec**:
-
 ```bash
+# Feature Spec
 /cmd:generate-feature-spec "User authentication system"
-```
 
-**Bug Spec**:
-
-```bash
+# Bug Spec
 /cmd:generate-bug-spec "Login page crashes on mobile"
-```
 
-**Issue Spec**:
-
-```bash
+# Issue Spec
 /cmd:generate-issue-spec "Refactor auth service for better testability"
 ```
 
@@ -108,6 +101,8 @@ await step.agent("generate-spec", {
 
 ## Spec Lifecycle
 
+Specs flow through folders that represent their status:
+
 ```mermaid
 graph LR
     A[backlog/] --> B[todo/]
@@ -117,88 +112,31 @@ graph LR
     E --> B
 ```
 
-**Folders represent status**:
-
 - **`backlog/`** - Future work, not prioritized
 - **`todo/`** - Ready to work on
 - **`in-progress/`** - Currently implementing
-- **done/`** - Completed
+- **`done/`** - Completed
 
-Use the slash command:
+Move specs between folders:
 
 ```bash
-/cmd:move-spec 251115123456-auth in-progress
+/cmd:move-spec auth-system in-progress
 ```
-
-## Spec Structure
-
-### Folder Layout
-
-```text title="Specs Directory Structure"
-.agent/specs/
-├── index.json               # Spec registry
-├── todo/
-│   ├── 251115123456-auth-system/
-│   │   └── spec.md
-│   └── 251116091234-api-rate-limiting/
-│       └── spec.md
-├── in-progress/
-│   └── 251114081340-user-dashboard/
-│       └── spec.md
-├── done/
-│   └── 251113152245-email-verification/
-│       └── spec.md
-└── backlog/
-    └── 251112103022-admin-panel/
-        └── spec.md
-```
-
-### Spec Metadata
-
-**Frontmatter** (top of spec.md):
-
-```markdown
-**Status**: todo | in-progress | done | backlog
-**Created**: YYYY-MM-DD
-**Package**: apps/app | packages/sdk | etc.
-**Complexity**: 1-100 points
-**Phases**: Number of implementation phases
-```
-
-### Spec Contents
-
-Standard sections:
-
-**Overview** - What is this feature?
-**User Story** - As a [user], I want [feature], so that [benefit]
-**Technical Approach** - How will it work?
-**Tasks** - Checklist of work items
-**Files to Create/Modify** - Changed files list
-**Success Criteria** - How do we know it's done?
 
 ## Spec Types
 
-agentcmd supports three spec types, each with a specific purpose:
+<AgentCmd /> supports three built-in spec types:
 
-| Type        | Purpose           | Generated Content                                                       | Use Case                                           |
-| ----------- | ----------------- | ----------------------------------------------------------------------- | -------------------------------------------------- |
-| **Feature** | New functionality | User stories, architecture, phased tasks, integration points            | New features, enhancements, capabilities           |
-| **Bug**     | Bug fixes         | Reproduction steps, root cause analysis, fix strategy, regression tests | Error corrections, defect fixes, issue resolutions |
-| **Issue**   | General issues    | Problem statement, solution approach, impact analysis, success criteria | Refactoring, tech debt, performance, documentation |
+| Type        | Purpose           | Use Case                                           |
+| ----------- | ----------------- | -------------------------------------------------- |
+| **Feature** | New functionality | New features, enhancements, capabilities           |
+| **Bug**     | Bug fixes         | Error corrections, defect fixes, issue resolutions |
+| **Issue**   | General issues    | Refactoring, tech debt, performance, documentation |
 
 <Callout type="info">
   **Extensible**: Create custom spec types by adding `generate-{type}-spec.md`
-  files to `.claude/commands/cmd/`. See [Custom Spec Types](#custom-spec-types)
-  below.
+  files to `.claude/commands/cmd/`. The system auto-discovers all spec types.
 </Callout>
-
-## Custom Spec Types
-
-<AgentCmd /> auto-discovers spec types from `.claude/commands/cmd/generate-
-{type}-spec.md` files. Create custom types for domain-specific workflows (test
-specs, migration specs, RFC specs, security audits, etc.). See built-in examples
-(`generate-feature-spec.md`, `generate-bug-spec.md`, `generate-issue-spec.md`)
-as templates.
 
 ## Implementing Specs
 
@@ -227,62 +165,22 @@ await step.agent("implement", {
 });
 ```
 
-The workflow:
+The workflow reads the spec, implements according to tasks, marks tasks complete, creates git commits, and moves spec to `done/`.
 
-1. Reads spec from `todo/` or `in-progress/`
-2. Implements according to tasks
-3. Marks tasks as complete
-4. Creates git commits
-5. Moves spec to `done/`
+## Spec System Overview
 
-## Spec Index
+Behind the scenes, <AgentCmd /> maintains:
 
-**`index.json`** tracks all specs:
+- **Spec folders** - Organized by status (backlog/todo/in-progress/done)
+- **Index file** - JSON registry tracking all specs for fast lookup
+- **Metadata** - Complexity scores, timestamps, package info
+- **Tasks** - Markdown checkboxes for progress tracking
 
-```json title=".agent/specs/index.json"
-{
-  "specs": [
-    {
-      "id": "251115123456",
-      "name": "auth-system",
-      "folder": "in-progress",
-      "status": "in-progress",
-      "complexity": 35,
-      "created": "2025-01-15T10:30:00Z",
-      "updated": "2025-01-16T14:22:00Z"
-    }
-  ]
-}
-```
-
-**Why index?**
-
-- Fast lookup by ID/name
-- Query all todo specs
-- Track spec history
-- Search by status/complexity
-
-## Complexity Estimates
-
-Specs include complexity scores (1-100 scale):
-
-| Complexity | Description  | Examples                                       |
-| ---------- | ------------ | ---------------------------------------------- |
-| 1-10       | Trivial      | Update copy, fix typo                          |
-| 11-25      | Simple       | Add form field, update API response            |
-| 26-50      | Moderate     | New API endpoint, component refactor           |
-| 51-75      | Complex      | Authentication system, data migration          |
-| 76-100     | Very Complex | Multi-service integration, architecture change |
-
-**Uses**:
-
-- Prioritization (do simpler specs first)
-- Time estimation (35 points ≈ 3-4 hours)
-- Sprint planning (aim for ~100 points per week)
+See [Spec System Reference](/docs/reference/spec-system) for technical details on folder structure, metadata format, complexity scoring, and the index.json schema.
 
 ## Common Workflows
 
-### Spec → Implement → Review
+### Spec → Implement → Review → Ship
 
 ```typescript
 defineWorkflow(
@@ -361,40 +259,6 @@ for (const spec of todoSpecs) {
 }
 ```
 
-## Slash Commands
-
-Built-in commands for spec management:
-
-### Generate
-
-- `/cmd:generate-feature-spec` - Full implementation spec
-- `/cmd:generate-bug-spec` - Bug fix spec with reproduction
-- `/cmd:generate-issue-spec` - General issue/refactor spec
-
-### Manage
-
-- `/cmd:list-specs` - List specs by folder/status
-- `/cmd:move-spec` - Move between folders
-- `/cmd:remove-spec` - Delete spec and update index
-
-### Implement
-
-- `/cmd:implement-spec` - Implement according to spec
-- `/cmd:review-spec-implementation` - Review completed spec
-
-### Query
-
-```bash
-# List all todo specs
-/cmd:list-specs todo
-
-# Search by keyword
-/cmd:list-specs todo --search "authentication"
-
-# Sort by complexity
-/cmd:list-specs todo --sort complexity
-```
-
 ## Best Practices
 
 ### Descriptive Names
@@ -435,22 +299,56 @@ Mark tasks as completed during implementation:
 - [ ] Implement token validation ← In progress
 ```
 
-### Use Consistent Status
+### Use Consistent Status Flow
 
 Don't skip statuses:
 
 ```
 ✅ backlog → todo → in-progress → done
-❌ backlog → done (skipped todo, in-progress)
+❌ backlog → done (skipped steps)
 ```
+
+## Resources
+
+### Internal Documentation
+
+- [Spec System Reference](/docs/reference/spec-system) - Technical details on folder structure, metadata, index.json
+- [Slash Commands Reference](/docs/reference/slash-commands) - Complete command documentation
+- [Implement & Review Example](/docs/examples/implement-and-review) - Basic spec implementation workflow
+- [Resilient Implementation](/docs/examples/recursive-implement-review) - Auto-retry pattern for large specs
+- [Self-Correcting Workflows](/docs/examples/advanced-recursive-implement-review) - Autonomous implement-review cycles
+- [Workflows](/docs/concepts/workflows) - Multi-step AI orchestration
+- [Agents](/docs/concepts/agents) - AI teammates that implement specs
+
+### Articles & Guides
+
+**Foundational:**
+
+- [GitHub: Spec-driven development with AI](https://github.blog/ai-and-ml/generative-ai/spec-driven-development-with-ai-get-started-with-a-new-open-source-toolkit/) - Open source toolkit intro
+- [Red Hat: How spec-driven development improves AI coding quality](https://developers.redhat.com/articles/2025/10/22/how-spec-driven-development-improves-ai-coding-quality) - Quality improvements with specs
+- [Martin Fowler: Understanding Spec-Driven-Development](https://martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html) - Tools and ecosystem overview
+
+**Best Practices:**
+
+- [Stack Overflow: A practical guide to writing technical specs](https://stackoverflow.blog/2020/04/06/a-practical-guide-to-writing-technical-specs/) - Comprehensive guide to spec writing
+- [Close: Writing a Technical Specification for Feature Development](https://making.close.com/posts/writing-technical-specification-for-feature-development/) - Real-world process at Close
+- [Medium: Spec First, Code Later](https://medium.com/@kittikawin_ball/spec-first-code-later-the-power-of-spec-driven-development-5d6270513cb3) - The power of spec-first approach
+
+**Tools & Ecosystem:**
+
+- [GitHub Spec Kit](https://github.com/github/spec-kit) - Open source toolkit for spec-driven development
+- [Kilo Code + OpenSpec](https://blog.kilocode.ai/p/spec-driven-development-what-it-is) - Getting started guide
 
 ## Next Steps
 
 <Cards>
-  <Card title="Generate Spec" href="/docs/examples">
-    See spec generation in action
+  <Card title="Spec System Reference" href="/docs/reference/spec-system">
+    Technical details on folders, metadata, index.json
   </Card>
   <Card title="Slash Commands" href="/docs/reference/slash-commands">
     All spec management commands
+  </Card>
+  <Card title="Examples" href="/docs/examples">
+    See spec generation and implementation in action
   </Card>
 </Cards>

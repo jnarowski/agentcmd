@@ -2,27 +2,27 @@
 /// <reference path="../types/fastify.d.ts" />
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { getTasks, clearTasksCache } from "@/server/domain/task/services/getTasks";
+import { getSpecs, clearSpecsCache } from "@/server/domain/spec/services/getSpecs";
 import { buildErrorResponse } from "@/server/errors";
 
-const TasksQuerySchema = z.object({
+const SpecsQuerySchema = z.object({
   project_id: z.string().cuid().optional(),
 });
 
-export async function taskRoutes(fastify: FastifyInstance) {
+export async function specRoutes(fastify: FastifyInstance) {
   /**
-   * GET /api/tasks
-   * Get all tasks (specs and planning sessions), optionally filtered by project
+   * GET /api/specs
+   * Get all specs and planning sessions, optionally filtered by project
    * Results cached for 30s per user/project
    */
   fastify.get<{
-    Querystring: z.infer<typeof TasksQuerySchema>;
+    Querystring: z.infer<typeof SpecsQuerySchema>;
   }>(
-    "/api/tasks",
+    "/api/specs",
     {
       preHandler: fastify.authenticate,
       schema: {
-        querystring: TasksQuerySchema,
+        querystring: SpecsQuerySchema,
       },
     },
     async (request, reply) => {
@@ -36,27 +36,27 @@ export async function taskRoutes(fastify: FastifyInstance) {
 
       request.log.info(
         { userId, projectId: project_id },
-        "Getting tasks and planning sessions"
+        "Getting specs and planning sessions"
       );
 
-      const data = await getTasks(userId, project_id);
+      const data = await getSpecs(userId, project_id);
 
       return reply.send({ data });
     }
   );
 
   /**
-   * POST /api/tasks/rescan
-   * Clear cache and return fresh tasks (optionally filtered by project)
+   * POST /api/specs/rescan
+   * Clear cache and return fresh specs (optionally filtered by project)
    */
   fastify.post<{
-    Querystring: z.infer<typeof TasksQuerySchema>;
+    Querystring: z.infer<typeof SpecsQuerySchema>;
   }>(
-    "/api/tasks/rescan",
+    "/api/specs/rescan",
     {
       preHandler: fastify.authenticate,
       schema: {
-        querystring: TasksQuerySchema,
+        querystring: SpecsQuerySchema,
       },
     },
     async (request, reply) => {
@@ -70,11 +70,11 @@ export async function taskRoutes(fastify: FastifyInstance) {
 
       request.log.info(
         { userId, projectId: project_id },
-        "Rescanning tasks (clearing cache)"
+        "Rescanning specs (clearing cache)"
       );
 
-      clearTasksCache();
-      const data = await getTasks(userId, project_id);
+      clearSpecsCache();
+      const data = await getSpecs(userId, project_id);
 
       return reply.send({ data });
     }

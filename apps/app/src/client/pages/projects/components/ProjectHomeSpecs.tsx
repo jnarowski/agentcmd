@@ -3,8 +3,8 @@ import { Button } from "@/client/components/ui/button";
 import { AgentIcon } from "@/client/components/AgentIcon";
 import { SessionStateBadge } from "@/client/pages/projects/sessions/components/SessionStateBadge";
 import { getSessionDisplayName } from "@/client/utils/getSessionDisplayName";
-import { useTasks } from "@/client/hooks/useTasks";
-import { useRescanTasks } from "@/client/hooks/useRescanTasks";
+import { useSpecs } from "@/client/hooks/useSpecs";
+import { useRescanSpecs } from "@/client/hooks/useRescanSpecs";
 import { useNavigate } from "react-router-dom";
 import { RefreshCw, Loader2, FileText } from "lucide-react";
 import { useSessions } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
@@ -12,19 +12,19 @@ import type { SessionResponse } from "@/shared/types";
 import type { AgentType } from "@/shared/types/agent.types";
 import { format, formatDistanceToNow } from "date-fns";
 
-interface ProjectHomeTasksProps {
+interface ProjectHomeSpecsProps {
   projectId: string;
 }
 
 /**
- * Tasks tab content for project home page
+ * Specs tab content for project home page
  * Shows Specs + Planning Sessions
  */
-export function ProjectHomeTasks({ projectId }: ProjectHomeTasksProps) {
+export function ProjectHomeSpecs({ projectId }: ProjectHomeSpecsProps) {
   const navigate = useNavigate();
-  const { data, isLoading, error } = useTasks(projectId);
+  const { data, isLoading, error } = useSpecs(projectId);
   const { data: allSessions } = useSessions({ projectId });
-  const rescanMutation = useRescanTasks();
+  const rescanMutation = useRescanSpecs();
 
   const handleRescan = () => {
     rescanMutation.mutate();
@@ -47,7 +47,7 @@ export function ProjectHomeTasks({ projectId }: ProjectHomeTasksProps) {
   if (error) {
     return (
       <div className="py-8 text-center text-sm text-destructive">
-        Failed to load tasks
+        Failed to load specs
       </div>
     );
   }
@@ -55,7 +55,7 @@ export function ProjectHomeTasks({ projectId }: ProjectHomeTasksProps) {
   if (isLoading) {
     return (
       <div className="py-8 text-center text-sm text-muted-foreground">
-        Loading tasks...
+        Loading specs...
       </div>
     );
   }
@@ -63,7 +63,7 @@ export function ProjectHomeTasks({ projectId }: ProjectHomeTasksProps) {
   return (
     <div className="space-y-6">
       {/* Specs Section */}
-      {data && data.tasks.length > 0 && (
+      {data && data.specs.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-semibold text-muted-foreground">
@@ -75,7 +75,7 @@ export function ProjectHomeTasks({ projectId }: ProjectHomeTasksProps) {
               className="ml-auto h-8 w-8 p-0"
               onClick={handleRescan}
               disabled={rescanMutation.isPending || isLoading}
-              aria-label="Refresh tasks"
+              aria-label="Refresh specs"
             >
               {rescanMutation.isPending ? (
                 <Loader2 className="size-4 animate-spin" />
@@ -94,7 +94,7 @@ export function ProjectHomeTasks({ projectId }: ProjectHomeTasksProps) {
                 </tr>
               </thead>
               <tbody>
-                {data.tasks.map((task) => (
+                {data.specs.map((task) => (
                   <tr
                     key={task.id}
                     className="border-b last:border-b-0 hover:bg-accent/50 cursor-pointer"
@@ -218,10 +218,10 @@ export function ProjectHomeTasks({ projectId }: ProjectHomeTasksProps) {
 
       {/* Empty state */}
       {data &&
-        data.tasks.length === 0 &&
+        data.specs.length === 0 &&
         data.planningSessions.length === 0 && (
           <div className="py-8 text-center text-sm text-muted-foreground">
-            No tasks in this project
+            No specs in this project
           </div>
         )}
     </div>

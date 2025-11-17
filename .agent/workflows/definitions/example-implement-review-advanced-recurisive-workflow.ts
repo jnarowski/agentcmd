@@ -27,7 +27,6 @@ export default defineWorkflow(
     description:
       "Implements and reviews a spec recursively, re-implementing until review passes",
     phases: [
-      { id: "setup", label: "Setup" },
       { id: "implement-review-cycle", label: "Implement & Review Cycle" },
     ],
   },

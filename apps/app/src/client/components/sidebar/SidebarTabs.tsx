@@ -8,10 +8,10 @@ import {
 } from "@/client/components/ui/tabs";
 import { useSettings, useUpdateSettings } from "@/client/hooks/useSettings";
 import { useNavigationStore } from "@/client/stores/navigationStore";
-import { NavTasks } from "./NavTasks";
+import { NavSpecs } from "./NavSpecs";
 import { NavActivities } from "./NavActivities";
 import { ProjectCombobox } from "./ProjectCombobox";
-import { useTasks } from "@/client/hooks/useTasks";
+import { useSpecs } from "@/client/hooks/useSpecs";
 
 export function SidebarTabs() {
   const { data: settings } = useSettings();
@@ -31,9 +31,9 @@ export function SidebarTabs() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSessionId, runId]);
 
-  // Count tasks (specs only) filtered by active project
-  const { data: tasksData } = useTasks(activeProjectId || undefined);
-  const tasksCount = tasksData?.tasks.length || 0;
+  // Count specs filtered by active project
+  const { data: specsData } = useSpecs(activeProjectId || undefined);
+  const specsCount = specsData?.specs.length || 0;
 
   const handleTabChange = (value: string) => {
     updateSettings.mutate({
@@ -55,7 +55,7 @@ export function SidebarTabs() {
               Activities
             </TabsTrigger>
             <TabsTrigger value="tasks" className="text-xs h-full px-1.5">
-              Tasks ({tasksCount})
+              Specs ({specsCount})
             </TabsTrigger>
           </TabsList>
         </div>
@@ -65,7 +65,7 @@ export function SidebarTabs() {
         </TabsContent>
 
         <TabsContent value="tasks" className="flex-1 mt-0 overflow-hidden">
-          <NavTasks />
+          <NavSpecs />
         </TabsContent>
       </Tabs>
     </div>

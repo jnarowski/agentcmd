@@ -3,18 +3,21 @@ title: Type-Safe Arguments
 description: Define and validate workflow inputs with JSON Schema
 ---
 
-import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
 ## Overview
 
+These arguments let you customize workflow behavior at runtime—control execution paths, toggle features (e.g., PR creation, E2E tests), adjust processing priorities, or configure any aspect of your workflow logic within `defineWorkflow()` to match your software development process.
+
 Workflows can accept typed arguments using `argsSchema` and `defineSchema()`. This provides:
 
+- Flexible workflow customization based on runtime inputs
 - Runtime validation via JSON Schema
 - Automatic TypeScript type inference
 - IDE autocomplete for event.data.args
 - Clear documentation of required inputs
 
-## Basic Usage
+## Usage
 
 ```typescript
 import { defineWorkflow, defineSchema } from "agentcmd-workflows";
@@ -44,272 +47,33 @@ export default defineWorkflow(
 );
 ```
 
-## Schema Definition
+## Arguments in the UI
 
-{/* AUTO-GENERATED:schema-builder-api */}
-### defineSchema() API
+When you run a workflow with arguments, they appear in the web interface as form fields based on their schema types:
 
-The `defineSchema()` function captures literal types automatically (no `as const` needed):
+<img src="/images/type-safe-arguments-ui.png" alt="Type-safe arguments UI" width="200" />
 
-```typescript
-const schema = defineSchema({
-  type: "object",
-  properties: {
-    buildType: { enum: ["production", "development"] },
-    verbose: { type: "boolean" },
-  },
-  required: ["buildType"],
-});
+The UI automatically generates appropriate input controls:
 
-type Inferred = InferSchemaType<typeof schema>;
-// { buildType: "production" | "development", verbose?: boolean }
-```
+- **Enums** → Dropdown select (e.g., priority: "critical", "high", "medium", "low")
+- **Booleans** → Checkboxes (e.g., createPr, runE2e)
+- **Strings** → Text inputs
+- **Numbers** → Number inputs
+- **Objects** → Nested field groups
+- **Arrays** → Dynamic list inputs
 
-### Supported JSON Schema Types
+Required fields are marked with an asterisk (\*) and validated before the workflow starts. The form submission triggers `inngest.send()` with the typed arguments.
 
-| Type | JSON Schema | TypeScript Type |
-|------|-------------|-----------------|
-| String | `{ type: "string" }` | `string` |
-| Number | `{ type: "number" }` | `number` |
-| Boolean | `{ type: "boolean" }` | `boolean` |
-| Enum | `{ enum: ["a", "b"] }` | `"a" \| "b"` |
-| Object | `{ type: "object", properties: {...} }` | `{ ... }` |
-| Array | `{ type: "array", items: {...} }` | `T[]` |
+## Supported JSON Schema Types
 
-{/* /AUTO-GENERATED:schema-builder-api */}
-
-## Examples
-
-<Tabs items={['Simple', 'With Booleans', 'Full Example']}>
-  <Tab value="Simple">
-    ```typescript
-    const argsSchema = defineSchema({
-      type: "object",
-      properties: {
-        priority: { enum: ["critical", "high", "medium", "low"] },
-      },
-      required: ["priority"],
-    });
-
-    // Inferred type:
-    // { priority: "critical" | "high" | "medium" | "low" }
-    ```
-  </Tab>
-
-  <Tab value="With Booleans">
-    ```typescript
-    const argsSchema = defineSchema({
-      type: "object",
-      properties: {
-        priority: { enum: ["critical", "high", "medium", "low"] },
-        createPr: { type: "boolean" },
-      },
-      required: ["priority"],
-    });
-
-    // Inferred type:
-    // {
-    //   priority: "critical" | "high" | "medium" | "low",
-    //   createPr?: boolean
-    // }
-    ```
-  </Tab>
-
-  <Tab value="Full Example">
-    ```typescript
-    const argsSchema = defineSchema({
-      type: "object",
-      properties: {
-        priority: { enum: ["critical", "high", "medium", "low"] },
-        createPr: { type: "boolean" },
-        runE2e: { type: "boolean" },
-      },
-      required: ["priority"],
-    });
-
-    // Inferred type:
-    // {
-    //   priority: "critical" | "high" | "medium" | "low",
-    //   createPr?: boolean,
-    //   runE2e?: boolean
-    // }
-    ```
-  </Tab>
-</Tabs>
-
-## Validation
-
-Arguments are validated at runtime before the workflow executes:
-
-```typescript
-// ✅ Valid
-await inngest.send({
-  name: "workflow/my-workflow",
-  data: {
-    args: {
-      priority: "high",
-      createPr: true,
-      runE2e: false,
-    },
-  },
-});
-
-// ❌ Invalid - missing required field
-await inngest.send({
-  name: "workflow/my-workflow",
-  data: {
-    args: {
-      createPr: true, // priority is required!
-    },
-  },
-});
-// Throws validation error before workflow runs
-```
-
-## No `as const` Required
-
-Unlike typical TypeScript patterns, `defineSchema()` automatically captures literal types:
-
-```typescript
-// ❌ Old pattern (other libraries)
-const schema = {
-  type: "object",
-  properties: {
-    env: { enum: ["dev", "prod"] },
-  },
-} as const;
-
-// ✅ AgentCmd pattern (automatic)
-const schema = defineSchema({
-  type: "object",
-  properties: {
-    env: { enum: ["dev", "prod"] }, // Automatically literal!
-  },
-});
-```
-
-This works because `defineSchema()` uses const generic parameters to preserve literal types.
-
-## Accessing Arguments
-
-Arguments are available via `event.data.args`:
-
-```typescript
-export default defineWorkflow(
-  {
-    id: "feature-workflow",
-    argsSchema: defineSchema({
-      type: "object",
-      properties: {
-        priority: { enum: ["critical", "high", "medium", "low"] },
-        createPr: { type: "boolean" },
-        runE2e: { type: "boolean" },
-      },
-      required: ["priority"],
-    }),
-  },
-  async ({ event, step }) => {
-    // Destructure with full type safety
-    const { priority, createPr, runE2e } = event.data.args;
-
-    await step.annotation("start", {
-      message: `Starting ${priority} priority feature implementation`,
-    });
-
-    // Implement the feature
-    await step.cli("implement", {
-      command: "pnpm build",
-    });
-
-    // Conditionally create PR
-    if (createPr) {
-      await step.git("create-pr", {
-        operation: "pr",
-        title: `feat: ${priority} priority implementation`,
-      });
-    }
-
-    // Conditionally run E2E tests
-    if (runE2e) {
-      await step.cli("test-e2e", {
-        command: "pnpm test:e2e",
-      });
-    }
-  }
-);
-```
-
-## Best Practices
-
-### Use Enums for Fixed Choices
-
-```typescript
-// ✅ Good - type-safe enum
-properties: {
-  mode: { enum: ["auto", "manual"] }
-}
-
-// ❌ Avoid - loose string
-properties: {
-  mode: { type: "string" }
-}
-```
-
-### Mark Required Fields Explicitly
-
-```typescript
-// ✅ Clear
-{
-  properties: {
-    name: { type: "string" },
-    email: { type: "string" },
-  },
-  required: ["name", "email"]
-}
-
-// ❌ Ambiguous
-{
-  properties: {
-    name: { type: "string" },
-    email: { type: "string" },
-  }
-}
-```
-
-### Provide Defaults in Code
-
-JSON Schema doesn't support defaults well, so handle them in your workflow:
-
-```typescript
-async ({ event, step }) => {
-  const { priority, createPr = false, runE2e = false } = event.data.args;
-  // Now createPr and runE2e have defaults if not provided
-}
-```
-
-## Type Inference Utilities
-
-{/* AUTO-GENERATED:type-utilities-api */}
-### InferSchemaType
-
-Extract TypeScript types from schema:
-
-```typescript
-import type { InferSchemaType } from "agentcmd-workflows";
-
-const schema = defineSchema({
-  type: "object",
-  properties: {
-    name: { type: "string" },
-  },
-  required: ["name"],
-});
-
-type Args = InferSchemaType<typeof schema>;
-// { name: string }
-```
-
-{/* /AUTO-GENERATED:type-utilities-api */}
+| Type    | JSON Schema                             | TypeScript Type |
+| ------- | --------------------------------------- | --------------- |
+| String  | `{ type: "string" }`                    | `string`        |
+| Number  | `{ type: "number" }`                    | `number`        |
+| Boolean | `{ type: "boolean" }`                   | `boolean`       |
+| Enum    | `{ enum: ["a", "b"] }`                  | `"a" \| "b"`    |
+| Object  | `{ type: "object", properties: {...} }` | `{ ... }`       |
+| Array   | `{ type: "array", items: {...} }`       | `T[]`           |
 
 ## Next Steps
 
