@@ -55,6 +55,7 @@ export interface WorkflowRun {
   spec_file: string | null;
   spec_content: string | null;
   spec_type: string | null;
+  planning_session_id: string | null;
   base_branch: string | null;
   branch_name: string | null;
   worktree_name: string | null;
@@ -204,6 +205,7 @@ export interface WorkflowRunDetail {
   spec_file: string | null;
   spec_content: string | null;
   spec_type: string | null;
+  planning_session_id: string | null;
   base_branch: string | null;
   branch_name: string | null;
   worktree_name: string | null;

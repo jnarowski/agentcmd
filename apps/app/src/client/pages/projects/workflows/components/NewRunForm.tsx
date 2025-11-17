@@ -13,6 +13,7 @@ import { CodeEditor } from "@/client/components/CodeEditor";
 import { useCreateWorkflow } from "@/client/pages/projects/workflows/hooks/useWorkflowMutations";
 import { useProjectSpecs } from "@/client/pages/projects/hooks/useProjectSpecs";
 import { useProjectBranches } from "@/client/pages/projects/hooks/useProjectBranches";
+import { useProject } from "@/client/pages/projects/hooks/useProjects";
 import { useSpecs } from "@/client/hooks/useSpecs";
 import { api } from "@/client/utils/api";
 import { cn } from "@/client/utils/cn";
@@ -46,6 +47,10 @@ export function NewRunForm({
   onCancel,
 }: NewRunFormProps) {
   const createWorkflow = useCreateWorkflow();
+  const { data: project } = useProject(projectId);
+
+  // Check if project is a git repository
+  const isGitRepo = project?.capabilities.git.initialized ?? true; // Default to true while loading
 
   // Don't set initial value - let useEffect handle it after definitions load
   const [selectedDefinitionId, setSelectedDefinitionId] = useState("");
@@ -212,6 +217,13 @@ export function NewRunForm({
     }
   }, [name, mode]);
 
+  // Force stay mode if git is not available
+  useEffect(() => {
+    if (!isGitRepo && (mode === "branch" || mode === "worktree")) {
+      setMode("stay");
+    }
+  }, [isGitRepo, mode]);
+
   const handleSubmit = async () => {
     setError(null);
     setShowValidation(true);
@@ -249,6 +261,12 @@ export function NewRunForm({
     }
     if (specInputType === "content" && !specContent.trim()) {
       setError("Spec content is required");
+      return;
+    }
+
+    // Validate git requirements for branch/worktree modes
+    if (!isGitRepo && (mode === "branch" || mode === "worktree")) {
+      setError("Git repository is required for branch and worktree modes");
       return;
     }
 
@@ -296,6 +314,18 @@ export function NewRunForm({
           </p>
           <p className="text-xs text-muted-foreground mt-2">
             Fix the error in the workflow file before creating a run.
+          </p>
+        </div>
+      )}
+
+      {/* Git repository warning */}
+      {!isGitRepo && (
+        <div className="rounded-lg border border-amber-500 bg-amber-500/10 p-3">
+          <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+            Not a Git Repository
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            This project is not initialized with git. Branch and worktree modes are unavailable.
           </p>
         </div>
       )}
@@ -505,16 +535,24 @@ export function NewRunForm({
           {/* Branch option */}
           <div className="space-y-1">
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="branch" id="mode-branch" />
+              <RadioGroupItem
+                value="branch"
+                id="mode-branch"
+                disabled={!isGitRepo}
+              />
               <Label
                 htmlFor="mode-branch"
-                className="font-normal cursor-pointer"
+                className={cn(
+                  "font-normal cursor-pointer",
+                  !isGitRepo && "opacity-50 cursor-not-allowed"
+                )}
               >
                 Create a Branch
               </Label>
             </div>
             <p className="text-xs text-muted-foreground ml-6">
               Switches to a new branch in your current directory
+              {!isGitRepo && " (requires git)"}
             </p>
             {mode === "branch" && (
               <div className="ml-2 space-y-3 border-l-2 border-muted pl-3.5 py-3 [&>div]:space-y-2">
@@ -575,16 +613,24 @@ export function NewRunForm({
           {/* Worktree option */}
           <div className="space-y-1">
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="worktree" id="mode-worktree" />
+              <RadioGroupItem
+                value="worktree"
+                id="mode-worktree"
+                disabled={!isGitRepo}
+              />
               <Label
                 htmlFor="mode-worktree"
-                className="font-normal cursor-pointer"
+                className={cn(
+                  "font-normal cursor-pointer",
+                  !isGitRepo && "opacity-50 cursor-not-allowed"
+                )}
               >
                 Create a Worktree
               </Label>
             </div>
             <p className="text-xs text-muted-foreground ml-6">
               Creates a new worktree directory for isolated parallel work
+              {!isGitRepo && " (requires git)"}
             </p>
             {mode === "worktree" && (
               <div className="ml-2 space-y-3 border-l-2 border-muted pl-3.5 py-3 [&>div]:space-y-2">

@@ -17,7 +17,6 @@ export default defineWorkflow(
     name: "Implement Review Workflow",
     description: "Implements a spec file and reviews the implementation",
     phases: [
-      { id: "setup", label: "Setup" },
       { id: "implement", label: "Implement" },
       { id: "review", label: "Review" },
     ],

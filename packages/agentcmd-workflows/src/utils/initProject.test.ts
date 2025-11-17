@@ -85,7 +85,7 @@ describe("Template files packaging", () => {
       ".agent/specs/backlog/.gitkeep",
       ".agent/specs/todo/.gitkeep",
       ".agent/specs/done/.gitkeep",
-      ".agent/workflows/executions/.gitkeep",
+      ".agent/workflows/runs/.gitkeep",
       ".agent/agents/.gitkeep",
       ".agent/docs/.gitkeep",
       ".agent/logs/.gitkeep",

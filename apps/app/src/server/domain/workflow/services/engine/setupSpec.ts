@@ -107,6 +107,9 @@ async function generateSpecFileWithAgent(
     return event.data.specFile;
   }
 
+  const promptSuffix =
+    "\n\nCRITICAL: You are in an automated workflow. Users CANNOT respond to questions. Make all decisions autonomously using existing patterns and best practices. Document assumptions.";
+
   // Determine which slash command to use for generation
   // specType: Type of spec to generate (e.g., "feature", "bug", "prd", "issue")
   //   - Determines which .claude/commands/cmd/generate-{specType}-spec.md file to use
@@ -124,12 +127,13 @@ async function generateSpecFileWithAgent(
   // MODE 1: Resume from existing planning session
   // Uses session history as context for spec generation
   if (event.data.planningSessionId) {
+    const prompt = `${buildSlashCommand(command as SlashCommandName)}${promptSuffix}`;
     const response = await step.agent<CmdGenerateSpecResponse>(
-      "Generateing Spec From Planning Session",
+      "Generating Spec From Planning Session",
       {
         agent: "claude", // Use Claude for spec generation
         json: true, // Expect structured JSON response
-        prompt: buildSlashCommand(command as SlashCommandName),
+        prompt,
         resume: event.data.planningSessionId, // Resume from this session
         workingDir: event.data.workingDir,
       }
@@ -153,7 +157,7 @@ async function generateSpecFileWithAgent(
       agent: "claude",
       json: true, // Expect structured JSON response with spec_file path
       prompt: buildSlashCommand(command as SlashCommandName, {
-        context: event.data.specContent, // Pass context to slash command
+        context: `${event.data.specContent}${promptSuffix}`, // Pass context to slash command
       }),
       workingDir: event.data.workingDir,
     }

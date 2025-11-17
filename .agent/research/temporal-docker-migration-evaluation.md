@@ -127,8 +127,8 @@ Frontend Real-Time Updates
 - Failure mode: Throw on restore failure (prevents inconsistent state)
 
 **Filesystem**:
-- Step logs: `.agent/workflows/executions/{runId}/logs/{stepId}/`
-- Artifacts: `.agent/workflows/executions/{runId}/artifacts/{stepId}/`
+- Step logs: `.agent/workflows/runs/{runId}/logs/{stepId}/`
+- Artifacts: `.agent/workflows/runs/{runId}/artifacts/{stepId}/`
 - Workflow definitions: `.agent/workflows/definitions/*.ts`
 
 **In-Memory**:

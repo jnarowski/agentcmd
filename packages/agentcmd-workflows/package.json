@@ -52,7 +52,7 @@
   "author": "Sourceborn",
   "license": "MIT",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "peerDependencies": {
     "inngest": "^3.0.0"

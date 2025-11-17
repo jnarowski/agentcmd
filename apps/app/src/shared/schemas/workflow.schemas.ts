@@ -321,6 +321,8 @@ export const workflowRunResponseSchema = z.object({
   args: z.record(z.string(), z.unknown()),
   spec_file: z.string().nullable(),
   spec_content: z.string().nullable(),
+  spec_type: z.string().nullable(),
+  planning_session_id: z.string().nullable(),
   base_branch: z.string().nullable(),
   branch_name: z.string().nullable(),
   worktree_name: z.string().nullable(),

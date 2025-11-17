@@ -21,6 +21,15 @@ export function DetailsTab({ run }: DetailsTabProps) {
 
   return (
     <div className="space-y-4">
+      {run.spec_content && (
+        <div>
+          <h3 className="text-sm font-medium mb-2">Spec Content</h3>
+          <pre className="bg-muted p-4 rounded text-xs overflow-x-auto whitespace-pre-wrap">
+            {run.spec_content}
+          </pre>
+        </div>
+      )}
+
       {hasArgs && (
         <div>
           <h3 className="text-sm font-medium mb-2">Workflow Arguments</h3>
@@ -81,6 +90,20 @@ export function DetailsTab({ run }: DetailsTabProps) {
             <div className="grid grid-cols-2 gap-2 py-2">
               <dt className="text-muted-foreground">Completed:</dt>
               <dd>{new Date(run.completed_at).toLocaleString()}</dd>
+            </div>
+          )}
+
+          {run.spec_file && (
+            <div className="grid grid-cols-2 gap-2 py-2">
+              <dt className="text-muted-foreground">Spec File:</dt>
+              <dd className="font-mono text-xs">{run.spec_file}</dd>
+            </div>
+          )}
+
+          {run.planning_session_id && (
+            <div className="grid grid-cols-2 gap-2 py-2">
+              <dt className="text-muted-foreground">Planning Session:</dt>
+              <dd className="font-mono text-xs">{run.planning_session_id}</dd>
             </div>
           )}
         </dl>
