@@ -2,7 +2,7 @@
 
 **Status**: review
 **Created**: 2025-11-16
-**Package**: apps/website
+**Package**: apps/appsite
 **Phases**: 10
 **Tasks**: 46
 
@@ -22,6 +22,7 @@ Generate comprehensive user-facing documentation for AgentCmd with auto-update c
 ## Auto-Update System
 
 **Sources of Truth** (6):
+
 1. TypeScript types (`packages/agentcmd-workflows/src/types/steps.ts`)
 2. Slash commands (`.claude/commands/**/*.md`)
 3. Example workflows (`.agent/workflows/definitions/example-*.ts`)
@@ -30,6 +31,7 @@ Generate comprehensive user-facing documentation for AgentCmd with auto-update c
 6. Environment variables (`apps/app/.env.example`)
 
 **Process**:
+
 - Extract context from sources
 - Read existing docs as templates
 - Surgical updates to `<!-- AUTO-GENERATED:id -->` sections

@@ -38,7 +38,7 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 3. **Filter agents by scope**
    - If scope = "frontend": only deploy agents 2, 3, 4, 7, 10
    - If scope = "backend": only deploy agents 1, 3, 4, 5, 7, 10
-   - If scope = "workflow": focus agents on specified domain in apps/web/src/client/pages/projects/workflows and server/domain/workflow
+   - If scope = "workflow": focus agents on specified domain in apps/app/src/client/pages/projects/workflows and server/domain/workflow
    - If scope = "types": only deploy agent 3
    - If scope = "tests": only deploy agent 10
    - If scope = "full": deploy all relevant agents
@@ -60,14 +60,16 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 **Task**: Analyze architectural patterns and design decisions.
 
 **Evaluate**:
-- Domain-driven design adherence (check server/domain/* structure)
+
+- Domain-driven design adherence (check server/domain/\* structure)
 - Separation of concerns (routes thin? logic in domain services?)
 - Layer boundaries (client/server/shared properly separated?)
 - Pure functions in domain services (no classes in services/)
-- One function per file rule in domain/*/services/
+- One function per file rule in domain/\*/services/
 - Backend imports from domain/ not old services/
 
 **Scoring Rubric** (12 points):
+
 - 12: Excellent domain-driven structure, clear boundaries, pure functions
 - 9: Good structure, minor violations (1-2 classes in services/)
 - 6: Moderate issues (mixed patterns, some layer leaking)
@@ -75,6 +77,7 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 - 0: Critical problems (no separation, everything coupled)
 
 **Report**:
+
 - Score: X/12
 - Issues found with file:line references
 - Recommended fixes
@@ -86,6 +89,7 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 **Task**: Analyze code readability and abstraction levels.
 
 **Evaluate**:
+
 - Unnecessary abstraction layers (over-engineering?)
 - Function/component complexity (too many params? deeply nested?)
 - Clear naming (intent obvious from names?)
@@ -94,6 +98,7 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 - Magic numbers/strings without constants
 
 **Scoring Rubric** (12 points):
+
 - 12: Excellent clarity, minimal indirection, obvious intent
 - 9: Good readability, minor complexity issues
 - 6: Moderate confusion (some unclear abstractions)
@@ -101,6 +106,7 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 - 0: Incomprehensible (layers on layers, no clear path)
 
 **Report**:
+
 - Score: X/12
 - Examples of unclear code with file:line
 - Specific refactoring suggestions
@@ -112,6 +118,7 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 **Task**: Analyze TypeScript usage and type coverage.
 
 **Evaluate**:
+
 - `any` usage (how prevalent? justified?)
 - Type duplication (same types defined multiple places?)
 - Strict mode compliance
@@ -120,6 +127,7 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 - Backend imports shared types from @/shared/schemas
 
 **Scoring Rubric** (10 points):
+
 - 10: Excellent type safety, minimal any, strict mode, shared types
 - 7: Good types, few any uses, minor duplication
 - 5: Moderate issues (scattered any, type duplication)
@@ -127,6 +135,7 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 - 0: No type safety (any everywhere)
 
 **Report**:
+
 - Score: X/10
 - Count of `any` usages with locations
 - Type duplication instances
@@ -139,6 +148,7 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 **Task**: Identify duplicated logic and DRY violations.
 
 **Evaluate**:
+
 - Copy-pasted code blocks
 - Similar logic in multiple places
 - Repeated patterns that could be utilities
@@ -146,6 +156,7 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 - Same logic in components/services
 
 **Scoring Rubric** (8 points):
+
 - 8: Minimal duplication, good abstraction
 - 6: Minor duplication (2-3 instances)
 - 4: Moderate duplication (4-6 instances)
@@ -153,6 +164,7 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 - 0: Pervasive copy-paste
 
 **Report**:
+
 - Score: X/8
 - List of duplicated code with file:line pairs
 - Suggested shared utilities to create
@@ -164,6 +176,7 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 **Task**: Analyze error handling patterns and consistency.
 
 **Evaluate**:
+
 - Consistent error patterns (services return null? throw?)
 - Proper error logging
 - User-facing error messages (clear? actionable?)
@@ -172,6 +185,7 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 - Centralized error handling
 
 **Scoring Rubric** (10 points):
+
 - 10: Excellent consistency, proper logging, good UX
 - 7: Good patterns, minor inconsistencies
 - 5: Moderate issues (mixed patterns, some errors swallowed)
@@ -179,6 +193,7 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 - 0: No error handling
 
 **Report**:
+
 - Score: X/10
 - Inconsistent patterns found with examples
 - Error handling gaps
@@ -191,6 +206,7 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 **Task**: Evaluate adherence to project conventions and best practices.
 
 **Evaluate**:
+
 - CLAUDE.md guidelines compliance
 - Import patterns (no .js extensions? @/ aliases?)
 - React hooks (proper dependency arrays? primitives only?)
@@ -200,6 +216,7 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 - Co-located tests
 
 **Scoring Rubric** (12 points):
+
 - 12: Excellent adherence to all guidelines
 - 9: Good compliance, minor violations (1-3)
 - 6: Moderate issues (4-8 violations)
@@ -207,6 +224,7 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 - 0: Guidelines ignored
 
 **Report**:
+
 - Score: X/12
 - List violations with file:line
 - Guidelines violated most frequently
@@ -219,14 +237,16 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 **Task**: Evaluate code organization and file placement.
 
 **Evaluate**:
+
 - Feature-based organization (pages/{feature}/ structure?)
-- Proper domain grouping (domain/*/services/)
+- Proper domain grouping (domain/\*/services/)
 - Shared vs feature-specific code (overuse of shared?)
 - File naming consistency (PascalCase components, camelCase utils?)
 - Logical module boundaries
 - Barrel exports complete
 
 **Scoring Rubric** (10 points):
+
 - 10: Excellent organization, clear boundaries
 - 7: Good structure, minor misplacements (2-3 files)
 - 5: Moderate issues (unclear boundaries, some files misplaced)
@@ -234,6 +254,7 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 - 0: Chaotic structure
 
 **Report**:
+
 - Score: X/10
 - Misplaced files with suggested locations
 - Organizational improvements
@@ -246,6 +267,7 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 **Task**: Identify unused code and documented debt.
 
 **Evaluate**:
+
 - Unused files (imports? exports?)
 - Commented-out code blocks
 - TODO/FIXME comments (how many? context?)
@@ -254,6 +276,7 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 - Barrel exports referencing missing files
 
 **Scoring Rubric** (8 points):
+
 - 8: Clean codebase, minimal debt, TODOs tracked
 - 6: Minor dead code (2-3 unused files)
 - 4: Moderate debt (several unused files, many TODOs)
@@ -261,6 +284,7 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 - 0: Abandoned code everywhere
 
 **Report**:
+
 - Score: X/8
 - List unused files/exports
 - Count and categorize TODO/FIXME comments
@@ -273,14 +297,16 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 **Task**: Evaluate dependency health and management.
 
 **Evaluate**:
+
 - Outdated packages (major versions behind?)
 - Unused dependencies (in package.json but not imported?)
 - Security vulnerabilities (known issues?)
 - Duplicate dependencies (same package multiple versions?)
 - Bundle size concerns (huge packages for small features?)
-- Workspace protocol usage (workspace:* for internal deps?)
+- Workspace protocol usage (workspace:\* for internal deps?)
 
 **Scoring Rubric** (8 points):
+
 - 8: Up-to-date, no unused deps, no vulnerabilities
 - 6: Few outdated packages (minor versions), no security issues
 - 4: Moderate issues (major versions behind, 1-2 unused deps)
@@ -288,6 +314,7 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 - 0: Critical security issues, abandoned deps
 
 **Report**:
+
 - Score: X/8
 - List outdated packages with current vs latest
 - Unused dependencies
@@ -301,14 +328,16 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 **Task**: Evaluate test coverage and quality.
 
 **Evaluate**:
+
 - Test coverage (what % of critical code tested?)
 - Co-location (tests next to source files?)
 - Test quality (meaningful assertions? brittle?)
 - Testing strategy (unit vs integration balance?)
 - Mock usage (appropriate? over-mocked?)
-- Test file naming (*.test.ts pattern?)
+- Test file naming (\*.test.ts pattern?)
 
 **Scoring Rubric** (10 points):
+
 - 10: Excellent coverage (80%+), high quality, co-located
 - 7: Good coverage (50-80%), mostly co-located
 - 5: Moderate coverage (30-50%), some quality issues
@@ -316,6 +345,7 @@ Perform comprehensive codebase audit focused on developer experience and code qu
 - 0: No tests or all broken
 
 **Report**:
+
 - Score: X/10
 - Coverage estimate with gaps identified
 - Test quality issues
@@ -340,9 +370,11 @@ After all agents complete, compile results into this format:
 ${2-3 sentence overview of codebase health}
 
 **Strengths**:
+
 - ${top_3_strengths}
 
 **Critical Issues**:
+
 - ${top_3_critical_issues}
 
 ---
@@ -365,14 +397,17 @@ ${2-3 sentence overview of codebase health}
 ## Detailed Findings
 
 ${for_each_section_with_issues}:
+
 ### ${section_name} (X/Y points)
 
 **Issues**:
+
 - ${issue_1} - file:line
 - ${issue_2} - file:line
 - ${issue_3} - file:line
 
 **Recommendations**:
+
 - ${fix_1}
 - ${fix_2}
 - ${fix_3}
@@ -382,16 +417,20 @@ ${for_each_section_with_issues}:
 ## Prioritized Refactoring Plan
 
 ### High Impact (Do First)
+
 1. ${critical_fix_1} - affects: ${affected_areas}
 2. ${critical_fix_2} - affects: ${affected_areas}
 3. ${critical_fix_3} - affects: ${affected_areas}
 
 ### Medium Impact (Do Next)
+
 1. ${moderate_fix_1} - improves: ${improvement_area}
 2. ${moderate_fix_2} - improves: ${improvement_area}
 
 ### Low Impact (Nice to Have)
+
 ${only_if_mode_is_standard_or_deep}:
+
 1. ${minor_fix_1}
 2. ${minor_fix_2}
 
@@ -400,6 +439,7 @@ ${only_if_mode_is_standard_or_deep}:
 ## Quick Wins
 
 ${list_3-5_easy_fixes_with_high_return}:
+
 - [ ] ${quick_win_1} - 5 min
 - [ ] ${quick_win_2} - 10 min
 - [ ] ${quick_win_3} - 15 min

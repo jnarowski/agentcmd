@@ -48,7 +48,7 @@ async function main() {
     // spectora-labs-monorepo-v2
     "/Users/jnarowski/Dev/spectora/src/spectora-labs-monorepo-v2",
     // web
-    // '/Users/jnarowski/Dev/sourceborn/src/agent-workflows-monorepo-v2/apps/web',
+    // '/Users/jnarowski/Dev/sourceborn/src/agent-workflows-monorepo-v2/apps/app',
     // workflows
     // '/Users/jnarowski/Dev/spectora/src/agent-utils/.agent/workflows',
     // workflows

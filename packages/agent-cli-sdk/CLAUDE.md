@@ -98,9 +98,10 @@ This is a TypeScript SDK for orchestrating AI-powered CLI tools (Claude Code, Op
 
 ### Integration with Web App
 
-The web app (`apps/web`) consumes the unified types defined in this SDK to render tool interactions in the chat UI. The web app implements a **standardized tool result matching pattern** that automatically connects `tool_result` blocks to their parent `tool_use` blocks.
+The web app (`apps/app`) consumes the unified types defined in this SDK to render tool interactions in the chat UI. The web app implements a **standardized tool result matching pattern** that automatically connects `tool_result` blocks to their parent `tool_use` blocks.
 
 **Key integration points:**
+
 - All `tool_use` blocks are rendered using specialized tool block components
 - Tool results are matched via `tool_use_id` during message enrichment (O(1) Map-based lookup)
 - Components receive `{input, result}` props - no manual `tool_use_id` matching required
@@ -111,6 +112,7 @@ The web app (`apps/web`) consumes the unified types defined in this SDK to rende
 `.agent/docs/claude-tool-result-patterns.md`
 
 This document explains:
+
 - How `tool_use_id` matching works under the hood
 - Complete data flow from JSONL → enrichment → rendering
 - Step-by-step guide for implementing new tools in the web app
@@ -118,6 +120,7 @@ This document explains:
 - Real-world examples from the codebase (Read, AskUserQuestion, Bash)
 
 **When adding a new tool to this SDK:**
+
 1. Define the tool input type in `src/types/unified.ts`
 2. The web app will automatically handle the result matching
 3. Create a tool block component in the web app following the documented pattern
@@ -147,6 +150,7 @@ This document explains:
 **JSONL Streaming Parser**: The execute function uses line buffering to handle streaming JSONL output from CLI tools without blocking.
 
 **Unified Message Format**: All AI CLI outputs are normalized to UnifiedMessage with typed content blocks, enabling tool-agnostic processing. Codex-specific formats are automatically transformed:
+
 - `function_call` → `tool_use`
 - `function_call_output` → `tool_result`
 - `input_text`/`output_text` → `text`
@@ -162,6 +166,7 @@ This document explains:
 Internal flags differ per tool but are abstracted by the SDK.
 
 **Session Storage**:
+
 - **Claude**: Encodes project paths by replacing `/` with `-` (e.g., `/Users/john/project` → `-Users-john-project`); uses JSONL format
 - **Codex**: Uses date-based directory structure with UUID-based session IDs from `session_meta` events; uses JSONL format
 - **Gemini**: Uses simple timestamp-UUID naming scheme; uses JSON format (not JSONL)

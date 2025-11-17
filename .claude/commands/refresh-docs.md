@@ -43,56 +43,70 @@ These decisions guide all documentation generation:
 Load context from these 6 sources to inform documentation generation:
 
 ### 1. TypeScript Types
+
 **Source**: `packages/agentcmd-workflows/src/types/steps.ts`
 **Generates**: Step Types Reference (all 8 step configs with signatures, timeouts)
 **Extraction**: Read file, extract interface definitions for:
+
 - `AgentStepConfig`, `AiStepConfig`, `CliStepConfig`, `GitStepConfig`
 - `ArtifactStepConfig`, `AnnotationStepConfig`, `PhaseOptions`
 - Note timeout constants in comments
 
 ### 2. Package Exports
+
 **Sources**:
+
 - `packages/agentcmd-workflows/src/index.ts`
 - `packages/agent-cli-sdk/src/index.ts`
 
 **Generates**: SDK API Reference
 **Extraction**: Read files, extract:
+
 - Exported functions (`defineWorkflow`, `defineSchema`, `buildSlashCommand`)
 - Exported types (`WorkflowDefinition`, `WorkflowConfig`, etc.)
 - JSDoc comments for function descriptions
 
 ### 3. Slash Commands
+
 **Source**: `.claude/commands/**/*.md`
 **Generates**: Slash Commands Reference
 **Extraction**: Read all `.md` files in `.claude/commands/`, parse:
+
 - YAML frontmatter (`description`, `argument-hint`)
 - Command name (filename without .md)
 - Build reference table with usage examples
 
 ### 4. Example Workflows
+
 **Sources**:
+
 - `.agent/workflows/definitions/example-basic-workflow.ts`
 - `.agent/workflows/definitions/example-implement-review-workflow.ts`
 - `.agent/workflows/definitions/example-kitchen-sink-workflow.ts`
 
 **Generates**: Examples & Recipes section
 **Extraction**: Read files, extract:
+
 - Workflow configs (id, name, phases)
 - Step usage patterns
 - Code snippets for documentation
 
 ### 5. CLI Definitions
+
 **Source**: `apps/app/src/cli/index.ts`
 **Generates**: CLI Reference
 **Extraction**: Read file, extract:
+
 - Command definitions (`install`, `start`, `config`)
 - Flags and options
 - Descriptions and defaults
 
 ### 6. Environment Variables
+
 **Source**: `apps/app/.env.example`
 **Generates**: Configuration Reference
 **Extraction**: Read file, extract:
+
 - Variable names
 - Inline comments (descriptions)
 - Categorize: Required | Server | Frontend | AI | Inngest
@@ -114,12 +128,12 @@ Workflows orchestrate multi-step AI automation...
 
 \`\`\`typescript
 interface AgentStepConfig {
-  agent: "claude" | "codex" | "gemini";
-  prompt: string;
-  workingDir?: string;
-  permissionMode?: "default" | "plan" | "acceptEdits" | "bypassPermissions";
-  json?: boolean;
-  resume?: string;
+agent: "claude" | "codex" | "gemini";
+prompt: string;
+workingDir?: string;
+permissionMode?: "default" | "plan" | "acceptEdits" | "bypassPermissions";
+json?: boolean;
+resume?: string;
 }
 \`\`\`
 
@@ -131,6 +145,7 @@ interface AgentStepConfig {
 ```
 
 **Rules**:
+
 - Only regenerate content between `START` and `END` markers
 - Preserve all content outside markers
 - Include `<!-- Source: path -->` and `<!-- Last updated: date -->` in regenerated sections
@@ -141,36 +156,43 @@ interface AgentStepConfig {
 Map section argument to target files and sources:
 
 ### `step-types`
-**Files**: `apps/website/content/docs/reference/steps/*.mdx`
+
+**Files**: `apps/appsite/content/docs/reference/steps/*.mdx`
 **Sources**: `types/steps.ts` + example workflows
 **Regenerates**: Config interfaces, timeout values, code examples
 
 ### `sdk-api`
-**Files**: `apps/website/content/docs/reference/sdk-api.mdx`
+
+**Files**: `apps/appsite/content/docs/reference/sdk-api.mdx`
 **Sources**: Package exports from `index.ts` files
 **Regenerates**: Function signatures, type exports, API examples
 
 ### `slash-commands`
-**Files**: `apps/website/content/docs/reference/slash-commands.mdx`
+
+**Files**: `apps/appsite/content/docs/reference/slash-commands.mdx`
 **Sources**: `.claude/commands/**/*.md` YAML frontmatter
 **Regenerates**: Command reference table with args and descriptions
 
 ### `cli`
-**Files**: `apps/website/content/docs/reference/cli.mdx`
+
+**Files**: `apps/appsite/content/docs/reference/cli.mdx`
 **Sources**: `apps/app/src/cli/index.ts`
 **Regenerates**: CLI command reference with flags
 
 ### `config`
-**Files**: `apps/website/content/docs/reference/configuration.mdx`
+
+**Files**: `apps/appsite/content/docs/reference/configuration.mdx`
 **Sources**: `apps/app/.env.example`
 **Regenerates**: Environment variable reference table
 
 ### `examples`
-**Files**: `apps/website/content/docs/examples/*.mdx`
+
+**Files**: `apps/appsite/content/docs/examples/*.mdx`
 **Sources**: `.agent/workflows/definitions/example-*.ts`
 **Regenerates**: Code snippets, workflow patterns
 
 ### `all`
+
 **Files**: All above
 **Sources**: All 6 sources
 **Regenerates**: All AUTO-GENERATED sections across entire docs site
@@ -193,22 +215,27 @@ For each target file:
 Run comprehensive quality checks after generation:
 
 ### Internal Links
+
 - Verify all `[Link](/docs/path)` point to existing pages
 - Report broken links: "❌ Broken link in file.mdx: /docs/missing-page"
 
 ### External Links
+
 - Check HTTP status for external URLs (only in manual content, skip AUTO-GENERATED)
 - Report dead links: "⚠️ External link may be dead: https://example.com (404)"
 
 ### Code Syntax
+
 - Validate TypeScript/JavaScript snippets parse correctly
 - Report syntax errors: "❌ Syntax error in file.mdx code block (line 42)"
 
 ### Outdated Signatures
+
 - Compare TypeScript interfaces in docs with extracted types
 - Report mismatches: "⚠️ step-agent-config signature outdated in reference/steps/agent.mdx"
 
 ### Orphaned Pages
+
 - Detect docs not linked from any other page or meta.json
 - Report: "⚠️ Orphaned page: advanced/old-feature.mdx"
 
@@ -217,6 +244,7 @@ Run comprehensive quality checks after generation:
 For concept pages requiring diagrams:
 
 ### Workflow Execution Lifecycle
+
 ```mermaid
 graph LR
     A[Define Workflow] --> B[Trigger Event]
@@ -227,6 +255,7 @@ graph LR
 ```
 
 ### Phase Organization
+
 ```mermaid
 graph TD
     A[Workflow Start] --> B[Phase: Plan]
@@ -236,6 +265,7 @@ graph TD
 ```
 
 ### Spec Lifecycle
+
 ```mermaid
 graph LR
     A[todo/] --> B[in-progress/]
@@ -251,19 +281,21 @@ Use these as templates, adapt for specific concept being illustrated.
 After execution, provide summary:
 
 ### Files Updated
+
 ```
 ✅ Updated 8 files:
-  - apps/website/content/docs/reference/steps/agent.mdx
-  - apps/website/content/docs/reference/steps/ai.mdx
-  - apps/website/content/docs/reference/steps/cli.mdx
-  - apps/website/content/docs/reference/sdk-api.mdx
-  - apps/website/content/docs/reference/slash-commands.mdx
-  - apps/website/content/docs/reference/cli.mdx
-  - apps/website/content/docs/reference/configuration.mdx
-  - apps/website/content/docs/examples/basic-automation.mdx
+  - apps/appsite/content/docs/reference/steps/agent.mdx
+  - apps/appsite/content/docs/reference/steps/ai.mdx
+  - apps/appsite/content/docs/reference/steps/cli.mdx
+  - apps/appsite/content/docs/reference/sdk-api.mdx
+  - apps/appsite/content/docs/reference/slash-commands.mdx
+  - apps/appsite/content/docs/reference/cli.mdx
+  - apps/appsite/content/docs/reference/configuration.mdx
+  - apps/appsite/content/docs/examples/basic-automation.mdx
 ```
 
 ### Sections Regenerated
+
 ```
 🔄 Regenerated 12 AUTO-GENERATED sections:
   - step-agent-config (agent.mdx)
@@ -279,6 +311,7 @@ After execution, provide summary:
 ```
 
 ### Validation Warnings
+
 ```
 ⚠️ 2 warnings found:
   - Broken internal link in guides/workflow-definition.mdx: /docs/reference/old-api
@@ -288,17 +321,19 @@ Recommendation: Fix broken links before committing
 ```
 
 ### Next Steps
+
 ```
 📝 Next steps:
-1. Review changes: git diff apps/website/content/docs/
+1. Review changes: git diff apps/appsite/content/docs/
 2. Verify updated content is accurate
 3. Fix validation warnings if any
-4. Commit when ready: git add apps/website/content/docs/ && git commit -m "docs: Refresh reference sections from codebase"
+4. Commit when ready: git add apps/appsite/content/docs/ && git commit -m "docs: Refresh reference sections from codebase"
 ```
 
 ## Examples
 
 ### Refresh all documentation
+
 ```bash
 /refresh-docs
 # or explicitly
@@ -306,11 +341,13 @@ Recommendation: Fix broken links before committing
 ```
 
 ### Refresh only step types reference
+
 ```bash
 /refresh-docs step-types
 ```
 
 ### Refresh multiple sections
+
 ```bash
 /refresh-docs sdk-api
 /refresh-docs slash-commands

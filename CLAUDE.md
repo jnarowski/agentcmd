@@ -30,7 +30,7 @@ Guidance for Claude Code when working with this repository.
 **Turborepo monorepo** for AI agent workflow tools:
 
 - **`apps/app`**: Full-stack application (React + Vite frontend, Fastify backend)
-- **`apps/website`**: Marketing site (Next.js)
+- **`apps/appsite`**: Marketing site (Next.js)
 - **`packages/agent-cli-sdk`**: TypeScript SDK for AI CLI orchestration
 - **`packages/agentcmd-workflows`**: Workflow utilities library
 
@@ -109,6 +109,7 @@ set((state) => {
 ### Code Organization
 
 **One export per file:**
+
 - **Services** - server-side only (`domain/*/services/*.ts`)
 - **Utils** - everywhere (client and server utils)
 - File name matches export: `createProject.ts` → `export function createProject()`
@@ -125,12 +126,14 @@ domain/
 ```
 
 **CRUD Gold Standard:** Follow Prisma naming patterns for domain services:
+
 - `get{Entity}` (findUnique), `get{Entity}By` (findFirst), `get{Entity}s` (findMany)
 - `create{Entity}`, `update{Entity}`, `upsert{Entity}`, `delete{Entity}`
 - See `.agent/docs/backend-patterns.md` for comprehensive patterns
 - Reference: `apps/app/src/server/domain/workflow/services/definitions/`
 
 **File structure:**
+
 - Imports → Module constants/private types → `// PUBLIC API` separator → Public exports with JSDoc → `// PRIVATE HELPERS` separator → Private functions
 - One function export per file, file name matches export
 - Shared types from `.types.ts`, private types stay in file
@@ -190,22 +193,22 @@ interface Project {
 ✅ **DO** - Colon notation for channels:
 
 ```typescript
-"project:123"
-"workflow:abc:step:xyz"
+"project:123";
+"workflow:abc:step:xyz";
 ```
 
 ✅ **DO** - Dot notation for events:
 
 ```typescript
-"workflow.started"
-"step.completed"
+"workflow.started";
+"step.completed";
 ```
 
 ❌ **DON'T** - Mix notations:
 
 ```typescript
-"project.123"  // Wrong - use colon
-"workflow:started"  // Wrong - use dot
+"project.123"; // Wrong - use colon
+"workflow:started"; // Wrong - use dot
 ```
 
 **See:** `.agent/docs/websocket-architecture.md` for comprehensive patterns
@@ -281,6 +284,7 @@ pnpm test:e2e            # E2E tests with real CLI
 ## Quick Reference
 
 **Common Patterns:**
+
 - Parallel operations: `Promise.all()` for independent async calls
 - Config: Use `@/server/config`, not `process.env` directly
 - Prisma: Import singleton from `@/shared/prisma`

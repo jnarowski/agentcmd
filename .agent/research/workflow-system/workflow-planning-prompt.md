@@ -1,6 +1,6 @@
 # Workflow Planning Prompt - see "be84e0e1-57f1-4327-89af-b1ea137eca50"
 
-I want to build a workflow system that allows you to write workflows like `workflows/simple-sdlc-workflow.ts` in code and then register them to be executed in the apps/web interface in a new part of the app called "workflows". These workflows will perform a variety of tasks from checking out git branches, pushing code online and most importantly executing CLI tools like claude code and others programmatically. This will support the full SDLC cycle.
+I want to build a workflow system that allows you to write workflows like `workflows/simple-sdlc-workflow.ts` in code and then register them to be executed in the apps/app interface in a new part of the app called "workflows". These workflows will perform a variety of tasks from checking out git branches, pushing code online and most importantly executing CLI tools like claude code and others programmatically. This will support the full SDLC cycle.
 
 We need to build the "engine" for this, as well as the Typescript SDK we'd need to create and register these workflows with the app.
 
@@ -32,7 +32,7 @@ commitAndPushChanges(....)
 })
 ```
 
-Then in apps/web, I'd be able to navigate to worklows, pick a spec from .`agent/specs/todo/[spec].md` and hit execute. This would then show a kanban style board with two columns, "plan", and "execute". The task would move between the columns as work progressed.
+Then in apps/app, I'd be able to navigate to worklows, pick a spec from .`agent/specs/todo/[spec].md` and hit execute. This would then show a kanban style board with two columns, "plan", and "execute". The task would move between the columns as work progressed.
 
 We can focus first on the database structure, and then move to the Typescript SDK
 

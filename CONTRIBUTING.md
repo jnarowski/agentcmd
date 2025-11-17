@@ -49,7 +49,7 @@ This project adheres to a Code of Conduct that all contributors are expected to 
 
 5. Set up the web app (optional, if working on the UI):
    ```bash
-   cd apps/web
+   cd apps/app
    pnpm dev:setup
    ```
 
@@ -117,7 +117,7 @@ pnpm test:e2e
 ### Running the Web App
 
 ```bash
-cd apps/web
+cd apps/app
 pnpm dev  # Runs both client and server
 ```
 

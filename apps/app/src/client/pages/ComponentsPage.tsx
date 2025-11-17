@@ -39,15 +39,14 @@ import { detectAndValidateClaudeCLI } from "../../src/adapters/claude/cli-detect
 import { z } from "zod";
 import { AgentClient, createClaudeAdapter } from "../../src/index";
 import { detectAndValidateClaudeCLI } from "../../src/claude/cli-detector";`,
-    filePath:
-      "packages/agent-cli-sdk/tests/e2e/structured-output.e2e.test.ts",
+    filePath: "packages/agent-cli-sdk/tests/e2e/structured-output.e2e.test.ts",
   };
 
   // Example 2: Git changes style - unified diff format
-  const gitDiff = `diff --git a/apps/web/src/client/components/DiffViewer.tsx b/apps/web/src/client/components/DiffViewer.tsx
+  const gitDiff = `diff --git a/apps/app/src/client/components/DiffViewer.tsx b/apps/app/src/client/components/DiffViewer.tsx
 index 1234567..abcdefg 100644
---- a/apps/web/src/client/components/DiffViewer.tsx
-+++ b/apps/web/src/client/components/DiffViewer.tsx
+--- a/apps/app/src/client/components/DiffViewer.tsx
++++ b/apps/app/src/client/components/DiffViewer.tsx
 @@ -1,10 +1,12 @@
  /**
   * Unified diff viewer component
@@ -154,8 +153,8 @@ index 1234567..abcdefg 100644
             <div className="border-l-4 border-blue-500 pl-4 py-2">
               <p className="font-medium mb-1">Visual Design</p>
               <p className="text-muted-foreground">
-                Orange spinning Loader2 icon with pulsing animated text, designed
-                to match the application's color scheme.
+                Orange spinning Loader2 icon with pulsing animated text,
+                designed to match the application's color scheme.
               </p>
             </div>
           </div>
@@ -185,9 +184,7 @@ index 1234567..abcdefg 100644
 
           <div className="border rounded-lg overflow-hidden">
             <div className="bg-muted/50 px-4 py-2 border-b">
-              <span className="text-xs font-mono">
-                {editExample1.filePath}
-              </span>
+              <span className="text-xs font-mono">{editExample1.filePath}</span>
             </div>
             <div className="p-4 bg-card">
               <DiffViewer
@@ -229,9 +226,7 @@ index 1234567..abcdefg 100644
 
           <div className="border rounded-lg overflow-hidden">
             <div className="bg-muted/50 px-4 py-2 border-b">
-              <span className="text-xs font-mono">
-                {editExample2.filePath}
-              </span>
+              <span className="text-xs font-mono">{editExample2.filePath}</span>
             </div>
             <div className="p-4 bg-card">
               <DiffViewer
@@ -266,7 +261,7 @@ index 1234567..abcdefg 100644
           <div className="border rounded-lg overflow-hidden">
             <div className="bg-muted/50 px-4 py-2 border-b">
               <span className="text-xs font-mono">
-                apps/web/src/client/components/DiffViewer.tsx
+                apps/app/src/client/components/DiffViewer.tsx
               </span>
             </div>
             <div className="p-4 bg-card">
@@ -330,8 +325,8 @@ index 1234567..abcdefg 100644
                     string (optional)
                   </td>
                   <td className="px-4 py-3">
-                    Language for syntax highlighting (auto-detected from filePath
-                    if not provided)
+                    Language for syntax highlighting (auto-detected from
+                    filePath if not provided)
                   </td>
                 </tr>
                 <tr>

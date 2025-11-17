@@ -27,7 +27,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "dev:setup": "cd apps/web && pnpm dev:setup",
+    "dev:setup": "cd apps/app && pnpm dev:setup",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",

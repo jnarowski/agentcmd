@@ -2,7 +2,7 @@
 
 **Status**: draft
 **Created**: 2025-11-08
-**Package**: apps/web
+**Package**: apps/app
 **Total Complexity**: 68 points
 **Phases**: 4
 **Tasks**: 17
@@ -10,13 +10,13 @@
 
 ## Complexity Breakdown
 
-| Phase | Tasks | Total Points | Avg Complexity | Max Task |
-|-------|-------|--------------|----------------|----------|
-| Phase 1: Backend Infrastructure | 5 | 22 | 4.4/10 | 6/10 |
-| Phase 2: WebSocket Integration | 4 | 18 | 4.5/10 | 6/10 |
-| Phase 3: Frontend Implementation | 6 | 22 | 3.7/10 | 5/10 |
-| Phase 4: Testing & Polish | 2 | 6 | 3.0/10 | 4/10 |
-| **Total** | **17** | **68** | **4.0/10** | **6/10** |
+| Phase                            | Tasks  | Total Points | Avg Complexity | Max Task |
+| -------------------------------- | ------ | ------------ | -------------- | -------- |
+| Phase 1: Backend Infrastructure  | 5      | 22           | 4.4/10         | 6/10     |
+| Phase 2: WebSocket Integration   | 4      | 18           | 4.5/10         | 6/10     |
+| Phase 3: Frontend Implementation | 6      | 22           | 3.7/10         | 5/10     |
+| Phase 4: Testing & Polish        | 2      | 6            | 3.0/10         | 4/10     |
+| **Total**                        | **17** | **68**       | **4.0/10**     | **6/10** |
 
 ## Overview
 
@@ -43,7 +43,7 @@ Use Phoenix Channels pattern with `logs:server` and `logs:inngest` channels. Cap
 ### File Structure
 
 ```
-apps/web/
+apps/app/
 ├── src/
 │   ├── server/
 │   │   ├── utils/
@@ -72,20 +72,24 @@ apps/web/
 ### Integration Points
 
 **Backend (Fastify)**:
-- `apps/web/src/server/index.ts` - Add custom Pino transport to targets array
-- `apps/web/src/server/utils/logBroadcaster.ts` - Central log broadcasting + ring buffer
-- `apps/web/src/server/websocket/handlers/logs.handler.ts` - Handle subscribe/unsubscribe
+
+- `apps/app/src/server/index.ts` - Add custom Pino transport to targets array
+- `apps/app/src/server/utils/logBroadcaster.ts` - Central log broadcasting + ring buffer
+- `apps/app/src/server/websocket/handlers/logs.handler.ts` - Handle subscribe/unsubscribe
 
 **CLI (Inngest spawning)**:
-- `apps/web/src/cli/commands/start.ts` - Change stdio from "inherit" to pipe, capture streams
+
+- `apps/app/src/cli/commands/start.ts` - Change stdio from "inherit" to pipe, capture streams
 
 **WebSocket Infrastructure**:
-- `apps/web/src/server/websocket/index.ts` - Route `logs:*` channels to logs handler
-- `apps/web/src/shared/websocket/types.ts` - Define LogsEventTypes and LogOutputData
+
+- `apps/app/src/server/websocket/index.ts` - Route `logs:*` channels to logs handler
+- `apps/app/src/shared/websocket/types.ts` - Define LogsEventTypes and LogOutputData
 
 **Frontend**:
-- `apps/web/src/client/pages/logs/index.tsx` - Subscribe to logs channels, mount viewer
-- `apps/web/src/client/components/LogViewer.tsx` - Render logs with virtual scrolling
+
+- `apps/app/src/client/pages/logs/index.tsx` - Subscribe to logs channels, mount viewer
+- `apps/app/src/client/components/LogViewer.tsx` - Render logs with virtual scrolling
 
 ## Implementation Details
 
@@ -94,6 +98,7 @@ apps/web/
 Centralized service managing ring buffers and WebSocket broadcasts for both log sources.
 
 **Key Points**:
+
 - Two separate 1000-line ring buffers (server, inngest)
 - `broadcastLog(source, content, level?)` - adds to buffer + broadcasts
 - `getLogHistory(source)` - returns buffer contents for new subscribers
@@ -105,6 +110,7 @@ Centralized service managing ring buffers and WebSocket broadcasts for both log 
 Worker thread transport that intercepts Pino log output and broadcasts to WebSocket clients.
 
 **Key Points**:
+
 - Inherits from `pino-abstract-transport`
 - Receives parsed JSON log objects
 - Calls `broadcastLog('server', JSON.stringify(obj), obj.level)`
@@ -115,6 +121,7 @@ Worker thread transport that intercepts Pino log output and broadcasts to WebSoc
 Modify Inngest process spawning to capture stdout/stderr while maintaining terminal output.
 
 **Key Points**:
+
 - Change `stdio: "inherit"` → `stdio: ["inherit", "pipe", "pipe"]`
 - Stdout listener: pipes to both `process.stdout.write()` AND `broadcastLog('inngest', data, 'stdout')`
 - Stderr listener: pipes to both `process.stderr.write()` AND `broadcastLog('inngest', data, 'stderr')`
@@ -125,6 +132,7 @@ Modify Inngest process spawning to capture stdout/stderr while maintaining termi
 Handle subscription/unsubscription to logs channels following existing pattern.
 
 **Key Points**:
+
 - Subscribe: send history from ring buffer + add to subscription list
 - Unsubscribe: remove from subscription list
 - Error handling: log errors, send error event to client
@@ -135,6 +143,7 @@ Handle subscription/unsubscription to logs channels following existing pattern.
 React component with virtual scrolling, auto-scroll toggle, and source filtering.
 
 **Key Points**:
+
 - Virtual scrolling via `@tanstack/react-virtual` (only ~30 visible lines rendered)
 - Auto-scroll toggle (default on, disables when user scrolls up)
 - Filter by source (server/inngest) with toggle buttons
@@ -146,19 +155,19 @@ React component with virtual scrolling, auto-scroll toggle, and source filtering
 
 ### New Files (4)
 
-1. `apps/web/src/server/utils/logBroadcaster.ts` - Ring buffer + broadcast service
-2. `apps/web/src/server/utils/pinoWsTransport.ts` - Custom Pino transport
-3. `apps/web/src/server/websocket/handlers/logs.handler.ts` - Logs channel handler
-4. `apps/web/src/client/pages/logs/index.tsx` - Logs page route
-5. `apps/web/src/client/components/LogViewer.tsx` - Log viewer component
+1. `apps/app/src/server/utils/logBroadcaster.ts` - Ring buffer + broadcast service
+2. `apps/app/src/server/utils/pinoWsTransport.ts` - Custom Pino transport
+3. `apps/app/src/server/websocket/handlers/logs.handler.ts` - Logs channel handler
+4. `apps/app/src/client/pages/logs/index.tsx` - Logs page route
+5. `apps/app/src/client/components/LogViewer.tsx` - Log viewer component
 
 ### Modified Files (5)
 
-1. `apps/web/src/server/index.ts` - Add Pino transport to targets
-2. `apps/web/src/cli/commands/start.ts` - Capture Inngest stdout/stderr
-3. `apps/web/src/server/websocket/index.ts` - Route logs:* channels
-4. `apps/web/src/shared/websocket/types.ts` - Add log event types
-5. `apps/web/src/client/App.tsx` - Add /logs route
+1. `apps/app/src/server/index.ts` - Add Pino transport to targets
+2. `apps/app/src/cli/commands/start.ts` - Capture Inngest stdout/stderr
+3. `apps/app/src/server/websocket/index.ts` - Route logs:\* channels
+4. `apps/app/src/shared/websocket/types.ts` - Add log event types
+5. `apps/app/src/client/App.tsx` - Add /logs route
 
 ## Step by Step Tasks
 
@@ -174,33 +183,33 @@ React component with virtual scrolling, auto-scroll toggle, and source filtering
   - Add `broadcastLog(source, content, level?)` function
   - Add `getLogHistory(source)` function
   - Implement 100ms batching with `setInterval`
-  - File: `apps/web/src/server/utils/logBroadcaster.ts`
+  - File: `apps/app/src/server/utils/logBroadcaster.ts`
 
 - [ ] m4k-2 6/10 Create custom Pino transport for WebSocket broadcasting
   - Extend `pino-abstract-transport`
   - Parse incoming log objects
   - Call `broadcastLog('server', JSON.stringify(obj), obj.level)`
   - Handle errors gracefully
-  - File: `apps/web/src/server/utils/pinoWsTransport.ts`
+  - File: `apps/app/src/server/utils/pinoWsTransport.ts`
 
 - [ ] m4k-3 3/10 Add Pino transport to server startup
   - Import custom transport in targets array
   - Add to both production and development transport configs
   - Set appropriate log level (inherit from config)
-  - File: `apps/web/src/server/index.ts` (lines 39-101)
+  - File: `apps/app/src/server/index.ts` (lines 39-101)
 
 - [ ] m4k-4 4/10 Create logs WebSocket handler
   - Implement `handleLogsEvent()` function following session.handler.ts pattern
   - Handle 'subscribe' event: send history + add to subscriptions
   - Handle 'unsubscribe' event: remove from subscriptions
   - Add error handling with proper logging
-  - File: `apps/web/src/server/websocket/handlers/logs.handler.ts`
+  - File: `apps/app/src/server/websocket/handlers/logs.handler.ts`
 
 - [ ] m4k-5 4/10 Define log event types and interfaces
   - Add `LogsEventTypes` constant (subscribe, log_output, error)
   - Add `LogOutputData` interface (source, content, timestamp, level, stream)
   - Export from shared types
-  - File: `apps/web/src/shared/websocket/types.ts`
+  - File: `apps/app/src/shared/websocket/types.ts`
 
 #### Completion Notes
 
@@ -215,19 +224,19 @@ React component with virtual scrolling, auto-scroll toggle, and source filtering
   - Add `else if (channel?.startsWith("logs:"))` branch
   - Call `handleLogsEvent(socket, channel, type, data, userId!, fastify)`
   - Add before default case
-  - File: `apps/web/src/server/websocket/index.ts` (around line 115)
+  - File: `apps/app/src/server/websocket/index.ts` (around line 115)
 
 - [ ] m4k-7 6/10 Capture Inngest stdout/stderr streams
   - Change `stdio: "inherit"` to `stdio: ["inherit", "pipe", "pipe"]`
   - Add `inngestProcess.stdout?.on('data', ...)` listener
   - Add `inngestProcess.stderr?.on('data', ...)` listener
   - Pipe to both `process.stdout/stderr.write()` AND `broadcastLog()`
-  - File: `apps/web/src/cli/commands/start.ts` (lines 106-132)
+  - File: `apps/app/src/cli/commands/start.ts` (lines 106-132)
 
 - [ ] m4k-8 4/10 Import logBroadcaster in start.ts
   - Add import at top of file
   - Handle case where server not yet initialized (queue logs or skip)
-  - File: `apps/web/src/cli/commands/start.ts`
+  - File: `apps/app/src/cli/commands/start.ts`
 
 - [ ] m4k-9 4/10 Test WebSocket subscription flow
   - Start dev server: `pnpm dev`
@@ -251,14 +260,14 @@ React component with virtual scrolling, auto-scroll toggle, and source filtering
   - Add auto-scroll toggle (useRef to track user scroll)
   - Add source filter toggles (server/inngest)
   - Style with Tailwind: dark theme, monospace font
-  - File: `apps/web/src/client/components/LogViewer.tsx`
+  - File: `apps/app/src/client/components/LogViewer.tsx`
 
 - [ ] m4k-11 4/10 Add JSON syntax highlighting to LogViewer
   - Detect JSON logs (starts with `{`)
   - Parse and pretty-print with color coding
   - Handle parse errors gracefully (show raw)
   - Use Tailwind colors for keys/values/strings
-  - File: `apps/web/src/client/components/LogViewer.tsx`
+  - File: `apps/app/src/client/components/LogViewer.tsx`
 
 - [ ] m4k-12 5/10 Create logs page with WebSocket subscription
   - Subscribe to `logs:server` and `logs:inngest` on mount
@@ -266,12 +275,12 @@ React component with virtual scrolling, auto-scroll toggle, and source filtering
   - Handle reconnection (resubscribe + fetch history)
   - Unsubscribe on unmount
   - Mount LogViewer with logs prop
-  - File: `apps/web/src/client/pages/logs/index.tsx`
+  - File: `apps/app/src/client/pages/logs/index.tsx`
 
 - [ ] m4k-13 2/10 Add logs route to App.tsx
   - Import logs page component
   - Add route: `<Route path="/logs" element={<LogsPage />} />`
-  - File: `apps/web/src/client/App.tsx`
+  - File: `apps/app/src/client/App.tsx`
 
 - [ ] m4k-14 3/10 Add "Logs" navigation link
   - Find main navigation component (likely in layouts/ or components/)
@@ -283,7 +292,7 @@ React component with virtual scrolling, auto-scroll toggle, and source filtering
   - Add button to copy all visible logs
   - Use `navigator.clipboard.writeText()`
   - Show toast/notification on success
-  - File: `apps/web/src/client/components/LogViewer.tsx`
+  - File: `apps/app/src/client/components/LogViewer.tsx`
 
 #### Completion Notes
 
@@ -295,7 +304,7 @@ React component with virtual scrolling, auto-scroll toggle, and source filtering
 
 <!-- prettier-ignore -->
 - [ ] m4k-16 4/10 Manual testing of log streaming
-  - Start dev server: `cd apps/web && pnpm dev`
+  - Start dev server: `cd apps/app && pnpm dev`
   - Navigate to http://localhost:5173/logs
   - Verify server logs appear (Fastify startup, API requests)
   - Verify Inngest logs appear (executor grpc, event streams)
@@ -305,7 +314,7 @@ React component with virtual scrolling, auto-scroll toggle, and source filtering
   - Expected: Real-time logs with <200ms latency
 
 - [ ] m4k-17 2/10 Verify terminal output still works during dev
-  - Start dev server: `cd apps/web && pnpm dev`
+  - Start dev server: `cd apps/app && pnpm dev`
   - Check terminal shows both Fastify and Inngest logs
   - Verify no regression in log visibility
   - Expected: Terminal logs identical to before (passthrough works)
@@ -318,19 +327,19 @@ React component with virtual scrolling, auto-scroll toggle, and source filtering
 
 ### Unit Tests
 
-**`apps/web/src/server/utils/logBroadcaster.test.ts`** - Ring buffer + batching:
+**`apps/app/src/server/utils/logBroadcaster.test.ts`** - Ring buffer + batching:
 
 ```typescript
-describe('logBroadcaster', () => {
-  it('should maintain 1000-line ring buffer per source', () => {
+describe("logBroadcaster", () => {
+  it("should maintain 1000-line ring buffer per source", () => {
     // Add 1001 logs, verify oldest dropped
   });
 
-  it('should batch logs every 100ms', () => {
+  it("should batch logs every 100ms", () => {
     // Mock timer, add logs, verify single broadcast after 100ms
   });
 
-  it('should return history on getLogHistory', () => {
+  it("should return history on getLogHistory", () => {
     // Add logs, call getLogHistory, verify correct order
   });
 });
@@ -371,7 +380,7 @@ Execute these commands to verify the feature works correctly:
 
 ```bash
 # Type checking
-cd apps/web
+cd apps/app
 pnpm check-types
 # Expected: No type errors
 
@@ -386,7 +395,7 @@ pnpm build
 
 **Manual Verification:**
 
-1. Start application: `cd apps/web && pnpm dev`
+1. Start application: `cd apps/app && pnpm dev`
 2. Navigate to: `http://localhost:5173/logs`
 3. Verify: Logs appear from both Fastify (API requests) and Inngest (grpc server startup)
 4. Test reconnection: Stop server (Ctrl+C), restart, verify history loads
@@ -411,6 +420,7 @@ Without 100ms batching, Inngest can produce 50+ WebSocket messages/sec during wo
 ### 2. Ring Buffer Size Trade-off
 
 1000 lines chosen as balance between:
+
 - Memory: ~100KB per source (200KB total) - negligible
 - Reconnection UX: Enough history to see recent context
 - Performance: Small enough to serialize/send quickly on subscribe
@@ -422,13 +432,13 @@ Custom transports run in worker threads with messaging overhead (~1-5ms per log)
 ## Dependencies
 
 - `@tanstack/react-virtual` - Virtual scrolling for log viewer (if not already installed)
-- `pino-abstract-transport` - Already installed (dev dependency in apps/web)
+- `pino-abstract-transport` - Already installed (dev dependency in apps/app)
 - No new server dependencies required
 
 ## References
 
-- Phoenix Channels pattern: `apps/web/src/server/websocket/index.ts`
-- Existing shell streaming: `apps/web/src/server/routes/shell.ts` (PTY example)
+- Phoenix Channels pattern: `apps/app/src/server/websocket/index.ts`
+- Existing shell streaming: `apps/app/src/server/routes/shell.ts` (PTY example)
 - Pino transports: https://github.com/pinojs/pino/blob/master/docs/transports.md
 - Virtual scrolling: https://tanstack.com/virtual/latest
 

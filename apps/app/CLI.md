@@ -30,13 +30,13 @@ If you've built the application locally, you can run the CLI directly using `nod
 pnpm build
 
 # Run CLI commands from monorepo root
-node apps/web/dist/cli.js install
-node apps/web/dist/cli.js install --force
-node apps/web/dist/cli.js --version
-node apps/web/dist/cli.js --help
+node apps/app/dist/cli.js install
+node apps/app/dist/cli.js install --force
+node apps/app/dist/cli.js --version
+node apps/app/dist/cli.js --help
 
-# Or from apps/web directory
-cd apps/web
+# Or from apps/app directory
+cd apps/app
 node dist/cli.js install
 ```
 
@@ -123,12 +123,12 @@ The CLI creates a configuration file at `~/.agents/agentcmd-ui-config.json`.
 
 ### Configuration Options
 
-| Option       | Type   | Default                   | Description                                                        |
-| ------------ | ------ | ------------------------- | ------------------------------------------------------------------ |
-| `uiPort`     | number | `5173`                    | Port for Vite dev server                                           |
-| `serverPort` | number | `3456`                    | Port for Fastify backend                                           |
-| `dbPath`     | string | `~/.agent/database.db`    | Path to SQLite database (tilde expands to home directory)          |
-| `logLevel`   | string | `info`                    | Logging level: `trace`, `debug`, `info`, `warn`, `error`, `fatal` |
+| Option       | Type   | Default                | Description                                                       |
+| ------------ | ------ | ---------------------- | ----------------------------------------------------------------- |
+| `uiPort`     | number | `5173`                 | Port for Vite dev server                                          |
+| `serverPort` | number | `3456`                 | Port for Fastify backend                                          |
+| `dbPath`     | string | `~/.agent/database.db` | Path to SQLite database (tilde expands to home directory)         |
+| `logLevel`   | string | `info`                 | Logging level: `trace`, `debug`, `info`, `warn`, `error`, `fatal` |
 
 ### Editing Configuration
 
@@ -167,7 +167,7 @@ After running `agentcmd-ui install`, start the application manually:
 ### Development Mode
 
 ```bash
-# From the apps/web directory
+# From the apps/app directory
 pnpm dev
 ```
 
@@ -187,6 +187,7 @@ node dist/server/index.js
 ```
 
 The server will:
+
 - Serve the API on port 3456 (or configured `serverPort`)
 - Serve the frontend from `dist/client/`
 
@@ -249,17 +250,16 @@ agentcmd-ui install
 
 **Problem**: Running `agentcmd-ui --version` shows `0.0.0`.
 
-**Solution**: This is expected if `package.json` has version `0.0.0`. Update the version in `apps/web/package.json` before building.
-
+**Solution**: This is expected if `package.json` has version `0.0.0`. Update the version in `apps/app/package.json` before building.
 
 ## Environment Variables
 
 The CLI respects the following environment variables:
 
-| Variable       | Description                                 | Default              |
-| -------------- | ------------------------------------------- | -------------------- |
-| `DATABASE_URL` | SQLite database URL (set during migration)  | From config `dbPath` |
-| `NODE_ENV`     | Node environment                            | `development`        |
+| Variable       | Description                                | Default              |
+| -------------- | ------------------------------------------ | -------------------- |
+| `DATABASE_URL` | SQLite database URL (set during migration) | From config `dbPath` |
+| `NODE_ENV`     | Node environment                           | `development`        |
 
 The `install` command automatically sets `DATABASE_URL` when running Prisma migrations.
 
@@ -268,6 +268,7 @@ The `install` command automatically sets `DATABASE_URL` when running Prisma migr
 ### Database Location
 
 The default database location (`~/.agent/database.db`) is in the user's home directory:
+
 - Only accessible by the current user
 - Not shared across users
 - Protected by OS file permissions
@@ -275,6 +276,7 @@ The default database location (`~/.agent/database.db`) is in the user's home dir
 ### Configuration File
 
 The config file (`~/.agents/agentcmd-ui-config.json`) contains:
+
 - ✅ Safe: Port numbers, log levels, file paths
 - ❌ No secrets: Does not contain API keys, passwords, or tokens
 
@@ -283,6 +285,7 @@ Secrets should be stored in `.env` files or environment variables, not in the co
 ### Path Traversal Protection
 
 The CLI validates paths to prevent directory traversal attacks:
+
 - Tilde (`~`) expansion only at the start of paths
 - Relative paths are resolved safely
 - Parent directory references (`..`) are not allowed in user input

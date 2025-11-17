@@ -56,7 +56,7 @@
       "problemMatcher": []
     },
     {
-      "label": "apps/website",
+      "label": "apps/appsite",
       "type": "shell",
       "command": "zsh -i -c 'cd apps/app && exec zsh'",
       "icon": {

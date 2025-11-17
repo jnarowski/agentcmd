@@ -47,7 +47,7 @@ Agent Workflows Web UI is a React 19 + Vite frontend with a Fastify backend and 
 ## Project Structure
 
 ```
-apps/web/
+apps/app/
 ├── src/
 │   ├── client/           # React frontend
 │   │   ├── pages/        # Page components (Projects, Sessions, Files, Shell, Git)
@@ -95,7 +95,7 @@ apps/web/
 3. **Set up the development environment**
 
    ```bash
-   cd apps/web
+   cd apps/app
    pnpm dev:setup
    ```
 
@@ -264,7 +264,7 @@ agentcmd-ui install
 
 # Or run directly from dist without installing
 pnpm build
-node apps/web/dist/cli.js install
+node apps/app/dist/cli.js install
 ```
 
 ### What It Does

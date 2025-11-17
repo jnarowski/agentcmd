@@ -20,9 +20,20 @@ This guide explains the gold standard testing pattern for backend routes using i
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { PrismaClient } from "@prisma/client";
-import { setupTestDB, cleanTestDB, teardownTestDB } from "@/server/test-utils/db";
-import { createTestApp, closeTestApp, injectAuth } from "@/server/test-utils/fastify";
-import { createTestUser, createTestProject } from "@/server/test-utils/fixtures";
+import {
+  setupTestDB,
+  cleanTestDB,
+  teardownTestDB,
+} from "@/server/test-utils/db";
+import {
+  createTestApp,
+  closeTestApp,
+  injectAuth,
+} from "@/server/test-utils/fastify";
+import {
+  createTestUser,
+  createTestProject,
+} from "@/server/test-utils/fixtures";
 
 describe("GET /api/my-endpoint", () => {
   let app: FastifyInstance;
@@ -70,16 +81,22 @@ describe("GET /api/my-endpoint", () => {
 - **Error Cases** - Constraint violations, not found errors
 
 **Benefits:**
+
 - Real Prisma queries (catches schema issues)
 - No manual mocking overhead
 - Fast (~50ms per test with setup)
 - Reliable and predictable
 
 **Example:**
+
 ```typescript
 // Testing GET /api/projects/:id route
 const project = await createTestProject(prisma, { name: "Test" });
-const response = await app.inject({ method: "GET", url: `/api/projects/${project.id}`, headers });
+const response = await app.inject({
+  method: "GET",
+  url: `/api/projects/${project.id}`,
+  headers,
+});
 expect(response.statusCode).toBe(200);
 ```
 
@@ -90,13 +107,16 @@ expect(response.statusCode).toBe(200);
 - **Performance-Critical Tests** - Tests that run 1000s of times
 
 **Example:**
+
 ```typescript
 // Unit test for domain service
 import { vi } from "vitest";
 
 vi.mock("@/shared/prisma", () => ({
   prisma: {
-    project: { findUnique: vi.fn().mockResolvedValue({ id: "1", name: "Mock" }) },
+    project: {
+      findUnique: vi.fn().mockResolvedValue({ id: "1", name: "Mock" }),
+    },
   },
 }));
 
@@ -127,7 +147,11 @@ const project = await createTestProject(prisma, { name: "Test" });
 ### Database Utilities (`db.ts`)
 
 ```typescript
-import { setupTestDB, cleanTestDB, teardownTestDB } from "@/server/test-utils/db";
+import {
+  setupTestDB,
+  cleanTestDB,
+  teardownTestDB,
+} from "@/server/test-utils/db";
 
 // Setup in-memory SQLite DB with migrations
 const prisma = await setupTestDB();
@@ -140,11 +164,13 @@ await teardownTestDB();
 ```
 
 **How it Works:**
+
 - `setupTestDB()` - Creates `:memory:` SQLite DB, runs `pnpm prisma migrate deploy`
 - `cleanTestDB()` - Truncates all tables in correct FK order
 - `teardownTestDB()` - Disconnects Prisma client
 
 **Performance:**
+
 - Setup: ~500ms (once per test suite)
 - Clean: ~20ms (between tests)
 - Total test time: ~50ms per test
@@ -152,7 +178,12 @@ await teardownTestDB();
 ### Fixture Factories (`fixtures.ts`)
 
 ```typescript
-import { createTestUser, createTestProject, createTestSession, createAuthToken } from "@/server/test-utils/fixtures";
+import {
+  createTestUser,
+  createTestProject,
+  createTestSession,
+  createAuthToken,
+} from "@/server/test-utils/fixtures";
 
 // Create test user (password auto-hashed with bcrypt)
 const user = await createTestUser(prisma, {
@@ -180,6 +211,7 @@ const token = createAuthToken(user.id, user.email, fastify);
 ```
 
 **Defaults:**
+
 - `createTestUser` - `email: "test@example.com"`, `password: "testpassword123"`
 - `createTestProject` - `name: "Test Project"`, `path: "/tmp/test-project"`
 - `createTestSession` - `agent: "claude"`, `state: "idle"`
@@ -187,7 +219,11 @@ const token = createAuthToken(user.id, user.email, fastify);
 ### Fastify Test App (`fastify.ts`)
 
 ```typescript
-import { createTestApp, closeTestApp, injectAuth } from "@/server/test-utils/fastify";
+import {
+  createTestApp,
+  closeTestApp,
+  injectAuth,
+} from "@/server/test-utils/fastify";
 
 // Create Fastify app (auth + routes registered)
 const app = await createTestApp();
@@ -216,9 +252,20 @@ Use this template for new route tests:
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { PrismaClient } from "@prisma/client";
-import { setupTestDB, cleanTestDB, teardownTestDB } from "@/server/test-utils/db";
-import { createTestApp, closeTestApp, injectAuth } from "@/server/test-utils/fastify";
-import { createTestUser, createTestProject } from "@/server/test-utils/fixtures";
+import {
+  setupTestDB,
+  cleanTestDB,
+  teardownTestDB,
+} from "@/server/test-utils/db";
+import {
+  createTestApp,
+  closeTestApp,
+  injectAuth,
+} from "@/server/test-utils/fastify";
+import {
+  createTestUser,
+  createTestProject,
+} from "@/server/test-utils/fixtures";
 import { myResponseSchema } from "@/server/domain/my-domain/schemas";
 
 describe("GET /api/my-endpoint", () => {
@@ -470,12 +517,12 @@ it("should handle concurrent requests", async () => {
 
 Based on gold standard test (`projects.test.ts`):
 
-| Operation | Duration |
-|-----------|----------|
-| `setupTestDB()` (one-time) | ~500ms |
-| Single test execution | ~50ms |
-| `cleanTestDB()` (between tests) | ~20ms |
-| Full test suite (6 tests) | <5 seconds |
+| Operation                       | Duration   |
+| ------------------------------- | ---------- |
+| `setupTestDB()` (one-time)      | ~500ms     |
+| Single test execution           | ~50ms      |
+| `cleanTestDB()` (between tests) | ~20ms      |
+| Full test suite (6 tests)       | <5 seconds |
 
 ### Performance Tips
 
@@ -502,6 +549,7 @@ If tests exceed ~50ms each:
 **Cause**: Multiple Prisma clients or unclosed connections
 
 **Fix**:
+
 ```bash
 # Kill zombie processes
 killall node
@@ -515,8 +563,9 @@ pnpm test
 **Cause**: Prisma schema out of sync with migrations
 
 **Fix**:
+
 ```bash
-cd apps/web
+cd apps/app
 pnpm prisma:generate
 pnpm prisma:migrate
 ```
@@ -526,6 +575,7 @@ pnpm prisma:migrate
 **Cause**: Environment variable missing
 
 **Fix**: Add to `beforeAll`:
+
 ```typescript
 beforeAll(async () => {
   process.env.JWT_SECRET = "test-secret";
@@ -538,6 +588,7 @@ beforeAll(async () => {
 **Cause**: `setupTestDB()` not called or failed
 
 **Fix**: Check `beforeAll` hook runs successfully:
+
 ```typescript
 beforeAll(async () => {
   prisma = await setupTestDB(); // ← Ensure this succeeds
@@ -550,6 +601,7 @@ beforeAll(async () => {
 **Cause**: Data leaking between tests (not cleaning DB)
 
 **Fix**: Ensure `afterEach` cleans database:
+
 ```typescript
 afterEach(async () => {
   await cleanTestDB(prisma); // ← Critical
@@ -561,6 +613,7 @@ afterEach(async () => {
 **Cause**: Path alias not resolved
 
 **Fix**: Use `@/server/` aliases (not relative paths):
+
 ```typescript
 // ✅ GOOD
 import { setupTestDB } from "@/server/test-utils/db";
@@ -574,13 +627,14 @@ import { setupTestDB } from "../test-utils/db";
 ## Next Steps
 
 1. **Copy template** from above
-2. **Create test file** in `apps/web/src/server/routes/{route}.test.ts`
+2. **Create test file** in `apps/app/src/server/routes/{route}.test.ts`
 3. **Run tests**: `pnpm test src/server/routes/{route}.test.ts`
 4. **Add coverage** for edge cases (errors, validation, concurrent requests)
 
 For more examples, see the gold standard test:
+
 ```
-apps/web/src/server/routes/projects.test.ts
+apps/app/src/server/routes/projects.test.ts
 ```
 
 ---
