@@ -1,9 +1,4 @@
-import {
-  buildSlashCommand,
-  defineWorkflow,
-  type CmdImplementSpecResponse,
-  type CmdReviewSpecImplementationResponse,
-} from "agentcmd-workflows";
+import { buildSlashCommand, defineWorkflow, type CmdImplementSpecResponse, type CmdReviewSpecImplementationResponse } from "agentcmd-workflows";
 
 /**
  * Example workflow demonstrating automatic workspace lifecycle.
@@ -17,7 +12,6 @@ export default defineWorkflow(
     name: "Implement Review Workflow",
     description: "Implements a spec file and reviews the implementation",
     phases: [
-      { id: "setup", label: "Setup" },
       { id: "implement", label: "Implement" },
       { id: "review", label: "Review" },
     ],

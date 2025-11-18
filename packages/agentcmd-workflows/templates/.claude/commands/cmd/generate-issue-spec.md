@@ -1,6 +1,6 @@
 ---
-description: Generate spec for single issue/bug with tasks and complexity estimates
-argument-hint: [context-or-spec-id?, context?]
+description: Generate issue spec only (no implementation)
+argument-hint: [context?]
 ---
 
 # Issue Specification
@@ -9,13 +9,13 @@ Generate a focused spec for single issues, bugs, or small tasks. Creates structu
 
 ## Variables
 
-- $param1: $1 (optional) - Either 12-digit spec ID to reuse existing folder, or context string for new issue
-- $param2: $2 (optional) - Additional context (only used if $1 is spec ID)
+- $param1: $1 (optional) - Issue context or description (infers from conversation if omitted)
 
 ## Instructions
 
 - **IMPORTANT**: Use reasoning model - THINK HARD about issue scope, approach, AND complexity
 - **IMPORTANT**: This command ONLY generates spec - do NOT implement code or make changes beyond spec folder/file and index.json
+- Your ONLY file operations: create spec folder, write spec.md, update index.json - nothing else
 - Normalize issue name to kebab-case for folder name
 - Replace ALL `<placeholders>` with specific details
 - **Create detailed tasks** with specific file paths and commands
@@ -39,27 +39,19 @@ Assign based on **context window usage and cognitive load**:
 ## Workflow
 
 1. **Determine Context**:
-   - If no explicit context: Use conversation history
-   - If spec ID provided: Read existing folder (PRD if present) + conversation history
-   - Otherwise: Use provided context string
+   - If $param1 provided: Use as context
+   - If $param1 empty: Infer from conversation history
 
-   **Detection:**
-   - If $param1 matches /^\d{12}$/: It's a spec ID → reuse folder, context from $param2 or conversation
-   - Otherwise: $param1 is context (or empty) → create new folder
-
-2. **Generate or Reuse Spec ID**:
-   - If reusing folder: Extract spec ID from $param1
-   - If new folder: Generate timestamp-based ID in format `YYMMDDHHmmss`
-   - Example: November 13, 2025 at 2:22:01pm → `251113142201`
+2. **Generate Spec ID**:
+   - Generate timestamp-based ID in format `YYMMDDHHmm`
+   - Example: November 13, 2025 at 2:22pm → `2511131422`
    - Read `.agent/specs/index.json` (will be updated in step 7)
 
 3. **Generate Issue Name**:
    - Generate concise kebab-case name from context (max 4 words)
    - Examples: "Fix memory leak" → "memory-leak-fix", "Add export button" → "export-button"
-   - If reusing folder: Extract name from existing folder path
 
 4. **Research Phase**:
-   - If reusing folder: Read existing `prd.md` if present
    - Search codebase for relevant patterns/files
    - Gather context on architecture and conventions
    - Identify files to modify
@@ -82,10 +74,9 @@ Assign based on **context window usage and cognitive load**:
    - Be concise but complete
 
 7. **Write Spec**:
-   - If new folder: Create folder `.agent/specs/todo/{timestampId}-{issueName}/`
-   - If reusing: Verify folder exists, check for conflicts (don't overwrite existing spec.md)
-   - Write: `spec.md` (never spec.json)
-   - Example: `.agent/specs/todo/251113142201-memory-leak-fix/spec.md`
+   - Create folder `.agent/specs/todo/{timestampId}-{issueName}/`
+   - Write `spec.md` (never spec.json)
+   - Example: `.agent/specs/todo/2511131422-memory-leak-fix/spec.md`
    - Always starts in `todo/` with Status "draft"
 
 8. **Update Index**:
@@ -93,16 +84,19 @@ Assign based on **context window usage and cognitive load**:
      ```json
      {
        "specs": {
-         "251113142201": {
-           "path": "todo/251113142201-memory-leak-fix/spec.md",
-           "status": "draft",
+         "2511131422": {
+           "folder": "2511131422-memory-leak-fix",
+           "path": "todo/2511131422-memory-leak-fix/spec.md",
            "spec_type": "issue",
-           "created": "2025-11-13T14:22:01.000Z",
-           "updated": "2025-11-13T14:22:01.000Z"
+           "status": "draft",
+           "created": "2025-11-13T14:22:00Z",
+           "updated": "2025-11-13T14:22:00Z"
          }
        }
      }
      ```
+
+9. **Output Report** - Do NOT implement. Output JSON only.
 
 ## Template
 

@@ -1,6 +1,6 @@
 ---
 description: Implements a feature based on provided context or spec file
-argument-hint: [specIdOrNameOrPath, format]
+argument-hint: [specIdOrNameOrPath]
 ---
 
 # Implement
@@ -9,8 +9,7 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 
 ## Variables
 
-- $specIdOrNameOrPath: $1 (required) - Either a timestamp ID (e.g., `251024120101`), feature name (e.g., `workflow-safety`), or full path
-- $format: $2 (optional) - Output format: "text" or "json" (defaults to "text" if not provided)
+- $specIdOrNameOrPath: $1 (required) - Either a timestamp ID (e.g., `2510241201`), feature name (e.g., `workflow-safety`), or full path
 
 ## Instructions
 
@@ -19,7 +18,7 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 - If it's a full path (contains `/`): use as-is
 - Otherwise, look up in `.agent/specs/index.json`:
   - For timestamp ID: Match by `id` field
-  - For feature name: Fuzzy match path (e.g., `message-queue` matches `todo/251024120101-message-queue-implementation/spec.md`)
+  - For feature name: Fuzzy match path (e.g., `message-queue` matches `todo/2510241201-message-queue-implementation/spec.md`)
   - Use path from index: `.agent/specs/{path}`
 - **If not found in index.json, fallback to directory search:**
   - Search in order: todo/, backlog
@@ -108,6 +107,44 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
    - Write updated index back to `.agent/specs/index.json`
    - This indicates implementation is complete and ready for review
 
+## Validation Commands
+
+Run validation checks from the spec's Validation section after each logical step:
+
+**Critical Checks** (must pass):
+- **Build**: `pnpm build` (or package-specific build command)
+- **Type-check**: `pnpm check-types` (or `tsc --noEmit`)
+
+**Important Checks** (should pass):
+- **Lint**: `pnpm lint` (or package-specific lint command)
+- **Tests**: `pnpm test` (or package-specific test command)
+
+Run these after completing:
+- Each phase (minimum)
+- Complex tasks (recommended)
+- Before marking spec as "review" (required)
+
+## Error Handling
+
+If a task fails during implementation:
+
+1. **Document the failure**:
+   - Add failure note in Completion Notes
+   - Mark failed task: `- [ ] ~~1.1 Task description~~ ❌ FAILED: [reason]`
+
+2. **Assess impact**:
+   - Can you continue with other tasks?
+   - Is this a blocker for subsequent tasks?
+
+3. **Update status**:
+   - Set `implementation_status: "partial"` in JSON output
+   - Keep spec status as `"in-progress"`
+   - Populate `error` field with details
+
+4. **Report to user**:
+   - Include failure details in JSON output
+   - Ask for guidance if blocked
+
 ## Success/Failure Criteria
 
 **Success (`success: true`)**:
@@ -130,15 +167,13 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 
 ## Report
 
-### JSON
-
-**IMPORTANT**: If $format is "json", output ONLY raw JSON (see `.agent/docs/slash-command-json-output-format.md`).
+**IMPORTANT**: Output ONLY raw JSON (see `.agent/docs/slash-command-json-output-format.md`).
 
 <json_output>
 {
 "success": true,
-"spec_id": "251113152201",
-"spec_file": ".agent/specs/todo/251113152201-feature-name/spec.md",
+"spec_id": "2511131522",
+"spec_file": ".agent/specs/todo/2511131522-feature-name/spec.md",
 "feature_name": "feature-name",
 "implementation_status": "completed",
 "tasks": {
@@ -186,7 +221,7 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 **JSON Field Descriptions:**
 
 - `success`: Boolean - true if all tasks completed successfully, false if any tasks failed or were skipped
-- `spec_id`: String - Timestamp-based spec ID (e.g., "251113152201")
+- `spec_id`: String - Timestamp-based spec ID (e.g., "2511131522")
 - `spec_file`: String - Full path to the spec file that was implemented
 - `feature_name`: String - Normalized feature name (lowercase, hyphenated)
 - `implementation_status`: Enum - "completed" | "partial" | "failed"
@@ -228,10 +263,67 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
   - `phase`: String - Which phase failed
   - `task`: String - Which task failed (if applicable)
 
-### Text
+### Example: Successful Implementation
 
-Otherwise, provide this human-readable information to the user:
+```json
+{
+  "success": true,
+  "spec_id": "2511131522",
+  "spec_file": ".agent/specs/todo/2511131522-feature-name/spec.md",
+  "feature_name": "feature-name",
+  "implementation_status": "completed",
+  "tasks": {
+    "total": 15,
+    "completed": 15,
+    "failed": 0,
+    "skipped": 0
+  },
+  "validation": {
+    "passed": true,
+    "checks": {
+      "build": true,
+      "type_check": true,
+      "lint": true,
+      "tests": true
+    },
+    "failures": []
+  },
+  "error": null
+}
+```
 
-- Summarize the work you've just done in a concise bullet point list
-- Report the files and total lines changed with `git diff --stat`
-- Note that spec status has been updated to "review" and is ready for validation
+### Example: Failed Implementation
+
+```json
+{
+  "success": false,
+  "spec_id": "2511131522",
+  "spec_file": ".agent/specs/todo/2511131522-auth-feature/spec.md",
+  "feature_name": "auth-feature",
+  "implementation_status": "partial",
+  "tasks": {
+    "total": 15,
+    "completed": 8,
+    "failed": 2,
+    "skipped": 5
+  },
+  "validation": {
+    "passed": false,
+    "checks": {
+      "build": false,
+      "type_check": true,
+      "lint": true,
+      "tests": false
+    },
+    "failures": [
+      "Build failed: Type error in src/auth/middleware.ts",
+      "Tests failed: 3 test suites failed"
+    ]
+  },
+  "error": {
+    "message": "Build failed after implementing authentication middleware",
+    "phase": "Phase 2: Backend Integration",
+    "task": "2.3 Add auth middleware"
+  }
+}
+```
