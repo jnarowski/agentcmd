@@ -83,8 +83,8 @@ export function WorkflowPackageInstallDialog({
             <div className="space-y-4">
               {!installResult.success && (
                 <Alert variant="destructive">
-                  <AlertDescription className="overflow-hidden">
-                    <div className="break-words" style={{ overflowWrap: "anywhere" }}>
+                  <AlertDescription className="min-w-0">
+                    <div className="break-words whitespace-pre-wrap" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
                       {installResult.message}
                     </div>
                   </AlertDescription>
@@ -188,8 +188,8 @@ export function WorkflowPackageInstallDialog({
 
               {installMutation.isError && (
                 <Alert variant="destructive">
-                  <AlertDescription className="overflow-hidden">
-                    <div className="break-words" style={{ overflowWrap: "anywhere" }}>
+                  <AlertDescription className="min-w-0">
+                    <div className="break-words whitespace-pre-wrap" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
                       {installMutation.error?.message || "Installation failed"}
                     </div>
                   </AlertDescription>

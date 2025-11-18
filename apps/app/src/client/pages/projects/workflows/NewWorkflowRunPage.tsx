@@ -12,6 +12,8 @@ export default function NewWorkflowRunPage() {
   const activeProjectId = projectId || id;
   const initialSpecFile = searchParams.get("specFile") ?? undefined;
   const initialName = searchParams.get("name") ?? undefined;
+  const initialPlanningSessionId = searchParams.get("planningSessionId") ?? undefined;
+  const initialSpecInputType = searchParams.get("specInputType") as "file" | "planning" | "content" | undefined;
 
   // Get project name for title
   const { data: project } = useProject(activeProjectId!);
@@ -66,6 +68,8 @@ export default function NewWorkflowRunPage() {
               definitions={definitions}
               initialSpecFile={initialSpecFile}
               initialName={initialName}
+              initialPlanningSessionId={initialPlanningSessionId}
+              initialSpecInputType={initialSpecInputType}
               onSuccess={handleSuccess}
               onCancel={handleCancel}
             />

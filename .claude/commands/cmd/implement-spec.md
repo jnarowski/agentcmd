@@ -9,7 +9,7 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 
 ## Variables
 
-- $specIdOrNameOrPath: $1 (required) - Either a timestamp ID (e.g., `251024120101`), feature name (e.g., `workflow-safety`), or full path
+- $specIdOrNameOrPath: $1 (required) - Either a timestamp ID (e.g., `2510241201`), feature name (e.g., `workflow-safety`), or full path
 - $format: $2 (optional) - Output format: "text" or "json" (defaults to "text" if not provided)
 
 ## Instructions
@@ -19,7 +19,7 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 - If it's a full path (contains `/`): use as-is
 - Otherwise, look up in `.agent/specs/index.json`:
   - For timestamp ID: Match by `id` field
-  - For feature name: Fuzzy match path (e.g., `message-queue` matches `todo/251024120101-message-queue-implementation/spec.md`)
+  - For feature name: Fuzzy match path (e.g., `message-queue` matches `todo/2510241201-message-queue-implementation/spec.md`)
   - Use path from index: `.agent/specs/{path}`
 - **If not found in index.json, fallback to directory search:**
   - Search in order: todo/, backlog
@@ -137,8 +137,8 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 <json_output>
 {
 "success": true,
-"spec_id": "251113152201",
-"spec_file": ".agent/specs/todo/251113152201-feature-name/spec.md",
+"spec_id": "2511131522",
+"spec_file": ".agent/specs/todo/2511131522-feature-name/spec.md",
 "feature_name": "feature-name",
 "implementation_status": "completed",
 "tasks": {
@@ -186,7 +186,7 @@ Follow the `Workflow` steps in the exact order to implement the spec then `Repor
 **JSON Field Descriptions:**
 
 - `success`: Boolean - true if all tasks completed successfully, false if any tasks failed or were skipped
-- `spec_id`: String - Timestamp-based spec ID (e.g., "251113152201")
+- `spec_id`: String - Timestamp-based spec ID (e.g., "2511131522")
 - `spec_file`: String - Full path to the spec file that was implemented
 - `feature_name`: String - Normalized feature name (lowercase, hyphenated)
 - `implementation_status`: Enum - "completed" | "partial" | "failed"

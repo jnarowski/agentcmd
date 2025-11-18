@@ -159,7 +159,7 @@ export async function createServer() {
   fastify.setSerializerCompiler(serializerCompiler);
 
   // Custom error handler for Zod validation and custom errors
-  fastify.setErrorHandler((error, request, reply) => {
+  fastify.setErrorHandler((error: Error & { validation?: unknown; code?: string; name?: string; statusCode?: number }, request, reply) => {
     // Handle Zod validation errors
     if (error.validation) {
       return reply.status(400).send({

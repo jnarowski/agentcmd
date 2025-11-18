@@ -35,17 +35,17 @@ The system looks for these files in `.agent/workflows/definitions/`. If the work
 
 When you create a workflow run, you provide two inputs:
 
-### Task
+### Spec
 
-The **task** is the spec - what needs to be built. There are three ways to provide it:
+The **spec** defines what needs to be built. There are three ways to provide it:
 
-| Method                    | What Happens                                                                                      | Use When                                                  |
-| ------------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| **Spec File**             | Select existing spec from `.agent/specs/` ([see Specs](/docs/concepts/spec-driven-development))                     | You already have a spec ready                             |
-| **Write It**              | Write markdown → AI generates full spec → executes workflow                                       | You have clear requirements and want quick implementation |
-| **Generate from Planning Session** | AI analyzes planning session transcript → generates spec → executes workflow               | You've had a planning discussion and want to proceed     |
+| Method                    | What Happens                                                                                    | Use When                                                  |
+| ------------------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| **Select File**           | Select existing spec from `.agent/specs/` ([see Specs](/docs/concepts/spec-driven-development)) | You already have a spec ready                             |
+| **From Planning Session** | AI analyzes planning session transcript → generates spec → executes workflow                    | You've had a planning discussion and want to proceed      |
+| **Write Custom**          | Write markdown → AI generates full spec → executes workflow                                     | You have clear requirements and want quick implementation |
 
-**Example "Write It" input:**
+**Example "Write Custom" input:**
 
 ```markdown
 # Add CSV Export
@@ -115,29 +115,12 @@ graph LR
 
 **Flow**:
 
-1. **Create Run** - User selects task + workspace in UI
+1. **Create Run** - User selects spec + workspace in UI
 2. **Trigger** - System sends event to Inngest
 3. **Queue** - Inngest queues the workflow function
 4. **Execute** - Steps run sequentially, each checkpointed
 5. **Update** - UI shows live progress via WebSocket
 6. **Complete** - Success/failure recorded, artifacts saved
-
-### Step Execution
-
-Each step in the workflow:
-
-1. **Checkpoint** - State saved before running
-2. **Execute** - CLI command, agent call, git operation, etc.
-3. **Stream** - Output streams to UI via WebSocket in real-time
-4. **Save** - Result stored in database
-5. **Checkpoint** - State saved after completion
-
-**On failure**:
-
-- Step retries automatically (configurable)
-- Workflow pauses, shows error in UI
-- User can cancel or wait for retry
-- On retry, resumes from last checkpoint
 
 ### Real-Time Updates
 
@@ -154,8 +137,8 @@ This means you can watch workflows execute in real-time, even from your phone (s
 
 When you create a workflow run:
 
-1. **Task** provides the spec (from file, planning, or markdown)
-2. **Spec type** determines the workflow file to execute
+1. **Spec** defines what to build (from file, planning, or markdown)
+2. **Spec type** determines the slash command to execute
 3. **Git workspace** determines where changes happen
 4. Workflow executes, making commits in the chosen workspace
 
@@ -168,36 +151,6 @@ Planning session "OAuth Implementation" + Feature spec + Branch mode
 - Generates feature spec from planning
 - Executes `implement-feature.ts`
 - Creates branch, commits changes, returns to original branch
-
-## Monitoring Runs
-
-### Timeline UI
-
-The <AgentCmd /> timeline shows:
-
-- **Phases** - High-level workflow stages
-- **Steps** - Individual operations
-- **Status** - Pending, running, completed, failed
-- **Output** - Live logs from each step
-- **Artifacts** - Generated files, images
-- **Annotations** - Progress markers
-
-### Inngest Dev UI
-
-Access at `http://localhost:8288` to see:
-
-- **Function runs** - All workflow executions
-- **Step-by-step breakdown** - Detailed execution flow
-- **Retry history** - Failed steps and retry attempts
-- **Event payloads** - Trigger data
-
-### Logs
-
-Server logs show detailed execution:
-
-```bash
-tail -f apps/app/logs/app.log | jq .
-```
 
 ## Next Steps
 

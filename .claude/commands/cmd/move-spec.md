@@ -9,7 +9,7 @@ Move a spec folder between workflow folders (backlog/todo/done), update index.js
 
 ## Variables
 
-- $specIdOrNameOrPath: $1 (required) - Either a spec ID (e.g., `1`, `2`), feature name (e.g., `workflow-safety`), or full path (e.g., `.agent/specs/todo/1-workflow-safety/`)
+- $specIdOrNameOrPath: $1 (required) - Either a timestamp ID (e.g., `2510241201`), feature name (e.g., `workflow-safety`), or full path (e.g., `.agent/specs/todo/2510241201-workflow-safety/`)
 - $targetFolder: $2 (required) - Target workflow folder: "backlog", "todo", or "done"
 
 ## Instructions
@@ -30,7 +30,7 @@ Move a spec folder between workflow folders (backlog/todo/done), update index.js
        - Use the path as-is
      - Otherwise, look up in `.agent/specs/index.json`:
        - For timestamp ID: Match by `id` field
-       - For feature name: Fuzzy match path (e.g., `message-queue` matches `todo/251024120101-message-queue-implementation/spec.md`)
+       - For feature name: Fuzzy match path (e.g., `message-queue` matches `todo/2510241201-message-queue-implementation/spec.md`)
        - Use path from index: `.agent/specs/{path}` (extract folder from file path: `dirname({path})`)
      - **If not found in index.json, fallback to directory search:**
        - Search in order: `.agent/specs/backlog/`, `.agent/specs/todo/`, `.agent/specs/done/`
@@ -80,21 +80,21 @@ Move a spec folder between workflow folders (backlog/todo/done), update index.js
 
 ## Examples
 
-**Example 1: Move by numeric spec ID**
+**Example 1: Move by timestamp spec ID**
 ```bash
-/move-spec 1 done
+/cmd:move-spec 2510241201 done
 ```
-Finds `1-*/` folder and moves it to `done/`, updates index
+Finds `2510241201-*/` folder and moves it to `done/`, updates index
 
 **Example 2: Move back to todo**
 ```bash
-/move-spec 2 todo
+/cmd:move-spec 2511131522 todo
 ```
-Finds `2-*/` folder and moves it to `todo/`
+Finds `2511131522-*/` folder and moves it to `todo/`
 
 **Example 3: Move by feature name**
 ```bash
-/move-spec workflow-safety done
+/cmd:move-spec workflow-safety done
 ```
 Finds `*-workflow-safety/` folder and moves it to `done/`
 
@@ -103,12 +103,12 @@ Finds `*-workflow-safety/` folder and moves it to `done/`
 ```text
 ✓ Moved spec folder
 
-From: .agent/specs/todo/1-workflow-safety/
-To:   .agent/specs/done/1-workflow-safety/
+From: .agent/specs/todo/2510241201-workflow-safety/
+To:   .agent/specs/done/2510241201-workflow-safety/
 
 Status updated: draft → completed
 Index updated:
-  - path: "todo/1-workflow-safety" → "done/1-workflow-safety"
+  - path: "todo/2510241201-workflow-safety/spec.md" → "done/2510241201-workflow-safety/spec.md"
   - status: "draft" → "completed"
   - updated: "2025-11-11T20:30:00.000Z"
 ```
@@ -131,7 +131,7 @@ Please check the spec name/ID and try again.
 ```text
 ✗ Error: Folder already exists at target location
 
-Target: .agent/specs/done/1-workflow-safety/
+Target: .agent/specs/done/2510241201-workflow-safety/
 
 Please resolve the conflict manually or use a different target folder.
 ```

@@ -16,11 +16,28 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AgentCmd - AI Workflow Orchestration",
-  description: "Build AI workflows that actually work. Orchestrate AI agents with powerful workflow automation.",
+  title: "agentcmd - AI Coding Workflow Orchestration Platform",
+  description:
+    "Build AI coding workflows that actually work. Orchestrate AI agents with powerful workflow automation.",
+  openGraph: {
+    title: "agentcmd - AI Coding Workflow Orchestration Platform",
+    description:
+      "Build AI coding workflows that actually work. Orchestrate AI agents with powerful workflow automation.",
+    images: ["/screenshots/workflows-dashboard.png"],
+  },
   icons: [
-    { rel: "icon", type: "image/svg+xml", sizes: "16x16", url: "/favicon-16.svg" },
-    { rel: "icon", type: "image/svg+xml", sizes: "32x32", url: "/favicon-32.svg" },
+    {
+      rel: "icon",
+      type: "image/svg+xml",
+      sizes: "16x16",
+      url: "/favicon-16.svg",
+    },
+    {
+      rel: "icon",
+      type: "image/svg+xml",
+      sizes: "32x32",
+      url: "/favicon-32.svg",
+    },
   ],
 };
 

@@ -71,27 +71,27 @@ export function SpecFileSelect({
             <span>Select spec file...</span>
           )
         }
-        renderOption={(option, selected) => (
-          <div className="flex flex-col gap-0.5">
-            <div className="flex items-center gap-2">
-              <span className={cn("font-medium", selected && "text-primary")}>
-                {option.label}
-              </span>
-              {option.specType && (
-                <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                  {option.specType}
+        renderOption={(option, selected) => {
+          const specType = (option as any).specType;
+          return (
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-center gap-2">
+                <span className={cn("font-medium", selected && "text-primary")}>
+                  {option.label}
                 </span>
-              )}
+                {specType && (
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                    {specType}
+                  </span>
+                )}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {option.description}
+              </div>
             </div>
-            <div className="text-xs text-muted-foreground">
-              {option.description}
-            </div>
-          </div>
-        )}
+          );
+        }}
       />
-      <p className="text-xs text-muted-foreground">
-        Use /cmd:generate-[type]-spec to generate spec files for this dropdown
-      </p>
     </div>
   );
 }

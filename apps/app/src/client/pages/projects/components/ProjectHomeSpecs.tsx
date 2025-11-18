@@ -35,12 +35,8 @@ export function ProjectHomeSpecs({ projectId }: ProjectHomeSpecsProps) {
     taskProjectId: string,
     taskName: string
   ) => {
-    const relativeSpecPath = specPath.startsWith("todo/")
-      ? specPath.slice(5)
-      : specPath;
-
     navigate(
-      `/projects/${taskProjectId}/workflows/new?specFile=${encodeURIComponent(relativeSpecPath)}&name=${encodeURIComponent(taskName)}`
+      `/projects/${taskProjectId}/workflows/new?specFile=${encodeURIComponent(specPath)}&name=${encodeURIComponent(taskName)}`
     );
   };
 
@@ -93,32 +89,21 @@ export function ProjectHomeSpecs({ projectId }: ProjectHomeSpecsProps) {
                   handleOpenWorkflow(task.specPath, task.projectId, task.name)
                 }
               >
-                <div className="flex items-start gap-2">
-                  <FileText className="size-4 shrink-0 mt-0.5" />
-                  <div className="flex flex-1 flex-col gap-1 min-w-0">
-                    <span className="text-sm truncate">
-                      {task.name}
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      <Badge
-                        variant="secondary"
-                        className="h-4 px-1.5 text-[10px] bg-muted/50 text-muted-foreground hover:bg-muted/50"
-                      >
-                        {task.status}
-                      </Badge>
-                      {task.spec_type && task.spec_type !== "feature" && (
-                        <Badge
-                          variant="outline"
-                          className="h-4 px-1.5 text-[10px]"
-                        >
-                          {task.spec_type}
-                        </Badge>
-                      )}
-                      <span className="text-[10px] text-muted-foreground">
+                <div className="flex items-center">
+                  <FileText className="size-4 shrink-0 mr-2.5" />
+                  <div className="flex flex-1 flex-col gap-0 min-w-0">
+                    <div className="flex items-center justify-between gap-2 min-w-0">
+                      <span className="text-sm min-w-0 truncate">{task.name}</span>
+                      <span className="text-xs text-muted-foreground shrink-0">
                         {formatDistanceToNow(new Date(task.created_at), {
                           addSuffix: true,
                         })}
                       </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <span>{task.status}</span>
+                      <span>•</span>
+                      <span className="truncate">{task.spec_type}</span>
                     </div>
                   </div>
                 </div>

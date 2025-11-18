@@ -37,10 +37,11 @@ export async function setupSpec(params: {
 
   // CASE 1: Spec file already provided - just validate it exists
   if (event.data.specFile) {
-    // Convert relative paths to absolute (relative to project root)
+    // Convert relative paths to absolute
+    // event.data.specFile is relative to .agent/specs/ (e.g., "todo/251117.../spec.md")
     const specFilePath = resolveProjectPath(
       run.project.path,
-      event.data.specFile
+      `.agent/specs/${event.data.specFile}`
     );
 
     if (!existsSync(specFilePath)) {

@@ -53,7 +53,8 @@ export async function scanSpecs(projectPath: string, projectId: string): Promise
       } catch {
         // If file read fails, fall back to generating name from path
         const pathParts = entry.path.split("/");
-        const folderName = pathParts[pathParts.length - 1];
+        // Get folder name (second-to-last part before spec.md)
+        const folderName = pathParts[pathParts.length - 2] || pathParts[pathParts.length - 1];
         const namePart = folderName.split("-").slice(1).join("-"); // Remove timestamp prefix
         displayName = namePart
           .split("-")
