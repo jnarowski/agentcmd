@@ -20,9 +20,9 @@ import type { SessionResponse } from "@/shared/types";
 import type { GitCapabilities } from "@/shared/types/project.types";
 import { SessionHeader } from "@/client/components/SessionHeader";
 import { GitOperationsModal } from "@/client/components/GitOperationsModal";
-import { NewButton } from "@/client/components/sidebar/NewButton";
 import { truncate } from "@/client/utils/truncate";
-import { MobileNavDropdown } from "@/client/components/MobileNavDropdown";
+import { NewButtonDropdown } from "@/client/pages/projects/components/NewButtonDropdown";
+import { NewButtonDropdownMobile } from "@/client/pages/projects/components/NewButtonDropdownMobile";
 
 interface ProjectHeaderProps {
   projectId: string;
@@ -129,12 +129,12 @@ export function ProjectHeader({ projectId, projectName, projectPath, gitCapabili
             ))}
           </nav>
           <div className="ml-2">
-            <NewButton />
+            <NewButtonDropdown />
           </div>
         </div>
 
         {/* Mobile navigation - dropdown */}
-        <MobileNavDropdown projectId={projectId} />
+        <NewButtonDropdownMobile projectId={projectId} />
       </div>
 
       {/* Session header - separate component below main header */}

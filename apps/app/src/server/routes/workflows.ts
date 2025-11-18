@@ -450,8 +450,9 @@ export async function workflowRoutes(fastify: FastifyInstance) {
         throw new NotFoundError("Project not found");
       }
 
-      // Read spec file from .agent/specs/todo/{specFile}
-      const specPath = `.agent/specs/todo/${specFile}`;
+      // Read spec file from .agent/specs/{specFile}
+      // specFile is already relative to .agent/specs/ (e.g., "todo/251117.../spec.md")
+      const specPath = `.agent/specs/${specFile}`;
 
       let specContent: string;
       try {

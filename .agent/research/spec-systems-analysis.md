@@ -7,15 +7,22 @@
 
 ## Executive Summary
 
-After analyzing three mature spec systems (Taskmaster AI, OpenSpec, SpecKit) and the current implementation, here's the synthesis:
+After analyzing four mature spec systems (Taskmaster AI, OpenSpec, SpecKit, Agent OS) and the current implementation, here's the synthesis:
 
 **Current system is already excellent** - it combines the best ID strategy (timestamps), unique performance optimization (JSON index), and unique complexity tracking. The recommended enhancements are additive, not replacement.
 
 **Key Findings**:
 - All systems converge on hidden directories, Markdown-first, three-state workflows
-- Timestamp IDs are objectively superior for team/long-term use
-- Complexity estimation is unique and valuable (none of the reviewed systems have it)
-- Best additions: Pre-implementation clarification (SpecKit), delta tracking (OpenSpec), batch operations (Taskmaster)
+- Timestamp IDs remain superior for team/long-term use (vs Agent OS date-based)
+- Complexity estimation is unique and valuable (none of the 4 reviewed systems have it)
+- **Agent OS introduces highest-value innovation**: spec-lite.md for AI token optimization
+- Best additions: spec-lite.md (Agent OS), pre-spec clarification (Agent OS > SpecKit), modular standards (Agent OS), delta tracking (OpenSpec), batch operations (Taskmaster)
+
+**Agent OS Standout Features**:
+- **spec-lite.md**: Token-optimized specs for AI context (no other system has this)
+- **Modular standards**: Example-driven, inheritable coding patterns (most comprehensive)
+- **Pre-spec shaping**: Clarify *before* writing spec (earlier than SpecKit)
+- **Dual spec formats**: Human-readable + AI-optimized versions
 
 ---
 
@@ -833,13 +840,15 @@ Generated: done/251112080100-oauth-support/implementation-notes.md
 
 ### Immediate (High Value, Low Effort)
 
-1. **Add `/cmd:clarify-spec` command** (SpecKit)
+1. **Add `/cmd:clarify-spec` command** (SpecKit) → **UPDATE: Use /cmd:shape-spec approach (Agent OS)**
    - Reduces implementation rework
+   - **Agent OS insight**: Run *before* formal spec generation (shape → write)
    - Simple prompt engineering
    - No schema changes needed
 
-2. **Reference CLAUDE.md in `/cmd:generate-spec`** (SpecKit)
+2. **Reference CLAUDE.md in `/cmd:generate-spec`** (SpecKit + Agent OS)
    - Ensures consistency
+   - **Agent OS insight**: Could evolve to modular standards/ directory
    - Just reads existing file
    - No breaking changes
 
@@ -848,39 +857,58 @@ Generated: done/251112080100-oauth-support/implementation-notes.md
    - Simple string parsing
    - Improves UX significantly
 
+4. **Add spec-lite.md generation** (Agent OS) **NEW**
+   - Token-optimized version for AI context
+   - Generated alongside spec.md
+   - Contains only essential requirements/tasks
+   - Reduces context usage during implementation
+
 ### Near-Term (High Value, Medium Effort)
 
-4. **Add "Implementation Changes" section to template** (OpenSpec)
+5. **Add "Implementation Changes" section to template** (OpenSpec)
    - Documents deviations
    - Update template + `/cmd:implement-spec` to fill it
    - Creates valuable audit trail
 
-5. **Enhance index.json with type/tags/complexity**
+6. **Enhance index.json with type/tags/complexity**
    - Enables better filtering/reporting
    - Backward compatible (optional fields)
    - Opens future possibilities
+   - **Agent OS insight**: Add profile/standards inheritance tracking
 
-6. **Add `/cmd:review-spec-implementation`** (SpecKit)
+7. **Add `/cmd:review-spec-implementation`** (SpecKit)
    - Quality gate before marking done
    - Validates completeness
    - Generates implementation notes
 
+8. **Consider modular standards system** (Agent OS) **NEW**
+   - Move from monolithic CLAUDE.md to standards/ directory
+   - Organize: backend/, frontend/, global/, testing/
+   - Enables selective injection (reduce context)
+   - **Later**: Could become Claude Code Skills
+
 ### Future (Lower Priority)
 
-7. **Dependency tracking and visualization**
+9. **Dependency tracking and visualization**
    - More complex (graph relationships)
    - Useful for large projects
    - Can defer until needed
 
-8. **Interactive spec browser TUI** (OpenSpec)
-   - Nice-to-have UX improvement
-   - Significant implementation effort
-   - Current CLI works fine
+10. **Interactive spec browser TUI** (OpenSpec)
+    - Nice-to-have UX improvement
+    - Significant implementation effort
+    - Current CLI works fine
 
-9. **Spec templates by type** (feature/bugfix/refactor)
-   - Useful but not critical
-   - Can do manually for now
-   - Automate when patterns stabilize
+11. **Spec templates by type** (feature/bugfix/refactor)
+    - Useful but not critical
+    - Can do manually for now
+    - Automate when patterns stabilize
+
+12. **Profile/standards inheritance** (Agent OS)
+    - Base profile → team profile → project profile
+    - Useful for multi-project organizations
+    - Complex to implement
+    - Defer until proven need
 
 ---
 
@@ -888,51 +916,429 @@ Generated: done/251112080100-oauth-support/implementation-notes.md
 
 ### Current System's Strengths (Don't Change)
 
-1. ✅ **Timestamp IDs** - Best collision prevention
+1. ✅ **Timestamp IDs** - Best collision prevention (vs Agent OS date-based)
 2. ✅ **JSON index** - Unique performance feature
-3. ✅ **Complexity estimation** - Unique context-based approach
-4. ✅ **Three-folder workflow** - Industry standard
+3. ✅ **Complexity estimation** - Unique context-based approach (none of 4 systems have this)
+4. ✅ **Three-folder workflow** - Industry standard (all systems converge here)
 5. ✅ **Folder structure** - Matches best practices
 
-### Best Additions from Other Systems
+### Best Additions from Reviewed Systems
 
-1. **SpecKit**: Pre-implementation clarification (biggest ROI)
-2. **OpenSpec**: Delta tracking for deviations
-3. **Taskmaster**: Batch operations, dependency handling
+1. **Agent OS**: spec-lite.md pattern (token optimization) **HIGHEST ROI**
+2. **Agent OS**: Pre-spec clarification (/shape-spec before /write-spec)
+3. **Agent OS**: Modular standards system (vs monolithic CLAUDE.md)
 4. **SpecKit**: Post-implementation review/validation
-5. **SpecKit**: Constitutional reference (CLAUDE.md)
+5. **OpenSpec**: Delta tracking for deviations
+6. **Taskmaster**: Batch operations, dependency handling
 
 ### What NOT to Copy
 
 1. ❌ Simple numeric IDs (Taskmaster) - inferior to timestamps
 2. ❌ Semantic names as primary ID (OpenSpec) - can conflict
 3. ❌ Sequential IDs (SpecKit) - requires coordination
-4. ❌ Separate changes/ directory (OpenSpec) - backlog/todo/done simpler
-5. ❌ Five-phase ceremony (SpecKit) - too formal for this use case
+4. ❌ Date + semantic IDs (Agent OS) - same-day collisions possible, timestamps better
+5. ❌ Separate changes/ directory (OpenSpec) - backlog/todo/done simpler
+6. ❌ Five/six-phase ceremony (SpecKit/Agent OS) - too formal for this use case
+7. ❌ Dual installation model (Agent OS) - adds complexity
+8. ❌ Profile inheritance (Agent OS) - overkill for single-project focus
+
+### Agent OS Key Learnings
+
+**Unique Innovations Worth Adopting**:
+- **spec-lite.md**: Biggest win for AI context efficiency
+- **Standards-as-code**: Modular, example-driven (better than constitutional principles)
+- **Pre-spec shaping**: Earlier clarification than SpecKit's post-spec approach
+- **Skills conversion**: Optional Claude Code Skills for standards (token savings)
+
+**Good Ideas, Wrong Execution**:
+- Date-based IDs: Great for readability, but timestamps better for collision prevention
+- Dual installation: Separation of concerns is good, but adds operational complexity
+- 6-phase workflow: Comprehensive, but too ceremonial for agile development
+
+**Lessons from Evolution** (v1.4 → v2.1):
+- Complexity for complexity's sake doesn't help (removed Roles system)
+- Flexibility > rigidity (moved from modes to boolean config)
+- Modularity wins (added Skills option vs forced injection)
 
 ### Final Recommendation
 
 **Implement in this order**:
 
 ```
-Week 1: Add /cmd:clarify-spec + CLAUDE.md reference
-  → Immediate quality improvement, minimal code
+Week 1: Add spec-lite.md generation + /cmd:shape-spec
+  → Immediate token savings + quality improvement
+  → Agent OS patterns, minimal code
 
-Week 2: Add batch operations + "Implementation Changes" section
-  → Better UX + audit trail
+Week 2: Add batch operations + CLAUDE.md reference
+  → Better UX + consistency
+  → Taskmaster + SpecKit patterns
 
-Week 3: Enhance index.json + /cmd:review-spec-implementation
-  → Better filtering + quality gate
+Week 3: Add "Implementation Changes" section + /cmd:review-spec-implementation
+  → Audit trail + quality gate
+  → OpenSpec + SpecKit patterns
 
-Future: Dependencies, TUI, templates by type
-  → Nice-to-have, defer until needed
+Week 4: Enhance index.json with type/tags
+  → Better filtering/reporting
+  → Enables future features
+
+Future: Modular standards, dependencies, TUI, templates by type
+  → Nice-to-have, defer until proven need
+  → Agent OS modular standards most promising
 ```
 
 This creates a **hybrid system stronger than any individual reference**, combining:
-- Current unique innovations (timestamp IDs, complexity, JSON index)
-- SpecKit's quality gates (clarify, review, constitutional)
-- OpenSpec's delta tracking (audit trail)
-- Taskmaster's UX improvements (batch ops, dependencies)
+- **Current unique innovations**: Timestamp IDs, complexity estimation, JSON index
+- **Agent OS best**: spec-lite.md, pre-spec shaping, modular standards concept
+- **SpecKit quality gates**: Review, constitutional reference
+- **OpenSpec audit trail**: Delta tracking
+- **Taskmaster UX**: Batch ops, dependencies
+
+**Result**: Most collision-proof IDs + best AI optimization + strongest quality gates + unique complexity tracking
+
+---
+
+---
+
+## 4. Agent OS - Standards-First Approach
+
+**Philosophy**: Capture organizational standards and coding patterns as executable specifications that AI agents automatically follow
+
+**Architecture**:
+```
+# Base Installation (~/agent-os/)
+~/agent-os/
+├── profiles/
+│   └── default/
+│       ├── standards/
+│       │   ├── backend/           # Backend-specific conventions
+│       │   ├── frontend/          # Frontend patterns
+│       │   ├── global/            # Universal rules
+│       │   │   └── tech-stack.md  # Default technology choices
+│       │   └── testing/           # Test standards
+│       ├── workflows/             # Phase workflows
+│       └── agents/                # Subagent definitions
+├── scripts/
+│   └── project-install.sh         # Project installer
+└── config.yml                     # Configuration
+
+# Project Installation (.agent-os/)
+.agent-os/
+├── product.md                     # Product roadmap & mission
+├── standards/                     # Project-specific standards (inherits from profile)
+├── specs/
+│   └── YYYY-MM-DD-spec-name/      # Date-based spec folders
+│       ├── spec.md                # Full specification
+│       ├── spec-lite.md           # Condensed for AI context efficiency
+│       ├── requirements.md        # Feature requirements
+│       ├── api-spec.md            # API specifications (if needed)
+│       ├── tasks.md               # Task breakdown
+│       └── sub-specs/             # Technical sub-specifications
+│           └── technical-spec.md
+└── .claude/                       # Claude Code integration (optional)
+    ├── commands/agent-os/         # Slash commands
+    ├── agents/agent-os/           # Subagents (5 built-in)
+    └── skills/agent-os/           # Standards as Skills (v2.1+)
+```
+
+**ID Strategy**: Date-based folder names (YYYY-MM-DD-spec-name)
+- ✅ Natural chronological sort
+- ✅ Human-readable semantic component
+- ✅ No coordination needed (collision-free by day)
+- ✅ Temporal information embedded
+- ❌ Multiple specs in one day require additional naming care
+
+**Best for**: Teams wanting clear temporal ordering with descriptive names
+
+**Spec Format** (spec.md):
+```markdown
+# Feature Name
+
+## User Story
+As a [USER_TYPE]
+I want to [ACTION]
+So that [BENEFIT]
+
+## Features
+1. [Feature 1] - [one-sentence description]
+2. [Feature 2] - [one-sentence description]
+3. [Feature 3] - [one-sentence description]
+
+## Out of Scope
+- [Explicitly excluded functionality 1]
+- [Explicitly excluded functionality 2]
+
+## Expected Deliverables
+- [Testable outcome 1]
+- [Testable outcome 2]
+- [Testable outcome 3]
+
+[Additional sub-specs referenced via @.agent-os/specs/YYYY-MM-DD-spec-name/...]
+```
+
+**Spec-Lite Format** (spec-lite.md):
+```markdown
+# Condensed spec optimized for AI context windows
+# Contains only essential requirements and deliverables
+# References full spec.md for details
+```
+
+**Command Patterns** (6-Phase Workflow):
+```bash
+# Phase 1: Product Planning
+/plan-product
+# → Creates product.md with mission, roadmap, tech stack
+# → Used by agents for context in all future phases
+
+# Phase 2: Spec Shaping (Clarification)
+/shape-spec
+# → Takes rough idea, clarifies requirements
+# → Asks targeted questions
+# → Scopes features before formal spec writing
+
+# Phase 3: Spec Writing
+/write-spec [context]
+# → Generates spec.md + spec-lite.md
+# → Creates YYYY-MM-DD-spec-name/ folder
+# → Includes user stories, features, deliverables
+
+# Phase 4: Task Creation
+/create-tasks [spec-path]
+# → Generates tasks.md from spec
+# → Breaks down into actionable steps
+# → Creates task checklist
+
+# Phase 5: Task Implementation
+/implement-tasks [spec-path]
+# → Executes tasks from tasks.md
+# → Updates checkboxes as work progresses
+# → Documents completion
+
+# Phase 6: Task Orchestration
+/orchestrate-tasks
+# → Coordinates multi-task workflows
+# → Manages dependencies
+# → Oversees implementation across tasks
+
+# Product Analysis (for existing codebases)
+/analyze-product
+# → Reverse-engineers product.md from existing code
+# → Documents current state and standards
+# → Creates baseline for future specs
+```
+
+**Workflow States**: Six-phase development cycle
+1. **Product Planning** - Define mission, roadmap, tech stack
+2. **Spec Shaping** - Clarify requirements before formal spec
+3. **Spec Writing** - Create formal specification documents
+4. **Task Creation** - Break spec into actionable tasks
+5. **Task Implementation** - Execute individual tasks
+6. **Task Orchestration** - Coordinate multi-task workflows
+
+**Standards System** (Core Innovation):
+```markdown
+# Standards are modular markdown files in standards/
+
+# Example: standards/frontend/react-hooks.md
+# React Hooks Conventions
+
+## useState Naming
+✅ DO: const [isOpen, setIsOpen] = useState(false)
+❌ DON'T: const [open, setOpen] = useState(false)
+
+Rationale: Boolean state should be prefixed with is/has/should
+
+## useEffect Dependencies
+✅ DO: Extract primitives from objects
+const { userId, projectId } = user
+useEffect(() => { ... }, [userId, projectId])
+
+❌ DON'T: Use objects directly (causes infinite loops)
+useEffect(() => { ... }, [user])
+```
+
+**Standards Injection**:
+```markdown
+# In workflow/agent prompts, use injection tags:
+{{standards/global/*}}          # All global standards
+{{standards/frontend/*}}        # All frontend standards
+{{standards/backend/api.md}}    # Specific standard file
+
+# At project install, tags replaced with file references
+# OR converted to Claude Code Skills (v2.1+)
+```
+
+**Profile Inheritance**:
+```bash
+# Don't edit default profile directly
+# Create layered inheritance:
+
+profiles/
+├── default/              # Base (never edit)
+├── company-general/      # Inherits from default
+│   └── standards/
+│       └── global/
+│           └── conventions.md
+└── nextjs-ts/            # Inherits from company-general
+    └── standards/
+        └── frontend/
+            ├── nextjs.md
+            └── typescript.md
+
+# In config.yml:
+profile: nextjs-ts
+```
+
+**Configuration Options** (config.yml v2.1.1):
+```yaml
+version: 2.1.1
+
+# Claude Code Integration
+claude_code_commands: true              # Install /commands in .claude/commands/agent-os/
+use_claude_code_subagents: true         # Delegate to .claude/agents/agent-os/
+standards_as_claude_code_skills: false  # Convert standards to Skills (vs inline injection)
+
+# Other Tools (Cursor, Windsurf, etc.)
+agent_os_commands: false                # Install in agent-os/commands/
+
+# Profile Selection
+profile: default
+
+# All overridable via ./project-install.sh flags
+```
+
+**Claude Code Subagents** (5 Built-in):
+```
+.claude/agents/agent-os/
+├── context-fetcher       # Retrieves relevant project context
+├── file-creator          # Generates new files
+├── test-runner           # Executes tests
+├── git-workflow          # Manages git operations
+└── date-checker          # Validates dates/timestamps
+```
+
+**Key Innovations**:
+- **Dual Installation Model**: Base (~) + Project (.) separation
+  - Base: Shared templates, profiles, defaults
+  - Project: Customized, version-controlled, portable
+- **Standards-as-Code**: Modular markdown files with injection system
+  - Not generic ("write clean code")
+  - Specific, actionable rules with examples and rationale
+- **Spec + Spec-Lite Pattern**: Full documentation + AI-optimized condensed version
+  - spec.md: Human-readable, complete
+  - spec-lite.md: Token-efficient, AI-focused
+- **Pre-Specification Clarification**: /shape-spec phase before /write-spec
+  - Reduces rework from underspecified requirements
+  - Similar to SpecKit's /clarify but earlier in workflow
+- **Profile Inheritance**: Layered standards (default → general → tech-specific)
+  - Preserves customizations during updates
+  - Enables team-wide + project-specific standards
+- **Product-Level Context**: product.md as foundation for all specs
+  - Mission statement, roadmap, tech stack
+  - Ensures feature alignment with strategic goals
+- **Reverse Engineering**: /analyze-product for existing codebases
+  - Bootstraps Agent OS into brownfield projects
+  - Documents current state before changes
+- **Tool Flexibility**: Works with Claude Code, Cursor, Windsurf, etc.
+  - Claude Code: Commands, subagents, skills
+  - Others: Sequential prompts with standards injection
+- **Standards as Skills** (v2.1+): Optional Claude Code Skills conversion
+  - Reduces token usage (Claude selects relevant standards)
+  - Alternative to explicit injection
+
+**Strengths**:
+- Standards system is most comprehensive of all reviewed systems
+- Dual installation keeps base clean, projects portable
+- Date-based naming with semantic suffix balances readability and collision prevention
+- Spec-lite pattern optimizes for AI context windows
+- Pre-spec clarification (/shape-spec) prevents underspecification
+- Product.md provides strategic alignment
+- Profile inheritance enables layered customization
+- Works across all major AI coding tools
+- Analyze-product enables brownfield adoption
+- Claude Code Skills integration (v2.1+) reduces token usage
+
+**Weaknesses**:
+- More complex setup (base + project installation)
+- Date-based naming can have same-day collisions
+- No built-in complexity/estimation system
+- Standards creation requires discipline (modular, specific, with rationale)
+- More ceremonial (6 phases) than simpler systems
+- Profile inheritance can become complex with many layers
+- No explicit delta tracking for implementation deviations
+
+**Evolution** (Key Changes):
+- **v1.4.0** (2024-08-17): Introduced dual installation model, config.yml, Project Types
+- **v2.0.0** (2024-10-07): Major rewrite for Claude Code multi-agent + other tools single-agent
+- **v2.1.0** (2024-10-21):
+  - Claude Code Skills support
+  - Flexible boolean config (removed simple/multi-agent modes)
+  - Retired "Roles" system (overcomplicated)
+  - Expanded from 4 to 6 phases (added shape-spec, orchestrate-tasks)
+  - Removed documentation/verification bloat
+- **v2.1.1** (2024-10-29): Renamed spec-researcher → spec-shaper, improved docs
+
+**Version Philosophy**: Movement toward modular, configuration-driven design
+- Early versions: Rigid structures
+- Recent updates: Flexible, adopt-what-you-need approach
+- Learnings: Removed complexity (Roles), added flexibility (boolean config)
+
+---
+
+## Universal Patterns Comparison
+
+Updating previous section with Agent OS findings:
+
+### ID Strategy Analysis (Updated)
+
+| System | Format | Pros | Cons | Best For |
+|--------|--------|------|------|----------|
+| **Taskmaster** | Simple numeric (1, 2, 3) | Easy to type, no ceremony | Collision-prone, no temporal info | Solo developers |
+| **OpenSpec** | Semantic (add-2fa) | Self-documenting | Conflicts, no sort order | Small teams with good communication |
+| **SpecKit** | Sequential + semantic (001-feature) | Natural sort, self-documenting | Requires coordination, gaps odd | Structured teams with process |
+| **Current System** | Timestamp (251112061640) | Collision-free, chronological, globally unique | Less human-readable | Teams, distributed, long-lived |
+| **Agent OS** | Date + semantic (2025-11-12-oauth) | Temporal + readable, natural sort | Same-day collisions possible | Teams wanting temporal + semantic |
+
+**Updated Verdict**:
+- **Timestamp IDs (current)** remain best for zero-coordination collision prevention
+- **Date + Semantic (Agent OS)** offers best human readability with acceptable collision risk (same-day specs rare)
+- Hybrid approach possible: Use timestamp as primary ID, semantic name as folder suffix
+
+### Standards/Constitutional Comparison
+
+| System | Approach | Location | Innovation |
+|--------|----------|----------|-----------|
+| **Taskmaster** | PRD-centric | `.taskmaster/docs/prd.txt` | Central requirements doc |
+| **OpenSpec** | Tech stack + agents | `project.md` + `AGENTS.md` | Tool-agnostic instructions |
+| **SpecKit** | Constitutional | `.specify/constitution.md` | Foundational principles |
+| **Agent OS** | Modular standards | `~/agent-os/profiles/default/standards/` | Executable specifications, inheritance |
+
+**Agent OS Advantage**: Only system with modular, inheritable, example-driven standards
+- Not just principles, but specific patterns with rationale
+- Profile inheritance enables layering (team → project → feature)
+- Standards injection makes them executable, not just documentation
+- Claude Code Skills conversion optimizes token usage
+
+### Pre-Implementation Clarification Comparison
+
+| System | Phase | Command | Purpose |
+|--------|-------|---------|---------|
+| **SpecKit** | Post-spec | `/speckit.clarify` | Identify underspecified areas after spec written |
+| **Agent OS** | Pre-spec | `/shape-spec` | Clarify requirements *before* formal spec writing |
+
+**Agent OS Advantage**: Earlier intervention prevents wasted spec writing effort
+
+### Spec Optimization for AI
+
+| System | Optimization |
+|--------|--------------|
+| **Taskmaster** | None (single format) |
+| **OpenSpec** | None (single format) |
+| **SpecKit** | None (single format) |
+| **Agent OS** | **spec.md + spec-lite.md** (human + AI versions) |
+
+**Agent OS Unique**: Only system with dual spec formats
+- spec.md: Complete, human-readable documentation
+- spec-lite.md: Condensed, token-optimized for AI context
 
 ---
 
@@ -941,4 +1347,7 @@ This creates a **hybrid system stronger than any individual reference**, combini
 - **Taskmaster AI**: https://github.com/eyaltoledano/claude-task-master
 - **OpenSpec**: https://github.com/Fission-AI/OpenSpec
 - **SpecKit**: https://github.com/github/spec-kit
+- **Agent OS**: https://github.com/buildermethods/agent-os (v2.1.1)
+  - Docs: https://buildermethods.com/agent-os
+  - Creator: Brian Casel / Builder Methods
 - **Current System**: `.agent/specs/`, `.claude/commands/cmd/generate-spec.md`, `.cursor/commands/implement-spec.md`

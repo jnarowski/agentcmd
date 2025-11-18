@@ -11,7 +11,7 @@ import {
 } from "@/client/components/ui/dropdown-menu";
 import { useWorkflowDefinitions } from "@/client/pages/projects/workflows/hooks/useWorkflowDefinitions";
 
-export function NewButton() {
+export function NewButtonDropdown() {
   const navigate = useNavigate();
   const { projectId, id } = useParams();
   const activeProjectId = projectId || id;
@@ -35,7 +35,7 @@ export function NewButton() {
           New
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-72">
+      <DropdownMenuContent align="end" className="w-80">
         {/* Sessions Section */}
         <DropdownMenuItem
           onClick={() => {

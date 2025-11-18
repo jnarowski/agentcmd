@@ -17,7 +17,7 @@ export interface CreateWorkflowRunInput {
   workflow_definition_id: string;
   name: string;
   args: Record<string, unknown>;
-  spec_file?: string;
+  spec_file?: string; // Path relative to .agent/specs/ (e.g., "todo/251117.../spec.md")
   spec_content?: string;
   spec_type?: string;
   planning_session_id?: string;

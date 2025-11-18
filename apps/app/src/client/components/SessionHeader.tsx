@@ -1,6 +1,7 @@
-import { Copy, Pencil } from "lucide-react";
+import { Copy, Pencil, Workflow } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { AgentIcon } from "@/client/components/AgentIcon";
 import { SessionDropdownMenu } from "@/client/pages/projects/sessions/components/SessionDropdownMenu";
 import { SessionStateBadge } from "@/client/pages/projects/sessions/components/SessionStateBadge";
@@ -10,6 +11,11 @@ import { useSessionStore } from "@/client/pages/projects/sessions/stores/session
 import { copySessionToClipboard } from "@/client/pages/projects/sessions/utils/copySessionToClipboard";
 import { Button } from "@/client/components/ui/button";
 import { Input } from "@/client/components/ui/input";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/client/components/ui/tooltip";
 import { useUpdateSession } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
 
 interface SessionHeaderProps {
@@ -21,6 +27,7 @@ interface SessionHeaderProps {
  * Shows agent icon, session name, and actions menu on the far right
  */
 export function SessionHeader({ session }: SessionHeaderProps) {
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
   const [isHovered, setIsHovered] = useState(false);
@@ -81,18 +88,27 @@ export function SessionHeader({ session }: SessionHeaderProps) {
     try {
       // Get state when needed to avoid infinite loop from object recreation
       const state = useSessionStore.getState();
-      const sessionState = { session: state.session, sessionId: state.sessionId };
+      const sessionState = {
+        session: state.session,
+        sessionId: state.sessionId,
+      };
 
       await copySessionToClipboard(sessionState);
       toast.success("Session JSON copied to clipboard", {
         description: "Full session data including messages and metadata",
       });
     } catch (error) {
-      console.error('[SessionHeader] Failed to copy session:', error);
+      console.error("[SessionHeader] Failed to copy session:", error);
       toast.error("Failed to copy session", {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     }
+  };
+
+  const handleNewWorkflow = () => {
+    navigate(
+      `/projects/${session.projectId}/workflows/new?planningSessionId=${session.id}&specInputType=planning`
+    );
   };
 
   return (
@@ -130,6 +146,23 @@ export function SessionHeader({ session }: SessionHeaderProps) {
           state={session.state}
           errorMessage={session.error_message}
         />
+        {session.permission_mode === "plan" && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={handleNewWorkflow}
+              >
+                <Workflow className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              Create workflow from this planning session
+            </TooltipContent>
+          </Tooltip>
+        )}
         {import.meta.env.DEV && (
           <Button
             variant="ghost"

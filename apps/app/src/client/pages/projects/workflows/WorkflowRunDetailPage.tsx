@@ -86,9 +86,9 @@ function WorkflowRunDetailPage() {
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold">{run.name}</h1>
             <WorkflowStatusBadge status={run.status} />
-            {run.pr_url && (
+            {(run as any).pr_url && (
               <a
-                href={run.pr_url}
+                href={(run as any).pr_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-sm text-blue-500 hover:text-blue-600"

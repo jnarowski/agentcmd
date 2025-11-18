@@ -15,6 +15,7 @@ import { useProjectBranches } from "@/client/pages/projects/hooks/useProjectBran
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
 import { api } from "@/client/utils/api";
 import { cn } from "@/client/utils/cn";
+import { getWebsiteUrl } from "@/client/utils/envConfig";
 import type {
   WorkflowDefinition,
   WorkflowRun,
@@ -31,6 +32,8 @@ interface NewRunFormProps {
   definitions?: WorkflowDefinition[];
   initialSpecFile?: string;
   initialName?: string;
+  initialPlanningSessionId?: string;
+  initialSpecInputType?: "file" | "planning" | "content";
   onSuccess: (run: WorkflowRun) => void;
   onCancel: () => void;
 }
@@ -42,11 +45,15 @@ export function NewRunForm({
   definitions,
   initialSpecFile,
   initialName,
+  initialPlanningSessionId,
+  initialSpecInputType,
   onSuccess,
   onCancel,
 }: NewRunFormProps) {
   const createWorkflow = useCreateWorkflow();
   const { data: project } = useProject(projectId);
+
+  const websiteUrl = getWebsiteUrl();
 
   // Check if project is a git repository
   const isGitRepo = project?.capabilities.git.initialized ?? true; // Default to true while loading
@@ -104,6 +111,21 @@ export function NewRunForm({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialName]);
+
+  useEffect(() => {
+    if (initialPlanningSessionId && planningSessionId !== initialPlanningSessionId) {
+      setPlanningSessionId(initialPlanningSessionId);
+      setSpecInputType("planning");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialPlanningSessionId]);
+
+  useEffect(() => {
+    if (initialSpecInputType && specInputType !== initialSpecInputType) {
+      setSpecInputType(initialSpecInputType);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSpecInputType]);
 
   // Reset dependent state when definition changes (but preserve initialSpecFile and initialName)
   useEffect(() => {
@@ -293,7 +315,8 @@ export function NewRunForm({
             Not a Git Repository
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            This project is not initialized with git. Branch and worktree modes are unavailable.
+            This project is not initialized with git. Branch and worktree modes
+            are unavailable.
           </p>
         </div>
       )}
@@ -334,7 +357,27 @@ export function NewRunForm({
 
       {/* Spec input type selection */}
       <div>
-        <Label className="mb-2 block">Spec</Label>
+        <Label className="mb-2">Spec</Label>
+        <p className="text-xs text-muted-foreground mb-3">
+          Every workflow run requires a spec file that defines what to build.{" "}
+          <a
+            href={`${websiteUrl}/docs/concepts/workflows/workflow-runs`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            Learn More
+          </a>
+          {" · "}
+          <a
+            href={`${websiteUrl}/docs/concepts/spec-driven-development`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            Spec-Driven Development
+          </a>
+        </p>
         <div className="rounded-lg border bg-card">
           <Tabs
             value={specInputType}
@@ -348,26 +391,35 @@ export function NewRunForm({
                 value="file"
                 className="flex-1 rounded-none data-[state=active]:border-b data-[state=active]:border-primary data-[state=active]:-mb-px rounded-tl-lg text-xs sm:text-sm px-2 sm:px-4"
               >
-                <span className="hidden sm:inline">Select Spec File</span>
+                <span className="hidden sm:inline">Select File</span>
                 <span className="sm:hidden">File</span>
               </TabsTrigger>
               <TabsTrigger
                 value="planning"
                 className="flex-1 rounded-none data-[state=active]:border-b data-[state=active]:border-primary data-[state=active]:-mb-px text-xs sm:text-sm px-2 sm:px-4"
               >
-                <span className="hidden sm:inline">Generate From Planning Session</span>
+                <span className="hidden sm:inline">
+                  From Planning Session
+                </span>
                 <span className="sm:hidden">Planning</span>
               </TabsTrigger>
               <TabsTrigger
                 value="content"
                 className="flex-1 rounded-none data-[state=active]:border-b data-[state=active]:border-primary data-[state=active]:-mb-px rounded-tr-lg text-xs sm:text-sm px-2 sm:px-4"
               >
-                <span className="hidden sm:inline">Write It</span>
-                <span className="sm:hidden">Write</span>
+                <span className="hidden sm:inline">Write Custom</span>
+                <span className="sm:hidden">Custom</span>
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="file" className="space-y-3 p-3 m-0">
+              <p className="text-sm text-muted-foreground">
+                Generate spec files by running cmd slash commands like{" "}
+                <code className="px-1.5 py-0.5 rounded bg-muted text-foreground font-mono text-xs">
+                  /cmd:generate-feature-spec
+                </code>
+                .{" "}
+              </p>
               <SpecFileSelect
                 projectId={projectId}
                 value={specFile}
@@ -390,7 +442,11 @@ export function NewRunForm({
               )}
             </TabsContent>
 
-            <TabsContent value="planning" className="space-y-2 p-3 m-0">
+            <TabsContent value="planning" className="space-y-3 p-3 m-0">
+              <p className="text-sm text-muted-foreground">
+                Generate a spec from a previous planning session. The AI will
+                analyze the session and create a detailed spec.{" "}
+              </p>
               <PlanningSessionSelect
                 projectId={projectId}
                 value={planningSessionId}
@@ -399,7 +455,11 @@ export function NewRunForm({
               />
             </TabsContent>
 
-            <TabsContent value="content" className="m-0 p-0">
+            <TabsContent value="content" className="space-y-3 m-0 p-0">
+              <div className="text-sm text-muted-foreground p-3 pb-0">
+                Write your spec directly in markdown below. Describe what you
+                want to build or fix.
+              </div>
               <CodeEditor
                 value={specContent}
                 onChange={setSpecContent}
@@ -478,8 +538,8 @@ export function NewRunForm({
                   disabled={createWorkflow.isPending}
                 />
                 <p className="text-xs text-muted-foreground">
-                  This determines the command used to generate the spec file
-                  from the above content.
+                  This determines which slash command will be used to generate
+                  the spec file from the above content.
                 </p>
               </div>
             </div>

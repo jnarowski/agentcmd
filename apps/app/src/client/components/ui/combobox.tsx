@@ -67,6 +67,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/client/components/ui/popover";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+  DrawerTitle,
+} from "@/client/components/ui/drawer";
+import { useIsMobile } from "@/client/hooks/use-mobile";
 
 export interface ComboboxOption<T extends string = string> {
   value: T;
@@ -86,6 +93,11 @@ export interface ComboboxProps<T extends string = string> {
   disabled?: boolean;
   buttonClassName?: string;
   popoverClassName?: string;
+  /**
+   * Enable mobile drawer on small screens (default: true)
+   * When enabled, uses a bottom drawer on mobile instead of popover
+   */
+  useMobileDrawer?: boolean;
   /**
    * Custom render function for the trigger button (selected value display)
    * @param selectedOption - The currently selected option, or undefined if none selected
@@ -110,10 +122,12 @@ export function Combobox<T extends string = string>({
   disabled = false,
   buttonClassName = "",
   popoverClassName = "",
+  useMobileDrawer = true,
   renderTrigger,
   renderOption,
 }: ComboboxProps<T>) {
   const [open, setOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const selectedOption = useMemo(
     () => options.find((opt) => opt.value === value),
@@ -134,9 +148,81 @@ export function Combobox<T extends string = string>({
     </>
   );
 
+  // Helper component for shared Command content
+  const CommandContent = () => (
+    <Command>
+      <CommandInput placeholder={searchPlaceholder} />
+      <CommandList>
+        <CommandEmpty>{emptyMessage}</CommandEmpty>
+        <CommandGroup>
+          {options.map((option) => {
+            const selected = option.value === value;
+            return (
+              <CommandItem
+                key={String(option.value)}
+                value={option.label}
+                onSelect={() => !option.disabled && handleSelect(option.value)}
+                disabled={option.disabled}
+              >
+                {/* @ts-ignore - React type version conflict */}
+                {renderOption ? (
+                  renderOption(option, selected)
+                ) : (
+                  <div className="flex flex-col flex-1">
+                    <span>{option.label}</span>
+                    {option.description && (
+                      <span className="text-xs text-muted-foreground">
+                        {option.description}
+                      </span>
+                    )}
+                    {option.badge && (
+                      <span className="text-xs text-muted-foreground">
+                        {option.badge}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </CommandItem>
+            );
+          })}
+        </CommandGroup>
+      </CommandList>
+    </Command>
+  );
+
+  // Desktop or drawer disabled: use Popover
+  if (!isMobile || !useMobileDrawer) {
+    return (
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className={cn(
+              "w-full justify-between",
+              !selectedOption && "text-muted-foreground",
+              buttonClassName
+            )}
+            disabled={disabled}
+          >
+            {triggerContent}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent
+          className={cn("w-auto p-0", popoverClassName)}
+          style={{ width: 'var(--radix-popover-trigger-width)' }}
+        >
+          <CommandContent />
+        </PopoverContent>
+      </Popover>
+    );
+  }
+
+  // Mobile with drawer enabled: use Drawer
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild>
         <Button
           variant="outline"
           role="combobox"
@@ -150,50 +236,15 @@ export function Combobox<T extends string = string>({
         >
           {triggerContent}
         </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        className={cn("w-auto p-0", popoverClassName)}
-        style={{ width: 'var(--radix-popover-trigger-width)' }}
-      >
-        <Command>
-          <CommandInput placeholder={searchPlaceholder} />
-          <CommandList>
-            <CommandEmpty>{emptyMessage}</CommandEmpty>
-            <CommandGroup>
-              {options.map((option) => {
-                const selected = option.value === value;
-                return (
-                  <CommandItem
-                    key={String(option.value)}
-                    value={option.label}
-                    onSelect={() => !option.disabled && handleSelect(option.value)}
-                    disabled={option.disabled}
-                  >
-                    {/* @ts-ignore - React type version conflict */}
-                    {renderOption ? (
-                      renderOption(option, selected)
-                    ) : (
-                      <div className="flex flex-col flex-1">
-                        <span>{option.label}</span>
-                        {option.description && (
-                          <span className="text-xs text-muted-foreground">
-                            {option.description}
-                          </span>
-                        )}
-                        {option.badge && (
-                          <span className="text-xs text-muted-foreground">
-                            {option.badge}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </CommandItem>
-                );
-              })}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+      </DrawerTrigger>
+      <DrawerContent aria-describedby={undefined}>
+        <DrawerTitle className="sr-only">
+          {placeholder}
+        </DrawerTitle>
+        <div className="mt-4 border-t">
+          <CommandContent />
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 }

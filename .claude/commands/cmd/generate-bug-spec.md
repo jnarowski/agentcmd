@@ -1,6 +1,6 @@
 ---
-description: Generate bug fix spec with reproduction steps and investigation workflow
-argument-hint: [context-or-spec-id?, context?]
+description: Generate bug fix spec only (no implementation)
+argument-hint: [context?]
 ---
 
 # Bug Fix Specification
@@ -9,13 +9,13 @@ Generate focused spec for bugs with reproduce → diagnose → fix → verify wo
 
 ## Variables
 
-- $param1: $1 (optional) - Either 12-digit spec ID to reuse existing folder, or context string for new bug
-- $param2: $2 (optional) - Additional context (only used if $1 is spec ID)
+- $param1: $1 (optional) - Bug context or description (infers from conversation if omitted)
 
 ## Instructions
 
 - **IMPORTANT**: Use reasoning model - THINK HARD about reproduction, root cause, AND fix approach
 - **IMPORTANT**: This command ONLY generates spec - do NOT implement code or make changes beyond spec folder/file and index.json
+- Your ONLY file operations: create spec folder, write spec.md, update index.json - nothing else
 - Normalize bug name to kebab-case for folder name
 - Replace ALL `<placeholders>` with specific details
 - **Formalize reproduction steps** - make them precise and repeatable
@@ -40,27 +40,19 @@ Assign based on **context window usage and cognitive load**:
 ## Workflow
 
 1. **Determine Context**:
-   - If no explicit context: Use conversation history
-   - If spec ID provided: Read existing folder (PRD if present) + conversation history
-   - Otherwise: Use provided context string
+   - If $param1 provided: Use as context
+   - If $param1 empty: Infer from conversation history
 
-   **Detection:**
-   - If $param1 matches /^\d{12}$/: It's a spec ID → reuse folder, context from $param2 or conversation
-   - Otherwise: $param1 is context (or empty) → create new folder
-
-2. **Generate or Reuse Spec ID**:
-   - If reusing folder: Extract spec ID from $param1
-   - If new folder: Generate timestamp-based ID in format `YYMMDDHHmmss`
-   - Example: November 13, 2025 at 2:22:01pm → `251113142201`
-   - Read `.agent/specs/index.json` (will be updated in step 8)
+2. **Generate Spec ID**:
+   - Generate timestamp-based ID in format `YYMMDDHHmm`
+   - Example: November 13, 2025 at 2:22pm → `2511131422`
+   - Read `.agent/specs/index.json` (will be updated in step 7)
 
 3. **Generate Bug Name**:
    - Generate concise kebab-case name from context (max 4 words)
    - Examples: "Memory leak in workflows" → "workflow-memory-leak", "Export crash" → "export-crash-fix"
-   - If reusing folder: Extract name from existing folder path
 
 4. **Research Phase**:
-   - If reusing folder: Read existing `prd.md` if present
    - Search codebase for relevant code paths
    - Attempt to reproduce bug if possible
    - Gather context on architecture
@@ -85,10 +77,9 @@ Assign based on **context window usage and cognitive load**:
    - Calculate totals and average
 
 7. **Write Spec**:
-   - If new folder: Create folder `.agent/specs/todo/{timestampId}-{bugName}/`
-   - If reusing: Verify folder exists, check for conflicts (don't overwrite existing spec.md)
-   - Write: `spec.md` (never spec.json)
-   - Example: `.agent/specs/todo/251113142201-workflow-memory-leak/spec.md`
+   - Create folder `.agent/specs/todo/{timestampId}-{bugName}/`
+   - Write `spec.md` (never spec.json)
+   - Example: `.agent/specs/todo/2511131422-workflow-memory-leak/spec.md`
    - Always starts in `todo/` with Status "draft"
 
 8. **Update Index**:
@@ -96,16 +87,19 @@ Assign based on **context window usage and cognitive load**:
      ```json
      {
        "specs": {
-         "251113142201": {
-           "path": "todo/251113142201-workflow-memory-leak/spec.md",
-           "status": "draft",
+         "2511131422": {
+           "folder": "2511131422-workflow-memory-leak",
+           "path": "todo/2511131422-workflow-memory-leak/spec.md",
            "spec_type": "bug",
-           "created": "2025-11-13T14:22:01.000Z",
-           "updated": "2025-11-13T14:22:01.000Z"
+           "status": "draft",
+           "created": "2025-11-13T14:22:00Z",
+           "updated": "2025-11-13T14:22:00Z"
          }
        }
      }
      ```
+
+9. **Output Report** - Do NOT implement. Output JSON only.
 
 ## Template
 

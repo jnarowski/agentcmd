@@ -17,11 +17,11 @@ import {
   DropdownMenuSeparator,
 } from "@/client/components/ui/dropdown-menu";
 
-interface MobileNavDropdownProps {
+interface NewButtonDropdownMobileProps {
   projectId: string;
 }
 
-export function MobileNavDropdown({ projectId }: MobileNavDropdownProps) {
+export function NewButtonDropdownMobile({ projectId }: NewButtonDropdownMobileProps) {
   const navigate = useNavigate();
   const location = useLocation();
 

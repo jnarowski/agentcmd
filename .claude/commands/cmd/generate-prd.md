@@ -1,75 +1,92 @@
 ---
 description: Generate PRD with high-level technical spec in spec folder structure
-argument-hint: [context-or-spec-id?, context?]
+argument-hint: [context?]
 ---
 
-# Generate PRD
+# Product Requirements Document (PRD)
 
-Create a concise, actionable Product Requirements Document (PRD) with high-level technical specification. Saves to `.agent/specs/todo/[id]-[feature]/prd.md` with timestamp-based ID.
+Generate high-level PRD focusing on "what" and "why" before implementation. Creates folder at `.agent/specs/todo/[id]-[feature]/prd.md` with timestamp-based ID.
 
 ## Variables
 
-- $param1: $1 (optional) - Either 12-digit spec ID to reuse existing folder, or context string for new PRD
-- $param2: $2 (optional) - Additional context (only used if $1 is spec ID)
+- $param1: $1 (optional) - Feature context or description (infers from conversation if omitted)
 
 ## Instructions
 
-- **IMPORTANT**: This command ONLY generates PRD - do NOT implement code or create implementation specs
-- PRDs are reference documents - NOT tracked in index.json
-- Normalize feature name to kebab-case for folder name
-- Replace ALL `<placeholders>` with specific details
-- Stay HIGH LEVEL - this is for planning, not implementation
-- Focus on DECISIONS not details
-- Keep concise: ~700-1000 words total
+- **IMPORTANT**: Use your reasoning model - THINK HARD about feature requirements, user needs, and business value
+- **IMPORTANT**: This command ONLY generates the PRD - do NOT implement any code or make file changes beyond creating the folder/file and updating index.json
+- Normalize feature name to kebab-case for the folder name
+- Replace ALL `<placeholders>` with specific details relevant to that section
+- Focus on WHAT and WHY, not HOW (save implementation details for spec)
+- Keep it high-level but comprehensive
+- **DO NOT include implementation tasks or complexity scores** - this is for planning only
 
 ## Workflow
 
 1. **Determine Context**:
-   - If no explicit context: Use conversation history
-   - If spec ID provided: Read existing folder + conversation history
-   - Otherwise: Use provided context string
+   - If $param1 provided: Use as context
+   - If $param1 empty: Infer from conversation history
 
-   **Detection:**
-   - If $1 matches /^\d{12}$/: It's a spec ID → reuse folder
-   - Otherwise: $1 is context (or empty) → create new folder
-
-2. **Generate or Reuse Spec ID**:
-   - If reusing folder: Extract spec ID from $1
-   - If new folder: Generate timestamp-based ID in format `YYMMDDHHmmss`
-   - Example: November 13, 2025 at 3:22:01pm → `251113152201`
+2. **Generate Spec ID**:
+   - Generate timestamp-based ID in format `YYMMDDHHmm`
+   - Example: November 13, 2025 at 3:22pm → `2511131522`
+   - Read `.agent/specs/index.json` (will be updated in step 7)
 
 3. **Generate Feature Name**:
    - Generate concise kebab-case name from context (max 4 words)
-   - Examples: "OAuth integration" → "oauth-integration", "User dashboard" → "user-dashboard"
-   - If reusing folder: Extract name from existing folder path
+   - Examples: "Add OAuth support" → "oauth-support", "Dashboard redesign" → "dashboard-redesign"
 
-4. **Clarification** (conditional):
-   - Ask clarifying questions ONE AT A TIME:
-     - Missing user details or use cases
-     - Unclear technical constraints
-     - Ambiguous success metrics
-     - Timeline if not specified
+4. **Research Phase**:
+   - Research codebase for existing patterns relevant to the feature
+   - Gather context about architecture, file structure, and conventions
+   - Look for similar features for inspiration
 
-   - Use this template:
-     ```md
-     **Question**: [Your question]
-     **Suggestions**:
-     1. [Option 1] (recommended - why)
-     2. [Option 2]
-     3. Other - user specifies
-     ```
+5. **Clarification** (conditional):
+   - **If explicit context provided**: Resolve ambiguities autonomously using recommended best practices
+   - **If inferring from conversation**: Ask clarifying questions ONE AT A TIME if requirements are unclear:
+     - Don't use the Question tool
+     - Use this template:
 
-5. **Generate PRD**:
-   - Follow PRD Template below
+       ```md
+       **Question**: [Your question]
+       **Suggestions**:
+
+       1. [Option 1] (recommended - why)
+       2. [Option 2]
+       3. Other - user specifies
+       ```
+
+6. **Generate PRD**:
+   - Once you have sufficient context, generate the PRD following the Template below
+   - Focus on requirements, user value, and high-level approach
    - Be concise but comprehensive
    - Skip sections only if truly not applicable
 
-6. **Write PRD Folder and File**:
-   - If new folder: Create folder `.agent/specs/todo/{timestampId}-{featureName}/`
-   - If reusing: Verify folder exists
-   - Write to `prd.md` in folder
-   - Example: `.agent/specs/todo/251113152201-oauth-integration/prd.md`
-   - **Note**: PRDs are NOT tracked in index.json (reference docs only)
+7. **Write PRD Folder and File**:
+   - Create folder `.agent/specs/todo/{timestampId}-{featureName}/`
+   - Write `prd.md` in folder (never `prd.json`)
+   - Example: `.agent/specs/todo/2511131522-oauth-support/prd.md`
+   - **Note**: PRDs always start in `todo/` folder with Status "draft"
+
+8. **Update Index**:
+   - Add minimal entry to index.json using timestamp ID as key (NO path field):
+
+     ```json
+     {
+       "specs": {
+         "2511131522": {
+           "folder": "2511131522-oauth-support",
+           "spec_type": "prd",
+           "status": "draft",
+           "created": "2025-11-13T15:22:00Z",
+           "updated": "2025-11-13T15:22:00Z"
+         }
+       }
+     }
+     ```
+
+   - **IMPORTANT**: PRD entries have NO `path` field - this indicates no implementation spec exists yet
+   - Write updated index back to `.agent/specs/index.json`
 
 ## PRD Template
 
@@ -230,65 +247,59 @@ Create a concise, actionable Product Requirements Document (PRD) with high-level
 /cmd:generate-prd
 ```
 
-Analyzes conversation history, generates ID `251113152201`, creates: `.agent/specs/todo/251113152201-oauth-integration/prd.md`
+Analyzes conversation history, generates ID `2511131522`, creates: `.agent/specs/todo/2511131522-oauth-support/prd.md`
 
 ### Example 2: Explicit context
 
 ```bash
-/cmd:generate-prd "OAuth integration with Google and GitHub for enterprise customers"
+/cmd:generate-prd "Add OAuth support with Google and GitHub providers"
 ```
 
-Uses explicit context, generates ID `251113152201`, creates: `.agent/specs/todo/251113152201-oauth-integration/prd.md`
-
-### Example 3: Add PRD to existing spec folder
-
-```bash
-/cmd:generate-prd 251113150000
-```
-
-Reuses existing folder, infers context from conversation, adds: `.agent/specs/todo/251113150000-oauth-integration/prd.md`
-
-### Example 4: Add PRD with explicit context
-
-```bash
-/cmd:generate-prd 251113150000 "OAuth integration details"
-```
-
-Reuses folder, uses explicit context, adds: `.agent/specs/todo/251113150000-oauth-integration/prd.md`
+Uses explicit context, generates ID `2511131522`, creates: `.agent/specs/todo/2511131522-oauth-support/prd.md`
 
 ## Common Pitfalls
 
-- **Spec ID format**: Must be exactly 12 digits to be recognized as folder reuse
-- **Too detailed**: PRDs are high-level planning docs, not implementation specs
-- **Wrong directory**: Always create folder in `.agent/specs/todo/`
-- **No index update**: PRDs are reference docs, NOT tracked in index.json
+- **Wrong directory**: Always create folder in `.agent/specs/todo/`, not `.agent/specs/`
+- **Folder structure**: Must create folder `{timestampId}-{feature}/` with `prd.md` inside (e.g., `2511131522-oauth-support/`)
+- **Index not updated**: Always update index.json after creating PRD
+- **Path field in index**: PRD entries should NOT have a `path` field - only add path when spec is generated
 - **Generic placeholders**: Replace all `<placeholders>` with actual content
-- **Too long**: Keep to ~700-1000 words total
+- **Including implementation details**: Keep high-level - save tasks and complexity for spec
+- **Status field**: Use lowercase status values: `draft`, `ready`, `in-progress`, `review`, `completed`
+- **Kebab-case**: Always convert feature name to kebab-case for folder name
 
 ## Report
 
-**IMPORTANT**: After completing all steps, output this JSON as your final message:
+**IMPORTANT**: After completing all steps (1-8), output ONLY raw JSON (see `.agent/docs/slash-command-json-output-format.md`).
 
 <json_output>
 {
   "success": true,
-  "prd_folder": ".agent/specs/todo/[id]-[feature]",
+  "spec_folder": ".agent/specs/todo/[id]-[feature]",
   "prd_file": ".agent/specs/todo/[id]-[feature]/prd.md",
   "spec_id": "[id]",
   "spec_type": "prd",
   "feature_name": "[feature-name]",
-  "primary_objective": "[main objective]",
-  "next_command": "/cmd:generate-spec [id]"
+  "next_command": "/cmd:add-spec [id]"
 }
 </json_output>
 
 **JSON Field Descriptions:**
 
 - `success`: Always true if PRD generation completed
-- `prd_folder`: Path to the created folder
-- `prd_file`: Full path to the PRD file
-- `spec_id`: The timestamp-based ID in YYMMDDHHmmss format
+- `spec_folder`: Path to the created spec folder
+- `prd_file`: Full path to the PRD file (always prd.md)
+- `spec_id`: The timestamp-based spec ID in YYMMDDHHmm format (e.g., "2511131522")
 - `spec_type`: Always "prd"
 - `feature_name`: Normalized feature name (kebab-case)
-- `primary_objective`: The main objective from the PRD
-- `next_command`: Suggested next command (generate implementation spec in same folder)
+- `next_command`: Suggested next command to run (add-spec to create implementation spec)
+
+**Output Examples:**
+
+❌ BAD:
+Perfect! PRD generated. Here's the summary:
+{ "success": true, ... }
+Ready to generate spec!
+
+✅ GOOD:
+{ "success": true, ... }

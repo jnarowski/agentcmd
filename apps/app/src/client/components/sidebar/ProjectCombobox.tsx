@@ -17,10 +17,11 @@ import {
   PopoverTrigger,
 } from "@/client/components/ui/popover";
 import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/client/components/ui/sheet";
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+  DrawerTitle,
+} from "@/client/components/ui/drawer";
 import { useIsMobile } from "@/client/hooks/use-mobile";
 import { useNavigationStore } from "@/client/stores";
 import {
@@ -34,7 +35,6 @@ export function ProjectCombobox() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
-  const [sheetOpen, setSheetOpen] = useState(false);
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const activeProjectId = useNavigationStore((s) => s.activeProjectId);
   const setActiveProject = useNavigationStore((s) => s.setActiveProject);
@@ -79,7 +79,6 @@ export function ProjectCombobox() {
       navigate(`/projects/${value}`);
     }
     setOpen(false);
-    setSheetOpen(false);
   };
 
   const handleToggleStar = (e: React.MouseEvent, project: Project) => {
@@ -92,7 +91,6 @@ export function ProjectCombobox() {
 
   const handleNewProject = () => {
     setOpen(false);
-    setSheetOpen(false);
     setIsProjectDialogOpen(true);
   };
 
@@ -172,32 +170,11 @@ export function ProjectCombobox() {
     </Command>
   );
 
-  return (
-    <div className="px-2 pt-3 pb-2">
-      <div className="flex items-center gap-2">
-        {isMobile ? (
-          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-            <SheetTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={sheetOpen}
-                className="flex-1 justify-between h-9"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <FolderOpen className="size-4 shrink-0 opacity-70" />
-                  <span className="truncate">
-                    {selectedProject?.name || "Show all"}
-                  </span>
-                </div>
-                <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="bottom" className="p-0">
-              {renderCommandContent()}
-            </SheetContent>
-          </Sheet>
-        ) : (
+  // Desktop: use Popover
+  if (!isMobile) {
+    return (
+      <div className="px-2 pt-3 pb-2">
+        <div className="flex items-center gap-2">
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
               <Button
@@ -223,7 +200,58 @@ export function ProjectCombobox() {
               {renderCommandContent()}
             </PopoverContent>
           </Popover>
-        )}
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 shrink-0"
+            onClick={handleNewProject}
+            aria-label="New project"
+          >
+            <Plus className="size-4" />
+          </Button>
+        </div>
+
+        <ProjectDialog
+          open={isProjectDialogOpen}
+          onOpenChange={setIsProjectDialogOpen}
+          onProjectCreated={(projectId) => {
+            setIsProjectDialogOpen(false);
+            setActiveProject(projectId);
+            navigate(`/projects/${projectId}`);
+          }}
+        />
+      </div>
+    );
+  }
+
+  // Mobile: use Drawer
+  return (
+    <div className="px-2 pt-3 pb-2">
+      <div className="flex items-center gap-2">
+        <Drawer open={open} onOpenChange={setOpen}>
+          <DrawerTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="flex-1 justify-between h-9"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <FolderOpen className="size-4 shrink-0 opacity-70" />
+                <span className="truncate">
+                  {selectedProject?.name || "Show all"}
+                </span>
+              </div>
+              <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
+            </Button>
+          </DrawerTrigger>
+          <DrawerContent aria-describedby={undefined}>
+            <DrawerTitle className="sr-only">Select project</DrawerTitle>
+            <div className="mt-4 border-t">
+              {renderCommandContent()}
+            </div>
+          </DrawerContent>
+        </Drawer>
         <Button
           variant="outline"
           size="icon"

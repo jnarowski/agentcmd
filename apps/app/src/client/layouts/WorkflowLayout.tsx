@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Outlet, useParams, Navigate } from "react-router-dom";
 import { ConnectionStatusBanner } from "@/client/components/ConnectionStatusBanner";
-import { ProjectHeader } from "@/client/components/ProjectHeader";
+import { ProjectHeader } from "@/client/pages/projects/components/ProjectHeader";
 import { AppSidebar } from "@/client/components/AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/client/components/ui/sidebar";
 import { useWebSocket } from "@/client/hooks/useWebSocket";
@@ -19,7 +19,9 @@ export default function WorkflowLayout() {
   const { readyState, reconnectAttempt, reconnect } = useWebSocket();
   const { data: project, isLoading } = useProject(projectId!);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const setActiveProject = useNavigationStore((state) => state.setActiveProject);
+  const setActiveProject = useNavigationStore(
+    (state) => state.setActiveProject
+  );
   const clearNavigation = useNavigationStore((state) => state.clearNavigation);
 
   // Set active project in navigation store
