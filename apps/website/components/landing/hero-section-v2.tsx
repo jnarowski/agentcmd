@@ -65,7 +65,7 @@ export default function HeroSectionV2() {
 
       <div className="mb-12 translate-y-[-1rem] animate-fade-in opacity-0 [--animation-delay:800ms]">
         <code className="inline-block rounded-lg bg-black/60 dark:bg-white/5 px-6 py-3 text-sm md:text-base font-mono text-emerald-400 border border-emerald-500/20">
-          npx agentcmd start
+          npx agentcmd install
         </code>
       </div>
 

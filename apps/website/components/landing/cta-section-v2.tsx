@@ -15,7 +15,8 @@ export default function CtaSectionV2() {
               Ready to Stop Babysitting?
             </h2>
             <p className="mt-4 text-xl text-gray-300 max-w-2xl mx-auto">
-              Start building workflows in under 5 minutes. No installation required.
+              Start building workflows in under 5 minutes. No installation
+              required.
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
@@ -43,7 +44,7 @@ export default function CtaSectionV2() {
 
             <div className="mt-8">
               <code className="inline-block rounded-lg bg-black/60 dark:bg-black/80 px-6 py-3 text-lg font-mono text-emerald-400 border border-emerald-500/20 shadow-lg">
-                npx agentcmd start
+                npx agentcmd install
               </code>
             </div>
           </div>
