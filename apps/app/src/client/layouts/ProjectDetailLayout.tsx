@@ -1,24 +1,23 @@
-import { useEffect } from 'react';
+import { useEffect } from "react";
 import { Outlet, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
 import { useActiveSession } from "@/client/hooks/navigation/useActiveSession";
 import { Button } from "@/client/components/ui/button";
 import { Skeleton } from "@/client/components/ui/skeleton";
-import {
-  AlertCircle,
-  ArrowLeft,
-} from "lucide-react";
+import { AlertCircle, ArrowLeft } from "lucide-react";
 import { Alert, AlertDescription } from "@/client/components/ui/alert";
 import { useNavigationStore } from "@/client/stores/index";
-import { ProjectHeader } from "@/client/components/ProjectHeader";
+import { ProjectHeader } from "@/client/pages/projects/components/ProjectHeader";
 import { getSessionDisplayName } from "@/client/utils/getSessionDisplayName";
 import type { SessionResponse } from "@/shared/types/agent-session.types";
 
 export default function ProjectDetailLayout() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const setActiveProject = useNavigationStore((state) => state.setActiveProject);
+  const setActiveProject = useNavigationStore(
+    (state) => state.setActiveProject
+  );
   const clearNavigation = useNavigationStore((state) => state.clearNavigation);
   const { data: project, isLoading, error } = useProject(id!);
 
@@ -31,10 +30,13 @@ export default function ProjectDetailLayout() {
   // Build current session with proper display name logic
   // Use utility function for consistent session naming
   // Only use cachedSession (from React Query) as it has all required fields
-  const currentSession: SessionResponse | null = activeSessionId && cachedSession ? {
-    ...cachedSession,
-    name: getSessionDisplayName(cachedSession)
-  } : null;
+  const currentSession: SessionResponse | null =
+    activeSessionId && cachedSession
+      ? {
+          ...cachedSession,
+          name: getSessionDisplayName(cachedSession),
+        }
+      : null;
 
   // Sync projectId with navigationStore on mount and when id changes
   useEffect(() => {
