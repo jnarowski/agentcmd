@@ -140,4 +140,98 @@ describe("installWorkflowPackage", () => {
     expect(result.message).toContain("Command failed with code 1");
     expect(result.output).toBeDefined();
   });
+
+  it("detects ERR_PNPM_ADDING_TO_ROOT as error", async () => {
+    // Given: install command fails with ERR_PNPM_ADDING_TO_ROOT
+    vi.mocked(fs.access).mockResolvedValue(undefined);
+    vi.mocked(fs.access)
+      .mockResolvedValueOnce(undefined) // package.json exists
+      .mockResolvedValueOnce(undefined); // pnpm-lock.yaml exists
+
+    // Mock install with ERR_PNPM_ADDING_TO_ROOT error
+    const installProcess = createMockProcess(
+      1,
+      "",
+      " ERR_PNPM_ADDING_TO_ROOT  Running this command will add the dependency to the workspace root"
+    );
+
+    vi.mocked(child_process.spawn).mockReturnValueOnce(installProcess);
+
+    // When: installWorkflowPackage()
+    const result = await installWorkflowPackage({ projectPath: mockProjectPath });
+
+    // Then: Returns success=false (error detected)
+    expect(result.success).toBe(false);
+    expect(result.message).toContain("Command failed with code 1");
+  });
+
+  it("detects ELIFECYCLE error codes", async () => {
+    // Given: install command fails with ELIFECYCLE
+    vi.mocked(fs.access).mockResolvedValue(undefined);
+    vi.mocked(fs.access)
+      .mockResolvedValueOnce(undefined) // package.json exists
+      .mockResolvedValueOnce(undefined); // pnpm-lock.yaml exists
+
+    const installProcess = createMockProcess(
+      1,
+      "",
+      "npm ERR! code ELIFECYCLE\nnpm ERR! errno 1"
+    );
+
+    vi.mocked(child_process.spawn).mockReturnValueOnce(installProcess);
+
+    // When: installWorkflowPackage()
+    const result = await installWorkflowPackage({ projectPath: mockProjectPath });
+
+    // Then: Returns success=false
+    expect(result.success).toBe(false);
+  });
+
+  it("allows exit code 1 with only warnings", async () => {
+    // Given: command succeeds but has warnings
+    vi.mocked(fs.access).mockResolvedValue(undefined);
+    vi.mocked(fs.access)
+      .mockResolvedValueOnce(undefined) // package.json exists
+      .mockResolvedValueOnce(undefined); // pnpm-lock.yaml exists
+
+    // Mock install with warnings but no errors
+    const installProcess = createMockProcess(
+      1,
+      "Package installed",
+      "WARN deprecated package@1.0.0: This package is deprecated"
+    );
+    const initProcess = createMockProcess(0, "Init complete");
+
+    vi.mocked(child_process.spawn)
+      .mockReturnValueOnce(installProcess)
+      .mockReturnValueOnce(initProcess);
+
+    // When: installWorkflowPackage()
+    const result = await installWorkflowPackage({ projectPath: mockProjectPath });
+
+    // Then: Returns success=true (warnings are allowed)
+    expect(result.success).toBe(true);
+  });
+
+  it("detects other ERR_ prefix patterns", async () => {
+    // Given: install fails with ERR_INVALID_PACKAGE
+    vi.mocked(fs.access).mockResolvedValue(undefined);
+    vi.mocked(fs.access)
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(undefined);
+
+    const installProcess = createMockProcess(
+      1,
+      "",
+      "ERR_INVALID_PACKAGE: Package name is invalid"
+    );
+
+    vi.mocked(child_process.spawn).mockReturnValueOnce(installProcess);
+
+    // When: installWorkflowPackage()
+    const result = await installWorkflowPackage({ projectPath: mockProjectPath });
+
+    // Then: Returns success=false
+    expect(result.success).toBe(false);
+  });
 });

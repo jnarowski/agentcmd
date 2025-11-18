@@ -54,11 +54,20 @@ function runCommand(
 
     proc.on("close", (code) => {
       // pnpm may return exit code 1 for non-fatal warnings (like missing env vars in .npmrc)
-      // Check if stderr contains only warnings (not actual errors)
+      // Check if stderr contains actual errors vs just warnings
+      const stderrLower = stderr.toLowerCase();
+      const hasError =
+        // Check for ERR_ prefix (e.g., ERR_PNPM_ADDING_TO_ROOT)
+        /\berr[_!]/i.test(stderr) ||
+        // Check for npm/pnpm error codes (e.g., ELIFECYCLE, ENOENT)
+        /\be[a-z]+\b/i.test(stderr) ||
+        // Check for "error" keyword
+        stderrLower.includes("error");
+
       const hasOnlyWarnings =
         stderr.trim() &&
-        !stderr.toLowerCase().includes("error") &&
-        stderr.toLowerCase().includes("warn");
+        !hasError &&
+        stderrLower.includes("warn");
 
       if (code === 0 || (code === 1 && hasOnlyWarnings)) {
         resolve({ stdout, stderr });

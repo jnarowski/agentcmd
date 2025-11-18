@@ -59,9 +59,9 @@ export function SpecTypeSelect({
       disabled={disabled || isLoading || !data || data.length === 0}
       renderTrigger={(selectedOption) =>
         selectedOption ? (
-          <div className="flex items-center justify-between gap-2 w-full">
+          <div className="flex items-center gap-2 w-full min-w-0">
             <span className="truncate font-medium">{selectedOption.label}</span>
-            <span className="text-xs text-muted-foreground/60 shrink-0 font-mono">
+            <span className="hidden sm:inline text-xs text-muted-foreground/60 shrink-0 font-mono">
               {selectedOption.badge}
             </span>
           </div>

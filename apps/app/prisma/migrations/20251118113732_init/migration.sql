@@ -34,6 +34,7 @@ CREATE TABLE "workflow_runs" (
     "mode" TEXT,
     "branch_name" TEXT,
     "base_branch" TEXT,
+    "pr_url" TEXT,
     "current_phase" TEXT,
     "current_step_index" INTEGER NOT NULL DEFAULT 0,
     "status" TEXT NOT NULL DEFAULT 'pending',

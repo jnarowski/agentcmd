@@ -17,88 +17,158 @@ export default function UseCaseSection() {
 
             <pre className="p-6 overflow-x-auto text-sm md:text-base">
               <code className="language-typescript">
-                <span className="text-gray-500">// Example workflow: Feature → PR → Review</span>
+                <span className="text-gray-500">// Example: Implement & Review Workflow</span>
                 {'\n'}
-                <span className="text-purple-400">const</span> <span className="text-blue-300">workflow</span> <span className="text-white">=</span> <span className="text-yellow-300">defineWorkflow</span>
-                <span className="text-white">{'({'}</span>
-                {'\n  '}
-                <span className="text-blue-300">name</span>
-                <span className="text-white">:</span> <span className="text-green-300">&quot;Full Feature Development&quot;</span>
-                <span className="text-white">,</span>
-                {'\n  '}
-                <span className="text-blue-300">steps</span>
-                <span className="text-white">: [</span>
-                {'\n    '}
-                <span className="text-gray-500">// Generate spec from planning session</span>
-                {'\n    '}
-                <span className="text-blue-300">step</span>
-                <span className="text-white">.</span>
-                <span className="text-emerald-400">slash</span>
+                <span className="text-purple-400">export default</span> <span className="text-yellow-300">defineWorkflow</span>
                 <span className="text-white">(</span>
-                <span className="text-green-300">&quot;/cmd:generate-feature-spec&quot;</span>
-                <span className="text-white">, {'{'}</span>
+                {'\n  '}
+                <span className="text-white">{'{'}</span>
+                {'\n    '}
+                <span className="text-blue-300">id</span>
+                <span className="text-white">:</span> <span className="text-green-300">&quot;implement-review-workflow&quot;</span>
+                <span className="text-white">,</span>
+                {'\n    '}
+                <span className="text-blue-300">name</span>
+                <span className="text-white">:</span> <span className="text-green-300">&quot;Implement Review Workflow&quot;</span>
+                <span className="text-white">,</span>
+                {'\n    '}
+                <span className="text-blue-300">phases</span>
+                <span className="text-white">: [</span>
                 {'\n      '}
-                <span className="text-blue-300">args</span>
-                <span className="text-white">: {'{ '}</span>
-                <span className="text-blue-300">feature</span>
-                <span className="text-white">:</span> <span className="text-green-300">&quot;user authentication&quot;</span>
+                <span className="text-white">{'{ '}</span>
+                <span className="text-blue-300">id</span>
+                <span className="text-white">:</span> <span className="text-green-300">&quot;implement&quot;</span>
+                <span className="text-white">,</span> <span className="text-blue-300">label</span>
+                <span className="text-white">:</span> <span className="text-green-300">&quot;Implement&quot;</span>
+                <span className="text-white">{' },'}</span>
+                {'\n      '}
+                <span className="text-white">{'{ '}</span>
+                <span className="text-blue-300">id</span>
+                <span className="text-white">:</span> <span className="text-green-300">&quot;review&quot;</span>
+                <span className="text-white">,</span> <span className="text-blue-300">label</span>
+                <span className="text-white">:</span> <span className="text-green-300">&quot;Review&quot;</span>
                 <span className="text-white">{' }'}</span>
                 {'\n    '}
-                <span className="text-white">{'}),'}</span>
-                {'\n\n    '}
-                <span className="text-gray-500">// Implement with Claude</span>
-                {'\n    '}
-                <span className="text-blue-300">step</span>
-                <span className="text-white">.</span>
-                <span className="text-emerald-400">agent</span>
-                <span className="text-white">(</span>
-                <span className="text-green-300">&quot;claude&quot;</span>
-                <span className="text-white">, {'{'}</span>
-                {'\n      '}
-                <span className="text-blue-300">prompt</span>
-                <span className="text-white">:</span> <span className="text-green-300">&quot;Implement the spec&quot;</span>
-                <span className="text-white">,</span>
-                {'\n      '}
-                <span className="text-blue-300">permissionMode</span>
-                <span className="text-white">:</span> <span className="text-green-300">&quot;acceptEdits&quot;</span>
-                {'\n    '}
-                <span className="text-white">{'}),'}</span>
-                {'\n\n    '}
-                <span className="text-gray-500">// Create PR with git integration</span>
-                {'\n    '}
-                <span className="text-blue-300">step</span>
-                <span className="text-white">.</span>
-                <span className="text-emerald-400">git</span>
-                <span className="text-white">(</span>
-                <span className="text-green-300">&quot;create-pr&quot;</span>
-                <span className="text-white">, {'{'}</span>
-                {'\n      '}
-                <span className="text-blue-300">title</span>
-                <span className="text-white">:</span> <span className="text-green-300">&quot;feat: Add user authentication&quot;</span>
-                <span className="text-white">,</span>
-                {'\n      '}
-                <span className="text-blue-300">branch</span>
-                <span className="text-white">:</span> <span className="text-green-300">&quot;auto-generated&quot;</span>
-                {'\n    '}
-                <span className="text-white">{'}),'}</span>
-                {'\n\n    '}
-                <span className="text-gray-500">// Review with Codex</span>
-                {'\n    '}
-                <span className="text-blue-300">step</span>
-                <span className="text-white">.</span>
-                <span className="text-emerald-400">agent</span>
-                <span className="text-white">(</span>
-                <span className="text-green-300">&quot;codex&quot;</span>
-                <span className="text-white">, {'{'}</span>
-                {'\n      '}
-                <span className="text-blue-300">prompt</span>
-                <span className="text-white">:</span> <span className="text-green-300">&quot;Review PR for bugs and edge cases&quot;</span>
-                {'\n    '}
-                <span className="text-white">{'}),'}</span>
+                <span className="text-white">],</span>
                 {'\n  '}
-                <span className="text-white">]</span>
-                {'\n'}
+                <span className="text-white">{'}'}</span>
+                <span className="text-white">,</span>
+                {'\n  '}
+                <span className="text-purple-400">async</span> <span className="text-white">({'({ '}</span>
+                <span className="text-blue-300">event</span>
+                <span className="text-white">,</span> <span className="text-blue-300">step</span>
+                <span className="text-white">{' }) => {'}</span>
+                {'\n    '}
+                <span className="text-purple-400">const</span> <span className="text-white">{'{ '}</span>
+                <span className="text-blue-300">workingDir</span>
+                <span className="text-white">,</span> <span className="text-blue-300">specFile</span>
+                <span className="text-white">{' } ='}</span> <span className="text-blue-300">event</span>
+                <span className="text-white">.</span>
+                <span className="text-blue-300">data</span>
+                <span className="text-white">;</span>
+                {'\n\n    '}
+                <span className="text-purple-400">await</span> <span className="text-blue-300">step</span>
+                <span className="text-white">.</span>
+                <span className="text-yellow-300">phase</span>
+                <span className="text-white">(</span>
+                <span className="text-green-300">&quot;implement&quot;</span>
+                <span className="text-white">,</span> <span className="text-purple-400">async</span> <span className="text-white">() {'=> {'}</span>
+                {'\n      '}
+                <span className="text-purple-400">const</span> <span className="text-blue-300">response</span> <span className="text-white">=</span> <span className="text-purple-400">await</span> <span className="text-blue-300">step</span>
+                <span className="text-white">.</span>
+                <span className="text-emerald-400">agent</span>
+                <span className="text-white">(</span>
+                {'\n        '}
+                <span className="text-green-300">&quot;implement-spec&quot;</span>
+                <span className="text-white">,</span>
+                {'\n        '}
+                <span className="text-white">{'{'}</span>
+                {'\n          '}
+                <span className="text-blue-300">agent</span>
+                <span className="text-white">:</span> <span className="text-green-300">&quot;claude&quot;</span>
+                <span className="text-white">,</span>
+                {'\n          '}
+                <span className="text-blue-300">json</span>
+                <span className="text-white">:</span> <span className="text-purple-400">true</span>
+                <span className="text-white">,</span>
+                {'\n          '}
+                <span className="text-blue-300">prompt</span>
+                <span className="text-white">:</span> <span className="text-yellow-300">buildSlashCommand</span>
+                <span className="text-white">(</span>
+                {'\n            '}
+                <span className="text-green-300">&quot;/cmd:implement-spec&quot;</span>
+                <span className="text-white">,</span>
+                {'\n            '}
+                <span className="text-white">{'{ '}</span>
+                <span className="text-blue-300">specIdOrNameOrPath</span>
+                <span className="text-white">:</span> <span className="text-blue-300">specFile</span>
+                <span className="text-white">,</span> <span className="text-blue-300">format</span>
+                <span className="text-white">:</span> <span className="text-green-300">&quot;json&quot;</span>
+                <span className="text-white">{' }'}</span>
+                {'\n          '}
+                <span className="text-white">),</span>
+                {'\n          '}
+                <span className="text-blue-300">workingDir</span>
+                {'\n        '}
+                <span className="text-white">{'}'}</span>
+                {'\n      '}
+                <span className="text-white">);</span>
+                {'\n      '}
+                <span className="text-purple-400">return</span> <span className="text-blue-300">response</span>
+                <span className="text-white">;</span>
+                {'\n    '}
                 <span className="text-white">{'});'}</span>
+                {'\n\n    '}
+                <span className="text-purple-400">await</span> <span className="text-blue-300">step</span>
+                <span className="text-white">.</span>
+                <span className="text-yellow-300">phase</span>
+                <span className="text-white">(</span>
+                <span className="text-green-300">&quot;review&quot;</span>
+                <span className="text-white">,</span> <span className="text-purple-400">async</span> <span className="text-white">() {'=> {'}</span>
+                {'\n      '}
+                <span className="text-purple-400">await</span> <span className="text-blue-300">step</span>
+                <span className="text-white">.</span>
+                <span className="text-emerald-400">agent</span>
+                <span className="text-white">(</span>
+                {'\n        '}
+                <span className="text-green-300">&quot;review-spec-implementation&quot;</span>
+                <span className="text-white">,</span>
+                {'\n        '}
+                <span className="text-white">{'{'}</span>
+                {'\n          '}
+                <span className="text-blue-300">agent</span>
+                <span className="text-white">:</span> <span className="text-green-300">&quot;claude&quot;</span>
+                <span className="text-white">,</span>
+                {'\n          '}
+                <span className="text-blue-300">json</span>
+                <span className="text-white">:</span> <span className="text-purple-400">true</span>
+                <span className="text-white">,</span>
+                {'\n          '}
+                <span className="text-blue-300">prompt</span>
+                <span className="text-white">:</span> <span className="text-yellow-300">buildSlashCommand</span>
+                <span className="text-white">(</span>
+                {'\n            '}
+                <span className="text-green-300">&quot;/cmd:review-spec-implementation&quot;</span>
+                <span className="text-white">,</span>
+                {'\n            '}
+                <span className="text-white">{'{ '}</span>
+                <span className="text-blue-300">specIdOrNameOrPath</span>
+                <span className="text-white">:</span> <span className="text-blue-300">specFile</span>
+                <span className="text-white">,</span> <span className="text-blue-300">format</span>
+                <span className="text-white">:</span> <span className="text-green-300">&quot;json&quot;</span>
+                <span className="text-white">{' }'}</span>
+                {'\n          '}
+                <span className="text-white">)</span>
+                {'\n        '}
+                <span className="text-white">{'}'}</span>
+                {'\n      '}
+                <span className="text-white">);</span>
+                {'\n    '}
+                <span className="text-white">{'});'}</span>
+                {'\n  '}
+                <span className="text-white">{'}'}</span>
+                {'\n'}
+                <span className="text-white">);</span>
               </code>
             </pre>
           </div>

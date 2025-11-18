@@ -50,6 +50,28 @@ export function PlanningSessionSelect({
       searchPlaceholder="Search sessions..."
       emptyMessage="No planning sessions found"
       disabled={disabled}
+      renderTrigger={(selectedOption) => {
+        if (!selectedOption) return <span>Select planning session...</span>;
+
+        const planningOption = selectedOption as PlanningSessionOption;
+        const session = planningOption.session;
+        if (!session) return <span>{planningOption.label}</span>;
+
+        const displayName = getSessionDisplayName(session);
+        const timeAgo = format(new Date(session.created_at), "MM/dd 'at' h:mma");
+
+        return (
+          <div className="flex items-center gap-2 w-full min-w-0">
+            {session.agent && (
+              <AgentIcon agent={session.agent} className="size-4 shrink-0" />
+            )}
+            <span className="truncate font-medium">{displayName}</span>
+            <span className="hidden sm:inline text-xs text-muted-foreground/60 tabular-nums shrink-0">
+              {timeAgo}
+            </span>
+          </div>
+        );
+      }}
       renderOption={(option) => {
         const planningOption = option as PlanningSessionOption;
         const session = planningOption.session;

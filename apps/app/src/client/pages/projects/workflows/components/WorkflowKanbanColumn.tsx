@@ -41,9 +41,8 @@ export function WorkflowKanbanColumn({
           </div>
         ) : (
           runs.map((run) => (
-            <div className="px-4">
+            <div key={run.id} className="px-4">
               <WorkflowRunCard
-                key={run.id}
                 run={run}
                 onClick={() => onExecutionClick(run)}
               />

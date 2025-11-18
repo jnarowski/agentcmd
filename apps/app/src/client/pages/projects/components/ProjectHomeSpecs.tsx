@@ -1,6 +1,5 @@
 import { Badge } from "@/client/components/ui/badge";
 import { Button } from "@/client/components/ui/button";
-import { Card, CardContent } from "@/client/components/ui/card";
 import { AgentIcon } from "@/client/components/AgentIcon";
 import { SessionStateBadge } from "@/client/pages/projects/sessions/components/SessionStateBadge";
 import { getSessionDisplayName } from "@/client/utils/getSessionDisplayName";
@@ -87,45 +86,43 @@ export function ProjectHomeSpecs({ projectId }: ProjectHomeSpecsProps) {
           </div>
           <div className="grid gap-2 md:grid-cols-2">
             {data.specs.map((task) => (
-              <Card
+              <div
                 key={task.id}
-                className="cursor-pointer hover:bg-accent/50 transition-colors"
+                className="p-3 cursor-pointer hover:bg-accent/50 transition-colors rounded-lg border bg-card"
                 onClick={() =>
                   handleOpenWorkflow(task.specPath, task.projectId, task.name)
                 }
               >
-                <CardContent className="p-3">
-                  <div className="flex items-start gap-2">
-                    <FileText className="size-4 shrink-0 mt-0.5" />
-                    <div className="flex flex-1 flex-col gap-1 min-w-0">
-                      <span className="text-sm truncate">
-                        {task.name}
-                      </span>
-                      <div className="flex items-center gap-1.5">
+                <div className="flex items-start gap-2">
+                  <FileText className="size-4 shrink-0 mt-0.5" />
+                  <div className="flex flex-1 flex-col gap-1 min-w-0">
+                    <span className="text-sm truncate">
+                      {task.name}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <Badge
+                        variant="secondary"
+                        className="h-4 px-1.5 text-[10px] bg-muted/50 text-muted-foreground hover:bg-muted/50"
+                      >
+                        {task.status}
+                      </Badge>
+                      {task.spec_type && task.spec_type !== "feature" && (
                         <Badge
-                          variant="secondary"
-                          className="h-4 px-1.5 text-[10px] bg-muted/50 text-muted-foreground hover:bg-muted/50"
+                          variant="outline"
+                          className="h-4 px-1.5 text-[10px]"
                         >
-                          {task.status}
+                          {task.spec_type}
                         </Badge>
-                        {task.spec_type && task.spec_type !== "feature" && (
-                          <Badge
-                            variant="outline"
-                            className="h-4 px-1.5 text-[10px]"
-                          >
-                            {task.spec_type}
-                          </Badge>
-                        )}
-                        <span className="text-[10px] text-muted-foreground">
-                          {formatDistanceToNow(new Date(task.created_at), {
-                            addSuffix: true,
-                          })}
-                        </span>
-                      </div>
+                      )}
+                      <span className="text-[10px] text-muted-foreground">
+                        {formatDistanceToNow(new Date(task.created_at), {
+                          addSuffix: true,
+                        })}
+                      </span>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -170,38 +167,36 @@ export function ProjectHomeSpecs({ projectId }: ProjectHomeSpecsProps) {
               const timeAgo = format(new Date(session.created_at), "MM/dd 'at' h:mma");
 
               return (
-                <Card
+                <div
                   key={planningSummary.id}
-                  className="cursor-pointer hover:bg-accent/50 transition-colors"
+                  className="p-3 cursor-pointer hover:bg-accent/50 transition-colors rounded-lg border bg-card"
                   onClick={() => navigate(`/projects/${planningSummary.projectId}/sessions/${planningSummary.id}`)}
                 >
-                  <CardContent className="p-3">
-                    <div className="flex items-start gap-2">
-                      <AgentIcon agent={planningSummary.agent as AgentType} className="size-4 shrink-0 mt-0.5" />
-                      <div className="flex flex-1 flex-col gap-1 min-w-0">
-                        <span className="text-sm truncate">
-                          {displayName}
-                        </span>
-                        <div className="text-xs text-muted-foreground tabular-nums">
-                          {timeAgo}
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <Badge
-                            variant="secondary"
-                            className="h-4 px-1.5 py-0 text-xs bg-green-500/10 text-green-600 border-green-500/20"
-                          >
-                            Plan
-                          </Badge>
-                          <SessionStateBadge
-                            state={session.state}
-                            errorMessage={session.error_message}
-                            compact
-                          />
-                        </div>
+                  <div className="flex items-start gap-2">
+                    <AgentIcon agent={planningSummary.agent as AgentType} className="size-4 shrink-0 mt-0.5" />
+                    <div className="flex flex-1 flex-col gap-1 min-w-0">
+                      <span className="text-sm truncate">
+                        {displayName}
+                      </span>
+                      <div className="text-xs text-muted-foreground tabular-nums">
+                        {timeAgo}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Badge
+                          variant="secondary"
+                          className="h-4 px-1.5 py-0 text-xs bg-green-500/10 text-green-600 border-green-500/20"
+                        >
+                          Plan
+                        </Badge>
+                        <SessionStateBadge
+                          state={session.state}
+                          errorMessage={session.error_message}
+                          compact
+                        />
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               );
             })}
           </div>

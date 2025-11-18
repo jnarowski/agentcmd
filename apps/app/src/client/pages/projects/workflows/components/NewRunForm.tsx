@@ -11,10 +11,8 @@ import {
 import { Combobox } from "@/client/components/ui/combobox";
 import { CodeEditor } from "@/client/components/CodeEditor";
 import { useCreateWorkflow } from "@/client/pages/projects/workflows/hooks/useWorkflowMutations";
-import { useProjectSpecs } from "@/client/pages/projects/hooks/useProjectSpecs";
 import { useProjectBranches } from "@/client/pages/projects/hooks/useProjectBranches";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
-import { useSpecs } from "@/client/hooks/useSpecs";
 import { api } from "@/client/utils/api";
 import { cn } from "@/client/utils/cn";
 import type {
@@ -24,6 +22,7 @@ import type {
 import { NewRunFormDialogArgSchemaFields } from "./NewRunFormDialogArgSchemaFields";
 import { SpecTypeSelect } from "./SpecTypeSelect";
 import { PlanningSessionSelect } from "./PlanningSessionSelect";
+import { SpecFileSelect } from "./SpecFileSelect";
 
 interface NewRunFormProps {
   projectId: string;
@@ -74,25 +73,21 @@ export function NewRunForm({
   const actualDefinition =
     definition || definitions?.find((d) => d.id === selectedDefinitionId);
 
-  // Fetch tasks to get spec metadata (for auto-populating spec_type)
-  const { data: specsData } = useSpecs(projectId);
-
   // Auto-select definition: use definitionId prop if provided, else first definition
   useEffect(() => {
-    if (definitions && definitions.length > 0) {
-      if (definitionId) {
-        // Only set if the definition exists in the list
-        const definitionExists = definitions.some((d) => d.id === definitionId);
-        if (definitionExists) {
-          setSelectedDefinitionId(definitionId);
-        }
-      } else if (!selectedDefinitionId) {
-        // Default to first definition
-        setSelectedDefinitionId(definitions[0].id);
+    if (!definitions || definitions.length === 0) return;
+
+    if (definitionId) {
+      // URL has a specific definition - use it if valid and different
+      const definitionExists = definitions.some((d) => d.id === definitionId);
+      if (definitionExists && selectedDefinitionId !== definitionId) {
+        setSelectedDefinitionId(definitionId);
       }
+    } else if (!selectedDefinitionId) {
+      // No URL definition - default to first
+      setSelectedDefinitionId(definitions[0].id);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [definitionId, definitions]);
+  }, [definitionId, definitions, selectedDefinitionId]);
 
   // Pre-fill spec file and name from URL params (runs before reset effect)
   useEffect(() => {
@@ -110,20 +105,6 @@ export function NewRunForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialName]);
 
-  // Auto-populate spec type when spec file is selected
-  useEffect(() => {
-    if (!specFile || !specsData?.specs) return;
-
-    // Find matching task by spec path
-    const matchingTask = specsData.specs.find(
-      (task) => task.specPath === specFile
-    );
-
-    if (matchingTask) {
-      setSpecType(matchingTask.spec_type);
-    }
-  }, [specFile, specsData]);
-
   // Reset dependent state when definition changes (but preserve initialSpecFile and initialName)
   useEffect(() => {
     if (selectedDefinitionId && selectedDefinitionId !== definitionId) {
@@ -139,9 +120,6 @@ export function NewRunForm({
     }
   }, [selectedDefinitionId, definitionId, initialSpecFile, initialName]);
 
-  // Fetch available spec files
-  const { data: specFiles } = useProjectSpecs(projectId, true);
-
   // Fetch available branches
   const { data: branches } = useProjectBranches(projectId, true);
 
@@ -154,16 +132,6 @@ export function NewRunForm({
       badge: branch.current ? "(current)" : undefined,
     }));
   }, [branches]);
-
-  // Transform spec tasks to combobox options
-  const specFileOptions = useMemo(() => {
-    if (!specFiles) return [];
-    return specFiles.map((task) => ({
-      value: task.specPath,
-      label: task.name,
-      description: task.specPath,
-    }));
-  }, [specFiles]);
 
   // Transform definitions to combobox options
   const definitionOptions = useMemo(() => {
@@ -345,6 +313,22 @@ export function NewRunForm({
           searchPlaceholder="Search definitions..."
           emptyMessage="No workflow definitions found"
           disabled={createWorkflow.isPending || !definitions}
+          renderTrigger={(selectedOption) =>
+            selectedOption ? (
+              <div className="flex items-center gap-2 w-full min-w-0">
+                <span className="truncate font-medium">
+                  {selectedOption.label}
+                </span>
+                {selectedOption.description && (
+                  <span className="hidden sm:inline text-xs text-muted-foreground/60 truncate">
+                    {selectedOption.description}
+                  </span>
+                )}
+              </div>
+            ) : (
+              <span>Select workflow definition...</span>
+            )
+          }
         />
       </div>
 
@@ -362,67 +346,48 @@ export function NewRunForm({
             <TabsList className="w-full rounded-t-lg rounded-b-none border-b h-auto p-0 bg-transparent">
               <TabsTrigger
                 value="file"
-                className="flex-1 rounded-none data-[state=active]:border-b data-[state=active]:border-primary data-[state=active]:-mb-px rounded-tl-lg"
+                className="flex-1 rounded-none data-[state=active]:border-b data-[state=active]:border-primary data-[state=active]:-mb-px rounded-tl-lg text-xs sm:text-sm px-2 sm:px-4"
               >
-                Select Spec File
+                <span className="hidden sm:inline">Select Spec File</span>
+                <span className="sm:hidden">File</span>
               </TabsTrigger>
               <TabsTrigger
                 value="planning"
-                className="flex-1 rounded-none data-[state=active]:border-b data-[state=active]:border-primary data-[state=active]:-mb-px"
+                className="flex-1 rounded-none data-[state=active]:border-b data-[state=active]:border-primary data-[state=active]:-mb-px text-xs sm:text-sm px-2 sm:px-4"
               >
-                Generate From Planning Session
+                <span className="hidden sm:inline">Generate From Planning Session</span>
+                <span className="sm:hidden">Planning</span>
               </TabsTrigger>
               <TabsTrigger
                 value="content"
-                className="flex-1 rounded-none data-[state=active]:border-b data-[state=active]:border-primary data-[state=active]:-mb-px rounded-tr-lg"
+                className="flex-1 rounded-none data-[state=active]:border-b data-[state=active]:border-primary data-[state=active]:-mb-px rounded-tr-lg text-xs sm:text-sm px-2 sm:px-4"
               >
-                Write It
+                <span className="hidden sm:inline">Write It</span>
+                <span className="sm:hidden">Write</span>
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="file" className="space-y-2 p-3 m-0">
-              <Combobox
+            <TabsContent value="file" className="space-y-3 p-3 m-0">
+              <SpecFileSelect
+                projectId={projectId}
                 value={specFile}
                 onValueChange={setSpecFile}
-                options={specFileOptions}
-                placeholder="Select spec file..."
-                searchPlaceholder="Search spec files..."
-                emptyMessage="No spec files found"
                 disabled={createWorkflow.isPending}
-                renderTrigger={(selectedOption) =>
-                  selectedOption ? (
-                    <div className="flex items-center justify-between gap-2 w-full">
-                      <span className="truncate font-medium">
-                        {selectedOption.label}
-                      </span>
-                      <span className="text-xs text-muted-foreground/60 shrink-0">
-                        {selectedOption.description?.replace(
-                          ".agent/specs/todo/",
-                          ""
-                        )}
-                      </span>
-                    </div>
-                  ) : (
-                    <span>Select spec file...</span>
-                  )
-                }
-                renderOption={(option, selected) => (
-                  <div className="flex flex-col gap-0.5">
-                    <div
-                      className={cn("font-medium", selected && "text-primary")}
-                    >
-                      {option.label}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {option.description}
-                    </div>
-                  </div>
-                )}
+                onSpecTypeChange={setSpecType}
               />
-              <p className="text-xs text-muted-foreground">
-                Use /cmd:generate-[type]-spec to generate spec files for this
-                dropdown
-              </p>
+
+              {/* Show spec type when file is selected */}
+              {specFile && (
+                <div className="space-y-2">
+                  <Label>Type</Label>
+                  <SpecTypeSelect
+                    projectId={projectId}
+                    value={specType}
+                    onValueChange={setSpecType}
+                    disabled={true}
+                  />
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="planning" className="space-y-2 p-3 m-0">

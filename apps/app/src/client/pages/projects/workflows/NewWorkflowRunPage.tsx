@@ -21,10 +21,12 @@ export default function NewWorkflowRunPage() {
       : undefined
   );
 
-  // Fetch workflow definitions (active only) - same pattern as NewButton
+  // Fetch workflow definitions
+  // If URL has definitionId, fetch all (including archived) to ensure it's included
+  // Otherwise fetch active only
   const { data: definitions } = useWorkflowDefinitions(
     activeProjectId || "",
-    "active"
+    definitionId ? undefined : "active"
   );
 
   // Find specific definition if definitionId provided
