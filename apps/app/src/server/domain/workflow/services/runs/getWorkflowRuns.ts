@@ -28,7 +28,6 @@ export async function getWorkflowRuns(
       ...(filters.search && {
         name: {
           contains: filters.search,
-          mode: 'insensitive',
         },
       }),
       ...(filters.definition_id && { workflow_definition_id: filters.definition_id }),

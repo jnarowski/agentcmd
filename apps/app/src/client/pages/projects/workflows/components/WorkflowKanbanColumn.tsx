@@ -18,10 +18,9 @@ export function WorkflowKanbanColumn({
   const Icon = config.icon;
 
   return (
-    <div className="flex h-full flex-col rounded-lg border bg-muted/50 p-4">
-
+    <div className="flex h-full flex-col rounded-lg border bg-muted/50">
       {/* Column header */}
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between p-4 pb-0">
         <div className="flex items-center gap-2">
           <Icon className={`h-5 w-5 ${config.textColor}`} />
           <h2 className="font-semibold text-base">{config.label}</h2>
@@ -42,11 +41,13 @@ export function WorkflowKanbanColumn({
           </div>
         ) : (
           runs.map((run) => (
-            <WorkflowRunCard
-              key={run.id}
-              run={run}
-              onClick={() => onExecutionClick(run)}
-            />
+            <div className="px-4">
+              <WorkflowRunCard
+                key={run.id}
+                run={run}
+                onClick={() => onExecutionClick(run)}
+              />
+            </div>
           ))
         )}
       </div>

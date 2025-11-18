@@ -111,18 +111,10 @@ function ProjectWorkflowsPage({
     {} as Record<WorkflowStatus, any[]>
   );
 
-  if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    );
-  }
-
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="border-b bg-background p-4">
+      <div className="border-b bg-background px-4 py-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
           <h1 className="text-xl md:text-2xl font-bold">Workflows</h1>
           <div className="flex items-center gap-2">
@@ -168,23 +160,29 @@ function ProjectWorkflowsPage({
       </div>
 
       {/* Kanban Board */}
-      <div className="flex-1 overflow-x-auto p-4">
-        <div className="flex gap-4 h-full md:min-w-0 min-w-max">
-          {[
-            WorkflowStatusValues.PENDING,
-            WorkflowStatusValues.RUNNING,
-            WorkflowStatusValues.COMPLETED,
-            WorkflowStatusValues.FAILED,
-          ].map((status) => (
-            <div key={status} className="w-72 md:flex-1 md:min-w-0">
-              <WorkflowKanbanColumn
-                status={status}
-                runs={runsByStatus[status] || []}
-                onExecutionClick={handleExecutionClick}
-              />
-            </div>
-          ))}
-        </div>
+      <div className="flex-1 overflow-x-auto">
+        {isLoading ? (
+          <div className="flex h-full items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          </div>
+        ) : (
+          <div className="flex gap-4 h-full md:min-w-0 min-w-max px-4 py-4">
+            {[
+              WorkflowStatusValues.PENDING,
+              WorkflowStatusValues.RUNNING,
+              WorkflowStatusValues.COMPLETED,
+              WorkflowStatusValues.FAILED,
+            ].map((status) => (
+              <div key={status} className="w-72 md:flex-1 md:min-w-0">
+                <WorkflowKanbanColumn
+                  status={status}
+                  runs={runsByStatus[status] || []}
+                  onExecutionClick={handleExecutionClick}
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
