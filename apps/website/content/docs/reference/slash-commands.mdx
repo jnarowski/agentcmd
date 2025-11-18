@@ -147,6 +147,76 @@ Generate general issue/refactoring spec.
 
 ---
 
+#### `/cmd:generate-prd`
+
+Generate Product Requirements Document (PRD) before implementation.
+
+**Usage**:
+
+```bash
+/cmd:generate-prd [context]
+```
+
+**Arguments**:
+
+- `context` (optional) - Feature description or requirements
+
+**What it does**:
+
+1. Analyzes feature requirements and business value
+2. Documents user stories and success criteria
+3. Defines high-level technical approach
+4. Creates PRD folder without implementation spec
+5. Writes to `.agent/specs/todo/{timestamp}-{name}/prd.md`
+6. Updates `.agent/specs/index.json` (no path field until spec added)
+
+**Example**:
+
+```bash
+/cmd:generate-prd "Add dark mode support with system preference detection"
+```
+
+**Returns**: JSON with `spec_id`, `prd_file`, `next_command: "/cmd:add-spec [id]"`
+
+---
+
+#### `/cmd:add-spec`
+
+Add implementation spec to existing PRD folder.
+
+**Usage**:
+
+```bash
+/cmd:add-spec <spec-id>
+```
+
+**Arguments**:
+
+- `spec-id` - 10-digit spec ID of existing folder with PRD
+
+**What it does**:
+
+1. Reads existing PRD from folder (if present)
+2. Detects spec type from conversation (feature/bug/issue)
+3. Routes to appropriate generate command
+4. Writes spec.md to existing folder
+5. Updates index.json with path field
+
+**Example**:
+
+```bash
+# 1. Generate PRD first
+/cmd:generate-prd "Add OAuth authentication"
+# Returns: { "spec_id": "2511131522", ... }
+
+# 2. Add implementation spec
+/cmd:add-spec 2511131522
+```
+
+**Use case**: Separate planning (PRD) from detailed implementation spec.
+
+---
+
 ### Spec Implementation
 
 #### `/cmd:implement-spec`
@@ -161,7 +231,7 @@ Implement feature from spec file.
 
 **Arguments**:
 
-- `spec-id-or-name-or-path` - Spec ID (12 digits), feature name, or full path
+- `spec-id-or-name-or-path` - Spec ID (10 digits), feature name, or full path
 
 **What it does**:
 
@@ -175,9 +245,9 @@ Implement feature from spec file.
 **Example**:
 
 ```bash
-/cmd:implement-spec 251116105638                        # By ID
-/cmd:implement-spec oauth-authentication                # By name
-/cmd:implement-spec .agent/specs/todo/251116105638-oauth/spec.md  # By path
+/cmd:implement-spec 2511161056                        # By ID
+/cmd:implement-spec oauth-authentication              # By name
+/cmd:implement-spec .agent/specs/todo/2511161056-oauth/spec.md  # By path
 ```
 
 ---
@@ -208,7 +278,7 @@ Review implementation against spec and document findings.
 **Example**:
 
 ```bash
-/cmd:review-spec-implementation 251116105638
+/cmd:review-spec-implementation 2511161056
 ```
 
 ---
@@ -265,7 +335,7 @@ Move spec between workflow folders (backlog → todo → in-progress → done).
 **Example**:
 
 ```bash
-/cmd:move-spec 251116105638 in-progress
+/cmd:move-spec 2511161056 in-progress
 /cmd:move-spec oauth-auth done
 ```
 
@@ -286,7 +356,7 @@ Delete spec folder and remove from index.
 **Example**:
 
 ```bash
-/cmd:remove-spec 251116105638
+/cmd:remove-spec 2511161056
 ```
 
 ---
@@ -342,13 +412,13 @@ Use commands to follow the spec-driven development flow:
 /cmd:generate-feature-spec "Add user authentication"
 
 # 2. Implement
-/cmd:implement-spec 251116105638
+/cmd:implement-spec 2511161056
 
 # 3. Review
-/cmd:review-spec-implementation 251116105638
+/cmd:review-spec-implementation 2511161056
 
 # 4. Move to done
-/cmd:move-spec 251116105638 done
+/cmd:move-spec 2511161056 done
 ```
 
 ### Iterative Development
