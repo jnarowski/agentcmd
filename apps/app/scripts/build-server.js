@@ -49,10 +49,17 @@ try {
   cpSync(
     join(rootDir, "prisma/migrations"),
     join(prismaDistDir, "migrations"),
-    { recursive: true }
+    {
+      recursive: true,
+      filter: (src) => !src.endsWith('.db') && !src.includes('.db-')
+    }
   );
 
-  console.log("✓ Copied Prisma schema and migrations\n");
+  // Clean any stray database files that might have been copied
+  rmSync(join(prismaDistDir, "*.db"), { force: true, glob: true });
+  rmSync(join(prismaDistDir, "*.db-*"), { force: true, glob: true });
+
+  console.log("✓ Copied Prisma schema and migrations (excluded .db files)\n");
 
   // 3. Copy workflow loader (next to bundled index.js)
   console.log("Copying workflow loader...");

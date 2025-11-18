@@ -3,12 +3,12 @@ import { spawnSync } from "child_process";
 import { existsSync } from "node:fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
-import type { FastifyInstance } from "fastify";
 import { loadConfig, mergeWithFlags } from "../utils/config";
 import { ensurePortAvailable } from "../utils/portCheck";
 import { getDbPath, getConfigPath, getLogFilePath } from "../utils/paths";
 import { checkPendingMigrations, createBackup, cleanupOldBackups } from "../utils/backup";
 import { setInngestEnvironment } from "@/shared/utils/inngestEnv";
+import { waitForServerReady } from "../utils/serverHealth";
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -20,7 +20,7 @@ interface StartOptions {
   host?: string;
 }
 
-let fastifyServer: FastifyInstance | null = null;
+let serverProcess: ChildProcess | null = null;
 let inngestProcess: ChildProcess | null = null;
 let serverStartTime: Date | null = null;
 
@@ -140,22 +140,49 @@ export async function startCommand(options: StartOptions): Promise<void> {
       );
     }
 
-    // 6. Import and start Fastify server
+    // 6. Start Fastify server as child process
     console.log("Starting Fastify server...");
     const serverPath = join(__dirname, 'server/index.js');
-    const { startServer } = await import(serverPath);
-    fastifyServer = await startServer({ port, host });
+    serverProcess = spawn("node", [serverPath], {
+      stdio: "inherit",
+      env: {
+        ...process.env,
+        PORT: port.toString(),
+        HOST: host,
+      },
+    });
+
+    serverProcess.on("error", (error) => {
+      console.error("Server process error:", error);
+      process.exit(1);
+    });
+
+    serverProcess.on("exit", (code) => {
+      if (code !== null && code !== 0) {
+        console.error(`Server exited with code ${code}`);
+        if (inngestProcess) inngestProcess.kill();
+        process.exit(code);
+      }
+    });
+
+    // 7. Wait for server to be ready
+    console.log("Waiting for server to be ready...");
+    await waitForServerReady(`http://localhost:${port}/api/health`, {
+      timeout: 30000,
+    });
+    console.log("✓ Server is ready");
     serverStartTime = new Date();
 
-    // 7. Spawn Inngest dev UI (server already ready - awaited above)
+    // 8. Start Inngest dev UI
     console.log("Starting Inngest dev UI...");
+    const inngestUrl = `http://localhost:${port}/api/workflows/inngest`;
     inngestProcess = spawn(
       "npx",
       [
         "inngest-cli@latest",
         "dev",
         "-u",
-        `http://localhost:${port}/api/workflows/inngest`,
+        inngestUrl,
         "-p",
         inngestPort.toString(),
       ],
@@ -171,7 +198,9 @@ export async function startCommand(options: StartOptions): Promise<void> {
 
     inngestProcess.on("exit", (code) => {
       if (code !== null && code !== 0) {
-        console.error(`Inngest process exited with code ${code}`);
+        console.error(`Inngest exited with code ${code}`);
+        if (serverProcess) serverProcess.kill();
+        process.exit(code);
       }
     });
 
@@ -216,15 +245,11 @@ async function cleanup(): Promise<void> {
     inngestProcess = null;
   }
 
-  // Close Fastify server
-  if (fastifyServer) {
+  // Kill server child process
+  if (serverProcess) {
     console.log("Stopping Fastify server...");
-    try {
-      await fastifyServer.close();
-    } catch (error) {
-      console.error("Error closing server:", error);
-    }
-    fastifyServer = null;
+    serverProcess.kill("SIGTERM");
+    serverProcess = null;
   }
 }
 
@@ -234,6 +259,7 @@ async function cleanup(): Promise<void> {
  */
 export function getServerHealth() {
   return {
+    serverProcess,
     inngestProcess,
     serverStartTime,
   };

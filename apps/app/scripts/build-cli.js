@@ -92,9 +92,14 @@ async function buildCLI() {
 
     cpSync(join(rootDir, "prisma/migrations"), migrationsDistDir, {
       recursive: true,
+      filter: (src) => !src.endsWith('.db') && !src.includes('.db-')
     });
 
-    console.log("✓ Copied Prisma schema and migrations\n");
+    // Clean any stray database files from package/dist
+    rmSync(join(rootDir, "package/dist/**/*.db"), { force: true, glob: true });
+    rmSync(join(rootDir, "package/dist/**/*.db-*"), { force: true, glob: true });
+
+    console.log("✓ Copied Prisma schema and migrations (excluded .db files)\n");
 
     // 4. Copy workflow loader to package/dist (next to bundled index.js)
     console.log("Copying workflow loader...");
