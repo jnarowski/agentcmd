@@ -1,6 +1,6 @@
 {
   "name": "agentcmd",
-  "version": "1.0.40",
+  "version": "1.0.41",
   "type": "module",
   "main": "dist/server/index.js",
   "bin": {
