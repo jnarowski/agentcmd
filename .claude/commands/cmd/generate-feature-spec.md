@@ -28,6 +28,23 @@ Generate a comprehensive spec document for new features with phases, complexity 
 - Keep acceptance criteria measurable
 - **DO NOT include hour-based estimates anywhere** - use complexity points only
 
+### Task ID Format
+
+Use phase.task notation for all tasks:
+- Format: `1.1`, `1.2`, `2.1`, `2.2`, etc.
+- Phase number matches the Phase heading number
+- Task numbers increment sequentially within each phase
+- Example: Phase 1 tasks → `1.1`, `1.2`, `1.3`; Phase 2 tasks → `2.1`, `2.2`
+
+### Folder Structure
+
+Specs are organized by lifecycle stage:
+- **`todo/`** - New specs ready to implement (Status: `draft` or `in-progress`)
+- **`backlog/`** - Lower priority specs not yet started
+- **`done/`** - Completed and reviewed specs (Status: `completed`)
+
+Specs start in `todo/` with Status `draft`. Use `/cmd:move-spec` to move between folders.
+
 ## Complexity Scale (Context-Focused)
 
 Assign complexity based on **context window usage and cognitive load**, not time:
@@ -213,31 +230,37 @@ So that [benefit/value]
 
 **Phase Complexity**: [X] points (avg [X.X]/10)
 
-- [ ] [task-id] [X/10] [Specific task description]
+- [ ] 1.1 [X/10] [Specific task description]
   - [Implementation detail or note]
   - File: `[specific filepath]`
   - [Any commands to run]
-- [ ] [task-id] [X/10] [Next specific task]
+- [ ] 1.2 [X/10] [Next specific task]
   - [Implementation detail or note]
   - File: `[specific filepath]`
   - [Any commands to run]
 
 #### Completion Notes
 
-(This will be filled in by the agent implementing this phase)
+- What was implemented:
+- Deviations from plan (if any):
+- Important context or decisions:
+- Known issues or follow-ups (if any):
 
 ### Phase 2: [Next Phase Name]
 
 **Phase Complexity**: [X] points (avg [X.X]/10)
 
-- [ ] [task-id] [X/10] [Specific task description]
+- [ ] 2.1 [X/10] [Specific task description]
   - [Implementation detail or note]
   - File: `[specific filepath]`
   - [Any commands to run]
 
 #### Completion Notes
 
-(This will be filled in by the agent implementing this phase)
+- What was implemented:
+- Deviations from plan (if any):
+- Important context or decisions:
+- Known issues or follow-ups (if any):
 
 [Continue with all phases needed, grouped logically]
 
@@ -383,9 +406,10 @@ Uses explicit context, generates ID `2511131522`, creates: `.agent/specs/todo/25
 - **Generic placeholders**: Replace all `<placeholders>` with actual content
 - **Missing complexity scores**: EVERY task must have a `[X/10]` complexity score
 - **Including hours**: Do NOT include hour estimates - use complexity points only
-- **Status field**: Use lowercase status values: `draft`, `ready`, `in-progress`, `review`, `completed`
+- **Status field**: Use lowercase status values: `draft`, `in-progress`, `review`, `completed`
 - **Complexity calculations**: Ensure phase totals and averages are accurate
 - **Kebab-case**: Always convert feature name to kebab-case for folder name
+- **Task ID format**: Use phase.task notation (1.1, 1.2, 2.1) not arbitrary IDs
 
 ## Report
 

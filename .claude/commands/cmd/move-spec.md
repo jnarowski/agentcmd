@@ -67,9 +67,11 @@ Move a spec folder between workflow folders (backlog/todo/done), update index.js
    - Read spec.md file content
    - Update Status field in spec.md based on target folder:
      - Moving to "backlog": Set to "draft"
-     - Moving to "todo": Set to "draft"
+     - Moving to "todo": Keep current status (typically "draft" or "in-progress")
      - Moving to "done": Set to "completed"
    - Also update status in index.json (step 5)
+
+   **Status Lifecycle**: `draft` → `in-progress` → `review` → `completed`
 
 7. **Report Results**
 
@@ -100,45 +102,102 @@ Finds `*-workflow-safety/` folder and moves it to `done/`
 
 ## Report
 
-```text
-✓ Moved spec folder
+**IMPORTANT**: Output ONLY raw JSON (see `.agent/docs/slash-command-json-output-format.md`).
 
-From: .agent/specs/todo/2510241201-workflow-safety/
-To:   .agent/specs/done/2510241201-workflow-safety/
+<json_output>
+{
+  "success": true,
+  "spec_id": "2510241201",
+  "spec_folder": "2510241201-workflow-safety",
+  "old_path": "todo/2510241201-workflow-safety/spec.md",
+  "new_path": "done/2510241201-workflow-safety/spec.md",
+  "old_folder": "todo",
+  "new_folder": "done",
+  "old_status": "draft",
+  "new_status": "completed",
+  "message": "Spec moved successfully and status updated"
+}
+</json_output>
 
-Status updated: draft → completed
-Index updated:
-  - path: "todo/2510241201-workflow-safety/spec.md" → "done/2510241201-workflow-safety/spec.md"
-  - status: "draft" → "completed"
-  - updated: "2025-11-11T20:30:00.000Z"
+**JSON Field Descriptions:**
+
+- `success`: Boolean - true if move completed successfully
+- `spec_id`: String - Timestamp-based spec ID (e.g., "2510241201")
+- `spec_folder`: String - Folder name (e.g., "2510241201-workflow-safety")
+- `old_path`: String - Previous relative path from `.agent/specs/`
+- `new_path`: String - New relative path from `.agent/specs/`
+- `old_folder`: String - Previous folder (backlog/todo/done)
+- `new_folder`: String - New folder (backlog/todo/done)
+- `old_status`: String - Previous status value
+- `new_status`: String - New status value
+- `message`: String - Success message
+
+**Output Examples:**
+
+✅ **Successful Move:**
+```json
+{
+  "success": true,
+  "spec_id": "2510241201",
+  "spec_folder": "2510241201-workflow-safety",
+  "old_path": "todo/2510241201-workflow-safety/spec.md",
+  "new_path": "done/2510241201-workflow-safety/spec.md",
+  "old_folder": "todo",
+  "new_folder": "done",
+  "old_status": "draft",
+  "new_status": "completed",
+  "message": "Spec moved successfully and status updated"
+}
 ```
 
-## Error Handling
-
-**Spec not found:**
-```text
-✗ Error: Could not find spec matching "workflow-safety"
-
-Searched in:
-- .agent/specs/backlog/
-- .agent/specs/todo/
-- .agent/specs/done/
-
-Please check the spec name/ID and try again.
+✅ **Already in Target (No-Op):**
+```json
+{
+  "success": true,
+  "spec_id": "2510241201",
+  "spec_folder": "2510241201-workflow-safety",
+  "old_path": "done/2510241201-workflow-safety/spec.md",
+  "new_path": "done/2510241201-workflow-safety/spec.md",
+  "old_folder": "done",
+  "new_folder": "done",
+  "old_status": "completed",
+  "new_status": "completed",
+  "message": "Spec already in target folder (no move needed)"
+}
 ```
 
-**Target conflict:**
-```text
-✗ Error: Folder already exists at target location
-
-Target: .agent/specs/done/2510241201-workflow-safety/
-
-Please resolve the conflict manually or use a different target folder.
+❌ **Error - Spec Not Found:**
+```json
+{
+  "success": false,
+  "error": {
+    "message": "Spec not found",
+    "spec_id_or_name": "workflow-safety",
+    "searched_in": ["backlog/", "todo/", "done/"]
+  }
+}
 ```
 
-**Invalid target folder:**
-```text
-✗ Error: Invalid target folder "invalid"
+❌ **Error - Target Conflict:**
+```json
+{
+  "success": false,
+  "error": {
+    "message": "Folder already exists at target location",
+    "target_path": "done/2510241201-workflow-safety/",
+    "suggestion": "Resolve conflict manually or use different target folder"
+  }
+}
+```
 
-Valid options: "backlog", "todo", "done"
+❌ **Error - Invalid Target:**
+```json
+{
+  "success": false,
+  "error": {
+    "message": "Invalid target folder",
+    "provided": "invalid",
+    "valid_options": ["backlog", "todo", "done"]
+  }
+}
 ```
