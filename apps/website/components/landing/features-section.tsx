@@ -1,6 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
+import { Iphone } from "@/components/ui/iphone";
+
 export default function FeaturesSection() {
   return (
     <>
@@ -170,13 +172,10 @@ export default function FeaturesSection() {
           </div>
           <div className="flex justify-center">
             <div className="relative max-w-sm">
-              <div className="relative rounded-3xl border-4 border-white/20 overflow-hidden shadow-2xl">
-                <img
-                  src="/screenshots/mobile-friendly.png"
-                  alt="Mobile Interface"
-                  className="w-full"
-                />
-              </div>
+              <Iphone
+                src="/screenshots/mobile-friendly.png"
+                className="w-full"
+              />
             </div>
           </div>
         </div>

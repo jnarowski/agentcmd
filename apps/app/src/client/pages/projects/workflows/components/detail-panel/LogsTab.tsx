@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { WorkflowRun, WorkflowRunStep } from "@/client/pages/projects/workflows/types";
 import {
   eventToLogEntry,
@@ -10,6 +10,7 @@ import {
   ConversationScrollButton,
 } from "@/client/components/ai-elements/conversation";
 import { SyntaxHighlighter } from "@/client/utils/syntaxHighlighter";
+import { Copy, Check } from "lucide-react";
 
 interface LogsTabProps {
   run: WorkflowRun;
@@ -127,6 +128,30 @@ interface LogEntryProps {
   selectedStepId: string | null;
 }
 
+function CopyButton({ content }: { content: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="p-1.5 hover:bg-muted rounded-md transition-colors"
+      title="Copy to clipboard"
+    >
+      {copied ? (
+        <Check className="w-3 h-3 text-green-600" />
+      ) : (
+        <Copy className="w-3 h-3 text-muted-foreground" />
+      )}
+    </button>
+  );
+}
+
 function LogEntry({ log, selectedStepId }: LogEntryProps) {
   // Color code by log level
   const levelColors = {
@@ -205,11 +230,14 @@ function LogEntry({ log, selectedStepId }: LogEntryProps) {
               <span className="inline-block transition-transform group-open:rotate-90">▶</span>
               Args
             </summary>
-            <div className="mt-1">
+            <div className="mt-1 relative">
+              <div className="absolute top-2 right-2 z-10">
+                <CopyButton content={JSON.stringify(log.stepArgs, null, 2)} />
+              </div>
               <SyntaxHighlighter
                 code={JSON.stringify(log.stepArgs, null, 2)}
                 language="json"
-                className="text-xs [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_pre]:max-w-full"
+                className="text-xs [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_pre]:max-w-full [&_pre]:rounded-md"
               />
             </div>
           </details>
@@ -224,11 +252,14 @@ function LogEntry({ log, selectedStepId }: LogEntryProps) {
               <span className="inline-block transition-transform group-open:rotate-90">▶</span>
               Output
             </summary>
-            <div className="mt-1">
+            <div className="mt-1 relative">
+              <div className="absolute top-2 right-2 z-10">
+                <CopyButton content={JSON.stringify(log.stepOutput, null, 2)} />
+              </div>
               <SyntaxHighlighter
                 code={JSON.stringify(log.stepOutput, null, 2)}
                 language="json"
-                className="text-xs [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_pre]:max-w-full"
+                className="text-xs [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_pre]:max-w-full [&_pre]:rounded-md"
               />
             </div>
           </details>

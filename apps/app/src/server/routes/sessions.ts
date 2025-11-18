@@ -8,6 +8,7 @@ import {
   getSessionMessages,
   createSession,
   syncProjectSessions,
+  bulkGenerateSessionNames,
   updateSession,
   archiveSession,
   unarchiveSession,
@@ -282,6 +283,18 @@ export async function sessionRoutes(fastify: FastifyInstance) {
         const result = await syncProjectSessions({
           projectId: request.params.id,
           userId
+        });
+
+        // Start background naming (fire-and-forget)
+        bulkGenerateSessionNames({
+          projectId: request.params.id,
+          userId,
+          logger: request.log,
+        }).catch((err) => {
+          request.log.error(
+            { err, projectId: request.params.id },
+            "Background session naming failed (non-critical)"
+          );
         });
 
         return reply.send({ data: result });

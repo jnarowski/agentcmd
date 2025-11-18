@@ -25,6 +25,7 @@ export { handleExecutionFailure } from './handleExecutionFailure';
 
 // Session utilities
 export { generateSessionName } from './generateSessionName';
+export { bulkGenerateSessionNames } from './bulkGenerateSessionNames';
 export { storeCliSessionId } from './storeCliSessionId';
 export { cleanupSessionImages } from './cleanupSessionImages';
 export { validateAgentSupported } from './validateAgentSupported';

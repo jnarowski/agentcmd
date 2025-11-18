@@ -95,6 +95,7 @@ export function createAgentStep(
               workingDir: config.workingDir ?? context.projectPath,
               permissionMode: "bypassPermissions", // Hardcoded to bypass permissions in workflows
               json: config.json,
+              timeout,
               onEvent: async ({ message }) => {
                 // Set agent_session_id on first message (only once)
                 if (!sessionIdSet) {

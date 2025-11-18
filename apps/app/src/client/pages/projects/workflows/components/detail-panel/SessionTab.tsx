@@ -8,6 +8,8 @@ import {
 } from "@/client/components/ui/empty";
 import { AgentSessionViewer } from "@/client/components/AgentSessionViewer";
 import { useSessionMessages } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
+import { useSessionWebSocket } from "@/client/pages/projects/sessions/hooks/useSessionWebSocket";
+import { useSessionStore } from "@/client/pages/projects/sessions/stores/sessionStore";
 
 interface SessionTabProps {
   projectId: string;
@@ -19,6 +21,17 @@ export function SessionTab({ projectId, selectedSessionId }: SessionTabProps) {
   const { data: messages, isLoading } = useSessionMessages(
     selectedSessionId || undefined,
     projectId
+  );
+
+  // Subscribe to WebSocket for real-time updates
+  useSessionWebSocket({
+    sessionId: selectedSessionId || '',
+    projectId
+  });
+
+  // Check both React Query cache AND Zustand store for messages
+  const storeMessages = useSessionStore((s) =>
+    s.sessionId === selectedSessionId ? s.session?.messages : undefined
   );
 
   if (!selectedSessionId) {
@@ -38,7 +51,9 @@ export function SessionTab({ projectId, selectedSessionId }: SessionTabProps) {
   }
 
   // Show loading state when session has no messages yet (agent hasn't started)
-  const hasMessages = messages && messages.length > 0;
+  const hasMessages = (messages && messages.length > 0) ||
+                      (storeMessages && storeMessages.length > 0) ||
+                      false;
   if (!isLoading && !hasMessages) {
     return (
       <Empty>

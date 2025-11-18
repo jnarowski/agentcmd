@@ -80,6 +80,7 @@ export function useWorkflowWebSocket(projectId: string) {
         started_at: Date;
         completed_at: Date;
         updated_at: Date;
+        agent_session_id: string | null;
       }> = {};
       if (changes.status !== undefined) normalizedChanges.status = changes.status;
       if (changes.logs !== undefined) normalizedChanges.logs = changes.logs;
@@ -87,6 +88,7 @@ export function useWorkflowWebSocket(projectId: string) {
       if (changes.started_at !== undefined) normalizedChanges.started_at = new Date(changes.started_at);
       if (changes.completed_at !== undefined) normalizedChanges.completed_at = new Date(changes.completed_at);
       if (changes.updated_at !== undefined) normalizedChanges.updated_at = new Date(changes.updated_at);
+      if (changes.agent_session_id !== undefined) normalizedChanges.agent_session_id = changes.agent_session_id;
 
       // Optimistic update: Update detail view (if cached)
       queryClient.setQueryData<WorkflowRunDetail>(

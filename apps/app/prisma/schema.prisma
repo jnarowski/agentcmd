@@ -250,22 +250,23 @@ enum StepType {
 }
 
 model AgentSession {
-  id             String                  @id @default(uuid())
-  projectId      String
-  userId         String
-  name           String? // AI-generated session name (nullable for legacy sessions)
-  agent          AgentType               @default(claude)
-  type           SessionType             @default(chat)
-  permission_mode String                 @default("default") // 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions'
-  cli_session_id String? // Session ID from CLI tool (Claude/Codex) - needed for loading/resuming sessions
-  session_path   String? // Full absolute path to session JSONL file (nullable during migration)
-  metadata       Json // { totalTokens, messageCount, lastMessageAt, firstMessagePreview }
-  state          SessionState            @default(idle)
-  error_message  String? // Error details when state is error
-  is_archived    Boolean                 @default(false)
-  archived_at    DateTime?
-  created_at     DateTime                @default(now())
-  updated_at     DateTime                @updatedAt
+  id                 String                  @id @default(uuid())
+  projectId          String
+  userId             String
+  name               String? // AI-generated session name (nullable for legacy sessions)
+  name_generated_at  DateTime? // Tracks if/when AI naming was attempted (prevents re-processing)
+  agent              AgentType               @default(claude)
+  type               SessionType             @default(chat)
+  permission_mode    String                  @default("default") // 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions'
+  cli_session_id     String? // Session ID from CLI tool (Claude/Codex) - needed for loading/resuming sessions
+  session_path       String? // Full absolute path to session JSONL file (nullable during migration)
+  metadata           Json // { totalTokens, messageCount, lastMessageAt, firstMessagePreview }
+  state              SessionState            @default(idle)
+  error_message      String? // Error details when state is error
+  is_archived        Boolean                 @default(false)
+  archived_at        DateTime?
+  created_at         DateTime                @default(now())
+  updated_at         DateTime                @updatedAt
 
   project                Project                 @relation(fields: [projectId], references: [id], onDelete: Cascade)
   user                   User                    @relation(fields: [userId], references: [id], onDelete: Cascade)

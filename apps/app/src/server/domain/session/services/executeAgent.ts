@@ -24,6 +24,7 @@ export interface AgentExecuteConfig {
   model?: string;
   images?: { path: string }[];
   json?: boolean;
+  timeout?: number; // Optional timeout in milliseconds
   onEvent?: (data: { raw: string; event: unknown; message: unknown | null }) => void;
   onStart?: (process: ChildProcess) => void;
 }
@@ -60,6 +61,7 @@ export async function executeAgent<T = string>(
     model,
     images,
     json,
+    timeout,
     onEvent,
   } = config;
 
@@ -76,6 +78,7 @@ export async function executeAgent<T = string>(
       verbose: true,
       images,
       json,
+      timeout,
     // @ts-ignore - onStart optional callback
       onStart: (process) => {
         // Store process by DB session ID for consistent tracking/cancellation
