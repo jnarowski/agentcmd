@@ -5,9 +5,8 @@ import {
   useToggleProjectStarred,
   useToggleProjectHidden,
 } from "@/client/pages/projects/hooks/useProjects";
-import { AppHeader } from "@/client/components/AppHeader";
 import { ProjectOnboardingSuggestions } from "@/client/pages/projects/components/ProjectOnboardingSuggestions";
-import { ProjectHomeContent } from "@/client/pages/projects/components/ProjectHomeContent";
+import { ProjectHomeSpecs } from "@/client/pages/projects/components/ProjectHomeSpecs";
 import { ProjectReadme } from "@/client/pages/projects/components/ProjectReadme";
 import { ProjectDialog } from "@/client/pages/projects/components/ProjectDialog";
 import { Skeleton } from "@/client/components/ui/skeleton";
@@ -78,8 +77,6 @@ export default function ProjectHomePage() {
 
   return (
     <>
-      <AppHeader title={project.name} />
-
       <div className="p-4 md:p-6 space-y-4 md:space-y-6">
         {/* Desktop header */}
         <div className="hidden md:flex items-center justify-between gap-4">
@@ -136,10 +133,10 @@ export default function ProjectHomePage() {
         <ProjectOnboardingSuggestions project={project} />
       )}
 
-      {/* Activities & Tasks */}
+      {/* Specs */}
       <Card>
         <CardContent className="pt-4 pb-4">
-          <ProjectHomeContent projectId={id!} />
+          <ProjectHomeSpecs projectId={id!} />
         </CardContent>
       </Card>
 

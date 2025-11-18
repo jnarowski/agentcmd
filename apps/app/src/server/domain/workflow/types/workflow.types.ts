@@ -32,4 +32,6 @@ export interface WorkflowRunFilters {
   project_id?: string;
   user_id?: string;
   status?: WorkflowStatus | WorkflowStatus[];
+  search?: string;
+  definition_id?: string;
 }

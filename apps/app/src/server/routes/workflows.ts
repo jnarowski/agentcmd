@@ -122,7 +122,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const userId = (request.user! as { id: string }).id;
-      const { project_id, status } = request.query;
+      const { project_id, status, search, definition_id } = request.query;
 
       // Parse status - can be single value or comma-separated array
       const parsedStatus = Array.isArray(status)
@@ -130,7 +130,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
         : status;
 
       fastify.log.info(
-        { userId, projectId: project_id, status: parsedStatus },
+        { userId, projectId: project_id, status: parsedStatus, search, definitionId: definition_id },
         "Fetching workflow runs"
       );
 
@@ -138,6 +138,8 @@ export async function workflowRoutes(fastify: FastifyInstance) {
         userId,
         projectId: project_id,
         status: parsedStatus,
+        search,
+        definitionId: definition_id,
       });
 
       return reply.send({ data: runs });

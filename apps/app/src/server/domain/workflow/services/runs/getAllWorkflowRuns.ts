@@ -12,14 +12,20 @@ export async function getAllWorkflowRuns({
   userId,
   projectId,
   status,
+  search,
+  definitionId,
 }: {
   userId: string;
   projectId?: string;
   status?: WorkflowStatus | WorkflowStatus[];
+  search?: string;
+  definitionId?: string;
 }): Promise<WorkflowRun[]> {
   return getWorkflowRuns({
     user_id: userId,
     project_id: projectId,
-    status
+    status,
+    search,
+    definition_id: definitionId,
   });
 }

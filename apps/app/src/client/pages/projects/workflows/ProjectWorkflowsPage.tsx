@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { Plus, Search, Settings, List } from "lucide-react";
+import { Plus, Search, Settings } from "lucide-react";
 import { Button } from "@/client/components/ui/button";
 import { WorkflowStatusValues } from "@/shared/schemas/workflow.schemas";
 import type { WorkflowStatus } from "@/shared/schemas/workflow.schemas";
@@ -24,10 +24,20 @@ function ProjectWorkflowsPage({
   const projectId = propProjectId || paramProjectId!;
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [search]);
 
   // Hooks
   const { data: runs, isLoading } = useWorkflowRuns(projectId, {
-    search,
+    search: debouncedSearch,
   });
   const { data: definitions } = useWorkflowDefinitions(projectId);
   const { data: project } = useProject(projectId);
@@ -113,18 +123,12 @@ function ProjectWorkflowsPage({
     <div className="flex h-full flex-col">
       {/* Header */}
       <div className="border-b bg-background p-4">
-        <div className="flex items-center justify-between gap-4">
-          <h1 className="text-2xl font-bold">Workflows</h1>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
+          <h1 className="text-xl md:text-2xl font-bold">Workflows</h1>
           <div className="flex items-center gap-2">
-            <Link to={`/projects/${projectId}/workflows/list`}>
-              <Button variant="outline" size="sm">
-                <List className="h-4 w-4 mr-2" />
-                List View
-              </Button>
-            </Link>
             <button
               onClick={handleNewRunClick}
-              className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
             >
               <Plus className="h-4 w-4" />
               New Run
@@ -133,7 +137,7 @@ function ProjectWorkflowsPage({
         </div>
 
         {/* Filters */}
-        <div className="mt-4 flex items-stretch gap-2">
+        <div className="mt-4 flex flex-col md:flex-row md:items-stretch gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
@@ -144,34 +148,35 @@ function ProjectWorkflowsPage({
               className="w-full h-full rounded-md border bg-background py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
-          <div className="flex-1">
-            <Combobox
-              options={workflowOptions}
-              onValueChange={handleWorkflowSelect}
-              placeholder="Select Workflow"
-              searchPlaceholder="Search workflows..."
-            />
+          <div className="flex gap-2 md:flex-1">
+            <div className="flex-1">
+              <Combobox
+                options={workflowOptions}
+                onValueChange={handleWorkflowSelect}
+                placeholder="Select Workflow"
+                searchPlaceholder="Search workflows..."
+              />
+            </div>
+            <Link to={`/projects/${projectId}/workflows/manage`}>
+              <Button variant="outline" className="h-9">
+                <Settings className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Manage</span>
+              </Button>
+            </Link>
           </div>
-          <Link to={`/projects/${projectId}/workflows/manage`}>
-            <Button variant="outline" className="h-9">
-              <Settings className="h-4 w-4 mr-2" />
-              Manage
-            </Button>
-          </Link>
         </div>
       </div>
 
       {/* Kanban Board */}
       <div className="flex-1 overflow-x-auto p-4">
-        <div className="flex gap-4 min-w-max">
+        <div className="flex gap-4 h-full md:min-w-0 min-w-max">
           {[
             WorkflowStatusValues.PENDING,
             WorkflowStatusValues.RUNNING,
             WorkflowStatusValues.COMPLETED,
             WorkflowStatusValues.FAILED,
-            WorkflowStatusValues.PAUSED,
           ].map((status) => (
-            <div key={status} className="w-80">
+            <div key={status} className="w-72 md:flex-1 md:min-w-0">
               <WorkflowKanbanColumn
                 status={status}
                 runs={runsByStatus[status] || []}

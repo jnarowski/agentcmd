@@ -6,7 +6,7 @@ import UseCaseSection from "@/components/landing/use-case-section";
 import BenefitsGrid from "@/components/landing/benefits-grid";
 import CtaSectionV2 from "@/components/landing/cta-section-v2";
 
-export default function Home() {
+export default function HomeV2() {
   return (
     <div className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-background">
       <Particles

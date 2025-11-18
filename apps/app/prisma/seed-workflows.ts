@@ -328,7 +328,7 @@ async function main() {
     })
   );
 
-  // Running runs (3)
+  // Running runs (7)
   runs.push(
     await prisma.workflowRun.create({
       data: {
@@ -402,6 +402,107 @@ async function main() {
         started_at: new Date(Date.now() - 1000 * 60 * 15), // 15 min ago
         created_at: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
       },
+    }),
+    await prisma.workflowRun.create({
+      data: {
+        name: "Feature: Real-time Chat System",
+        workflow_definition_id: featureWorkflow.id,
+        project_id: projectId,
+        user_id: users[0].id,
+        status: "running",
+        current_phase: "Design",
+        args: JSON.stringify({
+          featureName: "Real-time Chat System",
+          priority: "high",
+        }),
+        spec_file: null,
+        spec_content: null,
+        spec_type: null,
+        planning_session_id: null,
+        mode: null,
+        branch_name: null,
+        base_branch: null,
+        pr_url: null,
+        inngest_run_id: null,
+        started_at: new Date(Date.now() - 1000 * 60 * 90), // 1.5 hours ago
+        created_at: new Date(Date.now() - 1000 * 60 * 60 * 2.5), // 2.5 hours ago
+      },
+    }),
+    await prisma.workflowRun.create({
+      data: {
+        name: "Bug Fix: Performance Issues on Dashboard",
+        workflow_definition_id: bugFixWorkflow.id,
+        project_id: projectId,
+        user_id: users[0].id,
+        status: "running",
+        current_phase: "Investigation",
+        args: JSON.stringify({
+          bugId: "BUG-567",
+          severity: "medium",
+          description: "Dashboard taking 5+ seconds to load",
+        }),
+        spec_file: null,
+        spec_content: null,
+        spec_type: null,
+        planning_session_id: null,
+        mode: null,
+        branch_name: null,
+        base_branch: null,
+        pr_url: null,
+        inngest_run_id: null,
+        started_at: new Date(Date.now() - 1000 * 60 * 35), // 35 min ago
+        created_at: new Date(Date.now() - 1000 * 60 * 50), // 50 min ago
+      },
+    }),
+    await prisma.workflowRun.create({
+      data: {
+        name: "Feature: File Upload Service",
+        workflow_definition_id: featureWorkflow.id,
+        project_id: projectId,
+        user_id: users[0].id,
+        status: "running",
+        current_phase: "Testing",
+        args: JSON.stringify({
+          featureName: "File Upload Service",
+          priority: "medium",
+        }),
+        spec_file: null,
+        spec_content: null,
+        spec_type: null,
+        planning_session_id: null,
+        mode: null,
+        branch_name: null,
+        base_branch: null,
+        pr_url: null,
+        inngest_run_id: null,
+        started_at: new Date(Date.now() - 1000 * 60 * 120), // 2 hours ago
+        created_at: new Date(Date.now() - 1000 * 60 * 60 * 3), // 3 hours ago
+      },
+    }),
+    await prisma.workflowRun.create({
+      data: {
+        name: "Review: PR #912 - Refactor Auth Module",
+        workflow_definition_id: codeReviewWorkflow.id,
+        project_id: projectId,
+        user_id: users[0].id,
+        status: "running",
+        current_phase: "Analysis",
+        args: JSON.stringify({
+          prNumber: 912,
+          branch: "refactor/auth-module",
+        }),
+        spec_file: null,
+        spec_content: null,
+        spec_type: null,
+        planning_session_id: null,
+        mode: null,
+        branch_name: null,
+        base_branch: null,
+        pr_url: null,
+        inngest_run_id: null,
+        started_at: new Date(Date.now() - 1000 * 60 * 25), // 25 min ago
+        created_at: new Date(Date.now() - 1000 * 60 * 40), // 40 min ago
+      },
     })
   );
 
@@ -459,7 +560,7 @@ async function main() {
     })
   );
 
-  // Completed runs (3)
+  // Completed runs (7)
   runs.push(
     await prisma.workflowRun.create({
       data: {
@@ -539,6 +640,112 @@ async function main() {
         started_at: new Date(Date.now() - 1000 * 60 * 60 * 10), // 10 hours ago
         completed_at: new Date(Date.now() - 1000 * 60 * 60 * 6), // 6 hours ago
         created_at: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 hours ago
+      },
+    }),
+    await prisma.workflowRun.create({
+      data: {
+        name: "Feature: User Authentication Improvements",
+        workflow_definition_id: featureWorkflow.id,
+        project_id: projectId,
+        user_id: users[0].id,
+        status: "completed",
+        current_phase: "Deployment",
+        args: JSON.stringify({
+          featureName: "User Authentication Improvements",
+          priority: "high",
+        }),
+        spec_file: null,
+        spec_content: null,
+        spec_type: null,
+        planning_session_id: null,
+        mode: null,
+        branch_name: null,
+        base_branch: null,
+        pr_url: null,
+        inngest_run_id: null,
+        started_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 4), // 4 days ago
+        completed_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3), // 3 days ago
+        created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5), // 5 days ago
+      },
+    }),
+    await prisma.workflowRun.create({
+      data: {
+        name: "Bug Fix: Page Refresh Losing State",
+        workflow_definition_id: bugFixWorkflow.id,
+        project_id: projectId,
+        user_id: users[0].id,
+        status: "completed",
+        current_phase: "Verification",
+        args: JSON.stringify({
+          bugId: "BUG-345",
+          severity: "medium",
+          description: "User state lost on page refresh",
+        }),
+        spec_file: null,
+        spec_content: null,
+        spec_type: null,
+        planning_session_id: null,
+        mode: null,
+        branch_name: null,
+        base_branch: null,
+        pr_url: null,
+        inngest_run_id: null,
+        started_at: new Date(Date.now() - 1000 * 60 * 60 * 18), // 18 hours ago
+        completed_at: new Date(Date.now() - 1000 * 60 * 60 * 14), // 14 hours ago
+        created_at: new Date(Date.now() - 1000 * 60 * 60 * 20), // 20 hours ago
+      },
+    }),
+    await prisma.workflowRun.create({
+      data: {
+        name: "Feature: Advanced Filtering Options",
+        workflow_definition_id: featureWorkflow.id,
+        project_id: projectId,
+        user_id: users[0].id,
+        status: "completed",
+        current_phase: "Deployment",
+        args: JSON.stringify({
+          featureName: "Advanced Filtering Options",
+          priority: "medium",
+        }),
+        spec_file: null,
+        spec_content: null,
+        spec_type: null,
+        planning_session_id: null,
+        mode: null,
+        branch_name: null,
+        base_branch: null,
+        pr_url: null,
+        inngest_run_id: null,
+        started_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7), // 7 days ago
+        completed_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 6), // 6 days ago
+        created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 8), // 8 days ago
+      },
+    }),
+    await prisma.workflowRun.create({
+      data: {
+        name: "Review: PR #567 - Component Library Update",
+        workflow_definition_id: codeReviewWorkflow.id,
+        project_id: projectId,
+        user_id: users[0].id,
+        status: "completed",
+        current_phase: "Approval",
+        args: JSON.stringify({
+          prNumber: 567,
+          branch: "feat/component-library-v2",
+          autoMerge: false,
+        }),
+        spec_file: null,
+        spec_content: null,
+        spec_type: null,
+        planning_session_id: null,
+        mode: null,
+        branch_name: null,
+        base_branch: null,
+        pr_url: null,
+        inngest_run_id: null,
+        started_at: new Date(Date.now() - 1000 * 60 * 60 * 8), // 8 hours ago
+        completed_at: new Date(Date.now() - 1000 * 60 * 60 * 5), // 5 hours ago
+        created_at: new Date(Date.now() - 1000 * 60 * 60 * 9), // 9 hours ago
       },
     })
   );
@@ -1942,72 +2149,120 @@ async function main() {
     `      └─ Review: PR #456 - Authentication Updates (no steps started)\n`
   );
 
-  console.log("🔵 RUNNING WORKFLOWS (3):");
+  console.log("🔵 RUNNING WORKFLOWS (7):");
   console.log(
     `   3. ${baseUrl}/projects/${projectId}/workflows/${runs[2].workflow_definition_id}/runs/${runs[2].id}`
   );
   console.log(
-    `      └─ Feature: Dark Mode Support (Implementation phase, 8/10 steps done, has comments + artifacts + agent session)`
+    `      └─ Feature: Dark Mode Support (Implementation phase)`
   );
   console.log(
     `   4. ${baseUrl}/projects/${projectId}/workflows/${runs[3].workflow_definition_id}/runs/${runs[3].id}`
   );
   console.log(
-    `      └─ Bug Fix: Login Form Validation (Fix phase, 5/7 steps done, has comments + artifact + agent session)`
+    `      └─ Bug Fix: Login Form Validation (Fix phase)`
   );
   console.log(
     `   5. ${baseUrl}/projects/${projectId}/workflows/${runs[4].workflow_definition_id}/runs/${runs[4].id}`
   );
   console.log(
-    `      └─ Review: PR #789 - Database Migration (Feedback phase, 4/6 steps done, has comments + artifacts)\n`
+    `      └─ Review: PR #789 - Database Migration (Feedback phase)`
   );
-
-  console.log("⏸️  PAUSED WORKFLOWS (2):");
   console.log(
     `   6. ${baseUrl}/projects/${projectId}/workflows/${runs[5].workflow_definition_id}/runs/${runs[5].id}`
   );
   console.log(
-    `      └─ Feature: Export to CSV (Testing phase, paused for QA, has comments)`
+    `      └─ Feature: Real-time Chat System (Design phase)`
   );
   console.log(
     `   7. ${baseUrl}/projects/${projectId}/workflows/${runs[6].workflow_definition_id}/runs/${runs[6].id}`
   );
   console.log(
-    `      └─ Bug Fix: Memory Leak in Dashboard (Investigation phase, paused for analysis, has comments + artifact)\n`
+    `      └─ Bug Fix: Performance Issues on Dashboard (Investigation phase)`
   );
-
-  console.log("✅ COMPLETED WORKFLOWS (3):");
   console.log(
     `   8. ${baseUrl}/projects/${projectId}/workflows/${runs[7].workflow_definition_id}/runs/${runs[7].id}`
   );
   console.log(
-    `      └─ Feature: Notification System (All phases complete, 16 steps, has comments + artifacts)`
+    `      └─ Feature: File Upload Service (Testing phase)`
   );
   console.log(
     `   9. ${baseUrl}/projects/${projectId}/workflows/${runs[8].workflow_definition_id}/runs/${runs[8].id}`
   );
   console.log(
-    `      └─ Bug Fix: Incorrect Date Formatting (Fully complete, has comments)`
+    `      └─ Review: PR #912 - Refactor Auth Module (Analysis phase)\n`
   );
+
+  console.log("⏸️  PAUSED WORKFLOWS (2):");
   console.log(
     `  10. ${baseUrl}/projects/${projectId}/workflows/${runs[9].workflow_definition_id}/runs/${runs[9].id}`
   );
   console.log(
-    `      └─ Review: PR #234 - API Rate Limiting (Fully complete, has comments)\n`
+    `      └─ Feature: Export to CSV (Testing phase, paused for QA)`
   );
-
-  console.log("❌ FAILED WORKFLOWS (2):");
   console.log(
     `  11. ${baseUrl}/projects/${projectId}/workflows/${runs[10].workflow_definition_id}/runs/${runs[10].id}`
   );
   console.log(
-    `      └─ Feature: Advanced Search (Failed at Testing phase, integration test timeouts, has comments + error)`
+    `      └─ Bug Fix: Memory Leak in Dashboard (Investigation phase)\n`
   );
+
+  console.log("✅ COMPLETED WORKFLOWS (7):");
   console.log(
     `  12. ${baseUrl}/projects/${projectId}/workflows/${runs[11].workflow_definition_id}/runs/${runs[11].id}`
   );
   console.log(
-    `      └─ Bug Fix: API Endpoint 500 Error (Failed at Fix phase, security vulnerability, has comments + error)\n`
+    `      └─ Feature: Notification System (Deployment phase)`
+  );
+  console.log(
+    `  13. ${baseUrl}/projects/${projectId}/workflows/${runs[12].workflow_definition_id}/runs/${runs[12].id}`
+  );
+  console.log(
+    `      └─ Bug Fix: Incorrect Date Formatting (Verification phase)`
+  );
+  console.log(
+    `  14. ${baseUrl}/projects/${projectId}/workflows/${runs[13].workflow_definition_id}/runs/${runs[13].id}`
+  );
+  console.log(
+    `      └─ Review: PR #234 - API Rate Limiting (Approval phase)`
+  );
+  console.log(
+    `  15. ${baseUrl}/projects/${projectId}/workflows/${runs[14].workflow_definition_id}/runs/${runs[14].id}`
+  );
+  console.log(
+    `      └─ Feature: User Authentication Improvements (Deployment phase)`
+  );
+  console.log(
+    `  16. ${baseUrl}/projects/${projectId}/workflows/${runs[15].workflow_definition_id}/runs/${runs[15].id}`
+  );
+  console.log(
+    `      └─ Bug Fix: Page Refresh Losing State (Verification phase)`
+  );
+  console.log(
+    `  17. ${baseUrl}/projects/${projectId}/workflows/${runs[16].workflow_definition_id}/runs/${runs[16].id}`
+  );
+  console.log(
+    `      └─ Feature: Advanced Filtering Options (Deployment phase)`
+  );
+  console.log(
+    `  18. ${baseUrl}/projects/${projectId}/workflows/${runs[17].workflow_definition_id}/runs/${runs[17].id}`
+  );
+  console.log(
+    `      └─ Review: PR #567 - Component Library Update (Approval phase)\n`
+  );
+
+  console.log("❌ FAILED WORKFLOWS (2):");
+  console.log(
+    `  19. ${baseUrl}/projects/${projectId}/workflows/${runs[18].workflow_definition_id}/runs/${runs[18].id}`
+  );
+  console.log(
+    `      └─ Feature: Advanced Search (Failed at Testing phase)`
+  );
+  console.log(
+    `  20. ${baseUrl}/projects/${projectId}/workflows/${runs[19].workflow_definition_id}/runs/${runs[19].id}`
+  );
+  console.log(
+    `      └─ Bug Fix: API Endpoint 500 Error (Failed at Fix phase)\n`
   );
 
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");

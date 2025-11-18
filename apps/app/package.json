@@ -33,6 +33,7 @@
     "prisma:seed": "tsx prisma/seed.ts",
     "prisma:seed:hide:projects": "tsx prisma/seed-hide-projects.ts",
     "prisma:seed:workflows": "tsx prisma/seed-workflows.ts",
+    "prisma:seed:demo": "tsx prisma/seed-demo-workflow.ts",
     "prisma:studio": "prisma studio",
     "ship": "pnpm build && pnpm version patch && (git commit -am \"bump version\" || true) && pnpm publish",
     "start": "node scripts/start.js",
