@@ -1,8 +1,8 @@
 {
   "name": "agentcmd",
-  "version": "1.0.37",
+  "version": "1.0.38",
   "type": "module",
-  "main": "src/server/index.ts",
+  "main": "dist/server/index.js",
   "bin": {
     "agentcmd": "./dist/cli.js"
   },

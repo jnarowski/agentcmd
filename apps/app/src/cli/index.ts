@@ -3,6 +3,7 @@ import { Command } from "commander";
 import { installCommand } from "./commands/install";
 import { startCommand } from "./commands/start";
 import { configCommand } from "./commands/config";
+import { resetCommand } from "./commands/reset";
 
 // Version is inlined at build time via esbuild define
 declare const __CLI_VERSION__: string;
@@ -38,5 +39,12 @@ program
   .option("--set <key=value>", "Set value of specific key")
   .option("--path", "Print config file path")
   .action(configCommand);
+
+program
+  .command("reset")
+  .description("Reset database (deletes all data)")
+  .option("--force", "Confirm database reset")
+  .option("--keep-backups", "Keep backup files")
+  .action(resetCommand);
 
 program.parse();
