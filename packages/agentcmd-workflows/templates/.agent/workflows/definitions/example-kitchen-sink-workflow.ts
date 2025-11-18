@@ -1,8 +1,4 @@
-import {
-  buildSlashCommand,
-  defineWorkflow,
-  type CmdImplementSpecResponse,
-} from "../../../packages/agentcmd-workflows/dist";
+import { buildSlashCommand, defineWorkflow, type CmdImplementSpecResponse } from "agentcmd-workflows";
 
 /**
  * Kitchen Sink Example - demonstrates all available step capabilities
