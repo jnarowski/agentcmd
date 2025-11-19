@@ -30,6 +30,7 @@ interface UserPreferences {
   activity_filter?: 'all' | 'sessions' | 'workflows';
   sidebar_active_tab?: 'activities' | 'tasks';
   project_home_active_tab?: 'activities' | 'tasks';
+  dismissed_content?: Record<string, boolean>;
 }
 
 interface Settings {

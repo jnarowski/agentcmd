@@ -6,6 +6,28 @@
     <link rel="icon" type="image/svg+xml" sizes="32x32" href="/favicon-32.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>web</title>
+    <script>
+      (function() {
+        try {
+          const storageKey = 'theme';
+          const stored = localStorage.getItem(storageKey);
+          const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+          // Determine effective theme
+          let theme;
+          if (stored === 'light' || stored === 'dark') {
+            theme = stored;
+          } else if (stored === 'system' || stored === null) {
+            theme = systemDark ? 'dark' : 'light';
+          }
+
+          // Apply dark class immediately if needed
+          if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
