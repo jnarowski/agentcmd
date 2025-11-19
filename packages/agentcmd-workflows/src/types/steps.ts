@@ -338,16 +338,18 @@ export interface AnnotationStepResult {
   trace: TraceEntry[];
 }
 
+import type { AnthropicModelId, OpenaiModelId } from "./ai";
+
 /**
- * Configuration for AI text/structured generation step
+ * Configuration for AI text/structured generation step - Anthropic provider
  */
-export interface AiStepConfig<TSchema = unknown> {
+export interface AiStepConfigAnthropic<TSchema = unknown> {
   /** Prompt for the AI model */
   prompt: string;
-  /** AI provider: anthropic or openai */
-  provider?: "anthropic" | "openai";
-  /** Model ID (defaults: anthropic → claude-sonnet-4-5-20250929, openai → gpt-4) */
-  model?: string;
+  /** AI provider: anthropic */
+  provider: "anthropic";
+  /** Anthropic model ID (defaults to claude-sonnet-4-5-20250929) */
+  model?: AnthropicModelId;
   /** System prompt for context/instructions */
   systemPrompt?: string;
   /** Temperature (0-2, default: 0.7) */
@@ -357,6 +359,55 @@ export interface AiStepConfig<TSchema = unknown> {
   /** Zod schema for structured output (uses generateObject when provided) */
   schema?: TSchema;
 }
+
+/**
+ * Configuration for AI text/structured generation step - OpenAI provider
+ */
+export interface AiStepConfigOpenai<TSchema = unknown> {
+  /** Prompt for the AI model */
+  prompt: string;
+  /** AI provider: openai */
+  provider: "openai";
+  /** OpenAI model ID (defaults to gpt-4) */
+  model?: OpenaiModelId;
+  /** System prompt for context/instructions */
+  systemPrompt?: string;
+  /** Temperature (0-2, default: 0.7) */
+  temperature?: number;
+  /** Max tokens to generate */
+  maxTokens?: number;
+  /** Zod schema for structured output (uses generateObject when provided) */
+  schema?: TSchema;
+}
+
+/**
+ * Configuration for AI text/structured generation step - Default (Anthropic)
+ */
+export interface AiStepConfigDefault<TSchema = unknown> {
+  /** Prompt for the AI model */
+  prompt: string;
+  /** AI provider (defaults to anthropic) */
+  provider?: undefined;
+  /** Anthropic model ID (defaults to claude-sonnet-4-5-20250929) */
+  model?: AnthropicModelId;
+  /** System prompt for context/instructions */
+  systemPrompt?: string;
+  /** Temperature (0-2, default: 0.7) */
+  temperature?: number;
+  /** Max tokens to generate */
+  maxTokens?: number;
+  /** Zod schema for structured output (uses generateObject when provided) */
+  schema?: TSchema;
+}
+
+/**
+ * Configuration for AI text/structured generation step
+ * Discriminated union provides type-safe model selection based on provider
+ */
+export type AiStepConfig<TSchema = unknown> =
+  | AiStepConfigAnthropic<TSchema>
+  | AiStepConfigOpenai<TSchema>
+  | AiStepConfigDefault<TSchema>;
 
 /**
  * AI generation metadata (based on Vercel AI SDK types)

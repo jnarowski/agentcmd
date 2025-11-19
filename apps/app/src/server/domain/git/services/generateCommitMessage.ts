@@ -2,6 +2,7 @@ import simpleGit from 'simple-git'
 import { generateText } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
 import { config } from '@/server/config'
+import { AI_MODELS } from '@/shared/constants/ai'
 import type { GenerateCommitMessageOptions } from '../types/GenerateCommitMessageOptions'
 
 /**
@@ -49,7 +50,7 @@ export async function generateCommitMessage({ projectPath, files }: GenerateComm
 
     // Generate commit message using AI
     const result = await generateText({
-      model: anthropic('claude-sonnet-4-5-20250929'),
+      model: anthropic(AI_MODELS.anthropic.SONNET_4_5),
       system: `You are an expert at writing clear, concise git commit messages following conventional commit format.
 
 Rules:

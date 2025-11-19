@@ -94,6 +94,12 @@ export interface ExecuteOptions {
   };
   /** Images to include with the prompt */
   images?: Array<{ path: string }>;
+  /** Append text to the system prompt */
+  appendSystemPrompt?: string;
+  /** System prompt to use for the session */
+  systemPrompt?: string;
+  /** Load MCP servers from JSON files or strings (space-separated) */
+  mcpConfig?: string[];
   /** Automatically extract and parse JSON from the response */
   json?: boolean;
   /** Callback invoked immediately when process starts (before any output) */
@@ -318,6 +324,21 @@ function buildArgs(options: ExecuteOptions): string[] {
   // Model selection
   if (options.model) {
     args.push('--model', options.model);
+  }
+
+  // Append system prompt
+  if (options.appendSystemPrompt) {
+    args.push('--append-system-prompt', options.appendSystemPrompt);
+  }
+
+  // System prompt
+  if (options.systemPrompt) {
+    args.push('--system-prompt', options.systemPrompt);
+  }
+
+  // MCP config
+  if (options.mcpConfig && options.mcpConfig.length > 0) {
+    args.push('--mcp-config', ...options.mcpConfig);
   }
 
   // Session management (sessionId, continue, and resume are mutually exclusive)

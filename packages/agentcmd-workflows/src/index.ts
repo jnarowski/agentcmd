@@ -55,6 +55,15 @@ export type {
   PhaseDefinition,
 } from "./types";
 
+// AI model constants and types
+export { AI_MODELS } from "./types/ai";
+export type {
+  AiProvider,
+  AnthropicModelId,
+  OpenaiModelId,
+  AiModelId,
+} from "./types/ai";
+
 // Schema type utilities
 export type { InferSchemaType, DeepReadonly } from "./types/schema";
 

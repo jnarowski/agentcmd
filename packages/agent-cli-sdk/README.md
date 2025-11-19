@@ -127,15 +127,36 @@ Execute an AI CLI command programmatically.
 **Parameters:**
 
 ```typescript
-interface ExecuteOptions {
-  tool: 'claude' | 'codex' | 'gemini' | 'cursor';
+type ExecuteOptions = ClaudeSpecificOptions | CodexSpecificOptions | GeminiSpecificOptions;
+
+// Common options (available for all providers)
+interface BaseExecuteOptions {
   prompt: string;
   workingDir?: string;
   timeout?: number;
   verbose?: boolean;
-  extractJSON?: boolean;
-  onMessage?: (message: UnifiedMessage) => void;
-  onEvent?: (event: unknown) => void;
+  json?: boolean;  // Auto-extract JSON from response
+  sessionId?: string;
+  model?: string;
+  permissionMode?: 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions';
+  // ... callbacks omitted for brevity
+}
+
+// Claude-specific options
+interface ClaudeSpecificOptions extends BaseExecuteOptions {
+  tool: 'claude';
+  // Claude-only options:
+  appendSystemPrompt?: string;     // Append to system prompt
+  systemPrompt?: string;            // Override system prompt
+  mcpConfig?: string[];             // Load MCP servers
+  resume?: boolean;
+  continue?: boolean;
+  streaming?: boolean;
+  toolSettings?: {
+    allowedTools?: string[];
+    disallowedTools?: string[];
+  };
+  images?: Array<{ path: string }>;
 }
 ```
 

@@ -58,6 +58,8 @@ export interface ExecuteOptions {
   permissionMode?: PermissionMode;
   /** Automatically extract and parse JSON from the response */
   json?: boolean;
+  /** Callback invoked immediately when process starts (before any output) */
+  onStart?: (process: import('node:child_process').ChildProcess) => void;
   /** Callback invoked with raw stdout data */
   onStdout?: (chunk: string) => void;
   /** Callback invoked when stderr data is received */
@@ -125,6 +127,7 @@ export async function execute<T = string>(options: ExecuteOptions): Promise<Exec
       cwd: options.workingDir,
       timeout: options.timeout,
       verbose: options.verbose,
+      onStart: options.onStart,
       onStdout: (chunk) => {
         rawOutput += chunk;
 
