@@ -136,3 +136,17 @@
 .syntax-highlighter .line {
   font-weight: normal !important;
 }
+
+/* ============================================================================
+ * SESSION THEMES
+ * ============================================================================ */
+
+/* Terminal theme - light mode (to be styled later) */
+[data-session-theme="terminal"] {
+  /* Will add terminal light colors here later */
+}
+
+/* Terminal theme - dark mode (to be styled later) */
+[data-session-theme="terminal"].dark {
+  /* Will add terminal dark colors here later */
+}

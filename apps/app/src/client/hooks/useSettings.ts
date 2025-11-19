@@ -25,6 +25,7 @@ interface AgentCapabilities {
 interface UserPreferences {
   default_permission_mode: 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions';
   default_theme: 'light' | 'dark' | 'system';
+  session_theme: 'default';
   default_agent: AgentType;
   onboarding_dismissed?: boolean;
   activity_filter?: 'all' | 'sessions' | 'workflows';

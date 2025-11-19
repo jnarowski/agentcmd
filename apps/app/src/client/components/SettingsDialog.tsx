@@ -28,6 +28,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   // Form state
   const [permissionMode, setPermissionMode] = useState<string>('acceptEdits');
   const [theme, setThemeValue] = useState<string>('dark');
+  const [sessionTheme, setSessionTheme] = useState<string>('default');
   const [agent, setAgent] = useState<string>('claude');
 
   // Initialize form values from settings
@@ -35,6 +36,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     if (settings?.userPreferences) {
       setPermissionMode(settings.userPreferences.default_permission_mode);
       setThemeValue(settings.userPreferences.default_theme);
+      setSessionTheme(settings.userPreferences.session_theme);
       setAgent(settings.userPreferences.default_agent);
     }
   }, [settings]);
@@ -44,6 +46,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       await updateSettings.mutateAsync({
         default_permission_mode: permissionMode as 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions',
         default_theme: theme as 'light' | 'dark' | 'system',
+        session_theme: sessionTheme as 'default',
         default_agent: agent as 'claude' | 'codex' | 'cursor' | 'gemini',
       });
 
@@ -61,6 +64,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     if (settings?.userPreferences) {
       setPermissionMode(settings.userPreferences.default_permission_mode);
       setThemeValue(settings.userPreferences.default_theme);
+      setSessionTheme(settings.userPreferences.session_theme);
       setAgent(settings.userPreferences.default_agent);
     }
     onOpenChange(false);
@@ -143,6 +147,22 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </RadioGroup>
             <p className="text-sm text-muted-foreground">
               Theme changes apply immediately
+            </p>
+          </div>
+
+          {/* Session Theme Selector */}
+          <div className="space-y-2">
+            <Label htmlFor="session-theme">Session Theme</Label>
+            <Select value={sessionTheme} onValueChange={setSessionTheme}>
+              <SelectTrigger id="session-theme">
+                <SelectValue placeholder="Select session theme" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">Default</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-muted-foreground">
+              Visual style for session messages
             </p>
           </div>
 

@@ -18,7 +18,7 @@ interface MessageListProps {
  */
 export function MessageList({ messages, onApprove }: MessageListProps) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 session-message-list">
       {messages
         .filter(shouldRenderMessage)
         .map((message) => (

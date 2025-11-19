@@ -42,22 +42,22 @@ export function ToolCollapsibleWrapper({
   // If no content, render as non-interactive
   if (!hasContent) {
     return (
-      <div className={className}>
-        <div className="flex items-start gap-2.5 w-full min-w-0 py-1.5">
-          <div className="flex items-center h-5">
+      <div className={`${className} session-tool-block`}>
+        <div className="flex items-start gap-2.5 w-full min-w-0 py-1.5 session-tool-header">
+          <div className="flex items-center h-5 session-block-dot-wrapper">
             <ToolDot color={dotColor} />
           </div>
           <div className="flex flex-col items-start gap-0.5 min-w-0 flex-1">
             <div className="flex items-center gap-2 w-full min-w-0">
-              <span className="text-base md:text-sm font-semibold">{toolName}</span>
+              <span className="text-base md:text-sm font-semibold session-tool-name">{toolName}</span>
               {contextInfo && (
-                <span className="text-sm md:text-xs text-muted-foreground font-mono truncate">
+                <span className="text-sm md:text-xs text-muted-foreground font-mono truncate session-tool-context">
                   {contextInfo}
                 </span>
               )}
             </div>
             {description && (
-              <span className="text-sm md:text-xs text-muted-foreground">
+              <span className="text-sm md:text-xs text-muted-foreground session-tool-description">
                 ↳ {description}
               </span>
             )}
@@ -68,28 +68,28 @@ export function ToolCollapsibleWrapper({
   }
 
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen} className={className}>
+    <Collapsible open={isOpen} onOpenChange={setIsOpen} className={`${className} session-tool-block`}>
       {/* Header */}
       <CollapsibleTrigger asChild>
         <Button
           variant="ghost"
-          className="w-full justify-start px-0 py-1.5 hover:bg-transparent h-auto"
+          className="w-full justify-start px-0 py-1.5 hover:bg-transparent h-auto session-tool-header"
         >
           <div className="flex items-start gap-2.5 w-full min-w-0">
-            <div className="flex items-center h-5">
+            <div className="flex items-center h-5 session-block-dot-wrapper">
               <ToolDot color={dotColor} />
             </div>
             <div className="flex flex-col items-start gap-0.5 min-w-0 flex-1">
               <div className="flex items-center gap-2 w-full min-w-0">
-                <span className="text-base md:text-sm font-semibold">{toolName}</span>
+                <span className="text-base md:text-sm font-semibold session-tool-name">{toolName}</span>
                 {contextInfo && (
-                  <span className="text-sm md:text-xs text-muted-foreground font-mono truncate">
+                  <span className="text-sm md:text-xs text-muted-foreground font-mono truncate session-tool-context">
                     {contextInfo}
                   </span>
                 )}
               </div>
               {description && (
-                <span className="text-sm md:text-xs text-muted-foreground">
+                <span className="text-sm md:text-xs text-muted-foreground session-tool-description">
                   ↳ {description}
                 </span>
               )}
@@ -100,7 +100,7 @@ export function ToolCollapsibleWrapper({
 
       {/* Content */}
       <CollapsibleContent>
-        <div className="pl-5 pt-2 pb-3">{children}</div>
+        <div className="pl-5 pt-2 pb-3 session-tool-content">{children}</div>
       </CollapsibleContent>
     </Collapsible>
   );

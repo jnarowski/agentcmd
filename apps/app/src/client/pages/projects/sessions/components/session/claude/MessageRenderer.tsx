@@ -63,7 +63,7 @@ export function MessageRenderer({ message, onApprove }: MessageRendererProps) {
 
   return (
     <div
-      className={isDebugMode ? "relative group" : ""}
+      className={isDebugMode ? "relative group session-message-wrapper" : "session-message-wrapper"}
       {...dataAttributes}
     >
       {/* Debug controls - top right icons - only when ?debug=true */}

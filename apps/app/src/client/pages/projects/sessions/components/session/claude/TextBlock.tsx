@@ -28,16 +28,16 @@ export function TextBlock({ text, className = "", showDot = true }: TextBlockPro
   }
 
   return (
-    <div className={`${showDot ? 'flex gap-2.5' : ''} ${className}`}>
+    <div className={`${showDot ? 'flex gap-2.5' : ''} ${className} session-text-block`}>
       {/* Gray dot indicator */}
       {showDot && (
-        <div className="flex items-center h-7 md:h-6">
-          <div className="h-2 w-2 rounded-full bg-gray-500 shrink-0" />
+        <div className="flex items-center h-7 md:h-6 session-block-dot-wrapper">
+          <div className="h-2 w-2 rounded-full bg-gray-500 shrink-0 session-block-dot session-block-dot-text" />
         </div>
       )}
 
       {/* Text content */}
-      <div className={`prose prose-base md:prose-sm dark:prose-invert max-w-none prose-hr:my-2 prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-headings:mb-2 prose-headings:mt-3 prose-*:first:mt-0 prose-p:last:mb-0 prose-pre:my-0 prose-pre:bg-transparent prose-pre:p-0 break-words ${showDot ? 'flex-1 min-w-0 overflow-hidden' : ''}`}>
+      <div className={`prose prose-base md:prose-sm dark:prose-invert max-w-none prose-hr:my-2 prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-headings:mb-2 prose-headings:mt-3 prose-*:first:mt-0 prose-p:last:mb-0 prose-pre:my-0 prose-pre:bg-transparent prose-pre:p-0 break-words ${showDot ? 'flex-1 min-w-0 overflow-hidden' : ''} session-text-content`}>
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           children={safeText}
@@ -99,7 +99,7 @@ export function TextBlock({ text, className = "", showDot = true }: TextBlockPro
               if (isInline) {
                 return (
                   <code
-                    className="px-1.5 py-0.5 rounded bg-muted text-blue-600 dark:text-blue-400 font-mono text-sm md:text-xs font-normal"
+                    className="px-1.5 py-0.5 rounded bg-muted text-blue-600 dark:text-blue-400 font-mono text-sm md:text-xs font-normal session-inline-code"
                     {...props}
                   >
                     {children}

@@ -20,13 +20,13 @@ export function UserMessage({ message }: UserMessageProps) {
     }
     return (
       <div
-        className="flex justify-end"
+        className="flex justify-end session-message session-message-user"
         data-message-id={message.id}
         data-message-role={message.role}
         data-content-type="string"
       >
-        <div className="max-w-[85%] rounded-lg border border-border bg-muted/50 px-3 py-2">
-          <div className="whitespace-pre-wrap break-words">{message.content}</div>
+        <div className="max-w-[85%] rounded-lg border border-border bg-muted/50 px-3 py-2 session-message-bubble session-message-user-bubble">
+          <div className="whitespace-pre-wrap break-words session-message-text">{message.content}</div>
         </div>
       </div>
     );
@@ -67,12 +67,12 @@ export function UserMessage({ message }: UserMessageProps) {
 
   return (
     <div
-      className="flex justify-end"
+      className="flex justify-end session-message session-message-user"
       data-message-id={message.id}
       data-message-role={message.role}
       data-content-blocks={renderableBlocks.length}
     >
-      <div className="max-w-[85%] rounded-lg border border-border bg-muted/50 px-3 py-2">
+      <div className="max-w-[85%] rounded-lg border border-border bg-muted/50 px-3 py-2 session-message-bubble session-message-user-bubble">
         {/* Render all content blocks (text, slash_command, etc.) */}
         {renderableBlocks.map((block, index) => (
           <ContentBlockRenderer key={index} block={block} showDot={false} />

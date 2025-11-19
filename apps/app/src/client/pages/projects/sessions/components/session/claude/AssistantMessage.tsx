@@ -26,17 +26,17 @@ export function AssistantMessage({ message, onApprove }: AssistantMessageProps) 
     // Check if this is an error message
     if (message.isError) {
       return (
-        <div className="flex justify-center w-full">
-          <div className="w-full max-w-4xl">
-            <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/20 p-4">
+        <div className="flex justify-center w-full session-message session-message-assistant session-message-error">
+          <div className="w-full max-w-4xl session-message-error-wrapper">
+            <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/20 p-4 session-message-error-box">
               <div className="flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-red-900 dark:text-red-100 mb-2">
+                  <div className="text-sm font-medium text-red-900 dark:text-red-100 mb-2 session-message-error-title">
                     Error from Server
                   </div>
                   <div className="text-sm text-red-800 dark:text-red-200">
-                    <div className="whitespace-pre-wrap break-words">
+                    <div className="whitespace-pre-wrap break-words session-message-error-text">
                       {stripAnsiCodes(content)}
                     </div>
                   </div>
@@ -50,8 +50,8 @@ export function AssistantMessage({ message, onApprove }: AssistantMessageProps) 
 
     // Render plain text content
     return (
-      <div className="w-full overflow-hidden">
-        <div className="whitespace-pre-wrap break-words">{content}</div>
+      <div className="w-full overflow-hidden session-message session-message-assistant">
+        <div className="whitespace-pre-wrap break-words session-message-text">{content}</div>
       </div>
     );
   }
@@ -65,17 +65,17 @@ export function AssistantMessage({ message, onApprove }: AssistantMessageProps) 
       .join("\n");
 
     return (
-      <div className="flex justify-center w-full">
-        <div className="w-full max-w-4xl">
-          <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/20 p-4">
+      <div className="flex justify-center w-full session-message session-message-assistant session-message-error">
+        <div className="w-full max-w-4xl session-message-error-wrapper">
+          <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/20 p-4 session-message-error-box">
             <div className="flex items-start gap-3">
               <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-red-900 dark:text-red-100 mb-2">
+                <div className="text-sm font-medium text-red-900 dark:text-red-100 mb-2 session-message-error-title">
                   Error from Server
                 </div>
                 <div className="text-sm text-red-800 dark:text-red-200">
-                  <div className="whitespace-pre-wrap break-words">
+                  <div className="whitespace-pre-wrap break-words session-message-error-text">
                     {errorText}
                   </div>
                 </div>
@@ -108,7 +108,7 @@ export function AssistantMessage({ message, onApprove }: AssistantMessageProps) 
 
     // Show debug box for empty messages
     return (
-      <div className="w-full overflow-hidden">
+      <div className="w-full overflow-hidden session-message session-message-assistant session-message-debug">
         <div className="rounded-lg border-2 border-red-500 bg-yellow-50 dark:bg-yellow-950/20 p-4">
           <div className="flex items-start gap-3">
             <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
@@ -160,7 +160,7 @@ export function AssistantMessage({ message, onApprove }: AssistantMessageProps) 
   // Render content blocks with proper formatting
   return (
     <div
-      className="w-full overflow-hidden"
+      className="w-full overflow-hidden session-message session-message-assistant"
       data-message-id={message.id}
       data-message-role={message.role}
       data-content-blocks={renderableContent.length}
