@@ -19,6 +19,7 @@ export async function parseJSONLFile({
     let totalTokens = 0;
     let lastMessageAt = new Date().toISOString();
     let firstMessagePreview = '';
+    let firstAssistantMessage = '';
     let createdAt: string | undefined;
     let isPlanSession = false;
 
@@ -99,6 +100,22 @@ export async function parseJSONLFile({
             totalTokens += messageTokens;
           }
 
+          // Extract first assistant text message (skip tool_use, tool_result, thinking blocks)
+          if (!firstAssistantMessage) {
+            const content = entry.message?.content ?? entry.content;
+            if (Array.isArray(content)) {
+              // Find first text block
+              const textBlock = content.find((c: any) => c.type === 'text');
+              if (textBlock?.text) {
+                const cleanedText = stripXmlTags(textBlock.text);
+                firstAssistantMessage = cleanedText.substring(0, 250);
+              }
+            } else if (typeof content === 'string') {
+              const cleanedText = stripXmlTags(content);
+              firstAssistantMessage = cleanedText.substring(0, 250);
+            }
+          }
+
           // Check if this is a Plan session (Task tool with subagent_type: "Plan")
           if (!isPlanSession) {
             const content = entry.message?.content ?? entry.content;
@@ -140,6 +157,7 @@ export async function parseJSONLFile({
       totalTokens,
       lastMessageAt,
       firstMessagePreview: firstMessagePreview || 'Untitled Session',
+      firstAssistantMessage: firstAssistantMessage || undefined,
       createdAt,
       isPlanSession,
     };

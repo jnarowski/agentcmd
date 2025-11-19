@@ -4,6 +4,7 @@ import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types
 import type { FastifyBaseLogger } from "fastify";
 import type { WorkflowRun } from "@prisma/client";
 import { getCurrentBranch } from "@/server/domain/git/services/getCurrentBranch";
+import { sanitizeBranchForDirectory } from "@/server/domain/git/utils";
 import { createSetupWorkspaceStep } from "./steps";
 
 /**
@@ -44,7 +45,7 @@ export async function setupWorkspace(params: {
   const setupStep = createSetupWorkspaceStep(context, inngestStep);
   const worktreeName =
     run.mode === "worktree"
-      ? `run-${run.id}-${run.branch_name || "main"}`
+      ? `run-${run.id}-${sanitizeBranchForDirectory(run.branch_name || "main")}`
       : undefined;
 
   try {

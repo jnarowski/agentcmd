@@ -1,9 +1,5 @@
 import type { WorkflowStep, WorkflowEvent } from "agentcmd-workflows";
-import {
-  buildSlashCommand,
-  type CmdGenerateSpecResponse,
-  type SlashCommandName,
-} from "agentcmd-workflows";
+import { type CmdGenerateSpecResponse } from "agentcmd-workflows";
 import type { FastifyBaseLogger } from "fastify";
 import type { WorkflowRun } from "@prisma/client";
 import { getSpecCommand } from "../getSpecCommand";

@@ -134,6 +134,7 @@ CREATE TABLE "agent_sessions" (
     "projectId" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "name" TEXT,
+    "name_generated_at" DATETIME,
     "agent" TEXT NOT NULL DEFAULT 'claude',
     "type" TEXT NOT NULL DEFAULT 'chat',
     "permission_mode" TEXT NOT NULL DEFAULT 'default',
