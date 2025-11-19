@@ -1,8 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { Iphone } from "@/components/ui/iphone";
-
 export default function FeaturesSection() {
   return (
     <>
@@ -273,11 +271,15 @@ export default function FeaturesSection() {
             </p>
           </div>
           <div className="flex justify-center">
-            <div className="relative max-w-sm">
-              <Iphone
-                src="/screenshots/mobile-sessions.png"
-                className="w-full"
-              />
+            <div className="relative max-w-sm mx-auto">
+              <div className="relative inline-block w-full">
+                <img
+                  src="/screenshots/mobile-sessions.png"
+                  alt="Mobile session view"
+                  className="w-full rounded-[2.5rem] border-8 border-gray-800 shadow-2xl"
+                  style={{ aspectRatio: '728/1560' }}
+                />
+              </div>
             </div>
           </div>
         </div>

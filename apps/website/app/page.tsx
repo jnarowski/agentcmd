@@ -23,8 +23,8 @@ export default function Home() {
         <FeaturesSection />
         <UseCaseSection />
         <BenefitsGrid />
-        <NewsletterSection />
         <CtaSectionV2 />
+        <NewsletterSection />
       </main>
     </div>
   );

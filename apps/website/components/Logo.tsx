@@ -33,7 +33,7 @@ export function Logo() {
       </svg>
       <span className="text-xl tracking-tight leading-none">
         <span className="font-light">agent</span>
-        <span className="font-extrabold">cmd</span>
+        <span className="font-extrabold dark:font-extrabold font-bold">cmd</span>
       </span>
     </div>
   );
