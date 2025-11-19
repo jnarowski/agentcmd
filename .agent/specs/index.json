@@ -74,6 +74,14 @@
       "spec_type": "feature",
       "created": "2025-11-15T16:35:09.000Z",
       "updated": "2025-11-15T17:06:25.124Z"
+    },
+    "2511181832": {
+      "folder": "2511181832-branch-validation",
+      "path": "todo/2511181832-branch-validation/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-18T18:32:00.000Z",
+      "updated": "2025-11-18T18:32:00.000Z"
     }
   }
 }
