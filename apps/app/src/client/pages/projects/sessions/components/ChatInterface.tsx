@@ -15,7 +15,6 @@ import {
   ConversationContent,
   ConversationScrollButton,
 } from "@/client/components/ai-elements/conversation";
-import { useSettings } from "@/client/hooks/useSettings";
 
 interface ChatInterfaceProps {
   projectId: string;
@@ -43,9 +42,6 @@ export function ChatInterface({
   isLoadingHistory = false,
   onApprove,
 }: ChatInterfaceProps) {
-  const { data: settings } = useSettings();
-  const sessionTheme = settings?.userPreferences.session_theme || 'default';
-
   // Loading state
   if (isLoading) {
     return <ChatSkeleton />;
@@ -93,7 +89,7 @@ export function ChatInterface({
       data-session-id={sessionId}
     >
       <ConversationContent>
-        <div className="chat-container max-w-4xl mx-auto" data-session-theme={sessionTheme}>
+        <div className="chat-container max-w-4xl mx-auto">
           <MessageList messages={messages} onApprove={onApprove} />
           <AgentLoadingIndicator isStreaming={isStreaming} />
         </div>

@@ -38,6 +38,14 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       setThemeValue(settings.userPreferences.default_theme);
       setSessionTheme(settings.userPreferences.session_theme);
       setAgent(settings.userPreferences.default_agent);
+
+      // Apply color theme on mount
+      const root = document.documentElement;
+      if (settings.userPreferences.session_theme === 'nature') {
+        root.setAttribute('data-theme', 'nature');
+      } else {
+        root.removeAttribute('data-theme');
+      }
     }
   }, [settings]);
 
@@ -46,12 +54,20 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       await updateSettings.mutateAsync({
         default_permission_mode: permissionMode as 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions',
         default_theme: theme as 'light' | 'dark' | 'system',
-        session_theme: sessionTheme as 'default',
+        session_theme: sessionTheme as 'default' | 'nature',
         default_agent: agent as 'claude' | 'codex' | 'cursor' | 'gemini',
       });
 
       // Apply theme immediately
       setTheme(theme as 'light' | 'dark' | 'system');
+
+      // Apply color theme to :root
+      const root = document.documentElement;
+      if (sessionTheme === 'nature') {
+        root.setAttribute('data-theme', 'nature');
+      } else {
+        root.removeAttribute('data-theme');
+      }
 
       onOpenChange(false);
     } catch (error) {
@@ -159,6 +175,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="default">Default</SelectItem>
+                <SelectItem value="nature">Nature</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-sm text-muted-foreground">
