@@ -34,8 +34,7 @@ export function ProjectReadme({ project }: ProjectReadmeProps) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-          <FileText className="h-5 w-5 shrink-0" />
-          <span className="truncate">Project README</span>
+          <span className="truncate">Readme</span>
         </CardTitle>
         {readme?.path && (
           <TooltipProvider>

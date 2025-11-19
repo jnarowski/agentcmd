@@ -8,8 +8,16 @@ import {
 import { useSpecs } from "@/client/hooks/useSpecs";
 import { useRescanSpecs } from "@/client/hooks/useRescanSpecs";
 import { useNavigate } from "react-router-dom";
-import { RefreshCw, Loader2, FileText, ExternalLink, Sparkles, FolderOpen } from "lucide-react";
+import {
+  RefreshCw,
+  Loader2,
+  FileText,
+  ExternalLink,
+  Sparkles,
+  FolderOpen,
+} from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { getWebsiteUrl } from "@/client/utils/envConfig";
 
 interface ProjectHomeSpecsProps {
   projectId: string;
@@ -62,7 +70,6 @@ export function ProjectHomeSpecs({ projectId }: ProjectHomeSpecsProps) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-          <FolderOpen className="h-5 w-5 shrink-0" />
           <span className="truncate">Specs</span>
           <Button
             variant="ghost"
@@ -91,14 +98,20 @@ export function ProjectHomeSpecs({ projectId }: ProjectHomeSpecsProps) {
                     key={task.id}
                     className="p-3 cursor-pointer hover:bg-accent/50 transition-colors rounded-lg border bg-card"
                     onClick={() =>
-                      handleOpenWorkflow(task.specPath, task.projectId, task.name)
+                      handleOpenWorkflow(
+                        task.specPath,
+                        task.projectId,
+                        task.name
+                      )
                     }
                   >
                     <div className="flex items-center">
                       <FileText className="size-4 shrink-0 mr-2.5" />
                       <div className="flex flex-1 flex-col gap-0 min-w-0">
                         <div className="flex items-center justify-between gap-2 min-w-0">
-                          <span className="text-sm min-w-0 truncate">{task.name}</span>
+                          <span className="text-sm min-w-0 truncate">
+                            {task.name}
+                          </span>
                           <span className="text-xs text-muted-foreground shrink-0">
                             {formatDistanceToNow(new Date(task.created_at), {
                               addSuffix: true,
@@ -129,7 +142,8 @@ export function ProjectHomeSpecs({ projectId }: ProjectHomeSpecsProps) {
               <div className="space-y-2">
                 <h3 className="text-lg font-semibold">No specs yet</h3>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                  Specs are structured documents that guide AI agents to implement features, fix bugs, or plan projects.
+                  Specs are structured documents that guide AI agents to
+                  implement features, fix bugs, or plan projects.
                 </p>
               </div>
               <div className="space-y-2">
@@ -137,19 +151,20 @@ export function ProjectHomeSpecs({ projectId }: ProjectHomeSpecsProps) {
                   Create specs using slash commands:
                 </p>
                 <div className="flex flex-col gap-1 text-xs text-muted-foreground">
-                  <code className="bg-muted px-2 py-1 rounded mx-auto">/cmd:generate-feature-spec</code>
-                  <code className="bg-muted px-2 py-1 rounded mx-auto">/cmd:generate-bug-spec</code>
-                  <code className="bg-muted px-2 py-1 rounded mx-auto">/cmd:generate-prd</code>
+                  <code className="bg-muted px-2 py-1 rounded mx-auto">
+                    /cmd:generate-feature-spec
+                  </code>
+                  <code className="bg-muted px-2 py-1 rounded mx-auto">
+                    /cmd:generate-bug-spec
+                  </code>
+                  <code className="bg-muted px-2 py-1 rounded mx-auto">
+                    /cmd:generate-prd
+                  </code>
                 </div>
               </div>
-              <Button
-                variant="link"
-                size="sm"
-                asChild
-                className="text-primary"
-              >
+              <Button variant="link" size="sm" asChild className="text-primary">
                 <a
-                  href="https://agentcmd.com/docs/specs"
+                  href={`${getWebsiteUrl()}/docs/specs`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1"

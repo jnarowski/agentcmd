@@ -1,0 +1,266 @@
+---
+title: MCP Integration
+description: Extend agent capabilities with Model Context Protocol servers
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { AgentCmd } from '@/components/AgentCmd';
+
+## Overview
+
+This example demonstrates how to use [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) servers in workflows to extend agent capabilities with custom tools, resources, and prompts.
+
+## What is MCP?
+
+<Callout type="info">
+**Model Context Protocol** provides a standardized way to extend AI agents with:
+
+- **Custom tools** - GitHub API, database queries, browser automation
+- **Resources** - File system access, API endpoints, data sources
+- **Prompts** - Domain-specific prompt templates
+</Callout>
+
+## MCP Server Configuration
+
+Create MCP server config files in your project root:
+
+```json title=".mcp.json.github"
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "ghp_your_token_here"
+      }
+    }
+  }
+}
+```
+
+```json title=".mcp.json.playwright"
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    }
+  }
+}
+```
+
+## Example Workflow
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+
+export default defineWorkflow(
+  {
+    id: "analyze-prs-workflow",
+    name: "Analyze Pull Requests",
+    description: "Uses GitHub MCP server to analyze recent PRs",
+    phases: ["analyze", "test", "report"],
+  },
+  async ({ event, step }) => {
+    const projectPath = event.data.projectPath;
+
+    await step.phase("analyze", async () => {
+      // Use GitHub MCP server to analyze PRs
+      const analysis = await step.agent("analyze-prs", {
+        agent: "claude",
+        prompt: `Analyze the last 5 pull requests in this repository.
+For each PR:
+- Summarize the changes
+- Identify potential issues
+- Rate code quality (1-10)
+
+Return a JSON array of PR analyses.`,
+        mcpConfig: [".mcp.json.github"],
+        workingDir: projectPath,
+        json: true,
+      });
+
+      return analysis;
+    });
+
+    await step.phase("test", async () => {
+      // Use Playwright MCP server to test the application
+      await step.agent("run-e2e-tests", {
+        agent: "claude",
+        prompt: `Use Playwright to:
+1. Navigate to http://localhost:3000
+2. Test the login flow
+3. Take screenshots of any errors
+4. Return a test report`,
+        mcpConfig: [".mcp.json.playwright"],
+        workingDir: projectPath,
+      });
+    });
+
+    await step.phase("report", async () => {
+      // Combine MCP servers for comprehensive reporting
+      await step.agent("generate-report", {
+        agent: "claude",
+        prompt: `Create a comprehensive report combining:
+- PR analysis from phase 1
+- E2E test results from phase 2
+- Recommendations for improvements
+
+Save as REPORT.md in the project root.`,
+        mcpConfig: [
+          ".mcp.json.github",
+          ".mcp.json.playwright"
+        ],
+        workingDir: projectPath,
+        permissionMode: "acceptEdits",
+      });
+    });
+  }
+);
+```
+
+## How It Works
+
+### 1. Phase 1: Analyze PRs with GitHub MCP
+
+The `analyze` phase uses the GitHub MCP server to:
+- Access GitHub API without manual authentication
+- Fetch recent pull requests
+- Let Claude analyze PR data directly
+
+### 2. Phase 2: E2E Tests with Playwright MCP
+
+The `test` phase uses Playwright MCP server to:
+- Control browser automation
+- Run end-to-end tests
+- Capture screenshots and results
+
+### 3. Phase 3: Combined Report
+
+The `report` phase uses **multiple MCP servers** to:
+- Access GitHub data (from `.mcp.json.github`)
+- Access test results (from `.mcp.json.playwright`)
+- Generate comprehensive documentation
+
+## Common MCP Servers
+
+### GitHub Integration
+```bash
+npm install -g @modelcontextprotocol/server-github
+```
+
+**Capabilities:**
+- Create/update issues and PRs
+- Search code and repositories
+- Analyze commit history
+- Manage project boards
+
+### File System Operations
+```bash
+npm install -g @modelcontextprotocol/server-filesystem
+```
+
+**Capabilities:**
+- Enhanced file operations
+- Directory traversal
+- File search and filtering
+- Batch operations
+
+### Database Access
+```bash
+npm install -g @modelcontextprotocol/server-postgres
+```
+
+**Capabilities:**
+- Query PostgreSQL databases
+- Schema introspection
+- Data analysis
+- Migration support
+
+### Browser Automation
+```bash
+npm install -g @playwright/mcp
+```
+
+**Capabilities:**
+- E2E testing
+- Screenshot capture
+- Form automation
+- Performance testing
+
+## Best Practices
+
+### Security
+
+<Callout type="warn">
+**Never commit API tokens to version control!**
+
+Use environment variables in MCP configs:
+```json
+{
+  "env": {
+    "GITHUB_TOKEN": "${GITHUB_TOKEN}",
+    "DATABASE_URL": "${DATABASE_URL}"
+  }
+}
+```
+</Callout>
+
+### Performance
+
+- **Use specific servers per phase** - Don't load all MCP servers if only using one
+- **Cache server instances** - MCP servers persist across agent calls in same phase
+- **Limit concurrent servers** - Each server adds startup overhead
+
+### Debugging
+
+Enable verbose logging to see MCP server communication:
+
+```typescript
+await step.agent("debug-task", {
+  agent: "claude",
+  prompt: "Debug the issue",
+  mcpConfig: [".mcp.json.github"],
+  // MCP logs appear in agent output
+});
+```
+
+## Custom MCP Servers
+
+Build your own MCP servers for domain-specific needs:
+
+```typescript title="my-custom-server.ts"
+import { MCPServer } from '@modelcontextprotocol/sdk';
+
+const server = new MCPServer({
+  name: 'custom-api',
+  version: '1.0.0',
+});
+
+server.addTool({
+  name: 'query_api',
+  description: 'Query our custom API',
+  parameters: {
+    endpoint: { type: 'string' },
+    method: { type: 'string' }
+  },
+  handler: async (params) => {
+    // Your custom logic
+    return { data: 'result' };
+  }
+});
+
+server.start();
+```
+
+Then reference it in your workflow:
+
+```typescript
+mcpConfig: ["./mcp/my-custom-server.json"]
+```
+
+## Related Examples
+
+- [Implement & Review](/docs/examples/implement-and-review) - Multi-phase workflows
+- [Context Sharing](/docs/examples/context-sharing) - Share data between phases
+- [Type-Safe Arguments](/docs/examples/type-safe-arguments) - Type-safe workflow inputs

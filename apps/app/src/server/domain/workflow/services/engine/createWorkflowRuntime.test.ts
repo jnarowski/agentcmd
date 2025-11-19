@@ -12,7 +12,13 @@ vi.mock("@/server/domain/workflow/services/events/broadcastWorkflowEvent", () =>
 }));
 
 vi.mock("@/server/domain/workflow/services/events/createWorkflowEvent", () => ({
-  createWorkflowEvent: vi.fn(),
+  createWorkflowEvent: vi.fn().mockResolvedValue({
+    id: "mock-event-id",
+    workflow_run_id: "mock-run-id",
+    event_type: "step_log",
+    event_data: {},
+    created_at: new Date(),
+  }),
 }));
 
 vi.mock("@/server/domain/git/services/getCurrentBranch", () => ({

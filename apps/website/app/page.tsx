@@ -4,6 +4,7 @@ import HeroSectionV2 from "@/components/landing/hero-section-v2";
 import FeaturesSection from "@/components/landing/features-section";
 import UseCaseSection from "@/components/landing/use-case-section";
 import BenefitsGrid from "@/components/landing/benefits-grid";
+import NewsletterSection from "@/components/landing/newsletter-section";
 import CtaSectionV2 from "@/components/landing/cta-section-v2";
 
 export default function Home() {
@@ -22,6 +23,7 @@ export default function Home() {
         <FeaturesSection />
         <UseCaseSection />
         <BenefitsGrid />
+        <NewsletterSection />
         <CtaSectionV2 />
       </main>
     </div>

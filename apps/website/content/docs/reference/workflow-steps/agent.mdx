@@ -26,7 +26,7 @@ The agent step runs Claude Code, OpenAI Codex, or Google Gemini CLI tools. Unlik
 
 {/* AUTO-GENERATED:agent-step-config START */}
 {/* Source: packages/agentcmd-workflows/src/types/steps.ts
-{/* Last updated: 2025-11-16 */}
+{/* Last updated: 2025-11-19 */}
 
 ```typescript
 interface AgentStepConfig {
@@ -35,6 +35,7 @@ interface AgentStepConfig {
   workingDir?: string;
   context?: Record<string, unknown>;
   permissionMode?: "default" | "plan" | "acceptEdits" | "bypassPermissions";
+  mcpConfig?: string[];
   json?: boolean;
   resume?: string;
 }
@@ -80,6 +81,13 @@ interface AgentStepConfig {
 - Session ID from previous agent step
 - Continues the conversation
 - Context carries forward (files read, decisions made)
+
+**`mcpConfig`** (optional, **Claude only**)
+- Array of MCP server configuration file paths
+- Enables Model Context Protocol servers for enhanced capabilities
+- Paths relative to `workingDir` (e.g., `[".mcp.json.github", ".mcp.json.playwright"]`)
+- Only supported by Claude agent (ignored for Codex and Gemini)
+- See [MCP example](#with-mcp-servers) below
 
 ## Basic Usage
 
@@ -195,6 +203,48 @@ await step.agent("implement-endpoint", {
   },
 });
 ```
+
+### With MCP Servers
+
+Enable [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) servers to extend agent capabilities with custom tools and resources:
+
+```typescript
+// MCP server configuration example
+// .mcp.json.github
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "ghp_..."
+      }
+    }
+  }
+}
+
+// Use MCP servers in workflow
+await step.agent("analyze-prs", {
+  agent: "claude",
+  prompt: "Analyze recent pull requests and create a summary report",
+  mcpConfig: [
+    ".mcp.json.github",
+    ".mcp.json.playwright"
+  ],
+  workingDir: projectPath,
+});
+```
+
+**What MCP provides:**
+- **Custom tools** - GitHub API access, database queries, browser automation
+- **Resources** - File system access, API endpoints, data sources
+- **Enhanced prompts** - Domain-specific prompt templates
+
+**Common MCP servers:**
+- `@modelcontextprotocol/server-github` - GitHub API integration
+- `@modelcontextprotocol/server-filesystem` - Enhanced file operations
+- `@modelcontextprotocol/server-postgres` - PostgreSQL database access
+- `@playwright/mcp` - Browser automation and testing
 
 ## Return Value
 

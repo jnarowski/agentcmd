@@ -5,6 +5,7 @@
     "recursive-implement-review",
     "advanced-recursive-implement-review",
     "context-sharing",
+    "mcp-integration",
     "type-safe-slash-commands",
     "type-safe-arguments"
   ]

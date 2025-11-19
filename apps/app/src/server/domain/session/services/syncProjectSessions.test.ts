@@ -71,7 +71,7 @@ describe("syncProjectSessions", () => {
 
     // Verify sessions created in database
     const sessions = await prisma.agentSession.findMany({
-      where: { projectId },
+      where: { project_id: projectId },
     });
     expect(sessions).toHaveLength(2);
     expect(sessions.map((s) => s.id)).toEqual(
@@ -96,7 +96,7 @@ describe("syncProjectSessions", () => {
     expect(result.created).toBe(2);
 
     const sessions = await prisma.agentSession.findMany({
-      where: { projectId },
+      where: { project_id: projectId },
     });
     expect(sessions).toHaveLength(2);
   });
@@ -118,7 +118,7 @@ describe("syncProjectSessions", () => {
     expect(result.created).toBe(2);
 
     const sessions = await prisma.agentSession.findMany({
-      where: { projectId },
+      where: { project_id: projectId },
     });
     expect(sessions.map((s) => s.id)).toEqual(
       expect.arrayContaining(["session-1", "session-2"])
@@ -136,7 +136,7 @@ describe("syncProjectSessions", () => {
 
     const existingSessionId = (
       await prisma.agentSession.findFirst({
-        where: { projectId },
+        where: { project_id: projectId },
       })
     )!.id;
 
@@ -156,7 +156,7 @@ describe("syncProjectSessions", () => {
     expect(result.updated).toBe(0);
 
     const sessions = await prisma.agentSession.findMany({
-      where: { projectId },
+      where: { project_id: projectId },
     });
     expect(sessions).toHaveLength(2);
   });
@@ -254,7 +254,7 @@ describe("syncProjectSessions", () => {
 
     // Verify orphaned session deleted
     const sessions = await prisma.agentSession.findMany({
-      where: { projectId },
+      where: { project_id: projectId },
     });
     expect(sessions).toHaveLength(0);
   });
@@ -282,7 +282,7 @@ describe("syncProjectSessions", () => {
 
     // Verify working session NOT deleted
     const sessions = await prisma.agentSession.findMany({
-      where: { projectId },
+      where: { project_id: projectId },
     });
     expect(sessions).toHaveLength(1);
     expect(sessions[0].state).toBe("working");
@@ -308,7 +308,7 @@ describe("syncProjectSessions", () => {
 
     // Verify recent session NOT deleted (race condition protection)
     const sessions = await prisma.agentSession.findMany({
-      where: { projectId },
+      where: { project_id: projectId },
     });
     expect(sessions).toHaveLength(1);
   });
@@ -369,7 +369,7 @@ describe("syncProjectSessions", () => {
     expect(result.created).toBe(1);
 
     const sessions = await prisma.agentSession.findMany({
-      where: { projectId },
+      where: { project_id: projectId },
     });
     expect(sessions).toHaveLength(1);
     expect(sessions[0].id).toBe("good-session");
@@ -404,7 +404,7 @@ describe("syncProjectSessions", () => {
     expect(result.created).toBe(1);
 
     const sessions = await prisma.agentSession.findMany({
-      where: { projectId },
+      where: { project_id: projectId },
     });
 
     // Should have both codex (untouched) and new claude session
@@ -442,7 +442,7 @@ describe("syncProjectSessions", () => {
     expect(result.created).toBe(0);
 
     const sessions = await prisma.agentSession.findMany({
-      where: { projectId },
+      where: { project_id: projectId },
     });
     expect(sessions).toHaveLength(1); // Only original codex session
   });
@@ -465,7 +465,7 @@ describe("syncProjectSessions", () => {
 
     // Verify no duplicates created
     const sessions = await prisma.agentSession.findMany({
-      where: { projectId },
+      where: { project_id: projectId },
     });
     expect(sessions).toHaveLength(2);
   });
