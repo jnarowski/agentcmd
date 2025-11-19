@@ -4,7 +4,7 @@
  */
 
 export {
-  AI_MODELS,
+  MODELS,
   type AiProvider,
   type AnthropicModelId,
   type OpenaiModelId,

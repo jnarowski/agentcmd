@@ -135,6 +135,7 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     // 7. Success messaging
     const boxWidth = 61; // Content width for success box
     const padBox = (text: string) => {
+      // eslint-disable-next-line no-control-regex
       const visible = text.replace(/\u001b\[[0-9;]*m/g, '');
       const spaces = boxWidth - visible.length;
       return text + ' '.repeat(Math.max(0, spaces));
@@ -168,6 +169,7 @@ export async function installCommand(options: InstallOptions): Promise<void> {
   } catch (error) {
     const boxWidth = 61;
     const padError = (text: string) => {
+      // eslint-disable-next-line no-control-regex
       const visible = text.replace(/\u001b\[[0-9;]*m/g, '');
       const spaces = boxWidth - visible.length;
       return text + ' '.repeat(Math.max(0, spaces));

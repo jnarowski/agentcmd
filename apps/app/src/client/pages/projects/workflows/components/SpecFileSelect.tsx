@@ -72,6 +72,7 @@ export function SpecFileSelect({
           )
         }
         renderOption={(option, selected) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const specType = (option as any).specType;
           return (
             <div className="flex flex-col gap-0.5">

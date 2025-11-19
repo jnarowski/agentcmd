@@ -32,7 +32,7 @@ export async function waitForServerReady(
         });
       });
       return; // Success!
-    } catch (error) {
+    } catch {
       // Wait before retry
       await new Promise((resolve) => setTimeout(resolve, interval));
     }

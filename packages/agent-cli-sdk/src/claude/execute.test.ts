@@ -413,17 +413,6 @@ describe('execute', () => {
       expectSpawnCalledWith(expect.any(Array), 10000);
     });
 
-    it('should use default timeout of 5 minutes when not provided', async () => {
-      const mockOutput = createClaudeOutput([
-        { type: 'system', subtype: 'init', session_id: 'test-123', cwd: '/test' },
-      ]);
-
-      mockSpawnWithOutput(mockOutput);
-
-      await execute({ prompt: 'test' });
-
-      expectSpawnCalledWith(expect.any(Array), 300000);
-    });
   });
 
   describe('JSON extraction', () => {

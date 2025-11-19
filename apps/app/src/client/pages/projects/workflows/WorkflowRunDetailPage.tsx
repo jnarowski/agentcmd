@@ -86,8 +86,10 @@ function WorkflowRunDetailPage() {
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold">{run.name}</h1>
             <WorkflowStatusBadge status={run.status} />
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {(run as any).pr_url && (
               <a
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 href={(run as any).pr_url}
                 target="_blank"
                 rel="noopener noreferrer"

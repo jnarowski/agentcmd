@@ -1,7 +1,7 @@
 import { generateText } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { config } from "@/server/config";
-import { AI_MODELS } from "@/shared/constants/ai";
+import { MODELS } from "@/shared/constants/ai";
 
 /**
  * Options for generating a session name
@@ -48,7 +48,7 @@ export async function generateSessionName(
 
     // Generate session name using AI
     const result = await generateText({
-      model: anthropic(AI_MODELS.anthropic.HAIKU_3_5),
+      model: anthropic(MODELS.anthropic.HAIKU_3_5),
       system: `You create concise 3-5 word names for chat sessions. You MUST follow these rules strictly:
 
 Rules:

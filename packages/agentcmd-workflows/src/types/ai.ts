@@ -10,7 +10,7 @@
 /**
  * All available AI models organized by provider
  */
-export const AI_MODELS = {
+export const MODELS = {
   anthropic: {
     HAIKU_3_5: "claude-3-5-haiku-20241022",
     SONNET_3_7: "claude-3-7-sonnet-20250219",
@@ -32,19 +32,19 @@ export const AI_MODELS = {
 /**
  * Supported AI providers
  */
-export type AiProvider = keyof typeof AI_MODELS;
+export type AiProvider = keyof typeof MODELS;
 
 /**
  * All Anthropic model IDs
  */
 export type AnthropicModelId =
-  (typeof AI_MODELS.anthropic)[keyof typeof AI_MODELS.anthropic];
+  (typeof MODELS.anthropic)[keyof typeof MODELS.anthropic];
 
 /**
  * All OpenAI model IDs
  */
 export type OpenaiModelId =
-  (typeof AI_MODELS.openai)[keyof typeof AI_MODELS.openai];
+  (typeof MODELS.openai)[keyof typeof MODELS.openai];
 
 /**
  * Any valid AI model ID (union of all providers)

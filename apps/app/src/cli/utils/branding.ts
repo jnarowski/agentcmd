@@ -13,6 +13,7 @@ export function showWelcomeBanner(): void {
   const reset = "\x1b[0m";
 
   const center = (text: string) => {
+    // eslint-disable-next-line no-control-regex
     const visible = text.replace(/\u001b\[[0-9;]*m/g, '');
     const spaces = width - visible.length;
     const leftPad = Math.floor(spaces / 2);
@@ -54,6 +55,7 @@ export function showBoxedOutput(title: string, content: string): void {
   const lines = content.trim().split('\n');
   const maxWidth = Math.max(
     title.length + 4,
+    // eslint-disable-next-line no-control-regex
     ...lines.map(line => line.replace(/\u001b\[[0-9;]*m/g, '').length)
   );
   const boxWidth = Math.min(maxWidth + 4, 75);
@@ -76,6 +78,7 @@ export function showBoxedOutput(title: string, content: string): void {
 export function showSuccessBox(title: string, items: string[], nextSteps?: string[], metadata?: Record<string, string>): void {
   const boxWidth = 61;
   const pad = (text: string) => {
+    // eslint-disable-next-line no-control-regex
     const visible = text.replace(/\u001b\[[0-9;]*m/g, '');
     const spaces = boxWidth - visible.length;
     return text + ' '.repeat(Math.max(0, spaces));
@@ -124,6 +127,7 @@ export function showSuccessBox(title: string, items: string[], nextSteps?: strin
 export function showErrorBox(title: string, message: string): void {
   const boxWidth = 61;
   const pad = (text: string) => {
+    // eslint-disable-next-line no-control-regex
     const visible = text.replace(/\u001b\[[0-9;]*m/g, '');
     const spaces = boxWidth - visible.length;
     return text + ' '.repeat(Math.max(0, spaces));

@@ -56,7 +56,7 @@ export type {
 } from "./types";
 
 // AI model constants and types
-export { AI_MODELS } from "./types/ai";
+export { MODELS } from "./types/ai";
 export type {
   AiProvider,
   AnthropicModelId,

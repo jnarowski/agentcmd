@@ -2,7 +2,7 @@ import { generateObject } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
 import { config } from "@/server/config";
-import { AI_MODELS } from "@/shared/constants/ai";
+import { MODELS } from "@/shared/constants/ai";
 
 /**
  * Options for generating run names
@@ -75,7 +75,7 @@ export async function generateRunNames(
 
     // Generate names using AI with structured output
     const result = await generateObject({
-      model: anthropic(AI_MODELS.anthropic.SONNET_4_5),
+      model: anthropic(MODELS.anthropic.SONNET_4_5),
       system: `You analyze specification documents and create concise names for workflow runs and git branches.
 
 Rules for run names:

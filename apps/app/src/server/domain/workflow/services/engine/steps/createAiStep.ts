@@ -8,7 +8,7 @@ import type {
   AiStepResult,
   StepOptions,
 } from "agentcmd-workflows";
-import { AI_MODELS } from "@/shared/constants/ai";
+import { MODELS } from "@/shared/constants/ai";
 import { executeStep } from "@/server/domain/workflow/services/engine/steps/utils/executeStep";
 import { withTimeout } from "@/server/domain/workflow/services/engine/steps/utils/withTimeout";
 import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
@@ -47,8 +47,8 @@ function createModel(
   const apiKey = getApiKey(provider, apiKeys);
 
   return provider === "anthropic"
-    ? createAnthropic({ apiKey })(modelName ?? AI_MODELS.anthropic.SONNET_4_5)
-    : createOpenAI({ apiKey })(modelName ?? AI_MODELS.openai.GPT_4);
+    ? createAnthropic({ apiKey })(modelName ?? MODELS.anthropic.SONNET_4_5)
+    : createOpenAI({ apiKey })(modelName ?? MODELS.openai.GPT_4);
 }
 
 /**

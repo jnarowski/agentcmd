@@ -243,15 +243,15 @@ export async function execute<T = unknown>(
 ): Promise<ClaudeExecuteResult<T> | CodexExecuteResult<T> | GeminiExecuteResult<T>> {
   switch (options.tool) {
     case 'claude': {
-      const { tool, ...claudeOptions } = options;
+      const { tool: _tool, ...claudeOptions } = options;
       return await executeClaudeCommand<T>(claudeOptions);
     }
     case 'codex': {
-      const { tool, ...codexOptions } = options;
+      const { tool: _tool, ...codexOptions } = options;
       return await executeCodexCommand<T>(codexOptions);
     }
     case 'gemini': {
-      const { tool, ...geminiOptions } = options;
+      const { tool: _tool, ...geminiOptions } = options;
       return await executeGeminiCommand<T>(geminiOptions);
     }
     default: {
