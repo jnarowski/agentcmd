@@ -48,8 +48,8 @@ describe("cancelSession - Current Behavior (Phase 1)", () => {
     // Setup: Mock session in database
     vi.mocked(prisma.agentSession.findUnique).mockResolvedValue({
       id: sessionId,
-      userId,
-      projectId: "test-project",
+      user_id: userId,
+      project_id: "test-project",
       agent: "claude",
       type: "chat",
       state: "working",
@@ -59,6 +59,11 @@ describe("cancelSession - Current Behavior (Phase 1)", () => {
       metadata: {},
       created_at: new Date(),
       updated_at: new Date(),
+      is_archived: false,
+      archived_at: null,
+      name_generated_at: null,
+      permission_mode: "default",
+      session_path: null,
     });
 
     // Setup: Store process in activeSessions by sessionId
@@ -95,8 +100,8 @@ describe("cancelSession - Current Behavior (Phase 1)", () => {
     // Setup: Mock session owned by different user
     vi.mocked(prisma.agentSession.findUnique).mockResolvedValue({
       id: sessionId,
-      userId: differentUserId,
-      projectId: "test-project",
+      user_id: differentUserId,
+      project_id: "test-project",
       agent: "claude",
       type: "chat",
       state: "working",
@@ -106,6 +111,11 @@ describe("cancelSession - Current Behavior (Phase 1)", () => {
       metadata: {},
       created_at: new Date(),
       updated_at: new Date(),
+      is_archived: false,
+      archived_at: null,
+      name_generated_at: null,
+      permission_mode: "default",
+      session_path: null,
     });
 
     // Execute
@@ -123,8 +133,8 @@ describe("cancelSession - Current Behavior (Phase 1)", () => {
     // Setup: Mock session in idle state
     vi.mocked(prisma.agentSession.findUnique).mockResolvedValue({
       id: sessionId,
-      userId,
-      projectId: "test-project",
+      user_id: userId,
+      project_id: "test-project",
       agent: "claude",
       type: "chat",
       state: "idle",
@@ -134,6 +144,11 @@ describe("cancelSession - Current Behavior (Phase 1)", () => {
       metadata: {},
       created_at: new Date(),
       updated_at: new Date(),
+      is_archived: false,
+      archived_at: null,
+      name_generated_at: null,
+      permission_mode: "default",
+      session_path: null,
     });
 
     // Execute
@@ -151,8 +166,8 @@ describe("cancelSession - Current Behavior (Phase 1)", () => {
     // Setup: Mock session in working state
     vi.mocked(prisma.agentSession.findUnique).mockResolvedValue({
       id: sessionId,
-      userId,
-      projectId: "test-project",
+      user_id: userId,
+      project_id: "test-project",
       agent: "claude",
       type: "chat",
       state: "working",
@@ -162,6 +177,11 @@ describe("cancelSession - Current Behavior (Phase 1)", () => {
       metadata: {},
       created_at: new Date(),
       updated_at: new Date(),
+      is_archived: false,
+      archived_at: null,
+      name_generated_at: null,
+      permission_mode: "default",
+      session_path: null,
     });
 
     // Setup: No process in activeSessions (race condition)

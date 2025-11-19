@@ -56,10 +56,8 @@ export function SessionListItem({
         to={`/projects/${projectId}/sessions/${id}`}
         onClick={handleClick}
         className={cn(
-          "block px-2.5 py-2 rounded-lg overflow-hidden relative border transition-all hover:bg-accent/50",
-          isActive
-            ? "border-primary/20 bg-accent/30"
-            : "border-transparent"
+          "block px-3 py-3 rounded-lg overflow-hidden relative transition-all hover:bg-accent/50",
+          isActive && "bg-accent/30"
         )}
       >
         <div className="flex items-start gap-2.5 min-w-0">
@@ -71,8 +69,8 @@ export function SessionListItem({
             )}
           />
           <div className="space-y-1 min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 text-sm leading-tight min-w-0">
-              <span className="truncate" title={displayName}>
+            <div className="flex items-center gap-1.5 leading-tight min-w-0">
+              <span className="truncate font-medium" title={displayName}>
                 {truncatedName}
               </span>
               {permission_mode === 'plan' && (

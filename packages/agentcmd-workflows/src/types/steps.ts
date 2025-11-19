@@ -42,6 +42,8 @@ export interface AgentStepConfig {
   context?: Record<string, unknown>;
   /** Permission mode for agent */
   permissionMode?: "default" | "plan" | "acceptEdits" | "bypassPermissions";
+  /** Load MCP servers from JSON files or strings (space-separated) */
+  mcpConfig?: string[];
   /** Enable JSON mode - automatically extract and parse JSON from response */
   json?: boolean;
   /** CLI session ID to resume (e.g., planning session's cli_session_id) */

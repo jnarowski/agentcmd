@@ -24,6 +24,8 @@ import { NewRunFormDialogArgSchemaFields } from "./NewRunFormDialogArgSchemaFiel
 import { SpecTypeSelect } from "./SpecTypeSelect";
 import { PlanningSessionSelect } from "./PlanningSessionSelect";
 import { SpecFileSelect } from "./SpecFileSelect";
+import { useBranchValidation } from "../hooks/useBranchValidation";
+import { sanitizeBranchForDirectory } from "@/shared/utils/sanitizeBranchForDirectory";
 
 interface NewRunFormProps {
   projectId: string;
@@ -113,7 +115,10 @@ export function NewRunForm({
   }, [initialName]);
 
   useEffect(() => {
-    if (initialPlanningSessionId && planningSessionId !== initialPlanningSessionId) {
+    if (
+      initialPlanningSessionId &&
+      planningSessionId !== initialPlanningSessionId
+    ) {
       setPlanningSessionId(initialPlanningSessionId);
       setSpecInputType("planning");
     }
@@ -144,6 +149,13 @@ export function NewRunForm({
 
   // Fetch available branches
   const { data: branches } = useProjectBranches(projectId, true);
+
+  // Validate branch name when in branch or worktree mode
+  const branchValidation = useBranchValidation(
+    projectId,
+    mode === "branch" || mode === "worktree" ? branchName : "",
+    mode === "branch" || mode === "worktree" ? baseBranch : undefined
+  );
 
   // Transform branches to combobox options
   const branchOptions = useMemo(() => {
@@ -418,9 +430,7 @@ export function NewRunForm({
                 value="planning"
                 className="flex-1 rounded-none data-[state=active]:border-b data-[state=active]:border-primary data-[state=active]:-mb-px text-xs sm:text-sm px-2 sm:px-4"
               >
-                <span className="hidden sm:inline">
-                  From Planning Session
-                </span>
+                <span className="hidden sm:inline">From Planning Session</span>
                 <span className="sm:hidden">Planning</span>
               </TabsTrigger>
               <TabsTrigger
@@ -611,6 +621,21 @@ export function NewRunForm({
                     onChange={(e) => setBranchName(e.target.value)}
                     disabled={createWorkflow.isPending}
                   />
+                  {branchValidation.isValidating && (
+                    <p className="text-xs text-muted-foreground">
+                      Validating branch name...
+                    </p>
+                  )}
+                  {branchValidation.branchExists && (
+                    <p className="text-xs text-red-600 dark:text-red-400">
+                      Branch already exists. Please choose a different name.
+                    </p>
+                  )}
+                  {branchValidation.error && !branchValidation.branchExists && (
+                    <p className="text-xs text-red-600 dark:text-red-400">
+                      {branchValidation.error}
+                    </p>
+                  )}
                 </div>
                 {/* Branch From (optional) */}
                 <div>
@@ -689,6 +714,26 @@ export function NewRunForm({
                     onChange={(e) => setBranchName(e.target.value)}
                     disabled={createWorkflow.isPending}
                   />
+                  {branchValidation.isValidating && (
+                    <p className="text-xs text-muted-foreground">
+                      Validating branch name...
+                    </p>
+                  )}
+                  {branchValidation.branchExists && (
+                    <p className="text-xs text-red-600 dark:text-red-400">
+                      Branch already exists. Please choose a different name.
+                    </p>
+                  )}
+                  {branchValidation.error && !branchValidation.branchExists && (
+                    <p className="text-xs text-red-600 dark:text-red-400">
+                      {branchValidation.error}
+                    </p>
+                  )}
+                  {branchName && (
+                    <p className="text-xs text-muted-foreground">
+                      → Worktree directory: <code className="text-xs">.worktrees/run-&lt;id&gt;-{sanitizeBranchForDirectory(branchName)}</code>
+                    </p>
+                  )}
                 </div>
                 {/* Branch From (optional) */}
                 <div>
@@ -789,7 +834,9 @@ export function NewRunForm({
             (!definitionId &&
               definitions &&
               definitions.length > 0 &&
-              !selectedDefinitionId)
+              !selectedDefinitionId) ||
+            branchValidation.isValidating ||
+            branchValidation.branchExists
           }
           className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
         >

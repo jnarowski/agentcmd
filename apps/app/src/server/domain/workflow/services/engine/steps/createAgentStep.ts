@@ -94,6 +94,7 @@ export function createAgentStep(
               prompt: config.prompt,
               workingDir: config.workingDir ?? context.projectPath,
               permissionMode: "bypassPermissions", // Hardcoded to bypass permissions in workflows
+              mcpConfig: config.mcpConfig,
               json: config.json,
               timeout,
               onEvent: async ({ message }) => {

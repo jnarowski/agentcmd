@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronsUpDown, LogOut, Settings } from "lucide-react";
+import { BookOpen, ChevronsUpDown, FolderKanban, LogOut, Settings } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -18,6 +18,7 @@ import {
 import { SettingsDialog } from "@/client/components/SettingsDialog";
 import { useWebSocket } from "@/client/hooks/useWebSocket";
 import { ReadyState } from "@/shared/types/websocket.types";
+import { getWebsiteUrl } from "@/client/utils/envConfig";
 
 export function NavUser({
   user,
@@ -92,9 +93,21 @@ export function NavUser({
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <a href="/projects">
+                  <FolderKanban />
+                  Projects
+                </a>
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setIsSettingsOpen(true)}>
                 <Settings />
                 Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <a href={`${getWebsiteUrl()}/docs`} target="_blank" rel="noopener noreferrer">
+                  <BookOpen />
+                  Documentation
+                </a>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onLogout}>

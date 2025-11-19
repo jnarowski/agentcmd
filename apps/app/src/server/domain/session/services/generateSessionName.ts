@@ -9,6 +9,8 @@ import { MODELS } from "@/shared/constants/ai";
 export interface GenerateSessionNameOptions {
   /** The initial user prompt/message to base the session name on */
   userPrompt: string;
+  /** Optional first assistant response to provide additional context */
+  assistantResponse?: string;
 }
 
 /**
@@ -29,7 +31,7 @@ export interface GenerateSessionNameOptions {
 export async function generateSessionName(
   options: GenerateSessionNameOptions
 ): Promise<string> {
-  const { userPrompt } = options;
+  const { userPrompt, assistantResponse } = options;
 
   const apiKey = config.apiKeys.anthropicApiKey;
 
@@ -43,8 +45,15 @@ export async function generateSessionName(
   }
 
   try {
-    // Truncate prompt to control token costs (keep first 200 chars)
-    const truncatedPrompt = userPrompt.substring(0, 200);
+    // Truncate to control token costs (250 chars each, ~500 total)
+    const truncatedUserPrompt = userPrompt.substring(0, 250);
+    const truncatedAssistantResponse = assistantResponse?.substring(0, 250);
+
+    // Build context with both messages when available
+    let contextPrompt = `User: ${truncatedUserPrompt}`;
+    if (truncatedAssistantResponse) {
+      contextPrompt += `\n\nAssistant: ${truncatedAssistantResponse}`;
+    }
 
     // Generate session name using AI
     const result = await generateText({
@@ -67,7 +76,7 @@ Examples:
 
 Response:
 Your response must be ONLY the 3-5 word name, nothing else.`,
-      prompt: `Create a 3-5 word name for this chat session:\n\n${truncatedPrompt}`,
+      prompt: `Create a 3-5 word name for this chat session:\n\n${contextPrompt}`,
       temperature: 0.7,
     });
 

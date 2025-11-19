@@ -14,8 +14,8 @@ import type { AgentSessionMetadata } from "@/shared/types/agent-session.types";
  * Options for bulk session name generation
  */
 export interface BulkGenerateSessionNamesOptions {
-  /** Project ID to generate names for */
-  projectId: string;
+  /** Project ID to generate names for (optional - if not provided, names across all projects) */
+  projectId?: string;
   /** User ID (for authorization) */
   userId: string;
   /** Maximum number of sessions to process (default: 50) */
@@ -74,8 +74,8 @@ export async function bulkGenerateSessionNames({
   // Get sessions needing names (most recent first)
   const sessions = await prisma.agentSession.findMany({
     where: {
-      projectId,
-      userId,
+      ...(projectId && { project_id: projectId }), // Only filter by project if provided
+      user_id: userId,
       name: null,
       name_generated_at: null,
       is_archived: false,
@@ -174,8 +174,11 @@ async function processSession(
   }
 
   try {
-    // Generate name using AI
-    const name = await generateSessionName({ userPrompt });
+    // Generate name using AI (pass both user and assistant messages for context)
+    const name = await generateSessionName({
+      userPrompt,
+      assistantResponse: metadata.firstAssistantMessage,
+    });
 
     // Update session with name and timestamp
     await prisma.agentSession.update({

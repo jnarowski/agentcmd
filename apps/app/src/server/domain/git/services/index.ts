@@ -2,6 +2,7 @@
 export * from './getCurrentBranch';
 export * from './getGitStatus';
 export * from './getBranches';
+export * from './validateBranch';
 export * from './createAndSwitchBranch';
 export * from './switchBranch';
 export * from './stageFiles';

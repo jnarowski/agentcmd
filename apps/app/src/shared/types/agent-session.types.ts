@@ -17,7 +17,8 @@ export interface AgentSessionMetadata {
   totalTokens: number;
   messageCount: number;
   lastMessageAt: string; // ISO 8601 timestamp
-  firstMessagePreview: string; // First user message preview (truncated)
+  firstMessagePreview: string; // First user message preview (truncated to 100 chars)
+  firstAssistantMessage?: string; // First assistant text response (truncated to 250 chars)
   createdAt?: string; // ISO 8601 timestamp from first JSONL entry
   isPlanSession?: boolean; // True if session contains Plan Task tool uses
 }

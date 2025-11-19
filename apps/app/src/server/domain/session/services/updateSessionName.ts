@@ -16,7 +16,7 @@ export async function updateSessionName({
     const session = await prisma.agentSession.findFirst({
       where: {
         id: sessionId,
-        userId,
+        user_id: userId,
       },
     });
 
@@ -32,8 +32,8 @@ export async function updateSessionName({
 
     return {
       id: updatedSession.id,
-      projectId: updatedSession.projectId,
-      userId: updatedSession.userId,
+      projectId: updatedSession.project_id,
+      userId: updatedSession.user_id,
       name: updatedSession.name ?? undefined,
       agent: updatedSession.agent,
       type: updatedSession.type as SessionType,

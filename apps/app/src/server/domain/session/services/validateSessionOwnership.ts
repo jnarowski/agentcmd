@@ -23,7 +23,7 @@ export async function validateSessionOwnership({
     throw new Error("Session not found");
   }
 
-  if (session.userId !== userId) {
+  if (session.user_id !== userId) {
     throw new Error("Unauthorized access to session");
   }
 

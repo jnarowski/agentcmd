@@ -131,9 +131,10 @@ CREATE TABLE "users" (
 -- CreateTable
 CREATE TABLE "agent_sessions" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    "projectId" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
+    "project_id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
     "name" TEXT,
+    "name_generated_at" DATETIME,
     "agent" TEXT NOT NULL DEFAULT 'claude',
     "type" TEXT NOT NULL DEFAULT 'chat',
     "permission_mode" TEXT NOT NULL DEFAULT 'default',
@@ -146,8 +147,8 @@ CREATE TABLE "agent_sessions" (
     "archived_at" DATETIME,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" DATETIME NOT NULL,
-    CONSTRAINT "agent_sessions_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "projects" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "agent_sessions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT "agent_sessions_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "projects" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "agent_sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateIndex
@@ -223,10 +224,10 @@ CREATE UNIQUE INDEX "projects_path_key" ON "projects"("path");
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
-CREATE INDEX "agent_sessions_projectId_updated_at_idx" ON "agent_sessions"("projectId", "updated_at");
+CREATE INDEX "agent_sessions_project_id_updated_at_idx" ON "agent_sessions"("project_id", "updated_at");
 
 -- CreateIndex
-CREATE INDEX "agent_sessions_userId_updated_at_idx" ON "agent_sessions"("userId", "updated_at");
+CREATE INDEX "agent_sessions_user_id_updated_at_idx" ON "agent_sessions"("user_id", "updated_at");
 
 -- CreateIndex
 CREATE INDEX "agent_sessions_cli_session_id_idx" ON "agent_sessions"("cli_session_id");

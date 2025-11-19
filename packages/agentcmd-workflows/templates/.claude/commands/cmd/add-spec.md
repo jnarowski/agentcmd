@@ -1,6 +1,6 @@
 ---
 description: Add implementation spec to existing PRD folder
-argument-hint: [spec-id]
+argument-hint: [specId]
 ---
 
 # Add Spec to Existing Folder

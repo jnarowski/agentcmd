@@ -1,6 +1,6 @@
 # Git Branch Validation for NewRunForm
 
-**Status**: draft
+**Status**: review
 **Created**: 2025-11-18
 **Package**: apps/app
 **Total Complexity**: 26 points
@@ -139,12 +139,12 @@ Update NewRunForm to display validation feedback inline with the branch name inp
 
 **Phase Complexity**: 11 points (avg 3.7/10)
 
-- [ ] 1.1 [3/10] Create `ValidateBranchOptions` type
+- [x] 1.1 [3/10] Create `ValidateBranchOptions` type
   - Define interface with `projectPath`, `branchName`, and optional `baseBranch`
   - File: `apps/app/src/server/domain/git/types/ValidateBranchOptions.ts`
   - Follow pattern from `GetBranchesOptions.ts`
 
-- [ ] 1.2 [5/10] Create `validateBranch` service
+- [x] 1.2 [5/10] Create `validateBranch` service
   - Export `validateBranch({ projectPath, branchName, baseBranch? })` function
   - Call `getBranches({ projectPath })` to fetch current branches
   - Validate branch name format with regex `/^[a-zA-Z0-9_/.-]+$/`
@@ -154,7 +154,7 @@ Update NewRunForm to display validation feedback inline with the branch name inp
   - File: `apps/app/src/server/domain/git/services/validateBranch.ts`
   - Add JSDoc comments
 
-- [ ] 1.3 [3/10] Add validation endpoint to projects router
+- [x] 1.3 [3/10] Add validation endpoint to projects router
   - Add `POST /api/projects/:id/validate-branch` route
   - Request schema: `{ branchName: z.string(), baseBranch: z.string().optional() }`
   - Response schema: `{ valid: boolean, branchExists: boolean, baseBranchExists: z.boolean().optional(), error: z.string().optional() }`
@@ -165,16 +165,17 @@ Update NewRunForm to display validation feedback inline with the branch name inp
 
 #### Completion Notes
 
-- What was implemented:
-- Deviations from plan (if any):
-- Important context or decisions:
-- Known issues or follow-ups (if any):
+- Created `ValidateBranchOptions` type with Zod schema following `GetBranchesOptions` pattern
+- Implemented `validateBranch` service with branch name format validation, existence check, and base branch validation
+- Added `POST /api/projects/:id/validate-branch` endpoint with proper authentication and error handling
+- Exported `validateBranch` from git services index
+- All backend validation logic complete and follows existing patterns
 
 ### Phase 2: Frontend Hook
 
 **Phase Complexity**: 7 points (avg 3.5/10)
 
-- [ ] 2.1 [4/10] Create `useBranchValidation` hook
+- [x] 2.1 [4/10] Create `useBranchValidation` hook
   - Export `useBranchValidation(projectId: string, branchName: string, baseBranch?: string)`
   - Use `useState` for validation state: `{ isValidating, branchExists, baseBranchExists, error }`
   - Use `useEffect` with dependencies `[projectId, branchName, baseBranch]`
@@ -185,7 +186,7 @@ Update NewRunForm to display validation feedback inline with the branch name inp
   - Clean up timeout on unmount
   - File: `apps/app/src/client/pages/projects/workflows/hooks/useBranchValidation.ts`
 
-- [ ] 2.2 [3/10] Add TypeScript types for validation response
+- [x] 2.2 [3/10] Add TypeScript types for validation response
   - Define `BranchValidationResult` interface
   - Match backend response schema
   - Export from hook file for reuse
@@ -193,29 +194,31 @@ Update NewRunForm to display validation feedback inline with the branch name inp
 
 #### Completion Notes
 
-- What was implemented:
-- Deviations from plan (if any):
-- Important context or decisions:
-- Known issues or follow-ups (if any):
+- Created `useBranchValidation` hook with debounced validation logic
+- Implemented 500ms debounce using `useEffect` and `setTimeout`
+- Added proper cleanup to cancel pending timeouts on unmount
+- Defined `BranchValidationResult` and `ValidationState` interfaces
+- Hook only validates when branch name is non-empty to avoid unnecessary API calls
+- Includes error handling for failed API requests
 
 ### Phase 3: Form Integration
 
 **Phase Complexity**: 8 points (avg 2.7/10)
 
-- [ ] 3.1 [4/10] Integrate validation hook into NewRunForm
+- [x] 3.1 [4/10] Integrate validation hook into NewRunForm
   - Import `useBranchValidation` hook
   - Call hook: `const validation = useBranchValidation(projectId, branchName, baseBranch)`
   - Only call when `mode === 'branch' || mode === 'worktree'`
   - File: `apps/app/src/client/pages/projects/workflows/components/NewRunForm.tsx`
 
-- [ ] 3.2 [2/10] Add validation UI feedback
+- [x] 3.2 [2/10] Add validation UI feedback
   - Show spinner in branch name input when `validation.isValidating` is true
   - Display inline error below input when `validation.branchExists` is true
   - Error message: "Branch already exists. Please choose a different name."
   - Use existing error styling pattern (text-xs text-red-600)
   - File: `apps/app/src/client/pages/projects/workflows/components/NewRunForm.tsx` (lines 605-614 for branch mode, 683-692 for worktree mode)
 
-- [ ] 3.3 [2/10] Update submit button validation
+- [x] 3.3 [2/10] Update submit button validation
   - Disable submit when `validation.isValidating` is true
   - Prevent submit when `validation.branchExists` is true
   - Keep existing client-side validation (lines 280-286) as fallback
@@ -223,10 +226,11 @@ Update NewRunForm to display validation feedback inline with the branch name inp
 
 #### Completion Notes
 
-- What was implemented:
-- Deviations from plan (if any):
-- Important context or decisions:
-- Known issues or follow-ups (if any):
+- Integrated `useBranchValidation` hook into NewRunForm component
+- Hook only validates when mode is 'branch' or 'worktree' to avoid unnecessary API calls
+- Added validation UI feedback for both branch and worktree modes with loading and error states
+- Submit button now disabled when validating or when branch already exists
+- Error messages display inline below branch name inputs with consistent styling
 
 ## Testing Strategy
 

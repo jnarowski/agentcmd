@@ -79,9 +79,17 @@
       "folder": "2511181832-branch-validation",
       "path": "todo/2511181832-branch-validation/spec.md",
       "spec_type": "feature",
-      "status": "draft",
+      "status": "review",
       "created": "2025-11-18T18:32:00.000Z",
-      "updated": "2025-11-18T18:32:00.000Z"
+      "updated": "2025-11-18T23:59:00.000Z"
+    },
+    "2511190555": {
+      "folder": "2511190555-session-theme-system",
+      "path": "todo/2511190555-session-theme-system/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-19T12:57:47Z",
+      "updated": "2025-11-19T12:57:47Z"
     }
   }
 }

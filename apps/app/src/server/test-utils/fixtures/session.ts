@@ -34,8 +34,8 @@ export async function createTestSession(
 
   const session = await prisma.agentSession.create({
     data: {
-      projectId,
-      userId,
+      project_id: projectId,
+      user_id: userId,
       name,
       agent,
       state,

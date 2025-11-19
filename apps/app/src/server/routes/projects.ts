@@ -13,7 +13,7 @@ import {
 } from "@/server/domain/project/services";
 import { getAvailableSpecTypes } from "@/server/domain/workflow/services/getAvailableSpecTypes";
 import { installWorkflowPackage } from "@/server/domain/project/services/installWorkflowPackage";
-import { getBranches } from "@/server/domain/git/services";
+import { getBranches, validateBranch } from "@/server/domain/git/services";
 import { getFileTree, readFile, writeFile } from "@/server/domain/file/services/index";
 import { scanSpecs } from "@/server/domain/spec/services/scanSpecs";
 import {
@@ -80,7 +80,7 @@ export async function projectRoutes(fastify: FastifyInstance) {
           return reply.code(401).send(buildErrorResponse(401, "Unauthorized"));
         }
 
-        const syncResults = await syncFromClaudeProjects({ userId });
+        const syncResults = await syncFromClaudeProjects({ userId, logger: request.log });
 
         // Trigger workflow rescan to detect workflows in newly synced projects
         if (fastify.reloadWorkflowEngine) {
@@ -210,6 +210,57 @@ export async function projectRoutes(fastify: FastifyInstance) {
       const branches = await getBranches({ projectPath: project.path });
 
       return reply.send({ data: branches });
+    }
+  );
+
+  /**
+   * POST /api/projects/:id/validate-branch
+   * Validate a branch name for a project
+   */
+  fastify.post<{
+    Params: { id: string };
+    Body: { branchName: string; baseBranch?: string };
+  }>(
+    "/api/projects/:id/validate-branch",
+    {
+      preHandler: fastify.authenticate,
+      schema: {
+        params: projectIdSchema,
+        body: z.object({
+          branchName: z.string(),
+          baseBranch: z.string().optional(),
+        }),
+        response: {
+          200: z.object({
+            data: z.object({
+              valid: z.boolean(),
+              branchExists: z.boolean(),
+              baseBranchExists: z.boolean().optional(),
+              error: z.string().optional(),
+            }),
+          }),
+          404: errorResponse,
+        },
+      },
+    },
+    async (request, reply) => {
+      const project = await getProjectById({ id: request.params.id });
+
+      if (!project) {
+        return reply
+          .code(404)
+          .send(buildErrorResponse(404, "Project not found"));
+      }
+
+      const { branchName, baseBranch } = request.body;
+
+      const result = await validateBranch({
+        projectPath: project.path,
+        branchName,
+        baseBranch,
+      });
+
+      return reply.send({ data: result });
     }
   );
 

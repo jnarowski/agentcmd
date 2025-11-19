@@ -21,7 +21,7 @@ export async function getSessionMessages({
     throw new Error(`Session not found: ${sessionId}`);
   }
 
-  if (session.userId !== userId) {
+  if (session.user_id !== userId) {
     throw new Error('Unauthorized access to session');
   }
 

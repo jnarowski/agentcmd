@@ -62,7 +62,7 @@ describe("createSession", () => {
       where: { id: sessionId },
     });
     expect(dbSession).toBeTruthy();
-    expect(dbSession?.projectId).toBe(projectId);
+    expect(dbSession?.project_id).toBe(projectId);
   });
 
   it("creates session with custom agent type", async () => {
@@ -253,7 +253,7 @@ describe("createSession", () => {
 
     // Verify both exist in database
     const count = await prisma.agentSession.count({
-      where: { projectId },
+      where: { project_id: projectId },
     });
     expect(count).toBe(2);
   });
@@ -276,7 +276,7 @@ describe("createSession", () => {
 
     // Verify all in database
     const count = await prisma.agentSession.count({
-      where: { projectId },
+      where: { project_id: projectId },
     });
     expect(count).toBe(5);
   });

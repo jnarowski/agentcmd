@@ -24,6 +24,7 @@ export interface AgentExecuteConfig {
   sessionId: string;
   resume?: boolean;
   permissionMode?: "default" | "acceptEdits" | "bypassPermissions";
+  mcpConfig?: string[];
   model?: string;
   images?: { path: string }[];
   onEvent?: (data: { raw: string; event: unknown; message: unknown | null }) => void;

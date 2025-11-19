@@ -1,6 +1,6 @@
 {
   "name": "agentcmd-workflows",
-  "version": "1.0.23",
+  "version": "1.0.25",
   "description": "Type-safe workflow SDK for agentcmd workflow engine",
   "type": "module",
   "main": "./dist/index.js",
@@ -32,8 +32,8 @@
     "dev": "bunchee --watch",
     "clean": "rm -rf dist",
     "check-types": "tsc --noEmit",
-    "gen-slash-types": "node dist/cli.js generate-slash-types",
-    "gen-slash-types:monorepo": "node dist/cli.js generate-slash-types --input ../../.claude/commands --output ../../.agent/generated/slash-commands.ts",
+    "generate-slash-types": "node dist/cli.js generate-slash-types",
+    "generate-slash-types:monorepo": "node dist/cli.js generate-slash-types --input ../../.claude/commands --output ../../.agent/generated/slash-commands.ts",
     "generate:command:types": "tsx src/cli/generateTemplateCommandTypes.ts",
     "sync:commands": "cp -r ../../.claude/commands/cmd templates/.claude/commands/",
     "sync:workflows": "node scripts/sync-workflows.js",

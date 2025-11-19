@@ -21,6 +21,7 @@ export interface AgentExecuteConfig {
   sessionId: string; // CLI session ID passed to agent
   resume?: boolean;
   permissionMode?: PermissionMode;
+  mcpConfig?: string[];
   model?: string;
   images?: { path: string }[];
   json?: boolean;
@@ -58,6 +59,7 @@ export async function executeAgent<T = string>(
     sessionId,
     resume,
     permissionMode,
+    mcpConfig,
     model,
     images,
     json,
@@ -74,6 +76,7 @@ export async function executeAgent<T = string>(
       sessionId, // CLI receives the session ID (could be resumed)
       resume,
       permissionMode,
+      mcpConfig,
       model,
       verbose: true,
       images,

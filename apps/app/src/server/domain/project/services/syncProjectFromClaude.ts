@@ -2,7 +2,7 @@ import fs from "fs/promises";
 import fsSync from "fs";
 import path from "path";
 import readline from "readline";
-import { syncProjectSessions } from "@/server/domain/session/services";
+import { syncProjectSessions, bulkGenerateSessionNames } from "@/server/domain/session/services";
 import { getClaudeProjectsDir } from "@/server/utils/path";
 import type { SyncProjectsResponse } from "@/shared/types/project-sync.types";
 import type { SyncFromClaudeProjectsOptions } from "@/server/domain/project/types/SyncFromClaudeProjectsOptions";
@@ -140,7 +140,7 @@ async function extractProjectDirectory(projectName: string): Promise<string> {
  * @param options - Options object with userId
  * @returns Sync statistics
  */
-export async function syncFromClaudeProjects({ userId }: SyncFromClaudeProjectsOptions): Promise<SyncProjectsResponse> {
+export async function syncFromClaudeProjects({ userId, logger }: SyncFromClaudeProjectsOptions): Promise<SyncProjectsResponse> {
   let projectsImported = 0;
   let projectsUpdated = 0;
   let totalSessionsSynced = 0;
@@ -212,6 +212,21 @@ export async function syncFromClaudeProjects({ userId }: SyncFromClaudeProjectsO
     });
 
     totalSessionsSynced += sessionsSyncResult.synced;
+  }
+
+  // After all projects synced, trigger bulk naming for most recent 50 unnamed sessions
+  // across all projects (fire-and-forget, non-blocking)
+  if (totalSessionsSynced > 0) {
+    bulkGenerateSessionNames({
+      userId,
+      limit: 50,
+      logger,
+    }).catch((err) => {
+      logger.error(
+        { err, userId },
+        "Background session naming failed after project sync (non-critical)"
+      );
+    });
   }
 
   return {

@@ -16,6 +16,7 @@ Reviews a previous agent's implementation work by comparing the provided spec fi
 ## Spec File Resolution
 
 **Parse and resolve $specIdOrNameOrPath:**
+
 - If it's a full path (contains `/`): use as-is
 - Otherwise, look up in `.agent/specs/index.json`:
   - For timestamp ID: Match by `id` field
@@ -94,7 +95,6 @@ Use these guidelines to determine what issues to document:
 ## Workflow
 
 1. **Validate Inputs**
-
    - **Parse and resolve $specIdOrNameOrPath:**
      - If it's a full file path (contains `/`):
        - Use the path as-is
@@ -122,7 +122,6 @@ Use these guidelines to determine what issues to document:
    - If `$review-count <= $max-reviews`: Continue to step 2
 
 2. **Gather Context**
-
    - Run `git diff [main-branch]...HEAD` to see all code changes
    - Run `git log [main-branch]...HEAD --oneline` to see commit history
    - Read spec file completely (`$specFilePath`)
@@ -134,7 +133,6 @@ Use these guidelines to determine what issues to document:
      - Note all previously identified issues to track which were fixed
 
 3. **Perform Review**
-
    - **If $review-count > 1, verify previous findings were addressed:**
      - For each issue from the most recent Review Findings section:
        - Check if it was fixed in the code
@@ -153,7 +151,6 @@ Use these guidelines to determine what issues to document:
    - **Check context**: Read comments before flagging unusual patterns
 
 4. **Document Findings**
-
    - Append new `## Review Findings` section to spec file using template below
    - **Section naming:**
      - First review ($review-count = 1): `## Review Findings`
@@ -174,7 +171,6 @@ Use these guidelines to determine what issues to document:
      - Write updated index back to `.agent/specs/index.json`
 
 5. **Report Results**
-
    - Summary: iteration X of 3, files reviewed, issue counts by priority
    - Next step:
      - If issues found: `/implement-spec $specIdOrNameOrPath` then `/review-spec-implementation $specIdOrNameOrPath`
@@ -335,24 +331,25 @@ If the review finds zero HIGH or MEDIUM priority issues, use this simplified tem
 
 <json_output>
 {
-  "success": true,
-  "review_iteration": 2,
-  "max_iterations": 3,
-  "max_iterations_reached": false,
-  "spec_path": ".agent/specs/feature.md",
-  "branch": "feat/feature-name",
-  "commits_reviewed": 5,
-  "issues_found": 5,
-  "previous_issues_resolved": 3,
-  "priority_breakdown": {
-    "high": 2,
-    "medium": 3
-  },
-  "categories": {
-    "missing_implementations": 1,
-    "incomplete_implementations": 2,
-    "code_quality": 2
-  }
+"success": true,
+"review_iteration": 2,
+"max_iterations": 3,
+"max_iterations_reached": false,
+"spec_path": ".agent/specs/feature.md",
+"branch": "feat/feature-name",
+"commits_reviewed": 5,
+"issues_found": 5,
+"previous_issues_resolved": 3,
+"priority_breakdown": {
+"high": 2,
+"medium": 3
+},
+"categories": {
+"missing_implementations": 1,
+"incomplete_implementations": 2,
+"code_quality": 2
+},
+"explanation": "Implementation incomplete with 5 issues found (2 high, 3 medium priority). High priority issues include missing error handling in authentication service and incomplete validation logic. Medium priority issues involve code duplication and missing edge case handling. 3 issues from previous review were successfully resolved."
 }
 </json_output>
 
@@ -369,13 +366,13 @@ If the review finds zero HIGH or MEDIUM priority issues, use this simplified tem
 - `previous_issues_resolved`: Count of issues from previous review that were fixed (0 if first review)
 - `priority_breakdown`: Counts by priority level
 - `categories`: Counts by issue category
+- `explanation`: Human-readable summary explaining why the review passed/failed, including highlights of key issues and what was fixed from previous reviews
 
 ### Text
 
 Otherwise, provide this human-readable information to the user:
 
 1. **Review Summary:**
-
    - Review iteration: [current count] of $max-reviews
    - Spec file reviewed: [path]
    - Branch compared: [current] vs [main/master]
@@ -383,7 +380,6 @@ Otherwise, provide this human-readable information to the user:
    - Total issues found: [count]
 
 2. **Issue Breakdown by Category:**
-
    - HIGH Priority: [count]
    - MEDIUM Priority: [count]
    - By category:
@@ -393,7 +389,6 @@ Otherwise, provide this human-readable information to the user:
      - [Other categories with counts...]
 
 3. **Updated Spec Location:**
-
    - Path: [path to spec file with Review Findings section]
 
 4. **Next Steps:**

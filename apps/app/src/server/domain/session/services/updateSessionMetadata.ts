@@ -33,8 +33,8 @@ export async function updateSessionMetadata({
 
     return {
       id: updatedSession.id,
-      projectId: updatedSession.projectId,
-      userId: updatedSession.userId,
+      projectId: updatedSession.project_id,
+      userId: updatedSession.user_id,
       name: updatedSession.name ?? undefined,
       agent: updatedSession.agent,
       type: updatedSession.type as SessionType,
