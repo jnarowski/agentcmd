@@ -729,6 +729,11 @@ export function NewRunForm({
                       {branchValidation.error}
                     </p>
                   )}
+                  {branchName && (
+                    <p className="text-xs text-muted-foreground">
+                      → Worktree directory: <code className="text-xs">{sanitizeBranchForDirectory(branchName)}</code>
+                    </p>
+                  )}
                 </div>
                 {/* Branch From (optional) */}
                 <div>

@@ -80,7 +80,7 @@ export async function projectRoutes(fastify: FastifyInstance) {
           return reply.code(401).send(buildErrorResponse(401, "Unauthorized"));
         }
 
-        const syncResults = await syncFromClaudeProjects({ userId });
+        const syncResults = await syncFromClaudeProjects({ userId, logger: request.log });
 
         // Trigger workflow rescan to detect workflows in newly synced projects
         if (fastify.reloadWorkflowEngine) {

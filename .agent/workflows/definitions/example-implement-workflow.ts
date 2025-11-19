@@ -20,42 +20,33 @@ import {
 
 export default defineWorkflow(
   {
-    id: "implement-review-recurisive-workflow",
-    name: "Implement Review Recurisive Workflow",
-    description:
-      "Implements a spec file and reviews the implementation recursively",
+    id: "implement-workflow",
+    name: "Implement Workflow",
+    description: "Implements a spec iteratively until it is complete",
     phases: [
-      { id: "setup", label: "Setup" },
       { id: "implement", label: "Implement" },
       { id: "review", label: "Review" },
     ],
   },
   async ({ event, step }) => {
     const { workingDir, specFile } = event.data;
-
-    /**
-     * Implements spec with retry until success (up to 10 attempts).
-     * Resumes from last checked task if agent stops mid-implementation.
-     *
-     * Calls: /cmd:implement-spec (see .claude/commands/cmd/implement-spec.md)
-     */
     async function implementUntilComplete() {
       const MAX_ITERATIONS = 10;
       let lastResponse: CmdImplementSpecResponse | undefined;
 
       for (let i = 1; i <= MAX_ITERATIONS; i++) {
-        const result = await step.agent<CmdImplementSpecResponse>(
-          `implement-spec-${i}`,
-          {
-            agent: "claude",
-            json: true,
-            prompt: buildSlashCommand("/cmd:implement-spec", {
-              specIdOrNameOrPath: specFile,
-              format: "json",
-            }),
-            workingDir,
-          }
-        );
+        const stepName = `implement-spec-${i}`;
+        const prompt = buildSlashCommand("/cmd:implement-spec", {
+          specIdOrNameOrPath: specFile,
+          format: "json",
+        });
+
+        const result = await step.agent<CmdImplementSpecResponse>(stepName, {
+          agent: "claude",
+          json: true,
+          prompt,
+          workingDir,
+        });
 
         lastResponse = result.data;
 
@@ -83,6 +74,13 @@ export default defineWorkflow(
           workingDir,
         }
       );
+
+      if (!response.success) {
+        await step.annotation("review-failed", {
+          message:
+            "Review did not pass. Explanation: " + response.data.explanation,
+        });
+      }
 
       return response;
     });
