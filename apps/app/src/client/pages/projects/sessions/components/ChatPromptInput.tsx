@@ -189,7 +189,7 @@ const ChatPromptInputInner = forwardRef<
             "pb-2 md:pb-0",
             "transition-colors",
             permissionMode === "plan" &&
-              "border-green-500 md:has-[[data-slot=input-group-control]:focus-visible]:border-green-500",
+              "border-primary md:has-[[data-slot=input-group-control]:focus-visible]:border-primary",
             permissionMode === "acceptEdits" &&
               "border-purple-500 md:has-[[data-slot=input-group-control]:focus-visible]:border-purple-500",
             permissionMode === "bypassPermissions" &&
@@ -261,7 +261,7 @@ const ChatPromptInputInner = forwardRef<
                       className={cn(
                         "h-8 w-8 transition-colors",
                         permissionMode === "plan" &&
-                          "bg-green-500 hover:bg-green-600 text-white",
+                          "bg-primary hover:bg-primary/90 text-primary-foreground",
                         permissionMode === "acceptEdits" &&
                           "bg-purple-500 hover:bg-purple-600 text-white",
                         permissionMode === "bypassPermissions" &&

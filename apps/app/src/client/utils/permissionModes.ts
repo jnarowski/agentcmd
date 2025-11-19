@@ -26,7 +26,7 @@ export const PERMISSION_MODES: ReadonlyArray<PermissionModeConfig> = [
     id: "plan",
     name: "Plan Mode",
     shortName: "Plan",
-    color: "bg-green-500",
+    color: "bg-primary",
   },
   {
     id: "acceptEdits",
