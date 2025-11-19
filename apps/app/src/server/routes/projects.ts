@@ -13,7 +13,7 @@ import {
 } from "@/server/domain/project/services";
 import { getAvailableSpecTypes } from "@/server/domain/workflow/services/getAvailableSpecTypes";
 import { installWorkflowPackage } from "@/server/domain/project/services/installWorkflowPackage";
-import { getBranches } from "@/server/domain/git/services";
+import { getBranches, validateBranch } from "@/server/domain/git/services";
 import { getFileTree, readFile, writeFile } from "@/server/domain/file/services/index";
 import { scanSpecs } from "@/server/domain/spec/services/scanSpecs";
 import {

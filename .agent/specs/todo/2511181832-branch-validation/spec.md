@@ -1,6 +1,6 @@
 # Git Branch Validation for NewRunForm
 
-**Status**: draft
+**Status**: in-progress
 **Created**: 2025-11-18
 **Package**: apps/app
 **Total Complexity**: 26 points
@@ -139,12 +139,12 @@ Update NewRunForm to display validation feedback inline with the branch name inp
 
 **Phase Complexity**: 11 points (avg 3.7/10)
 
-- [ ] 1.1 [3/10] Create `ValidateBranchOptions` type
+- [x] 1.1 [3/10] Create `ValidateBranchOptions` type
   - Define interface with `projectPath`, `branchName`, and optional `baseBranch`
   - File: `apps/app/src/server/domain/git/types/ValidateBranchOptions.ts`
   - Follow pattern from `GetBranchesOptions.ts`
 
-- [ ] 1.2 [5/10] Create `validateBranch` service
+- [x] 1.2 [5/10] Create `validateBranch` service
   - Export `validateBranch({ projectPath, branchName, baseBranch? })` function
   - Call `getBranches({ projectPath })` to fetch current branches
   - Validate branch name format with regex `/^[a-zA-Z0-9_/.-]+$/`
