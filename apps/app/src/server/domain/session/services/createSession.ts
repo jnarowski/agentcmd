@@ -47,8 +47,8 @@ export async function createSession({
   const session = await prisma.agentSession.create({
     data: {
       id: sessionId,
-      projectId,
-      userId,
+      project_id: projectId,
+      user_id: userId,
       agent,
       type,
       permission_mode: permission_mode ?? 'default',
@@ -63,8 +63,8 @@ export async function createSession({
 
   return {
     id: session.id,
-    projectId: session.projectId,
-    userId: session.userId,
+    projectId: session.project_id,
+    userId: session.user_id,
     name: session.name ?? undefined,
     agent: session.agent,
     type: session.type as SessionType,

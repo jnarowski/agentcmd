@@ -48,7 +48,7 @@ export async function cancelSession({
     return { success: false, error: errorMsg };
   }
 
-  if (session.userId !== userId) {
+  if (session.user_id !== userId) {
     const errorMsg = "Unauthorized: session does not belong to user";
 
     if (shouldBroadcast) {

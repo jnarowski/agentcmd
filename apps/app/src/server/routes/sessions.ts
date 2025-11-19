@@ -338,7 +338,7 @@ export async function sessionRoutes(fastify: FastifyInstance) {
 
       // Verify session ownership
       const existingSession = await prisma.agentSession.findFirst({
-        where: { id: sessionId, userId },
+        where: { id: sessionId, user_id: userId },
       });
 
       if (!existingSession) {
@@ -386,7 +386,7 @@ export async function sessionRoutes(fastify: FastifyInstance) {
         const session = await prisma.agentSession.findFirst({
           where: {
             id: sessionId,
-            userId,
+            user_id: userId,
           },
         });
 

@@ -22,14 +22,14 @@ export async function validateSessionAccess(
   try {
     const session = await prisma.agentSession.findUnique({
       where: { id: sessionId },
-      select: { userId: true },
+      select: { user_id: true },
     });
 
     if (!session) {
       return false;
     }
 
-    const hasAccess = session.userId === userId;
+    const hasAccess = session.user_id === userId;
     return hasAccess;
   } catch {
     return false;

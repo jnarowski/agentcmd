@@ -35,7 +35,7 @@ describe("validateSessionOwnership", () => {
     // Assert
     expect(result).toBeDefined();
     expect(result.id).toBe(session.id);
-    expect(result.userId).toBe(user.id);
+    expect(result.user_id).toBe(user.id);
     expect(result.project).toBeDefined();
     expect(result.project.id).toBe(project.id);
     expect(result.project.name).toBe("Test Project");

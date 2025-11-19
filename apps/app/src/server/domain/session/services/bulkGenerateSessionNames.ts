@@ -74,8 +74,8 @@ export async function bulkGenerateSessionNames({
   // Get sessions needing names (most recent first)
   const sessions = await prisma.agentSession.findMany({
     where: {
-      ...(projectId && { projectId }), // Only filter by project if provided
-      userId,
+      ...(projectId && { project_id: projectId }), // Only filter by project if provided
+      user_id: userId,
       name: null,
       name_generated_at: null,
       is_archived: false,

@@ -16,8 +16,8 @@ export async function getSessionById({
   const session = await prisma.agentSession.findFirst({
     where: {
       id: sessionId,
-      projectId,
-      userId,
+      project_id: projectId,
+      user_id: userId,
     },
   });
 
@@ -25,8 +25,8 @@ export async function getSessionById({
 
   return {
     id: session.id,
-    projectId: session.projectId,
-    userId: session.userId,
+    projectId: session.project_id,
+    userId: session.user_id,
     name: session.name ?? undefined,
     agent: session.agent,
     type: session.type as SessionType,

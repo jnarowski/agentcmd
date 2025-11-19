@@ -251,8 +251,8 @@ enum StepType {
 
 model AgentSession {
   id                 String                  @id @default(uuid())
-  projectId          String
-  userId             String
+  project_id         String
+  user_id            String
   name               String? // AI-generated session name (nullable for legacy sessions)
   name_generated_at  DateTime? // Tracks if/when AI naming was attempted (prevents re-processing)
   agent              AgentType               @default(claude)
@@ -268,13 +268,13 @@ model AgentSession {
   created_at         DateTime                @default(now())
   updated_at         DateTime                @updatedAt
 
-  project                Project                 @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  user                   User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project                Project                 @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  user                   User                    @relation(fields: [user_id], references: [id], onDelete: Cascade)
   workflowSteps          WorkflowRunStep[]
   workflowRunsPlanning   WorkflowRun[]           @relation("WorkflowRunPlanningSession")
 
-  @@index([projectId, updated_at])
-  @@index([userId, updated_at])
+  @@index([project_id, updated_at])
+  @@index([user_id, updated_at])
   @@index([cli_session_id])
   @@index([session_path])
   @@map("agent_sessions")

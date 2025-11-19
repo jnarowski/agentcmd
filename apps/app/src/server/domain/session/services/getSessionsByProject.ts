@@ -10,8 +10,8 @@ export async function getSessionsByProject({
 }: GetSessionsByProjectOptions): Promise<SessionResponse[]> {
   const sessions = await prisma.agentSession.findMany({
     where: {
-      projectId,
-      userId,
+      project_id: projectId,
+      user_id: userId,
       ...(includeArchived ? {} : { is_archived: false }),
       ...(type && { type }),
       ...(permission_mode && { permission_mode }),
@@ -23,8 +23,8 @@ export async function getSessionsByProject({
   // Map to response format
   const mappedSessions = sessions.map((session) => ({
     id: session.id,
-    projectId: session.projectId,
-    userId: session.userId,
+    projectId: session.project_id,
+    userId: session.user_id,
     name: session.name ?? undefined,
     agent: session.agent,
     type: session.type as SessionType,

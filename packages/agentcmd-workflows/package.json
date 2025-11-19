@@ -1,6 +1,6 @@
 {
   "name": "agentcmd-workflows",
-  "version": "1.0.24",
+  "version": "1.0.25",
   "description": "Type-safe workflow SDK for agentcmd workflow engine",
   "type": "module",
   "main": "./dist/index.js",

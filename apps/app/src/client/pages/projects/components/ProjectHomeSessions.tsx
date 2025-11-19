@@ -3,6 +3,12 @@ import { SessionListItem } from "@/client/pages/projects/sessions/components/Ses
 import { Input } from "@/client/components/ui/input";
 import { Badge } from "@/client/components/ui/badge";
 import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/client/components/ui/card";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -16,7 +22,7 @@ import {
   EmptyDescription,
 } from "@/client/components/ui/empty";
 import { Button } from "@/client/components/ui/button";
-import { Search, X } from "lucide-react";
+import { Search, X, MessageSquare } from "lucide-react";
 import { truncate } from "@/client/utils/truncate";
 import type { SessionResponse } from "@/shared/types";
 
@@ -136,9 +142,17 @@ export function ProjectHomeSessions({
   }
 
   return (
-    <div className="space-y-4">
-      {/* Filter Controls */}
-      <div className="space-y-3">
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+          <MessageSquare className="h-5 w-5 shrink-0" />
+          <span className="truncate">Sessions</span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {/* Filter Controls */}
+          <div className="space-y-3">
         {/* Filter Row */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
           {/* Search Input */}
@@ -313,12 +327,14 @@ export function ProjectHomeSessions({
         </div>
       )}
 
-      {/* Session Count */}
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>
-          Showing {filteredSessions.length} of {sessions.length} sessions
-        </span>
-      </div>
-    </div>
+          {/* Session Count */}
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>
+              Showing {filteredSessions.length} of {sessions.length} sessions
+            </span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -731,7 +731,7 @@ export function NewRunForm({
                   )}
                   {branchName && (
                     <p className="text-xs text-muted-foreground">
-                      → Worktree directory: <code className="text-xs">{sanitizeBranchForDirectory(branchName)}</code>
+                      → Worktree directory: <code className="text-xs">.worktrees/run-&lt;id&gt;-{sanitizeBranchForDirectory(branchName)}</code>
                     </p>
                   )}
                 </div>

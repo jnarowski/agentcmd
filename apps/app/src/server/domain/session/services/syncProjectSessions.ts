@@ -55,14 +55,14 @@ export async function syncProjectSessions({
     // Only sync Claude sessions - other agents (Codex, Cursor, Gemini) have different storage locations
     const dbClaudeSessions = await prisma.agentSession.findMany({
       where: {
-        projectId,
+        project_id: projectId,
         agent: 'claude',
       },
     });
 
     // Also fetch IDs of all sessions (any agent) to avoid unique constraint violations
     const allSessionIds = await prisma.agentSession.findMany({
-      where: { projectId },
+      where: { project_id: projectId },
       select: { id: true },
     });
 
@@ -77,8 +77,8 @@ export async function syncProjectSessions({
     const jsonlSessionIds = new Set<string>();
     const sessionsToCreate: Array<{
       id: string;
-      projectId: string;
-      userId: string;
+      project_id: string;
+      user_id: string;
       agent: 'claude';
       cli_session_id: string;
       session_path: string;
@@ -127,8 +127,8 @@ export async function syncProjectSessions({
           // Create new Claude session
           sessionsToCreate.push({
             id: sessionId,
-            projectId,
-            userId,
+            project_id: projectId,
+            user_id: userId,
             agent: 'claude',
             cli_session_id: sessionId,
             session_path: filePath,
@@ -149,7 +149,7 @@ export async function syncProjectSessions({
     // Batch create new sessions
     if (sessionsToCreate.length > 0) {
       const beforeCount = await prisma.agentSession.count({
-        where: { projectId },
+        where: { project_id: projectId },
       });
 
       try {
@@ -173,7 +173,7 @@ export async function syncProjectSessions({
       }
 
       const afterCount = await prisma.agentSession.count({
-        where: { projectId },
+        where: { project_id: projectId },
       });
 
       created = afterCount - beforeCount;

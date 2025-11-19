@@ -14,10 +14,6 @@ import { Button } from "@/client/components/ui/button";
 import { ButtonGroup } from "@/client/components/ui/button-group";
 import { Badge } from "@/client/components/ui/badge";
 import {
-  Card,
-  CardContent,
-} from "@/client/components/ui/card";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -134,11 +130,7 @@ export default function ProjectHomePage() {
       )}
 
       {/* Specs */}
-      <Card>
-        <CardContent className="pt-4 pb-4">
-          <ProjectHomeSpecs projectId={id!} />
-        </CardContent>
-      </Card>
+      <ProjectHomeSpecs projectId={id!} />
 
       {/* README Section */}
       <ProjectReadme project={project} />

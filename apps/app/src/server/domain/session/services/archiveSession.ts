@@ -13,7 +13,7 @@ export async function archiveSession({
 	const session = await prisma.agentSession.findFirst({
 		where: {
 			id: sessionId,
-			userId,
+			user_id: userId,
 		},
 	});
 
