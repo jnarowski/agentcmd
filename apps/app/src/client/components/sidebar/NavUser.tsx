@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BookOpen, ChevronsUpDown, FolderKanban, LogOut, Settings } from "lucide-react";
+import { BookOpen, ChevronsUpDown, FolderKanban, LogOut, Mail, Settings } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -16,6 +16,7 @@ import {
   useSidebar,
 } from "@/client/components/ui/sidebar";
 import { SettingsDialog } from "@/client/components/SettingsDialog";
+import { NewsletterDialog } from "@/client/components/NewsletterDialog";
 import { useWebSocket } from "@/client/hooks/useWebSocket";
 import { ReadyState } from "@/shared/types/websocket.types";
 import { getWebsiteUrl } from "@/client/utils/envConfig";
@@ -33,6 +34,7 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isNewsletterOpen, setIsNewsletterOpen] = useState(false);
   const { isConnected, readyState, reconnectAttempt } = useWebSocket();
 
   const getStatusColor = () => {
@@ -109,6 +111,10 @@ export function NavUser({
                   Documentation
                 </a>
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsNewsletterOpen(true)}>
+                <Mail />
+                Subscribe to Newsletter
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onLogout}>
                 <LogOut />
@@ -120,6 +126,11 @@ export function NavUser({
       </SidebarMenu>
 
       <SettingsDialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
+      <NewsletterDialog
+        open={isNewsletterOpen}
+        onOpenChange={setIsNewsletterOpen}
+        defaultEmail={user.email}
+      />
     </>
   );
 }
