@@ -16,7 +16,7 @@ export default defineWorkflow(
     await step.phase("review", async () => {
       // Review the code changes
       const review = await step.ai("review-code", {
-        model: "claude",
+        model: "claude-sonnet-4-5-20250929",
         prompt: `You are a code reviewer. Review the following specification and provide feedback:
 
 ${spec || "No specification provided"}

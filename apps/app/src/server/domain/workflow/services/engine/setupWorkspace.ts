@@ -47,17 +47,38 @@ export async function setupWorkspace(params: {
       ? `run-${run.id}-${run.branch_name || "main"}`
       : undefined;
 
-  const workspace = await setupStep("setup-workspace", {
-    branch: run.branch_name ?? undefined,
-    baseBranch: run.base_branch ?? "main",
-    projectPath: run.project.path,
-    worktreeName,
-  });
+  try {
+    const workspace = await setupStep("setup-workspace", {
+      branch: run.branch_name ?? undefined,
+      baseBranch: run.base_branch ?? "main",
+      projectPath: run.project.path,
+      worktreeName,
+    });
 
-  logger.info(
-    { runId: run.id, mode: run.mode, workingDir: workspace.workingDir },
-    "Workspace setup completed"
-  );
+    logger.info(
+      { runId: run.id, mode: run.mode, workingDir: workspace.workingDir },
+      "Workspace setup completed"
+    );
 
-  return workspace;
+    return workspace;
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+
+    // Enhance git branch errors with user-friendly messages
+    if (errorMsg.includes("a branch named")) {
+      const branchName = run.branch_name || "unknown";
+      throw new Error(
+        `Git branch "${branchName}" already exists. Please choose a different branch name or delete the existing branch first.`
+      );
+    }
+
+    if (errorMsg.includes("Invalid branch name")) {
+      throw new Error(
+        `Invalid git branch name "${run.branch_name}". Branch names can only contain letters, numbers, dashes, underscores, dots, and slashes.`
+      );
+    }
+
+    // Re-throw original error for other failures
+    throw error;
+  }
 }

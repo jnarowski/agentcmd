@@ -266,6 +266,26 @@ export function NewRunForm({
       return;
     }
 
+    // Validate branch name format
+    if (mode !== "stay" && branchName.trim()) {
+      const branchNameRegex = /^[a-zA-Z0-9_/.-]+$/;
+      if (!branchNameRegex.test(branchName)) {
+        setError(
+          "Invalid branch name. Only letters, numbers, dashes, underscores, dots, and slashes are allowed."
+        );
+        return;
+      }
+
+      // Check if branch already exists
+      const branchExists = branches?.some((b) => b.name === branchName);
+      if (branchExists) {
+        setError(
+          `Branch "${branchName}" already exists. Please choose a different name.`
+        );
+        return;
+      }
+    }
+
     try {
       // At this point, we've validated that we have a definitionId
       const actualDefinitionId = selectedDefinitionId || definitionId!;

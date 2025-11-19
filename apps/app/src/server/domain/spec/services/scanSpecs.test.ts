@@ -65,7 +65,7 @@ describe("scanSpecs", () => {
       lastId: 251112070556,
       specs: {
         "251112070556": {
-          path: "todo/251112070556-tasks-nav-workflow-integration",
+          path: "todo/251112070556-tasks-nav-workflow-integration/spec.md",
           status: "in-progress",
           created: "2025-11-12T07:05:56.000Z",
           updated: "2025-11-12T20:30:00.000Z",

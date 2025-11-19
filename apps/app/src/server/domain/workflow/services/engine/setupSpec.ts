@@ -128,7 +128,7 @@ async function generateSpecFileWithAgent(
   // MODE 1: Resume from existing planning session
   // Uses session history as context for spec generation
   if (event.data.planningSessionId) {
-    const prompt = `${buildSlashCommand(command as SlashCommandName)}${promptSuffix}`;
+    const prompt = `${command} ${promptSuffix}`;
     const response = await step.agent<CmdGenerateSpecResponse>(
       "Generating Spec From Planning Session",
       {
@@ -150,6 +150,10 @@ async function generateSpecFileWithAgent(
     return response.data.spec_file;
   }
 
+  const prompt = `${command} '${event.data.specContent}' ${promptSuffix}`;
+
+  await step.log("Generating spec from provided context, prompt:", prompt);
+
   // MODE 2: Fresh spec generation
   // Uses provided spec content/context as input
   const response = await step.agent<CmdGenerateSpecResponse>(
@@ -157,9 +161,7 @@ async function generateSpecFileWithAgent(
     {
       agent: "claude",
       json: true, // Expect structured JSON response with spec_file path
-      prompt: buildSlashCommand(command as SlashCommandName, {
-        context: `${event.data.specContent}${promptSuffix}`, // Pass context to slash command
-      }),
+      prompt,
       workingDir: event.data.workingDir,
     }
   );

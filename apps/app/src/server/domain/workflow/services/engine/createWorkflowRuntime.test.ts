@@ -776,7 +776,8 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
     });
 
     it("verifies existing spec file if provided", async () => {
-      const existingSpecPath = "/tmp/test-project/.agent/specs/todo/existing-spec/spec.md";
+      const existingSpecPath = "todo/existing-spec/spec.md";
+      const fullPath = "/tmp/test-project/.agent/specs/todo/existing-spec/spec.md";
       vi.mocked(existsSync).mockReturnValue(true);
 
       const run = await createTestWorkflowRun(prisma, {
@@ -827,15 +828,15 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         runId: "inngest-run-123",
       } as never);
 
-      // Verify specFile was kept as-is
-      expect(capturedSpecFile).toBe(existingSpecPath);
+      // Verify specFile was normalized to full path
+      expect(capturedSpecFile).toBe(fullPath);
 
       // Verify file existence was checked
-      expect(existsSync).toHaveBeenCalledWith(existingSpecPath);
+      expect(existsSync).toHaveBeenCalledWith(fullPath);
 
       // Verify log message
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.objectContaining({ specFile: existingSpecPath }),
+        expect.objectContaining({ specFile: fullPath }),
         "Using provided spec file"
       );
     });

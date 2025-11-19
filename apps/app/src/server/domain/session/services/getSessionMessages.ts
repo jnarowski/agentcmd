@@ -29,6 +29,11 @@ export async function getSessionMessages({
   // This allows loading sessions for both Claude and Codex using their native session IDs
   const cliSessionId = session.cli_session_id || sessionId;
 
+  // Check if agent is supported by SDK
+  if (session.agent === 'cursor') {
+    throw new Error('Cursor sessions are not yet supported by the SDK');
+  }
+
   // Use SDK to load session messages
   const messages = await loadMessages({
     tool: session.agent,

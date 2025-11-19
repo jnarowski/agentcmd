@@ -297,6 +297,7 @@ function buildWorkflowEventData(
     userId: execution.user_id,
     specFile: execution.spec_file ?? undefined,
     specContent: execution.spec_content ?? undefined,
+    specType: execution.spec_type ?? undefined,
     planningSessionId: execution.planning_session?.cli_session_id ?? undefined,
     mode: execution.mode ?? undefined,
     baseBranch: execution.base_branch ?? undefined,

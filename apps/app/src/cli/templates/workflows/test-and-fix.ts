@@ -28,7 +28,7 @@ export default defineWorkflow(
       await step.phase("analyze", async () => {
         // Analyze test failures with AI
         const analysis = await step.ai("analyze-failures", {
-          model: "claude",
+          model: "claude-sonnet-4-5-20250929",
           prompt: `Analyze the following test output and suggest fixes:
 
 ${testResult.data.stdout}
