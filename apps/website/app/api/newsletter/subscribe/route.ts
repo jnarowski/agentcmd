@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const KIT_API_KEY = "mBblmIEKoIqENqcfxeCo0Q";
+const KIT_API_KEY = process.env.KIT_API_KEY;
 const KIT_API_URL = "https://api.kit.com/v4/subscribers";
 
 export async function POST(request: NextRequest) {
+  if (!KIT_API_KEY) {
+    return NextResponse.json(
+      { error: "Server configuration error" },
+      { status: 500 }
+    );
+  }
+
   try {
     const body = await request.json();
     const { email_address, first_name } = body;
