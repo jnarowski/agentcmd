@@ -72,6 +72,7 @@ model WorkflowRun {
   steps               WorkflowRunStep[]
   events              WorkflowEvent[]
   artifacts           WorkflowArtifact[]
+  webhook_events      WebhookEvent[]
 
   @@index([project_id, status])
   @@index([user_id, status])
@@ -129,6 +130,53 @@ model WorkflowEvent {
   @@map("workflow_events")
 }
 
+model Webhook {
+  id                   String         @id @default(cuid())
+  project_id           String
+  name                 String
+  description          String?
+  source               WebhookSource  @default(generic)
+  status               WebhookStatus  @default(draft)
+  secret               String         // HMAC secret for signature validation (32-byte hex)
+  workflow_identifier  String?        // Dynamic workflow identifier (no FK to WorkflowDefinition)
+  config               Json           @default("{}")  // Field mappings, conditions, source config
+  webhook_conditions   Json?          // Webhook-level conditions (all must pass)
+  error_message        String?        // Error message when status is 'error'
+  last_triggered_at    DateTime?
+  created_at           DateTime       @default(now())
+  updated_at           DateTime       @updatedAt
+
+  project Project         @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  events  WebhookEvent[]
+
+  @@index([project_id])
+  @@index([status])
+  @@index([source])
+  @@map("webhooks")
+}
+
+model WebhookEvent {
+  id                 String             @id @default(cuid())
+  webhook_id         String
+  workflow_run_id    String?            // Null if no run triggered
+  status             WebhookEventStatus
+  payload            Json               // Original webhook payload
+  headers            Json               // Request headers
+  mapped_data        Json?              // Resolved field mappings (for debugging)
+  error_message      String?            // Error details if status is 'failed' or 'invalid_signature'
+  processing_time_ms Int?               // Time taken to process event
+  created_at         DateTime           @default(now())
+
+  webhook      Webhook      @relation(fields: [webhook_id], references: [id], onDelete: Cascade)
+  workflow_run WorkflowRun? @relation(fields: [workflow_run_id], references: [id], onDelete: SetNull)
+
+  @@index([webhook_id, created_at])
+  @@index([workflow_run_id])
+  @@index([status])
+  @@index([created_at])
+  @@map("webhook_events")
+}
+
 model WorkflowArtifact {
   id                    String    @id @default(cuid())
   workflow_run_id String    // Direct reference to run
@@ -164,6 +212,7 @@ model Project {
   sessions             AgentSession[]
   workflow_definitions WorkflowDefinition[]
   workflow_runs  WorkflowRun[]
+  webhooks             Webhook[]
 
   @@map("projects")
 }
@@ -247,6 +296,29 @@ enum StepType {
   annotation
   system
   command
+}
+
+enum WebhookSource {
+  github
+  linear
+  jira
+  generic
+}
+
+enum WebhookStatus {
+  draft
+  active
+  paused
+  error
+}
+
+enum WebhookEventStatus {
+  test
+  success
+  filtered
+  invalid_signature
+  failed
+  error
 }
 
 model AgentSession {

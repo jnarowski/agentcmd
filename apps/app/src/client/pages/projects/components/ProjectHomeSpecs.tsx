@@ -14,7 +14,6 @@ import {
   FileText,
   ExternalLink,
   Sparkles,
-  FolderOpen,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { getWebsiteUrl } from "@/client/utils/envConfig";

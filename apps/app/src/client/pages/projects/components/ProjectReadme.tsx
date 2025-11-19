@@ -12,7 +12,6 @@ import {
   TooltipTrigger,
 } from "@/client/components/ui/tooltip";
 import { Skeleton } from "@/client/components/ui/skeleton";
-import { FileText } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { truncatePath } from "@/client/utils/cn";

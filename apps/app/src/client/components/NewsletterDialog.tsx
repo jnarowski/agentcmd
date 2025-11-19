@@ -63,7 +63,7 @@ export function NewsletterDialog({
       } else {
         toast.error(data.error || "Something went wrong. Please try again.");
       }
-    } catch (error) {
+    } catch {
       toast.error("Network error. Please try again.");
     } finally {
       setIsLoading(false);

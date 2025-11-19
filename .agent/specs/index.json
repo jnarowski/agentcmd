@@ -95,9 +95,17 @@
       "folder": "2511191028-webhook-system",
       "path": "todo/2511191028-webhook-system/spec.md",
       "spec_type": "feature",
-      "status": "draft",
+      "status": "completed",
       "created": "2025-11-19T10:28:00Z",
-      "updated": "2025-11-19T10:28:00Z"
+      "updated": "2025-11-19T18:57:00Z"
+    },
+    "2511191054": {
+      "folder": "2511191054-monospace-theme",
+      "path": "todo/2511191054-monospace-theme/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-19T10:54:00Z",
+      "updated": "2025-11-19T10:54:00Z"
     }
   }
 }

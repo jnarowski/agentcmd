@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Kit-Api-Key": KIT_API_KEY,
+        Authorization: `Bearer ${KIT_API_KEY}`,
       },
       body: JSON.stringify({
         email_address,
