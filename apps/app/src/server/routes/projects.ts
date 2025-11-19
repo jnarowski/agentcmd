@@ -214,6 +214,57 @@ export async function projectRoutes(fastify: FastifyInstance) {
   );
 
   /**
+   * POST /api/projects/:id/validate-branch
+   * Validate a branch name for a project
+   */
+  fastify.post<{
+    Params: { id: string };
+    Body: { branchName: string; baseBranch?: string };
+  }>(
+    "/api/projects/:id/validate-branch",
+    {
+      preHandler: fastify.authenticate,
+      schema: {
+        params: projectIdSchema,
+        body: z.object({
+          branchName: z.string(),
+          baseBranch: z.string().optional(),
+        }),
+        response: {
+          200: z.object({
+            data: z.object({
+              valid: z.boolean(),
+              branchExists: z.boolean(),
+              baseBranchExists: z.boolean().optional(),
+              error: z.string().optional(),
+            }),
+          }),
+          404: errorResponse,
+        },
+      },
+    },
+    async (request, reply) => {
+      const project = await getProjectById({ id: request.params.id });
+
+      if (!project) {
+        return reply
+          .code(404)
+          .send(buildErrorResponse(404, "Project not found"));
+      }
+
+      const { branchName, baseBranch } = request.body;
+
+      const result = await validateBranch({
+        projectPath: project.path,
+        branchName,
+        baseBranch,
+      });
+
+      return reply.send({ data: result });
+    }
+  );
+
+  /**
    * POST /api/projects
    * Create a new project
    */
