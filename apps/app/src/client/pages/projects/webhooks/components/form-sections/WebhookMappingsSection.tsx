@@ -25,13 +25,6 @@ export function WebhookMappingsSection({
 
   return (
     <div className="space-y-4">
-      <div>
-        <FieldLabel>Field Mappings</FieldLabel>
-        <FieldDescription>
-          Map webhook payload fields to workflow input parameters. Use the
-          token picker to select fields from your test payload.
-        </FieldDescription>
-      </div>
       <FieldMappingEditor testPayload={testPayload} disabled={false} />
     </div>
   );

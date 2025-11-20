@@ -17,6 +17,12 @@ const MAPPING_TYPE_OPTIONS = [
   { label: "Conditional", value: "conditional" },
 ];
 
+const FIELD_NAME_OPTIONS = [
+  { label: "Workflow", value: "workflow" },
+  { label: "Spec Type", value: "spec_type" },
+  { label: "Spec Content", value: "spec_content" },
+];
+
 export function FieldMappingRow({
   index,
   testPayload,
@@ -44,9 +50,11 @@ export function FieldMappingRow({
             control={control}
             name={`config.field_mappings.${index}.field`}
             render={({ field }) => (
-              <Input
-                {...field}
-                placeholder="e.g., issue_number"
+              <Combobox
+                value={field.value}
+                onValueChange={field.onChange}
+                options={FIELD_NAME_OPTIONS}
+                placeholder="Select field"
                 disabled={disabled}
               />
             )}

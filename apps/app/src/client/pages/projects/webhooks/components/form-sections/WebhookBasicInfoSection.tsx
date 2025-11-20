@@ -5,6 +5,7 @@ import { Field, FieldContent, FieldLabel, FieldDescription } from "@/client/comp
 import { Input } from "@/client/components/ui/input";
 import { Textarea } from "@/client/components/ui/textarea";
 import { Button } from "@/client/components/ui/button";
+import { InputGroup, InputGroupInput, InputGroupAddon, InputGroupButton } from "@/client/components/ui/input-group";
 import type { ComboboxOption } from "@/client/components/ui/combobox";
 import { SecretDisplay } from "../SecretDisplay";
 import type { UpdateWebhookFormValues } from "../../schemas/webhook.schemas";
@@ -132,26 +133,26 @@ export function WebhookBasicInfoSection({
         <Field>
           <FieldLabel>Webhook URL</FieldLabel>
           <FieldContent>
-            <div className="flex gap-2">
-              <Input
+            <InputGroup>
+              <InputGroupInput
                 value={webhookUrl}
                 readOnly
-                className="flex-1 font-mono text-sm bg-muted"
+                className="font-mono text-sm bg-muted"
               />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={handleCopyUrl}
-                aria-label="Copy webhook URL"
-              >
-                {urlCopied ? (
-                  <CheckIcon className="h-4 w-4" />
-                ) : (
-                  <CopyIcon className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
+              <InputGroupAddon align="inline-end">
+                <InputGroupButton
+                  size="icon-sm"
+                  onClick={handleCopyUrl}
+                  aria-label="Copy webhook URL"
+                >
+                  {urlCopied ? (
+                    <CheckIcon className="h-4 w-4" />
+                  ) : (
+                    <CopyIcon className="h-4 w-4" />
+                  )}
+                </InputGroupButton>
+              </InputGroupAddon>
+            </InputGroup>
             <FieldDescription>
               Configure this URL in your external service to send webhooks
             </FieldDescription>
@@ -159,42 +160,60 @@ export function WebhookBasicInfoSection({
         </Field>
       )}
 
-      {/* Webhook Secret - Always editable */}
+      {/* Webhook Secret */}
       <Controller
         control={control}
         name="secret"
-        render={({ field, fieldState }) => (
-          <Field data-invalid={!!fieldState.error}>
-            <FieldLabel>Secret {isEditMode && "(optional)"}</FieldLabel>
-            <FieldContent>
-              <Input
-                {...field}
-                type="password"
-                value={field.value || ""}
-                placeholder={isEditMode ? "Enter new secret to update" : "Paste secret from external service"}
-              />
-              <FieldDescription>
-                {isEditMode ? (
-                  "Leave blank to keep existing secret"
-                ) : (
-                  "Used to verify webhook signatures"
-                )}
-              </FieldDescription>
-              {fieldState.error && (
-                <p className="text-sm text-destructive">{fieldState.error.message}</p>
-              )}
-            </FieldContent>
-          </Field>
-        )}
-      />
+        render={({ field, fieldState }) => {
+          const [isEditing, setIsEditing] = useState(false);
+          const hasExistingSecret = isEditMode && webhookSecret && !isEditing;
 
-      {/* Current Secret Display (Edit Mode) */}
-      {isEditMode && webhookSecret && (
-        <SecretDisplay
-          secret={webhookSecret}
-          label="Current Secret"
-        />
-      )}
+          return (
+            <Field data-invalid={!!fieldState.error}>
+              <FieldLabel>Secret</FieldLabel>
+              <FieldContent>
+                {hasExistingSecret ? (
+                  <InputGroup>
+                    <InputGroupInput
+                      type="password"
+                      value="••••••••••••••••"
+                      disabled
+                      className="bg-muted"
+                    />
+                    <InputGroupAddon align="inline-end">
+                      <InputGroupButton
+                        onClick={() => {
+                          setIsEditing(true);
+                          field.onChange("");
+                        }}
+                      >
+                        Edit
+                      </InputGroupButton>
+                    </InputGroupAddon>
+                  </InputGroup>
+                ) : (
+                  <Input
+                    {...field}
+                    type="password"
+                    value={field.value || ""}
+                    placeholder={isEditMode ? "Enter new secret" : "Paste secret from external service"}
+                  />
+                )}
+                <FieldDescription>
+                  {isEditMode ? (
+                    hasExistingSecret ? "Click 'Edit' to change or clear the secret" : "Enter a new secret or leave blank to keep current"
+                  ) : (
+                    "Used to verify webhook signatures"
+                  )}
+                </FieldDescription>
+                {fieldState.error && (
+                  <p className="text-sm text-destructive">{fieldState.error.message}</p>
+                )}
+              </FieldContent>
+            </Field>
+          );
+        }}
+      />
     </div>
   );
 }

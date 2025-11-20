@@ -14,7 +14,6 @@ import {
 } from "./schemas/webhook.schemas";
 import type { Webhook } from "./types/webhook.types";
 import { WebhookBasicInfoSection } from "./components/form-sections/WebhookBasicInfoSection";
-import { WebhookWorkflowSection } from "./components/form-sections/WebhookWorkflowSection";
 import { WebhookMappingsSection } from "./components/form-sections/WebhookMappingsSection";
 import { WebhookConditionsSection } from "./components/form-sections/WebhookConditionsSection";
 
@@ -156,70 +155,62 @@ export default function WebhookFormPage() {
 
         {/* Form */}
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          {/* Basic Info Section - Always visible */}
-          <div className="space-y-4 p-4 sm:p-6 bg-card rounded-lg border">
-            <h2 className="text-xl font-semibold">Basic Information</h2>
-            <WebhookBasicInfoSection
-              control={form.control}
-              webhookUrl={
-                isCreateMode
-                  ? ""
-                  : `${window.location.origin}/api/webhooks/${webhook!.id}/events`
-              }
-              webhookSecret={isCreateMode ? "" : webhook!.secret}
-              currentSource={isCreateMode ? "generic" : webhook!.source}
-              isEditMode={!isCreateMode}
-            />
-          </div>
-
-          {/* Locked sections until test event */}
-          {!isCreateMode && !hasTestEvent && (
-            <div className="p-8 bg-card rounded-lg border">
-              <div className="text-center">
-                <p className="text-sm font-medium">Waiting for test event</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Send a test webhook to unlock configuration sections
-                </p>
-              </div>
+          {/* Single Card with All Sections */}
+          <div className="space-y-6 p-4 sm:p-6 bg-card rounded-lg border">
+            {/* Basic Info Section - Always visible */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold">Basic Information</h2>
+              <WebhookBasicInfoSection
+                control={form.control}
+                webhookUrl={
+                  isCreateMode
+                    ? ""
+                    : `${window.location.origin}/api/webhooks/${webhook!.id}/events`
+                }
+                webhookSecret={isCreateMode ? "" : webhook!.secret}
+                currentSource={isCreateMode ? "generic" : webhook!.source}
+                isEditMode={!isCreateMode}
+              />
             </div>
-          )}
 
-          {/* Unlocked sections after test event */}
-          {!isCreateMode && hasTestEvent && (
-            <>
-              {/* Workflow Section */}
-              <div className="space-y-4 p-4 sm:p-6 bg-card rounded-lg border">
-                <h2 className="text-xl font-semibold">Workflow</h2>
-                <WebhookWorkflowSection
-                  control={form.control}
-                  projectId={projectId}
-                  locked={false}
-                />
+            {/* Locked sections until test event */}
+            {!isCreateMode && !hasTestEvent && (
+              <div className="pt-6 border-t">
+                <div className="text-center py-8">
+                  <p className="text-sm font-medium">Waiting for test event</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Send a test webhook to unlock configuration sections
+                  </p>
+                </div>
               </div>
+            )}
 
-              {/* Field Mappings Section */}
-              <div className="space-y-4 p-4 sm:p-6 bg-card rounded-lg border">
-                <h2 className="text-xl font-semibold">Field Mappings</h2>
-                <WebhookMappingsSection
-                  testPayload={
-                    testEvent?.payload as Record<string, unknown> | undefined
-                  }
-                  locked={false}
-                />
-              </div>
+            {/* Unlocked sections after test event */}
+            {!isCreateMode && hasTestEvent && (
+              <>
+                {/* Field Mappings Section */}
+                <div className="space-y-4 pt-6 border-t">
+                  <WebhookMappingsSection
+                    testPayload={
+                      testEvent?.payload as Record<string, unknown> | undefined
+                    }
+                    locked={false}
+                  />
+                </div>
 
-              {/* Conditions Section */}
-              <div className="space-y-4 p-4 sm:p-6 bg-card rounded-lg border">
-                <h2 className="text-xl font-semibold">Webhook Conditions</h2>
-                <WebhookConditionsSection
-                  testPayload={
-                    testEvent?.payload as Record<string, unknown> | undefined
-                  }
-                  locked={false}
-                />
-              </div>
-            </>
-          )}
+                {/* Conditions Section */}
+                <div className="space-y-4 pt-6 border-t">
+                  <h2 className="text-xl font-semibold">Webhook Conditions</h2>
+                  <WebhookConditionsSection
+                    testPayload={
+                      testEvent?.payload as Record<string, unknown> | undefined
+                    }
+                    locked={false}
+                  />
+                </div>
+              </>
+            )}
+          </div>
 
           {/* Actions */}
           <div className="flex justify-between">
