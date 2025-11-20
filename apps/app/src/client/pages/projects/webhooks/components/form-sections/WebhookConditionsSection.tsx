@@ -25,13 +25,10 @@ export function WebhookConditionsSection({
 
   return (
     <div className="space-y-4">
-      <div>
-        <FieldLabel>Webhook Conditions</FieldLabel>
-        <FieldDescription>
-          Filter which webhook events should trigger workflow runs. Only events
-          matching all conditions will be processed.
-        </FieldDescription>
-      </div>
+      <FieldDescription>
+        Filter which webhook events should trigger workflow runs. Only events
+        matching all conditions will be processed.
+      </FieldDescription>
       <ConditionEditor
         basePath="webhook_conditions"
         testPayload={testPayload}
