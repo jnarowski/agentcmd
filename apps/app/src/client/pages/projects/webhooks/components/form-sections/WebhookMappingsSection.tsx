@@ -62,12 +62,18 @@ export function WebhookMappingsSection({
       // Switch to conditional mode: add default_action
       setValue("config.default_action", "skip");
       if (mappings.length === 0 || mappings[0]?.conditions?.length === 0) {
-        // If switching from simple, convert to conditional
+        // If switching from simple, convert to conditional with one initial condition
         setValue("config.mappings", [
           {
             spec_type_id: mappings[0]?.spec_type_id || "",
             workflow_id: mappings[0]?.workflow_id || "",
-            conditions: [],
+            conditions: [
+              {
+                path: "",
+                operator: "equals",
+                value: "",
+              },
+            ],
           },
         ]);
       }

@@ -293,7 +293,7 @@ export async function processWebhookEvent(
     });
 
     // 8. Extract issue info and branch name from payload
-    const issueInfo = extractIssueInfo(payload, webhook.source);
+    const issueInfo = extractIssueInfo(payload, webhook.source, event.id);
 
     // 9. Create workflow run with trigger, issue info, and worktree mode
     const workflowRun = await createWorkflowRun({
@@ -398,10 +398,14 @@ export async function processWebhookEvent(
 /**
  * Extract issue information and branch name from webhook payload based on source
  * Returns issue_id, issue_url, issue_source, and auto-generated branch_name
+ * @param payload - Webhook payload
+ * @param source - Webhook source type
+ * @param eventId - Webhook event ID (used as fallback for generic branch names)
  */
 function extractIssueInfo(
   payload: Record<string, unknown>,
   source: WebhookSource,
+  eventId: string,
 ): {
   issue_id: string | undefined;
   issue_url: string | undefined;
@@ -465,8 +469,8 @@ function extractIssueInfo(
       // Generic: try to extract from common fields
       issue_id = (payload.id || payload.identifier || payload.number) as string | undefined;
       issue_url = (payload.url || payload.html_url || payload.link) as string | undefined;
-      // Fallback branch name from ID
-      branch_name = issue_id ? `webhook-${issue_id}` : undefined;
+      // Fallback to webhook event ID (ensures branch name always exists)
+      branch_name = issue_id ? `webhook-${issue_id}` : `webhook-event-${eventId.slice(0, 8)}`;
       break;
     }
   }

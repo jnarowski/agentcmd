@@ -425,7 +425,10 @@ export async function webhookRoutes(fastify: FastifyInstance) {
         }),
         response: {
           200: z.object({
-            data: z.array(z.any()),
+            events: z.array(z.any()),
+            total: z.number(),
+            limit: z.number(),
+            offset: z.number(),
           }),
           401: errorResponse,
           500: errorResponse,
@@ -441,13 +444,13 @@ export async function webhookRoutes(fastify: FastifyInstance) {
           offset?: number;
         };
 
-        const events = await getWebhookEvents(webhookId, {
+        const result = await getWebhookEvents(webhookId, {
           status: status as WebhookEventStatus | undefined,
           limit,
           offset,
         });
 
-        return reply.send({ data: events });
+        return reply.send(result);
       } catch (error) {
         fastify.log.error({ error }, "Error fetching webhook events");
         return reply

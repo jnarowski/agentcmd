@@ -36,7 +36,13 @@ export function ConditionalMappingsBuilder({
     append({
       spec_type_id: "",
       workflow_id: "",
-      conditions: [],
+      conditions: [
+        {
+          path: "",
+          operator: "equals",
+          value: "",
+        },
+      ],
     });
   };
 
@@ -46,11 +52,13 @@ export function ConditionalMappingsBuilder({
       {fields.map((field, index) => (
         <div key={field.id}>
           <Card>
-            <CardContent className="pt-6 space-y-4">
+            <CardContent className="space-y-4">
               {/* Conditions Section */}
               <div className="space-y-2">
-                <FieldLabel>
-                  {index === 0 ? "If these conditions match" : "If these conditions match"}
+                <FieldLabel className="text-sm mb-6 font-semibold">
+                  {index === 0
+                    ? "If these conditions match"
+                    : "If these conditions match"}
                 </FieldLabel>
                 <ConditionEditor
                   basePath={`config.mappings.${index}.conditions`}
@@ -112,7 +120,7 @@ export function ConditionalMappingsBuilder({
 
           {/* Separator between groups */}
           {index < fields.length - 1 && (
-            <div className="text-center py-2 text-sm text-muted-foreground">
+            <div className="text-center py-6 text-sm text-muted-foreground">
               if that doesn't match then
             </div>
           )}
@@ -140,7 +148,7 @@ export function ConditionalMappingsBuilder({
 
       {/* Default Action Section */}
       <Card>
-        <CardContent className="pt-6 space-y-4">
+        <CardContent className="pt-4 space-y-4">
           <div className="space-y-2">
             <FieldLabel>Default Action</FieldLabel>
             <Controller
@@ -152,7 +160,9 @@ export function ConditionalMappingsBuilder({
                     <SelectValue placeholder="Select action..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="skip">Skip - Don't create workflow run</SelectItem>
+                    <SelectItem value="skip">
+                      Skip - Don't create workflow run
+                    </SelectItem>
                     <SelectItem value="set_fields">
                       Set fields - Create run with default values
                     </SelectItem>
@@ -180,7 +190,9 @@ export function ConditionalMappingsBuilder({
                         value={field.value}
                         onValueChange={(value) => {
                           // Ensure default_mapping object exists
-                          const currentMapping = watch("config.default_mapping");
+                          const currentMapping = watch(
+                            "config.default_mapping"
+                          );
                           setValue("config.default_mapping", {
                             ...currentMapping,
                             spec_type_id: value,
@@ -202,7 +214,9 @@ export function ConditionalMappingsBuilder({
                         value={field.value}
                         onValueChange={(value) => {
                           // Ensure default_mapping object exists
-                          const currentMapping = watch("config.default_mapping");
+                          const currentMapping = watch(
+                            "config.default_mapping"
+                          );
                           setValue("config.default_mapping", {
                             ...currentMapping,
                             spec_type_id: currentMapping?.spec_type_id || "",

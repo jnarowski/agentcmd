@@ -34,15 +34,6 @@ export function ConditionEditor({
 
   return (
     <div className="space-y-3">
-      {fields.length > 0 && (
-        <Alert>
-          <Info className="h-4 w-4" />
-          <AlertDescription>
-            All conditions must pass (AND logic)
-          </AlertDescription>
-        </Alert>
-      )}
-
       {fields.length === 0 ? (
         <div className="text-center py-4 text-sm text-muted-foreground border rounded-lg">
           <p className="mb-3">No conditions. All events will match.</p>

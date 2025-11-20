@@ -26,7 +26,16 @@ function webhookToFormValues(webhook: Webhook): UpdateWebhookFormValues {
     name: webhook.name,
     description: webhook.description || undefined,
     workflow_identifier: webhook.workflow_identifier || undefined,
-    config: webhook.config,
+    config: webhook.config || {
+      name: "Webhook Run",
+      mappings: [
+        {
+          spec_type_id: "",
+          workflow_id: "",
+          conditions: [],
+        },
+      ],
+    },
     // Don't include secret - let it remain undefined so form detects changes
   };
 }
@@ -205,7 +214,7 @@ export default function WebhookFormPage() {
               <div className="space-y-4 pt-6 border-t">
                 <WebhookMappingsSection
                   testPayload={
-                    testEvent?.payload as Record<string, unknown> | undefined
+                    (testEvent?.payload as Record<string, unknown>) || null
                   }
                   locked={false}
                 />

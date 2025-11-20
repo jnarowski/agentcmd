@@ -90,6 +90,10 @@ export function TokenInput({
 
   const paths = testPayload ? flattenPayload(testPayload) : [];
 
+  // DEBUG: Remove after testing
+  console.log('[TokenInput] testPayload:', testPayload);
+  console.log('[TokenInput] Generated paths:', paths);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "/" && !disabled) {
       e.preventDefault();
@@ -104,7 +108,7 @@ export function TokenInput({
   };
 
   return (
-    <div className="flex gap-2">
+    <div className="relative">
       <Input
         ref={inputRef}
         value={value}
@@ -112,17 +116,18 @@ export function TokenInput({
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         disabled={disabled}
-        className="flex-1"
+        className="pr-10"
       />
 
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             type="button"
-            variant="outline"
+            variant="ghost"
             size="sm"
             disabled={disabled || !testPayload}
             title={testPayload ? "Pick token from test payload" : "Send test event first"}
+            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
           >
             <Plus className="h-4 w-4" />
           </Button>
@@ -137,8 +142,9 @@ export function TokenInput({
                   <CommandItem
                     key={path}
                     value={path}
+                    keywords={[path, ...path.split('.'), preview]}
                     onSelect={() => handleSelect(path)}
-                    className="flex justify-between gap-4"
+                    className="flex items-center justify-between gap-4"
                   >
                     <span className="font-mono text-sm">{path}</span>
                     <span className="text-xs text-muted-foreground truncate max-w-[200px]">
