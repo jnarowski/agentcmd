@@ -16,6 +16,7 @@ import { workflowRoutes } from "@/server/routes/workflows";
 import { workflowStepRoutes } from "@/server/routes/workflow-steps";
 import { workflowArtifactRoutes } from "@/server/routes/workflow-artifacts";
 import { workflowEventRoutes } from "@/server/routes/workflow-events";
+import { webhookRoutes } from "@/server/routes/webhooks";
 import { createAuthToken } from "./fixtures";
 
 /**
@@ -59,6 +60,7 @@ export async function createTestApp(): Promise<
   await app.register(workflowStepRoutes);
   await app.register(workflowArtifactRoutes);
   await app.register(workflowEventRoutes);
+  await app.register(webhookRoutes);
 
   // Note: WebSocket routes are skipped in test app
 

@@ -7,8 +7,8 @@ CREATE TABLE "workflow_definitions" (
     "description" TEXT,
     "type" TEXT NOT NULL,
     "path" TEXT NOT NULL,
-    "phases" JSONB NOT NULL,
-    "args_schema" JSONB,
+    "phases" TEXT NOT NULL,
+    "args_schema" TEXT,
     "is_template" BOOLEAN NOT NULL DEFAULT true,
     "status" TEXT NOT NULL DEFAULT 'active',
     "file_exists" BOOLEAN NOT NULL DEFAULT true,
@@ -26,7 +26,7 @@ CREATE TABLE "workflow_runs" (
     "user_id" TEXT NOT NULL,
     "workflow_definition_id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "args" JSONB NOT NULL,
+    "args" TEXT NOT NULL,
     "spec_file" TEXT,
     "spec_content" TEXT,
     "spec_type" TEXT,
@@ -61,8 +61,8 @@ CREATE TABLE "workflow_run_steps" (
     "step_type" TEXT NOT NULL,
     "phase" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'pending',
-    "args" JSONB,
-    "output" JSONB,
+    "args" TEXT,
+    "output" TEXT,
     "agent_session_id" TEXT,
     "error_message" TEXT,
     "started_at" DATETIME,
@@ -78,7 +78,7 @@ CREATE TABLE "workflow_events" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "workflow_run_id" TEXT NOT NULL,
     "event_type" TEXT NOT NULL,
-    "event_data" JSONB NOT NULL,
+    "event_data" TEXT NOT NULL,
     "phase" TEXT,
     "inngest_step_id" TEXT,
     "created_by_user_id" TEXT,
@@ -86,6 +86,41 @@ CREATE TABLE "workflow_events" (
     "updated_at" DATETIME NOT NULL,
     CONSTRAINT "workflow_events_workflow_run_id_fkey" FOREIGN KEY ("workflow_run_id") REFERENCES "workflow_runs" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "workflow_events_created_by_user_id_fkey" FOREIGN KEY ("created_by_user_id") REFERENCES "users" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "webhooks" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "project_id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "source" TEXT NOT NULL DEFAULT 'generic',
+    "status" TEXT NOT NULL DEFAULT 'draft',
+    "secret" TEXT NOT NULL,
+    "workflow_identifier" TEXT,
+    "config" TEXT NOT NULL DEFAULT '{}',
+    "webhook_conditions" TEXT,
+    "error_message" TEXT,
+    "last_triggered_at" DATETIME,
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" DATETIME NOT NULL,
+    CONSTRAINT "webhooks_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "projects" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "webhook_events" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "webhook_id" TEXT NOT NULL,
+    "workflow_run_id" TEXT,
+    "status" TEXT NOT NULL,
+    "payload" TEXT NOT NULL,
+    "headers" TEXT NOT NULL,
+    "mapped_data" TEXT,
+    "error_message" TEXT,
+    "processing_time_ms" INTEGER,
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "webhook_events_webhook_id_fkey" FOREIGN KEY ("webhook_id") REFERENCES "webhooks" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "webhook_events_workflow_run_id_fkey" FOREIGN KEY ("workflow_run_id") REFERENCES "workflow_runs" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -125,7 +160,7 @@ CREATE TABLE "users" (
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "last_login" DATETIME,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
-    "settings" JSONB
+    "settings" TEXT
 );
 
 -- CreateTable
@@ -140,7 +175,7 @@ CREATE TABLE "agent_sessions" (
     "permission_mode" TEXT NOT NULL DEFAULT 'default',
     "cli_session_id" TEXT,
     "session_path" TEXT,
-    "metadata" JSONB NOT NULL,
+    "metadata" TEXT NOT NULL,
     "state" TEXT NOT NULL DEFAULT 'idle',
     "error_message" TEXT,
     "is_archived" BOOLEAN NOT NULL DEFAULT false,
@@ -204,6 +239,27 @@ CREATE INDEX "workflow_events_event_type_idx" ON "workflow_events"("event_type")
 
 -- CreateIndex
 CREATE INDEX "workflow_events_phase_idx" ON "workflow_events"("phase");
+
+-- CreateIndex
+CREATE INDEX "webhooks_project_id_idx" ON "webhooks"("project_id");
+
+-- CreateIndex
+CREATE INDEX "webhooks_status_idx" ON "webhooks"("status");
+
+-- CreateIndex
+CREATE INDEX "webhooks_source_idx" ON "webhooks"("source");
+
+-- CreateIndex
+CREATE INDEX "webhook_events_webhook_id_created_at_idx" ON "webhook_events"("webhook_id", "created_at");
+
+-- CreateIndex
+CREATE INDEX "webhook_events_workflow_run_id_idx" ON "webhook_events"("workflow_run_id");
+
+-- CreateIndex
+CREATE INDEX "webhook_events_status_idx" ON "webhook_events"("status");
+
+-- CreateIndex
+CREATE INDEX "webhook_events_created_at_idx" ON "webhook_events"("created_at");
 
 -- CreateIndex
 CREATE INDEX "workflow_artifacts_workflow_run_id_idx" ON "workflow_artifacts"("workflow_run_id");

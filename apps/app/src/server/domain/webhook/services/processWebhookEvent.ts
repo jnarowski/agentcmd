@@ -1,4 +1,4 @@
-import type { WebhookProcessingResult } from "../types/webhook.types";
+import type { WebhookProcessingResult, ConditionRule } from "../types/webhook.types";
 import { getWebhookById } from "./getWebhookById";
 import { validateWebhookSignature } from "./validateWebhookSignature";
 import { evaluateConditions } from "./evaluateConditions";
@@ -9,6 +9,9 @@ import { getWorkflowDefinitionBy } from "../../workflow/services/definitions/get
 import { createWorkflowRun } from "../../workflow/services/runs/createWorkflowRun";
 import { getProjectById } from "../../project/services/getProjectById";
 import { prisma } from "@/shared/prisma";
+import { broadcast } from "@/server/websocket/infrastructure/subscriptions";
+import { Channels } from "@/shared/websocket";
+import { WebhookEventTypes } from "@/shared/types/websocket.types";
 
 // PUBLIC API
 
@@ -74,6 +77,19 @@ export async function processWebhookEvent(
         processing_time_ms: Date.now() - startTime,
       });
 
+      // Emit WebSocket event
+      broadcast(Channels.project(webhook.project_id), {
+        type: WebhookEventTypes.EVENT_RECEIVED,
+        data: {
+          webhook_id: webhook.id,
+          event: {
+            id: event.id,
+            status: event.status,
+            created_at: event.created_at,
+          },
+        },
+      });
+
       return {
         success: false,
         event_id: event.id,
@@ -102,6 +118,19 @@ export async function processWebhookEvent(
         data: { last_triggered_at: new Date() },
       });
 
+      // Emit WebSocket event
+      broadcast(Channels.project(webhook.project_id), {
+        type: WebhookEventTypes.EVENT_RECEIVED,
+        data: {
+          webhook_id: webhook.id,
+          event: {
+            id: event.id,
+            status: event.status,
+            created_at: event.created_at,
+          },
+        },
+      });
+
       return {
         success: true,
         event_id: event.id,
@@ -123,6 +152,19 @@ export async function processWebhookEvent(
         processing_time_ms: Date.now() - startTime,
       });
 
+      // Emit WebSocket event
+      broadcast(Channels.project(webhook.project_id), {
+        type: WebhookEventTypes.EVENT_RECEIVED,
+        data: {
+          webhook_id: webhook.id,
+          event: {
+            id: event.id,
+            status: event.status,
+            created_at: event.created_at,
+          },
+        },
+      });
+
       return {
         success: false,
         event_id: event.id,
@@ -134,12 +176,7 @@ export async function processWebhookEvent(
 
     // 4. Evaluate webhook-level conditions (if any)
     if (webhook.webhook_conditions) {
-      const conditions =
-        typeof webhook.webhook_conditions === "string"
-          ? JSON.parse(webhook.webhook_conditions)
-          : webhook.webhook_conditions;
-
-      if (!evaluateConditions(conditions, payload)) {
+      if (!evaluateConditions(webhook.webhook_conditions as unknown as ConditionRule[], payload)) {
         eventStatus = "filtered";
 
         const event = await createWebhookEvent({
@@ -153,6 +190,19 @@ export async function processWebhookEvent(
         await prisma.webhook.update({
           where: { id: webhookId },
           data: { last_triggered_at: new Date() },
+        });
+
+        // Emit WebSocket event
+        broadcast(Channels.project(webhook.project_id), {
+          type: WebhookEventTypes.EVENT_RECEIVED,
+          data: {
+            webhook_id: webhook.id,
+            event: {
+              id: event.id,
+              status: event.status,
+              created_at: event.created_at,
+            },
+          },
         });
 
         return {
@@ -203,6 +253,19 @@ export async function processWebhookEvent(
         headers,
         error_message: errorMessage,
         processing_time_ms: Date.now() - startTime,
+      });
+
+      // Emit WebSocket event
+      broadcast(Channels.project(webhook.project_id), {
+        type: WebhookEventTypes.EVENT_RECEIVED,
+        data: {
+          webhook_id: webhook.id,
+          event: {
+            id: event.id,
+            status: event.status,
+            created_at: event.created_at,
+          },
+        },
       });
 
       return {
@@ -271,6 +334,19 @@ export async function processWebhookEvent(
       data: { last_triggered_at: new Date() },
     });
 
+    // Emit WebSocket event
+    broadcast(Channels.project(webhook.project_id), {
+      type: WebhookEventTypes.EVENT_RECEIVED,
+      data: {
+        webhook_id: webhook.id,
+        event: {
+          id: event.id,
+          status: event.status,
+          created_at: event.created_at,
+        },
+      },
+    });
+
     return {
       success: true,
       event_id: event.id,
@@ -293,6 +369,22 @@ export async function processWebhookEvent(
       error_message: errorMessage,
       processing_time_ms: Date.now() - startTime,
     });
+
+    // Emit WebSocket event
+    const webhookForError = await getWebhookById(webhookId);
+    if (webhookForError) {
+      broadcast(Channels.project(webhookForError.project_id), {
+        type: WebhookEventTypes.EVENT_RECEIVED,
+        data: {
+          webhook_id: webhookForError.id,
+          event: {
+            id: event.id,
+            status: event.status,
+            created_at: event.created_at,
+          },
+        },
+      });
+    }
 
     return {
       success: false,

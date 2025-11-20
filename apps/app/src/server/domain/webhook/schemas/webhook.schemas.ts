@@ -103,10 +103,11 @@ export const webhookEventStatusSchema = z.enum(WEBHOOK_EVENT_STATUSES);
  * Create webhook schema
  */
 export const createWebhookSchema = z.object({
-  project_id: z.string().min(1),
+  project_id: z.string().min(1).optional(), // Optional because route handler adds it from URL params
   name: z.string().min(1).max(255),
   description: z.string().max(1000).optional(),
   source: webhookSourceSchema.optional().default("generic"),
+  secret: z.string().optional(), // HMAC secret from external service (e.g., Linear signing secret)
   workflow_identifier: z.string().optional(),
   config: webhookConfigSchema.optional(),
   webhook_conditions: z.array(conditionRuleSchema).optional(),
@@ -118,6 +119,7 @@ export const createWebhookSchema = z.object({
 export const updateWebhookSchema = z.object({
   name: z.string().min(1).max(255).optional(),
   description: z.string().max(1000).optional(),
+  secret: z.string().min(1).optional(), // Allow secret rotation
   workflow_identifier: z.string().optional(),
   config: webhookConfigSchema.optional(),
   webhook_conditions: z.array(conditionRuleSchema).optional(),

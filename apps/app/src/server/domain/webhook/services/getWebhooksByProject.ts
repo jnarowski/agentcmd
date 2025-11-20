@@ -17,8 +17,5 @@ export async function getWebhooksByProject(
     orderBy: { created_at: "desc" },
   });
 
-  return webhooks.map((webhook) => ({
-    ...webhook,
-    config: JSON.parse(webhook.config as string),
-  }));
+  return webhooks as unknown as WebhookWithConfig[];
 }

@@ -16,12 +16,5 @@ export async function getWebhookById(
     where: { id },
   });
 
-  if (!webhook) {
-    return null;
-  }
-
-  return {
-    ...webhook,
-    config: JSON.parse(webhook.config as string),
-  };
+  return webhook as WebhookWithConfig | null;
 }

@@ -19,6 +19,9 @@ import ProjectWorkflowsOnboardingPage from "@/client/pages/projects/workflows/Pr
 import WorkflowDefinitionPage from "@/client/pages/projects/workflows/WorkflowDefinitionPage";
 import WorkflowRunDetailPage from "@/client/pages/projects/workflows/WorkflowRunDetailPage";
 import NewWorkflowRunPage from "@/client/pages/projects/workflows/NewWorkflowRunPage";
+import ProjectWebhooksPage from "@/client/pages/projects/webhooks/ProjectWebhooksPage";
+import WebhookFormPage from "@/client/pages/projects/webhooks/WebhookFormPage";
+import WebhookDetailPage from "@/client/pages/projects/webhooks/WebhookDetailPage";
 import LoginPage from "@/client/pages/auth/LoginPage";
 import SignupPage from "@/client/pages/auth/SignupPage";
 import ComponentsPage from "@/client/pages/ComponentsPage";
@@ -58,6 +61,10 @@ function AppContent() {
               <Route path="source" element={<Navigate to="source/files" replace />} />
               <Route path="source/files" element={<ProjectSourcePage />} />
               <Route path="source/git" element={<ProjectSourcePage />} />
+              <Route path="webhooks" element={<ProjectWebhooksPage />} />
+              <Route path="webhooks/new" element={<WebhookFormPage />} />
+              <Route path="webhooks/:webhookId" element={<WebhookDetailPage />} />
+              <Route path="webhooks/:webhookId/edit" element={<WebhookFormPage />} />
             </Route>
           </Route>
 

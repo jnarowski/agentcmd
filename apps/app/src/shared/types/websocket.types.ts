@@ -432,6 +432,42 @@ export type WorkflowWebSocketEvent =
     };
 
 // ============================================================================
+// Webhook Events
+// ============================================================================
+
+/**
+ * Webhook WebSocket event type constants
+ *
+ * Events use dot notation for hierarchical naming
+ * - webhook.event_received - Webhook event received (test, success, filtered, failed)
+ *
+ * All events broadcast to project:${projectId} channel
+ */
+export const WebhookEventTypes = {
+  EVENT_RECEIVED: "webhook.event_received",
+} as const;
+
+/**
+ * Data interface for webhook event received
+ */
+export interface WebhookEventReceivedData {
+  webhook_id: string;
+  event: {
+    id: string;
+    status: "test" | "success" | "filtered" | "failed";
+    created_at: Date | string;
+  };
+}
+
+/**
+ * Discriminated union for all webhook WebSocket events
+ */
+export type WebhookWebSocketEvent = {
+  type: typeof WebhookEventTypes.EVENT_RECEIVED;
+  data: WebhookEventReceivedData;
+};
+
+// ============================================================================
 // Combined Types
 // ============================================================================
 
@@ -439,7 +475,12 @@ export type WorkflowWebSocketEvent =
  * Union of all possible channel events
  * Useful for generic event handling
  */
-export type AnyChannelEvent = SessionEvent | GlobalEvent | ShellEvent | WorkflowWebSocketEvent;
+export type AnyChannelEvent =
+  | SessionEvent
+  | GlobalEvent
+  | ShellEvent
+  | WorkflowWebSocketEvent
+  | WebhookWebSocketEvent;
 
 /**
  * WebSocket message format sent over the wire

@@ -27,6 +27,9 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: vitePort,
+      allowedHosts: env.VITE_ALLOWED_HOSTS
+        ? env.VITE_ALLOWED_HOSTS.split(",").map((host) => host.trim())
+        : undefined,
       proxy: {
         "/api": {
           target: `http://localhost:${serverPort}`,

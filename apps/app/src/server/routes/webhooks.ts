@@ -25,12 +25,12 @@ import { WEBHOOK_RATE_LIMIT } from "@/server/domain/webhook/constants/webhook.co
 
 export async function webhookRoutes(fastify: FastifyInstance) {
   /**
-   * POST /api/webhooks/:webhookId
+   * POST /api/webhooks/:webhookId/events
    * Public webhook receiver endpoint (no auth, rate limited)
    * Always returns 200 to prevent external services from retrying
    */
   fastify.post(
-    "/api/webhooks/:webhookId",
+    "/api/webhooks/:webhookId/events",
     {
       config: {
         rateLimit: {

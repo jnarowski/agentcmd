@@ -1,32 +1,31 @@
-import crypto from "node:crypto";
 import { prisma } from "@/shared/prisma";
-import type { CreateWebhookData, WebhookWithConfig, WebhookConfig } from "../types/webhook.types";
-import { WEBHOOK_SECRET_BYTES, DEFAULT_WEBHOOK_CONFIG } from "../constants/webhook.constants";
+import type { CreateWebhookData, WebhookWithConfig } from "../types/webhook.types";
+import { DEFAULT_WEBHOOK_CONFIG } from "../constants/webhook.constants";
 
 // PUBLIC API
 
 /**
  * Creates a new webhook in draft status
- * Generates a cryptographic secret for HMAC validation
+ * Stores HMAC secret from external service (Linear, GitHub, etc.)
  *
- * @param data - Webhook creation data
+ * @param data - Webhook creation data with secret from provider
  * @returns Created webhook with typed config
  *
  * @example
  * ```typescript
  * const webhook = await createWebhook({
  *   project_id: "proj_123",
- *   name: "GitHub PR Webhook",
- *   source: "github",
- *   workflow_identifier: "pr-review-workflow"
+ *   name: "Linear Issue Webhook",
+ *   source: "linear",
+ *   secret: "abc123...", // From Linear webhook settings
+ *   workflow_identifier: "issue-workflow"
  * });
- * // => { id: "wh_abc", secret: "64-char-hex-string", status: "draft", ... }
+ * // => { id: "wh_abc", secret: "abc123...", status: "draft", ... }
  * ```
  */
 export async function createWebhook(
   data: CreateWebhookData,
 ): Promise<WebhookWithConfig> {
-  const secret = generateSecret();
   const config = data.config || DEFAULT_WEBHOOK_CONFIG;
 
   const webhook = await prisma.webhook.create({
@@ -36,27 +35,12 @@ export async function createWebhook(
       description: data.description,
       source: data.source || "generic",
       status: "draft", // Always start in draft mode
-      secret,
+      secret: data.secret || "",
       workflow_identifier: data.workflow_identifier,
-      config: JSON.stringify(config),
-      webhook_conditions: data.webhook_conditions
-        ? JSON.stringify(data.webhook_conditions)
-        : undefined,
+      config: config as unknown as never,
+      webhook_conditions: data.webhook_conditions as unknown as never,
     },
   });
 
-  return {
-    ...webhook,
-    config: config as WebhookConfig,
-  };
-}
-
-// PRIVATE HELPERS
-
-/**
- * Generates a cryptographic secret for HMAC validation
- * Returns 64-character hex string (32 bytes)
- */
-function generateSecret(): string {
-  return crypto.randomBytes(WEBHOOK_SECRET_BYTES).toString("hex");
+  return webhook as unknown as WebhookWithConfig;
 }
