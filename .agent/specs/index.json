@@ -114,6 +114,14 @@
       "status": "completed",
       "created": "2025-11-19T11:30:00Z",
       "updated": "2025-11-19T20:55:00Z"
+    },
+    "2511200630": {
+      "folder": "2511200630-webhook-revamp",
+      "path": "todo/2511200630-webhook-revamp/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-20T06:30:00Z",
+      "updated": "2025-11-20T06:30:00Z"
     }
   }
 }

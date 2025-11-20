@@ -10,10 +10,10 @@ interface SlashCommandBlockProps {
  */
 export function SlashCommandBlock({ command, message, args }: SlashCommandBlockProps) {
   return (
-    <div className="flex items-center gap-2 text-sm font-mono text-muted-foreground">
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-mono text-muted-foreground">
       <span className="text-foreground">{command}</span>
-      {args && <span className="text-foreground">{args}</span>}
-      {message && <span className="text-xs">• {message}</span>}
+      {args && <span className="text-foreground break-all">{args}</span>}
+      {message && <span className="text-xs break-words">• {message}</span>}
     </div>
   );
 }
