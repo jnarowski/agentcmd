@@ -43,6 +43,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       const root = document.documentElement;
       if (settings.userPreferences.session_theme === 'nature') {
         root.setAttribute('data-theme', 'nature');
+      } else if (settings.userPreferences.session_theme === 'monospace') {
+        root.setAttribute('data-theme', 'monospace');
       } else {
         root.removeAttribute('data-theme');
       }
@@ -54,7 +56,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       await updateSettings.mutateAsync({
         default_permission_mode: permissionMode as 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions',
         default_theme: theme as 'light' | 'dark' | 'system',
-        session_theme: sessionTheme as 'default' | 'nature',
+        session_theme: sessionTheme as 'default' | 'nature' | 'monospace',
         default_agent: agent as 'claude' | 'codex' | 'cursor' | 'gemini',
       });
 
@@ -65,6 +67,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       const root = document.documentElement;
       if (sessionTheme === 'nature') {
         root.setAttribute('data-theme', 'nature');
+      } else if (sessionTheme === 'monospace') {
+        root.setAttribute('data-theme', 'monospace');
       } else {
         root.removeAttribute('data-theme');
       }
@@ -176,6 +180,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               <SelectContent>
                 <SelectItem value="default">Default</SelectItem>
                 <SelectItem value="nature">Nature</SelectItem>
+                <SelectItem value="monospace">Monospace</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-sm text-muted-foreground">

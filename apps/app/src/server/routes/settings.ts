@@ -19,7 +19,7 @@ const execAsync = promisify(exec);
 const userPreferencesSchema = z.object({
   default_permission_mode: z.enum(["default", "plan", "acceptEdits", "bypassPermissions"]),
   default_theme: z.enum(["light", "dark", "system"]),
-  session_theme: z.enum(["default", "nature"]),
+  session_theme: z.enum(["default", "nature", "monospace"]),
   default_agent: z.enum(["claude", "codex", "cursor", "gemini"]),
   onboarding_dismissed: z.boolean().optional(),
   activity_filter: z.enum(["all", "sessions", "workflows"]).optional(),

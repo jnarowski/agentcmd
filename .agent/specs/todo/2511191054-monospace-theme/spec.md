@@ -1,6 +1,6 @@
 # Monospace Theme
 
-**Status**: draft
+**Status**: review
 **Created**: 2025-11-19
 **Package**: apps/app
 **Total Complexity**: 23 points
@@ -138,23 +138,22 @@ None - all changes to existing files
 
 **Phase Complexity**: 2 points (avg 2.0/10)
 
-- [ ] 1.1 [2/10] Add "monospace" to session_theme enum
+- [x] 1.1 [2/10] Add "monospace" to session_theme enum
   - Update Zod enum in `userPreferencesSchema`
   - File: `apps/app/src/server/routes/settings.ts`
   - Line 22: Change `z.enum(["default", "nature"])` to `z.enum(["default", "nature", "monospace"])`
 
 #### Completion Notes
 
-- What was implemented:
-- Deviations from plan (if any):
-- Important context or decisions:
-- Known issues or follow-ups (if any):
+- Added "monospace" to session_theme enum in backend schema
+- No database migration needed (stored in JSON field)
+- Backend now accepts and validates monospace theme value
 
 ### Phase 2: CSS Theme
 
 **Phase Complexity**: 14 points (avg 2.8/10)
 
-- [ ] 2.1 [4/10] Add font-family variables to @theme inline
+- [x] 2.1 [4/10] Add font-family variables to @theme inline
   - Add `--font-sans`, `--font-serif`, `--font-mono` mappings
   - File: `apps/app/src/client/index.css`
   - Add after line 42 (in `@theme inline` block):
@@ -165,7 +164,7 @@ None - all changes to existing files
     ```
   - This enables Tailwind utilities and prose to respect theme fonts
 
-- [ ] 2.2 [3/10] Add monospace theme light mode CSS
+- [x] 2.2 [3/10] Add monospace theme light mode CSS
   - File: `apps/app/src/client/index.css`
   - Add after nature theme (~line 215)
   - Use selector: `:root[data-theme="monospace"]`
@@ -173,7 +172,7 @@ None - all changes to existing files
   - Include font overrides: `--font-sans`, `--font-serif`, `--font-mono` set to `Geist Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace`
   - Include `--radius: 0rem`
 
-- [ ] 2.3 [3/10] Add monospace theme dark mode CSS
+- [x] 2.3 [3/10] Add monospace theme dark mode CSS
   - File: `apps/app/src/client/index.css`
   - Add after light mode definition
   - Use selector: `:root[data-theme="monospace"].dark`
@@ -181,52 +180,53 @@ None - all changes to existing files
   - Include same font overrides as light mode
   - Include `--radius: 0rem`
 
-- [ ] 2.4 [2/10] Verify CSS variable completeness
+- [x] 2.4 [2/10] Verify CSS variable completeness
   - Check that both light and dark modes have all 34 variables
   - Required vars: background, foreground, card, card-foreground, popover, popover-foreground, primary, primary-foreground, secondary, secondary-foreground, muted, muted-foreground, accent, accent-foreground, destructive, destructive-foreground, border, input, ring, chart-1 through chart-5, sidebar, sidebar-foreground, sidebar-primary, sidebar-primary-foreground, sidebar-accent, sidebar-accent-foreground, sidebar-border, sidebar-ring
   - Verify OKLCH format and chroma = 0 for grayscale
 
-- [ ] 2.5 [2/10] Test CSS syntax
+- [x] 2.5 [2/10] Test CSS syntax
   - Run: `pnpm dev:client`
   - Check browser console for CSS errors
   - Verify no syntax errors in theme definitions
 
 #### Completion Notes
 
-- What was implemented:
-- Deviations from plan (if any):
-- Important context or decisions:
-- Known issues or follow-ups (if any):
+- Added font mappings to @theme inline for automatic cascade
+- Implemented full monospace theme with all 34 CSS variables for light and dark modes
+- All colors use pure grayscale (chroma = 0) in OKLCH format
+- Zero border radius and monospace fonts (Geist Mono with fallbacks)
+- Font variables enable automatic application to all Tailwind utilities including prose
 
 ### Phase 3: Frontend Types & UI
 
 **Phase Complexity**: 7 points (avg 1.8/10)
 
-- [ ] 3.1 [2/10] Update useSettings type
+- [x] 3.1 [2/10] Update useSettings type
   - File: `apps/app/src/client/hooks/useSettings.ts`
   - Line 28: Change `session_theme: 'default' | 'nature'` to `'default' | 'nature' | 'monospace'`
 
-- [ ] 3.2 [2/10] Update SettingsDialog type cast
+- [x] 3.2 [2/10] Update SettingsDialog type cast
   - File: `apps/app/src/client/components/SettingsDialog.tsx`
   - Line 57: Change type cast to `session_theme: sessionTheme as 'default' | 'nature' | 'monospace'`
 
-- [ ] 3.3 [2/10] Add theme application logic
+- [x] 3.3 [2/10] Add theme application logic
   - File: `apps/app/src/client/components/SettingsDialog.tsx`
   - Update `handleSave` function (around line 66-70)
   - Add conditional: `else if (sessionTheme === 'monospace') { root.setAttribute('data-theme', 'monospace'); }`
   - Update `useEffect` with same logic (for mount)
 
-- [ ] 3.4 [1/10] Add dropdown option
+- [x] 3.4 [1/10] Add dropdown option
   - File: `apps/app/src/client/components/SettingsDialog.tsx`
   - Add `<SelectItem value="monospace">Monospace</SelectItem>` to theme dropdown
   - Should be after "Nature" option
 
 #### Completion Notes
 
-- What was implemented:
-- Deviations from plan (if any):
-- Important context or decisions:
-- Known issues or follow-ups (if any):
+- Updated TypeScript types to include monospace theme
+- Added theme application logic in both handleSave and useEffect mount
+- Added Monospace option to Settings dialog dropdown
+- Theme correctly applies data-theme="monospace" attribute to root element
 
 ## Testing Strategy
 
