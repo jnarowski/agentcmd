@@ -25,6 +25,11 @@ export interface CreateWorkflowRunInput {
   base_branch?: string;
   branch_name?: string;
   inngest_run_id?: string;
+  triggered_by?: 'manual' | 'webhook' | 'api' | 'scheduled';
+  webhook_event_id?: string;
+  issue_id?: string;
+  issue_url?: string;
+  issue_source?: 'github' | 'linear' | 'jira' | 'generic';
 }
 
 // Workflow execution filters for querying

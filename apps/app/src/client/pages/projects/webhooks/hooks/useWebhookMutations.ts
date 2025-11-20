@@ -10,10 +10,6 @@ interface UpdateWebhookInput {
   data: Partial<WebhookFormData>;
 }
 
-interface RotateSecretResponse {
-  secret: string;
-}
-
 /**
  * All webhook mutations with proper invalidation and navigation
  */
@@ -107,27 +103,6 @@ export function useWebhookMutations(projectId: string) {
     },
   });
 
-  // Rotate secret
-  const rotateSecretMutation = useMutation({
-    mutationFn: async ({ webhookId }: { webhookId: string }): Promise<RotateSecretResponse> => {
-      const result = await api.post<{ data: RotateSecretResponse }>(
-        `/api/webhooks/${webhookId}/rotate-secret`
-      );
-      return result.data;
-    },
-    onSuccess: (_data, { webhookId }) => {
-      queryClient.invalidateQueries({ queryKey: webhookKeys.detail(webhookId) });
-      toast.success("Secret rotated", {
-        description: "Update your webhook configuration with the new secret",
-      });
-    },
-    onError: (error: Error) => {
-      toast.error("Failed to rotate secret", {
-        description: error.message,
-      });
-    },
-  });
-
   // Delete webhook
   const deleteMutation = useMutation({
     mutationFn: async ({ webhookId }: { webhookId: string }): Promise<void> => {
@@ -149,7 +124,6 @@ export function useWebhookMutations(projectId: string) {
     updateMutation,
     activateMutation,
     pauseMutation,
-    rotateSecretMutation,
     deleteMutation,
   };
 }

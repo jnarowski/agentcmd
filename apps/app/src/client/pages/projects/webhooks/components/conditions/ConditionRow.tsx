@@ -1,6 +1,8 @@
 import { Controller, useFormContext, useWatch } from "react-hook-form";
+import { X } from "lucide-react";
 import { Field, FieldError } from "@/client/components/ui/field";
 import { Combobox } from "@/client/components/ui/combobox";
+import { Button } from "@/client/components/ui/button";
 import type { WebhookFormData } from "../../schemas/webhook.schemas";
 import { TokenInput } from "../TokenInput";
 
@@ -9,6 +11,9 @@ interface ConditionRowProps {
   index: number;
   testPayload?: Record<string, unknown> | null;
   disabled?: boolean;
+  label: "if" | "and";
+  showRemove: boolean;
+  onRemove: () => void;
 }
 
 const OPERATOR_OPTIONS = [
@@ -30,6 +35,9 @@ export function ConditionRow({
   index,
   testPayload,
   disabled = false,
+  label,
+  showRemove,
+  onRemove,
 }: ConditionRowProps) {
   const {
     control,
@@ -59,76 +67,98 @@ export function ConditionRow({
   const conditionError = getError();
 
   return (
-    <div className="flex flex-col gap-2 sm:grid sm:grid-cols-12 sm:items-start">
-      {/* Path */}
-      <div className="sm:col-span-5">
-        <Field>
-          <Controller
-            control={control}
-            // @ts-expect-error - Dynamic path validated at runtime
-            name={`${basePath}.${index}.path`}
-            render={({ field }) => (
-              <TokenInput
-                value={field.value as string}
-                onChange={field.onChange}
-                testPayload={testPayload}
-                placeholder="Field path or / to pick"
-                disabled={disabled}
-              />
-            )}
-          />
-          {conditionError?.path && (
-            <FieldError>{conditionError.path.message}</FieldError>
-          )}
-        </Field>
-      </div>
+    <div className="flex gap-2 items-start">
+      {/* Label */}
+      <span className="text-sm font-medium text-muted-foreground mt-2 min-w-[2rem]">
+        {label}
+      </span>
 
-      {/* Operator */}
-      <div className={showValue ? "sm:col-span-3" : "sm:col-span-7"}>
-        <Field>
-          <Controller
-            control={control}
-            // @ts-expect-error - Dynamic path validated at runtime
-            name={`${basePath}.${index}.operator`}
-            render={({ field }) => (
-              <Combobox
-                value={field.value}
-                onValueChange={field.onChange}
-                options={OPERATOR_OPTIONS}
-                placeholder="Operator"
-                disabled={disabled}
-              />
-            )}
-          />
-          {conditionError?.operator && (
-            <FieldError>{conditionError.operator.message}</FieldError>
-          )}
-        </Field>
-      </div>
-
-      {/* Value (hidden for exists/not_exists) */}
-      {showValue && (
-        <div className="sm:col-span-4">
+      {/* Condition Fields */}
+      <div className="flex-1 flex flex-col gap-2 sm:grid sm:grid-cols-12 sm:items-start">
+        {/* Path */}
+        <div className="sm:col-span-5">
           <Field>
             <Controller
               control={control}
               // @ts-expect-error - Dynamic path validated at runtime
-              name={`${basePath}.${index}.value`}
+              name={`${basePath}.${index}.path`}
               render={({ field }) => (
                 <TokenInput
                   value={field.value as string}
                   onChange={field.onChange}
                   testPayload={testPayload}
-                  placeholder="Value or / to pick"
+                  placeholder="Field path or / to pick"
                   disabled={disabled}
                 />
               )}
             />
-            {conditionError?.value && (
-              <FieldError>{conditionError.value.message}</FieldError>
+            {conditionError?.path && (
+              <FieldError>{conditionError.path.message}</FieldError>
             )}
           </Field>
         </div>
+
+        {/* Operator */}
+        <div className={showValue ? "sm:col-span-3" : "sm:col-span-7"}>
+          <Field>
+            <Controller
+              control={control}
+              // @ts-expect-error - Dynamic path validated at runtime
+              name={`${basePath}.${index}.operator`}
+              render={({ field }) => (
+                <Combobox
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  options={OPERATOR_OPTIONS}
+                  placeholder="Operator"
+                  disabled={disabled}
+                />
+              )}
+            />
+            {conditionError?.operator && (
+              <FieldError>{conditionError.operator.message}</FieldError>
+            )}
+          </Field>
+        </div>
+
+        {/* Value (hidden for exists/not_exists) */}
+        {showValue && (
+          <div className="sm:col-span-4">
+            <Field>
+              <Controller
+                control={control}
+                // @ts-expect-error - Dynamic path validated at runtime
+                name={`${basePath}.${index}.value`}
+                render={({ field }) => (
+                  <TokenInput
+                    value={field.value as string}
+                    onChange={field.onChange}
+                    testPayload={testPayload}
+                    placeholder="Value or / to pick"
+                    disabled={disabled}
+                  />
+                )}
+              />
+              {conditionError?.value && (
+                <FieldError>{conditionError.value.message}</FieldError>
+              )}
+            </Field>
+          </div>
+        )}
+      </div>
+
+      {/* Remove Button - only show if showRemove */}
+      {showRemove && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={onRemove}
+          disabled={disabled}
+          className="mt-1"
+        >
+          <X className="h-4 w-4" />
+        </Button>
       )}
     </div>
   );

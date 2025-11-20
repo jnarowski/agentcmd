@@ -9,13 +9,14 @@ import { useRecentTestEvent } from "./hooks/useRecentTestEvent";
 import { useWebhookMutations } from "./hooks/useWebhookMutations";
 import { useWebhookWebSocket } from "./hooks/useWebhookWebSocket";
 import {
+  createWebhookFormSchema,
   updateWebhookFormSchema,
+  type CreateWebhookFormValues,
   type UpdateWebhookFormValues,
 } from "./schemas/webhook.schemas";
 import type { Webhook } from "./types/webhook.types";
 import { WebhookBasicInfoSection } from "./components/form-sections/WebhookBasicInfoSection";
 import { WebhookMappingsSection } from "./components/form-sections/WebhookMappingsSection";
-import { WebhookConditionsSection } from "./components/form-sections/WebhookConditionsSection";
 
 /**
  * Convert Webhook to form values
@@ -26,7 +27,7 @@ function webhookToFormValues(webhook: Webhook): UpdateWebhookFormValues {
     description: webhook.description || undefined,
     workflow_identifier: webhook.workflow_identifier || undefined,
     config: webhook.config,
-    webhook_conditions: webhook.webhook_conditions,
+    // Don't include secret - let it remain undefined so form detects changes
   };
 }
 
@@ -50,20 +51,35 @@ export default function WebhookFormPage() {
   // WebSocket for real-time updates (only in edit mode)
   useWebhookWebSocket(projectId!, webhookId);
 
-  // Form setup - use UpdateWebhookFormValues for both modes (it's a superset)
-  const form = useForm<UpdateWebhookFormValues>({
-    resolver: zodResolver(updateWebhookFormSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      source: "generic",
-      secret: "",
-      workflow_identifier: "",
-      config: {
-        field_mappings: [],
-      },
-      webhook_conditions: [],
-    },
+  // Form setup - use different schemas for create vs edit
+  const form = useForm<CreateWebhookFormValues | UpdateWebhookFormValues>({
+    resolver: zodResolver(
+      isCreateMode ? createWebhookFormSchema : updateWebhookFormSchema
+    ),
+    defaultValues: isCreateMode
+      ? {
+          name: "",
+          description: "",
+          source: "generic" as const,
+          secret: "",
+        }
+      : {
+          name: "",
+          description: "",
+          source: "generic" as const,
+          // Don't include secret in default values - only set it when user edits
+          workflow_identifier: "",
+          config: {
+            name: "Webhook Run",
+            mappings: [
+              {
+                spec_type_id: "",
+                workflow_id: "",
+                conditions: [],
+              },
+            ],
+          },
+        },
   });
 
   const { reset, formState } = form;
@@ -76,19 +92,19 @@ export default function WebhookFormPage() {
   }, [webhook, reset, isCreateMode]);
 
   // Handle form submission
-  const onSubmit = async (data: UpdateWebhookFormValues) => {
+  const onSubmit = async (
+    data: CreateWebhookFormValues | UpdateWebhookFormValues
+  ) => {
     if (isCreateMode) {
-      // For create mode, extract only the fields needed for CreateWebhookFormValues
-      const createData = {
-        name: data.name,
-        description: data.description,
-        source: data.source || ("github" as const),
-        secret: data.secret,
-      };
-      createMutation.mutate(createData);
+      // Create mode - data is CreateWebhookFormValues
+      createMutation.mutate(data as CreateWebhookFormValues);
     } else {
+      // Edit mode - data is UpdateWebhookFormValues
       if (!webhookId) return;
-      updateMutation.mutate({ webhookId: webhookId!, data });
+      updateMutation.mutate({
+        webhookId: webhookId!,
+        data: data as UpdateWebhookFormValues,
+      });
     }
   };
 
@@ -159,7 +175,6 @@ export default function WebhookFormPage() {
           <div className="space-y-6 p-4 sm:p-6 bg-card rounded-lg border">
             {/* Basic Info Section - Always visible */}
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold">Basic Information</h2>
               <WebhookBasicInfoSection
                 control={form.control}
                 webhookUrl={
@@ -187,28 +202,14 @@ export default function WebhookFormPage() {
 
             {/* Unlocked sections after test event */}
             {!isCreateMode && hasTestEvent && (
-              <>
-                {/* Field Mappings Section */}
-                <div className="space-y-4 pt-6 border-t">
-                  <WebhookMappingsSection
-                    testPayload={
-                      testEvent?.payload as Record<string, unknown> | undefined
-                    }
-                    locked={false}
-                  />
-                </div>
-
-                {/* Conditions Section */}
-                <div className="space-y-4 pt-6 border-t">
-                  <h2 className="text-xl font-semibold">Webhook Conditions</h2>
-                  <WebhookConditionsSection
-                    testPayload={
-                      testEvent?.payload as Record<string, unknown> | undefined
-                    }
-                    locked={false}
-                  />
-                </div>
-              </>
+              <div className="space-y-4 pt-6 border-t">
+                <WebhookMappingsSection
+                  testPayload={
+                    testEvent?.payload as Record<string, unknown> | undefined
+                  }
+                  locked={false}
+                />
+              </div>
             )}
           </div>
 

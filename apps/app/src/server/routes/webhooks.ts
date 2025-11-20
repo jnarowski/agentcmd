@@ -11,7 +11,6 @@ import {
   deleteWebhook,
   activateWebhook,
   pauseWebhook,
-  rotateWebhookSecret,
   getWebhookEvents,
   processWebhookEvent,
 } from "@/server/domain/webhook/services";
@@ -90,6 +89,7 @@ export async function webhookRoutes(fastify: FastifyInstance) {
               name: z.string(),
               secret: z.string(),
               status: z.string(),
+              config: z.unknown(),
             }),
           }),
           400: errorResponse,
@@ -114,9 +114,17 @@ export async function webhookRoutes(fastify: FastifyInstance) {
             name: webhook.name,
             secret: webhook.secret,
             status: webhook.status,
+            config: webhook.config,
           },
         });
-      } catch (error) {
+      } catch (error: unknown) {
+        // Handle validation errors from service
+        if (error instanceof Error && error.message.includes("mapping")) {
+          return reply
+            .code(400)
+            .send(buildErrorResponse(400, error.message));
+        }
+
         fastify.log.error({ error }, "Error creating webhook");
         return reply
           .code(500)
@@ -231,6 +239,13 @@ export async function webhookRoutes(fastify: FastifyInstance) {
 
         return reply.send({ data: webhook });
       } catch (error) {
+        // Handle validation errors from service
+        if (error instanceof Error && error.message.includes("mapping")) {
+          return reply
+            .code(400)
+            .send(buildErrorResponse(400, error.message));
+        }
+
         if (
           error instanceof Error &&
           error.message.includes("not found")
@@ -389,50 +404,6 @@ export async function webhookRoutes(fastify: FastifyInstance) {
         return reply
           .code(500)
           .send(buildErrorResponse(500, "Failed to pause webhook"));
-      }
-    },
-  );
-
-  /**
-   * POST /api/webhooks/:webhookId/rotate-secret
-   * Rotate webhook secret
-   */
-  fastify.post(
-    "/api/webhooks/:webhookId/rotate-secret",
-    {
-      preHandler: fastify.authenticate,
-      schema: {
-        params: z.object({ webhookId: z.string() }),
-        response: {
-          200: z.object({
-            secret: z.string(),
-          }),
-          401: errorResponse,
-          404: errorResponse,
-          500: errorResponse,
-        },
-      },
-    },
-    async (request, reply) => {
-      try {
-        const { webhookId } = request.params as { webhookId: string };
-        const newSecret = await rotateWebhookSecret(webhookId);
-
-        return reply.send({ secret: newSecret });
-      } catch (error) {
-        if (
-          error instanceof Error &&
-          error.message.includes("not found")
-        ) {
-          return reply
-            .code(404)
-            .send(buildErrorResponse(404, "Webhook not found"));
-        }
-
-        fastify.log.error({ error }, "Error rotating secret");
-        return reply
-          .code(500)
-          .send(buildErrorResponse(500, "Failed to rotate secret"));
       }
     },
   );

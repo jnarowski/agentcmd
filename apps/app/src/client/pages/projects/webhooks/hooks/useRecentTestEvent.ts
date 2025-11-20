@@ -15,8 +15,8 @@ export function useRecentTestEvent(webhookId: string | undefined, options?: { en
         limit: "1",
       });
 
-      const data = await api.get(`/api/webhooks/${webhookId}/events?${params}`);
-      const events = data.data as WebhookEvent[];
+      const response = await api.get<{ data: WebhookEvent[] }>(`/api/webhooks/${webhookId}/events?${params}`);
+      const events = response.data;
       return events.length > 0 ? events[0] : null;
     },
     enabled: options?.enabled !== false && !!webhookId,

@@ -1,7 +1,6 @@
 import { z } from "zod";
 import {
   CONDITIONAL_OPERATORS,
-  FIELD_MAPPING_TYPES,
   HMAC_METHODS,
   WEBHOOK_SOURCES,
   WEBHOOK_STATUSES,
@@ -25,48 +24,21 @@ export const conditionRuleSchema = z.object({
 });
 
 /**
- * Conditional mapping schema
+ * Simple mapping schema (no conditions, always matches)
  */
-export const conditionalMappingSchema = z.object({
-  conditions: z.array(conditionRuleSchema).min(1),
-  value: z.string(),
+export const simpleMappingSchema = z.object({
+  spec_type_id: z.string().min(1),
+  workflow_id: z.string().min(1),
 });
 
 /**
- * Field mapping type schema
+ * Mapping group schema (with conditions)
  */
-export const fieldMappingTypeSchema = z.enum(FIELD_MAPPING_TYPES);
-
-/**
- * Field mapping schema
- */
-export const fieldMappingSchema = z
-  .object({
-    type: fieldMappingTypeSchema,
-    field: z.string().min(1),
-    value: z.string().optional(),
-    default: z.string().optional(),
-    conditionals: z.array(conditionalMappingSchema).optional(),
-  })
-  .refine(
-    (data) => {
-      // Input type must have value
-      if (data.type === "input") {
-        return data.value !== undefined;
-      }
-      // Conditional type must have conditionals array
-      if (data.type === "conditional") {
-        return (
-          data.conditionals !== undefined && data.conditionals.length > 0
-        );
-      }
-      return true;
-    },
-    {
-      message:
-        "Input type requires 'value', conditional type requires 'conditionals'",
-    },
-  );
+export const mappingGroupSchema = z.object({
+  spec_type_id: z.string().min(1),
+  workflow_id: z.string().min(1),
+  conditions: z.array(conditionRuleSchema), // Empty array = always match
+});
 
 /**
  * Source config schema
@@ -77,12 +49,53 @@ export const sourceConfigSchema = z.object({
 });
 
 /**
- * Webhook config schema
+ * Webhook config schema with unified mappings array
  */
-export const webhookConfigSchema = z.object({
-  field_mappings: z.array(fieldMappingSchema),
-  source_config: sourceConfigSchema.optional(),
-});
+export const webhookConfigSchema = z
+  .object({
+    name: z.string().min(1), // Template for workflow run name with {{tokens}}
+    spec_content: z.string().optional(), // Template for spec content with {{tokens}}
+    mappings: z.array(mappingGroupSchema).default([]),
+    default_action: z.enum(["skip", "set_fields"]).optional(),
+    default_mapping: simpleMappingSchema.optional(),
+    source_config: sourceConfigSchema.optional(),
+  })
+  .refine(
+    (data) => {
+      // Allow empty mappings array (draft webhooks)
+      if (data.mappings.length === 0) {
+        return true;
+      }
+
+      const hasNonEmptyConditions = data.mappings.some(
+        (m) => m.conditions.length > 0,
+      );
+      const allEmptyConditions = data.mappings.every(
+        (m) => m.conditions.length === 0,
+      );
+
+      // Simple mode: exactly 1 mapping with empty conditions, no default_action
+      if (data.mappings.length === 1 && allEmptyConditions) {
+        return data.default_action === undefined;
+      }
+
+      // Multiple mappings with all empty conditions: default_action required
+      if (data.mappings.length > 1 && allEmptyConditions) {
+        return data.default_action !== undefined;
+      }
+
+      // Conditional mode: at least one mapping with conditions, default_action required
+      if (hasNonEmptyConditions) {
+        return data.default_action !== undefined;
+      }
+
+      return true;
+    },
+    {
+      message:
+        "Simple mode (1 mapping with empty conditions) requires no default_action. Multiple mappings or conditional mode require default_action.",
+    },
+  );
 
 /**
  * Webhook source schema
@@ -101,6 +114,7 @@ export const webhookEventStatusSchema = z.enum(WEBHOOK_EVENT_STATUSES);
 
 /**
  * Create webhook schema
+ * Note: config validation happens in service layer (createWebhook) to avoid Fastify serialization issues
  */
 export const createWebhookSchema = z.object({
   project_id: z.string().min(1).optional(), // Optional because route handler adds it from URL params
@@ -109,18 +123,17 @@ export const createWebhookSchema = z.object({
   source: webhookSourceSchema.optional().default("generic"),
   secret: z.string().optional(), // HMAC secret from external service (e.g., Linear signing secret)
   workflow_identifier: z.string().optional(),
-  config: webhookConfigSchema.optional(),
-  webhook_conditions: z.array(conditionRuleSchema).optional(),
+  config: z.unknown().optional(), // Validated in service layer
 });
 
 /**
  * Update webhook schema
+ * Note: config validation happens in service layer (updateWebhook) to avoid Fastify serialization issues
  */
 export const updateWebhookSchema = z.object({
   name: z.string().min(1).max(255).optional(),
   description: z.string().max(1000).optional(),
   secret: z.string().min(1).optional(), // Allow secret rotation
   workflow_identifier: z.string().optional(),
-  config: webhookConfigSchema.optional(),
-  webhook_conditions: z.array(conditionRuleSchema).optional(),
+  config: z.unknown().optional(), // Validated in service layer
 });

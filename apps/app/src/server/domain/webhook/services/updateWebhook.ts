@@ -1,5 +1,6 @@
 import { prisma } from "@/shared/prisma";
 import type { UpdateWebhookData, WebhookWithConfig } from "../types/webhook.types";
+import { webhookConfigSchema } from "../schemas/webhook.schemas";
 
 // PUBLIC API
 
@@ -20,12 +21,20 @@ export async function updateWebhook(
 
   if (data.name !== undefined) updateData.name = data.name;
   if (data.description !== undefined) updateData.description = data.description;
-  if (data.secret !== undefined) updateData.secret = data.secret;
+  // Only update secret if a non-empty value is provided (empty string = keep existing)
+  if (data.secret !== undefined && data.secret !== "") updateData.secret = data.secret;
   if (data.workflow_identifier !== undefined)
     updateData.workflow_identifier = data.workflow_identifier;
-  if (data.config !== undefined) updateData.config = data.config;
-  if (data.webhook_conditions !== undefined)
-    updateData.webhook_conditions = data.webhook_conditions;
+
+  // Validate config if provided
+  if (data.config !== undefined) {
+    const validationResult = webhookConfigSchema.safeParse(data.config);
+    if (!validationResult.success) {
+      const firstError = validationResult.error.issues[0];
+      throw new Error(firstError?.message || "Invalid webhook configuration");
+    }
+    updateData.config = data.config;
+  }
 
   const webhook = await prisma.webhook.update({
     where: { id },

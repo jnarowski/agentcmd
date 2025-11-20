@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Github, Box, Webhook, MoreVertical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -10,11 +11,11 @@ import {
   DropdownMenuTrigger,
 } from "@/client/components/ui/dropdown-menu";
 import { Button } from "@/client/components/ui/button";
+import { DeleteWebhookDialog } from "./DeleteWebhookDialog";
 
 export interface WebhookCardProps {
   webhook: WebhookType;
   projectId: string;
-  onDelete?: (webhookId: string) => void;
 }
 
 function getSourceIcon(source: string) {
@@ -44,12 +45,9 @@ function getSourceLabel(source: string) {
   }
 }
 
-export function WebhookCard({
-  webhook,
-  projectId,
-  onDelete,
-}: WebhookCardProps) {
+export function WebhookCard({ webhook, projectId }: WebhookCardProps) {
   const navigate = useNavigate();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const SourceIcon = getSourceIcon(webhook.source);
 
   const handleCardClick = () => {
@@ -63,7 +61,7 @@ export function WebhookCard({
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onDelete?.(webhook.id);
+    setDeleteDialogOpen(true);
   };
 
   const lastTriggered = webhook.last_triggered_at
@@ -116,14 +114,12 @@ export function WebhookCard({
                 View Details
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
-              {onDelete && (
-                <DropdownMenuItem
-                  onClick={handleDelete}
-                  className="text-destructive"
-                >
-                  Delete
-                </DropdownMenuItem>
-              )}
+              <DropdownMenuItem
+                onClick={handleDelete}
+                className="text-destructive"
+              >
+                Delete
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -155,6 +151,12 @@ export function WebhookCard({
           </div>
         )}
       </div>
+
+      <DeleteWebhookDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        webhook={webhook}
+      />
     </div>
   );
 }

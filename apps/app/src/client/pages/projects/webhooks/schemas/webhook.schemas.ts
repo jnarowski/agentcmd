@@ -30,11 +30,6 @@ export const conditionalOperatorSchema = z.enum([
 ]);
 
 /**
- * Field mapping types
- */
-export const fieldMappingTypeSchema = z.enum(["input", "conditional"]);
-
-/**
  * Condition rule schema
  */
 export const conditionRuleSchema = z.object({
@@ -44,38 +39,21 @@ export const conditionRuleSchema = z.object({
 });
 
 /**
- * Conditional mapping schema
+ * Simple mapping schema (no conditions)
  */
-export const conditionalMappingSchema = z.object({
-  conditions: z.array(conditionRuleSchema).min(1, "At least one condition required"),
-  value: z.string().min(1, "Value is required"),
+export const simpleMappingSchema = z.object({
+  spec_type_id: z.string().min(1, "Spec type is required"),
+  workflow_id: z.string().min(1, "Workflow is required"),
 });
 
 /**
- * Field mapping schema
+ * Mapping group schema (with conditions)
  */
-export const fieldMappingSchema = z
-  .object({
-    type: fieldMappingTypeSchema,
-    field: z.string().min(1, "Field name is required"),
-    value: z.string().optional(),
-    default: z.string().optional(),
-    conditional_values: z.array(conditionalMappingSchema).optional(),
-  })
-  .refine(
-    (data) => {
-      if (data.type === "input") {
-        return data.value !== undefined && data.value.length > 0;
-      }
-      if (data.type === "conditional") {
-        return data.conditional_values !== undefined && data.conditional_values.length > 0;
-      }
-      return true;
-    },
-    {
-      message: "Input type requires value, conditional type requires conditional_values",
-    },
-  );
+export const mappingGroupSchema = z.object({
+  spec_type_id: z.string().min(1, "Spec type is required"),
+  workflow_id: z.string().min(1, "Workflow is required"),
+  conditions: z.array(conditionRuleSchema), // Empty array = always match
+});
 
 /**
  * Source config schema
@@ -86,12 +64,38 @@ export const sourceConfigSchema = z.object({
 });
 
 /**
- * Webhook config schema
+ * Webhook config schema with unified mappings array
  */
-export const webhookConfigSchema = z.object({
-  field_mappings: z.array(fieldMappingSchema),
-  source_config: sourceConfigSchema.optional(),
-});
+export const webhookConfigSchema = z
+  .object({
+    name: z.string().min(1, "Workflow run name is required"),
+    spec_content: z.string().optional(),
+    mappings: z.array(mappingGroupSchema).min(1, "At least one mapping required"),
+    default_action: z.enum(["skip", "set_fields"]).optional(),
+    default_mapping: simpleMappingSchema.optional(),
+    source_config: sourceConfigSchema.optional(),
+  })
+  .refine(
+    (data) => {
+      const hasEmptyConditions = data.mappings.some((m) => m.conditions.length === 0);
+      const hasNonEmptyConditions = data.mappings.some((m) => m.conditions.length > 0);
+
+      // Simple mode: exactly 1 mapping with empty conditions, no default_action
+      if (hasEmptyConditions && data.mappings.length === 1) {
+        return data.default_action === undefined;
+      }
+
+      // Conditional mode: at least one mapping with conditions, default_action required
+      if (hasNonEmptyConditions) {
+        return data.default_action !== undefined;
+      }
+
+      return true;
+    },
+    {
+      message: "Simple mode: 1 mapping with empty conditions. Conditional mode: default_action required.",
+    },
+  );
 
 /**
  * Create webhook form schema
@@ -112,8 +116,7 @@ export const updateWebhookFormSchema = z.object({
   source: webhookSourceSchema.optional(), // Optional for update, required for create
   secret: z.string().optional(), // Allow secret rotation (empty string = keep existing)
   workflow_identifier: z.string().optional(),
-  config: webhookConfigSchema,
-  webhook_conditions: z.array(conditionRuleSchema),
+  config: webhookConfigSchema.optional(),
 });
 
 /**

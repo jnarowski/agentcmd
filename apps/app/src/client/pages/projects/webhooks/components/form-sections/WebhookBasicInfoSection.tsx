@@ -4,10 +4,7 @@ import { useState } from "react";
 import { Field, FieldContent, FieldLabel, FieldDescription } from "@/client/components/ui/field";
 import { Input } from "@/client/components/ui/input";
 import { Textarea } from "@/client/components/ui/textarea";
-import { Button } from "@/client/components/ui/button";
 import { InputGroup, InputGroupInput, InputGroupAddon, InputGroupButton } from "@/client/components/ui/input-group";
-import type { ComboboxOption } from "@/client/components/ui/combobox";
-import { SecretDisplay } from "../SecretDisplay";
 import type { UpdateWebhookFormValues } from "../../schemas/webhook.schemas";
 import type { WebhookSource } from "../../types/webhook.types";
 
@@ -19,11 +16,11 @@ interface WebhookBasicInfoSectionProps {
   isEditMode?: boolean;
 }
 
-const sourceOptions: readonly ComboboxOption<WebhookSource>[] = [
-  { value: "github", label: "GitHub", description: "GitHub webhook events" },
-  { value: "linear", label: "Linear", description: "Linear issue events" },
-  { value: "jira", label: "Jira", description: "Jira issue events" },
-  { value: "generic", label: "Generic", description: "Custom webhook payloads" },
+const sourceOptions = [
+  { value: "github" as const, label: "GitHub", description: "GitHub webhook events" },
+  { value: "linear" as const, label: "Linear", description: "Linear issue events" },
+  { value: "jira" as const, label: "Jira", description: "Jira issue events" },
+  { value: "generic" as const, label: "Generic", description: "Custom webhook payloads" },
 ] as const;
 
 export function WebhookBasicInfoSection({
@@ -34,6 +31,7 @@ export function WebhookBasicInfoSection({
   isEditMode = true,
 }: WebhookBasicInfoSectionProps) {
   const [urlCopied, setUrlCopied] = useState(false);
+  const [isEditingSecret, setIsEditingSecret] = useState(false);
 
   const handleCopyUrl = async () => {
     if (!webhookUrl) return;
@@ -165,8 +163,7 @@ export function WebhookBasicInfoSection({
         control={control}
         name="secret"
         render={({ field, fieldState }) => {
-          const [isEditing, setIsEditing] = useState(false);
-          const hasExistingSecret = isEditMode && webhookSecret && !isEditing;
+          const hasExistingSecret = isEditMode && webhookSecret && !isEditingSecret;
 
           return (
             <Field data-invalid={!!fieldState.error}>
@@ -183,7 +180,7 @@ export function WebhookBasicInfoSection({
                     <InputGroupAddon align="inline-end">
                       <InputGroupButton
                         onClick={() => {
-                          setIsEditing(true);
+                          setIsEditingSecret(true);
                           field.onChange("");
                         }}
                       >

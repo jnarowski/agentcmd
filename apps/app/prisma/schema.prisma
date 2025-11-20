@@ -53,6 +53,11 @@ model WorkflowRun {
   branch_name            String? // New branch name for execution
   base_branch            String? // Branch to create new branch from
   pr_url                 String? // Pull request URL (set by step.git operation: "pr")
+  triggered_by           String         @default("manual") // How run was triggered: "manual" | "webhook" | "api" | "scheduled"
+  webhook_event_id       String? // Link to triggering webhook event (if triggered_by="webhook")
+  issue_id               String? // External issue ID (e.g., "PROJ-123", "LIN-456")
+  issue_url              String? // Direct link to external issue
+  issue_source           String? // External issue source: "github" | "linear" | "jira" | "generic"
   current_phase          String? // Current phase name
   current_step_index     Int            @default(0)
   status                 WorkflowStatus @default(pending)
@@ -69,15 +74,18 @@ model WorkflowRun {
   user                User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
   workflow_definition WorkflowDefinition @relation(fields: [workflow_definition_id], references: [id], onDelete: Cascade)
   planning_session    AgentSession?      @relation("WorkflowRunPlanningSession", fields: [planning_session_id], references: [id], onDelete: SetNull)
+  webhook_event       WebhookEvent?      @relation(fields: [webhook_event_id], references: [id], onDelete: SetNull)
   steps               WorkflowRunStep[]
   events              WorkflowEvent[]
   artifacts           WorkflowArtifact[]
-  webhook_events      WebhookEvent[]
 
   @@index([project_id, status])
   @@index([user_id, status])
   @@index([workflow_definition_id])
   @@index([planning_session_id])
+  @@index([webhook_event_id])
+  @@index([triggered_by])
+  @@index([issue_source])
   @@index([status])
   @@index([inngest_run_id])
   @@map("workflow_runs")
@@ -140,7 +148,6 @@ model Webhook {
   secret              String // HMAC secret for signature validation (32-byte hex)
   workflow_identifier String? // Dynamic workflow identifier (no FK to WorkflowDefinition)
   config              Json // Field mappings, conditions, source config
-  webhook_conditions  Json? // Webhook-level conditions (all must pass)
   error_message       String? // Error message when status is 'error'
   last_triggered_at   DateTime?
   created_at          DateTime      @default(now())
@@ -158,7 +165,6 @@ model Webhook {
 model WebhookEvent {
   id                 String             @id @default(cuid())
   webhook_id         String
-  workflow_run_id    String? // Null if no run triggered
   status             WebhookEventStatus
   payload            String // Original webhook payload
   headers            String // Request headers
@@ -167,11 +173,10 @@ model WebhookEvent {
   processing_time_ms Int? // Time taken to process event
   created_at         DateTime           @default(now())
 
-  webhook      Webhook      @relation(fields: [webhook_id], references: [id], onDelete: Cascade)
-  workflow_run WorkflowRun? @relation(fields: [workflow_run_id], references: [id], onDelete: SetNull)
+  webhook       Webhook       @relation(fields: [webhook_id], references: [id], onDelete: Cascade)
+  workflow_runs WorkflowRun[]
 
   @@index([webhook_id, created_at])
-  @@index([workflow_run_id])
   @@index([status])
   @@index([created_at])
   @@map("webhook_events")

@@ -1,11 +1,20 @@
 import type { Webhook } from "@prisma/client";
+import type { WebhookMappingFields } from "../constants/webhook.constants";
 
 // PUBLIC API
 
+// Re-export for convenience
+export type { WebhookMappingFields };
+
 /**
- * Field mapping types: determines how values are resolved
+ * Mapping mode: simple (always applies) or conditional (first match wins)
  */
-export type FieldMappingType = "input" | "conditional";
+export type MappingMode = "simple" | "conditional";
+
+/**
+ * Default action when no conditions match
+ */
+export type DefaultAction = "skip" | "set_fields";
 
 /**
  * Conditional operators for evaluating webhook payloads
@@ -30,23 +39,17 @@ export interface ConditionRule {
 }
 
 /**
- * Conditional field mapping with if/then logic
+ * Mapping group with conditions and field values
+ * Empty conditions array = always match (simple mode)
  */
-export interface ConditionalMapping {
-  conditions: ConditionRule[]; // All must pass (AND logic)
-  value: string; // Template value to use if conditions match
+export interface MappingGroup extends WebhookMappingFields {
+  conditions: ConditionRule[]; // Empty = always match, else all must pass (AND)
 }
 
 /**
- * Field mapping configuration (input or conditional)
+ * Simple mapping with no conditions (always matches)
  */
-export interface FieldMapping {
-  type: FieldMappingType;
-  field: string; // Target field name
-  value?: string; // Template for input type
-  default?: string; // Default value if no conditions match
-  conditionals?: ConditionalMapping[]; // Rules for conditional type
-}
+export type SimpleMapping = WebhookMappingFields;
 
 /**
  * Source-specific configuration (HMAC settings)
@@ -57,10 +60,14 @@ export interface SourceConfig {
 }
 
 /**
- * Full webhook configuration
+ * Full webhook configuration with unified mappings array
  */
 export interface WebhookConfig {
-  field_mappings: FieldMapping[]; // How to map payload to workflow args
+  name: string; // Template for workflow run name with {{tokens}}
+  spec_content?: string; // Template for spec content with {{tokens}}
+  mappings: MappingGroup[]; // Unified array (empty conditions = simple, else conditional)
+  default_action?: DefaultAction; // Only for conditional mode
+  default_mapping?: WebhookMappingFields; // Only when default_action = "set_fields"
   source_config?: SourceConfig; // Source-specific settings
 }
 
@@ -73,26 +80,50 @@ export interface WebhookWithConfig extends Omit<Webhook, "config"> {
 
 /**
  * Create webhook request data
+ * Note: config is unknown from HTTP request, validated in service layer
  */
 export interface CreateWebhookData {
   project_id: string;
   name: string;
   description?: string;
   source?: "github" | "linear" | "jira" | "generic";
+  secret?: string;
   workflow_identifier?: string;
-  config?: WebhookConfig;
-  webhook_conditions?: ConditionRule[];
+  config?: unknown; // Validated to WebhookConfig in createWebhook service
 }
 
 /**
  * Update webhook request data
+ * Note: config is unknown from HTTP request, validated in service layer
  */
 export interface UpdateWebhookData {
   name?: string;
   description?: string;
+  secret?: string;
   workflow_identifier?: string;
-  config?: WebhookConfig;
-  webhook_conditions?: ConditionRule[];
+  config?: unknown; // Validated to WebhookConfig in updateWebhook service
+}
+
+/**
+ * Matched condition with actual payload value for debugging
+ */
+export interface MatchedCondition {
+  path: string;
+  operator: ConditionalOperator;
+  value: unknown; // Expected value from condition
+  payload_value: unknown; // Actual value from payload
+}
+
+/**
+ * Debug information about mapping resolution
+ * Stored in WebhookEvent.mapped_data for troubleshooting
+ */
+export interface MappedDataDebugInfo {
+  mapping_mode: MappingMode; // "simple" or "conditional"
+  mapping_conditions_matched: MatchedCondition[] | null; // Conditions that matched (null for simple)
+  used_default: boolean; // Whether default_mapping was used
+  mapping: WebhookMappingFields; // Final mapping values applied
+  spec_content_rendered?: string; // Rendered spec_content template
 }
 
 /**

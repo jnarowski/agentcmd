@@ -1,11 +1,13 @@
+import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Edit, Trash2, Play, Pause, RefreshCw, ChevronRight } from "lucide-react";
+import { Edit, Trash2, Play, Pause, ChevronRight } from "lucide-react";
 import { useWebhook } from "./hooks/useWebhook";
 import { useWebhookMutations } from "./hooks/useWebhookMutations";
 import { useWebhookWebSocket } from "./hooks/useWebhookWebSocket";
 import { WebhookStatusBadge } from "./components/WebhookStatusBadge";
 import { SecretDisplay } from "./components/SecretDisplay";
 import { EventHistory } from "./components/EventHistory";
+import { DeleteWebhookDialog } from "./components/DeleteWebhookDialog";
 import { Button } from "@/client/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/client/components/ui/card";
 import { Badge } from "@/client/components/ui/badge";
@@ -16,14 +18,14 @@ export default function WebhookDetailPage() {
     webhookId: string;
   }>();
   const navigate = useNavigate();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   if (!projectId || !webhookId) {
     throw new Error("Missing projectId or webhookId");
   }
 
   const { data: webhook, isLoading } = useWebhook(webhookId);
-  const { activateMutation, pauseMutation, rotateSecretMutation, deleteMutation } =
-    useWebhookMutations(projectId);
+  const { activateMutation, pauseMutation } = useWebhookMutations(projectId);
 
   // Listen for real-time events
   useWebhookWebSocket(projectId, webhookId);
@@ -36,36 +38,13 @@ export default function WebhookDetailPage() {
     pauseMutation.mutate({ webhookId });
   };
 
-  const handleRotateSecret = () => {
-    if (
-      confirm(
-        "Are you sure you want to rotate the secret? You'll need to update the external webhook configuration."
-      )
-    ) {
-      rotateSecretMutation.mutate({ webhookId });
-    }
-  };
-
   const handleDelete = () => {
-    if (
-      confirm(
-        "Are you sure you want to delete this webhook? This action cannot be undone."
-      )
-    ) {
-      deleteMutation.mutate(
-        { webhookId },
-        {
-          onSuccess: () => {
-            navigate(`/projects/${projectId}/webhooks`);
-          },
-        }
-      );
-    }
+    setDeleteDialogOpen(true);
   };
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-8">
+      <div className="px-6 py-4">
         <div className="animate-pulse space-y-6">
           <div className="h-8 bg-gray-200 rounded w-1/3" />
           <div className="h-64 bg-gray-200 rounded" />
@@ -77,7 +56,7 @@ export default function WebhookDetailPage() {
 
   if (!webhook) {
     return (
-      <div className="container mx-auto py-8">
+      <div className="px-6 py-4">
         <div className="text-center">
           <h2 className="text-2xl font-bold">Webhook not found</h2>
           <Link to={`/projects/${projectId}/webhooks`} className="text-blue-600 hover:underline">
@@ -89,7 +68,7 @@ export default function WebhookDetailPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="px-6 py-4 space-y-6">
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-2 text-sm text-gray-600">
         <Link to={`/projects/${projectId}`} className="hover:text-gray-900">
@@ -144,21 +123,7 @@ export default function WebhookDetailPage() {
               Pause
             </Button>
           )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRotateSecret}
-            disabled={rotateSecretMutation.isPending}
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Rotate Secret
-          </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleDelete}
-            disabled={deleteMutation.isPending}
-          >
+          <Button variant="destructive" size="sm" onClick={handleDelete}>
             <Trash2 className="w-4 h-4 mr-2" />
             Delete
           </Button>
@@ -206,38 +171,22 @@ export default function WebhookDetailPage() {
             </div>
           )}
 
-          {webhook.config.field_mappings && webhook.config.field_mappings.length > 0 && (
+          {webhook.config.mappings && webhook.config.mappings.length > 0 && (
             <div>
-              <div className="text-sm font-medium text-gray-700 mb-2">Field Mappings</div>
+              <div className="text-sm font-medium text-gray-700 mb-2">Mappings</div>
               <div className="space-y-2">
-                {webhook.config.field_mappings.map((mapping, idx) => (
+                {webhook.config.mappings.map((mapping, idx) => (
                   <div key={idx} className="text-sm bg-gray-50 p-2 rounded">
-                    <span className="font-mono text-blue-600">{mapping.field}</span>
-                    {" → "}
-                    {mapping.type === "input" ? (
-                      <span className="font-mono text-gray-700">{mapping.value}</span>
-                    ) : (
-                      <span className="text-gray-500">conditional</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {webhook.webhook_conditions && webhook.webhook_conditions.length > 0 && (
-            <div>
-              <div className="text-sm font-medium text-gray-700 mb-2">Conditions</div>
-              <div className="space-y-2">
-                {webhook.webhook_conditions.map((condition, idx) => (
-                  <div key={idx} className="text-sm bg-gray-50 p-2 rounded font-mono">
-                    {condition.path} {condition.operator}{" "}
-                    {condition.value != null && (
-                      <span className="text-gray-700">
-                        {typeof condition.value === "object"
-                          ? JSON.stringify(condition.value)
-                          : String(condition.value)}
-                      </span>
+                    <div className="font-mono text-sm">
+                      <span className="text-blue-600">spec_type_id:</span> {mapping.spec_type_id}
+                    </div>
+                    <div className="font-mono text-sm">
+                      <span className="text-blue-600">workflow_id:</span> {mapping.workflow_id}
+                    </div>
+                    {mapping.conditions && mapping.conditions.length > 0 && (
+                      <div className="mt-1 text-xs text-gray-500">
+                        {mapping.conditions.length} condition(s)
+                      </div>
                     )}
                   </div>
                 ))}
@@ -249,6 +198,13 @@ export default function WebhookDetailPage() {
 
       {/* Event History */}
       <EventHistory webhookId={webhookId} />
+
+      <DeleteWebhookDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        webhook={webhook}
+        onSuccess={() => navigate(`/projects/${projectId}/webhooks`)}
+      />
     </div>
   );
 }

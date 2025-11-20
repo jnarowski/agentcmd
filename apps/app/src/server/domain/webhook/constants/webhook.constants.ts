@@ -1,19 +1,21 @@
 // PUBLIC API
 
 /**
- * WorkflowRun table fields (not custom args)
- * These fields map directly to WorkflowRun columns
+ * Fields that can be mapped from webhook payloads to workflow runs
+ * To add new fields: extend this array and WebhookMappingFields type
+ * Example: ["spec_type_id", "workflow_id", "mode", "branch_name"] as const
  */
-export const WORKFLOW_RUN_TABLE_FIELDS = [
-  "name",
-  "spec_content",
-  "spec_type",
-  "spec_file",
-  "mode",
-  "branch_name",
-  "base_branch",
-  "planning_session_id",
-] as const;
+export const WEBHOOK_MAPPING_FIELDS = ["spec_type_id", "workflow_id"] as const;
+
+// Export type for use in types file
+// Defined here to avoid circular dependency
+/**
+ * Type-safe mapping fields derived from constant
+ */
+export interface WebhookMappingFields {
+  spec_type_id: string;
+  workflow_id: string;
+}
 
 /**
  * Rate limit for public webhook endpoint
@@ -27,8 +29,10 @@ export const WEBHOOK_RATE_LIMIT = {
  * Default webhook config
  */
 export const DEFAULT_WEBHOOK_CONFIG = {
-  field_mappings: [],
-} as const;
+  name: "Webhook Run",
+  mappings: [],
+  source_config: {},
+};
 
 /**
  * Supported webhook sources

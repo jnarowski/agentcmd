@@ -86,6 +86,29 @@ function WorkflowRunDetailPage() {
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold">{run.name}</h1>
             <WorkflowStatusBadge status={run.status} />
+
+            {/* Trigger type badge */}
+            {run.triggered_by === 'webhook' && (
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-purple-500/10 px-2 py-1 text-xs font-medium text-purple-500 border border-purple-500/20">
+                Webhook
+              </span>
+            )}
+
+            {/* Issue link */}
+            {run.issue_url && (
+              <a
+                href={run.issue_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm text-blue-500 hover:text-blue-600"
+                title={run.issue_id || undefined}
+              >
+                {run.issue_id || 'View Issue'}
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            )}
+
+            {/* PR link */}
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {(run as any).pr_url && (
               <a

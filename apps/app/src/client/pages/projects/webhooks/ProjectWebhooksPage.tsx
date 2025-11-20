@@ -21,11 +21,6 @@ export default function ProjectWebhooksPage() {
     navigate(`/projects/${projectId}/webhooks/new`);
   };
 
-  const handleDeleteWebhook = (webhookId: string) => {
-    // Will be implemented in Phase 9 with mutations
-    console.log("Delete webhook:", webhookId);
-  };
-
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -97,7 +92,6 @@ export default function ProjectWebhooksPage() {
           <WebhookList
             webhooks={filteredWebhooks || []}
             projectId={projectId!}
-            onDelete={handleDeleteWebhook}
           />
         )}
       </div>

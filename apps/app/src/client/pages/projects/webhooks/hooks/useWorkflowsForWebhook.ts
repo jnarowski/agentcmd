@@ -18,10 +18,10 @@ export function useWorkflowsForWebhook(projectId: string | undefined) {
   return useQuery({
     queryKey: webhookKeys.workflows(projectId!),
     queryFn: async (): Promise<WorkflowDefinition[]> => {
-      const result = await api.get(`/api/projects/${projectId}/workflows/definitions`);
+      const response = await api.get<{ data: WorkflowDefinition[] }>(`/api/projects/${projectId}/workflows/definitions`);
 
       // Filter out archived workflows
-      return result.data.filter((wf: WorkflowDefinition) => !wf.is_archived);
+      return response.data.filter((wf) => !wf.is_archived);
     },
     enabled: !!projectId,
     staleTime: 1000 * 60 * 5, // 5 minutes

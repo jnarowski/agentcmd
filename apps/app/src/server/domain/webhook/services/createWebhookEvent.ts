@@ -11,7 +11,6 @@ import type { WebhookEventStatus } from "@prisma/client";
  */
 export async function createWebhookEvent(data: {
   webhook_id: string;
-  workflow_run_id?: string;
   status: WebhookEventStatus;
   payload: Record<string, unknown>;
   headers: Record<string, string>;
@@ -22,7 +21,6 @@ export async function createWebhookEvent(data: {
   return prisma.webhookEvent.create({
     data: {
       webhook_id: data.webhook_id,
-      workflow_run_id: data.workflow_run_id,
       status: data.status,
       payload: JSON.stringify(data.payload),
       headers: JSON.stringify(data.headers),

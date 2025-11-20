@@ -209,6 +209,11 @@ export interface WorkflowRunDetail {
   base_branch: string | null;
   branch_name: string | null;
   worktree_name: string | null;
+  triggered_by: string;
+  webhook_event_id: string | null;
+  issue_id: string | null;
+  issue_url: string | null;
+  issue_source: string | null;
   current_step: string | null;
   current_phase: string | null;
   error_message: string | null;

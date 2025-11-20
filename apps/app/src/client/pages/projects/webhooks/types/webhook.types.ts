@@ -5,11 +5,13 @@
 
 import type {
   ConditionalOperator,
-  FieldMappingType,
+  MappingMode,
+  DefaultAction,
+  WebhookMappingFields,
 } from "@/server/domain/webhook/types/webhook.types";
 
 // Re-export backend types used in frontend
-export type { ConditionalOperator, FieldMappingType };
+export type { ConditionalOperator, MappingMode, DefaultAction, WebhookMappingFields };
 
 /**
  * Webhook source types
@@ -42,22 +44,10 @@ export interface ConditionRule {
 }
 
 /**
- * Conditional mapping with if/then logic
+ * Mapping group with conditions and field values
  */
-export interface ConditionalMapping {
-  conditions: ConditionRule[];
-  value: string;
-}
-
-/**
- * Field mapping configuration
- */
-export interface FieldMapping {
-  type: FieldMappingType;
-  field: string;
-  value?: string;
-  default?: string;
-  conditionals?: ConditionalMapping[];
+export interface MappingGroup extends WebhookMappingFields {
+  conditions: ConditionRule[]; // Empty = always match
 }
 
 /**
@@ -69,10 +59,14 @@ export interface SourceConfig {
 }
 
 /**
- * Webhook configuration
+ * Webhook configuration (unified mappings array)
  */
 export interface WebhookConfig {
-  field_mappings: FieldMapping[];
+  name: string; // Template for workflow run name with {{tokens}}
+  spec_content?: string; // Template for spec content with {{tokens}}
+  mappings: MappingGroup[];
+  default_action?: DefaultAction;
+  default_mapping?: WebhookMappingFields;
   source_config?: SourceConfig;
 }
 
@@ -90,7 +84,6 @@ export interface Webhook {
   status: WebhookStatus;
   workflow_identifier: string | null;
   config: WebhookConfig;
-  webhook_conditions: ConditionRule[];
   last_triggered_at: Date | null;
   last_error: string | null;
   error_count: number;
@@ -131,7 +124,6 @@ export interface UpdateWebhookFormData {
   description?: string;
   workflow_identifier?: string;
   config: WebhookConfig;
-  webhook_conditions: ConditionRule[];
 }
 
 /**

@@ -1,85 +1,145 @@
-import type { FieldMapping } from "../types/webhook.types";
-import { WORKFLOW_RUN_TABLE_FIELDS } from "../constants/webhook.constants";
-import { resolveMapping } from "./resolveMapping";
+import type {
+  WebhookConfig,
+  MappedDataDebugInfo,
+  MatchedCondition,
+  WebhookMappingFields,
+} from "../types/webhook.types";
+import { evaluateConditions } from "./evaluateConditions";
 
 // PUBLIC API
 
 /**
- * Maps webhook payload to WorkflowRun creation data
- * Separates table fields from custom args using WORKFLOW_RUN_TABLE_FIELDS
+ * Maps webhook payload to workflow run fields using unified mappings array
+ * Implements first-match-wins for conditional mode, always-match for simple mode
  *
  * @param payload - Webhook payload
- * @param mappings - Field mapping configurations
- * @param workflowIdentifier - Workflow identifier for the run
- * @param projectId - Project ID
- * @param userId - User ID
- * @returns WorkflowRun creation data with table fields and args
+ * @param config - Webhook configuration with unified mappings
+ * @returns Mapping fields and debug info, or null if no match and default_action is "skip"
  *
  * @example
  * ```typescript
- * const payload = { pull_request: { number: 42, title: "Fix bug" } };
- * const mappings = [
- *   { type: "input", field: "name", value: "PR #{{pull_request.number}}" },
- *   { type: "input", field: "description", value: "{{pull_request.title}}" }
- * ];
- * const result = mapPayloadToWorkflowRun(payload, mappings, "pr-workflow", "proj_123", "user_123");
- * // => {
- * //   name: "PR #42",
- * //   args: { description: "Fix bug" },
- * //   ...
- * // }
+ * // Simple mode (always matches)
+ * const config = {
+ *   mappings: [{ spec_type_id: "bug", workflow_id: "wf_123", conditions: [] }]
+ * };
+ * const result = mapPayloadToWorkflowRun(payload, config);
+ * // => { mapping: { spec_type_id: "bug", workflow_id: "wf_123" }, debugInfo: { ... } }
+ *
+ * // Conditional mode (first match wins)
+ * const config = {
+ *   mappings: [
+ *     { spec_type_id: "bug", workflow_id: "wf_1", conditions: [{ path: "type", operator: "equals", value: "bug" }] },
+ *     { spec_type_id: "feature", workflow_id: "wf_2", conditions: [{ path: "type", operator: "equals", value: "feature" }] }
+ *   ],
+ *   default_action: "set_fields",
+ *   default_mapping: { spec_type_id: "other", workflow_id: "wf_default" }
+ * };
+ * const result = mapPayloadToWorkflowRun({ type: "bug" }, config);
+ * // => { mapping: { spec_type_id: "bug", workflow_id: "wf_1" }, debugInfo: { ... } }
  * ```
  */
 export function mapPayloadToWorkflowRun(
   payload: Record<string, unknown>,
-  mappings: FieldMapping[],
-  workflowIdentifier: string,
-  projectId: string,
-  userId: string,
-): MappedWorkflowRunData {
-  const tableFields: Record<string, unknown> = {};
-  const args: Record<string, unknown> = {};
+  config: WebhookConfig,
+): MappingResult | null {
+  const mappingMode = config.mappings.length === 1 && config.mappings[0]!.conditions.length === 0
+    ? "simple"
+    : "conditional";
 
-  // Resolve all mappings
-  for (const mapping of mappings) {
-    const value = resolveMapping(mapping, payload);
+  // Try each mapping group (first match wins)
+  for (const group of config.mappings) {
+    // Empty conditions = always match (simple mode)
+    if (group.conditions.length === 0) {
+      const mapping: WebhookMappingFields = {
+        spec_type_id: group.spec_type_id,
+        workflow_id: group.workflow_id,
+      };
 
-    if (value !== undefined) {
-      // Check if this is a table field
-      if (isTableField(mapping.field)) {
-        tableFields[mapping.field] = value;
-      } else {
-        // Custom arg
-        args[mapping.field] = value;
-      }
+      const debugInfo: MappedDataDebugInfo = {
+        mapping_mode: "simple",
+        mapping_conditions_matched: null,
+        used_default: false,
+        mapping,
+      };
+
+      return { mapping, debugInfo };
+    }
+
+    // Evaluate conditions (all must pass for AND logic)
+    if (evaluateConditions(group.conditions, payload)) {
+      const mapping: WebhookMappingFields = {
+        spec_type_id: group.spec_type_id,
+        workflow_id: group.workflow_id,
+      };
+
+      // Build matched conditions with payload values for debugging
+      const matchedConditions: MatchedCondition[] = group.conditions.map((cond) => ({
+        path: cond.path,
+        operator: cond.operator,
+        value: cond.value,
+        payload_value: getValueByPath(payload, cond.path),
+      }));
+
+      const debugInfo: MappedDataDebugInfo = {
+        mapping_mode: "conditional",
+        mapping_conditions_matched: matchedConditions,
+        used_default: false,
+        mapping,
+      };
+
+      return { mapping, debugInfo };
     }
   }
 
-  return {
-    project_id: projectId,
-    user_id: userId,
-    workflow_identifier: workflowIdentifier,
-    table_fields: tableFields,
-    args,
-  };
+  // No conditions matched - use default_action
+  if (mappingMode === "conditional") {
+    if (config.default_action === "skip") {
+      return null; // Don't create workflow run
+    }
+
+    if (config.default_action === "set_fields" && config.default_mapping) {
+      const debugInfo: MappedDataDebugInfo = {
+        mapping_mode: "conditional",
+        mapping_conditions_matched: null,
+        used_default: true,
+        mapping: config.default_mapping,
+      };
+
+      return { mapping: config.default_mapping, debugInfo };
+    }
+  }
+
+  // Should never reach here if validation works correctly
+  return null;
 }
 
 // PRIVATE HELPERS
 
 /**
- * Checks if a field name is a WorkflowRun table field
+ * Gets value from payload by dot-notation path
+ *
+ * @example
+ * getValueByPath({ pull_request: { number: 42 } }, "pull_request.number") // => 42
  */
-function isTableField(field: string): boolean {
-  return (WORKFLOW_RUN_TABLE_FIELDS as readonly string[]).includes(field);
+function getValueByPath(obj: Record<string, unknown>, path: string): unknown {
+  const parts = path.split(".");
+  let current: unknown = obj;
+
+  for (const part of parts) {
+    if (current && typeof current === "object" && part in current) {
+      current = (current as Record<string, unknown>)[part];
+    } else {
+      return undefined;
+    }
+  }
+
+  return current;
 }
 
 /**
- * Mapped workflow run data
+ * Result of mapping resolution
  */
-export interface MappedWorkflowRunData {
-  project_id: string;
-  user_id: string;
-  workflow_identifier: string;
-  table_fields: Record<string, unknown>;
-  args: Record<string, unknown>;
+export interface MappingResult {
+  mapping: WebhookMappingFields;
+  debugInfo: MappedDataDebugInfo;
 }

@@ -121,6 +121,72 @@ describe("Workflow Routes", () => {
       expect(body.data.project_id).toBe(project.id);
     });
 
+    it("should create workflow run with trigger and issue fields", async () => {
+      const { headers } = await createAuthenticatedUser(prisma, app);
+      const project = await createTestProject(prisma, {
+        name: "Test Project",
+        path: "/tmp/test",
+      });
+
+      // Create workflow definition
+      const workflowDef = await prisma.workflowDefinition.create({
+        data: {
+          project_id: project.id,
+          identifier: "test-workflow",
+          name: "Test Workflow",
+          type: "code",
+          path: ".workflows/test.ts",
+          phases: [],
+        },
+      });
+
+      // Create webhook event first
+      const webhook = await prisma.webhook.create({
+        data: {
+          project_id: project.id,
+          name: "Test Webhook",
+          source: "github",
+          secret: "test-secret",
+          config: {},
+        },
+      });
+
+      const webhookEvent = await prisma.webhookEvent.create({
+        data: {
+          webhook_id: webhook.id,
+          status: "success",
+          payload: "{}",
+          headers: "{}",
+        },
+      });
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/workflow-runs",
+        headers,
+        payload: {
+          project_id: project.id,
+          workflow_definition_id: workflowDef.id,
+          name: "Test Run",
+          args: {},
+          spec_content: "test spec",
+          triggered_by: "webhook",
+          webhook_event_id: webhookEvent.id,
+          issue_id: "PROJ-123",
+          issue_url: "https://github.com/test/test/issues/123",
+          issue_source: "github",
+        },
+      });
+
+      expect(response.statusCode).toBe(201);
+      const body = JSON.parse(response.body);
+      expect(body.data.triggered_by).toBe("webhook");
+      expect(body.data.webhook_event_id).toBe(webhookEvent.id);
+      expect(body.data.issue_id).toBe("PROJ-123");
+      expect(body.data.issue_url).toBe("https://github.com/test/test/issues/123");
+      expect(body.data.issue_source).toBe("github");
+    });
+
     it("should return 404 for non-existent workflow definition", async () => {
       const { headers } = await createAuthenticatedUser(prisma, app);
       const project = await createTestProject(prisma, {

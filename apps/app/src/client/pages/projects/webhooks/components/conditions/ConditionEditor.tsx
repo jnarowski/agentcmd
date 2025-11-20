@@ -1,4 +1,4 @@
-import { Plus, X } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { Button } from "@/client/components/ui/button";
 import { Alert, AlertDescription } from "@/client/components/ui/alert";
@@ -61,26 +61,16 @@ export function ConditionEditor({
         <>
           <div className="space-y-2">
             {fields.map((field, index) => (
-              <div key={field.id} className="flex gap-2 items-start">
-                <div className="flex-1">
-                  <ConditionRow
-                    basePath={basePath}
-                    index={index}
-                    testPayload={testPayload}
-                    disabled={disabled}
-                  />
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => remove(index)}
-                  disabled={disabled}
-                  className="mt-1"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
+              <ConditionRow
+                key={field.id}
+                basePath={basePath}
+                index={index}
+                testPayload={testPayload}
+                disabled={disabled}
+                label={index === 0 ? "if" : "and"}
+                showRemove={index > 0}
+                onRemove={() => remove(index)}
+              />
             ))}
           </div>
 

@@ -106,6 +106,34 @@ export const artifactTypeSchema = z.enum([
 export type ArtifactType = z.infer<typeof artifactTypeSchema>;
 
 /**
+ * Triggered By Schema
+ *
+ * Represents how a workflow run was triggered.
+ */
+export const triggeredBySchema = z.enum(['manual', 'webhook', 'api', 'scheduled']);
+
+/**
+ * Triggered By Type
+ *
+ * Derived from triggeredBySchema for type safety.
+ */
+export type TriggeredBy = z.infer<typeof triggeredBySchema>;
+
+/**
+ * Issue Source Schema
+ *
+ * Represents the external issue tracking system.
+ */
+export const issueSourceSchema = z.enum(['github', 'linear', 'jira', 'generic']);
+
+/**
+ * Issue Source Type
+ *
+ * Derived from issueSourceSchema for type safety.
+ */
+export type IssueSource = z.infer<typeof issueSourceSchema>;
+
+/**
  * Workflow Event Type Enum Schema
  *
  * Represents the type of a workflow event.
@@ -161,6 +189,11 @@ export const createWorkflowRunSchema = z
     base_branch: z.string().optional(),
     branch_name: z.string().optional(),
     inngest_run_id: z.string().optional(),
+    triggered_by: triggeredBySchema.optional(),
+    webhook_event_id: z.string().cuid().optional(),
+    issue_id: z.string().optional(),
+    issue_url: z.string().url().optional(),
+    issue_source: issueSourceSchema.optional(),
   })
   .refine((data) => {
     // XOR: spec_file OR spec_content OR planning_session_id (exactly one must be provided)
@@ -328,6 +361,11 @@ export const workflowRunResponseSchema = z.object({
   base_branch: z.string().nullable(),
   branch_name: z.string().nullable(),
   worktree_name: z.string().nullable(),
+  triggered_by: z.string(),
+  webhook_event_id: z.string().nullable(),
+  issue_id: z.string().nullable(),
+  issue_url: z.string().nullable(),
+  issue_source: z.string().nullable(),
   current_phase: z.string().nullable(),
   current_step_index: z.number(),
   status: z.string(),

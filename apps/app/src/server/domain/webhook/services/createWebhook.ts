@@ -1,6 +1,8 @@
+import crypto from "node:crypto";
 import { prisma } from "@/shared/prisma";
 import type { CreateWebhookData, WebhookWithConfig } from "../types/webhook.types";
-import { DEFAULT_WEBHOOK_CONFIG } from "../constants/webhook.constants";
+import { DEFAULT_WEBHOOK_CONFIG, WEBHOOK_SECRET_BYTES } from "../constants/webhook.constants";
+import { webhookConfigSchema } from "../schemas/webhook.schemas";
 
 // PUBLIC API
 
@@ -26,7 +28,18 @@ import { DEFAULT_WEBHOOK_CONFIG } from "../constants/webhook.constants";
 export async function createWebhook(
   data: CreateWebhookData,
 ): Promise<WebhookWithConfig> {
+  // Default to empty mappings array if not provided
   const config = data.config || DEFAULT_WEBHOOK_CONFIG;
+
+  // Validate config structure
+  const validationResult = webhookConfigSchema.safeParse(config);
+  if (!validationResult.success) {
+    const firstError = validationResult.error.issues[0];
+    throw new Error(firstError?.message || "Invalid webhook configuration");
+  }
+
+  // Generate secret if not provided
+  const secret = data.secret || crypto.randomBytes(WEBHOOK_SECRET_BYTES).toString("hex");
 
   const webhook = await prisma.webhook.create({
     data: {
@@ -35,10 +48,9 @@ export async function createWebhook(
       description: data.description,
       source: data.source || "generic",
       status: "draft", // Always start in draft mode
-      secret: data.secret || "",
+      secret,
       workflow_identifier: data.workflow_identifier,
       config: config as unknown as never,
-      webhook_conditions: data.webhook_conditions as unknown as never,
     },
   });
 
