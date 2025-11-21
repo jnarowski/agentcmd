@@ -4,7 +4,6 @@
  */
 
 import { useState } from "react";
-import { useParams } from "react-router-dom";
 import {
   Tabs,
   TabsList,
@@ -26,17 +25,17 @@ import {
 } from "./hooks/useGitOperations";
 import { gitKeys } from "./hooks/queryKeys";
 import { useProject } from "../hooks/useProjects";
+import { useProjectId } from "@/client/hooks/useProjectId";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
 
 export default function ProjectSourceControl() {
-  const { projectId, id } = useParams<{ projectId?: string; id?: string }>();
-  const activeProjectId = projectId || id;
+  const projectId = useProjectId();
   const queryClient = useQueryClient();
 
   // Fetch project to get path
-  const { data: project } = useProject(activeProjectId!);
+  const { data: project } = useProject(projectId);
 
   useDocumentTitle(project?.name ? `Source Control - ${project.name} | Agent Workflows` : undefined);
   const projectPath = project?.path;

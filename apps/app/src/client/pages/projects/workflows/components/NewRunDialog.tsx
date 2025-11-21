@@ -57,7 +57,7 @@ export function NewRunDialog({
         </DialogDescription>
       </DialogHeader>
 
-      <div className="px-6 py-4 max-h-[60vh] overflow-y-auto">
+      <div className="max-h-[60vh] overflow-y-auto">
         <NewRunForm
           projectId={projectId}
           definitionId={definitionId}

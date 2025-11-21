@@ -70,7 +70,7 @@ export default function ProjectLoader() {
   if (isLoading) {
     return (
       <div className="flex flex-col h-full">
-        <Skeleton className="h-16 w-full rounded-none" />
+        <Skeleton className="h-17 w-full rounded-none" />
         <div className="flex-1 p-4">
           <Skeleton className="h-full w-full" />
         </div>

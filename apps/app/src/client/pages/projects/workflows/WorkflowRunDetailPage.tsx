@@ -8,11 +8,12 @@ import { useWorkflowRun } from "./hooks/useWorkflowRun";
 import { useWorkflowDefinition } from "./hooks/useWorkflowDefinition";
 import { useWorkflowWebSocket } from "./hooks/useWorkflowWebSocket";
 import { useWorkflowDetailPanel } from "./hooks/useWorkflowDetailPanel";
+import { useProjectId } from "@/client/hooks/useProjectId";
 import { PageHeader } from "@/client/components/PageHeader";
 
 function WorkflowRunDetailPage() {
-  const { projectId, definitionId, runId } = useParams<{
-    projectId: string;
+  const projectId = useProjectId();
+  const { definitionId, runId } = useParams<{
     definitionId: string;
     runId: string;
   }>();

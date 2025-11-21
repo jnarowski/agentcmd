@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/client/components/ui/button";
 import { Badge } from "@/client/components/ui/badge";
 import { TableCell, TableRow } from "@/client/components/ui/table";
@@ -9,6 +9,7 @@ import {
   TooltipTrigger,
 } from "@/client/components/ui/tooltip";
 import { Archive, ArchiveRestore, AlertCircle } from "lucide-react";
+import { useProjectId } from "@/client/hooks/useProjectId";
 import type { WorkflowDefinition } from "@/client/pages/projects/workflows/types";
 
 interface WorkflowDefinitionRowProps {
@@ -24,15 +25,14 @@ export function WorkflowDefinitionRow({
   onUnarchive,
   isArchived,
 }: WorkflowDefinitionRowProps) {
-  const { projectId, id } = useParams<{ projectId?: string; id?: string }>();
-  const activeProjectId = projectId || id;
+  const projectId = useProjectId();
   const runCount = definition._count?.runs ?? 0;
 
   return (
     <TableRow>
       <TableCell className="font-medium">
         <Link
-          to={`/projects/${activeProjectId}/workflows/${definition.id}`}
+          to={`/projects/${projectId}/workflows/${definition.id}`}
           className="hover:underline"
         >
           {definition.name}

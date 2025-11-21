@@ -52,13 +52,14 @@ export function Breadcrumb({ items, className, size = "sm" }: BreadcrumbProps) {
             {item.href && !isLast ? (
               <Link
                 to={item.href}
-                className="hover:text-foreground transition-colors"
+                className="hover:text-foreground transition-colors uppercase"
               >
                 {item.label}
               </Link>
             ) : (
               <span
                 className={cn(
+                  "uppercase",
                   isLast && "text-foreground font-medium"
                 )}
               >

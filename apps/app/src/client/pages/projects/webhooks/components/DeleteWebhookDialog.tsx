@@ -22,8 +22,8 @@ export function DeleteWebhookDialog({
       { webhookId: webhook.id },
       {
         onSuccess: () => {
-          onOpenChange(false);
           onSuccess?.();
+          onOpenChange(false);
         },
       }
     );
@@ -36,13 +36,13 @@ export function DeleteWebhookDialog({
       title="Delete webhook?"
       description={
         <>
-          <p>
+          <div>
             This will permanently delete the webhook{" "}
             <span className="font-semibold">{webhook.name}</span>.
-          </p>
-          <p className="text-sm text-muted-foreground">
+          </div>
+          <div className="text-sm text-muted-foreground">
             All webhook events and configuration will be removed.
-          </p>
+          </div>
         </>
       }
       onConfirm={handleDelete}

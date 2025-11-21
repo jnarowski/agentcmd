@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Plus, Search, Settings, LayoutGrid } from "lucide-react";
 import { Button } from "@/client/components/ui/button";
 import { WorkflowStatusValues } from "@/shared/schemas/workflow.schemas";
@@ -11,6 +11,7 @@ import { useWorkflowRuns } from "./hooks/useWorkflowRuns";
 import { useWorkflowDefinitions } from "./hooks/useWorkflowDefinitions";
 import { useWorkflowWebSocket } from "./hooks/useWorkflowWebSocket";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
+import { useProjectId } from "@/client/hooks/useProjectId";
 import { Combobox } from "@/client/components/ui/combobox";
 import type { ComboboxOption } from "@/client/components/ui/combobox";
 import { getWorkflowStatusConfig } from "./utils/workflowStatus";
@@ -23,8 +24,8 @@ export interface ProjectWorkflowsListViewProps {
 function ProjectWorkflowsListPage({
   projectId: propProjectId,
 }: ProjectWorkflowsListViewProps) {
-  const { projectId: paramProjectId } = useParams<{ projectId: string }>();
-  const projectId = propProjectId || paramProjectId!;
+  const paramProjectId = useProjectId();
+  const projectId = propProjectId || paramProjectId;
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 

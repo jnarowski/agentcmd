@@ -6,15 +6,14 @@ import { WorkflowPhaseKanbanColumn } from "./components/WorkflowPhaseKanbanColum
 import { useWorkflowDefinition } from "./hooks/useWorkflowDefinition";
 import { useWorkflowRuns } from "./hooks/useWorkflowRuns";
 import { useWorkflowWebSocket } from "./hooks/useWorkflowWebSocket";
+import { useProjectId } from "@/client/hooks/useProjectId";
 import { getPhaseId, getPhaseLabel } from "@/shared/utils/phase.utils";
 import { PageHeader } from "@/client/components/PageHeader";
 import { Button } from "@/client/components/ui/button";
 
 function WorkflowDefinitionPage() {
-  const { projectId, definitionId } = useParams<{
-    projectId: string;
-    definitionId: string;
-  }>();
+  const projectId = useProjectId();
+  const { definitionId } = useParams<{ definitionId: string }>();
   const navigate = useNavigate();
 
   const {
@@ -111,36 +110,36 @@ function WorkflowDefinitionPage() {
         }
       />
 
-      {/* Kanban Board - Full Screen */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden p-4">
-        <div className="flex gap-4 h-full min-w-full">
-          {/* Add "Not Started" column first */}
-          {runsByPhase["Not Started"] && (
-            <div className="flex-1 min-w-80 h-full">
-              <WorkflowPhaseKanbanColumn
-                phaseId="not-started"
-                phaseLabel="Not Started"
-                runs={runsByPhase["Not Started"]}
-                onExecutionClick={handleExecutionClick}
-              />
-            </div>
-          )}
-
-          {/* Then add columns for each phase from the definition */}
-          {phases.map((phase: any) => {
-            const phaseId = getPhaseId(phase);
-            const phaseLabel = getPhaseLabel(phase);
-            return (
-              <div key={phaseId} className="flex-1 min-w-80 h-full">
+      {/* Kanban Board */}
+      <div className="flex-1 overflow-x-auto">
+        <div className="flex gap-4 h-full md:min-w-0 min-w-max px-4 py-4">
+            {/* Add "Not Started" column first */}
+            {runsByPhase["Not Started"] && (
+              <div className="w-72 md:flex-1 md:min-w-0">
                 <WorkflowPhaseKanbanColumn
-                  phaseId={phaseId}
-                  phaseLabel={phaseLabel}
-                  runs={runsByPhase[phaseId] || []}
+                  phaseId="not-started"
+                  phaseLabel="Not Started"
+                  runs={runsByPhase["Not Started"]}
                   onExecutionClick={handleExecutionClick}
                 />
               </div>
-            );
-          })}
+            )}
+
+            {/* Then add columns for each phase from the definition */}
+            {phases.map((phase: any) => {
+              const phaseId = getPhaseId(phase);
+              const phaseLabel = getPhaseLabel(phase);
+              return (
+                <div key={phaseId} className="w-72 md:flex-1 md:min-w-0">
+                  <WorkflowPhaseKanbanColumn
+                    phaseId={phaseId}
+                    phaseLabel={phaseLabel}
+                    runs={runsByPhase[phaseId] || []}
+                    onExecutionClick={handleExecutionClick}
+                  />
+                </div>
+              );
+            })}
         </div>
       </div>
     </div>

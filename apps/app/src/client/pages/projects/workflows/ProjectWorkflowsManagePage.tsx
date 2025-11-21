@@ -104,15 +104,17 @@ function ProjectWorkflowsManagePage() {
         </div>
 
         {/* Archived Workflows Section */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Archived Workflows</h2>
-          <WorkflowDefinitionsTable
-            definitions={archivedDefinitions}
-            onUnarchive={handleUnarchiveClick}
-            isArchived={true}
-            isLoading={isLoadingArchived}
-          />
-        </div>
+        {archivedDefinitions.length > 0 && (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Archived Workflows</h2>
+            <WorkflowDefinitionsTable
+              definitions={archivedDefinitions}
+              onUnarchive={handleUnarchiveClick}
+              isArchived={true}
+              isLoading={isLoadingArchived}
+            />
+          </div>
+        )}
       </div>
 
       {/* Dialogs */}

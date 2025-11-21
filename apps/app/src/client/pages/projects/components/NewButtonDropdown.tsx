@@ -1,5 +1,5 @@
 import { Plus, Workflow, MessageSquare } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/client/components/ui/button";
 import {
   DropdownMenu,
@@ -10,17 +10,14 @@ import {
   DropdownMenuLabel,
 } from "@/client/components/ui/dropdown-menu";
 import { useWorkflowDefinitions } from "@/client/pages/projects/workflows/hooks/useWorkflowDefinitions";
+import { useProjectId } from "@/client/hooks/useProjectId";
 
 export function NewButtonDropdown() {
   const navigate = useNavigate();
-  const { projectId, id } = useParams();
-  const activeProjectId = projectId || id;
+  const projectId = useProjectId();
 
   // Fetch workflow definitions for the active project
-  const { data: workflows } = useWorkflowDefinitions(
-    activeProjectId || "",
-    "active"
-  );
+  const { data: workflows } = useWorkflowDefinitions(projectId, "active");
 
   // Sort workflows alphabetically by name
   const sortedWorkflows = workflows
@@ -39,11 +36,7 @@ export function NewButtonDropdown() {
         {/* Sessions Section */}
         <DropdownMenuItem
           onClick={() => {
-            if (activeProjectId) {
-              navigate(`/projects/${activeProjectId}/sessions/new`);
-            } else {
-              navigate(`/projects`);
-            }
+            navigate(`/projects/${projectId}/sessions/new`);
           }}
         >
           <MessageSquare className="size-4" />
@@ -64,11 +57,9 @@ export function NewButtonDropdown() {
             <DropdownMenuItem
               key={workflow.id}
               onClick={() => {
-                if (activeProjectId) {
-                  navigate(
-                    `/projects/${activeProjectId}/workflows/${workflow.id}/new`
-                  );
-                }
+                navigate(
+                  `/projects/${projectId}/workflows/${workflow.id}/new`
+                );
               }}
             >
               <Workflow className="size-4 shrink-0" />

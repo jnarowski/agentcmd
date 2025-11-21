@@ -53,7 +53,7 @@ export const sourceConfigSchema = z.object({
  */
 export const webhookConfigSchema = z
   .object({
-    name: z.string().min(1), // Template for workflow run name with {{tokens}}
+    name: z.string(), // Template for workflow run name with {{tokens}} - can be empty for draft
     spec_content: z.string().optional(), // Template for spec content with {{tokens}}
     mappings: z.array(mappingGroupSchema).default([]),
     default_action: z.enum(["skip", "set_fields"]).optional(),

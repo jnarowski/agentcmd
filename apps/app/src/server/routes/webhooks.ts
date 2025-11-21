@@ -126,7 +126,9 @@ export async function webhookRoutes(fastify: FastifyInstance) {
             .send(buildErrorResponse(400, error.message));
         }
 
-        fastify.log.error({ error }, "Error creating webhook");
+        fastify.log.error({
+          error: error instanceof Error ? { message: error.message, stack: error.stack } : error
+        }, "Error creating webhook");
         return reply
           .code(500)
           .send(buildErrorResponse(500, "Failed to create webhook"));

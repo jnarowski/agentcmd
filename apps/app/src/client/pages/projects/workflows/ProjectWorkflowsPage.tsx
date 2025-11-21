@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { Button } from "@/client/components/ui/button";
 import { WorkflowStatusValues } from "@/shared/schemas/workflow.schemas";
@@ -10,6 +10,7 @@ import { useWorkflowRuns } from "./hooks/useWorkflowRuns";
 import { useWorkflowDefinitions } from "./hooks/useWorkflowDefinitions";
 import { useWorkflowWebSocket } from "./hooks/useWorkflowWebSocket";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
+import { useProjectId } from "@/client/hooks/useProjectId";
 import { PageHeader } from "@/client/components/PageHeader";
 import { WorkflowTabs } from "./components/WorkflowTabs";
 import { SearchBar } from "@/client/components/ui/search-bar";
@@ -21,8 +22,8 @@ export interface ProjectWorkflowsViewProps {
 function ProjectWorkflowsPage({
   projectId: propProjectId,
 }: ProjectWorkflowsViewProps) {
-  const { projectId: paramProjectId } = useParams<{ projectId: string }>();
-  const projectId = propProjectId || paramProjectId!;
+  const paramProjectId = useProjectId();
+  const projectId = propProjectId || paramProjectId;
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");

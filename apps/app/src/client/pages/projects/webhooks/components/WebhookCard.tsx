@@ -1,17 +1,9 @@
-import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Github, Box, Webhook, MoreVertical } from "lucide-react";
+import { Github, Box, Webhook } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { Webhook as WebhookType } from "../types/webhook.types";
 import { WebhookStatusBadge } from "./WebhookStatusBadge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/client/components/ui/dropdown-menu";
-import { Button } from "@/client/components/ui/button";
-import { DeleteWebhookDialog } from "./DeleteWebhookDialog";
+import { WebhookDropdownMenu } from "./WebhookDropdownMenu";
 
 export interface WebhookCardProps {
   webhook: WebhookType;
@@ -47,21 +39,10 @@ function getSourceLabel(source: string) {
 
 export function WebhookCard({ webhook, projectId }: WebhookCardProps) {
   const navigate = useNavigate();
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const SourceIcon = getSourceIcon(webhook.source);
 
   const handleCardClick = () => {
     navigate(`/projects/${projectId}/workflows/triggers/${webhook.id}`);
-  };
-
-  const handleEdit = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigate(`/projects/${projectId}/workflows/triggers/${webhook.id}/edit`);
-  };
-
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setDeleteDialogOpen(true);
   };
 
   const lastTriggered = webhook.last_triggered_at
@@ -102,26 +83,7 @@ export function WebhookCard({ webhook, projectId }: WebhookCardProps) {
 
         <div className="flex items-center gap-2">
           <WebhookStatusBadge status={webhook.status} size="sm" />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreVertical className="h-4 w-4" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleCardClick}>
-                View Details
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={handleDelete}
-                className="text-destructive"
-              >
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <WebhookDropdownMenu webhook={webhook} projectId={projectId} />
         </div>
       </div>
 
@@ -151,12 +113,6 @@ export function WebhookCard({ webhook, projectId }: WebhookCardProps) {
           </div>
         )}
       </div>
-
-      <DeleteWebhookDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        webhook={webhook}
-      />
     </div>
   );
 }

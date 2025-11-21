@@ -1,5 +1,4 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
 import { Button } from "@/client/components/ui/button";
 import {
   useProject,
@@ -7,25 +6,25 @@ import {
 } from "@/client/pages/projects/hooks/useProjects";
 import { WorkflowPackageInstallDialog } from "@/client/pages/projects/components/WorkflowPackageInstallDialog";
 import { workflowKeys } from "@/client/pages/projects/workflows/hooks/queryKeys";
+import { useProjectId } from "@/client/hooks/useProjectId";
 import { useState } from "react";
 
 function ProjectWorkflowsOnboardingPage() {
-  const { projectId, id } = useParams<{ projectId?: string; id?: string }>();
-  const activeProjectId = projectId || id;
+  const projectId = useProjectId();
   const queryClient = useQueryClient();
-  const { data: project } = useProject(activeProjectId!);
+  const { data: project } = useProject(projectId);
   const [showInstallDialog, setShowInstallDialog] = useState(false);
 
   const handleRefreshDefinitions = () => {
     queryClient.invalidateQueries({
-      queryKey: workflowKeys.definitionsList(activeProjectId!),
+      queryKey: workflowKeys.definitionsList(projectId!),
     });
   };
 
   const handleCloseInstallDialog = () => {
     setShowInstallDialog(false);
     // Refresh project data to update capabilities
-    queryClient.invalidateQueries({ queryKey: projectKeys.detail(activeProjectId!) });
+    queryClient.invalidateQueries({ queryKey: projectKeys.detail(projectId!) });
     // Refresh workflow definitions
     handleRefreshDefinitions();
   };
@@ -169,7 +168,7 @@ export default defineWorkflow({
         <WorkflowPackageInstallDialog
           isOpen={showInstallDialog}
           onClose={handleCloseInstallDialog}
-          projectId={activeProjectId!}
+          projectId={projectId}
           sdkStatus={project.capabilities.workflow_sdk}
         />
       )}

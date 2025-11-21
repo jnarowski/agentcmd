@@ -11,6 +11,7 @@ import { TokenInput } from "../TokenInput";
 import { SpecTypeSelect } from "@/client/pages/projects/workflows/components/SpecTypeSelect";
 import { WorkflowDefinitionSelect } from "../WorkflowDefinitionSelect";
 import { ConditionalMappingsBuilder } from "../ConditionalMappingsBuilder";
+import { useProjectId } from "@/client/hooks/useProjectId";
 import type { WebhookFormData } from "../../schemas/webhook.schemas";
 
 interface WebhookMappingsSectionProps {
@@ -22,10 +23,8 @@ export function WebhookMappingsSection({
   testPayload: initialTestPayload,
   locked = false,
 }: WebhookMappingsSectionProps) {
-  const { webhookId, projectId } = useParams<{
-    webhookId: string;
-    projectId: string;
-  }>();
+  const projectId = useProjectId();
+  const { webhookId } = useParams<{ webhookId: string }>();
   const { control, watch, setValue } = useFormContext<WebhookFormData>();
 
   const [testPayload, setTestPayload] = useState<Record<

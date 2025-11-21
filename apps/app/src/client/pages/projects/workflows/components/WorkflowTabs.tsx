@@ -1,15 +1,11 @@
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger } from "@/client/components/ui/tabs";
+import { useProjectId } from "@/client/hooks/useProjectId";
 
 export function WorkflowTabs() {
-  const { projectId, id } = useParams<{ projectId?: string; id?: string }>();
+  const projectId = useProjectId();
   const location = useLocation();
   const navigate = useNavigate();
-
-  // Use projectId or id (depending on route structure)
-  const activeProjectId = projectId || id;
-
-  if (!activeProjectId) return null;
 
   // Determine active tab based on current path
   const getActiveTab = () => {
@@ -21,13 +17,13 @@ export function WorkflowTabs() {
   const handleTabChange = (value: string) => {
     switch (value) {
       case "runs":
-        navigate(`/projects/${activeProjectId}/workflows`);
+        navigate(`/projects/${projectId}/workflows`);
         break;
       case "definitions":
-        navigate(`/projects/${activeProjectId}/workflows/manage`);
+        navigate(`/projects/${projectId}/workflows/manage`);
         break;
       case "triggers":
-        navigate(`/projects/${activeProjectId}/workflows/triggers`);
+        navigate(`/projects/${projectId}/workflows/triggers`);
         break;
     }
   };

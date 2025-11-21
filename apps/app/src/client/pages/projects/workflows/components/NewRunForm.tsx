@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Input } from "@/client/components/ui/input";
 import { Label } from "@/client/components/ui/label";
+import { Button } from "@/client/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/client/components/ui/radio-group";
 import {
   Tabs,
@@ -324,34 +325,36 @@ export function NewRunForm({
   };
 
   return (
-    <div className="space-y-6 [&>div]:space-y-2">
-      {/* Show error alert if selected workflow has load error */}
-      {actualDefinition?.load_error && (
-        <div className="rounded-lg border border-destructive bg-destructive/10 p-3">
-          <p className="text-sm font-medium text-destructive">
-            Workflow Load Error
-          </p>
-          <p className="text-xs text-destructive/80 mt-1">
-            {actualDefinition.load_error}
-          </p>
-          <p className="text-xs text-muted-foreground mt-2">
-            Fix the error in the workflow file before creating a run.
-          </p>
-        </div>
-      )}
+    <>
+      {/* Body */}
+      <div className="px-6 py-4 space-y-6 [&>div]:space-y-2">
+        {/* Show error alert if selected workflow has load error */}
+        {actualDefinition?.load_error && (
+          <div className="rounded-lg border border-destructive bg-destructive/10 p-3">
+            <p className="text-sm font-medium text-destructive">
+              Workflow Load Error
+            </p>
+            <p className="text-xs text-destructive/80 mt-1">
+              {actualDefinition.load_error}
+            </p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Fix the error in the workflow file before creating a run.
+            </p>
+          </div>
+        )}
 
-      {/* Git repository warning */}
-      {!isGitRepo && (
-        <div className="rounded-lg border border-amber-500 bg-amber-500/10 p-3">
-          <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
-            Not a Git Repository
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            This project is not initialized with git. Branch and worktree modes
-            are unavailable.
-          </p>
-        </div>
-      )}
+        {/* Git repository warning */}
+        {!isGitRepo && (
+          <div className="rounded-lg border border-amber-500 bg-amber-500/10 p-3">
+            <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+              Not a Git Repository
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              This project is not initialized with git. Branch and worktree modes
+              are unavailable.
+            </p>
+          </div>
+        )}
 
       {/* Workflow definition selection - always show */}
       <div>
@@ -809,24 +812,25 @@ export function NewRunForm({
           </div>
         )}
 
-      {/* Error message */}
-      {error && (
-        <div className="rounded-md bg-red-50 dark:bg-red-950 p-3 text-sm text-red-600 dark:text-red-400">
-          {error}
-        </div>
-      )}
+        {/* Error message */}
+        {error && (
+          <div className="rounded-md bg-red-50 dark:bg-red-950 p-3 text-sm text-red-600 dark:text-red-400">
+            {error}
+          </div>
+        )}
+      </div>
 
-      {/* Submit actions - exposed for wrapper to customize */}
-      <div className="flex gap-2 justify-end pt-2">
-        <button
+      {/* Footer - Actions */}
+      <div className="flex justify-end gap-2 border-t px-6 py-4">
+        <Button
           type="button"
+          variant="ghost"
           onClick={onCancel}
           disabled={createWorkflow.isPending}
-          className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground disabled:opacity-50"
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           onClick={handleSubmit}
           disabled={
@@ -838,11 +842,10 @@ export function NewRunForm({
             branchValidation.isValidating ||
             branchValidation.branchExists
           }
-          className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
         >
           {createWorkflow.isPending ? "Creating..." : "Create Run"}
-        </button>
+        </Button>
       </div>
-    </div>
+    </>
   );
 }
