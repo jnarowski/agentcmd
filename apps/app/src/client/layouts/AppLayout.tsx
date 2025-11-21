@@ -10,18 +10,29 @@ import { useSettings } from "@/client/hooks/useSettings";
 import { useSessionStore } from "@/client/pages/projects/sessions/stores/sessionStore";
 import { useTheme } from "next-themes";
 import { useWebSocket } from "@/client/hooks/useWebSocket";
+import { useIsMobile } from "@/client/hooks/use-mobile";
 import { AppSidebar } from "@/client/components/AppSidebar";
 import { SidebarInset, SidebarProvider } from "@/client/components/ui/sidebar";
 import { ConnectionStatusBanner } from "@/client/components/ConnectionStatusBanner";
 import { api } from "@/client/utils/api";
 import { workflowKeys } from "@/client/pages/projects/workflows/hooks/queryKeys";
 
-function ProtectedLayout() {
+/**
+ * Main authenticated app layout
+ * Replaces ProtectedLayout, ProjectDetailLayout, and WorkflowLayout
+ *
+ * Features:
+ * - Sidebar always visible with toggle (minimizes to icons on desktop)
+ * - Sidebar closed by default on mobile
+ * - Pages render their own headers (ProjectHeader, PageHeader)
+ */
+function AppLayout() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const queryClient = useQueryClient();
   const initializeFromSettings = useSessionStore((s) => s.initializeFromSettings);
   const { setTheme } = useTheme();
   const { readyState, reconnectAttempt, reconnect } = useWebSocket();
+  const isMobile = useIsMobile();
 
   // Prefetch settings and workflow definitions on mount to prevent race conditions
   // where multiple components call hooks before first request completes, triggering duplicate fetches
@@ -94,23 +105,24 @@ function ProtectedLayout() {
 
   return (
     <SidebarProvider
+      defaultOpen={!isMobile}
       style={
         {
           "--sidebar-width": "350px",
         } as React.CSSProperties
       }
     >
-      <ConnectionStatusBanner
-        readyState={readyState}
-        reconnectAttempt={reconnectAttempt}
-        onReconnect={reconnect}
-      />
-      <AppSidebar />
+      <AppSidebar collapsible="offcanvas" />
       <SidebarInset>
+        <ConnectionStatusBanner
+          readyState={readyState}
+          reconnectAttempt={reconnectAttempt}
+          onReconnect={reconnect}
+        />
         <Outlet />
       </SidebarInset>
     </SidebarProvider>
   );
 }
 
-export default ProtectedLayout;
+export default AppLayout;

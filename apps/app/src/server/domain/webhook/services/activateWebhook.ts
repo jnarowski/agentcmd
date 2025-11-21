@@ -26,6 +26,11 @@ export async function activateWebhook(id: string): Promise<void> {
     throw new Error("Webhook must have at least one mapping to activate");
   }
 
+  // Validate name template is present
+  if (!config.name || config.name.trim().length === 0) {
+    throw new Error("Webhook must have a workflow run name template to activate");
+  }
+
   // Validate each mapping has a workflow_definition_id
   const invalidMappings = config.mappings.filter(m => !m.workflow_definition_id);
   if (invalidMappings.length > 0) {

@@ -30,11 +30,9 @@ interface ProjectHeaderProps {
   projectPath: string;
   gitCapabilities: GitCapabilities;
   currentSession?: SessionResponse | null;
-  showSidebarTrigger?: boolean;
-  sidebarTriggerAlwaysVisible?: boolean; // When true, shows on all screen sizes
 }
 
-export function ProjectHeader({ projectId, projectName, projectPath, gitCapabilities, currentSession, showSidebarTrigger = true, sidebarTriggerAlwaysVisible = false }: ProjectHeaderProps) {
+export function ProjectHeader({ projectId, projectName, projectPath, gitCapabilities, currentSession }: ProjectHeaderProps) {
   const navigate = useNavigate();
   const [gitModalOpen, setGitModalOpen] = useState(false);
 
@@ -65,12 +63,8 @@ export function ProjectHeader({ projectId, projectName, projectPath, gitCapabili
     <>
       <div className="flex items-center justify-between border-b px-4 md:px-6 py-3">
         <div className="flex items-center gap-2 min-w-0">
-          {showSidebarTrigger && (
-            <>
-              <SidebarTrigger className={sidebarTriggerAlwaysVisible ? "shrink-0" : "md:hidden shrink-0"} />
-              <Separator orientation="vertical" className={sidebarTriggerAlwaysVisible ? "h-4 shrink-0" : "md:hidden h-4 shrink-0"} />
-            </>
-          )}
+          <SidebarTrigger className="shrink-0" />
+          <Separator orientation="vertical" className="h-4 shrink-0" />
           <div className="flex flex-col gap-1 min-w-0">
             <button
               onClick={() => navigate(`/projects/${projectId}`)}

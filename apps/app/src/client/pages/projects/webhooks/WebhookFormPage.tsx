@@ -1,13 +1,16 @@
 import { useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, ChevronRight } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/client/components/ui/button";
+import { useProjectId } from "@/client/hooks/useProjectId";
 import { useWebhook } from "./hooks/useWebhook";
 import { useRecentTestEvent } from "./hooks/useRecentTestEvent";
 import { useWebhookMutations } from "./hooks/useWebhookMutations";
 import { useWebhookWebSocket } from "./hooks/useWebhookWebSocket";
+import { api } from "@/client/utils/api";
 import {
   createWebhookFormSchema,
   updateWebhookFormSchema,
@@ -17,6 +20,7 @@ import {
 import type { Webhook } from "./types/webhook.types";
 import { WebhookBasicInfoSection } from "./components/form-sections/WebhookBasicInfoSection";
 import { WebhookMappingsSection } from "./components/form-sections/WebhookMappingsSection";
+import { PageHeader } from "@/client/components/PageHeader";
 
 /**
  * Convert Webhook to form values
@@ -44,10 +48,8 @@ function webhookToFormValues(webhook: Webhook): UpdateWebhookFormValues {
 }
 
 export default function WebhookFormPage() {
-  const { id: projectId, webhookId } = useParams<{
-    id: string;
-    webhookId: string;
-  }>();
+  const projectId = useProjectId();
+  const { webhookId } = useParams<{ webhookId: string }>();
   const navigate = useNavigate();
 
   // Determine if this is create or edit mode
@@ -57,11 +59,24 @@ export default function WebhookFormPage() {
   const { data: webhook, isLoading: isLoadingWebhook } = useWebhook(webhookId);
   const { data: testEvent, isLoading: isLoadingTestEvent } =
     useRecentTestEvent(webhookId);
-  const { createMutation, updateMutation } =
-    useWebhookMutations(projectId!);
+  const { createMutation, updateMutation } = useWebhookMutations(projectId!);
 
   // WebSocket for real-time updates (only in edit mode)
   useWebhookWebSocket(projectId!, webhookId);
+
+  // Fetch webhook URL from server (only in edit mode)
+  const { data: webhookUrlData } = useQuery({
+    queryKey: ["webhookUrl", webhookId],
+    queryFn: async () => {
+      const response = await api.get<{ url: string }>(
+        `/api/webhooks/${webhookId}/url`
+      );
+      return response;
+    },
+    enabled: !!webhookId && !isCreateMode,
+  });
+
+  const webhookUrl = webhookUrlData?.url || "";
 
   // Form setup - use different schemas for create vs edit
   const form = useForm<CreateWebhookFormValues | UpdateWebhookFormValues>({
@@ -141,7 +156,9 @@ export default function WebhookFormPage() {
           <h1 className="text-2xl font-semibold">Webhook not found</h1>
           <Button
             className="mt-4"
-            onClick={() => navigate(`/projects/${projectId}/webhooks`)}
+            onClick={() =>
+              navigate(`/projects/${projectId}/workflows/triggers`)
+            }
           >
             Back to Webhooks
           </Button>
@@ -155,112 +172,107 @@ export default function WebhookFormPage() {
 
   return (
     <FormProvider {...form}>
-      <div className="px-6 py-4 space-y-6">
-        {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Link
-            to={`/projects/${projectId}`}
-            className="hover:text-foreground transition-colors"
-          >
-            Project
-          </Link>
-          <ChevronRight className="w-4 h-4" />
-          <Link
-            to={`/projects/${projectId}/webhooks`}
-            className="hover:text-foreground transition-colors"
-          >
-            Webhooks
-          </Link>
-          <ChevronRight className="w-4 h-4" />
-          <span className="text-foreground font-medium">
-            {isCreateMode ? "Create Webhook" : webhook?.name || "Edit Webhook"}
-          </span>
-        </nav>
+      <div className="flex h-full flex-col">
+        <PageHeader
+          breadcrumbs={[
+            { label: "Project", href: `/projects/${projectId}` },
+            { label: "Workflows", href: `/projects/${projectId}/workflows` },
+            {
+              label: "Triggers",
+              href: `/projects/${projectId}/workflows/triggers`,
+            },
+            {
+              label: isCreateMode ? "Create" : webhook?.name || "Edit",
+            },
+          ]}
+          title={
+            isCreateMode ? "New Webhook Trigger" : "Configure Webhook Trigger"
+          }
+          description={
+            !isCreateMode && webhook
+              ? `${webhook.name} - ${webhook.status}`
+              : undefined
+          }
+        />
 
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold">
-            {isCreateMode ? "Create Webhook" : "Configure Webhook"}
-          </h1>
-          {!isCreateMode && webhook && (
-            <p className="text-sm text-muted-foreground mt-2">
-              {webhook.name} - {webhook.status}
-            </p>
-          )}
-        </div>
-
-        {/* Form */}
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Single Card with All Sections */}
-          <div className="space-y-6 p-4 sm:p-6 bg-card rounded-lg border">
-            {/* Basic Info Section - Always visible */}
-            <div className="space-y-4">
-              <WebhookBasicInfoSection
-                control={form.control}
-                webhookUrl={
-                  isCreateMode
-                    ? ""
-                    : `${window.location.origin}/api/webhooks/${webhook!.id}/events`
-                }
-                webhookSecret={isCreateMode ? "" : webhook!.secret}
-                currentSource={isCreateMode ? "generic" : webhook!.source}
-                isEditMode={!isCreateMode}
-              />
-            </div>
-
-            {/* Locked sections until test event */}
-            {!isCreateMode && !hasTestEvent && (
-              <div className="pt-6 border-t">
-                <div className="text-center py-8">
-                  <p className="text-sm font-medium">Waiting for test event</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Send a test webhook to unlock configuration sections
-                  </p>
+        <div className="flex-1 overflow-auto p-6 space-y-6">
+          {/* Form */}
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            {/* Single Card with All Sections */}
+            <div className="bg-card rounded-lg border">
+              {/* Body */}
+              <div className="space-y-6 p-4 sm:p-6">
+                {/* Basic Info Section - Always visible */}
+                <div className="space-y-4">
+                  <WebhookBasicInfoSection
+                    control={form.control}
+                    webhookUrl={isCreateMode ? "" : webhookUrl}
+                    webhookSecret={isCreateMode ? "" : webhook!.secret}
+                    currentSource={isCreateMode ? "generic" : webhook!.source}
+                    isEditMode={!isCreateMode}
+                  />
                 </div>
-              </div>
-            )}
 
-            {/* Unlocked sections after test event */}
-            {!isCreateMode && hasTestEvent && (
-              <div className="space-y-6 pt-6 border-t">
-                <WebhookMappingsSection
-                  testPayload={
-                    (testEvent?.payload as Record<string, unknown>) || null
+                {/* Locked sections until test event */}
+                {!isCreateMode && !hasTestEvent && (
+                  <div className="pt-6 border-t">
+                    <div className="text-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground mx-auto mb-3" />
+                      <p className="text-sm font-medium">
+                        Waiting for test event
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Send a test webhook to unlock configuration sections
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Unlocked sections after test event */}
+                {!isCreateMode && hasTestEvent && (
+                  <div className="space-y-6 pt-6 border-t">
+                    <WebhookMappingsSection
+                      testPayload={
+                        (testEvent?.payload as Record<string, unknown>) || null
+                      }
+                      locked={false}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Footer - Actions */}
+              <div className="flex justify-end gap-2 border-t p-4 sm:p-6">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() =>
+                    navigate(`/projects/${projectId}/workflows/triggers`)
                   }
-                  locked={false}
-                />
+                >
+                  Cancel
+                </Button>
+
+                <Button
+                  type="submit"
+                  disabled={
+                    (isCreateMode ? false : !isDirty) ||
+                    (isCreateMode
+                      ? createMutation.isPending
+                      : updateMutation.isPending)
+                  }
+                >
+                  {(isCreateMode
+                    ? createMutation.isPending
+                    : updateMutation.isPending) && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  {isCreateMode ? "Create" : "Save"}
+                </Button>
               </div>
-            )}
-          </div>
-
-          {/* Actions */}
-          <div className="flex justify-between">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate(`/projects/${projectId}/webhooks`)}
-            >
-              Cancel
-            </Button>
-
-            <Button
-              type="submit"
-              disabled={
-                (isCreateMode ? false : !isDirty) ||
-                (isCreateMode
-                  ? createMutation.isPending
-                  : updateMutation.isPending)
-              }
-            >
-              {(isCreateMode
-                ? createMutation.isPending
-                : updateMutation.isPending) && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              {isCreateMode ? "Create" : "Save"}
-            </Button>
-          </div>
-        </form>
+            </div>
+          </form>
+        </div>
       </div>
     </FormProvider>
   );

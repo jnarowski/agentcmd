@@ -7,6 +7,7 @@ import {
   createWebhook,
   getWebhookById,
   getWebhooksByProject,
+  getWebhookUrl,
   updateWebhook,
   deleteWebhook,
   activateWebhook,
@@ -125,7 +126,9 @@ export async function webhookRoutes(fastify: FastifyInstance) {
             .send(buildErrorResponse(400, error.message));
         }
 
-        fastify.log.error({ error }, "Error creating webhook");
+        fastify.log.error({
+          error: error instanceof Error ? { message: error.message, stack: error.stack } : error
+        }, "Error creating webhook");
         return reply
           .code(500)
           .send(buildErrorResponse(500, "Failed to create webhook"));
@@ -204,6 +207,49 @@ export async function webhookRoutes(fastify: FastifyInstance) {
         return reply
           .code(500)
           .send(buildErrorResponse(500, "Failed to fetch webhook"));
+      }
+    },
+  );
+
+  /**
+   * GET /api/webhooks/:webhookId/url
+   * Get full webhook URL (uses WEBHOOK_BASE_URL config or falls back to server URL)
+   */
+  fastify.get(
+    "/api/webhooks/:webhookId/url",
+    {
+      preHandler: fastify.authenticate,
+      schema: {
+        params: z.object({ webhookId: z.string() }),
+        response: {
+          200: z.object({
+            url: z.string(),
+          }),
+          401: errorResponse,
+          404: errorResponse,
+          500: errorResponse,
+        },
+      },
+    },
+    async (request, reply) => {
+      try {
+        const { webhookId } = request.params as { webhookId: string };
+
+        // Verify webhook exists
+        const webhook = await getWebhookById(webhookId);
+        if (!webhook) {
+          return reply
+            .code(404)
+            .send(buildErrorResponse(404, "Webhook not found"));
+        }
+
+        const url = getWebhookUrl(webhookId);
+        return reply.send({ url });
+      } catch (error) {
+        fastify.log.error({ error }, "Error getting webhook URL");
+        return reply
+          .code(500)
+          .send(buildErrorResponse(500, "Failed to get webhook URL"));
       }
     },
   );

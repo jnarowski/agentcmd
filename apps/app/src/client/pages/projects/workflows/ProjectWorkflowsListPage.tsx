@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Plus, Search, Settings, LayoutGrid } from "lucide-react";
 import { Button } from "@/client/components/ui/button";
 import { WorkflowStatusValues } from "@/shared/schemas/workflow.schemas";
@@ -11,9 +11,11 @@ import { useWorkflowRuns } from "./hooks/useWorkflowRuns";
 import { useWorkflowDefinitions } from "./hooks/useWorkflowDefinitions";
 import { useWorkflowWebSocket } from "./hooks/useWorkflowWebSocket";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
+import { useProjectId } from "@/client/hooks/useProjectId";
 import { Combobox } from "@/client/components/ui/combobox";
 import type { ComboboxOption } from "@/client/components/ui/combobox";
 import { getWorkflowStatusConfig } from "./utils/workflowStatus";
+import { PageHeader } from "@/client/components/PageHeader";
 
 export interface ProjectWorkflowsListViewProps {
   projectId?: string;
@@ -22,8 +24,8 @@ export interface ProjectWorkflowsListViewProps {
 function ProjectWorkflowsListPage({
   projectId: propProjectId,
 }: ProjectWorkflowsListViewProps) {
-  const { projectId: paramProjectId } = useParams<{ projectId: string }>();
-  const projectId = propProjectId || paramProjectId!;
+  const paramProjectId = useProjectId();
+  const projectId = propProjectId || paramProjectId;
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
@@ -112,11 +114,15 @@ function ProjectWorkflowsListPage({
 
   return (
     <div className="flex h-full flex-col">
-      {/* Header */}
-      <div className="border-b bg-background p-4">
-        <div className="flex items-center justify-between gap-4">
-          <h1 className="text-2xl font-bold">Workflows</h1>
-          <div className="flex items-center gap-2">
+      <PageHeader
+        breadcrumbs={[
+          { label: "Project", href: `/projects/${projectId}` },
+          { label: "Workflows" },
+        ]}
+        title="Workflows"
+        description="View and manage workflow runs organized by status"
+        actions={
+          <>
             <Link to={`/projects/${projectId}/workflows`}>
               <Button variant="outline" size="sm">
                 <LayoutGrid className="h-4 w-4 mr-2" />
@@ -130,37 +136,37 @@ function ProjectWorkflowsListPage({
               <Plus className="h-4 w-4" />
               New Run
             </button>
+          </>
+        }
+        belowHeader={
+          <div className="flex items-stretch gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search workflows..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full h-full rounded-md border bg-background py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+            <div className="flex-1">
+              <Combobox
+                options={workflowOptions}
+                onValueChange={handleWorkflowSelect}
+                placeholder="Select Workflow"
+                searchPlaceholder="Search workflows..."
+              />
+            </div>
+            <Link to={`/projects/${projectId}/workflows/manage`}>
+              <Button variant="outline" className="h-9">
+                <Settings className="h-4 w-4 mr-2" />
+                Manage
+              </Button>
+            </Link>
           </div>
-        </div>
-
-        {/* Filters */}
-        <div className="mt-4 flex items-stretch gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search workflows..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full h-full rounded-md border bg-background py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
-          <div className="flex-1">
-            <Combobox
-              options={workflowOptions}
-              onValueChange={handleWorkflowSelect}
-              placeholder="Select Workflow"
-              searchPlaceholder="Search workflows..."
-            />
-          </div>
-          <Link to={`/projects/${projectId}/workflows/manage`}>
-            <Button variant="outline" className="h-9">
-              <Settings className="h-4 w-4 mr-2" />
-              Manage
-            </Button>
-          </Link>
-        </div>
-      </div>
+        }
+      />
 
       {/* Accordion Sections */}
       <div className="flex-1 overflow-y-auto p-4">

@@ -65,6 +65,13 @@ const WorkflowConfigSchema = z.object({
 });
 
 /**
+ * Webhook configuration schema
+ */
+const WebhookConfigSchema = z.object({
+  baseUrl: z.string().url().optional(),
+});
+
+/**
  * Complete application configuration schema
  */
 export const ConfigSchema = z.object({
@@ -74,4 +81,5 @@ export const ConfigSchema = z.object({
   database: DatabaseConfigSchema,
   apiKeys: ApiKeysConfigSchema,
   workflow: WorkflowConfigSchema,
+  webhook: WebhookConfigSchema,
 });

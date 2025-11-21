@@ -1,4 +1,4 @@
-import type { WorkflowRun } from "@/client/pages/projects/workflows/types";
+import type { WorkflowRun, WorkflowRunListItem } from "@/client/pages/projects/workflows/types";
 import { getPhaseId } from "@/shared/utils/phase.utils";
 
 /**
@@ -26,7 +26,7 @@ export interface ExecutionMetrics {
  * // Shows: "1 / 3 phases"
  */
 export function getExecutionMetrics(
-  run: WorkflowRun
+  run: WorkflowRun | WorkflowRunListItem
 ): ExecutionMetrics {
   // Get phases from workflow definition
   const phases = run.workflow_definition?.phases || [];
@@ -50,8 +50,10 @@ export function getExecutionMetrics(
       : 0;
 
   // Count total actions (steps + events)
+  // WorkflowRunListItem only has steps count, events is optional
   const totalActions =
-    (run._count?.steps || 0) + (run._count?.events || 0);
+    (run._count?.steps || 0) +
+    (('_count' in run && run._count && 'events' in run._count) ? run._count.events || 0 : 0);
 
   return {
     currentPhaseNumber,

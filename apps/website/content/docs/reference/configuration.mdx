@@ -42,6 +42,7 @@ The CLI config file (`~/.agentcmd/config.json`) uses a **flat structure**:
   "inngestPort": 8288,
   "host": "0.0.0.0",
   "logLevel": "info",
+  "webhookBaseUrl": "",
   "anthropicApiKey": "",
   "openaiApiKey": "",
   "jwtSecret": "",
@@ -57,6 +58,7 @@ The CLI config file (`~/.agentcmd/config.json`) uses a **flat structure**:
 | `inngestPort` | number | Inngest dev server port | `8288` |
 | `host` | string | Bind address | `0.0.0.0` |
 | `logLevel` | string | Log verbosity | `info` |
+| `webhookBaseUrl` | string | Public webhook endpoint base URL | Server URL |
 | `anthropicApiKey` | string | Anthropic API key | `""` |
 | `openaiApiKey` | string | OpenAI API key | `""` |
 | `jwtSecret` | string | JWT signing secret | `""` |
@@ -101,6 +103,10 @@ export JWT_SECRET=$(openssl rand -base64 32)
 
 # CORS
 export ALLOWED_ORIGINS=http://localhost:5173
+
+# Webhooks (optional)
+# Public webhook endpoint base URL (for Tailscale Funnel, ngrok, etc.)
+export WEBHOOK_BASE_URL=https://your-domain.ts.net
 ```
 
 ### AI Provider Keys
@@ -176,6 +182,9 @@ DATABASE_URL=file:./dev.db
 ANTHROPIC_API_KEY=<your-key>
 OPENAI_API_KEY=<your-key>
 JWT_SECRET=<generate-with-openssl>
+
+# Optional: Public webhook URL (for Tailscale Funnel, ngrok)
+WEBHOOK_BASE_URL=https://your-machine.ts.net
 ```
 </Tab>
 <Tab value="CI/CD">
@@ -206,6 +215,9 @@ DATABASE_URL=file:/var/lib/agentcmd/production.db
 
 # Security (required)
 JWT_SECRET=<long-random-string>
+
+# Webhooks (public endpoint)
+WEBHOOK_BASE_URL=https://agentcmd.example.com
 
 # Inngest (production)
 INNGEST_DEV_MODE=false

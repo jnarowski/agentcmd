@@ -4,6 +4,7 @@
     "workflow-definitions",
     "workflow-phases",
     "workflow-runs",
-    "workflow-steps"
+    "workflow-steps",
+    "workflow-triggers"
   ]
 }

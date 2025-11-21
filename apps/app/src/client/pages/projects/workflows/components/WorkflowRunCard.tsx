@@ -1,10 +1,10 @@
-import type { WorkflowRun } from '../types';
+import type { WorkflowRun, WorkflowRunListItem } from '../types';
 import { WorkflowStatusBadge } from './WorkflowStatusBadge';
 import { formatRelativeTime } from '../utils/workflowFormatting';
 import { getExecutionMetrics } from '../utils/runMetrics';
 
 export interface WorkflowRunCardProps {
-  run: WorkflowRun;
+  run: WorkflowRun | WorkflowRunListItem;
   onClick: () => void;
 }
 
@@ -68,7 +68,7 @@ export function WorkflowRunCard({
       )}
 
       {/* Current step */}
-      {run.current_step && (
+      {'current_step' in run && run.current_step && (
         <div className="mb-3 rounded-md bg-muted/50 p-2 text-xs">
           <span className="font-medium text-muted-foreground">Current: </span>
           <span className="text-foreground">{run.current_step}</span>

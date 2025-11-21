@@ -6,13 +6,14 @@ import { WorkflowPhaseKanbanColumn } from "./components/WorkflowPhaseKanbanColum
 import { useWorkflowDefinition } from "./hooks/useWorkflowDefinition";
 import { useWorkflowRuns } from "./hooks/useWorkflowRuns";
 import { useWorkflowWebSocket } from "./hooks/useWorkflowWebSocket";
+import { useProjectId } from "@/client/hooks/useProjectId";
 import { getPhaseId, getPhaseLabel } from "@/shared/utils/phase.utils";
+import { PageHeader } from "@/client/components/PageHeader";
+import { Button } from "@/client/components/ui/button";
 
 function WorkflowDefinitionPage() {
-  const { projectId, definitionId } = useParams<{
-    projectId: string;
-    definitionId: string;
-  }>();
+  const projectId = useProjectId();
+  const { definitionId } = useParams<{ definitionId: string }>();
   const navigate = useNavigate();
 
   const {
@@ -72,26 +73,22 @@ function WorkflowDefinitionPage() {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Header */}
-      <div className="border-b bg-background p-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-              <h1 className="text-xl sm:text-2xl font-bold truncate">
-                {definition?.name}
-              </h1>
-              <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
-                {(allExecutions || []).length} run
-                {(allExecutions || []).length !== 1 ? "s" : ""}
-              </span>
-            </div>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-1 truncate">
-              Workflow Definition • {phases.length} phase
-              {phases.length !== 1 ? "s" : ""}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0 w-full sm:w-auto">
+      <PageHeader
+        breadcrumbs={[
+          { label: "Project", href: `/projects/${projectId}` },
+          { label: "Workflows", href: `/projects/${projectId}/workflows` },
+          { label: definition?.name || "Loading..." },
+        ]}
+        title={definition?.name || "Loading..."}
+        description={`Workflow Definition • ${phases.length} phase${phases.length !== 1 ? "s" : ""}`}
+        afterTitle={
+          <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
+            {(allExecutions || []).length} run
+            {(allExecutions || []).length !== 1 ? "s" : ""}
+          </span>
+        }
+        actions={
+          <>
             <button
               onClick={() => navigate(`/projects/${projectId}/workflows`)}
               className="hidden sm:flex rounded-md p-2 hover:bg-muted"
@@ -99,51 +96,50 @@ function WorkflowDefinitionPage() {
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-
-            <button
+            <Button
               onClick={() =>
                 navigate(`/projects/${projectId}/workflows/${definitionId}/new`)
               }
-              className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-primary-foreground hover:bg-primary/90 w-full sm:w-auto"
+              variant="outline"
+              className="flex-1 md:flex-none"
             >
               <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">New Run</span>
-              <span className="sm:hidden">New Run</span>
-            </button>
-          </div>
-        </div>
-      </div>
+              New Run
+            </Button>
+          </>
+        }
+      />
 
-      {/* Kanban Board - Full Screen */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden p-4">
-        <div className="flex gap-4 h-full min-w-full">
-          {/* Add "Not Started" column first */}
-          {runsByPhase["Not Started"] && (
-            <div className="flex-1 min-w-80 h-full">
-              <WorkflowPhaseKanbanColumn
-                phaseId="not-started"
-                phaseLabel="Not Started"
-                runs={runsByPhase["Not Started"]}
-                onExecutionClick={handleExecutionClick}
-              />
-            </div>
-          )}
-
-          {/* Then add columns for each phase from the definition */}
-          {phases.map((phase: any) => {
-            const phaseId = getPhaseId(phase);
-            const phaseLabel = getPhaseLabel(phase);
-            return (
-              <div key={phaseId} className="flex-1 min-w-80 h-full">
+      {/* Kanban Board */}
+      <div className="flex-1 overflow-x-auto">
+        <div className="flex gap-4 h-full md:min-w-0 min-w-max px-4 py-4">
+            {/* Add "Not Started" column first */}
+            {runsByPhase["Not Started"] && (
+              <div className="w-72 md:flex-1 md:min-w-0">
                 <WorkflowPhaseKanbanColumn
-                  phaseId={phaseId}
-                  phaseLabel={phaseLabel}
-                  runs={runsByPhase[phaseId] || []}
+                  phaseId="not-started"
+                  phaseLabel="Not Started"
+                  runs={runsByPhase["Not Started"]}
                   onExecutionClick={handleExecutionClick}
                 />
               </div>
-            );
-          })}
+            )}
+
+            {/* Then add columns for each phase from the definition */}
+            {phases.map((phase: any) => {
+              const phaseId = getPhaseId(phase);
+              const phaseLabel = getPhaseLabel(phase);
+              return (
+                <div key={phaseId} className="w-72 md:flex-1 md:min-w-0">
+                  <WorkflowPhaseKanbanColumn
+                    phaseId={phaseId}
+                    phaseLabel={phaseLabel}
+                    runs={runsByPhase[phaseId] || []}
+                    onExecutionClick={handleExecutionClick}
+                  />
+                </div>
+              );
+            })}
         </div>
       </div>
     </div>

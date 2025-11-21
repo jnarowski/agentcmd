@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import { ArrowLeft, Plus, XCircle, ExternalLink } from "lucide-react";
+import { XCircle, ExternalLink } from "lucide-react";
 import { WorkflowStatusBadge } from "./components/WorkflowStatusBadge";
 import { PhaseTimeline } from "./components/timeline/PhaseTimeline";
 import { WorkflowDetailPanel } from "./components/detail-panel/WorkflowDetailPanel";
@@ -8,17 +8,27 @@ import { useWorkflowRun } from "./hooks/useWorkflowRun";
 import { useWorkflowDefinition } from "./hooks/useWorkflowDefinition";
 import { useWorkflowWebSocket } from "./hooks/useWorkflowWebSocket";
 import { useWorkflowDetailPanel } from "./hooks/useWorkflowDetailPanel";
+import { useProjectId } from "@/client/hooks/useProjectId";
+import { PageHeader } from "@/client/components/PageHeader";
 
 function WorkflowRunDetailPage() {
-  const { projectId, definitionId, runId } = useParams<{
-    projectId: string;
+  const projectId = useProjectId();
+  const { definitionId, runId } = useParams<{
     definitionId: string;
     runId: string;
   }>();
   const navigate = useNavigate();
 
   // Detail panel state
-  const { activeTab, setActiveTab, selectedSessionId, setSelectedSession, selectedStepId, setSelectedStep, clearSelection } = useWorkflowDetailPanel();
+  const {
+    activeTab,
+    setActiveTab,
+    selectedSessionId,
+    setSelectedSession,
+    selectedStepId,
+    setSelectedStep,
+    clearSelection,
+  } = useWorkflowDetailPanel();
 
   // Fetch data
   const {
@@ -79,22 +89,25 @@ function WorkflowRunDetailPage() {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Header */}
-      <div className="border-b bg-background px-6 py-3">
-        <div className="flex items-center justify-between gap-6">
-          {/* Run name and badge */}
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold">{run.name}</h1>
+      <PageHeader
+        breadcrumbs={[
+          { label: "Project", href: `/projects/${projectId}` },
+          { label: "Workflows", href: `/projects/${projectId}/workflows` },
+          {
+            label: definition.name,
+            href: `/projects/${projectId}/workflows/${definitionId}`,
+          },
+          { label: run.name },
+        ]}
+        title={run.name}
+        afterTitle={
+          <>
             <WorkflowStatusBadge status={run.status} />
-
-            {/* Trigger type badge */}
-            {run.triggered_by === 'webhook' && (
+            {run.triggered_by === "webhook" && (
               <span className="inline-flex items-center gap-1.5 rounded-md bg-purple-500/10 px-2 py-1 text-xs font-medium text-purple-500 border border-purple-500/20">
                 Webhook
               </span>
             )}
-
-            {/* Issue link */}
             {run.issue_url && (
               <a
                 href={run.issue_url}
@@ -103,12 +116,10 @@ function WorkflowRunDetailPage() {
                 className="inline-flex items-center gap-1.5 text-sm text-blue-500 hover:text-blue-600"
                 title={run.issue_id || undefined}
               >
-                {run.issue_id || 'View Issue'}
+                {run.issue_id || "View Issue"}
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
             )}
-
-            {/* PR link */}
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {(run as any).pr_url && (
               <a
@@ -122,43 +133,27 @@ function WorkflowRunDetailPage() {
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
             )}
-          </div>
-
-          {/* Navigation buttons */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() =>
-                navigate(`/projects/${projectId}/workflows/${definitionId}`)
-              }
-              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </button>
-
-            <button
-              onClick={() => navigate(`/projects/${projectId}/workflows/${definitionId}/new`)}
-              className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-            >
-              <Plus className="h-4 w-4" />
-              New Run
-            </button>
-          </div>
-        </div>
-
-        {/* Error Alert */}
-        {run.status === "failed" && run.error_message && (
-          <div className="mt-3 rounded-md bg-red-500/10 border border-red-500/20 px-4 py-3">
-            <div className="flex items-start gap-3">
-              <XCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-medium text-red-500">Workflow Failed</h3>
-                <p className="mt-1 text-sm text-red-500/90">{run.error_message}</p>
+          </>
+        }
+        alerts={
+          run.status === "failed" && run.error_message ? (
+            <div className="rounded-md bg-red-500/10 border border-red-500/20 px-4 py-3">
+              <div className="flex items-start gap-3">
+                <XCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-medium text-red-500">
+                    Workflow Failed
+                  </h3>
+                  <p className="mt-1 text-sm text-red-500/90">
+                    {run.error_message}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          ) : undefined
+        }
+        className="px-6 py-3"
+      />
 
       {/* Content - Split Pane Layout */}
       <div className="flex-1 grid grid-cols-1 md:grid-cols-2 overflow-hidden">

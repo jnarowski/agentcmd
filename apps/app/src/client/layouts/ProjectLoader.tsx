@@ -12,14 +12,22 @@ import { ProjectHeader } from "@/client/pages/projects/components/ProjectHeader"
 import { getSessionDisplayName } from "@/client/utils/getSessionDisplayName";
 import type { SessionResponse } from "@/shared/types/agent-session.types";
 
-export default function ProjectDetailLayout() {
-  const { id } = useParams<{ id: string }>();
+/**
+ * Loads project data and renders ProjectHeader for all project routes
+ * Used as an intermediate route component under AppLayout
+ */
+export default function ProjectLoader() {
+  const { id, projectId } = useParams<{ id?: string; projectId?: string }>();
   const navigate = useNavigate();
   const setActiveProject = useNavigationStore(
     (state) => state.setActiveProject
   );
   const clearNavigation = useNavigationStore((state) => state.clearNavigation);
-  const { data: project, isLoading, error } = useProject(id!);
+
+  // Use either id or projectId param (workflow routes use projectId)
+  const activeProjectId = id || projectId;
+
+  const { data: project, isLoading, error } = useProject(activeProjectId!);
 
   // Only show session when on a session route
   const { sessionId: activeSessionId } = useParams<{ sessionId: string }>();
@@ -40,15 +48,15 @@ export default function ProjectDetailLayout() {
 
   // Sync projectId with navigationStore on mount and when id changes
   useEffect(() => {
-    if (id) {
-      setActiveProject(id);
+    if (activeProjectId) {
+      setActiveProject(activeProjectId);
     }
 
     // Cleanup: clear navigation on unmount
     return () => {
       clearNavigation();
     };
-  }, [id, setActiveProject, clearNavigation]);
+  }, [activeProjectId, setActiveProject, clearNavigation]);
 
   // Redirect to root if project is not found or deleted
   useEffect(() => {
@@ -62,7 +70,7 @@ export default function ProjectDetailLayout() {
   if (isLoading) {
     return (
       <div className="flex flex-col h-full">
-        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-17 w-full rounded-none" />
         <div className="flex-1 p-4">
           <Skeleton className="h-full w-full" />
         </div>
@@ -94,7 +102,7 @@ export default function ProjectDetailLayout() {
   return (
     <div className="flex flex-col h-full">
       <ProjectHeader
-        projectId={id!}
+        projectId={activeProjectId!}
         projectName={project.name}
         projectPath={project.path}
         gitCapabilities={project.capabilities.git}
