@@ -79,7 +79,7 @@ export default function NewWorkflowRunPage() {
 
       <div className="flex-1 overflow-auto p-6 space-y-6">
         {/* Form */}
-        <div className="rounded-lg border bg-card p-6">
+        <div className="rounded-lg border bg-card">
           <NewRunForm
             projectId={projectId}
             definitionId={definitionId}

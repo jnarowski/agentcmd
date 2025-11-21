@@ -140,14 +140,14 @@ function ProjectWorkflowsPage({
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
         ) : (
-          <div className="flex gap-4 h-full md:min-w-0 min-w-max px-4 py-4">
+          <div className="flex flex-col lg:flex-row gap-4 h-full px-4 py-4">
             {[
               WorkflowStatusValues.PENDING,
               WorkflowStatusValues.RUNNING,
               WorkflowStatusValues.COMPLETED,
               WorkflowStatusValues.FAILED,
             ].map((status) => (
-              <div key={status} className="w-72 md:flex-1 md:min-w-0">
+              <div key={status} className="w-full lg:flex-1 lg:min-w-0">
                 <WorkflowKanbanColumn
                   status={status}
                   runs={runsByStatus[status] || []}

@@ -22,7 +22,7 @@ interface BreadcrumbSectionProps {
  */
 export function BreadcrumbSection({ items }: BreadcrumbSectionProps) {
   return (
-    <div className="border-b border-border/40 bg-background px-4 py-2">
+    <div className="hidden sm:block border-b border-border/40 bg-background px-4 py-2">
       <Breadcrumb items={items} size="xs" />
     </div>
   );
