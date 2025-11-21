@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Edit, Trash2, Play, Pause, Copy, Check, Eye, EyeOff } from "lucide-react";
+import { useProjectId } from "@/client/hooks/useProjectId";
 import { useWebhook } from "./hooks/useWebhook";
 import { useWebhookMutations } from "./hooks/useWebhookMutations";
 import { useWebhookWebSocket } from "./hooks/useWebhookWebSocket";
@@ -21,18 +22,16 @@ import type { SpecTypeMetadata } from "@/client/pages/projects/workflows/compone
 import { PageHeader } from "@/client/components/PageHeader";
 
 export default function WebhookDetailPage() {
-  const { projectId, webhookId } = useParams<{
-    projectId: string;
-    webhookId: string;
-  }>();
+  const projectId = useProjectId();
+  const { webhookId } = useParams<{ webhookId: string }>();
   const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [urlCopied, setUrlCopied] = useState(false);
   const [secretCopied, setSecretCopied] = useState(false);
   const [secretRevealed, setSecretRevealed] = useState(false);
 
-  if (!projectId || !webhookId) {
-    throw new Error("Missing projectId or webhookId");
+  if (!webhookId) {
+    throw new Error("Missing webhookId");
   }
 
   const { data: webhook, isLoading } = useWebhook(webhookId);

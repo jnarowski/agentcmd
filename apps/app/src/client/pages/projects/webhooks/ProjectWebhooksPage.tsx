@@ -1,19 +1,20 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Plus, Webhook } from "lucide-react";
 import { Button } from "@/client/components/ui/button";
+import { useProjectId } from "@/client/hooks/useProjectId";
 import { WebhookList } from "./components/WebhookList";
 import { useWebhooks } from "./hooks/useWebhooks";
 import { WorkflowTabs } from "../workflows/components/WorkflowTabs";
 import { PageHeader } from "@/client/components/PageHeader";
 
 export default function ProjectWebhooksPage() {
-  const { projectId } = useParams<{ projectId: string }>();
+  const projectId = useProjectId();
   const navigate = useNavigate();
 
-  const { data: webhooks, isLoading } = useWebhooks(projectId!);
+  const { data: webhooks, isLoading } = useWebhooks(projectId);
 
   const handleCreateWebhook = () => {
-    navigate(`/projects/${projectId}/workflows/triggers/new`);
+    navigate(`/projects/${activeProjectId}/workflows/triggers/new`);
   };
 
   if (isLoading) {
@@ -33,8 +34,8 @@ export default function ProjectWebhooksPage() {
     <div className="flex h-full flex-col">
       <PageHeader
         breadcrumbs={[
-          { label: "Project", href: `/projects/${projectId}` },
-          { label: "Workflows", href: `/projects/${projectId}/workflows` },
+          { label: "Project", href: `/projects/${activeProjectId}` },
+          { label: "Workflows", href: `/projects/${activeProjectId}/workflows` },
           { label: "Triggers" },
         ]}
         title="Workflow Triggers"
@@ -75,7 +76,7 @@ export default function ProjectWebhooksPage() {
         ) : (
           <div>
             <h2 className="text-lg font-semibold mb-4">Webhooks</h2>
-            <WebhookList webhooks={webhooks || []} projectId={projectId!} />
+            <WebhookList webhooks={webhooks || []} projectId={activeProjectId!} />
           </div>
         )}
       </div>

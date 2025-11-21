@@ -24,14 +24,15 @@ export function WorkflowDefinitionRow({
   onUnarchive,
   isArchived,
 }: WorkflowDefinitionRowProps) {
-  const { projectId } = useParams<{ projectId: string }>();
+  const { projectId, id } = useParams<{ projectId?: string; id?: string }>();
+  const activeProjectId = projectId || id;
   const runCount = definition._count?.runs ?? 0;
 
   return (
     <TableRow>
       <TableCell className="font-medium">
         <Link
-          to={`/projects/${projectId}/workflows/${definition.id}`}
+          to={`/projects/${activeProjectId}/workflows/${definition.id}`}
           className="hover:underline"
         >
           {definition.name}

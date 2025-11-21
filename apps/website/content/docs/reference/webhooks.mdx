@@ -19,12 +19,7 @@ Environment variable that sets the base URL for webhook endpoints.
 
 **Why needed:** External services (GitHub, Linear, Jira) need to send webhooks to a publicly accessible URL. By default, agentcmd uses `http://localhost:3456` which only works locally.
 
-**Configuration:**
-
-```bash
-# .env
-WEBHOOK_BASE_URL=https://your-domain.com
-```
+**Configuration:** Set in your `.env` file.
 
 **Examples:**
 
@@ -35,98 +30,76 @@ WEBHOOK_BASE_URL=https://your-domain.com
 | **Production** | `https://agentcmd.example.com` | Production deployment with custom domain |
 | **Local only** | (not set) | Defaults to `http://127.0.0.1:3456` - won't work for external webhooks |
 
-**How it works:**
-
-```typescript
-// Without WEBHOOK_BASE_URL
-https://github.com → http://localhost:3456/api/webhooks/wh_123/events ❌ (unreachable)
-
-// With WEBHOOK_BASE_URL=https://your-machine.ts.net
-https://github.com → https://your-machine.ts.net/api/webhooks/wh_123/events ✅
-```
-
-The webhook URL shown in the UI automatically uses `WEBHOOK_BASE_URL` when configured.
+**How it works:** The webhook URL shown in the UI automatically uses `WEBHOOK_BASE_URL` when configured. Without it, external services can't reach your local server. With it set to a public URL (like your Tailscale domain), services like GitHub can successfully send webhooks to your server.
 
 <Callout type="warn">
   Always set `WEBHOOK_BASE_URL` when using webhooks. Without it, external services can't reach your server.
 </Callout>
 
-## Webhook Schema
+## How Webhooks Work
 
-### WebhookConfig
+### Configuration Overview
 
-Complete webhook configuration structure:
+Each webhook has a configuration that determines what happens when an event arrives:
 
-```typescript
-interface WebhookConfig {
-  name: string;                      // Template: "Build PR #{{pull_request.number}}"
-  spec_content?: string;             // Template: "{{pull_request.title}}\n\n{{pull_request.body}}"
-  mappings: MappingGroup[];          // Conditional routing rules
-  default_action?: "skip" | "set_fields";
-  default_mapping?: WebhookMappingFields;
-  source_config?: SourceConfig;      // HMAC settings for generic webhooks
-}
-```
+- **name** - Template for workflow run name (e.g., `"Build PR #{{pull_request.number}}"`)
+- **spec_content** - Optional template for spec markdown content
+- **mappings** - Rules that route events to workflows
+- **default_action** - What to do when no mapping matches: `"skip"` or `"set_fields"`
+- **source_config** - HMAC settings for generic webhooks
 
-**Validation rules:**
-- **Simple mode**: Exactly 1 mapping with 0 conditions, no `default_action` or `default_mapping`
-- **Conditional mode**: 1+ mappings with conditions, requires `default_action`
+### Operating Modes
 
-### MappingGroup
+**Simple mode** - Single mapping with no conditions. Always creates a workflow run when webhook receives an event.
 
-Routing rule with optional conditions:
+**Conditional mode** - Multiple mappings with conditions. Only creates workflow run when conditions match.
 
-```typescript
-interface MappingGroup {
-  conditions: Condition[];           // Empty = always match (simple mode)
-  spec_type_id: string;              // Which spec type to use
-  workflow_definition_id: string;    // Which workflow to execute
-}
-```
+### Mappings
 
-### Condition
+Mappings connect incoming webhook events to workflows. Each mapping contains:
 
-Evaluation criteria for conditional routing:
+- **conditions** - List of rules that must all be true for this mapping to match (empty = always match)
+- **spec_type_id** - Which spec type to use for the created workflow run
+- **workflow_definition_id** - Which workflow to execute
 
-```typescript
-interface Condition {
-  path: string;                      // JSONPath-style: "pull_request.action"
-  operator: ConditionalOperator;     // Comparison operator
-  value: string | number | boolean;  // Expected value
-}
-```
+**How mapping selection works:**
+1. Webhook receives event
+2. Evaluates each mapping's conditions in order
+3. First mapping where ALL conditions are true wins
+4. If no mappings match, uses `default_action`
 
-### ConditionalOperator
+### Conditions
 
-| Operator | Description | Example |
-|----------|-------------|---------|
-| `equals` | Exact match | `{ path: "action", operator: "equals", value: "opened" }` |
-| `not_equals` | Not equal | `{ path: "state", operator: "not_equals", value: "draft" }` |
-| `contains` | String/array contains | `{ path: "labels", operator: "contains", value: "bug" }` |
-| `not_contains` | Does not contain | `{ path: "title", operator: "not_contains", value: "WIP" }` |
-| `greater_than` | Numeric greater than | `{ path: "pull_request.changed_files", operator: "greater_than", value: 5 }` |
-| `less_than` | Numeric less than | `{ path: "issue.priority", operator: "less_than", value: 3 }` |
-| `exists` | Field is present | `{ path: "assignee", operator: "exists", value: true }` |
-| `not_exists` | Field is absent | `{ path: "milestone", operator: "not_exists", value: true }` |
+Conditions are rules that filter which webhook events trigger workflows. Each condition checks one field from the webhook payload:
 
-### SourceConfig
+- **path** - Field to check in the webhook payload (e.g., "pull_request.action", "issue.state.name")
+- **operator** - How to compare the value (equals, contains, greater_than, etc.)
+- **value** - The expected value to compare against
 
-HMAC configuration for generic webhooks:
+**Example logic:**
+- Condition 1: "action" equals "opened"
+- Condition 2: "pull_request.draft" equals false
+- Result: Only triggers for non-draft PRs that are newly opened
 
-```typescript
-interface SourceConfig {
-  signature_header: string;          // Header containing signature (e.g., "x-hub-signature")
-  hmac_method: "sha1" | "sha256";    // HMAC algorithm
-}
-```
+### Operators
 
-**Example:**
-```json
-{
-  "signature_header": "x-webhook-signature",
-  "hmac_method": "sha256"
-}
-```
+| Operator | Description | Example Use Case |
+|----------|-------------|------------------|
+| `equals` | Exact match | Check if action is "opened" |
+| `not_equals` | Not equal | Exclude draft PRs |
+| `contains` | String/array contains | Check if labels include "bug" |
+| `not_contains` | Does not contain | Exclude WIP items |
+| `greater_than` | Numeric greater than | Only PRs with more than 5 changed files |
+| `less_than` | Numeric less than | Only high priority issues (priority < 3) |
+| `exists` | Field is present | Only issues with an assignee |
+| `not_exists` | Field is absent | Only issues without a milestone |
+
+### Source Configuration (Generic Webhooks)
+
+For generic webhooks, you can configure HMAC signature verification:
+
+- **signature_header** - HTTP header containing the signature (e.g., "x-webhook-signature")
+- **hmac_method** - Algorithm to use: "sha1" or "sha256"
 
 ## Webhook Sources
 
@@ -147,54 +120,33 @@ interface SourceConfig {
 - Format: `github-{number}`
 - Example: `github-123` (for PR #123)
 
-**Common event payloads:**
+**Common webhook fields:**
 
-```json
-// pull_request event
-{
-  "action": "opened",
-  "pull_request": {
-    "number": 123,
-    "title": "Add feature X",
-    "body": "Description",
-    "html_url": "https://github.com/org/repo/pull/123",
-    "merged": false,
-    "state": "open",
-    "changed_files": 5
-  }
-}
+Pull request events:
+- `action` - Event type (opened, closed, reopened, synchronize, etc.)
+- `pull_request.number` - PR number
+- `pull_request.title` - PR title
+- `pull_request.body` - PR description
+- `pull_request.html_url` - PR URL
+- `pull_request.merged` - Whether PR is merged
+- `pull_request.state` - open, closed
+- `pull_request.draft` - Whether PR is draft
+- `pull_request.changed_files` - Number of files changed
 
-// issue event
-{
-  "action": "opened",
-  "issue": {
-    "number": 456,
-    "title": "Bug report",
-    "body": "Steps to reproduce...",
-    "html_url": "https://github.com/org/repo/issues/456",
-    "labels": [{"name": "bug"}]
-  }
-}
-```
+Issue events:
+- `action` - Event type (opened, closed, reopened, etc.)
+- `issue.number` - Issue number
+- `issue.title` - Issue title
+- `issue.body` - Issue description
+- `issue.html_url` - Issue URL
+- `issue.labels` - Array of label objects
+- `issue.assignee` - Assigned user (if any)
+- `issue.milestone` - Milestone (if any)
 
-**Example mapping:**
-
-```typescript
-{
-  name: "PR #{{pull_request.number}}: {{pull_request.title}}",
-  spec_content: "{{pull_request.body}}",
-  mappings: [
-    {
-      conditions: [
-        { path: "action", operator: "equals", value: "opened" },
-        { path: "pull_request.draft", operator: "equals", value: false }
-      ],
-      spec_type_id: "feature",
-      workflow_definition_id: "wf_review_pr"
-    }
-  ]
-}
-```
+**Example use cases:**
+- Trigger workflow only for non-draft PRs: Check `pull_request.draft` equals `false`
+- Only high-priority issues: Check `issue.labels` contains "priority-high"
+- Large PRs only: Check `pull_request.changed_files` greater than 10
 
 ### Linear
 
@@ -212,51 +164,26 @@ interface SourceConfig {
 - Uses Linear's `data.branchName` field directly
 - Example: `jnarowski-plt-1084-test-feature`
 
-**Common event payloads:**
+**Common webhook fields:**
 
-```json
-{
-  "action": "create",
-  "data": {
-    "id": "issue-uuid",
-    "identifier": "PLT-1084",
-    "title": "Implement feature Y",
-    "description": "Full description...",
-    "url": "https://linear.app/team/issue/PLT-1084",
-    "branchName": "jnarowski-plt-1084-implement-feature-y",
-    "state": {
-      "name": "In Progress"
-    },
-    "priority": 1
-  }
-}
-```
+- `action` - Event type (create, update, remove)
+- `data.id` - Issue UUID
+- `data.identifier` - Issue identifier (e.g., "PLT-1084")
+- `data.title` - Issue title
+- `data.description` - Issue description
+- `data.url` - Issue URL
+- `data.branchName` - Suggested git branch name (pre-formatted by Linear)
+- `data.state.name` - Current state (e.g., "In Progress", "Done")
+- `data.priority` - Priority number (1=urgent, 2=high, 3=medium, 4=low)
+- `data.assignee` - Assigned user (if any)
+- `data.team.name` - Team name
+- `data.labels` - Array of label objects
 
-**Example mapping:**
-
-```typescript
-{
-  name: "{{data.identifier}}: {{data.title}}",
-  spec_content: "{{data.description}}",
-  mappings: [
-    {
-      conditions: [
-        { path: "action", operator: "equals", value: "create" }
-      ],
-      spec_type_id: "feature",
-      workflow_definition_id: "wf_implement"
-    },
-    {
-      conditions: [
-        { path: "data.state.name", operator: "equals", value: "In Progress" }
-      ],
-      spec_type_id: "feature",
-      workflow_definition_id: "wf_implement"
-    }
-  ],
-  default_action: "skip"
-}
-```
+**Example use cases:**
+- Trigger only on issue creation: Check `action` equals "create"
+- Only in-progress issues: Check `data.state.name` equals "In Progress"
+- High priority only: Check `data.priority` less than 3
+- Specific team: Check `data.team.name` equals "Engineering"
 
 ### Jira
 
@@ -273,55 +200,25 @@ interface SourceConfig {
 - Format: `{key}`.toLowerCase()
 - Example: `proj-456` (for PROJ-456)
 
-**Common event payloads:**
+**Common webhook fields:**
 
-```json
-{
-  "webhookEvent": "jira:issue_created",
-  "issue": {
-    "key": "PROJ-456",
-    "fields": {
-      "summary": "Implement feature Z",
-      "description": "Detailed requirements...",
-      "priority": {
-        "id": "1",
-        "name": "High"
-      },
-      "status": {
-        "name": "To Do"
-      }
-    },
-    "self": "https://jira.example.com/rest/api/2/issue/12345"
-  }
-}
-```
+- `webhookEvent` - Event type (jira:issue_created, jira:issue_updated, etc.)
+- `issue.key` - Issue key (e.g., "PROJ-456")
+- `issue.fields.summary` - Issue title
+- `issue.fields.description` - Issue description
+- `issue.fields.priority.id` - Priority ID
+- `issue.fields.priority.name` - Priority name (High, Medium, Low)
+- `issue.fields.status.name` - Status (To Do, In Progress, Done, etc.)
+- `issue.fields.issuetype.name` - Issue type (Story, Bug, Task, etc.)
+- `issue.fields.assignee` - Assigned user (if any)
+- `issue.fields.labels` - Array of label strings
+- `issue.self` - API URL for the issue
 
-**Example mapping:**
-
-```typescript
-{
-  name: "{{issue.key}}: {{issue.fields.summary}}",
-  spec_content: "{{issue.fields.description}}",
-  mappings: [
-    {
-      conditions: [
-        { path: "webhookEvent", operator: "equals", value: "jira:issue_created" },
-        { path: "issue.fields.priority.name", operator: "equals", value: "High" }
-      ],
-      spec_type_id: "feature",
-      workflow_definition_id: "wf_high_priority"
-    },
-    {
-      conditions: [
-        { path: "webhookEvent", operator: "equals", value: "jira:issue_created" }
-      ],
-      spec_type_id: "feature",
-      workflow_definition_id: "wf_normal_priority"
-    }
-  ],
-  default_action: "skip"
-}
-```
+**Example use cases:**
+- Only new issues: Check `webhookEvent` equals "jira:issue_created"
+- High priority bugs only: Check `issue.fields.priority.name` equals "High" AND `issue.fields.issuetype.name` equals "Bug"
+- In progress items: Check `issue.fields.status.name` equals "In Progress"
+- Specific labels: Check `issue.fields.labels` contains "urgent"
 
 ### Generic
 
@@ -338,63 +235,28 @@ interface SourceConfig {
 - Uses issue ID if found
 - Format: `webhook-{id}` or `webhook-event-{eventId}`
 
-**Example with custom service:**
+**Configuration:**
+Generic webhooks are flexible and can work with any service. You'll need to:
+1. Configure the signature header and HMAC method to match your service
+2. Identify which fields in your webhook payload to use for conditions
+3. Set up template paths based on your payload structure
 
-```typescript
-{
-  name: "Event {{event.type}}: {{event.title}}",
-  spec_content: "{{event.description}}",
-  mappings: [
-    {
-      conditions: [
-        { path: "event.type", operator: "equals", value: "deployment_requested" }
-      ],
-      spec_type_id: "deploy",
-      workflow_definition_id: "wf_deploy"
-    }
-  ],
-  source_config: {
-    signature_header: "x-custom-signature",
-    hmac_method: "sha256"
-  }
-}
-```
+**Example use cases:**
+- Custom deployment service: Check `event.type` equals "deployment_requested"
+- Internal tools: Check `status` equals "approved"
+- Any custom integration: Inspect your webhook payload to identify useful fields for conditions
 
-## API Endpoints
+## Webhook Lifecycle
 
-### Public Webhook Receiver
+### How Events Are Processed
 
-Receives webhook events from external services. **No authentication required.**
+When a webhook receives an event:
 
-```
-POST /api/webhooks/:webhookId/events
-```
-
-**Rate limiting:** 100 requests/minute per webhook
-
-**Request:**
-```bash
-curl -X POST https://your-domain.com/api/webhooks/wh_abc123/events \
-  -H "Content-Type: application/json" \
-  -H "x-hub-signature-256: sha256=abc123..." \
-  -d '{"action": "opened", "pull_request": {...}}'
-```
-
-**Response:** Always returns `200 OK` (prevents retry storms)
-
-```json
-{
-  "status": "ok",
-  "message": "Event received"
-}
-```
-
-**Event processing:**
-1. Validates HMAC signature
-2. Checks webhook status (must be `active`)
-3. Evaluates conditions (first-match-wins)
-4. Creates workflow run if matched
-5. Records event in database
+1. **Signature validation** - Verifies HMAC signature matches
+2. **Status check** - Webhook must be `active` status
+3. **Condition evaluation** - Checks each mapping's conditions in order (first-match-wins)
+4. **Workflow creation** - Creates workflow run if mapping matched
+5. **Event recording** - Stores event in history for debugging
 
 **Event statuses:**
 - `test` - Test event sent via UI
@@ -404,192 +266,24 @@ curl -X POST https://your-domain.com/api/webhooks/wh_abc123/events \
 - `failed` - Error creating workflow run
 - `error` - Webhook in error state
 
-### CRUD Operations
+### Managing Webhooks in the UI
 
-Authenticated endpoints for managing webhooks.
+All webhook management happens through the UI:
 
-#### Create Webhook
+**Creating a webhook:**
+1. Choose webhook source (GitHub, Linear, Jira, Generic)
+2. Configure name and description
+3. Set up mappings and conditions
+4. Configure templates for workflow run name and spec content
+5. Activate when ready
 
-```
-POST /api/projects/:projectId/webhooks
-Authorization: Bearer {token}
-```
-
-**Request:**
-```json
-{
-  "name": "GitHub PR Automation",
-  "description": "Auto-review PRs",
-  "source": "github",
-  "config": {
-    "name": "PR #{{pull_request.number}}",
-    "mappings": [...]
-  }
-}
-```
-
-**Response:**
-```json
-{
-  "id": "wh_abc123",
-  "project_id": "proj_xyz",
-  "name": "GitHub PR Automation",
-  "source": "github",
-  "status": "draft",
-  "secret": "whsec_32bytehexstring...",
-  "config": {...},
-  "webhook_url": "https://your-domain.com/api/webhooks/wh_abc123/events",
-  "created_at": "2025-11-21T10:00:00.000Z"
-}
-```
-
-#### List Webhooks
-
-```
-GET /api/projects/:projectId/webhooks
-Authorization: Bearer {token}
-```
-
-**Response:**
-```json
-{
-  "data": [
-    {
-      "id": "wh_abc123",
-      "name": "GitHub PR Automation",
-      "source": "github",
-      "status": "active",
-      "last_triggered_at": "2025-11-21T09:30:00.000Z",
-      "created_at": "2025-11-21T08:00:00.000Z"
-    }
-  ]
-}
-```
-
-#### Get Webhook
-
-```
-GET /api/webhooks/:webhookId
-Authorization: Bearer {token}
-```
-
-**Response:**
-```json
-{
-  "data": {
-    "id": "wh_abc123",
-    "name": "GitHub PR Automation",
-    "source": "github",
-    "status": "active",
-    "secret": "whsec_...",
-    "config": {...},
-    "webhook_url": "https://your-domain.com/api/webhooks/wh_abc123/events",
-    "last_triggered_at": "2025-11-21T09:30:00.000Z",
-    "created_at": "2025-11-21T08:00:00.000Z"
-  }
-}
-```
-
-#### Update Webhook
-
-```
-PATCH /api/webhooks/:webhookId
-Authorization: Bearer {token}
-```
-
-**Request:**
-```json
-{
-  "name": "Updated name",
-  "config": {...}
-}
-```
-
-#### Delete Webhook
-
-```
-DELETE /api/webhooks/:webhookId
-Authorization: Bearer {token}
-```
-
-**Response:** `204 No Content`
-
-#### Activate Webhook
-
-Transition from `draft` → `active`:
-
-```
-POST /api/webhooks/:webhookId/activate
-Authorization: Bearer {token}
-```
-
-**Response:**
-```json
-{
-  "data": {
-    "id": "wh_abc123",
-    "status": "active"
-  }
-}
-```
-
-#### Pause Webhook
-
-Transition from `active` → `paused`:
-
-```
-POST /api/webhooks/:webhookId/pause
-Authorization: Bearer {token}
-```
-
-**Response:**
-```json
-{
-  "data": {
-    "id": "wh_abc123",
-    "status": "paused"
-  }
-}
-```
-
-#### List Events
-
-Get webhook event history with pagination:
-
-```
-GET /api/webhooks/:webhookId/events?limit=20&offset=0
-Authorization: Bearer {token}
-```
-
-**Response:**
-```json
-{
-  "data": [
-    {
-      "id": "evt_123",
-      "webhook_id": "wh_abc123",
-      "status": "success",
-      "payload": "{...}",
-      "headers": "{...}",
-      "mapped_data": "{...}",
-      "processing_time_ms": 45,
-      "created_at": "2025-11-21T09:30:00.000Z",
-      "workflow_runs": [
-        {
-          "id": "run_xyz",
-          "name": "PR #123: Add feature",
-          "status": "completed"
-        }
-      ]
-    }
-  ],
-  "pagination": {
-    "total": 150,
-    "limit": 20,
-    "offset": 0
-  }
-}
-```
+**Webhook actions:**
+- **Activate** - Enable webhook to process events (draft → active)
+- **Pause** - Temporarily stop processing events (active → paused)
+- **Edit** - Update configuration, mappings, or conditions
+- **Delete** - Permanently remove webhook
+- **View events** - See history of received events
+- **Test** - Send test event to verify configuration
 
 ## Status Transitions
 
@@ -623,42 +317,34 @@ stateDiagram-v2
 
 ## Template Syntax
 
-Use `{{path.to.value}}` to inject webhook payload data into strings.
+Use `{{path.to.value}}` to inject webhook payload data into your workflow run names and spec content.
 
 **Syntax:**
 - Dot notation: `{{pull_request.number}}`
 - Nested paths: `{{issue.fields.summary}}`
 - Array access: `{{labels[0].name}}`
 
-**Supported fields:**
-- `name` - Workflow run name
-- `spec_content` - Spec markdown content
+**Where to use templates:**
+- **Workflow run name** - Creates descriptive names like "PR #123: Add feature"
+- **Spec content** - Populates spec with issue/PR description
 
-**Examples:**
+**Example templates:**
 
-```typescript
-// GitHub PR
-{
-  name: "Build PR #{{pull_request.number}}",
-  spec_content: "{{pull_request.title}}\n\n{{pull_request.body}}"
-}
+GitHub PR:
+- Name: `Build PR #{{pull_request.number}}`
+- Spec: `{{pull_request.title}}\n\n{{pull_request.body}}`
 
-// Linear issue
-{
-  name: "{{data.identifier}}: {{data.title}}",
-  spec_content: "Priority: {{data.priority}}\n\n{{data.description}}"
-}
+Linear issue:
+- Name: `{{data.identifier}}: {{data.title}}`
+- Spec: `Priority: {{data.priority}}\n\n{{data.description}}`
 
-// Jira ticket
-{
-  name: "[{{issue.key}}] {{issue.fields.summary}}",
-  spec_content: "{{issue.fields.description}}"
-}
-```
+Jira ticket:
+- Name: `[{{issue.key}}] {{issue.fields.summary}}`
+- Spec: `{{issue.fields.description}}`
 
 **Missing values:**
-- If path doesn't exist, template renders as empty string
-- Use `exists`/`not_exists` operators to check presence
+- If a field doesn't exist in the payload, it renders as empty string
+- Use `exists`/`not_exists` operators in conditions to check if fields are present before using them
 
 ## Debugging
 
@@ -681,93 +367,75 @@ Every webhook event is recorded with:
 
 ### Common Issues
 
-**Invalid signature:**
-```json
-{
-  "status": "invalid_signature",
-  "error_message": "HMAC verification failed"
-}
-```
+**Invalid signature (status: invalid_signature)**
 
-**Solution:**
-- Verify webhook secret matches in external service
+**Problem:** HMAC verification failed
+
+**Solutions:**
+- Verify webhook secret matches in external service configuration
 - Check signature header is correct for source type
 - Ensure payload is sent as `application/json`
+- For GitHub, make sure the secret in GitHub matches the secret shown in the UI
 
-**Filtered:**
-```json
-{
-  "status": "filtered",
-  "mapped_data": "{\"action\": \"synchronize\"}"
-}
-```
+**Filtered (status: filtered)**
 
-**Solution:**
-- Check conditions - no mapping matched
-- Verify `default_action` is set correctly
-- Review matched values in `mapped_data`
+**Problem:** Event received but no mapping matched
 
-**Failed:**
-```json
-{
-  "status": "failed",
-  "error_message": "Workflow definition not found"
-}
-```
+**Solutions:**
+- Review your conditions - none matched the incoming event
+- Verify `default_action` is set correctly (should be "skip" if you want to filter events)
+- Check the event details to see what values were in the payload
+- Adjust your conditions to match the actual payload structure
 
-**Solution:**
-- Verify `workflow_definition_id` exists
-- Check `spec_type_id` is valid
-- Ensure workflow is not deleted
+**Failed (status: failed)**
 
-**Webhook set to error status:**
-```json
-{
-  "status": "error",
-  "error_message": "Too many failures (5 in last hour)"
-}
-```
+**Problem:** Error creating workflow run
 
-**Solution:**
-- Review recent events for error patterns
-- Fix configuration issues
-- Reactivate webhook after fixing
+**Solutions:**
+- Verify the workflow definition still exists and wasn't deleted
+- Check that the spec type is valid
+- Ensure your template syntax is correct
+- Review the error message in the event details
+
+**Error status (webhook in error state)**
+
+**Problem:** Too many consecutive failures
+
+**Solutions:**
+- Review recent event history for error patterns
+- Fix the underlying configuration issue
+- Test the webhook to verify it's working
+- Reactivate the webhook once fixed
 
 ### Testing Webhooks
 
-**Send test event:**
-1. Go to webhook detail page
+**How to test:**
+1. Go to webhook detail page in the UI
 2. Click "Test" button
-3. Select recent event payload or paste custom JSON
-4. Review test event result
+3. Either select a recent event payload or paste custom JSON
+4. Review the test result to see what would happen
 
-**Test events:**
-- Have status `test`
-- Don't trigger real workflow runs (dry-run mode)
-- Show what would have been matched
+**Test event behavior:**
+- Shows status as `test` in event history
+- Runs through condition evaluation
+- Shows which mapping would match
+- Does NOT create actual workflow runs (dry-run mode)
+- Perfect for verifying configuration before activating
 
 ## Rate Limiting
 
 **Limit:** 100 requests per minute per webhook
 
-**Behavior:**
-- Returns `429 Too Many Requests` when exceeded
+**How it works:**
+- Each webhook has its own rate limit (not shared across all webhooks)
 - Resets every minute
-- Applies per webhook (not global)
-
-**Response:**
-```json
-{
-  "error": "rate_limit_exceeded",
-  "message": "Too many requests. Try again in 30 seconds.",
-  "retry_after": 30
-}
-```
+- Exceeding the limit returns an error to the external service
 
 **Best practices:**
-- Configure external services to batch events
-- Use conditional mappings to filter events server-side
-- Monitor event history for unusual activity
+- Configure external services to batch events when possible
+- Use conditional mappings to filter events (reduces processing load)
+- Monitor event history for unusual activity or spam
+- If you're hitting limits, consider whether all those events really need to trigger workflows
 
 ## Security
 

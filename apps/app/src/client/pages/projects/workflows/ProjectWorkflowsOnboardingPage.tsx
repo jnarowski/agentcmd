@@ -10,21 +10,22 @@ import { workflowKeys } from "@/client/pages/projects/workflows/hooks/queryKeys"
 import { useState } from "react";
 
 function ProjectWorkflowsOnboardingPage() {
-  const { projectId } = useParams<{ projectId: string }>();
+  const { projectId, id } = useParams<{ projectId?: string; id?: string }>();
+  const activeProjectId = projectId || id;
   const queryClient = useQueryClient();
-  const { data: project } = useProject(projectId!);
+  const { data: project } = useProject(activeProjectId!);
   const [showInstallDialog, setShowInstallDialog] = useState(false);
 
   const handleRefreshDefinitions = () => {
     queryClient.invalidateQueries({
-      queryKey: workflowKeys.definitionsList(projectId!),
+      queryKey: workflowKeys.definitionsList(activeProjectId!),
     });
   };
 
   const handleCloseInstallDialog = () => {
     setShowInstallDialog(false);
     // Refresh project data to update capabilities
-    queryClient.invalidateQueries({ queryKey: projectKeys.detail(projectId!) });
+    queryClient.invalidateQueries({ queryKey: projectKeys.detail(activeProjectId!) });
     // Refresh workflow definitions
     handleRefreshDefinitions();
   };
@@ -168,7 +169,7 @@ export default defineWorkflow({
         <WorkflowPackageInstallDialog
           isOpen={showInstallDialog}
           onClose={handleCloseInstallDialog}
-          projectId={projectId!}
+          projectId={activeProjectId!}
           sdkStatus={project.capabilities.workflow_sdk}
         />
       )}

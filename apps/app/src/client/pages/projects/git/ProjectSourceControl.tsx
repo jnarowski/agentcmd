@@ -31,11 +31,12 @@ import { toast } from "sonner";
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
 
 export default function ProjectSourceControl() {
-  const { projectId } = useParams<{ projectId: string }>();
+  const { projectId, id } = useParams<{ projectId?: string; id?: string }>();
+  const activeProjectId = projectId || id;
   const queryClient = useQueryClient();
 
   // Fetch project to get path
-  const { data: project } = useProject(projectId!);
+  const { data: project } = useProject(activeProjectId!);
 
   useDocumentTitle(project?.name ? `Source Control - ${project.name} | Agent Workflows` : undefined);
   const projectPath = project?.path;

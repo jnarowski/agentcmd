@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import { ArrowLeft, Plus, XCircle, ExternalLink } from "lucide-react";
+import { XCircle, ExternalLink } from "lucide-react";
 import { WorkflowStatusBadge } from "./components/WorkflowStatusBadge";
 import { PhaseTimeline } from "./components/timeline/PhaseTimeline";
 import { WorkflowDetailPanel } from "./components/detail-panel/WorkflowDetailPanel";

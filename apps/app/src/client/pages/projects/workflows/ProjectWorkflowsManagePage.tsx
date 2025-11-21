@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/client/components/ui/button";
 import { WorkflowDefinitionsTable } from "./components/WorkflowDefinitionsTable";
@@ -9,12 +8,13 @@ import { useWorkflowDefinitions } from "./hooks/useWorkflowDefinitions";
 import { useArchiveWorkflowDefinition } from "./hooks/useArchiveWorkflowDefinition";
 import { useUnarchiveWorkflowDefinition } from "./hooks/useUnarchiveWorkflowDefinition";
 import { useResyncWorkflows } from "./hooks/useResyncWorkflows";
+import { useProjectId } from "@/client/hooks/useProjectId";
 import type { WorkflowDefinition } from "@/client/pages/projects/workflows/types";
 import { WorkflowTabs } from "./components/WorkflowTabs";
 import { PageHeader } from "@/client/components/PageHeader";
 
 function ProjectWorkflowsManagePage() {
-  const { projectId } = useParams<{ projectId: string }>();
+  const projectId = useProjectId();
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
   const [unarchiveDialogOpen, setUnarchiveDialogOpen] = useState(false);
   const [selectedDefinition, setSelectedDefinition] =
@@ -22,10 +22,10 @@ function ProjectWorkflowsManagePage() {
 
   // Fetch active and archived workflows separately
   const { data: activeDefinitions = [], isLoading: isLoadingActive } =
-    useWorkflowDefinitions(projectId!, "active");
+    useWorkflowDefinitions(projectId, "active");
 
   const { data: archivedDefinitions = [], isLoading: isLoadingArchived } =
-    useWorkflowDefinitions(projectId!, "archived");
+    useWorkflowDefinitions(projectId, "archived");
 
   const archiveMutation = useArchiveWorkflowDefinition();
   const unarchiveMutation = useUnarchiveWorkflowDefinition();

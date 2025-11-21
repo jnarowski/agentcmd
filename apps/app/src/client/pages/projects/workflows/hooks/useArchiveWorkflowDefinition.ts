@@ -21,10 +21,17 @@ export function useArchiveWorkflowDefinition() {
   return useMutation({
     mutationFn: archiveWorkflowDefinition,
     onSuccess: (data) => {
-      // Invalidate workflow definitions for this project
+      // Invalidate all workflow definition queries for this project (active + archived)
       if (data.project_id) {
+        const baseKey = workflowKeys.definitions();
         queryClient.invalidateQueries({
-          queryKey: workflowKeys.definitionsList(data.project_id),
+          predicate: (query) => {
+            const key = query.queryKey;
+            // Match ["workflows", "definitions", projectId, ...any status]
+            return key[0] === baseKey[0] &&
+                   key[1] === baseKey[1] &&
+                   key[2] === data.project_id;
+          },
         });
       }
       toast.success(`"${data.name}" archived successfully`);

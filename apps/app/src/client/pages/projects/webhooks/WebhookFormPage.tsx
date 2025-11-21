@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/client/components/ui/button";
+import { useProjectId } from "@/client/hooks/useProjectId";
 import { useWebhook } from "./hooks/useWebhook";
 import { useRecentTestEvent } from "./hooks/useRecentTestEvent";
 import { useWebhookMutations } from "./hooks/useWebhookMutations";
@@ -47,10 +48,8 @@ function webhookToFormValues(webhook: Webhook): UpdateWebhookFormValues {
 }
 
 export default function WebhookFormPage() {
-  const { projectId, webhookId } = useParams<{
-    projectId: string;
-    webhookId: string;
-  }>();
+  const projectId = useProjectId();
+  const { webhookId } = useParams<{ webhookId: string }>();
   const navigate = useNavigate();
 
   // Determine if this is create or edit mode

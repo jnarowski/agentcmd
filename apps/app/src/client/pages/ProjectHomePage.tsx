@@ -8,7 +8,7 @@ import {
 import { ProjectOnboardingSuggestions } from "@/client/pages/projects/components/ProjectOnboardingSuggestions";
 import { ProjectHomeSpecs } from "@/client/pages/projects/components/ProjectHomeSpecs";
 import { ProjectReadme } from "@/client/pages/projects/components/ProjectReadme";
-import { ProjectWorkflows } from "@/client/pages/projects/components/ProjectWorkflows";
+import { ProjectHomeWorkflows } from "@/client/pages/projects/components/ProjectHomeWorkflows";
 import { ProjectDialog } from "@/client/pages/projects/components/ProjectDialog";
 import { Skeleton } from "@/client/components/ui/skeleton";
 import { Button } from "@/client/components/ui/button";
@@ -133,8 +133,8 @@ export default function ProjectHomePage() {
       {/* Specs */}
       <ProjectHomeSpecs projectId={id!} />
 
-      {/* Workflows (includes Runs, Definitions, and Webhooks tabs) */}
-      <ProjectWorkflows projectId={id!} />
+      {/* Workflows (includes Runs, Definitions, and Triggers tabs) */}
+      <ProjectHomeWorkflows projectId={id!} />
 
       {/* README Section */}
       <ProjectReadme project={project} />

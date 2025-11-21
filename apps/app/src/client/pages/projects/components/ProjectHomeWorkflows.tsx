@@ -12,7 +12,8 @@ import {
   TabsContent,
 } from "@/client/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
-import { Workflow, Plus, Settings, Play } from "lucide-react";
+import { Workflow, Plus, Settings, Play, ExternalLink } from "lucide-react";
+import { getWebsiteUrl } from "@/client/utils/envConfig";
 import { useWorkflowRuns } from "@/client/pages/projects/workflows/hooks/useWorkflowRuns";
 import { useWorkflowDefinitions } from "@/client/pages/projects/workflows/hooks/useWorkflowDefinitions";
 import { useWebhooks } from "@/client/pages/projects/webhooks/hooks/useWebhooks";
@@ -25,9 +26,9 @@ interface ProjectWorkflowsProps {
 
 /**
  * Workflows section for project home page
- * Shows workflow runs, definitions, and webhooks in tabs
+ * Shows workflow runs, definitions, and triggers in tabs
  */
-export function ProjectWorkflows({ projectId }: ProjectWorkflowsProps) {
+export function ProjectHomeWorkflows({ projectId }: ProjectWorkflowsProps) {
   const navigate = useNavigate();
   const { data: runs, isLoading: isLoadingRuns } = useWorkflowRuns(projectId);
   const { data: definitions, isLoading: isLoadingDefs } =
@@ -93,7 +94,7 @@ export function ProjectWorkflows({ projectId }: ProjectWorkflowsProps) {
               Definitions {definitions && `(${definitions.length})`}
             </TabsTrigger>
             <TabsTrigger value="webhooks">
-              Webhooks {webhooks && `(${webhooks.length})`}
+              Triggers {webhooks && `(${webhooks.length})`}
             </TabsTrigger>
           </TabsList>
 
@@ -138,10 +139,26 @@ export function ProjectWorkflows({ projectId }: ProjectWorkflowsProps) {
                     Execute workflows to automate tasks with AI agents
                   </p>
                 </div>
-                <Button onClick={handleNewRun} className="gap-2">
-                  <Plus className="size-4" />
-                  Create your first run
-                </Button>
+                <div className="flex gap-2 justify-center">
+                  <Button onClick={handleNewRun} className="gap-2">
+                    <Plus className="size-4" />
+                    Create your first run
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="gap-2"
+                    asChild
+                  >
+                    <a
+                      href={`${getWebsiteUrl()}/docs/workflows/runs`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="size-4" />
+                      Learn More
+                    </a>
+                  </Button>
+                </div>
               </div>
             )}
           </TabsContent>
@@ -227,10 +244,26 @@ export function ProjectWorkflows({ projectId }: ProjectWorkflowsProps) {
                     Set up workflow definitions to automate your tasks
                   </p>
                 </div>
-                <Button onClick={handleManageWorkflows} className="gap-2">
-                  <Settings className="size-4" />
-                  Setup workflows
-                </Button>
+                <div className="flex gap-2 justify-center">
+                  <Button onClick={handleManageWorkflows} className="gap-2">
+                    <Settings className="size-4" />
+                    Setup workflows
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="gap-2"
+                    asChild
+                  >
+                    <a
+                      href={`${getWebsiteUrl()}/docs/workflows/definitions`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="size-4" />
+                      Learn More
+                    </a>
+                  </Button>
+                </div>
               </div>
             )}
           </TabsContent>
@@ -275,10 +308,26 @@ export function ProjectWorkflows({ projectId }: ProjectWorkflowsProps) {
                     services
                   </p>
                 </div>
-                <Button onClick={handleNewWebhook} className="gap-2">
-                  <Plus className="size-4" />
-                  Create your first webhook
-                </Button>
+                <div className="flex gap-2 justify-center">
+                  <Button onClick={handleNewWebhook} className="gap-2">
+                    <Plus className="size-4" />
+                    Create your first webhook
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="gap-2"
+                    asChild
+                  >
+                    <a
+                      href={`${getWebsiteUrl()}/docs/webhooks`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="size-4" />
+                      Learn More
+                    </a>
+                  </Button>
+                </div>
               </div>
             )}
           </TabsContent>

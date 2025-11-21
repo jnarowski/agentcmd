@@ -2,10 +2,9 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ShellProvider } from "@/client/pages/projects/shell/contexts/ShellContext";
 import { WebSocketProvider } from "@/client/providers/WebSocketProvider";
 import { DebugPanel } from "@/client/components/debug/DebugPanel";
-import ProtectedLayout from "@/client/layouts/ProtectedLayout";
+import AppLayout from "@/client/layouts/AppLayout";
 import AuthLayout from "@/client/layouts/AuthLayout";
-import ProjectDetailLayout from "@/client/layouts/ProjectDetailLayout";
-import WorkflowLayout from "@/client/layouts/WorkflowLayout";
+import ProjectLoader from "@/client/layouts/ProjectLoader";
 import ProjectsPage from "@/client/pages/ProjectsPage";
 import ProjectHomePage from "@/client/pages/ProjectHomePage";
 import NewSessionPage from "@/client/pages/projects/sessions/NewSessionPage";
@@ -41,15 +40,15 @@ function AppContent() {
           </Route>
 
           {/* Protected routes with sidebar */}
-          <Route element={<ProtectedLayout />}>
+          <Route element={<AppLayout />}>
             {/* Root redirect to projects */}
             <Route index element={<Navigate to="/projects" replace />} />
 
             {/* Projects list */}
             <Route path="/projects" element={<ProjectsPage />} />
 
-            {/* Project detail with nested routes */}
-            <Route path="/projects/:id" element={<ProjectDetailLayout />}>
+            {/* All project routes (detail + workflows) */}
+            <Route path="/projects/:id" element={<ProjectLoader />}>
               <Route index element={<ProjectHomePage />} />
               <Route
                 path="chat"
@@ -61,23 +60,19 @@ function AppContent() {
               <Route path="source" element={<Navigate to="source/files" replace />} />
               <Route path="source/files" element={<ProjectSourcePage />} />
               <Route path="source/git" element={<ProjectSourcePage />} />
+              <Route path="workflows" element={<ProjectWorkflowsPage />} />
+              <Route path="workflows/list" element={<ProjectWorkflowsListPage />} />
+              <Route path="workflows/onboarding" element={<ProjectWorkflowsOnboardingPage />} />
+              <Route path="workflows/manage" element={<ProjectWorkflowsManagePage />} />
+              <Route path="workflows/new" element={<NewWorkflowRunPage />} />
+              <Route path="workflows/:definitionId/new" element={<NewWorkflowRunPage />} />
+              <Route path="workflows/:definitionId" element={<WorkflowDefinitionPage />} />
+              <Route path="workflows/:definitionId/runs/:runId" element={<WorkflowRunDetailPage />} />
+              <Route path="workflows/triggers" element={<ProjectWebhooksPage />} />
+              <Route path="workflows/triggers/new" element={<WebhookFormPage />} />
+              <Route path="workflows/triggers/:webhookId" element={<WebhookDetailPage />} />
+              <Route path="workflows/triggers/:webhookId/edit" element={<WebhookFormPage />} />
             </Route>
-          </Route>
-
-          {/* Workflow routes with dedicated layout (no sidebar) */}
-          <Route path="/projects/:projectId" element={<WorkflowLayout />}>
-            <Route path="workflows" element={<ProjectWorkflowsPage />} />
-            <Route path="workflows/list" element={<ProjectWorkflowsListPage />} />
-            <Route path="workflows/onboarding" element={<ProjectWorkflowsOnboardingPage />} />
-            <Route path="workflows/manage" element={<ProjectWorkflowsManagePage />} />
-            <Route path="workflows/new" element={<NewWorkflowRunPage />} />
-            <Route path="workflows/:definitionId/new" element={<NewWorkflowRunPage />} />
-            <Route path="workflows/:definitionId" element={<WorkflowDefinitionPage />} />
-            <Route path="workflows/:definitionId/runs/:runId" element={<WorkflowRunDetailPage />} />
-            <Route path="workflows/triggers" element={<ProjectWebhooksPage />} />
-            <Route path="workflows/triggers/new" element={<WebhookFormPage />} />
-            <Route path="workflows/triggers/:webhookId" element={<WebhookDetailPage />} />
-            <Route path="workflows/triggers/:webhookId/edit" element={<WebhookFormPage />} />
           </Route>
         </Routes>
       </ShellProvider>
