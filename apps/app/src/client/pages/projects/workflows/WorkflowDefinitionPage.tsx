@@ -7,7 +7,7 @@ import { useWorkflowDefinition } from "./hooks/useWorkflowDefinition";
 import { useWorkflowRuns } from "./hooks/useWorkflowRuns";
 import { useWorkflowWebSocket } from "./hooks/useWorkflowWebSocket";
 import { getPhaseId, getPhaseLabel } from "@/shared/utils/phase.utils";
-import { Breadcrumb } from "@/client/components/ui/breadcrumb";
+import { PageHeader } from "@/client/components/PageHeader";
 
 function WorkflowDefinitionPage() {
   const { projectId, definitionId } = useParams<{
@@ -73,36 +73,22 @@ function WorkflowDefinitionPage() {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Header */}
-      <div className="border-b bg-background p-4">
-        {/* Breadcrumbs */}
-        <Breadcrumb
-          items={[
-            { label: "Project", href: `/projects/${projectId}` },
-            { label: "Workflows", href: `/projects/${projectId}/workflows` },
-            { label: definition?.name || "Loading..." },
-          ]}
-          className="mb-4"
-        />
-
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-              <h1 className="text-xl sm:text-2xl font-bold truncate">
-                {definition?.name}
-              </h1>
-              <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
-                {(allExecutions || []).length} run
-                {(allExecutions || []).length !== 1 ? "s" : ""}
-              </span>
-            </div>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-1 truncate">
-              Workflow Definition • {phases.length} phase
-              {phases.length !== 1 ? "s" : ""}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0 w-full sm:w-auto">
+      <PageHeader
+        breadcrumbs={[
+          { label: "Project", href: `/projects/${projectId}` },
+          { label: "Workflows", href: `/projects/${projectId}/workflows` },
+          { label: definition?.name || "Loading..." },
+        ]}
+        title={definition?.name || "Loading..."}
+        description={`Workflow Definition • ${phases.length} phase${phases.length !== 1 ? "s" : ""}`}
+        afterTitle={
+          <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
+            {(allExecutions || []).length} run
+            {(allExecutions || []).length !== 1 ? "s" : ""}
+          </span>
+        }
+        actions={
+          <>
             <button
               onClick={() => navigate(`/projects/${projectId}/workflows`)}
               className="hidden sm:flex rounded-md p-2 hover:bg-muted"
@@ -110,7 +96,6 @@ function WorkflowDefinitionPage() {
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-
             <button
               onClick={() =>
                 navigate(`/projects/${projectId}/workflows/${definitionId}/new`)
@@ -121,9 +106,9 @@ function WorkflowDefinitionPage() {
               <span className="hidden sm:inline">New Run</span>
               <span className="sm:hidden">New Run</span>
             </button>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* Kanban Board - Full Screen */}
       <div className="flex-1 overflow-x-auto overflow-y-hidden p-4">

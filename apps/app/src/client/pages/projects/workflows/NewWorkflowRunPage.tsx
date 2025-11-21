@@ -4,7 +4,8 @@ import { useProject } from "@/client/pages/projects/hooks/useProjects";
 import { useWorkflowDefinitions } from "./hooks/useWorkflowDefinitions";
 import { NewRunForm } from "./components/NewRunForm";
 import type { WorkflowRun } from "./types";
-import { Breadcrumb, type BreadcrumbItem } from "@/client/components/ui/breadcrumb";
+import { PageHeader } from "@/client/components/PageHeader";
+import type { BreadcrumbItem } from "@/client/components/ui/breadcrumb";
 
 export default function NewWorkflowRunPage() {
   const navigate = useNavigate();
@@ -68,31 +69,23 @@ export default function NewWorkflowRunPage() {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Header */}
-      <div className="border-b bg-background px-6 py-4">
-        <div className="max-w-4xl mx-auto">
-          <Breadcrumb items={breadcrumbItems} className="mb-4" />
-          <h1 className="text-2xl font-semibold">New Workflow Run</h1>
-        </div>
-      </div>
+      <PageHeader breadcrumbs={breadcrumbItems} title="New Workflow Run" />
 
-      {/* Form container */}
-      <div className="flex-1 overflow-auto p-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="rounded-lg border bg-card p-6">
-            <NewRunForm
-              projectId={activeProjectId!}
-              definitionId={definitionId}
-              definition={definition}
-              definitions={definitions}
-              initialSpecFile={initialSpecFile}
-              initialName={initialName}
-              initialPlanningSessionId={initialPlanningSessionId}
-              initialSpecInputType={initialSpecInputType}
-              onSuccess={handleSuccess}
-              onCancel={handleCancel}
-            />
-          </div>
+      <div className="flex-1 overflow-auto px-6 py-4 space-y-6">
+        {/* Form */}
+        <div className="rounded-lg border bg-card p-6">
+          <NewRunForm
+            projectId={activeProjectId!}
+            definitionId={definitionId}
+            definition={definition}
+            definitions={definitions}
+            initialSpecFile={initialSpecFile}
+            initialName={initialName}
+            initialPlanningSessionId={initialPlanningSessionId}
+            initialSpecInputType={initialSpecInputType}
+            onSuccess={handleSuccess}
+            onCancel={handleCancel}
+          />
         </div>
       </div>
     </div>

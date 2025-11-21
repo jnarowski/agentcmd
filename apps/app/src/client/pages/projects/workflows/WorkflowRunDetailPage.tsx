@@ -8,7 +8,7 @@ import { useWorkflowRun } from "./hooks/useWorkflowRun";
 import { useWorkflowDefinition } from "./hooks/useWorkflowDefinition";
 import { useWorkflowWebSocket } from "./hooks/useWorkflowWebSocket";
 import { useWorkflowDetailPanel } from "./hooks/useWorkflowDetailPanel";
-import { Breadcrumb } from "@/client/components/ui/breadcrumb";
+import { PageHeader } from "@/client/components/PageHeader";
 
 function WorkflowRunDetailPage() {
   const { projectId, definitionId, runId } = useParams<{
@@ -80,36 +80,25 @@ function WorkflowRunDetailPage() {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Header */}
-      <div className="border-b bg-background px-6 py-3">
-        {/* Breadcrumbs */}
-        <Breadcrumb
-          items={[
-            { label: "Project", href: `/projects/${projectId}` },
-            { label: "Workflows", href: `/projects/${projectId}/workflows` },
-            {
-              label: definition.name,
-              href: `/projects/${projectId}/workflows/${definitionId}`,
-            },
-            { label: run.name },
-          ]}
-          className="mb-3"
-        />
-
-        <div className="flex items-center justify-between gap-6">
-          {/* Run name and badge */}
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold">{run.name}</h1>
+      <PageHeader
+        breadcrumbs={[
+          { label: "Project", href: `/projects/${projectId}` },
+          { label: "Workflows", href: `/projects/${projectId}/workflows` },
+          {
+            label: definition.name,
+            href: `/projects/${projectId}/workflows/${definitionId}`,
+          },
+          { label: run.name },
+        ]}
+        title={run.name}
+        afterTitle={
+          <>
             <WorkflowStatusBadge status={run.status} />
-
-            {/* Trigger type badge */}
             {run.triggered_by === 'webhook' && (
               <span className="inline-flex items-center gap-1.5 rounded-md bg-purple-500/10 px-2 py-1 text-xs font-medium text-purple-500 border border-purple-500/20">
                 Webhook
               </span>
             )}
-
-            {/* Issue link */}
             {run.issue_url && (
               <a
                 href={run.issue_url}
@@ -122,8 +111,6 @@ function WorkflowRunDetailPage() {
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
             )}
-
-            {/* PR link */}
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {(run as any).pr_url && (
               <a
@@ -137,10 +124,10 @@ function WorkflowRunDetailPage() {
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
             )}
-          </div>
-
-          {/* Navigation buttons */}
-          <div className="flex items-center gap-3">
+          </>
+        }
+        actions={
+          <>
             <button
               onClick={() =>
                 navigate(`/projects/${projectId}/workflows/${definitionId}`)
@@ -150,7 +137,6 @@ function WorkflowRunDetailPage() {
               <ArrowLeft className="h-4 w-4" />
               Back
             </button>
-
             <button
               onClick={() => navigate(`/projects/${projectId}/workflows/${definitionId}/new`)}
               className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
@@ -158,22 +144,23 @@ function WorkflowRunDetailPage() {
               <Plus className="h-4 w-4" />
               New Run
             </button>
-          </div>
-        </div>
-
-        {/* Error Alert */}
-        {run.status === "failed" && run.error_message && (
-          <div className="mt-3 rounded-md bg-red-500/10 border border-red-500/20 px-4 py-3">
-            <div className="flex items-start gap-3">
-              <XCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-medium text-red-500">Workflow Failed</h3>
-                <p className="mt-1 text-sm text-red-500/90">{run.error_message}</p>
+          </>
+        }
+        alerts={
+          run.status === "failed" && run.error_message ? (
+            <div className="rounded-md bg-red-500/10 border border-red-500/20 px-4 py-3">
+              <div className="flex items-start gap-3">
+                <XCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-medium text-red-500">Workflow Failed</h3>
+                  <p className="mt-1 text-sm text-red-500/90">{run.error_message}</p>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          ) : undefined
+        }
+        className="px-6 py-3"
+      />
 
       {/* Content - Split Pane Layout */}
       <div className="flex-1 grid grid-cols-1 md:grid-cols-2 overflow-hidden">

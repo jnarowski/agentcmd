@@ -19,7 +19,7 @@ import {
 import type { Webhook } from "./types/webhook.types";
 import { WebhookBasicInfoSection } from "./components/form-sections/WebhookBasicInfoSection";
 import { WebhookMappingsSection } from "./components/form-sections/WebhookMappingsSection";
-import { BreadcrumbSection } from "@/client/components/ui/breadcrumb-section";
+import { PageHeader } from "@/client/components/PageHeader";
 
 /**
  * Convert Webhook to form values
@@ -173,8 +173,8 @@ export default function WebhookFormPage() {
   return (
     <FormProvider {...form}>
       <div className="flex h-full flex-col">
-        <BreadcrumbSection
-          items={[
+        <PageHeader
+          breadcrumbs={[
             { label: "Project", href: `/projects/${projectId}` },
             { label: "Workflows", href: `/projects/${projectId}/workflows` },
             { label: "Triggers", href: `/projects/${projectId}/workflows/triggers` },
@@ -182,20 +182,15 @@ export default function WebhookFormPage() {
               label: isCreateMode ? "Create" : webhook?.name || "Edit",
             },
           ]}
+          title={isCreateMode ? "Create Webhook" : "Configure Webhook"}
+          description={
+            !isCreateMode && webhook
+              ? `${webhook.name} - ${webhook.status}`
+              : undefined
+          }
         />
 
         <div className="flex-1 overflow-auto px-6 py-4 space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold">
-            {isCreateMode ? "Create Webhook" : "Configure Webhook"}
-          </h1>
-          {!isCreateMode && webhook && (
-            <p className="text-sm text-muted-foreground mt-2">
-              {webhook.name} - {webhook.status}
-            </p>
-          )}
-        </div>
 
         {/* Form */}
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

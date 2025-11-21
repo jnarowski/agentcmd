@@ -11,7 +11,7 @@ import { useUnarchiveWorkflowDefinition } from "./hooks/useUnarchiveWorkflowDefi
 import { useResyncWorkflows } from "./hooks/useResyncWorkflows";
 import type { WorkflowDefinition } from "@/client/pages/projects/workflows/types";
 import { WorkflowTabs } from "./components/WorkflowTabs";
-import { BreadcrumbSection } from "@/client/components/ui/breadcrumb-section";
+import { PageHeader } from "@/client/components/PageHeader";
 
 function ProjectWorkflowsManagePage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -65,46 +65,30 @@ function ProjectWorkflowsManagePage() {
 
   return (
     <div className="flex h-full flex-col">
-      <BreadcrumbSection
-        items={[
+      <PageHeader
+        breadcrumbs={[
           { label: "Project", href: `/projects/${projectId}` },
           { label: "Workflows", href: `/projects/${projectId}/workflows` },
           { label: "Workflow Definitions" },
         ]}
+        title="Workflow Definitions"
+        description="Manage workflow definitions for this project"
+        actions={
+          <Button
+            onClick={() => resyncMutation.mutate()}
+            disabled={resyncMutation.isPending}
+            variant="outline"
+          >
+            <RefreshCw
+              className={`w-4 h-4 md:mr-2 ${resyncMutation.isPending ? "animate-spin" : ""}`}
+            />
+            <span className="hidden md:inline">
+              {resyncMutation.isPending ? "Resyncing..." : "Resync Workflows"}
+            </span>
+          </Button>
+        }
+        belowHeader={<WorkflowTabs />}
       />
-
-      {/* Header */}
-      <div className="border-b bg-background px-4 py-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold">
-              Workflow Definitions
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Manage workflow definitions for this project
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={() => resyncMutation.mutate()}
-              disabled={resyncMutation.isPending}
-              variant="outline"
-            >
-              <RefreshCw
-                className={`w-4 h-4 md:mr-2 ${resyncMutation.isPending ? "animate-spin" : ""}`}
-              />
-              <span className="hidden md:inline">
-                {resyncMutation.isPending ? "Resyncing..." : "Resync Workflows"}
-              </span>
-            </Button>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="mt-4">
-          <WorkflowTabs />
-        </div>
-      </div>
 
       {/* Content */}
       <div className="flex-1 overflow-auto px-4 py-4">

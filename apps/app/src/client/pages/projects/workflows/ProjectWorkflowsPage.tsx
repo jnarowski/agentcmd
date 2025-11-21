@@ -10,7 +10,7 @@ import { useWorkflowRuns } from "./hooks/useWorkflowRuns";
 import { useWorkflowDefinitions } from "./hooks/useWorkflowDefinitions";
 import { useWorkflowWebSocket } from "./hooks/useWorkflowWebSocket";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
-import { BreadcrumbSection } from "@/client/components/ui/breadcrumb-section";
+import { PageHeader } from "@/client/components/PageHeader";
 import { WorkflowTabs } from "./components/WorkflowTabs";
 import { SearchBar } from "@/client/components/ui/search-bar";
 
@@ -101,39 +101,25 @@ function ProjectWorkflowsPage({
 
   return (
     <div className="flex h-full flex-col">
-      <BreadcrumbSection
-        items={[
+      <PageHeader
+        breadcrumbs={[
           { label: "Project", href: `/projects/${projectId}` },
           { label: "Workflows" },
         ]}
+        title="Workflows"
+        description="View workflow runs across all workflow definitions"
+        actions={
+          <Button
+            onClick={handleNewRunClick}
+            variant="outline"
+            className="flex-1 md:flex-none"
+          >
+            <Plus className="h-4 w-4" />
+            New Run
+          </Button>
+        }
+        belowHeader={<WorkflowTabs />}
       />
-
-      {/* Header */}
-      <div className="border-b bg-background px-4 py-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold">Workflows</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              View workflow runs across all workflow definitions
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={handleNewRunClick}
-              variant="outline"
-              className="flex-1 md:flex-none"
-            >
-              <Plus className="h-4 w-4" />
-              New Run
-            </Button>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="mt-4">
-          <WorkflowTabs />
-        </div>
-      </div>
 
       {/* Kanban Board */}
       <div className="flex-1 overflow-x-auto">

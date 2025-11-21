@@ -18,7 +18,7 @@ import {
 import { Badge } from "@/client/components/ui/badge";
 import { api } from "@/client/utils/api";
 import type { SpecTypeMetadata } from "@/client/pages/projects/workflows/components/SpecTypeSelect";
-import { BreadcrumbSection } from "@/client/components/ui/breadcrumb-section";
+import { PageHeader } from "@/client/components/PageHeader";
 
 export default function WebhookDetailPage() {
   const { projectId, webhookId } = useParams<{
@@ -146,65 +146,58 @@ export default function WebhookDetailPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <BreadcrumbSection
-        items={[
+      <PageHeader
+        breadcrumbs={[
           { label: "Project", href: `/projects/${projectId}` },
           { label: "Workflows", href: `/projects/${projectId}/workflows` },
           { label: "Triggers", href: `/projects/${projectId}/workflows/triggers` },
           { label: webhook.name },
         ]}
-      />
-
-      <div className="flex-1 overflow-auto px-6 py-4 space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-bold">{webhook.name}</h1>
-            <WebhookStatusBadge status={webhook.status} />
-          </div>
-          {webhook.description && (
-            <p className="text-gray-600">{webhook.description}</p>
-          )}
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              navigate(`/projects/${projectId}/workflows/triggers/${webhookId}/edit`)
-            }
-          >
-            <Edit className="w-4 h-4 mr-2" />
-            Edit
-          </Button>
-          {webhook.status === "draft" || webhook.status === "paused" ? (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={handleActivate}
-              disabled={activateMutation.isPending}
-            >
-              <Play className="w-4 h-4 mr-2" />
-              Activate
-            </Button>
-          ) : (
+        title={webhook.name}
+        description={webhook.description || undefined}
+        afterTitle={<WebhookStatusBadge status={webhook.status} />}
+        actions={
+          <>
             <Button
               variant="outline"
               size="sm"
-              onClick={handlePause}
-              disabled={pauseMutation.isPending}
+              onClick={() =>
+                navigate(`/projects/${projectId}/workflows/triggers/${webhookId}/edit`)
+              }
             >
-              <Pause className="w-4 h-4 mr-2" />
-              Pause
+              <Edit className="w-4 h-4 mr-2" />
+              Edit
             </Button>
-          )}
-          <Button variant="destructive" size="sm" onClick={handleDelete}>
-            <Trash2 className="w-4 h-4 mr-2" />
-            Delete
-          </Button>
-        </div>
-      </div>
+            {webhook.status === "draft" || webhook.status === "paused" ? (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleActivate}
+                disabled={activateMutation.isPending}
+              >
+                <Play className="w-4 h-4 mr-2" />
+                Activate
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePause}
+                disabled={pauseMutation.isPending}
+              >
+                <Pause className="w-4 h-4 mr-2" />
+                Pause
+              </Button>
+            )}
+            <Button variant="destructive" size="sm" onClick={handleDelete}>
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete
+            </Button>
+          </>
+        }
+      />
+
+      <div className="flex-1 overflow-auto px-6 py-4 space-y-6">
 
       {/* Info Card */}
       <Card>

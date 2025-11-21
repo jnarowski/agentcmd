@@ -4,7 +4,7 @@ import { Button } from "@/client/components/ui/button";
 import { WebhookList } from "./components/WebhookList";
 import { useWebhooks } from "./hooks/useWebhooks";
 import { WorkflowTabs } from "../workflows/components/WorkflowTabs";
-import { BreadcrumbSection } from "@/client/components/ui/breadcrumb-section";
+import { PageHeader } from "@/client/components/PageHeader";
 
 export default function ProjectWebhooksPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -31,23 +31,15 @@ export default function ProjectWebhooksPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <BreadcrumbSection
-        items={[
+      <PageHeader
+        breadcrumbs={[
           { label: "Project", href: `/projects/${projectId}` },
           { label: "Workflows", href: `/projects/${projectId}/workflows` },
           { label: "Triggers" },
         ]}
-      />
-
-      {/* Header */}
-      <div className="border-b bg-background px-4 py-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold">Workflow Triggers</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Configure webhooks to trigger workflows from external events
-            </p>
-          </div>
+        title="Workflow Triggers"
+        description="Configure webhooks to trigger workflows from external events"
+        actions={
           <Button
             onClick={handleCreateWebhook}
             variant="outline"
@@ -56,13 +48,9 @@ export default function ProjectWebhooksPage() {
             <Plus className="h-4 w-4" />
             New
           </Button>
-        </div>
-
-        {/* Tabs */}
-        <div className="mt-4">
-          <WorkflowTabs />
-        </div>
-      </div>
+        }
+        belowHeader={<WorkflowTabs />}
+      />
 
       {/* Content */}
       <div className="flex-1 overflow-auto p-4">
