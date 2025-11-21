@@ -93,17 +93,17 @@ export function ProjectHomeWorkflows({ projectId }: ProjectWorkflowsProps) {
               Runs {recentRuns.length > 0 && `(${recentRuns.length})`}
             </TabsTrigger>
             <TabsTrigger value="definitions">
-              Definitions {definitions && `(${definitions.length})`}
+              Definitions
             </TabsTrigger>
             <TabsTrigger value="webhooks">
-              Triggers {webhooks && `(${webhooks.length})`}
+              Triggers
             </TabsTrigger>
           </TabsList>
 
           {/* Runs Tab */}
           <TabsContent value="runs" className="space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
+              <p className="hidden md:block text-sm text-muted-foreground">
                 Recent workflow executions
               </p>
               <Button
@@ -127,14 +127,16 @@ export function ProjectHomeWorkflows({ projectId }: ProjectWorkflowsProps) {
                 ))}
               </div>
             ) : (
-              <WorkflowRunEmptyState onCreateRun={handleNewRun} />
+              <div className="rounded-lg border p-8">
+                <WorkflowRunEmptyState onCreateRun={handleNewRun} />
+              </div>
             )}
           </TabsContent>
 
           {/* Definitions Tab */}
           <TabsContent value="definitions" className="space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
+              <p className="hidden md:block text-sm text-muted-foreground">
                 Configured workflow templates
               </p>
               <Button
@@ -175,11 +177,6 @@ export function ProjectHomeWorkflows({ projectId }: ProjectWorkflowsProps) {
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        {def._count && (
-                          <div className="text-xs text-muted-foreground">
-                            {def._count.runs} runs
-                          </div>
-                        )}
                         <Button
                           variant="ghost"
                           size="icon"
@@ -198,14 +195,16 @@ export function ProjectHomeWorkflows({ projectId }: ProjectWorkflowsProps) {
                 ))}
               </div>
             ) : (
-              <WorkflowDefinitionEmptyState onManageWorkflows={handleManageWorkflows} />
+              <div className="rounded-lg border p-8">
+                <WorkflowDefinitionEmptyState onManageWorkflows={handleManageWorkflows} />
+              </div>
             )}
           </TabsContent>
 
           {/* Webhooks Tab */}
           <TabsContent value="webhooks" className="space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
+              <p className="hidden md:block text-sm text-muted-foreground">
                 Webhook integrations for triggering workflows
               </p>
               <Button
@@ -229,7 +228,9 @@ export function ProjectHomeWorkflows({ projectId }: ProjectWorkflowsProps) {
                 ))}
               </div>
             ) : (
-              <WebhookEmptyState onCreateWebhook={handleNewWebhook} />
+              <div className="rounded-lg border p-8">
+                <WebhookEmptyState onCreateWebhook={handleNewWebhook} />
+              </div>
             )}
           </TabsContent>
         </Tabs>

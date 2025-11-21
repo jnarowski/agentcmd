@@ -24,7 +24,7 @@ export async function setupSpec(params: {
   step: WorkflowStep;
   logger: FastifyBaseLogger;
 }): Promise<string | null> {
-  const { run, event, step, logger } = params;
+  const { run, event, step } = params;
 
   // Guard: Skip if event has no data payload
   if (!event.data) {
@@ -44,7 +44,7 @@ export async function setupSpec(params: {
       throw new Error(`Spec file not found: ${event.data.specFile}`);
     }
 
-    logger.info({ specFile: specFilePath }, "Using provided spec file");
+    await step.annotation("spec-file-loaded", { message: specFilePath });
 
     return specFilePath;
   }

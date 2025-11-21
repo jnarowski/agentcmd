@@ -24,12 +24,12 @@ export function WorkflowRunEmptyState({ onCreateRun }: WorkflowRunEmptyStateProp
           Execute workflows to automate tasks with AI agents
         </p>
       </div>
-      <div className="flex gap-2 justify-center">
-        <Button onClick={onCreateRun} className="gap-2">
+      <div className="flex flex-col sm:flex-row gap-2 justify-center">
+        <Button onClick={onCreateRun} className="gap-2 w-full sm:w-auto">
           <Plus className="size-4" />
           Create your first run
         </Button>
-        <Button variant="outline" className="gap-2" asChild>
+        <Button variant="outline" className="gap-2 w-full sm:w-auto" asChild>
           <a
             href={`${getWebsiteUrl()}/docs/workflows/runs`}
             target="_blank"

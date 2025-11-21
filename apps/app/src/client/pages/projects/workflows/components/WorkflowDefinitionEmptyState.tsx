@@ -24,12 +24,12 @@ export function WorkflowDefinitionEmptyState({ onManageWorkflows }: WorkflowDefi
           Set up workflow definitions to automate your tasks
         </p>
       </div>
-      <div className="flex gap-2 justify-center">
-        <Button onClick={onManageWorkflows} className="gap-2">
+      <div className="flex flex-col sm:flex-row gap-2 justify-center">
+        <Button onClick={onManageWorkflows} className="gap-2 w-full sm:w-auto">
           <Settings className="size-4" />
           Setup workflows
         </Button>
-        <Button variant="outline" className="gap-2" asChild>
+        <Button variant="outline" className="gap-2 w-full sm:w-auto" asChild>
           <a
             href={`${getWebsiteUrl()}/docs/workflows/definitions`}
             target="_blank"

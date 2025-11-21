@@ -23,6 +23,7 @@ export async function setupWorkspace(params: {
   logger: FastifyBaseLogger;
 }): Promise<WorkspaceResult> {
   const { run, context, inngestStep, logger } = params;
+
   // No mode specified - default to stay mode (use existing project directory)
   if (!run.mode) {
     const currentBranch = await getCurrentBranch({
