@@ -30,13 +30,14 @@ export function TestPayloadSelector({
 
   const events = data?.events || [];
   const selectedEvent = events.find((e) => e.id === selectedEventId);
+  const firstEventId = events[0]?.id;
 
   // Auto-select first event when events load
   useEffect(() => {
-    if (events.length > 0 && !selectedEventId) {
-      setSelectedEventId(events[0].id);
+    if (firstEventId && !selectedEventId) {
+      setSelectedEventId(firstEventId);
     }
-  }, [events, selectedEventId]);
+  }, [firstEventId, selectedEventId]);
 
   // Update parent when selection changes
   useEffect(() => {

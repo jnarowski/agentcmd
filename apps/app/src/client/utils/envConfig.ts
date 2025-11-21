@@ -15,5 +15,5 @@
  * ```
  */
 export function getWebsiteUrl(): string {
-  return import.meta.env.VITE_WEBSITE_URL || "https://docs.agentcmd.com";
+  return import.meta.env.VITE_WEBSITE_URL || "http://localhost:3000";
 }

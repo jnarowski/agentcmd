@@ -147,17 +147,11 @@ export function ProjectHomeSpecs({ projectId }: ProjectHomeSpecsProps) {
               </div>
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">
-                  Create specs using slash commands:
+                  Create specs using slash commands like:
                 </p>
                 <div className="flex flex-col gap-1 text-xs text-muted-foreground">
                   <code className="bg-muted px-2 py-1 rounded mx-auto">
                     /cmd:generate-feature-spec
-                  </code>
-                  <code className="bg-muted px-2 py-1 rounded mx-auto">
-                    /cmd:generate-bug-spec
-                  </code>
-                  <code className="bg-muted px-2 py-1 rounded mx-auto">
-                    /cmd:generate-prd
                   </code>
                 </div>
               </div>
