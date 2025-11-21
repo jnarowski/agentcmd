@@ -14,6 +14,7 @@ import { useProject } from "@/client/pages/projects/hooks/useProjects";
 import { Combobox } from "@/client/components/ui/combobox";
 import type { ComboboxOption } from "@/client/components/ui/combobox";
 import { getWorkflowStatusConfig } from "./utils/workflowStatus";
+import { BreadcrumbSection } from "@/client/components/ui/breadcrumb-section";
 
 export interface ProjectWorkflowsListViewProps {
   projectId?: string;
@@ -112,10 +113,22 @@ function ProjectWorkflowsListPage({
 
   return (
     <div className="flex h-full flex-col">
+      <BreadcrumbSection
+        items={[
+          { label: "Project", href: `/projects/${projectId}` },
+          { label: "Workflows" },
+        ]}
+      />
+
       {/* Header */}
       <div className="border-b bg-background p-4">
         <div className="flex items-center justify-between gap-4">
-          <h1 className="text-2xl font-bold">Workflows</h1>
+          <div>
+            <h1 className="text-2xl font-bold">Workflows</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              View and manage workflow runs organized by status
+            </p>
+          </div>
           <div className="flex items-center gap-2">
             <Link to={`/projects/${projectId}/workflows`}>
               <Button variant="outline" size="sm">

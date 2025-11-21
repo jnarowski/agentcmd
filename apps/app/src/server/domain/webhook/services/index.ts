@@ -2,6 +2,7 @@
 export * from "./createWebhook";
 export * from "./getWebhookById";
 export * from "./getWebhooksByProject";
+export * from "./getWebhookUrl";
 export * from "./updateWebhook";
 export * from "./deleteWebhook";
 export * from "./activateWebhook";

@@ -7,6 +7,7 @@ import { useWorkflowDefinition } from "./hooks/useWorkflowDefinition";
 import { useWorkflowRuns } from "./hooks/useWorkflowRuns";
 import { useWorkflowWebSocket } from "./hooks/useWorkflowWebSocket";
 import { getPhaseId, getPhaseLabel } from "@/shared/utils/phase.utils";
+import { Breadcrumb } from "@/client/components/ui/breadcrumb";
 
 function WorkflowDefinitionPage() {
   const { projectId, definitionId } = useParams<{
@@ -74,6 +75,16 @@ function WorkflowDefinitionPage() {
     <div className="flex h-full flex-col">
       {/* Header */}
       <div className="border-b bg-background p-4">
+        {/* Breadcrumbs */}
+        <Breadcrumb
+          items={[
+            { label: "Project", href: `/projects/${projectId}` },
+            { label: "Workflows", href: `/projects/${projectId}/workflows` },
+            { label: definition?.name || "Loading..." },
+          ]}
+          className="mb-4"
+        />
+
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">

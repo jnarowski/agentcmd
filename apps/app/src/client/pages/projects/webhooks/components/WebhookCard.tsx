@@ -51,12 +51,12 @@ export function WebhookCard({ webhook, projectId }: WebhookCardProps) {
   const SourceIcon = getSourceIcon(webhook.source);
 
   const handleCardClick = () => {
-    navigate(`/projects/${projectId}/webhooks/${webhook.id}`);
+    navigate(`/projects/${projectId}/workflows/triggers/${webhook.id}`);
   };
 
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/projects/${projectId}/webhooks/${webhook.id}/edit`);
+    navigate(`/projects/${projectId}/workflows/triggers/${webhook.id}/edit`);
   };
 
   const handleDelete = (e: React.MouseEvent) => {

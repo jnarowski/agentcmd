@@ -61,10 +61,6 @@ function AppContent() {
               <Route path="source" element={<Navigate to="source/files" replace />} />
               <Route path="source/files" element={<ProjectSourcePage />} />
               <Route path="source/git" element={<ProjectSourcePage />} />
-              <Route path="webhooks" element={<ProjectWebhooksPage />} />
-              <Route path="webhooks/new" element={<WebhookFormPage />} />
-              <Route path="webhooks/:webhookId" element={<WebhookDetailPage />} />
-              <Route path="webhooks/:webhookId/edit" element={<WebhookFormPage />} />
             </Route>
           </Route>
 
@@ -78,6 +74,10 @@ function AppContent() {
             <Route path="workflows/:definitionId/new" element={<NewWorkflowRunPage />} />
             <Route path="workflows/:definitionId" element={<WorkflowDefinitionPage />} />
             <Route path="workflows/:definitionId/runs/:runId" element={<WorkflowRunDetailPage />} />
+            <Route path="workflows/triggers" element={<ProjectWebhooksPage />} />
+            <Route path="workflows/triggers/new" element={<WebhookFormPage />} />
+            <Route path="workflows/triggers/:webhookId" element={<WebhookDetailPage />} />
+            <Route path="workflows/triggers/:webhookId/edit" element={<WebhookFormPage />} />
           </Route>
         </Routes>
       </ShellProvider>

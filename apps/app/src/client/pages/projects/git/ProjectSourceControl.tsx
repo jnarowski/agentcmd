@@ -31,7 +31,7 @@ import { toast } from "sonner";
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
 
 export default function ProjectSourceControl() {
-  const { id: projectId } = useParams<{ id: string }>();
+  const { projectId } = useParams<{ projectId: string }>();
   const queryClient = useQueryClient();
 
   // Fetch project to get path

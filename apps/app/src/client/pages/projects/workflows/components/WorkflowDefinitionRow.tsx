@@ -1,3 +1,4 @@
+import { Link, useParams } from "react-router-dom";
 import { Button } from "@/client/components/ui/button";
 import { Badge } from "@/client/components/ui/badge";
 import { TableCell, TableRow } from "@/client/components/ui/table";
@@ -23,12 +24,18 @@ export function WorkflowDefinitionRow({
   onUnarchive,
   isArchived,
 }: WorkflowDefinitionRowProps) {
+  const { projectId } = useParams<{ projectId: string }>();
   const runCount = definition._count?.runs ?? 0;
 
   return (
     <TableRow>
       <TableCell className="font-medium">
-        {definition.name}
+        <Link
+          to={`/projects/${projectId}/workflows/${definition.id}`}
+          className="hover:underline"
+        >
+          {definition.name}
+        </Link>
         {definition.load_error && (
           <TooltipProvider>
             <Tooltip>

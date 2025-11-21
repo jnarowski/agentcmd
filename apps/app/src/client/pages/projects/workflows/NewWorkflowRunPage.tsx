@@ -4,6 +4,7 @@ import { useProject } from "@/client/pages/projects/hooks/useProjects";
 import { useWorkflowDefinitions } from "./hooks/useWorkflowDefinitions";
 import { NewRunForm } from "./components/NewRunForm";
 import type { WorkflowRun } from "./types";
+import { Breadcrumb, type BreadcrumbItem } from "@/client/components/ui/breadcrumb";
 
 export default function NewWorkflowRunPage() {
   const navigate = useNavigate();
@@ -48,11 +49,29 @@ export default function NewWorkflowRunPage() {
     navigate(`/projects/${activeProjectId}/workflows/manage`);
   };
 
+  // Build breadcrumb items
+  const breadcrumbItems: BreadcrumbItem[] = [
+    { label: "Project", href: `/projects/${activeProjectId}` },
+    { label: "Workflows", href: `/projects/${activeProjectId}/workflows` },
+  ];
+
+  // Add definition if available
+  if (definition) {
+    breadcrumbItems.push({
+      label: definition.name,
+      href: `/projects/${activeProjectId}/workflows/${definitionId}`,
+    });
+  }
+
+  // Add current page
+  breadcrumbItems.push({ label: "New Run" });
+
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
       <div className="border-b bg-background px-6 py-4">
         <div className="max-w-4xl mx-auto">
+          <Breadcrumb items={breadcrumbItems} className="mb-4" />
           <h1 className="text-2xl font-semibold">New Workflow Run</h1>
         </div>
       </div>

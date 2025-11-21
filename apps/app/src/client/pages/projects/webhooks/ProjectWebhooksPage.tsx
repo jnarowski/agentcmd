@@ -1,24 +1,19 @@
-import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Plus, Search, Webhook } from "lucide-react";
+import { Plus, Webhook } from "lucide-react";
 import { Button } from "@/client/components/ui/button";
-import { Input } from "@/client/components/ui/input";
 import { WebhookList } from "./components/WebhookList";
 import { useWebhooks } from "./hooks/useWebhooks";
+import { WorkflowTabs } from "../workflows/components/WorkflowTabs";
+import { BreadcrumbSection } from "@/client/components/ui/breadcrumb-section";
 
 export default function ProjectWebhooksPage() {
-  const { id: projectId } = useParams<{ id: string }>();
+  const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: webhooks, isLoading } = useWebhooks(projectId!);
 
-  const filteredWebhooks = webhooks?.filter((webhook) =>
-    webhook.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
   const handleCreateWebhook = () => {
-    navigate(`/projects/${projectId}/webhooks/new`);
+    navigate(`/projects/${projectId}/workflows/triggers/new`);
   };
 
   if (isLoading) {
@@ -36,40 +31,41 @@ export default function ProjectWebhooksPage() {
 
   return (
     <div className="flex h-full flex-col">
+      <BreadcrumbSection
+        items={[
+          { label: "Project", href: `/projects/${projectId}` },
+          { label: "Workflows", href: `/projects/${projectId}/workflows` },
+          { label: "Triggers" },
+        ]}
+      />
+
       {/* Header */}
-      <div className="border-b bg-background px-6 py-4">
-        <div className="flex items-center justify-between">
+      <div className="border-b bg-background px-4 py-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
           <div>
-            <h1 className="text-2xl font-semibold">Webhooks</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="text-xl md:text-2xl font-bold">Workflow Triggers</h1>
+            <p className="text-sm text-muted-foreground mt-1">
               Configure webhooks to trigger workflows from external events
             </p>
           </div>
-          <Button onClick={handleCreateWebhook}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Webhook
+          <Button
+            onClick={handleCreateWebhook}
+            variant="outline"
+            className="flex-1 md:flex-none"
+          >
+            <Plus className="h-4 w-4" />
+            New
           </Button>
+        </div>
+
+        {/* Tabs */}
+        <div className="mt-4">
+          <WorkflowTabs />
         </div>
       </div>
 
-      {/* Search bar (only show if webhooks exist) */}
-      {!showEmptyState && (
-        <div className="border-b bg-background px-6 py-3">
-          <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search webhooks..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-        </div>
-      )}
-
       {/* Content */}
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-4">
         {showEmptyState ? (
           <div className="flex h-full items-center justify-center">
             <div className="max-w-md text-center">
@@ -82,17 +78,17 @@ export default function ProjectWebhooksPage() {
                 when external events occur from GitHub, Linear, Jira, or custom
                 sources.
               </p>
-              <Button onClick={handleCreateWebhook}>
-                <Plus className="mr-2 h-4 w-4" />
-                Create Your First Webhook
+              <Button onClick={handleCreateWebhook} variant="outline">
+                <Plus className="h-4 w-4" />
+                New Webhook
               </Button>
             </div>
           </div>
         ) : (
-          <WebhookList
-            webhooks={filteredWebhooks || []}
-            projectId={projectId!}
-          />
+          <div>
+            <h2 className="text-lg font-semibold mb-4">Webhooks</h2>
+            <WebhookList webhooks={webhooks || []} projectId={projectId!} />
+          </div>
         )}
       </div>
     </div>

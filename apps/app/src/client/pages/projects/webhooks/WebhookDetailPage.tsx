@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Edit, Trash2, Play, Pause, ChevronRight, Copy, Check, Eye, EyeOff } from "lucide-react";
+import { Edit, Trash2, Play, Pause, Copy, Check, Eye, EyeOff } from "lucide-react";
 import { useWebhook } from "./hooks/useWebhook";
 import { useWebhookMutations } from "./hooks/useWebhookMutations";
 import { useWebhookWebSocket } from "./hooks/useWebhookWebSocket";
@@ -18,10 +18,11 @@ import {
 import { Badge } from "@/client/components/ui/badge";
 import { api } from "@/client/utils/api";
 import type { SpecTypeMetadata } from "@/client/pages/projects/workflows/components/SpecTypeSelect";
+import { BreadcrumbSection } from "@/client/components/ui/breadcrumb-section";
 
 export default function WebhookDetailPage() {
-  const { id: projectId, webhookId } = useParams<{
-    id: string;
+  const { projectId, webhookId } = useParams<{
+    projectId: string;
     webhookId: string;
   }>();
   const navigate = useNavigate();
@@ -36,6 +37,20 @@ export default function WebhookDetailPage() {
 
   const { data: webhook, isLoading } = useWebhook(webhookId);
   const { activateMutation, pauseMutation } = useWebhookMutations(projectId);
+
+  // Fetch webhook URL from server
+  const { data: webhookUrlData } = useQuery({
+    queryKey: ["webhookUrl", webhookId],
+    queryFn: async () => {
+      const response = await api.get<{ url: string }>(
+        `/api/webhooks/${webhookId}/url`
+      );
+      return response;
+    },
+    enabled: !!webhookId,
+  });
+
+  const webhookUrl = webhookUrlData?.url || "";
 
   // Listen for real-time events
   useWebhookWebSocket(projectId, webhookId);
@@ -88,8 +103,7 @@ export default function WebhookDetailPage() {
   };
 
   const handleCopyUrl = async () => {
-    if (!webhook) return;
-    const webhookUrl = `${window.location.origin}/api/webhooks/${webhook.id}/events`;
+    if (!webhookUrl) return;
     await navigator.clipboard.writeText(webhookUrl);
     setUrlCopied(true);
     setTimeout(() => setUrlCopied(false), 2000);
@@ -120,7 +134,7 @@ export default function WebhookDetailPage() {
         <div className="text-center">
           <h2 className="text-2xl font-bold">Webhook not found</h2>
           <Link
-            to={`/projects/${projectId}/webhooks`}
+            to={`/projects/${projectId}/workflows/triggers`}
             className="text-blue-600 hover:underline"
           >
             Back to webhooks
@@ -131,26 +145,17 @@ export default function WebhookDetailPage() {
   }
 
   return (
-    <div className="px-6 py-4 space-y-6">
-      {/* Breadcrumbs */}
-      <nav className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Link
-          to={`/projects/${projectId}`}
-          className="hover:text-foreground transition-colors"
-        >
-          Project
-        </Link>
-        <ChevronRight className="w-4 h-4" />
-        <Link
-          to={`/projects/${projectId}/webhooks`}
-          className="hover:text-foreground transition-colors"
-        >
-          Webhooks
-        </Link>
-        <ChevronRight className="w-4 h-4" />
-        <span className="text-foreground font-medium">{webhook.name}</span>
-      </nav>
+    <div className="flex h-full flex-col">
+      <BreadcrumbSection
+        items={[
+          { label: "Project", href: `/projects/${projectId}` },
+          { label: "Workflows", href: `/projects/${projectId}/workflows` },
+          { label: "Triggers", href: `/projects/${projectId}/workflows/triggers` },
+          { label: webhook.name },
+        ]}
+      />
 
+      <div className="flex-1 overflow-auto px-6 py-4 space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
@@ -167,7 +172,7 @@ export default function WebhookDetailPage() {
             variant="outline"
             size="sm"
             onClick={() =>
-              navigate(`/projects/${projectId}/webhooks/${webhookId}/edit`)
+              navigate(`/projects/${projectId}/workflows/triggers/${webhookId}/edit`)
             }
           >
             <Edit className="w-4 h-4 mr-2" />
@@ -224,7 +229,7 @@ export default function WebhookDetailPage() {
             </div>
             <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-md border group">
               <code className="flex-1 text-sm font-mono text-foreground select-all break-all">
-                {`${window.location.origin}/api/webhooks/${webhook.id}/events`}
+                {webhookUrl}
               </code>
               <Button
                 variant="ghost"
@@ -374,8 +379,9 @@ export default function WebhookDetailPage() {
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         webhook={webhook}
-        onSuccess={() => navigate(`/projects/${projectId}/webhooks`)}
+        onSuccess={() => navigate(`/projects/${projectId}/workflows/triggers`)}
       />
+      </div>
     </div>
   );
 }

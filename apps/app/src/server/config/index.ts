@@ -41,6 +41,9 @@ const rawConfig = {
     servePath: process.env.INNGEST_SERVE_PATH,
     inngestDevPort: process.env.INNGEST_PORT,
   },
+  webhook: {
+    baseUrl: process.env.WEBHOOK_BASE_URL,
+  },
 };
 
 /**

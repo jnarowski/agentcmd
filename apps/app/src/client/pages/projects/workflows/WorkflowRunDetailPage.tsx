@@ -8,6 +8,7 @@ import { useWorkflowRun } from "./hooks/useWorkflowRun";
 import { useWorkflowDefinition } from "./hooks/useWorkflowDefinition";
 import { useWorkflowWebSocket } from "./hooks/useWorkflowWebSocket";
 import { useWorkflowDetailPanel } from "./hooks/useWorkflowDetailPanel";
+import { Breadcrumb } from "@/client/components/ui/breadcrumb";
 
 function WorkflowRunDetailPage() {
   const { projectId, definitionId, runId } = useParams<{
@@ -81,6 +82,20 @@ function WorkflowRunDetailPage() {
     <div className="flex h-full flex-col">
       {/* Header */}
       <div className="border-b bg-background px-6 py-3">
+        {/* Breadcrumbs */}
+        <Breadcrumb
+          items={[
+            { label: "Project", href: `/projects/${projectId}` },
+            { label: "Workflows", href: `/projects/${projectId}/workflows` },
+            {
+              label: definition.name,
+              href: `/projects/${projectId}/workflows/${definitionId}`,
+            },
+            { label: run.name },
+          ]}
+          className="mb-3"
+        />
+
         <div className="flex items-center justify-between gap-6">
           {/* Run name and badge */}
           <div className="flex items-center gap-3">

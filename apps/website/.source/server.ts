@@ -1,16 +1,18 @@
 // @ts-nocheck
-import * as __fd_glob_39 from "../content/docs/reference/workflow-steps/phase.mdx?collection=docs"
-import * as __fd_glob_38 from "../content/docs/reference/workflow-steps/log.mdx?collection=docs"
-import * as __fd_glob_37 from "../content/docs/reference/workflow-steps/git.mdx?collection=docs"
-import * as __fd_glob_36 from "../content/docs/reference/workflow-steps/cli-step.mdx?collection=docs"
-import * as __fd_glob_35 from "../content/docs/reference/workflow-steps/artifact.mdx?collection=docs"
-import * as __fd_glob_34 from "../content/docs/reference/workflow-steps/annotation.mdx?collection=docs"
-import * as __fd_glob_33 from "../content/docs/reference/workflow-steps/ai.mdx?collection=docs"
-import * as __fd_glob_32 from "../content/docs/reference/workflow-steps/agent.mdx?collection=docs"
-import * as __fd_glob_31 from "../content/docs/concepts/workflows/workflow-steps.mdx?collection=docs"
-import * as __fd_glob_30 from "../content/docs/concepts/workflows/workflow-runs.mdx?collection=docs"
-import * as __fd_glob_29 from "../content/docs/concepts/workflows/workflow-phases.mdx?collection=docs"
-import * as __fd_glob_28 from "../content/docs/concepts/workflows/workflow-definitions.mdx?collection=docs"
+import * as __fd_glob_41 from "../content/docs/reference/workflow-steps/phase.mdx?collection=docs"
+import * as __fd_glob_40 from "../content/docs/reference/workflow-steps/log.mdx?collection=docs"
+import * as __fd_glob_39 from "../content/docs/reference/workflow-steps/git.mdx?collection=docs"
+import * as __fd_glob_38 from "../content/docs/reference/workflow-steps/cli-step.mdx?collection=docs"
+import * as __fd_glob_37 from "../content/docs/reference/workflow-steps/artifact.mdx?collection=docs"
+import * as __fd_glob_36 from "../content/docs/reference/workflow-steps/annotation.mdx?collection=docs"
+import * as __fd_glob_35 from "../content/docs/reference/workflow-steps/ai.mdx?collection=docs"
+import * as __fd_glob_34 from "../content/docs/reference/workflow-steps/agent.mdx?collection=docs"
+import * as __fd_glob_33 from "../content/docs/concepts/workflows/workflow-steps.mdx?collection=docs"
+import * as __fd_glob_32 from "../content/docs/concepts/workflows/workflow-runs.mdx?collection=docs"
+import * as __fd_glob_31 from "../content/docs/concepts/workflows/workflow-phases.mdx?collection=docs"
+import * as __fd_glob_30 from "../content/docs/concepts/workflows/workflow-definitions.mdx?collection=docs"
+import * as __fd_glob_29 from "../content/docs/concepts/workflows/triggers.mdx?collection=docs"
+import * as __fd_glob_28 from "../content/docs/reference/webhooks.mdx?collection=docs"
 import * as __fd_glob_27 from "../content/docs/reference/slash-commands.mdx?collection=docs"
 import * as __fd_glob_26 from "../content/docs/reference/configuration.mdx?collection=docs"
 import * as __fd_glob_25 from "../content/docs/reference/cli.mdx?collection=docs"
@@ -34,9 +36,9 @@ import * as __fd_glob_8 from "../content/docs/concepts/agents.mdx?collection=doc
 import * as __fd_glob_7 from "../content/docs/index.mdx?collection=docs"
 import { default as __fd_glob_6 } from "../content/docs/reference/workflow-steps/meta.json?collection=docs"
 import { default as __fd_glob_5 } from "../content/docs/concepts/workflows/meta.json?collection=docs"
-import { default as __fd_glob_4 } from "../content/docs/reference/meta.json?collection=docs"
-import { default as __fd_glob_3 } from "../content/docs/examples/meta.json?collection=docs"
-import { default as __fd_glob_2 } from "../content/docs/getting-started/meta.json?collection=docs"
+import { default as __fd_glob_4 } from "../content/docs/getting-started/meta.json?collection=docs"
+import { default as __fd_glob_3 } from "../content/docs/reference/meta.json?collection=docs"
+import { default as __fd_glob_2 } from "../content/docs/examples/meta.json?collection=docs"
 import { default as __fd_glob_1 } from "../content/docs/concepts/meta.json?collection=docs"
 import { default as __fd_glob_0 } from "../content/docs/meta.json?collection=docs"
 import { fromConfig } from 'fumadocs-mdx/runtime/server';
@@ -44,4 +46,4 @@ import type * as Config from '../source.config';
 
 const create = fromConfig<typeof Config>();
 
-export const docs = await create.docs("docs", "content/docs", {"meta.json": __fd_glob_0, "concepts/meta.json": __fd_glob_1, "getting-started/meta.json": __fd_glob_2, "examples/meta.json": __fd_glob_3, "reference/meta.json": __fd_glob_4, "concepts/workflows/meta.json": __fd_glob_5, "reference/workflow-steps/meta.json": __fd_glob_6, }, {"index.mdx": __fd_glob_7, "concepts/agents.mdx": __fd_glob_8, "concepts/sessions.mdx": __fd_glob_9, "concepts/slash-commands.mdx": __fd_glob_10, "concepts/spec-driven-development.mdx": __fd_glob_11, "concepts/spec-task-system.mdx": __fd_glob_12, "examples/advanced-recursive-implement-review.mdx": __fd_glob_13, "examples/context-sharing.mdx": __fd_glob_14, "examples/implement-and-review.mdx": __fd_glob_15, "examples/mcp-integration.mdx": __fd_glob_16, "examples/recursive-implement-review.mdx": __fd_glob_17, "examples/type-safe-arguments.mdx": __fd_glob_18, "examples/type-safe-slash-commands.mdx": __fd_glob_19, "getting-started/access-anywhere.mdx": __fd_glob_20, "getting-started/first-workflow.mdx": __fd_glob_21, "getting-started/how-it-works.mdx": __fd_glob_22, "getting-started/installation.mdx": __fd_glob_23, "getting-started/quick-start.mdx": __fd_glob_24, "reference/cli.mdx": __fd_glob_25, "reference/configuration.mdx": __fd_glob_26, "reference/slash-commands.mdx": __fd_glob_27, "concepts/workflows/workflow-definitions.mdx": __fd_glob_28, "concepts/workflows/workflow-phases.mdx": __fd_glob_29, "concepts/workflows/workflow-runs.mdx": __fd_glob_30, "concepts/workflows/workflow-steps.mdx": __fd_glob_31, "reference/workflow-steps/agent.mdx": __fd_glob_32, "reference/workflow-steps/ai.mdx": __fd_glob_33, "reference/workflow-steps/annotation.mdx": __fd_glob_34, "reference/workflow-steps/artifact.mdx": __fd_glob_35, "reference/workflow-steps/cli-step.mdx": __fd_glob_36, "reference/workflow-steps/git.mdx": __fd_glob_37, "reference/workflow-steps/log.mdx": __fd_glob_38, "reference/workflow-steps/phase.mdx": __fd_glob_39, });
+export const docs = await create.docs("docs", "content/docs", {"meta.json": __fd_glob_0, "concepts/meta.json": __fd_glob_1, "examples/meta.json": __fd_glob_2, "reference/meta.json": __fd_glob_3, "getting-started/meta.json": __fd_glob_4, "concepts/workflows/meta.json": __fd_glob_5, "reference/workflow-steps/meta.json": __fd_glob_6, }, {"index.mdx": __fd_glob_7, "concepts/agents.mdx": __fd_glob_8, "concepts/sessions.mdx": __fd_glob_9, "concepts/slash-commands.mdx": __fd_glob_10, "concepts/spec-driven-development.mdx": __fd_glob_11, "concepts/spec-task-system.mdx": __fd_glob_12, "examples/advanced-recursive-implement-review.mdx": __fd_glob_13, "examples/context-sharing.mdx": __fd_glob_14, "examples/implement-and-review.mdx": __fd_glob_15, "examples/mcp-integration.mdx": __fd_glob_16, "examples/recursive-implement-review.mdx": __fd_glob_17, "examples/type-safe-arguments.mdx": __fd_glob_18, "examples/type-safe-slash-commands.mdx": __fd_glob_19, "getting-started/access-anywhere.mdx": __fd_glob_20, "getting-started/first-workflow.mdx": __fd_glob_21, "getting-started/how-it-works.mdx": __fd_glob_22, "getting-started/installation.mdx": __fd_glob_23, "getting-started/quick-start.mdx": __fd_glob_24, "reference/cli.mdx": __fd_glob_25, "reference/configuration.mdx": __fd_glob_26, "reference/slash-commands.mdx": __fd_glob_27, "reference/webhooks.mdx": __fd_glob_28, "concepts/workflows/triggers.mdx": __fd_glob_29, "concepts/workflows/workflow-definitions.mdx": __fd_glob_30, "concepts/workflows/workflow-phases.mdx": __fd_glob_31, "concepts/workflows/workflow-runs.mdx": __fd_glob_32, "concepts/workflows/workflow-steps.mdx": __fd_glob_33, "reference/workflow-steps/agent.mdx": __fd_glob_34, "reference/workflow-steps/ai.mdx": __fd_glob_35, "reference/workflow-steps/annotation.mdx": __fd_glob_36, "reference/workflow-steps/artifact.mdx": __fd_glob_37, "reference/workflow-steps/cli-step.mdx": __fd_glob_38, "reference/workflow-steps/git.mdx": __fd_glob_39, "reference/workflow-steps/log.mdx": __fd_glob_40, "reference/workflow-steps/phase.mdx": __fd_glob_41, });

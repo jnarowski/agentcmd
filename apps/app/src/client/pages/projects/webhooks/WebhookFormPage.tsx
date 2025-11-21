@@ -1,13 +1,15 @@
 import { useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, ChevronRight } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/client/components/ui/button";
 import { useWebhook } from "./hooks/useWebhook";
 import { useRecentTestEvent } from "./hooks/useRecentTestEvent";
 import { useWebhookMutations } from "./hooks/useWebhookMutations";
 import { useWebhookWebSocket } from "./hooks/useWebhookWebSocket";
+import { api } from "@/client/utils/api";
 import {
   createWebhookFormSchema,
   updateWebhookFormSchema,
@@ -17,6 +19,7 @@ import {
 import type { Webhook } from "./types/webhook.types";
 import { WebhookBasicInfoSection } from "./components/form-sections/WebhookBasicInfoSection";
 import { WebhookMappingsSection } from "./components/form-sections/WebhookMappingsSection";
+import { BreadcrumbSection } from "@/client/components/ui/breadcrumb-section";
 
 /**
  * Convert Webhook to form values
@@ -44,8 +47,8 @@ function webhookToFormValues(webhook: Webhook): UpdateWebhookFormValues {
 }
 
 export default function WebhookFormPage() {
-  const { id: projectId, webhookId } = useParams<{
-    id: string;
+  const { projectId, webhookId } = useParams<{
+    projectId: string;
     webhookId: string;
   }>();
   const navigate = useNavigate();
@@ -62,6 +65,20 @@ export default function WebhookFormPage() {
 
   // WebSocket for real-time updates (only in edit mode)
   useWebhookWebSocket(projectId!, webhookId);
+
+  // Fetch webhook URL from server (only in edit mode)
+  const { data: webhookUrlData } = useQuery({
+    queryKey: ["webhookUrl", webhookId],
+    queryFn: async () => {
+      const response = await api.get<{ url: string }>(
+        `/api/webhooks/${webhookId}/url`
+      );
+      return response;
+    },
+    enabled: !!webhookId && !isCreateMode,
+  });
+
+  const webhookUrl = webhookUrlData?.url || "";
 
   // Form setup - use different schemas for create vs edit
   const form = useForm<CreateWebhookFormValues | UpdateWebhookFormValues>({
@@ -141,7 +158,7 @@ export default function WebhookFormPage() {
           <h1 className="text-2xl font-semibold">Webhook not found</h1>
           <Button
             className="mt-4"
-            onClick={() => navigate(`/projects/${projectId}/webhooks`)}
+            onClick={() => navigate(`/projects/${projectId}/workflows/triggers`)}
           >
             Back to Webhooks
           </Button>
@@ -155,28 +172,19 @@ export default function WebhookFormPage() {
 
   return (
     <FormProvider {...form}>
-      <div className="px-6 py-4 space-y-6">
-        {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Link
-            to={`/projects/${projectId}`}
-            className="hover:text-foreground transition-colors"
-          >
-            Project
-          </Link>
-          <ChevronRight className="w-4 h-4" />
-          <Link
-            to={`/projects/${projectId}/webhooks`}
-            className="hover:text-foreground transition-colors"
-          >
-            Webhooks
-          </Link>
-          <ChevronRight className="w-4 h-4" />
-          <span className="text-foreground font-medium">
-            {isCreateMode ? "Create Webhook" : webhook?.name || "Edit Webhook"}
-          </span>
-        </nav>
+      <div className="flex h-full flex-col">
+        <BreadcrumbSection
+          items={[
+            { label: "Project", href: `/projects/${projectId}` },
+            { label: "Workflows", href: `/projects/${projectId}/workflows` },
+            { label: "Triggers", href: `/projects/${projectId}/workflows/triggers` },
+            {
+              label: isCreateMode ? "Create" : webhook?.name || "Edit",
+            },
+          ]}
+        />
 
+        <div className="flex-1 overflow-auto px-6 py-4 space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold">
@@ -197,11 +205,7 @@ export default function WebhookFormPage() {
             <div className="space-y-4">
               <WebhookBasicInfoSection
                 control={form.control}
-                webhookUrl={
-                  isCreateMode
-                    ? ""
-                    : `${window.location.origin}/api/webhooks/${webhook!.id}/events`
-                }
+                webhookUrl={isCreateMode ? "" : webhookUrl}
                 webhookSecret={isCreateMode ? "" : webhook!.secret}
                 currentSource={isCreateMode ? "generic" : webhook!.source}
                 isEditMode={!isCreateMode}
@@ -238,7 +242,7 @@ export default function WebhookFormPage() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate(`/projects/${projectId}/webhooks`)}
+              onClick={() => navigate(`/projects/${projectId}/workflows/triggers`)}
             >
               Cancel
             </Button>
@@ -261,6 +265,7 @@ export default function WebhookFormPage() {
             </Button>
           </div>
         </form>
+        </div>
       </div>
     </FormProvider>
   );
