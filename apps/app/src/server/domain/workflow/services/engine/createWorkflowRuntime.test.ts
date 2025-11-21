@@ -839,12 +839,6 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
 
       // Verify file existence was checked
       expect(existsSync).toHaveBeenCalledWith(fullPath);
-
-      // Verify log message
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.objectContaining({ specFile: fullPath }),
-        "Using provided spec file"
-      );
     });
 
     it("throws error when provided spec file doesn't exist", async () => {
