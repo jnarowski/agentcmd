@@ -413,7 +413,7 @@ export function NewRunForm({
             Spec-Driven Development
           </a>
         </p>
-        <div className="rounded-lg border bg-card">
+        <div className="sm:rounded-lg sm:border bg-card">
           <Tabs
             value={specInputType}
             onValueChange={(v) =>
@@ -821,7 +821,7 @@ export function NewRunForm({
       </div>
 
       {/* Footer - Actions */}
-      <div className="flex justify-end gap-2 border-t px-6 py-4">
+      <div className="flex justify-end gap-2 sm:border-t px-4 sm:px-6 py-3 sm:py-4">
         <Button
           type="button"
           variant="ghost"

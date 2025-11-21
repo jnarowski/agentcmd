@@ -77,9 +77,9 @@ export default function NewWorkflowRunPage() {
     <div className="flex h-full flex-col">
       <PageHeader breadcrumbs={breadcrumbItems} title="New Workflow Run" />
 
-      <div className="flex-1 overflow-auto p-6 space-y-6">
+      <div className="flex-1 overflow-auto space-y-6 md:p-6">
         {/* Form */}
-        <div className="rounded-lg border bg-card">
+        <div className="md:bg-card md:rounded-lg md:border">
           <NewRunForm
             projectId={projectId}
             definitionId={definitionId}

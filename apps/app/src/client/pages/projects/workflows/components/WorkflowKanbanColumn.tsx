@@ -34,7 +34,7 @@ export function WorkflowKanbanColumn({
       <div className="flex-1 space-y-3 overflow-y-auto">
         {runs.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <Icon className="mb-3 h-12 w-12 text-muted-foreground/30" />
+            <Icon className="mb-3 h-10 w-10 text-muted-foreground/30" />
             <p className="text-sm text-muted-foreground">
               No {config.label.toLowerCase()} workflows
             </p>

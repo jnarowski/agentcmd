@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Outlet, useNavigate, useParams } from "react-router-dom";
+import { Outlet, useNavigate, useParams, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
 import { useActiveSession } from "@/client/hooks/navigation/useActiveSession";
@@ -19,10 +19,14 @@ import type { SessionResponse } from "@/shared/types/agent-session.types";
 export default function ProjectLoader() {
   const { id, projectId } = useParams<{ id?: string; projectId?: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const setActiveProject = useNavigationStore(
     (state) => state.setActiveProject
   );
   const clearNavigation = useNavigationStore((state) => state.clearNavigation);
+
+  // Only apply h-screen constraint for workflow routes
+  const isWorkflowRoute = location.pathname.includes("/workflows");
 
   // Use either id or projectId param (workflow routes use projectId)
   const activeProjectId = id || projectId;
@@ -100,7 +104,7 @@ export default function ProjectLoader() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className={isWorkflowRoute ? "flex flex-col h-screen overflow-hidden" : "flex flex-col h-full"}>
       <ProjectHeader
         projectId={activeProjectId!}
         projectName={project.name}
@@ -110,7 +114,7 @@ export default function ProjectLoader() {
       />
 
       {/* Content area */}
-      <div className="flex-1 relative">
+      <div className={isWorkflowRoute ? "flex-1 overflow-hidden" : "flex-1 relative"}>
         <Outlet />
       </div>
     </div>

@@ -91,7 +91,9 @@ export function PageHeader({
 
         {/* Description */}
         {description && (
-          <p className="text-sm text-muted-foreground mt-1">{description}</p>
+          <p className="hidden md:block text-sm text-muted-foreground mt-1">
+            {description}
+          </p>
         )}
 
         {/* Below header content (tabs, filters) */}

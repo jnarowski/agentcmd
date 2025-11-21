@@ -66,7 +66,7 @@ export function ProjectHomeSpecs({ projectId }: ProjectHomeSpecsProps) {
   }
 
   return (
-    <Card>
+    <Card className="min-w-0">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
           <span className="truncate">Specs</span>
@@ -86,16 +86,16 @@ export function ProjectHomeSpecs({ projectId }: ProjectHomeSpecsProps) {
           </Button>
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
+      <CardContent className="min-w-0">
+        <div className="space-y-6 min-w-0">
           {/* Specs Section */}
           {data && data.specs.length > 0 && (
             <div className="space-y-3">
-              <div className="grid gap-2 md:grid-cols-2">
+              <div className="grid gap-2 grid-cols-1 md:grid-cols-2">
                 {data.specs.map((task) => (
                   <div
                     key={task.id}
-                    className="p-3 cursor-pointer hover:bg-accent/50 transition-colors rounded-lg border bg-card"
+                    className="p-3 cursor-pointer hover:bg-accent/50 transition-colors rounded-lg border bg-card min-w-0"
                     onClick={() =>
                       handleOpenWorkflow(
                         task.specPath,
@@ -104,7 +104,7 @@ export function ProjectHomeSpecs({ projectId }: ProjectHomeSpecsProps) {
                       )
                     }
                   >
-                    <div className="flex items-center">
+                    <div className="flex items-center min-w-0">
                       <FileText className="size-4 shrink-0 mr-2.5" />
                       <div className="flex flex-1 flex-col gap-0 min-w-0">
                         <div className="flex items-center justify-between gap-2 min-w-0">

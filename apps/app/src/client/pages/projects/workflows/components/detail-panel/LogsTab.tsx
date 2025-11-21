@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import type { WorkflowRun, WorkflowRunStep } from "@/client/pages/projects/workflows/types";
-import {
-  eventToLogEntry,
-  type UnifiedLogEntry,
-} from "./types";
+import type {
+  WorkflowRun,
+  WorkflowRunStep,
+} from "@/client/pages/projects/workflows/types";
+import { eventToLogEntry, type UnifiedLogEntry } from "./types";
 import {
   Conversation,
   ConversationContent,
@@ -53,16 +53,19 @@ export function LogsTab({ run, selectedStepId }: LogsTabProps) {
 
     // Step completed/failed entry
     if (step.completed_at) {
-      const duration = step.started_at && step.completed_at
-        ? new Date(step.completed_at).getTime() - new Date(step.started_at).getTime()
-        : undefined;
+      const duration =
+        step.started_at && step.completed_at
+          ? new Date(step.completed_at).getTime() -
+            new Date(step.started_at).getTime()
+          : undefined;
 
       allLogs.push({
         source: "trace",
         timestamp: new Date(step.completed_at),
-        content: step.status === "failed"
-          ? `Failed${step.error_message ? `: ${step.error_message}` : ""}`
-          : "Completed",
+        content:
+          step.status === "failed"
+            ? `Failed${step.error_message ? `: ${step.error_message}` : ""}`
+            : "Completed",
         level: step.status === "failed" ? "error" : "info",
         stepId: step.id,
         stepName: step.name,
@@ -80,7 +83,9 @@ export function LogsTab({ run, selectedStepId }: LogsTabProps) {
   events
     .filter((e) => e.event_type === "step_log")
     .forEach((event) => {
-      const step = steps.find((s) => s.inngest_step_id === event.inngest_step_id);
+      const step = steps.find(
+        (s) => s.inngest_step_id === event.inngest_step_id
+      );
       allLogs.push({
         ...eventToLogEntry(event),
         stepId: step?.id,
@@ -94,9 +99,11 @@ export function LogsTab({ run, selectedStepId }: LogsTabProps) {
   // Scroll to selected step's first log when selectedStepId changes
   useEffect(() => {
     if (selectedStepId) {
-      const firstLogElement = document.querySelector(`[data-step-id="${selectedStepId}"]`);
+      const firstLogElement = document.querySelector(
+        `[data-step-id="${selectedStepId}"]`
+      );
       if (firstLogElement) {
-        firstLogElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        firstLogElement.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     }
   }, [selectedStepId]);
@@ -111,8 +118,8 @@ export function LogsTab({ run, selectedStepId }: LogsTabProps) {
 
   return (
     <Conversation className="h-full">
-      <ConversationContent className="p-6">
-        <div className="bg-muted/20 p-4 space-y-2 border rounded">
+      <ConversationContent>
+        <div className="bg-muted/20 p-6 space-y-2 border rounded">
           {allLogs.map((log, index) => (
             <LogEntry key={index} log={log} selectedStepId={selectedStepId} />
           ))}
@@ -175,7 +182,7 @@ function LogEntry({ log, selectedStepId }: LogEntryProps) {
 
   return (
     <div
-      className={`text-xs font-mono space-y-1 ${isSelected ? 'bg-blue-500/10 -mx-2 px-2 py-1 rounded' : ''}`}
+      className={`text-xs font-mono space-y-1 ${isSelected ? "bg-blue-500/10 -mx-2 px-2 py-1 rounded" : ""}`}
       data-step-id={log.stepId}
     >
       {/* Timestamp + Step + Level + Status */}
@@ -189,7 +196,9 @@ function LogEntry({ log, selectedStepId }: LogEntryProps) {
           </span>
         )}
         {log.stepStatus && (
-          <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${statusColors[log.stepStatus]}`}>
+          <span
+            className={`text-xs px-1.5 py-0.5 rounded font-medium ${statusColors[log.stepStatus]}`}
+          >
             {log.stepStatus}
           </span>
         )}
@@ -209,16 +218,23 @@ function LogEntry({ log, selectedStepId }: LogEntryProps) {
       )}
 
       {/* Log Content (skip for lifecycle entries - status badge is enough) */}
-      {log.content && log.content !== "Started" && log.content !== "Completed" && !log.content.startsWith("Failed") && (
-        <pre className={`whitespace-pre-wrap break-words ${levelColor} pl-4 border-l-2 border-muted`}>
-          {log.content}
-        </pre>
-      )}
+      {log.content &&
+        log.content !== "Started" &&
+        log.content !== "Completed" &&
+        !log.content.startsWith("Failed") && (
+          <pre
+            className={`whitespace-pre-wrap break-words ${levelColor} pl-4 border-l-2 border-muted`}
+          >
+            {log.content}
+          </pre>
+        )}
 
       {/* Failed message (only show error, not "Failed:" prefix) */}
       {log.content && log.content.startsWith("Failed") && (
-        <pre className={`whitespace-pre-wrap break-words ${levelColor} pl-4 border-l-2 border-muted`}>
-          {log.content.replace(/^Failed: /, '')}
+        <pre
+          className={`whitespace-pre-wrap break-words ${levelColor} pl-4 border-l-2 border-muted`}
+        >
+          {log.content.replace(/^Failed: /, "")}
         </pre>
       )}
 
@@ -227,7 +243,9 @@ function LogEntry({ log, selectedStepId }: LogEntryProps) {
         <div className="pl-4">
           <details className="group">
             <summary className="cursor-pointer text-xs font-semibold text-muted-foreground hover:text-foreground list-none flex items-center gap-1">
-              <span className="inline-block transition-transform group-open:rotate-90">▶</span>
+              <span className="inline-block transition-transform group-open:rotate-90">
+                ▶
+              </span>
               Args
             </summary>
             <div className="mt-1 relative">
@@ -249,7 +267,9 @@ function LogEntry({ log, selectedStepId }: LogEntryProps) {
         <div className="pl-4">
           <details className="group">
             <summary className="cursor-pointer text-xs font-semibold text-muted-foreground hover:text-foreground list-none flex items-center gap-1">
-              <span className="inline-block transition-transform group-open:rotate-90">▶</span>
+              <span className="inline-block transition-transform group-open:rotate-90">
+                ▶
+              </span>
               Output
             </summary>
             <div className="mt-1 relative">
@@ -267,12 +287,18 @@ function LogEntry({ log, selectedStepId }: LogEntryProps) {
       )}
 
       {/* Metadata (exit code, duration) */}
-      {(log.exitCode !== undefined || log.duration !== undefined || log.stepDuration !== undefined) && (
+      {(log.exitCode !== undefined ||
+        log.duration !== undefined ||
+        log.stepDuration !== undefined) && (
         <div className="text-muted-foreground flex gap-3 pl-4">
           {log.exitCode !== undefined && (
             <span>
               exit code:{" "}
-              <span className={log.exitCode === 0 ? "text-green-600" : "text-red-600"}>
+              <span
+                className={
+                  log.exitCode === 0 ? "text-green-600" : "text-red-600"
+                }
+              >
                 {log.exitCode}
               </span>
             </span>

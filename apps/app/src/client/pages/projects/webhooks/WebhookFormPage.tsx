@@ -195,11 +195,11 @@ export default function WebhookFormPage() {
           }
         />
 
-        <div className="flex-1 overflow-auto p-6 space-y-6">
+        <div className="flex-1 overflow-auto md:p-6 space-y-6">
           {/* Form */}
           <form onSubmit={form.handleSubmit(onSubmit)}>
             {/* Single Card with All Sections */}
-            <div className="bg-card rounded-lg border">
+            <div className="md:bg-card md:rounded-lg md:border">
               {/* Body */}
               <div className="space-y-6 p-4 sm:p-6">
                 {/* Basic Info Section - Always visible */}
@@ -242,7 +242,7 @@ export default function WebhookFormPage() {
               </div>
 
               {/* Footer - Actions */}
-              <div className="flex justify-end gap-2 border-t p-4 sm:p-6">
+              <div className="flex justify-end gap-2 sm:border-t p-4 sm:p-6">
                 <Button
                   type="button"
                   variant="ghost"

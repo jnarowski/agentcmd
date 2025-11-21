@@ -25,8 +25,8 @@ export function SessionTab({ projectId, selectedSessionId }: SessionTabProps) {
 
   // Subscribe to WebSocket for real-time updates
   useSessionWebSocket({
-    sessionId: selectedSessionId || '',
-    projectId
+    sessionId: selectedSessionId || "",
+    projectId,
   });
 
   // Check both React Query cache AND Zustand store for messages
@@ -51,9 +51,10 @@ export function SessionTab({ projectId, selectedSessionId }: SessionTabProps) {
   }
 
   // Show loading state when session has no messages yet (agent hasn't started)
-  const hasMessages = (messages && messages.length > 0) ||
-                      (storeMessages && storeMessages.length > 0) ||
-                      false;
+  const hasMessages =
+    (messages && messages.length > 0) ||
+    (storeMessages && storeMessages.length > 0) ||
+    false;
   if (!isLoading && !hasMessages) {
     return (
       <Empty>
@@ -63,7 +64,8 @@ export function SessionTab({ projectId, selectedSessionId }: SessionTabProps) {
           </EmptyMedia>
           <EmptyTitle>Waiting for agent to start</EmptyTitle>
           <EmptyDescription>
-            The agent session will appear here automatically once it starts. This usually takes a few seconds.
+            The agent session will appear here automatically once it starts.
+            This usually takes a few seconds.
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
