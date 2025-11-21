@@ -39,6 +39,10 @@ export default defineConfig(({ mode }) => {
           target: `ws://localhost:${serverPort}`,
           ws: true,
         },
+        "/shell": {
+          target: `ws://localhost:${serverPort}`,
+          ws: true,
+        },
       },
     },
   };
