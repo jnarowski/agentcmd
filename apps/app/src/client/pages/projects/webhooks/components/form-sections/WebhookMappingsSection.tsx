@@ -1,11 +1,12 @@
 import { useState, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useFormContext, Controller } from "react-hook-form";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Settings } from "lucide-react";
 import { Alert, AlertDescription } from "@/client/components/ui/alert";
 import { FieldLabel } from "@/client/components/ui/field";
 import { RadioGroup, RadioGroupItem } from "@/client/components/ui/radio-group";
 import { Label } from "@/client/components/ui/label";
+import { Button } from "@/client/components/ui/button";
 import { TestPayloadSelector } from "../TestPayloadSelector";
 import { TokenInput } from "../TokenInput";
 import { SpecTypeSelect } from "@/client/pages/projects/workflows/components/SpecTypeSelect";
@@ -26,6 +27,7 @@ export function WebhookMappingsSection({
     webhookId: string;
     id: string;
   }>();
+  const navigate = useNavigate();
   const { control, watch, setValue } = useFormContext<WebhookFormData>();
 
   const [testPayload, setTestPayload] = useState<Record<
@@ -215,18 +217,29 @@ export function WebhookMappingsSection({
           </div>
           <div className="space-y-2">
             <FieldLabel>Workflow</FieldLabel>
-            <div className="max-w-lg">
-              <Controller
-                control={control}
-                name="config.mappings.0.workflow_definition_id"
-                render={({ field }) => (
-                  <WorkflowDefinitionSelect
-                    projectId={projectId!}
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  />
-                )}
-              />
+            <div className="max-w-lg flex items-center gap-2">
+              <div className="flex-1">
+                <Controller
+                  control={control}
+                  name="config.mappings.0.workflow_definition_id"
+                  render={({ field }) => (
+                    <WorkflowDefinitionSelect
+                      projectId={projectId!}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    />
+                  )}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(`/projects/${projectId}/workflows`)}
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Manage
+              </Button>
             </div>
           </div>
         </div>
