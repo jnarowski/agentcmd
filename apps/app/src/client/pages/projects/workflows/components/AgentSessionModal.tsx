@@ -58,10 +58,10 @@ export function AgentSessionModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[100vw] max-h-[100vh] w-screen h-screen flex flex-col overflow-hidden p-0">
-        <DialogHeader className="px-6 pt-6 pb-4">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle>{sessionName || "Agent Session"}</DialogTitle>
         </DialogHeader>
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-6">
+        <div className="flex-1 min-h-0 overflow-y-auto pb-6">
           <AgentSessionViewer
             projectId={projectId}
             sessionId={sessionId}

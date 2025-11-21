@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Outlet, useNavigate, useParams, useLocation } from "react-router-dom";
+import { Outlet, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
 import { useActiveSession } from "@/client/hooks/navigation/useActiveSession";
@@ -17,16 +17,15 @@ import type { SessionResponse } from "@/shared/types/agent-session.types";
  * Used as an intermediate route component under AppLayout
  */
 export default function ProjectLoader() {
-  const { id, projectId } = useParams<{ id?: string; projectId?: string }>();
+  const { id, projectId, runId } = useParams<{ id?: string; projectId?: string; runId?: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
   const setActiveProject = useNavigationStore(
     (state) => state.setActiveProject
   );
   const clearNavigation = useNavigationStore((state) => state.clearNavigation);
 
-  // Only apply h-screen constraint for workflow routes
-  const isWorkflowRoute = location.pathname.includes("/workflows");
+  // Only apply h-screen constraint for workflow run detail page (split-pane layout)
+  const isWorkflowRoute = Boolean(runId);
 
   // Use either id or projectId param (workflow routes use projectId)
   const activeProjectId = id || projectId;
