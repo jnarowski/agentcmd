@@ -139,19 +139,18 @@ model WorkflowEvent {
 }
 
 model Webhook {
-  id                  String        @id @default(cuid())
-  project_id          String
-  name                String
-  description         String?
-  source              WebhookSource @default(generic)
-  status              WebhookStatus @default(draft)
-  secret              String // HMAC secret for signature validation (32-byte hex)
-  workflow_identifier String? // Dynamic workflow identifier (no FK to WorkflowDefinition)
-  config              Json // Field mappings, conditions, source config
-  error_message       String? // Error message when status is 'error'
-  last_triggered_at   DateTime?
-  created_at          DateTime      @default(now())
-  updated_at          DateTime      @updatedAt
+  id                String        @id @default(cuid())
+  project_id        String
+  name              String
+  description       String?
+  source            WebhookSource @default(generic)
+  status            WebhookStatus @default(draft)
+  secret            String // HMAC secret for signature validation (32-byte hex)
+  config            Json // Field mappings, conditions, source config
+  error_message     String? // Error message when status is 'error'
+  last_triggered_at DateTime?
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @updatedAt
 
   project Project        @relation(fields: [project_id], references: [id], onDelete: Cascade)
   events  WebhookEvent[]

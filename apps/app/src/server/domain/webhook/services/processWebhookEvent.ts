@@ -237,13 +237,13 @@ export async function processWebhookEvent(
     const workflowDefinition = await getWorkflowDefinitionBy({
       where: {
         project_id: webhook.project_id,
-        id: mapping.workflow_id,
+        id: mapping.workflow_definition_id,
       },
     });
 
     if (!workflowDefinition) {
       // Mark webhook as error
-      const errorMsg = `Workflow '${mapping.workflow_id}' not found`;
+      const errorMsg = `Workflow '${mapping.workflow_definition_id}' not found`;
       await markWebhookError(webhookId, errorMsg);
 
       eventStatus = "failed";

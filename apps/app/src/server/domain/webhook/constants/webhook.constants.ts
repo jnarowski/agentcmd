@@ -3,9 +3,12 @@
 /**
  * Fields that can be mapped from webhook payloads to workflow runs
  * To add new fields: extend this array and WebhookMappingFields type
- * Example: ["spec_type_id", "workflow_id", "mode", "branch_name"] as const
+ * Example: ["spec_type_id", "workflow_definition_id", "mode", "branch_name"] as const
  */
-export const WEBHOOK_MAPPING_FIELDS = ["spec_type_id", "workflow_id"] as const;
+export const WEBHOOK_MAPPING_FIELDS = [
+  "spec_type_id",
+  "workflow_definition_id",
+] as const;
 
 // Export type for use in types file
 // Defined here to avoid circular dependency
@@ -14,7 +17,7 @@ export const WEBHOOK_MAPPING_FIELDS = ["spec_type_id", "workflow_id"] as const;
  */
 export interface WebhookMappingFields {
   spec_type_id: string;
-  workflow_id: string;
+  workflow_definition_id: string;
 }
 
 /**
@@ -29,7 +32,7 @@ export const WEBHOOK_RATE_LIMIT = {
  * Default webhook config
  */
 export const DEFAULT_WEBHOOK_CONFIG = {
-  name: "Webhook Run",
+  name: "",
   mappings: [],
   source_config: {},
 };
@@ -42,12 +45,7 @@ export const WEBHOOK_SOURCES = ["github", "linear", "jira", "generic"] as const;
 /**
  * Webhook statuses
  */
-export const WEBHOOK_STATUSES = [
-  "draft",
-  "active",
-  "paused",
-  "error",
-] as const;
+export const WEBHOOK_STATUSES = ["draft", "active", "paused", "error"] as const;
 
 /**
  * Webhook event statuses

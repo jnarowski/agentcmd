@@ -1,8 +1,8 @@
 import { useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronRight } from "lucide-react";
 import { Button } from "@/client/components/ui/button";
 import { useWebhook } from "./hooks/useWebhook";
 import { useRecentTestEvent } from "./hooks/useRecentTestEvent";
@@ -22,20 +22,23 @@ import { WebhookMappingsSection } from "./components/form-sections/WebhookMappin
  * Convert Webhook to form values
  */
 function webhookToFormValues(webhook: Webhook): UpdateWebhookFormValues {
+  // Default to simple mode structure
+  const defaultConfig = {
+    name: "",
+    mappings: [
+      {
+        spec_type_id: "",
+        workflow_definition_id: "",
+        conditions: [],
+      },
+    ],
+    default_action: undefined,
+  };
+
   return {
     name: webhook.name,
     description: webhook.description || undefined,
-    workflow_identifier: webhook.workflow_identifier || undefined,
-    config: webhook.config || {
-      name: "Webhook Run",
-      mappings: [
-        {
-          spec_type_id: "",
-          workflow_id: "",
-          conditions: [],
-        },
-      ],
-    },
+    config: webhook.config || defaultConfig,
     // Don't include secret - let it remain undefined so form detects changes
   };
 }
@@ -54,7 +57,7 @@ export default function WebhookFormPage() {
   const { data: webhook, isLoading: isLoadingWebhook } = useWebhook(webhookId);
   const { data: testEvent, isLoading: isLoadingTestEvent } =
     useRecentTestEvent(webhookId);
-  const { createMutation, updateMutation, activateMutation } =
+  const { createMutation, updateMutation } =
     useWebhookMutations(projectId!);
 
   // WebSocket for real-time updates (only in edit mode)
@@ -77,16 +80,16 @@ export default function WebhookFormPage() {
           description: "",
           source: "generic" as const,
           // Don't include secret in default values - only set it when user edits
-          workflow_identifier: "",
           config: {
-            name: "Webhook Run",
+            name: "",
             mappings: [
               {
                 spec_type_id: "",
-                workflow_id: "",
+                workflow_definition_id: "",
                 conditions: [],
               },
             ],
+            default_action: undefined,
           },
         },
   });
@@ -115,19 +118,6 @@ export default function WebhookFormPage() {
         data: data as UpdateWebhookFormValues,
       });
     }
-  };
-
-  // Handle activate
-  const handleActivate = async () => {
-    if (!webhookId || !webhook) return;
-
-    // Validate workflow exists
-    if (!webhook.workflow_identifier) {
-      alert("Please select a workflow before activating");
-      return;
-    }
-
-    activateMutation.mutate({ webhookId: webhookId! });
   };
 
   if (!projectId) {
@@ -165,21 +155,42 @@ export default function WebhookFormPage() {
 
   return (
     <FormProvider {...form}>
-      <div className="container mx-auto max-w-4xl px-4 sm:px-6 md:px-8 py-8">
+      <div className="px-6 py-4 space-y-6">
+        {/* Breadcrumbs */}
+        <nav className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Link
+            to={`/projects/${projectId}`}
+            className="hover:text-foreground transition-colors"
+          >
+            Project
+          </Link>
+          <ChevronRight className="w-4 h-4" />
+          <Link
+            to={`/projects/${projectId}/webhooks`}
+            className="hover:text-foreground transition-colors"
+          >
+            Webhooks
+          </Link>
+          <ChevronRight className="w-4 h-4" />
+          <span className="text-foreground font-medium">
+            {isCreateMode ? "Create Webhook" : webhook?.name || "Edit Webhook"}
+          </span>
+        </nav>
+
         {/* Header */}
-        <div className="mb-6">
+        <div>
           <h1 className="text-3xl font-bold">
             {isCreateMode ? "Create Webhook" : "Configure Webhook"}
           </h1>
           {!isCreateMode && webhook && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground mt-2">
               {webhook.name} - {webhook.status}
             </p>
           )}
         </div>
 
         {/* Form */}
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Single Card with All Sections */}
           <div className="space-y-6 p-4 sm:p-6 bg-card rounded-lg border">
             {/* Basic Info Section - Always visible */}
@@ -211,7 +222,7 @@ export default function WebhookFormPage() {
 
             {/* Unlocked sections after test event */}
             {!isCreateMode && hasTestEvent && (
-              <div className="space-y-4 pt-6 border-t">
+              <div className="space-y-6 pt-6 border-t">
                 <WebhookMappingsSection
                   testPayload={
                     (testEvent?.payload as Record<string, unknown>) || null
@@ -232,37 +243,22 @@ export default function WebhookFormPage() {
               Cancel
             </Button>
 
-            <div className="flex gap-2">
-              <Button
-                type="submit"
-                disabled={
-                  (isCreateMode ? false : !isDirty) ||
-                  (isCreateMode
-                    ? createMutation.isPending
-                    : updateMutation.isPending)
-                }
-              >
-                {(isCreateMode
+            <Button
+              type="submit"
+              disabled={
+                (isCreateMode ? false : !isDirty) ||
+                (isCreateMode
                   ? createMutation.isPending
-                  : updateMutation.isPending) && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
-                {isCreateMode ? "Create" : "Save"}
-              </Button>
-
-              {webhook?.status === "draft" && hasTestEvent && (
-                <Button
-                  type="button"
-                  onClick={handleActivate}
-                  disabled={activateMutation.isPending}
-                >
-                  {activateMutation.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Activate
-                </Button>
+                  : updateMutation.isPending)
+              }
+            >
+              {(isCreateMode
+                ? createMutation.isPending
+                : updateMutation.isPending) && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-            </div>
+              {isCreateMode ? "Create" : "Save"}
+            </Button>
           </div>
         </form>
       </div>

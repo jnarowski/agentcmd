@@ -317,7 +317,13 @@ export async function webhookRoutes(fastify: FastifyInstance) {
         params: z.object({ webhookId: z.string() }),
         response: {
           200: z.object({
-            success: z.boolean(),
+            data: z.object({
+              id: z.string(),
+              name: z.string(),
+              secret: z.string(),
+              status: z.string(),
+              config: z.unknown(),
+            }),
           }),
           400: errorResponse,
           401: errorResponse,
@@ -331,7 +337,9 @@ export async function webhookRoutes(fastify: FastifyInstance) {
         const { webhookId } = request.params as { webhookId: string };
         await activateWebhook(webhookId);
 
-        return reply.send({ success: true });
+        // Fetch updated webhook to return
+        const webhook = await getWebhookById(webhookId);
+        return reply.send({ data: webhook });
       } catch (error) {
         if (
           error instanceof Error &&
@@ -344,16 +352,11 @@ export async function webhookRoutes(fastify: FastifyInstance) {
 
         if (
           error instanceof Error &&
-          error.message.includes("workflow_identifier")
+          (error.message.includes("mapping") || error.message.includes("workflow"))
         ) {
           return reply
             .code(400)
-            .send(
-              buildErrorResponse(
-                400,
-                "Webhook must have workflow_identifier to activate",
-              ),
-            );
+            .send(buildErrorResponse(400, error.message));
         }
 
         fastify.log.error({ error }, "Error activating webhook");
@@ -376,7 +379,13 @@ export async function webhookRoutes(fastify: FastifyInstance) {
         params: z.object({ webhookId: z.string() }),
         response: {
           200: z.object({
-            success: z.boolean(),
+            data: z.object({
+              id: z.string(),
+              name: z.string(),
+              secret: z.string(),
+              status: z.string(),
+              config: z.unknown(),
+            }),
           }),
           401: errorResponse,
           404: errorResponse,
@@ -389,7 +398,9 @@ export async function webhookRoutes(fastify: FastifyInstance) {
         const { webhookId } = request.params as { webhookId: string };
         await pauseWebhook(webhookId);
 
-        return reply.send({ success: true });
+        // Fetch updated webhook to return
+        const webhook = await getWebhookById(webhookId);
+        return reply.send({ data: webhook });
       } catch (error) {
         if (
           error instanceof Error &&

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Edit, Trash2, Play, Pause, ChevronRight } from "lucide-react";
 import { useWebhook } from "./hooks/useWebhook";
 import { useWebhookMutations } from "./hooks/useWebhookMutations";
@@ -9,8 +10,15 @@ import { SecretDisplay } from "./components/SecretDisplay";
 import { EventHistory } from "./components/EventHistory";
 import { DeleteWebhookDialog } from "./components/DeleteWebhookDialog";
 import { Button } from "@/client/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/client/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/client/components/ui/card";
 import { Badge } from "@/client/components/ui/badge";
+import { api } from "@/client/utils/api";
+import type { SpecTypeMetadata } from "@/client/pages/projects/workflows/components/SpecTypeSelect";
 
 export default function WebhookDetailPage() {
   const { id: projectId, webhookId } = useParams<{
@@ -29,6 +37,41 @@ export default function WebhookDetailPage() {
 
   // Listen for real-time events
   useWebhookWebSocket(projectId, webhookId);
+
+  // Fetch spec types for name lookup
+  const { data: specTypes } = useQuery({
+    queryKey: ["specTypes", projectId],
+    queryFn: async () => {
+      const response = await api.get<{ data: SpecTypeMetadata[] }>(
+        `/api/projects/${projectId}/spec-types`
+      );
+      return response.data;
+    },
+    enabled: !!projectId,
+  });
+
+  // Fetch workflows for name lookup
+  const { data: workflows } = useQuery({
+    queryKey: ["workflows", projectId],
+    queryFn: async () => {
+      const response = await api.get<{ data: { id: string; name: string; identifier: string }[] }>(
+        `/api/projects/${projectId}/workflows`
+      );
+      return response.data;
+    },
+    enabled: !!projectId,
+  });
+
+  // Helper functions to get names
+  const getSpecTypeName = (id: string) => {
+    const specType = specTypes?.find((st) => st.id === id);
+    return specType?.name || id;
+  };
+
+  const getWorkflowName = (id: string) => {
+    const workflow = workflows?.find((wf) => wf.id === id);
+    return workflow?.name || id;
+  };
 
   const handleActivate = () => {
     activateMutation.mutate({ webhookId });
@@ -59,7 +102,10 @@ export default function WebhookDetailPage() {
       <div className="px-6 py-4">
         <div className="text-center">
           <h2 className="text-2xl font-bold">Webhook not found</h2>
-          <Link to={`/projects/${projectId}/webhooks`} className="text-blue-600 hover:underline">
+          <Link
+            to={`/projects/${projectId}/webhooks`}
+            className="text-blue-600 hover:underline"
+          >
             Back to webhooks
           </Link>
         </div>
@@ -70,16 +116,22 @@ export default function WebhookDetailPage() {
   return (
     <div className="px-6 py-4 space-y-6">
       {/* Breadcrumbs */}
-      <nav className="flex items-center gap-2 text-sm text-gray-600">
-        <Link to={`/projects/${projectId}`} className="hover:text-gray-900">
+      <nav className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Link
+          to={`/projects/${projectId}`}
+          className="hover:text-foreground transition-colors"
+        >
           Project
         </Link>
         <ChevronRight className="w-4 h-4" />
-        <Link to={`/projects/${projectId}/webhooks`} className="hover:text-gray-900">
+        <Link
+          to={`/projects/${projectId}/webhooks`}
+          className="hover:text-foreground transition-colors"
+        >
           Webhooks
         </Link>
         <ChevronRight className="w-4 h-4" />
-        <span className="text-gray-900 font-medium">{webhook.name}</span>
+        <span className="text-foreground font-medium">{webhook.name}</span>
       </nav>
 
       {/* Header */}
@@ -97,7 +149,9 @@ export default function WebhookDetailPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate(`/projects/${projectId}/webhooks/${webhookId}/edit`)}
+            onClick={() =>
+              navigate(`/projects/${projectId}/webhooks/${webhookId}/edit`)
+            }
           >
             <Edit className="w-4 h-4 mr-2" />
             Edit
@@ -135,20 +189,28 @@ export default function WebhookDetailPage() {
         <CardHeader>
           <CardTitle>Configuration</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
+          {/* Source */}
           <div>
-            <div className="text-sm font-medium text-gray-700 mb-1">Source</div>
-            <Badge variant="secondary">{webhook.source}</Badge>
+            <div className="text-sm font-medium text-muted-foreground mb-2">
+              Source
+            </div>
+            <Badge variant="secondary" className="text-sm px-3 py-1">
+              {webhook.source}
+            </Badge>
           </div>
 
+          {/* Webhook URL */}
           <div>
-            <div className="text-sm font-medium text-gray-700 mb-1">Webhook URL</div>
+            <div className="text-sm font-medium text-muted-foreground mb-2">
+              Webhook URL
+            </div>
             <div className="flex gap-2">
               <input
                 type="text"
                 readOnly
                 value={webhook.webhook_url}
-                className="flex-1 px-3 py-2 border rounded-md bg-gray-50 text-sm font-mono"
+                className="flex-1 px-3 py-2 border rounded-md bg-muted/50 text-sm font-mono text-foreground"
               />
               <Button
                 variant="outline"
@@ -162,32 +224,85 @@ export default function WebhookDetailPage() {
             </div>
           </div>
 
+          {/* Secret */}
           <SecretDisplay secret={webhook.secret} />
 
-          {webhook.workflow_identifier && (
-            <div>
-              <div className="text-sm font-medium text-gray-700 mb-1">Workflow</div>
-              <Badge variant="secondary">{webhook.workflow_identifier}</Badge>
-            </div>
-          )}
-
+          {/* Mappings */}
           {webhook.config.mappings && webhook.config.mappings.length > 0 && (
             <div>
-              <div className="text-sm font-medium text-gray-700 mb-2">Mappings</div>
-              <div className="space-y-2">
+              <div className="text-sm font-medium text-muted-foreground mb-3">
+                Workflow Run Mapping
+              </div>
+              <div className="space-y-3">
                 {webhook.config.mappings.map((mapping, idx) => (
-                  <div key={idx} className="text-sm bg-gray-50 p-2 rounded">
-                    <div className="font-mono text-sm">
-                      <span className="text-blue-600">spec_type_id:</span> {mapping.spec_type_id}
-                    </div>
-                    <div className="font-mono text-sm">
-                      <span className="text-blue-600">workflow_id:</span> {mapping.workflow_id}
-                    </div>
-                    {mapping.conditions && mapping.conditions.length > 0 && (
-                      <div className="mt-1 text-xs text-gray-500">
-                        {mapping.conditions.length} condition(s)
+                  <div
+                    key={idx}
+                    className="border rounded-lg p-4 bg-muted/30 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="space-y-3">
+                      {/* Mapping Fields */}
+                      <div className="grid grid-cols-2 gap-3">
+                        {mapping.spec_type_id && (
+                          <div>
+                            <div className="text-xs font-medium text-muted-foreground mb-1">
+                              Spec Type
+                            </div>
+                            <div className="text-sm bg-background px-3 py-2 rounded border">
+                              <div className="font-medium">
+                                {getSpecTypeName(mapping.spec_type_id)}
+                              </div>
+                              <div className="text-xs text-muted-foreground font-mono mt-0.5">
+                                {mapping.spec_type_id}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {mapping.workflow_definition_id && (
+                          <div>
+                            <div className="text-xs font-medium text-muted-foreground mb-1">
+                              Workflow
+                            </div>
+                            <div className="text-sm bg-background px-3 py-2 rounded border">
+                              <div className="font-medium">
+                                {getWorkflowName(mapping.workflow_definition_id)}
+                              </div>
+                              <div className="text-xs text-muted-foreground font-mono mt-0.5 truncate">
+                                {mapping.workflow_definition_id}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    )}
+
+                      {/* Conditions */}
+                      {mapping.conditions && mapping.conditions.length > 0 && (
+                        <div className="pt-2 border-t">
+                          <div className="text-xs font-medium text-muted-foreground mb-2">
+                            Conditions ({mapping.conditions.length})
+                          </div>
+                          <div className="space-y-1.5">
+                            {mapping.conditions.map((condition, condIdx) => (
+                              <div
+                                key={condIdx}
+                                className="text-xs bg-background px-2 py-1.5 rounded border flex items-center gap-2"
+                              >
+                                <span className="font-mono text-blue-600">
+                                  {condition.path}
+                                </span>
+                                <span className="text-muted-foreground">
+                                  {condition.operator}
+                                </span>
+                                <span className="font-mono">
+                                  {typeof condition.value === "string"
+                                    ? `"${condition.value}"`
+                                    : JSON.stringify(condition.value)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -197,7 +312,7 @@ export default function WebhookDetailPage() {
       </Card>
 
       {/* Event History */}
-      <EventHistory webhookId={webhookId} />
+      <EventHistory webhookId={webhookId} projectId={projectId} />
 
       <DeleteWebhookDialog
         open={deleteDialogOpen}

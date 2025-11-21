@@ -28,7 +28,7 @@ export const conditionRuleSchema = z.object({
  */
 export const simpleMappingSchema = z.object({
   spec_type_id: z.string().min(1),
-  workflow_id: z.string().min(1),
+  workflow_definition_id: z.string().min(1),
 });
 
 /**
@@ -36,7 +36,7 @@ export const simpleMappingSchema = z.object({
  */
 export const mappingGroupSchema = z.object({
   spec_type_id: z.string().min(1),
-  workflow_id: z.string().min(1),
+  workflow_definition_id: z.string().min(1),
   conditions: z.array(conditionRuleSchema), // Empty array = always match
 });
 
@@ -122,7 +122,6 @@ export const createWebhookSchema = z.object({
   description: z.string().max(1000).optional(),
   source: webhookSourceSchema.optional().default("generic"),
   secret: z.string().optional(), // HMAC secret from external service (e.g., Linear signing secret)
-  workflow_identifier: z.string().optional(),
   config: z.unknown().optional(), // Validated in service layer
 });
 
@@ -134,6 +133,5 @@ export const updateWebhookSchema = z.object({
   name: z.string().min(1).max(255).optional(),
   description: z.string().max(1000).optional(),
   secret: z.string().min(1).optional(), // Allow secret rotation
-  workflow_identifier: z.string().optional(),
   config: z.unknown().optional(), // Validated in service layer
 });

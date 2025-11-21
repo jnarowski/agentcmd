@@ -1,11 +1,12 @@
 import { prisma } from "@/shared/prisma";
 import { getWebhookById } from "./getWebhookById";
+import type { WebhookConfig } from "../types/webhook.types";
 
 // PUBLIC API
 
 /**
  * Activates a webhook
- * Validates that webhook has required configuration
+ * Validates that webhook has required configuration (mappings with workflows)
  *
  * @param id - Webhook ID
  *
@@ -19,8 +20,16 @@ export async function activateWebhook(id: string): Promise<void> {
   }
 
   // Validate required configuration
-  if (!webhook.workflow_identifier) {
-    throw new Error("Webhook must have workflow_identifier to activate");
+  const config = webhook.config as WebhookConfig | null;
+
+  if (!config || !config.mappings || config.mappings.length === 0) {
+    throw new Error("Webhook must have at least one mapping to activate");
+  }
+
+  // Validate each mapping has a workflow_definition_id
+  const invalidMappings = config.mappings.filter(m => !m.workflow_definition_id);
+  if (invalidMappings.length > 0) {
+    throw new Error("All mappings must have a workflow selected");
   }
 
   await prisma.webhook.update({

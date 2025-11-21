@@ -23,8 +23,6 @@ export async function updateWebhook(
   if (data.description !== undefined) updateData.description = data.description;
   // Only update secret if a non-empty value is provided (empty string = keep existing)
   if (data.secret !== undefined && data.secret !== "") updateData.secret = data.secret;
-  if (data.workflow_identifier !== undefined)
-    updateData.workflow_identifier = data.workflow_identifier;
 
   // Validate config if provided
   if (data.config !== undefined) {

@@ -7,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/client/components/ui/dialog";
-import { Button } from "@/client/components/ui/button";
 import { CodeBlock } from "@/client/pages/projects/sessions/components/CodeBlock";
 
 interface PayloadViewDialogProps {
@@ -43,25 +42,20 @@ export function PayloadViewDialog({
             View the raw JSON payload received by this webhook
           </DialogDescription>
         </DialogHeader>
-        <div className="mt-4 flex-1 min-h-0 relative">
-          <Button
-            variant="outline"
-            size="sm"
-            className="absolute top-2 right-2 z-10 h-8 px-3"
-            onClick={handleCopy}
-          >
-            {copied ? (
-              <>
-                <Check className="h-4 w-4 mr-2" />
-                Copied
-              </>
-            ) : (
-              <>
-                <Copy className="h-4 w-4 mr-2" />
-                Copy
-              </>
-            )}
-          </Button>
+        <div className="mt-4 flex-1 min-h-0 overflow-auto relative">
+          <div className="absolute top-2 right-6 z-10">
+            <button
+              onClick={handleCopy}
+              className="p-1.5 hover:bg-muted rounded-md transition-colors"
+              title="Copy to clipboard"
+            >
+              {copied ? (
+                <Check className="w-3 h-3 text-green-600" />
+              ) : (
+                <Copy className="w-3 h-3 text-muted-foreground" />
+              )}
+            </button>
+          </div>
           <CodeBlock
             code={formattedPayload}
             language="json"

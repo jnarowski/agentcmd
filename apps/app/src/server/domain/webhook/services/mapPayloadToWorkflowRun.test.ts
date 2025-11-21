@@ -10,7 +10,7 @@ describe("mapPayloadToWorkflowRun", () => {
         mappings: [
           {
             spec_type_id: "spec_feature",
-            workflow_id: "wf_123",
+            workflow_definition_id: "wf_123",
             conditions: [], // Empty = always match
           },
         ],
@@ -27,7 +27,7 @@ describe("mapPayloadToWorkflowRun", () => {
       // Assert
       expect(result).not.toBeNull();
       expect(result?.mapping.spec_type_id).toBe("spec_feature");
-      expect(result?.mapping.workflow_id).toBe("wf_123");
+      expect(result?.mapping.workflow_definition_id).toBe("wf_123");
       expect(result?.debugInfo.mapping_mode).toBe("simple");
       expect(result?.debugInfo.used_default).toBe(false);
     });
@@ -38,12 +38,12 @@ describe("mapPayloadToWorkflowRun", () => {
         mappings: [
           {
             spec_type_id: "spec_first",
-            workflow_id: "wf_first",
+            workflow_definition_id: "wf_first",
             conditions: [],
           },
           {
             spec_type_id: "spec_second",
-            workflow_id: "wf_second",
+            workflow_definition_id: "wf_second",
             conditions: [],
           },
         ],
@@ -67,7 +67,7 @@ describe("mapPayloadToWorkflowRun", () => {
         mappings: [
           {
             spec_type_id: "spec_bug",
-            workflow_id: "wf_bugfix",
+            workflow_definition_id: "wf_bugfix",
             conditions: [
               {
                 path: "labels",
@@ -78,7 +78,7 @@ describe("mapPayloadToWorkflowRun", () => {
           },
           {
             spec_type_id: "spec_feature",
-            workflow_id: "wf_feature",
+            workflow_definition_id: "wf_feature",
             conditions: [
               {
                 path: "labels",
@@ -116,7 +116,7 @@ describe("mapPayloadToWorkflowRun", () => {
         mappings: [
           {
             spec_type_id: "spec_open",
-            workflow_id: "wf_open",
+            workflow_definition_id: "wf_open",
             conditions: [
               {
                 path: "status",
@@ -149,7 +149,7 @@ describe("mapPayloadToWorkflowRun", () => {
         mappings: [
           {
             spec_type_id: "spec_bug",
-            workflow_id: "wf_bugfix",
+            workflow_definition_id: "wf_bugfix",
             conditions: [
               {
                 path: "labels",
@@ -160,7 +160,7 @@ describe("mapPayloadToWorkflowRun", () => {
           },
           {
             spec_type_id: "spec_feature",
-            workflow_id: "wf_feature",
+            workflow_definition_id: "wf_feature",
             conditions: [
               {
                 path: "labels",
@@ -190,7 +190,7 @@ describe("mapPayloadToWorkflowRun", () => {
         mappings: [
           {
             spec_type_id: "spec_urgent",
-            workflow_id: "wf_urgent",
+            workflow_definition_id: "wf_urgent",
             conditions: [
               {
                 path: "labels",
@@ -240,7 +240,7 @@ describe("mapPayloadToWorkflowRun", () => {
         mappings: [
           {
             spec_type_id: "spec_bug",
-            workflow_id: "wf_bugfix",
+            workflow_definition_id: "wf_bugfix",
             conditions: [
               {
                 path: "labels",
@@ -253,7 +253,7 @@ describe("mapPayloadToWorkflowRun", () => {
         default_action: "set_fields",
         default_mapping: {
           spec_type_id: "spec_default",
-          workflow_id: "wf_default",
+          workflow_definition_id: "wf_default",
         },
       };
 
@@ -267,7 +267,7 @@ describe("mapPayloadToWorkflowRun", () => {
       // Assert
       expect(result).not.toBeNull();
       expect(result?.mapping.spec_type_id).toBe("spec_default");
-      expect(result?.mapping.workflow_id).toBe("wf_default");
+      expect(result?.mapping.workflow_definition_id).toBe("wf_default");
       expect(result?.debugInfo.used_default).toBe(true);
       expect(result?.debugInfo.mapping_conditions_matched).toBeNull();
     });
@@ -278,7 +278,7 @@ describe("mapPayloadToWorkflowRun", () => {
         mappings: [
           {
             spec_type_id: "spec_bug",
-            workflow_id: "wf_bugfix",
+            workflow_definition_id: "wf_bugfix",
             conditions: [
               {
                 path: "labels",
@@ -310,7 +310,7 @@ describe("mapPayloadToWorkflowRun", () => {
         mappings: [
           {
             spec_type_id: "spec_test",
-            workflow_id: "wf_test",
+            workflow_definition_id: "wf_test",
             conditions: [
               {
                 path: "action",
@@ -338,7 +338,7 @@ describe("mapPayloadToWorkflowRun", () => {
         mappings: [
           {
             spec_type_id: "spec_test",
-            workflow_id: "wf_test",
+            workflow_definition_id: "wf_test",
             conditions: [
               {
                 path: "action",
@@ -366,7 +366,7 @@ describe("mapPayloadToWorkflowRun", () => {
         mappings: [
           {
             spec_type_id: "spec_test",
-            workflow_id: "wf_test",
+            workflow_definition_id: "wf_test",
             conditions: [
               {
                 path: "tags",
@@ -399,7 +399,7 @@ describe("mapPayloadToWorkflowRun", () => {
         mappings: [
           {
             spec_type_id: "spec_test",
-            workflow_id: "wf_test",
+            workflow_definition_id: "wf_test",
             conditions: [
               {
                 path: "title",
@@ -432,7 +432,7 @@ describe("mapPayloadToWorkflowRun", () => {
         mappings: [
           {
             spec_type_id: "spec_test",
-            workflow_id: "wf_test",
+            workflow_definition_id: "wf_test",
             conditions: [
               {
                 path: "pull_request",
@@ -460,7 +460,7 @@ describe("mapPayloadToWorkflowRun", () => {
         mappings: [
           {
             spec_type_id: "spec_test",
-            workflow_id: "wf_test",
+            workflow_definition_id: "wf_test",
             conditions: [
               {
                 path: "priority",
@@ -490,7 +490,7 @@ describe("mapPayloadToWorkflowRun", () => {
         mappings: [
           {
             spec_type_id: "spec_test",
-            workflow_id: "wf_test",
+            workflow_definition_id: "wf_test",
             conditions: [
               {
                 path: "pull_request.user.login",
@@ -527,7 +527,7 @@ describe("mapPayloadToWorkflowRun", () => {
         mappings: [
           {
             spec_type_id: "spec_test",
-            workflow_id: "wf_test",
+            workflow_definition_id: "wf_test",
             conditions: [
               {
                 path: "pull_request.user.login",

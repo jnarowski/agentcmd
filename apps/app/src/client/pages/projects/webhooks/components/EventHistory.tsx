@@ -16,6 +16,7 @@ import { EventDetailDialog } from "./EventDetailDialog";
 
 interface EventHistoryProps {
   webhookId: string;
+  projectId: string;
 }
 
 const STATUS_COLORS: Record<WebhookEventStatus, { bg: string; text: string; icon: typeof CheckCircle }> = {
@@ -27,7 +28,7 @@ const STATUS_COLORS: Record<WebhookEventStatus, { bg: string; text: string; icon
   invalid_signature: { bg: "bg-orange-100", text: "text-orange-800", icon: AlertCircle },
 };
 
-export function EventHistory({ webhookId }: EventHistoryProps) {
+export function EventHistory({ webhookId, projectId }: EventHistoryProps) {
   const [statusFilter, setStatusFilter] = useState<WebhookEventStatus | "all">("all");
   const [selectedEvent, setSelectedEvent] = useState<WebhookEvent | null>(null);
   const [page, setPage] = useState(0);
@@ -170,6 +171,7 @@ export function EventHistory({ webhookId }: EventHistoryProps) {
       {selectedEvent && (
         <EventDetailDialog
           event={selectedEvent}
+          projectId={projectId}
           open={!!selectedEvent}
           onOpenChange={(open) => !open && setSelectedEvent(null)}
         />

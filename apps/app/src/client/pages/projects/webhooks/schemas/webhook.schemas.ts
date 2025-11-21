@@ -43,7 +43,7 @@ export const conditionRuleSchema = z.object({
  */
 export const simpleMappingSchema = z.object({
   spec_type_id: z.string().min(1, "Spec type is required"),
-  workflow_id: z.string().min(1, "Workflow is required"),
+  workflow_definition_id: z.string().min(1, "Workflow is required"),
 });
 
 /**
@@ -51,7 +51,7 @@ export const simpleMappingSchema = z.object({
  */
 export const mappingGroupSchema = z.object({
   spec_type_id: z.string().min(1, "Spec type is required"),
-  workflow_id: z.string().min(1, "Workflow is required"),
+  workflow_definition_id: z.string().min(1, "Workflow is required"),
   conditions: z.array(conditionRuleSchema), // Empty array = always match
 });
 
@@ -115,7 +115,6 @@ export const updateWebhookFormSchema = z.object({
   description: z.string().max(1000, "Description too long").optional(),
   source: webhookSourceSchema.optional(), // Optional for update, required for create
   secret: z.string().optional(), // Allow secret rotation (empty string = keep existing)
-  workflow_identifier: z.string().optional(),
   config: webhookConfigSchema.optional(),
 });
 

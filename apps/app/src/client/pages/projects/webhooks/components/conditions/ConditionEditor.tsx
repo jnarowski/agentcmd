@@ -1,8 +1,6 @@
 import { Plus } from "lucide-react";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { Button } from "@/client/components/ui/button";
-import { Alert, AlertDescription } from "@/client/components/ui/alert";
-import { Info } from "lucide-react";
 import type { WebhookFormData } from "../../schemas/webhook.schemas";
 import { ConditionRow } from "./ConditionRow";
 
@@ -65,16 +63,27 @@ export function ConditionEditor({
             ))}
           </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleAdd}
-            disabled={disabled}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Condition
-          </Button>
+          <div className="flex gap-2 items-start">
+            {/* Empty space to align with label */}
+            <div className="min-w-[2rem]" />
+
+            {/* Button aligned with fields */}
+            <div className="flex-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAdd}
+                disabled={disabled}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Condition
+              </Button>
+            </div>
+
+            {/* Empty space to align with remove button */}
+            <div className="w-10" />
+          </div>
         </>
       )}
     </div>

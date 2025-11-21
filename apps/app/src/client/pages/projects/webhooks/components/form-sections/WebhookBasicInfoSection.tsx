@@ -50,10 +50,12 @@ export function WebhookBasicInfoSection({
           <Field data-invalid={!!fieldState.error}>
             <FieldLabel>Name</FieldLabel>
             <FieldContent>
-              <Input
-                {...field}
-                placeholder="e.g., GitHub PR Webhook"
-              />
+              <div className="max-w-md">
+                <Input
+                  {...field}
+                  placeholder="e.g., GitHub PR Webhook"
+                />
+              </div>
               {fieldState.error && (
                 <p className="text-sm text-destructive">{fieldState.error.message}</p>
               )}
@@ -90,16 +92,18 @@ export function WebhookBasicInfoSection({
             <Field data-invalid={!!fieldState.error}>
               <FieldLabel>Source</FieldLabel>
               <FieldContent>
-                <select
-                  {...field}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {sourceOptions.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                <div className="max-w-sm">
+                  <select
+                    {...field}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {sourceOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <FieldDescription>
                   The external service that will send webhook events
                 </FieldDescription>
@@ -114,11 +118,13 @@ export function WebhookBasicInfoSection({
         <Field>
           <FieldLabel>Source</FieldLabel>
           <FieldContent>
-            <Input
-              value={sourceOptions.find(opt => opt.value === currentSource)?.label || currentSource || ''}
-              disabled
-              className="bg-muted"
-            />
+            <div className="max-w-sm">
+              <Input
+                value={sourceOptions.find(opt => opt.value === currentSource)?.label || currentSource || ''}
+                disabled
+                className="bg-muted"
+              />
+            </div>
             <FieldDescription>
               Webhook source cannot be changed after creation
             </FieldDescription>

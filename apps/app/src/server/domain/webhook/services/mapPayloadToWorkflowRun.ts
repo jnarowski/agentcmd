@@ -20,22 +20,22 @@ import { evaluateConditions } from "./evaluateConditions";
  * ```typescript
  * // Simple mode (always matches)
  * const config = {
- *   mappings: [{ spec_type_id: "bug", workflow_id: "wf_123", conditions: [] }]
+ *   mappings: [{ spec_type_id: "bug", workflow_definition_id: "wf_123", conditions: [] }]
  * };
  * const result = mapPayloadToWorkflowRun(payload, config);
- * // => { mapping: { spec_type_id: "bug", workflow_id: "wf_123" }, debugInfo: { ... } }
+ * // => { mapping: { spec_type_id: "bug", workflow_definition_id: "wf_123" }, debugInfo: { ... } }
  *
  * // Conditional mode (first match wins)
  * const config = {
  *   mappings: [
- *     { spec_type_id: "bug", workflow_id: "wf_1", conditions: [{ path: "type", operator: "equals", value: "bug" }] },
- *     { spec_type_id: "feature", workflow_id: "wf_2", conditions: [{ path: "type", operator: "equals", value: "feature" }] }
+ *     { spec_type_id: "bug", workflow_definition_id: "wf_1", conditions: [{ path: "type", operator: "equals", value: "bug" }] },
+ *     { spec_type_id: "feature", workflow_definition_id: "wf_2", conditions: [{ path: "type", operator: "equals", value: "feature" }] }
  *   ],
  *   default_action: "set_fields",
- *   default_mapping: { spec_type_id: "other", workflow_id: "wf_default" }
+ *   default_mapping: { spec_type_id: "other", workflow_definition_id: "wf_default" }
  * };
  * const result = mapPayloadToWorkflowRun({ type: "bug" }, config);
- * // => { mapping: { spec_type_id: "bug", workflow_id: "wf_1" }, debugInfo: { ... } }
+ * // => { mapping: { spec_type_id: "bug", workflow_definition_id: "wf_1" }, debugInfo: { ... } }
  * ```
  */
 export function mapPayloadToWorkflowRun(
@@ -52,7 +52,7 @@ export function mapPayloadToWorkflowRun(
     if (group.conditions.length === 0) {
       const mapping: WebhookMappingFields = {
         spec_type_id: group.spec_type_id,
-        workflow_id: group.workflow_id,
+        workflow_definition_id: group.workflow_definition_id,
       };
 
       const debugInfo: MappedDataDebugInfo = {
@@ -69,7 +69,7 @@ export function mapPayloadToWorkflowRun(
     if (evaluateConditions(group.conditions, payload)) {
       const mapping: WebhookMappingFields = {
         spec_type_id: group.spec_type_id,
-        workflow_id: group.workflow_id,
+        workflow_definition_id: group.workflow_definition_id,
       };
 
       // Build matched conditions with payload values for debugging

@@ -19,8 +19,7 @@ import { webhookConfigSchema } from "../schemas/webhook.schemas";
  *   project_id: "proj_123",
  *   name: "Linear Issue Webhook",
  *   source: "linear",
- *   secret: "abc123...", // From Linear webhook settings
- *   workflow_identifier: "issue-workflow"
+ *   secret: "abc123..." // From Linear webhook settings
  * });
  * // => { id: "wh_abc", secret: "abc123...", status: "draft", ... }
  * ```
@@ -49,7 +48,6 @@ export async function createWebhook(
       source: data.source || "generic",
       status: "draft", // Always start in draft mode
       secret,
-      workflow_identifier: data.workflow_identifier,
       config: config as unknown as never,
     },
   });

@@ -10,9 +10,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/client/components/ui/select";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/client/components/ui/tooltip";
 import { ConditionEditor } from "./conditions/ConditionEditor";
 import { SpecTypeSelect } from "@/client/pages/projects/workflows/components/SpecTypeSelect";
 import { WorkflowDefinitionSelect } from "./WorkflowDefinitionSelect";
+import { cn } from "@/client/utils/cn";
 import type { WebhookFormData } from "../schemas/webhook.schemas";
 
 interface ConditionalMappingsBuilderProps {
@@ -35,7 +41,7 @@ export function ConditionalMappingsBuilder({
   const handleAddRule = () => {
     append({
       spec_type_id: "",
-      workflow_id: "",
+      workflow_definition_id: "",
       conditions: [
         {
           path: "",
@@ -47,7 +53,7 @@ export function ConditionalMappingsBuilder({
   };
 
   return (
-    <div className="space-y-4">
+    <div>
       {/* Conditional Mapping Groups */}
       {fields.map((field, index) => (
         <div key={field.id}>
@@ -55,11 +61,11 @@ export function ConditionalMappingsBuilder({
             <CardContent className="space-y-4">
               {/* Conditions Section */}
               <div className="space-y-2">
-                <FieldLabel className="text-sm mb-6 font-semibold">
+                {/* <FieldLabel className="text-sm mb-6 font-semibold">
                   {index === 0
                     ? "If these conditions match"
                     : "If these conditions match"}
-                </FieldLabel>
+                </FieldLabel> */}
                 <ConditionEditor
                   basePath={`config.mappings.${index}.conditions`}
                   testPayload={testPayload}
@@ -68,11 +74,11 @@ export function ConditionalMappingsBuilder({
               </div>
 
               {/* Then Set Section */}
-              <div className="space-y-4 p-4 bg-muted/30 rounded-lg">
-                <div className="text-sm font-medium text-muted-foreground">
-                  Then set these fields:
+              <div className="space-y-2">
+                <div className="text-sm mb-4 mt-6 font-semibold text-muted-foreground">
+                  THEN
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <div className="space-y-2">
                     <FieldLabel>Spec Type</FieldLabel>
                     <Controller
@@ -91,7 +97,7 @@ export function ConditionalMappingsBuilder({
                     <FieldLabel>Workflow</FieldLabel>
                     <Controller
                       control={control}
-                      name={`config.mappings.${index}.workflow_id`}
+                      name={`config.mappings.${index}.workflow_definition_id`}
                       render={({ field }) => (
                         <WorkflowDefinitionSelect
                           projectId={projectId}
@@ -105,16 +111,26 @@ export function ConditionalMappingsBuilder({
               </div>
 
               {/* Remove Rule Button */}
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => remove(index)}
-                className="text-destructive hover:text-destructive"
-              >
-                <X className="h-4 w-4 mr-2" />
-                Remove this rule
-              </Button>
+              <Tooltip open={index === 0 ? undefined : false}>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => remove(index)}
+                    disabled={index === 0}
+                    className={cn(
+                      index !== 0 && "text-destructive hover:text-destructive"
+                    )}
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Remove this rule
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>First rule cannot be removed</p>
+                </TooltipContent>
+              </Tooltip>
             </CardContent>
           </Card>
 
@@ -133,7 +149,7 @@ export function ConditionalMappingsBuilder({
         variant="outline"
         size="sm"
         onClick={handleAddRule}
-        className="w-full"
+        className="w-full mt-4"
       >
         <Plus className="h-4 w-4 mr-2" />
         Add another rule
@@ -141,22 +157,21 @@ export function ConditionalMappingsBuilder({
 
       {/* Separator before default section */}
       {fields.length > 0 && (
-        <div className="text-center py-2 text-sm text-muted-foreground border-t">
+        <div className="text-center py-6 text-sm text-muted-foreground border-t">
           if nothing matches then
         </div>
       )}
 
       {/* Default Action Section */}
       <Card>
-        <CardContent className="pt-4 space-y-4">
-          <div className="space-y-2">
-            <FieldLabel>Default Action</FieldLabel>
+        <CardContent className="space-y-4">
+          <div>
             <Controller
               control={control}
               name="config.default_action"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select action..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -196,7 +211,8 @@ export function ConditionalMappingsBuilder({
                           setValue("config.default_mapping", {
                             ...currentMapping,
                             spec_type_id: value,
-                            workflow_id: currentMapping?.workflow_id || "",
+                            workflow_definition_id:
+                              currentMapping?.workflow_definition_id || "",
                           });
                         }}
                       />
@@ -207,7 +223,7 @@ export function ConditionalMappingsBuilder({
                   <FieldLabel>Workflow</FieldLabel>
                   <Controller
                     control={control}
-                    name="config.default_mapping.workflow_id"
+                    name="config.default_mapping.workflow_definition_id"
                     render={({ field }) => (
                       <WorkflowDefinitionSelect
                         projectId={projectId}
@@ -220,7 +236,7 @@ export function ConditionalMappingsBuilder({
                           setValue("config.default_mapping", {
                             ...currentMapping,
                             spec_type_id: currentMapping?.spec_type_id || "",
-                            workflow_id: value,
+                            workflow_definition_id: value,
                           });
                         }}
                       />

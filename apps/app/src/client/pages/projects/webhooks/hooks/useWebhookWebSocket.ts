@@ -7,7 +7,6 @@ import {
   type WebhookWebSocketEvent,
   type WebhookEventReceivedData,
 } from "@/shared/types/websocket.types";
-import { toast } from "sonner";
 import { webhookKeys } from "./queryKeys";
 
 /**
@@ -39,13 +38,6 @@ export function useWebhookWebSocket(projectId: string, webhookId?: string) {
       queryClient.invalidateQueries({
         queryKey: webhookKeys.list(projectId),
       });
-
-      // Show toast for test events
-      if (data.event.status === "test") {
-        toast.success("Test event received!", {
-          description: "Form sections are now unlocked",
-        });
-      }
     },
     [queryClient, webhookId, projectId]
   );

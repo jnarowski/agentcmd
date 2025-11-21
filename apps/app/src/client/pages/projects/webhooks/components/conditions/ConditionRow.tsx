@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { Field, FieldError } from "@/client/components/ui/field";
 import { Combobox } from "@/client/components/ui/combobox";
 import { Button } from "@/client/components/ui/button";
+import { Input } from "@/client/components/ui/input";
 import type { WebhookFormData } from "../../schemas/webhook.schemas";
 import { TokenInput } from "../TokenInput";
 
@@ -26,7 +27,6 @@ const OPERATOR_OPTIONS = [
   { label: "Not Exists", value: "not_exists" },
   { label: "Greater Than", value: "greater_than" },
   { label: "Less Than", value: "less_than" },
-  { label: "Matches Regex", value: "matches_regex" },
 ];
 
 const VALUE_HIDDEN_OPERATORS = ["exists", "not_exists"];
@@ -85,13 +85,15 @@ export function ConditionRow({
   useEffect(() => {
     if (!testPayload || !path || !showValue) return;
 
-    const value = getValueFromPath(testPayload, path);
+    const value = getValueFromPath(testPayload, path as string);
     if (value !== undefined) {
       // Convert value to string for display
       const stringValue =
         typeof value === "string" ? value : JSON.stringify(value);
       // @ts-expect-error - Dynamic path validated at runtime
-      setValue(`${basePath}.${index}.value`, stringValue, { shouldDirty: true });
+      setValue(`${basePath}.${index}.value`, stringValue, {
+        shouldDirty: true,
+      });
     }
   }, [path, testPayload, basePath, index, setValue, showValue]);
 
@@ -112,14 +114,14 @@ export function ConditionRow({
   return (
     <div className="flex gap-2 items-start">
       {/* Label */}
-      <span className="text-sm font-medium text-muted-foreground mt-2 min-w-[2rem]">
+      <span className="text-sm font-medium text-muted-foreground mt-2 min-w-[2rem] text-center uppercase">
         {label}
       </span>
 
       {/* Condition Fields */}
       <div className="flex-1 flex flex-col gap-2 sm:grid sm:grid-cols-12 sm:items-start">
         {/* Path */}
-        <div className="sm:col-span-4">
+        <div className="sm:col-span-5">
           <Field>
             <Controller
               control={control}
@@ -130,7 +132,7 @@ export function ConditionRow({
                   value={field.value as string}
                   onChange={field.onChange}
                   testPayload={testPayload}
-                  placeholder="Field path or / to pick"
+                  placeholder="Search payload path"
                   disabled={disabled}
                 />
               )}
@@ -142,7 +144,7 @@ export function ConditionRow({
         </div>
 
         {/* Operator */}
-        <div className={showValue ? "sm:col-span-4" : "sm:col-span-8"}>
+        <div className={showValue ? "sm:col-span-2" : "sm:col-span-7"}>
           <Field>
             <Controller
               control={control}
@@ -166,18 +168,17 @@ export function ConditionRow({
 
         {/* Value (hidden for exists/not_exists) */}
         {showValue && (
-          <div className="sm:col-span-4">
+          <div className="sm:col-span-5">
             <Field>
               <Controller
                 control={control}
                 // @ts-expect-error - Dynamic path validated at runtime
                 name={`${basePath}.${index}.value`}
                 render={({ field }) => (
-                  <TokenInput
+                  <Input
                     value={field.value as string}
-                    onChange={field.onChange}
-                    testPayload={testPayload}
-                    placeholder="Value or / to pick"
+                    onChange={(e) => field.onChange(e.target.value)}
+                    placeholder="Enter value"
                     disabled={disabled}
                   />
                 )}
@@ -197,7 +198,9 @@ export function ConditionRow({
         size="sm"
         onClick={onRemove}
         disabled={disabled || !showRemove}
-        title={showRemove ? "Remove condition" : "First condition cannot be removed"}
+        title={
+          showRemove ? "Remove condition" : "First condition cannot be removed"
+        }
         className="mt-1"
       >
         <X className="h-4 w-4" />

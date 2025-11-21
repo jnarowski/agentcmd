@@ -88,7 +88,6 @@ export interface CreateWebhookData {
   description?: string;
   source?: "github" | "linear" | "jira" | "generic";
   secret?: string;
-  workflow_identifier?: string;
   config?: unknown; // Validated to WebhookConfig in createWebhook service
 }
 
@@ -100,7 +99,6 @@ export interface UpdateWebhookData {
   name?: string;
   description?: string;
   secret?: string;
-  workflow_identifier?: string;
   config?: unknown; // Validated to WebhookConfig in updateWebhook service
 }
 

@@ -94,14 +94,13 @@ describe("POST /api/projects/:projectId/webhooks", () => {
         name: "Linear Issue Webhook",
         description: "Creates tickets from Linear issues",
         source: "linear",
-        workflow_identifier: "issue-workflow",
         config: {
           name: "Issue {{issue.title}}",
           spec_content: "Create issue: {{issue.title}}",
           mappings: [
             {
               spec_type_id: "spec_123",
-              workflow_id: "wf_123",
+              workflow_definition_id: "wf_123",
               conditions: [], // Empty = simple mode
             },
           ],
@@ -604,47 +603,6 @@ describe("PATCH /api/webhooks/:webhookId", () => {
       where: { id: webhook.id },
     });
     expect(updated?.name).toBe("Updated Name");
-  });
-
-  it("should update workflow_identifier", async () => {
-    // Arrange
-    const { headers } = await createAuthenticatedUser(prisma, app, {
-      email: "test@example.com",
-    });
-
-    const project = await createTestProject(prisma, {
-      name: "Test Project",
-      path: "/tmp/test-project",
-    });
-
-    const webhook = await prisma.webhook.create({
-      data: {
-        project_id: project.id,
-        name: "Test Webhook",
-        source: "github",
-        secret: "test-secret",
-        status: "draft",
-        config: { field_mappings: [], source_config: {} },
-      },
-    });
-
-    // Act
-    const response = await app.inject({
-      method: "PATCH",
-      url: `/api/webhooks/${webhook.id}`,
-      headers,
-      payload: {
-        workflow_identifier: "my-workflow",
-      },
-    });
-
-    // Assert
-    expect(response.statusCode).toBe(200);
-
-    const updated = await prisma.webhook.findUnique({
-      where: { id: webhook.id },
-    });
-    expect(updated?.workflow_identifier).toBe("my-workflow");
   });
 
   it("should return 404 for non-existent webhook", async () => {

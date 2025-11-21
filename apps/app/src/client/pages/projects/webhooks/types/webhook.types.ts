@@ -82,7 +82,6 @@ export interface Webhook {
   webhook_url: string;
   secret: string;
   status: WebhookStatus;
-  workflow_identifier: string | null;
   config: WebhookConfig;
   last_triggered_at: Date | null;
   last_error: string | null;
@@ -122,7 +121,6 @@ export interface CreateWebhookFormData {
 export interface UpdateWebhookFormData {
   name: string;
   description?: string;
-  workflow_identifier?: string;
   config: WebhookConfig;
 }
 
