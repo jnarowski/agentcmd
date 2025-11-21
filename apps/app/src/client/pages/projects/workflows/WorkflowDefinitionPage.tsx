@@ -112,10 +112,10 @@ function WorkflowDefinitionPage() {
 
       {/* Kanban Board */}
       <div className="flex-1 overflow-x-auto">
-        <div className="flex gap-4 h-full md:min-w-0 min-w-max px-4 py-4">
+        <div className="flex flex-col xl:flex-row gap-4 h-full px-4 py-4">
             {/* Add "Not Started" column first */}
             {runsByPhase["Not Started"] && (
-              <div className="w-72 md:flex-1 md:min-w-0">
+              <div className="w-full xl:flex-1 xl:min-w-0">
                 <WorkflowPhaseKanbanColumn
                   phaseId="not-started"
                   phaseLabel="Not Started"
@@ -130,7 +130,7 @@ function WorkflowDefinitionPage() {
               const phaseId = getPhaseId(phase);
               const phaseLabel = getPhaseLabel(phase);
               return (
-                <div key={phaseId} className="w-72 md:flex-1 md:min-w-0">
+                <div key={phaseId} className="w-full xl:flex-1 xl:min-w-0">
                   <WorkflowPhaseKanbanColumn
                     phaseId={phaseId}
                     phaseLabel={phaseLabel}
