@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { WebhookEvent } from "../types/webhook.types";
+import { useWebhook } from "../hooks/useWebhook";
 import {
   Dialog,
   DialogContent,
@@ -14,13 +15,17 @@ import { Link } from "react-router-dom";
 
 interface EventDetailDialogProps {
   event: WebhookEvent;
+  webhookId: string;
   projectId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function EventDetailDialog({ event, projectId, open, onOpenChange }: EventDetailDialogProps) {
+export function EventDetailDialog({ event, webhookId, projectId, open, onOpenChange }: EventDetailDialogProps) {
   const [activeTab, setActiveTab] = useState("overview");
+
+  // Fetch webhook to get mapping conditions
+  const { data: webhook } = useWebhook(webhookId);
 
   const formatJson = (data: unknown) => {
     if (!data) return "null";
@@ -144,6 +149,46 @@ export function EventDetailDialog({ event, projectId, open, onOpenChange }: Even
                           {typeof value === 'object' ? JSON.stringify(value) : String(value)}
                         </div>
                       </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Mapping Conditions */}
+              {webhook?.config.mappings && webhook.config.mappings.some(m => m.conditions && m.conditions.length > 0) && (
+                <div className="border-t pt-4">
+                  <h4 className="text-sm font-medium mb-3">Mapping Conditions</h4>
+                  <div className="space-y-3">
+                    {webhook.config.mappings.map((mapping, idx) => (
+                      mapping.conditions && mapping.conditions.length > 0 ? (
+                        <div key={idx} className="bg-muted/30 rounded-lg p-3 space-y-2">
+                          {mapping.spec_type_id && (
+                            <div className="text-xs text-muted-foreground">
+                              Spec Type: <span className="font-mono">{mapping.spec_type_id}</span>
+                            </div>
+                          )}
+                          <div className="space-y-1.5">
+                            {mapping.conditions.map((condition, condIdx) => (
+                              <div
+                                key={condIdx}
+                                className="text-xs bg-background px-2 py-1.5 rounded border flex items-center gap-2"
+                              >
+                                <span className="font-mono text-blue-600">
+                                  {condition.path}
+                                </span>
+                                <span className="text-muted-foreground">
+                                  {condition.operator}
+                                </span>
+                                <span className="font-mono">
+                                  {typeof condition.value === "string"
+                                    ? `"${condition.value}"`
+                                    : JSON.stringify(condition.value)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null
                     ))}
                   </div>
                 </div>

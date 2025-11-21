@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Edit, Trash2, Play, Pause, ChevronRight } from "lucide-react";
+import { Edit, Trash2, Play, Pause, ChevronRight, Copy, Check, Eye, EyeOff } from "lucide-react";
 import { useWebhook } from "./hooks/useWebhook";
 import { useWebhookMutations } from "./hooks/useWebhookMutations";
 import { useWebhookWebSocket } from "./hooks/useWebhookWebSocket";
 import { WebhookStatusBadge } from "./components/WebhookStatusBadge";
-import { SecretDisplay } from "./components/SecretDisplay";
 import { EventHistory } from "./components/EventHistory";
 import { DeleteWebhookDialog } from "./components/DeleteWebhookDialog";
 import { Button } from "@/client/components/ui/button";
@@ -27,6 +26,9 @@ export default function WebhookDetailPage() {
   }>();
   const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [urlCopied, setUrlCopied] = useState(false);
+  const [secretCopied, setSecretCopied] = useState(false);
+  const [secretRevealed, setSecretRevealed] = useState(false);
 
   if (!projectId || !webhookId) {
     throw new Error("Missing projectId or webhookId");
@@ -83,6 +85,21 @@ export default function WebhookDetailPage() {
 
   const handleDelete = () => {
     setDeleteDialogOpen(true);
+  };
+
+  const handleCopyUrl = async () => {
+    if (!webhook) return;
+    const webhookUrl = `${window.location.origin}/api/webhooks/${webhook.id}/events`;
+    await navigator.clipboard.writeText(webhookUrl);
+    setUrlCopied(true);
+    setTimeout(() => setUrlCopied(false), 2000);
+  };
+
+  const handleCopySecret = async () => {
+    if (!webhook) return;
+    await navigator.clipboard.writeText(webhook.secret);
+    setSecretCopied(true);
+    setTimeout(() => setSecretCopied(false), 2000);
   };
 
   if (isLoading) {
@@ -205,27 +222,60 @@ export default function WebhookDetailPage() {
             <div className="text-sm font-medium text-muted-foreground mb-2">
               Webhook URL
             </div>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                readOnly
-                value={webhook.webhook_url}
-                className="flex-1 px-3 py-2 border rounded-md bg-muted/50 text-sm font-mono text-foreground"
-              />
+            <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-md border group">
+              <code className="flex-1 text-sm font-mono text-foreground select-all break-all">
+                {`${window.location.origin}/api/webhooks/${webhook.id}/events`}
+              </code>
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  navigator.clipboard.writeText(webhook.webhook_url);
-                }}
+                variant="ghost"
+                size="icon-sm"
+                onClick={handleCopyUrl}
+                className="shrink-0"
               >
-                Copy
+                {urlCopied ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
               </Button>
             </div>
           </div>
 
           {/* Secret */}
-          <SecretDisplay secret={webhook.secret} />
+          <div>
+            <div className="text-sm font-medium text-muted-foreground mb-2">
+              Webhook Secret
+            </div>
+            <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-md border group">
+              <code className="flex-1 text-sm font-mono text-foreground select-all">
+                {secretRevealed ? webhook.secret : "•".repeat(32)}
+              </code>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => setSecretRevealed(!secretRevealed)}
+                className="shrink-0"
+              >
+                {secretRevealed ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={handleCopySecret}
+                className="shrink-0"
+              >
+                {secretCopied ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </div>
 
           {/* Mappings */}
           {webhook.config.mappings && webhook.config.mappings.length > 0 && (
@@ -235,10 +285,8 @@ export default function WebhookDetailPage() {
               </div>
               <div className="space-y-3">
                 {webhook.config.mappings.map((mapping, idx) => (
-                  <div
-                    key={idx}
-                    className="border rounded-lg p-4 bg-muted/30 hover:bg-muted/50 transition-colors"
-                  >
+                  <div key={idx}>
+                    <div className="border rounded-lg p-4">
                     <div className="space-y-3">
                       {/* Mapping Fields */}
                       <div className="grid grid-cols-2 gap-3">
@@ -247,7 +295,7 @@ export default function WebhookDetailPage() {
                             <div className="text-xs font-medium text-muted-foreground mb-1">
                               Spec Type
                             </div>
-                            <div className="text-sm bg-background px-3 py-2 rounded border">
+                            <div className="text-sm px-3 py-2 rounded border">
                               <div className="font-medium">
                                 {getSpecTypeName(mapping.spec_type_id)}
                               </div>
@@ -262,7 +310,7 @@ export default function WebhookDetailPage() {
                             <div className="text-xs font-medium text-muted-foreground mb-1">
                               Workflow
                             </div>
-                            <div className="text-sm bg-background px-3 py-2 rounded border">
+                            <div className="text-sm px-3 py-2 rounded border">
                               <div className="font-medium">
                                 {getWorkflowName(mapping.workflow_definition_id)}
                               </div>
@@ -284,7 +332,7 @@ export default function WebhookDetailPage() {
                             {mapping.conditions.map((condition, condIdx) => (
                               <div
                                 key={condIdx}
-                                className="text-xs bg-background px-2 py-1.5 rounded border flex items-center gap-2"
+                                className="text-xs px-2 py-1.5 rounded border flex items-center gap-2"
                               >
                                 <span className="font-mono text-blue-600">
                                   {condition.path}
@@ -303,6 +351,14 @@ export default function WebhookDetailPage() {
                         </div>
                       )}
                     </div>
+                    </div>
+
+                    {/* Separator between mappings */}
+                    {idx < webhook.config.mappings.length - 1 && (
+                      <div className="text-center py-4 text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                        If that doesn't match, then
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

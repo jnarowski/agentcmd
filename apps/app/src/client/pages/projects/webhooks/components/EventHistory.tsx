@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AlertCircle, CheckCircle, XCircle, Filter, ChevronLeft, ChevronRight } from "lucide-react";
+import { AlertCircle, CheckCircle, XCircle, Filter, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { useWebhookEvents } from "../hooks/useWebhookEvents";
 import type { WebhookEventStatus, WebhookEvent } from "../types/webhook.types";
 import { Badge } from "@/client/components/ui/badge";
@@ -112,13 +112,19 @@ export function EventHistory({ webhookId, projectId }: EventHistoryProps) {
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <StatusIcon className={`w-4 h-4 flex-shrink-0 ${statusConfig.text}`} />
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <Badge
                               variant="secondary"
                               className={`${statusConfig.bg} ${statusConfig.text} border-0`}
                             >
                               {event.status}
                             </Badge>
+                            {event.workflow_run_id && (
+                              <Badge variant="outline" className="text-xs flex items-center gap-1">
+                                <Play className="w-3 h-3" />
+                                Workflow Run
+                              </Badge>
+                            )}
                             <span className="text-xs text-gray-500 truncate">
                               {formatDate(event.created_at)}
                             </span>
@@ -171,6 +177,7 @@ export function EventHistory({ webhookId, projectId }: EventHistoryProps) {
       {selectedEvent && (
         <EventDetailDialog
           event={selectedEvent}
+          webhookId={webhookId}
           projectId={projectId}
           open={!!selectedEvent}
           onOpenChange={(open) => !open && setSelectedEvent(null)}

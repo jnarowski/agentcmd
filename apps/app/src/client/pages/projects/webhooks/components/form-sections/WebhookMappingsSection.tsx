@@ -196,7 +196,7 @@ export function WebhookMappingsSection({
 
       {/* Simple Mode - Show Selects */}
       {isSimpleMode && (
-        <div className="space-y-4 p-4 bg-muted/30 rounded-lg border">
+        <div className="space-y-4">
           <div className="space-y-2">
             <FieldLabel>Spec Type</FieldLabel>
             <div className="max-w-lg">

@@ -53,6 +53,7 @@ export function useWebhookMutations(projectId: string) {
       queryClient.invalidateQueries({ queryKey: webhookKeys.detail(webhook.id) });
       queryClient.invalidateQueries({ queryKey: webhookKeys.list(webhook.project_id) });
       toast.success("Webhook updated");
+      navigate(`/projects/${webhook.project_id}/webhooks/${webhook.id}`);
     },
     onError: (error: Error) => {
       toast.error("Failed to update webhook", {

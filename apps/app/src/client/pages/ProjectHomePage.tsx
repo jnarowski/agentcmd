@@ -8,6 +8,8 @@ import {
 import { ProjectOnboardingSuggestions } from "@/client/pages/projects/components/ProjectOnboardingSuggestions";
 import { ProjectHomeSpecs } from "@/client/pages/projects/components/ProjectHomeSpecs";
 import { ProjectReadme } from "@/client/pages/projects/components/ProjectReadme";
+import { ProjectWebhooks } from "@/client/pages/projects/components/ProjectWebhooks";
+import { ProjectWorkflows } from "@/client/pages/projects/components/ProjectWorkflows";
 import { ProjectDialog } from "@/client/pages/projects/components/ProjectDialog";
 import { Skeleton } from "@/client/components/ui/skeleton";
 import { Button } from "@/client/components/ui/button";
@@ -131,6 +133,12 @@ export default function ProjectHomePage() {
 
       {/* Specs */}
       <ProjectHomeSpecs projectId={id!} />
+
+      {/* Webhooks */}
+      <ProjectWebhooks projectId={id!} />
+
+      {/* Workflows */}
+      <ProjectWorkflows projectId={id!} />
 
       {/* README Section */}
       <ProjectReadme project={project} />
