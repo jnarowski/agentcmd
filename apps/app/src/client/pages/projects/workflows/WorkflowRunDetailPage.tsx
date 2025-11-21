@@ -19,7 +19,15 @@ function WorkflowRunDetailPage() {
   const navigate = useNavigate();
 
   // Detail panel state
-  const { activeTab, setActiveTab, selectedSessionId, setSelectedSession, selectedStepId, setSelectedStep, clearSelection } = useWorkflowDetailPanel();
+  const {
+    activeTab,
+    setActiveTab,
+    selectedSessionId,
+    setSelectedSession,
+    selectedStepId,
+    setSelectedStep,
+    clearSelection,
+  } = useWorkflowDetailPanel();
 
   // Fetch data
   const {
@@ -94,7 +102,7 @@ function WorkflowRunDetailPage() {
         afterTitle={
           <>
             <WorkflowStatusBadge status={run.status} />
-            {run.triggered_by === 'webhook' && (
+            {run.triggered_by === "webhook" && (
               <span className="inline-flex items-center gap-1.5 rounded-md bg-purple-500/10 px-2 py-1 text-xs font-medium text-purple-500 border border-purple-500/20">
                 Webhook
               </span>
@@ -107,7 +115,7 @@ function WorkflowRunDetailPage() {
                 className="inline-flex items-center gap-1.5 text-sm text-blue-500 hover:text-blue-600"
                 title={run.issue_id || undefined}
               >
-                {run.issue_id || 'View Issue'}
+                {run.issue_id || "View Issue"}
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
             )}
@@ -126,34 +134,18 @@ function WorkflowRunDetailPage() {
             )}
           </>
         }
-        actions={
-          <>
-            <button
-              onClick={() =>
-                navigate(`/projects/${projectId}/workflows/${definitionId}`)
-              }
-              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </button>
-            <button
-              onClick={() => navigate(`/projects/${projectId}/workflows/${definitionId}/new`)}
-              className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-            >
-              <Plus className="h-4 w-4" />
-              New Run
-            </button>
-          </>
-        }
         alerts={
           run.status === "failed" && run.error_message ? (
             <div className="rounded-md bg-red-500/10 border border-red-500/20 px-4 py-3">
               <div className="flex items-start gap-3">
                 <XCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-medium text-red-500">Workflow Failed</h3>
-                  <p className="mt-1 text-sm text-red-500/90">{run.error_message}</p>
+                  <h3 className="text-sm font-medium text-red-500">
+                    Workflow Failed
+                  </h3>
+                  <p className="mt-1 text-sm text-red-500/90">
+                    {run.error_message}
+                  </p>
                 </div>
               </div>
             </div>

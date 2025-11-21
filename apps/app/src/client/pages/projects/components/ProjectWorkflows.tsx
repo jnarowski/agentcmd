@@ -5,7 +5,12 @@ import {
   CardTitle,
   CardContent,
 } from "@/client/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/client/components/ui/tabs";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@/client/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { Workflow, Plus, Settings, Play } from "lucide-react";
 import { useWorkflowRuns } from "@/client/pages/projects/workflows/hooks/useWorkflowRuns";
@@ -25,8 +30,10 @@ interface ProjectWorkflowsProps {
 export function ProjectWorkflows({ projectId }: ProjectWorkflowsProps) {
   const navigate = useNavigate();
   const { data: runs, isLoading: isLoadingRuns } = useWorkflowRuns(projectId);
-  const { data: definitions, isLoading: isLoadingDefs } = useWorkflowDefinitions(projectId, "active");
-  const { data: webhooks, isLoading: isLoadingWebhooks } = useWebhooks(projectId);
+  const { data: definitions, isLoading: isLoadingDefs } =
+    useWorkflowDefinitions(projectId, "active");
+  const { data: webhooks, isLoading: isLoadingWebhooks } =
+    useWebhooks(projectId);
 
   const isLoading = isLoadingRuns || isLoadingDefs || isLoadingWebhooks;
 
@@ -42,7 +49,10 @@ export function ProjectWorkflows({ projectId }: ProjectWorkflowsProps) {
     navigate(`/projects/${projectId}/workflows/manage`);
   };
 
-  const handleRunClick = (run: { id: string; workflow_definition_id: string }) => {
+  const handleRunClick = (run: {
+    id: string;
+    workflow_definition_id: string;
+  }) => {
     navigate(
       `/projects/${projectId}/workflows/${run.workflow_definition_id}/runs/${run.id}`
     );
@@ -121,7 +131,9 @@ export function ProjectWorkflows({ projectId }: ProjectWorkflowsProps) {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-lg font-semibold">No workflow runs yet</h3>
+                  <h3 className="text-lg font-semibold">
+                    No workflow runs yet
+                  </h3>
                   <p className="text-sm text-muted-foreground max-w-md mx-auto">
                     Execute workflows to automate tasks with AI agents
                   </p>
@@ -208,7 +220,9 @@ export function ProjectWorkflows({ projectId }: ProjectWorkflowsProps) {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-lg font-semibold">No workflows configured</h3>
+                  <h3 className="text-lg font-semibold">
+                    No workflows configured
+                  </h3>
                   <p className="text-sm text-muted-foreground max-w-md mx-auto">
                     Set up workflow definitions to automate your tasks
                   </p>
@@ -234,7 +248,7 @@ export function ProjectWorkflows({ projectId }: ProjectWorkflowsProps) {
                 onClick={handleNewWebhook}
               >
                 <Plus className="size-4" />
-                New Webhook
+                New Webhook Trigger
               </Button>
             </div>
             {recentWebhooks.length > 0 ? (
@@ -257,7 +271,8 @@ export function ProjectWorkflows({ projectId }: ProjectWorkflowsProps) {
                 <div className="space-y-2">
                   <h3 className="text-lg font-semibold">No webhooks yet</h3>
                   <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                    Configure webhooks to trigger workflows from external services
+                    Configure webhooks to trigger workflows from external
+                    services
                   </p>
                 </div>
                 <Button onClick={handleNewWebhook} className="gap-2">

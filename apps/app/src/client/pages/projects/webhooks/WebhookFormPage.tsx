@@ -60,8 +60,7 @@ export default function WebhookFormPage() {
   const { data: webhook, isLoading: isLoadingWebhook } = useWebhook(webhookId);
   const { data: testEvent, isLoading: isLoadingTestEvent } =
     useRecentTestEvent(webhookId);
-  const { createMutation, updateMutation } =
-    useWebhookMutations(projectId!);
+  const { createMutation, updateMutation } = useWebhookMutations(projectId!);
 
   // WebSocket for real-time updates (only in edit mode)
   useWebhookWebSocket(projectId!, webhookId);
@@ -158,7 +157,9 @@ export default function WebhookFormPage() {
           <h1 className="text-2xl font-semibold">Webhook not found</h1>
           <Button
             className="mt-4"
-            onClick={() => navigate(`/projects/${projectId}/workflows/triggers`)}
+            onClick={() =>
+              navigate(`/projects/${projectId}/workflows/triggers`)
+            }
           >
             Back to Webhooks
           </Button>
@@ -177,12 +178,17 @@ export default function WebhookFormPage() {
           breadcrumbs={[
             { label: "Project", href: `/projects/${projectId}` },
             { label: "Workflows", href: `/projects/${projectId}/workflows` },
-            { label: "Triggers", href: `/projects/${projectId}/workflows/triggers` },
+            {
+              label: "Triggers",
+              href: `/projects/${projectId}/workflows/triggers`,
+            },
             {
               label: isCreateMode ? "Create" : webhook?.name || "Edit",
             },
           ]}
-          title={isCreateMode ? "Create Webhook" : "Configure Webhook"}
+          title={
+            isCreateMode ? "New Webhook Trigger" : "Configure Webhook Trigger"
+          }
           description={
             !isCreateMode && webhook
               ? `${webhook.name} - ${webhook.status}`
@@ -191,75 +197,78 @@ export default function WebhookFormPage() {
         />
 
         <div className="flex-1 overflow-auto px-6 py-4 space-y-6">
-
-        {/* Form */}
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Single Card with All Sections */}
-          <div className="space-y-6 p-4 sm:p-6 bg-card rounded-lg border">
-            {/* Basic Info Section - Always visible */}
-            <div className="space-y-4">
-              <WebhookBasicInfoSection
-                control={form.control}
-                webhookUrl={isCreateMode ? "" : webhookUrl}
-                webhookSecret={isCreateMode ? "" : webhook!.secret}
-                currentSource={isCreateMode ? "generic" : webhook!.source}
-                isEditMode={!isCreateMode}
-              />
-            </div>
-
-            {/* Locked sections until test event */}
-            {!isCreateMode && !hasTestEvent && (
-              <div className="pt-6 border-t">
-                <div className="text-center py-8">
-                  <p className="text-sm font-medium">Waiting for test event</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Send a test webhook to unlock configuration sections
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Unlocked sections after test event */}
-            {!isCreateMode && hasTestEvent && (
-              <div className="space-y-6 pt-6 border-t">
-                <WebhookMappingsSection
-                  testPayload={
-                    (testEvent?.payload as Record<string, unknown>) || null
-                  }
-                  locked={false}
+          {/* Form */}
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Single Card with All Sections */}
+            <div className="space-y-6 p-4 sm:p-6 bg-card rounded-lg border">
+              {/* Basic Info Section - Always visible */}
+              <div className="space-y-4">
+                <WebhookBasicInfoSection
+                  control={form.control}
+                  webhookUrl={isCreateMode ? "" : webhookUrl}
+                  webhookSecret={isCreateMode ? "" : webhook!.secret}
+                  currentSource={isCreateMode ? "generic" : webhook!.source}
+                  isEditMode={!isCreateMode}
                 />
               </div>
-            )}
-          </div>
 
-          {/* Actions */}
-          <div className="flex justify-between">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate(`/projects/${projectId}/workflows/triggers`)}
-            >
-              Cancel
-            </Button>
-
-            <Button
-              type="submit"
-              disabled={
-                (isCreateMode ? false : !isDirty) ||
-                (isCreateMode
-                  ? createMutation.isPending
-                  : updateMutation.isPending)
-              }
-            >
-              {(isCreateMode
-                ? createMutation.isPending
-                : updateMutation.isPending) && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {/* Locked sections until test event */}
+              {!isCreateMode && !hasTestEvent && (
+                <div className="pt-6 border-t">
+                  <div className="text-center py-8">
+                    <p className="text-sm font-medium">
+                      Waiting for test event
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Send a test webhook to unlock configuration sections
+                    </p>
+                  </div>
+                </div>
               )}
-              {isCreateMode ? "Create" : "Save"}
-            </Button>
-          </div>
-        </form>
+
+              {/* Unlocked sections after test event */}
+              {!isCreateMode && hasTestEvent && (
+                <div className="space-y-6 pt-6 border-t">
+                  <WebhookMappingsSection
+                    testPayload={
+                      (testEvent?.payload as Record<string, unknown>) || null
+                    }
+                    locked={false}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  navigate(`/projects/${projectId}/workflows/triggers`)
+                }
+              >
+                Cancel
+              </Button>
+
+              <Button
+                type="submit"
+                disabled={
+                  (isCreateMode ? false : !isDirty) ||
+                  (isCreateMode
+                    ? createMutation.isPending
+                    : updateMutation.isPending)
+                }
+              >
+                {(isCreateMode
+                  ? createMutation.isPending
+                  : updateMutation.isPending) && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {isCreateMode ? "Create" : "Save"}
+              </Button>
+            </div>
+          </form>
         </div>
       </div>
     </FormProvider>

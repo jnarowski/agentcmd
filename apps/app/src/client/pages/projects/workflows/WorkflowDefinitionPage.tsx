@@ -8,6 +8,7 @@ import { useWorkflowRuns } from "./hooks/useWorkflowRuns";
 import { useWorkflowWebSocket } from "./hooks/useWorkflowWebSocket";
 import { getPhaseId, getPhaseLabel } from "@/shared/utils/phase.utils";
 import { PageHeader } from "@/client/components/PageHeader";
+import { Button } from "@/client/components/ui/button";
 
 function WorkflowDefinitionPage() {
   const { projectId, definitionId } = useParams<{
@@ -96,16 +97,16 @@ function WorkflowDefinitionPage() {
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <button
+            <Button
               onClick={() =>
                 navigate(`/projects/${projectId}/workflows/${definitionId}/new`)
               }
-              className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-primary-foreground hover:bg-primary/90 w-full sm:w-auto"
+              variant="outline"
+              className="flex-1 md:flex-none"
             >
               <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">New Run</span>
-              <span className="sm:hidden">New Run</span>
-            </button>
+              New Run
+            </Button>
           </>
         }
       />

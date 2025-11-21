@@ -46,7 +46,7 @@ export default function ProjectWebhooksPage() {
             className="flex-1 md:flex-none"
           >
             <Plus className="h-4 w-4" />
-            New
+            New Webhook Trigger
           </Button>
         }
         belowHeader={<WorkflowTabs />}
@@ -68,7 +68,7 @@ export default function ProjectWebhooksPage() {
               </p>
               <Button onClick={handleCreateWebhook} variant="outline">
                 <Plus className="h-4 w-4" />
-                New Webhook
+                New Webhook Trigger
               </Button>
             </div>
           </div>

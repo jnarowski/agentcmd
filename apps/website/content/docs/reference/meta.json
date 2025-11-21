@@ -4,6 +4,7 @@
     "cli",
     "configuration",
     "slash-commands",
+    "webhooks",
     "workflow-steps"
   ]
 }

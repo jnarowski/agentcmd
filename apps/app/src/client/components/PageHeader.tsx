@@ -78,7 +78,7 @@ export function PageHeader({
 
       {/* Header */}
       <div className={cn("border-b bg-background px-4 py-4", className)}>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4">
           {/* Title and description */}
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-xl md:text-2xl font-bold">{title}</h1>

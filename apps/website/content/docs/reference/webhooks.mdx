@@ -8,7 +8,7 @@ import { Callout } from "fumadocs-ui/components/callout";
 Complete technical reference for webhook triggers, including configuration schemas, API endpoints, and source-specific implementations.
 
 <Callout type="info">
-  Looking for a high-level overview? See [Triggers](/docs/concepts/workflows/triggers) in the concepts guide.
+  Looking for a high-level overview? See [Workflow Triggers](/docs/concepts/workflows/workflow-triggers) in the concepts guide.
 </Callout>
 
 ## Configuration
@@ -104,8 +104,8 @@ interface Condition {
 | `not_equals` | Not equal | `{ path: "state", operator: "not_equals", value: "draft" }` |
 | `contains` | String/array contains | `{ path: "labels", operator: "contains", value: "bug" }` |
 | `not_contains` | Does not contain | `{ path: "title", operator: "not_contains", value: "WIP" }` |
-| `greater_than` | Numeric > | `{ path: "pull_request.changed_files", operator: "greater_than", value: 5 }` |
-| `less_than` | Numeric < | `{ path: "issue.priority", operator: "less_than", value: 3 }` |
+| `greater_than` | Numeric greater than | `{ path: "pull_request.changed_files", operator: "greater_than", value: 5 }` |
+| `less_than` | Numeric less than | `{ path: "issue.priority", operator: "less_than", value: 3 }` |
 | `exists` | Field is present | `{ path: "assignee", operator: "exists", value: true }` |
 | `not_exists` | Field is absent | `{ path: "milestone", operator: "not_exists", value: true }` |
 
@@ -814,6 +814,6 @@ Public webhook endpoint always returns `200 OK`, even on errors:
 
 ## Next Steps
 
-- [Triggers Concept Guide](/docs/concepts/workflows/triggers) - High-level overview
+- [Workflow Triggers](/docs/concepts/workflows/workflow-triggers) - High-level overview
 - [Workflow Runs](/docs/concepts/workflows/workflow-runs) - Learn about execution
 - [Configuration Reference](/docs/reference/configuration) - Environment variables

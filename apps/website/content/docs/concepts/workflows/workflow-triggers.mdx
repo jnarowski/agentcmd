@@ -1,5 +1,5 @@
 ---
-title: Triggers
+title: Workflow Triggers
 description: Automate workflow runs with webhook-based triggers
 ---
 
@@ -99,88 +99,71 @@ Trigger workflows from any webhook source:
 
 ## Mapping Modes
 
-Triggers use **mappings** to determine which workflow to run and how to configure it.
+Configure which workflow runs based on the incoming webhook event.
 
 ### Simple Mode
 
-One mapping with no conditions - always executes the same workflow:
+Always runs the same workflow for every event.
 
-```typescript
-{
-  name: "Build PR #{{pull_request.number}}",
-  spec_content: "{{pull_request.title}}",
-  mappings: [
-    {
-      conditions: [],  // Empty = always match
-      spec_type_id: "feature",
-      workflow_definition_id: "wf_abc123"
-    }
-  ]
-}
-```
+**In the UI:**
+1. Select spec type (feature, bug, issue)
+2. Select workflow definition
+3. No conditions needed
 
-**Use when**: Single workflow handles all events
+**Use when**: Single workflow handles all events (e.g., all PRs run the same workflow)
 
 ### Conditional Mode
 
-Multiple mappings with conditions - first match wins:
+Route different events to different workflows based on conditions.
 
-```typescript
-{
-  name: "Route by action",
-  mappings: [
-    {
-      conditions: [
-        { path: "action", operator: "equals", value: "opened" }
-      ],
-      spec_type_id: "feature",
-      workflow_definition_id: "wf_feature"
-    },
-    {
-      conditions: [
-        { path: "action", operator: "equals", value: "closed" }
-      ],
-      spec_type_id: "cleanup",
-      workflow_definition_id: "wf_cleanup"
-    }
-  ],
-  default_action: "skip"  // or "set_fields"
-}
-```
+**In the UI:**
+1. Add multiple mapping groups
+2. Set conditions for each group (e.g., "if action equals opened")
+3. System checks conditions top-to-bottom, first match wins
+4. Configure default behavior if nothing matches:
+   - **Skip** - Don't create workflow run
+   - **Set fields** - Use default workflow/spec type
 
-**Use when**: Different events need different workflows
+**Example:**
+- First group: If PR opened → run review workflow
+- Second group: If PR closed → run cleanup workflow
+- Default: Skip other events
 
-**Conditional operators:**
-- `equals`, `not_equals` - Exact match
-- `contains`, `not_contains` - String/array contains
-- `greater_than`, `less_than` - Numeric comparison
-- `exists`, `not_exists` - Field presence
+**Available condition operators:**
+- Equals / Not equals
+- Contains / Not contains
+- Greater than / Less than
+- Exists / Not exists
 
-## Template Syntax
+## Dynamic Fields
 
-Use `{{path.to.value}}` to inject webhook payload data:
+Use placeholder syntax to pull data from webhook events into your workflow runs.
 
-```typescript
-{
-  name: "Build PR #{{pull_request.number}}",
-  spec_content: "{{pull_request.title}}\n\n{{pull_request.body}}"
-}
-```
+**In the UI:**
 
-**GitHub payload:**
-```json
-{
-  "pull_request": {
-    "number": 123,
-    "title": "Add feature X",
-    "body": "Implements feature X with tests"
-  }
-}
-```
+When configuring workflow run name or spec content, use `{{field.name}}` to insert values from the webhook:
 
-**Result:**
-- Workflow run name: `"Build PR #123"`
-- Spec content: `"Add feature X\n\nImplements feature X with tests"`
+- **Workflow run name**: `Build PR #{{pull_request.number}}`
+- **Spec content**: `{{pull_request.title}}\n\n{{pull_request.body}}`
+
+**Example:**
+
+When GitHub sends a PR event with number 123, title "Add feature X", the system creates:
+- Workflow run named: **"Build PR #123"**
+- Spec content containing: **"Add feature X"** plus the PR description
+
+**Common placeholders:**
+
+| Source | Field | Example |
+|--------|-------|---------|
+| GitHub | `{{pull_request.number}}` | `123` |
+| GitHub | `{{pull_request.title}}` | `"Add feature X"` |
+| Linear | `{{data.identifier}}` | `"PLT-1084"` |
+| Linear | `{{data.title}}` | `"Implement feature"` |
+| Jira | `{{issue.key}}` | `"PROJ-456"` |
+| Jira | `{{issue.fields.summary}}` | `"Bug fix"` |
+
+The UI shows placeholder suggestions as you type in supported fields.
 
 ## Setup Guide
 
