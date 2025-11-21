@@ -122,6 +122,14 @@
       "status": "completed",
       "created": "2025-11-20T06:30:00Z",
       "updated": "2025-11-20T15:36:00Z"
+    },
+    "2511211229": {
+      "folder": "2511211229-fixed-layout-skeleton",
+      "path": "todo/2511211229-fixed-layout-skeleton/spec.md",
+      "spec_type": "issue",
+      "status": "draft",
+      "created": "2025-11-21T19:30:40Z",
+      "updated": "2025-11-21T19:30:40Z"
     }
   }
 }

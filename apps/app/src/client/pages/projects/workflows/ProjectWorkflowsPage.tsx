@@ -122,6 +122,17 @@ function ProjectWorkflowsPage({
         belowHeader={<WorkflowTabs />}
       />
 
+      {/* Search - Dashboard Filter */}
+      {!isLoading && (
+        <div className="hidden md:block">
+          <SearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Search workflows..."
+          />
+        </div>
+      )}
+
       {/* Kanban Board */}
       <div className="flex-1 overflow-x-auto">
         {isLoading ? (
@@ -129,31 +140,21 @@ function ProjectWorkflowsPage({
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
         ) : (
-          <div className="flex flex-col h-full">
-            {/* Search - Dashboard Filter */}
-            <SearchBar
-              value={search}
-              onChange={setSearch}
-              placeholder="Search workflows..."
-            />
-
-            {/* Kanban Columns */}
-            <div className="flex gap-4 flex-1 md:min-w-0 min-w-max px-4 py-4">
-              {[
-                WorkflowStatusValues.PENDING,
-                WorkflowStatusValues.RUNNING,
-                WorkflowStatusValues.COMPLETED,
-                WorkflowStatusValues.FAILED,
-              ].map((status) => (
-                <div key={status} className="w-72 md:flex-1 md:min-w-0">
-                  <WorkflowKanbanColumn
-                    status={status}
-                    runs={runsByStatus[status] || []}
-                    onExecutionClick={handleExecutionClick}
-                  />
-                </div>
-              ))}
-            </div>
+          <div className="flex gap-4 h-full md:min-w-0 min-w-max px-4 py-4">
+            {[
+              WorkflowStatusValues.PENDING,
+              WorkflowStatusValues.RUNNING,
+              WorkflowStatusValues.COMPLETED,
+              WorkflowStatusValues.FAILED,
+            ].map((status) => (
+              <div key={status} className="w-72 md:flex-1 md:min-w-0">
+                <WorkflowKanbanColumn
+                  status={status}
+                  runs={runsByStatus[status] || []}
+                  onExecutionClick={handleExecutionClick}
+                />
+              </div>
+            ))}
           </div>
         )}
       </div>

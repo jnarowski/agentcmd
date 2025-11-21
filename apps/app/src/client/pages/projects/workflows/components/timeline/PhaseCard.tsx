@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Loader2, Clock } from "lucide-react";
 import { StepRow } from "./StepRow";
 import { ArtifactRow } from "./ArtifactRow";
 import { EventRow } from "./EventRow";
@@ -174,7 +174,7 @@ export function PhaseCard({
   const statusColor = {
     pending: "bg-gray-500",
     running: "bg-blue-500",
-    completed: "bg-green-500",
+    completed: "bg-primary",
     failed: "bg-red-500",
   }[metadata.status];
 
@@ -197,53 +197,70 @@ export function PhaseCard({
   // Detect system phases (check phaseId, not phaseName)
   const isSystemPhase = phaseId.startsWith("_system_");
 
+  // Strip "System " prefix from system phase names for cleaner display
+  const displayName =
+    isSystemPhase && phaseName.startsWith("System ")
+      ? phaseName.substring(7)
+      : phaseName;
+
   return (
     <div className="border-b bg-card">
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className={`w-full flex items-center justify-between py-5 px-4 transition-colors border-l-2 ${
+        className={`w-full flex flex-col md:flex-row md:items-center md:justify-between py-4 md:py-5 px-4 transition-colors border-l-2 gap-3 md:gap-0 ${
           isSystemPhase
             ? "bg-muted/30 hover:bg-muted/50 border-muted-foreground/20"
             : "bg-background hover:bg-muted/80 border-primary/20"
         }`}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
           {isExpanded ? (
-            <ChevronDown className="h-5 w-5 text-muted-foreground" />
+            <ChevronDown className="h-5 w-5 text-muted-foreground flex-shrink-0" />
           ) : (
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
           )}
 
-          <h3
-            className={`text-xl font-bold ${
-              isSystemPhase ? "text-muted-foreground" : ""
-            }`}
-          >
-            {phaseName}
-          </h3>
+          <div className="flex items-center gap-2 flex-wrap min-w-0 flex-1">
+            <div className="flex flex-col gap-0.5">
+              <h3
+                className={`text-lg md:text-xl font-bold ${
+                  isSystemPhase ? "text-muted-foreground" : ""
+                }`}
+              >
+                {displayName}
+              </h3>
 
-          {isSystemPhase && (
-            <span className="px-2 py-1 text-xs font-medium bg-muted text-muted-foreground rounded border border-muted-foreground/30">
-              SYSTEM
+              {isSystemPhase && (
+                <span className="text-xs text-muted-foreground uppercase tracking-wider leading-none">
+                  system
+                </span>
+              )}
+            </div>
+
+            <span
+              className={`px-1.5 py-0.5 text-[10px] font-medium text-white rounded uppercase ${statusColor} flex-shrink-0`}
+            >
+              {metadata.status}
             </span>
-          )}
-
-          <span
-            className={`px-2 py-1 text-xs font-medium text-white rounded ${statusColor}`}
-          >
-            {metadata.status}
-          </span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <div className="flex items-center gap-3 text-xs md:text-sm text-muted-foreground flex-wrap md:flex-nowrap pl-7 md:pl-0">
           {metadata.retryCount > 0 && (
-            <span>Retries: {metadata.retryCount}</span>
+            <span className="whitespace-nowrap">
+              Retries: {metadata.retryCount}
+            </span>
           )}
           {metadata.duration && (
-            <span>Duration: {formatDuration(metadata.duration)}</span>
+            <span className="flex items-center gap-1 whitespace-nowrap">
+              <Clock className="h-3 w-3" />
+              {formatDuration(metadata.duration)}
+            </span>
           )}
-          <span>{timelineItems.length} items</span>
+          <span className="whitespace-nowrap">
+            {timelineItems.length} items
+          </span>
         </div>
       </button>
 

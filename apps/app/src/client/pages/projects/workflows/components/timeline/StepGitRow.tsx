@@ -84,7 +84,7 @@ export function StepGitRow({ step, onSelectStep, onSetActiveTab }: StepGitRowPro
       }}
     >
       <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 md:gap-3">
           <span className="font-medium">{step.name}</span>
           {debugMode && (
             <span className="text-xs text-muted-foreground font-mono">
@@ -95,7 +95,7 @@ export function StepGitRow({ step, onSelectStep, onSetActiveTab }: StepGitRowPro
             <span className="text-xs text-muted-foreground">{formatDuration(duration)}</span>
           )}
           {step.error_message && (
-            <span className="text-xs text-red-500 truncate">{step.error_message}</span>
+            <span className="text-xs text-red-500 break-words md:truncate w-full md:w-auto">{step.error_message}</span>
           )}
         </div>
 

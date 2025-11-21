@@ -34,8 +34,8 @@ export function ArtifactRow({ artifact }: ArtifactRowProps) {
         </div>
       }
     >
-      <div className="flex items-center gap-2">
-        <span className="font-medium truncate" title={artifact.name}>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="font-medium break-words md:truncate" title={artifact.name}>
           {artifact.name}
         </span>
         {debugMode && (

@@ -12,13 +12,13 @@ interface TimelineRowProps {
 export function TimelineRow({ icon, tooltipLabel, children, rightContent, onClick }: TimelineRowProps) {
   return (
     <div
-      className={`flex items-start gap-3 p-3 hover:bg-accent/50 transition-colors ${onClick ? 'cursor-pointer' : ''}`}
+      className={`flex items-start gap-2 md:gap-3 p-3 hover:bg-accent/50 transition-colors ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
     >
-      {/* Fixed 40px Icon Container with Tooltip */}
+      {/* Responsive Icon Container with Tooltip */}
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="w-10 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <div className="w-8 md:w-10 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">
             {icon}
           </div>
         </TooltipTrigger>
@@ -32,9 +32,9 @@ export function TimelineRow({ icon, tooltipLabel, children, rightContent, onClic
         {children}
       </div>
 
-      {/* Right Metadata */}
+      {/* Right Metadata - hide on mobile if needed */}
       {rightContent && (
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 hidden md:block">
           {rightContent}
         </div>
       )}

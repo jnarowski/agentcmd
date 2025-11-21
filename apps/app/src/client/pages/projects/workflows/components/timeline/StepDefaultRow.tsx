@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   CheckCircle2,
   Circle,
@@ -6,29 +5,19 @@ import {
   XCircle,
   MinusCircle,
 } from "lucide-react";
-import { AgentSessionModal } from "@/client/pages/projects/workflows/components/AgentSessionModal";
-import { useIsMobile } from "@/client/hooks/use-mobile";
 import { useDebugMode } from "@/client/hooks/useDebugMode";
-import type { WorkflowRunStep, StepOutput } from "@/shared/types/workflow-step.types";
+import type { WorkflowRunStep } from "@/shared/types/workflow-step.types";
 import type { WorkflowTab } from "@/client/pages/projects/workflows/hooks/useWorkflowDetailPanel";
-import type { TraceEntry } from "agentcmd-workflows";
 import { TimelineRow } from "./TimelineRow";
 
 interface StepDefaultRowProps {
   step: WorkflowRunStep;
-  projectId: string;
-  onSelectSession?: (sessionId: string) => void;
   onSelectStep?: (stepId: string) => void;
   onSetActiveTab?: (tab: WorkflowTab) => void;
 }
 
-export function StepDefaultRow({ step, projectId, onSelectSession, onSelectStep, onSetActiveTab }: StepDefaultRowProps) {
-  const [showSessionModal, setShowSessionModal] = useState(false);
-  const isMobile = useIsMobile();
+export function StepDefaultRow({ step, onSelectStep, onSetActiveTab }: StepDefaultRowProps) {
   const debugMode = useDebugMode();
-
-  // Type-safe output access for trace
-  const output = step.output as StepOutput<typeof step.step_type> | null;
 
   // Status icon
   const StatusIcon = {
@@ -96,24 +85,6 @@ export function StepDefaultRow({ step, projectId, onSelectSession, onSelectStep,
               [STEP: {step.id}]
             </span>
           )}
-          {step.agent_session_id && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (isMobile) {
-                  setShowSessionModal(true);
-                } else {
-                  if (step.agent_session_id) {
-                    onSelectSession?.(step.agent_session_id);
-                    onSetActiveTab?.("session");
-                  }
-                }
-              }}
-              className="text-xs text-blue-500 hover:underline"
-            >
-              View Session
-            </button>
-          )}
         </div>
 
         <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
@@ -125,33 +96,7 @@ export function StepDefaultRow({ step, projectId, onSelectSession, onSelectStep,
             <span className="text-red-500">{step.error_message}</span>
           )}
         </div>
-
-        {/* Trace display */}
-        {output?.trace && output.trace.length > 0 && (
-          <div className="text-xs font-mono text-muted-foreground space-y-1 mt-2">
-            {(output.trace as TraceEntry[]).map((entry, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                <span className="text-blue-400">$</span>
-                <span>{entry.command}</span>
-                {entry.duration && (
-                  <span className="text-gray-500">({entry.duration}ms)</span>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
       </TimelineRow>
-
-      {/* Session Modal */}
-      {step.agent_session_id && (
-        <AgentSessionModal
-          open={showSessionModal}
-          onOpenChange={setShowSessionModal}
-          projectId={projectId}
-          sessionId={step.agent_session_id}
-          sessionName={`${step.name} Session`}
-        />
-      )}
     </>
   );
 }
