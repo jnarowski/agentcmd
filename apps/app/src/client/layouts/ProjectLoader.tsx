@@ -2,15 +2,12 @@ import { useEffect } from "react";
 import { Outlet, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
-import { useActiveSession } from "@/client/hooks/navigation/useActiveSession";
 import { Button } from "@/client/components/ui/button";
 import { Skeleton } from "@/client/components/ui/skeleton";
 import { AlertCircle, ArrowLeft } from "lucide-react";
 import { Alert, AlertDescription } from "@/client/components/ui/alert";
 import { useNavigationStore } from "@/client/stores/index";
 import { ProjectHeader } from "@/client/pages/projects/components/ProjectHeader";
-import { getSessionDisplayName } from "@/client/utils/getSessionDisplayName";
-import type { SessionResponse } from "@/shared/types/agent-session.types";
 
 /**
  * Loads project data and renders ProjectHeader for all project routes
@@ -32,22 +29,9 @@ export default function ProjectLoader() {
 
   const { data: project, isLoading, error } = useProject(activeProjectId!);
 
-  // Only show session when on a session route
-  const { sessionId: activeSessionId } = useParams<{ sessionId: string }>();
-
-  // Try to get session from React Query cache first (for sidebar sessions)
-  const { session: cachedSession } = useActiveSession();
-
-  // Build current session with proper display name logic
-  // Use utility function for consistent session naming
-  // Only use cachedSession (from React Query) as it has all required fields
-  const currentSession: SessionResponse | null =
-    activeSessionId && cachedSession
-      ? {
-          ...cachedSession,
-          name: getSessionDisplayName(cachedSession),
-        }
-      : null;
+  // Check if we're on a session route (session page handles its own headers)
+  const { sessionId } = useParams<{ sessionId: string }>();
+  const isSessionRoute = Boolean(sessionId);
 
   // Sync projectId with navigationStore on mount and when id changes
   useEffect(() => {
@@ -102,6 +86,11 @@ export default function ProjectLoader() {
     );
   }
 
+  // Session routes handle their own layout with Grid
+  if (isSessionRoute) {
+    return <Outlet />;
+  }
+
   return (
     <div className={isWorkflowRoute ? "flex flex-col h-screen overflow-hidden" : "flex flex-col h-full"}>
       <ProjectHeader
@@ -109,7 +98,6 @@ export default function ProjectLoader() {
         projectName={project.name}
         projectPath={project.path}
         gitCapabilities={project.capabilities.git}
-        currentSession={currentSession}
       />
 
       {/* Content area */}

@@ -16,9 +16,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/client/components/ui/tooltip";
-import type { SessionResponse } from "@/shared/types";
 import type { GitCapabilities } from "@/shared/types/project.types";
-import { SessionHeader } from "@/client/components/SessionHeader";
 import { GitOperationsModal } from "@/client/components/GitOperationsModal";
 import { truncate } from "@/client/utils/truncate";
 import { NewButtonDropdown } from "@/client/pages/projects/components/NewButtonDropdown";
@@ -29,10 +27,9 @@ interface ProjectHeaderProps {
   projectName: string;
   projectPath: string;
   gitCapabilities: GitCapabilities;
-  currentSession?: SessionResponse | null;
 }
 
-export function ProjectHeader({ projectId, projectName, projectPath, gitCapabilities, currentSession }: ProjectHeaderProps) {
+export function ProjectHeader({ projectId, projectName, projectPath, gitCapabilities }: ProjectHeaderProps) {
   const navigate = useNavigate();
   const [gitModalOpen, setGitModalOpen] = useState(false);
 
@@ -61,7 +58,7 @@ export function ProjectHeader({ projectId, projectName, projectPath, gitCapabili
 
   return (
     <>
-      <div className="flex items-center justify-between border-b px-4 md:px-6 py-3">
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b bg-background px-4 md:px-6 py-3">
         <div className="flex items-center gap-2 min-w-0">
           <SidebarTrigger className="shrink-0" />
           <Separator orientation="vertical" className="h-4 shrink-0" />
@@ -129,10 +126,7 @@ export function ProjectHeader({ projectId, projectName, projectPath, gitCapabili
 
         {/* Mobile navigation - dropdown */}
         <NewButtonDropdownMobile projectId={projectId} />
-      </div>
-
-      {/* Session header - separate component below main header */}
-      {currentSession && <SessionHeader session={currentSession} />}
+      </header>
 
       {/* Git Operations Modal */}
       <GitOperationsModal

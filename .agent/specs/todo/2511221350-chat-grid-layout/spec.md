@@ -1,6 +1,6 @@
 # Chat Interface Grid Layout Redesign
 
-**Status**: draft
+**Status**: review
 **Created**: 2025-11-22
 **Package**: apps/app
 **Total Complexity**: 34 points
@@ -183,20 +183,20 @@ None - all changes to existing files
 
 **Phase Complexity**: 13 points (avg 4.3/10)
 
-- [ ] 1.1 [6/10] Replace absolute layout with Grid container in ProjectSessionPage
+- [x] 1.1 [6/10] Replace absolute layout with Grid container in ProjectSessionPage
   - Remove entire `<div className="absolute inset-0 flex flex-col overflow-hidden">` wrapper
   - Add Grid: `<div className="grid h-dvh" style={{ gridTemplateRows: "auto auto 1fr auto" }}>`
   - File: `apps/app/src/client/pages/projects/sessions/ProjectSessionPage.tsx`
   - Import ProjectHeader from `@/client/pages/projects/components/ProjectHeader`
   - Import SessionHeader from `@/client/components/SessionHeader`
   - Verify Grid creates 4 rows as expected
-- [ ] 1.2 [4/10] Move ProjectHeader and SessionHeader inside Grid
+- [x] 1.2 [4/10] Move ProjectHeader and SessionHeader inside Grid
   - Add row 1: `<ProjectHeader projectId={projectId!} projectName={project?.name || ''} projectPath={project?.path || ''} gitCapabilities={project?.capabilities.git || { initialized: false }} />`
   - Add row 2: `{session && <SessionHeader session={session} />}`
   - Remove old input wrapper, replace with sticky bottom wrapper
   - File: `apps/app/src/client/pages/projects/sessions/ProjectSessionPage.tsx`
   - Ensure project data is available (useProject hook)
-- [ ] 1.3 [3/10] Add sticky input wrapper with safe area padding
+- [x] 1.3 [3/10] Add sticky input wrapper with safe area padding
   - Wrap ChatPromptInput in sticky container (row 4)
   - Add classes: `sticky bottom-0 z-10 border-t bg-background px-4 py-4 md:px-6`
   - Add style: `{{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}`
@@ -205,28 +205,28 @@ None - all changes to existing files
 
 #### Completion Notes
 
-- What was implemented:
-- Deviations from plan (if any):
-- Important context or decisions:
-- Known issues or follow-ups (if any):
+- Implemented Grid container with 4 rows (auto auto 1fr auto) replacing absolute positioning
+- Moved ProjectHeader and SessionHeader inside Grid for proper sticky positioning
+- Added sticky input wrapper with iOS safe area padding
+- No deviations from plan - all Grid layout working as specified
 
 ### Phase 2: Headers
 
 **Phase Complexity**: 10 points (avg 3.3/10)
 
-- [ ] 2.1 [3/10] Remove SessionHeader from ProjectLoader
+- [x] 2.1 [3/10] Remove SessionHeader from ProjectLoader
   - Remove line: `{currentSession && <SessionHeader session={currentSession} />}`
   - Keep ProjectHeader rendering (needed for other routes)
   - File: `apps/app/src/client/layouts/ProjectLoader.tsx`
   - Verify workflows, shell, source pages still show ProjectHeader
-- [ ] 2.2 [4/10] Add sticky positioning to ProjectHeader
+- [x] 2.2 [4/10] Add sticky positioning to ProjectHeader
   - Find existing header element (should be a `<div>` around line 64)
   - Change to `<header>` semantic element
   - Add classes: `sticky top-0 z-10`
   - Ensure `bg-background` exists in className
   - File: `apps/app/src/client/pages/projects/components/ProjectHeader.tsx`
   - Verify header sticks to top on scroll
-- [ ] 2.3 [3/10] Add sticky positioning with offset to SessionHeader
+- [x] 2.3 [3/10] Add sticky positioning with offset to SessionHeader
   - Find existing header element (line 115)
   - Add classes: `sticky top-[52px] z-10`
   - Ensure `bg-muted/30` exists (already present)
@@ -235,22 +235,22 @@ None - all changes to existing files
 
 #### Completion Notes
 
-- What was implemented:
-- Deviations from plan (if any):
-- Important context or decisions:
-- Known issues or follow-ups (if any):
+- Removed SessionHeader from ProjectLoader and currentSession prop
+- Changed ProjectHeader div to semantic header element with sticky positioning
+- Added sticky positioning with 52px offset to SessionHeader
+- Removed unused imports from ProjectLoader
 
 ### Phase 3: Scroll Polish
 
 **Phase Complexity**: 11 points (avg 5.5/10)
 
-- [ ] 3.1 [5/10] Update ChatInterface scroll behavior
+- [x] 3.1 [5/10] Update ChatInterface scroll behavior
   - Find Conversation component (line 86)
   - Change `className="h-full"` to `className="overflow-y-auto"`
   - File: `apps/app/src/client/pages/projects/sessions/components/ChatInterface.tsx`
   - Test scroll works with long message lists
   - Verify empty state still centers correctly
-- [ ] 3.2 [6/10] Remove flex-1 from conversation.tsx StickToBottom
+- [x] 3.2 [6/10] Remove flex-1 from conversation.tsx StickToBottom
   - Find StickToBottom className (line 14)
   - Change from `cn("relative flex-1 overflow-y-auto", className)` to `cn("relative overflow-y-auto", className)`
   - File: `apps/app/src/client/components/ai-elements/conversation.tsx`
@@ -259,10 +259,10 @@ None - all changes to existing files
 
 #### Completion Notes
 
-- What was implemented:
-- Deviations from plan (if any):
-- Important context or decisions:
-- Known issues or follow-ups (if any):
+- Updated ChatInterface to use overflow-y-auto instead of h-full
+- Removed flex-1 from conversation.tsx StickToBottom component
+- Grid now controls height, scroll container only handles overflow
+- No deviations - scroll behavior working as expected
 
 ## Testing Strategy
 

@@ -212,9 +212,7 @@ const ChatPromptInputInner = forwardRef<
               "border-red-500 md:has-[[data-slot=input-group-control]:focus-visible]:border-red-500"
           )}
           style={
-            isPwa
-              ? { paddingBottom: "env(safe-area-inset-bottom)" }
-              : undefined
+            isPwa ? { paddingBottom: "env(safe-area-inset-bottom)" } : undefined
           }
         >
           <PromptInputBody>

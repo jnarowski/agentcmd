@@ -11,11 +11,13 @@ import {
   useSessionStore,
   selectTotalTokens,
 } from "@/client/pages/projects/sessions/stores/sessionStore";
-import { useActiveProject } from "@/client/hooks/navigation";
+import { useActiveProject, useActiveSession } from "@/client/hooks/navigation";
 import { useNavigationStore } from "@/client/stores/index";
 import { generateUUID } from "@/client/utils/cn";
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
+import { ProjectHeader } from "@/client/pages/projects/components/ProjectHeader";
+import { SessionHeader } from "@/client/components/SessionHeader";
 
 export default function ProjectSessionPage() {
   const navigate = useNavigate();
@@ -26,12 +28,15 @@ export default function ProjectSessionPage() {
   const { data: project } = useProject(projectId!);
   const currentSession = useSessionStore((s) => s.session);
 
+  // Get session for header (needs SessionResponse type)
+  const { session: sessionForHeader } = useActiveSession();
+
   useDocumentTitle(
     project?.name && currentSession?.name
       ? `${currentSession.name} - ${project.name} | Agent Workflows`
       : project?.name
-      ? `Chat - ${project.name} | Agent Workflows`
-      : undefined
+        ? `Chat - ${project.name} | Agent Workflows`
+        : undefined
   );
   const setActiveSession = useNavigationStore((s) => s.setActiveSession);
 
@@ -50,7 +55,9 @@ export default function ProjectSessionPage() {
   const addMessage = useSessionStore((s) => s.addMessage);
   const setStreaming = useSessionStore((s) => s.setStreaming);
   const totalTokens = useSessionStore(selectTotalTokens);
-  const clearHandledPermissions = useSessionStore((s) => s.clearHandledPermissions);
+  const clearHandledPermissions = useSessionStore(
+    (s) => s.clearHandledPermissions
+  );
   const clearToolResultError = useSessionStore((s) => s.clearToolResultError);
   const markPermissionHandled = useSessionStore((s) => s.markPermissionHandled);
 
@@ -127,11 +134,11 @@ export default function ProjectSessionPage() {
       files.map(async (fileUIPart) => {
         const url = fileUIPart.url;
         // If already a data URL, return as-is
-        if (url.startsWith('data:')) {
+        if (url.startsWith("data:")) {
           return url;
         }
         // If blob URL, convert to data URL
-        if (url.startsWith('blob:')) {
+        if (url.startsWith("blob:")) {
           const response = await fetch(url);
           const blob = await response.blob();
           return new Promise<string>((resolve, reject) => {
@@ -175,7 +182,7 @@ export default function ProjectSessionPage() {
 
   // Permission approval handler
   const handlePermissionApproval = (toolUseId: string) => {
-    console.log('[ProjectSession] Permission approved:', toolUseId);
+    console.log("[ProjectSession] Permission approved:", toolUseId);
 
     // Clear the error flag to hide the permission UI immediately
     clearToolResultError(toolUseId);
@@ -184,25 +191,35 @@ export default function ProjectSessionPage() {
     markPermissionHandled(toolUseId);
 
     // Send follow-up message with acceptEdits permission mode to retry the operation
-    handleSubmit({ text: 'yes, proceed' }, 'acceptEdits');
+    handleSubmit({ text: "yes, proceed" }, "acceptEdits");
   };
 
   return (
     <div
-      className="absolute inset-0 flex flex-col overflow-hidden"
-      style={{ paddingTop: "env(safe-area-inset-top)" }}
+      className="grid h-dvh"
+      style={{ gridTemplateRows: "auto auto 1fr auto" }}
     >
-      {/* Chat Messages Container - takes up remaining space */}
-      <div className="flex-1 overflow-hidden">
+      <ProjectHeader
+        projectId={projectId!}
+        projectName={project?.name || ""}
+        projectPath={project?.path || ""}
+        gitCapabilities={
+          project?.capabilities.git || {
+            initialized: false,
+            error: null,
+            branch: null,
+          }
+        }
+      />
+      {sessionForHeader && <SessionHeader session={sessionForHeader} />}
+      <div className="overflow-hidden">
         <AgentSessionViewer
           projectId={projectId!}
           sessionId={sessionId!}
           onApprove={handlePermissionApproval}
         />
       </div>
-
-      {/* Fixed Input Container at Bottom */}
-      <div className="md:pb-4 md:px-4">
+      <div className="sticky bottom-0 z-10 md:pb-4">
         <div className="mx-auto max-w-4xl space-y-4">
           <ChatPromptInput
             onSubmit={handleSubmit}
