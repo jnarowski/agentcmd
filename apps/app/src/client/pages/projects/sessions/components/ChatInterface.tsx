@@ -84,7 +84,7 @@ export function ChatInterface({
   // Messages list
   return (
     <Conversation
-      className="h-full"
+      className="h-full overflow-y-auto"
       data-project-id={projectId}
       data-session-id={sessionId}
     >
