@@ -1,0 +1,18 @@
+{
+  "name": "agentcmd",
+  "short_name": "agentcmd",
+  "description": "AI agent workflow orchestration for developers",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#10B981",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
