@@ -91,9 +91,12 @@ export function PhaseTimeline({ run, projectId, onSelectSession, onSelectStep, o
         artifacts: phaseArtifacts,
       };
     }).filter((group) => {
-      // Hide system phases only if completely empty
+      // Hide system phases only if completely empty AND not currently active
       const isSystemPhase = group.phaseId.startsWith("_system_");
       if (!isSystemPhase) return true;
+
+      // Always show if this is the current active phase
+      if (group.phaseId === run.current_phase) return true;
 
       // Count only meaningful events (exclude phase lifecycle events)
       const meaningfulEvents = group.events.filter(

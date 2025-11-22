@@ -47,8 +47,8 @@ export function SessionItem({
   return (
     <SidebarMenuItem
       key={id}
-      onMouseEnter={() => setHoveredActivityId(id)}
-      onMouseLeave={() => setHoveredActivityId(null)}
+      onMouseEnter={() => !isMobile && setHoveredActivityId(id)}
+      onMouseLeave={() => !isMobile && setHoveredActivityId(null)}
       className="relative"
     >
       <SidebarMenuButton
@@ -98,7 +98,7 @@ export function SessionItem({
           </div>
         </Link>
       </SidebarMenuButton>
-      {(hoveredActivityId === id || menuOpenActivityId === id) && (
+      {!isMobile && (hoveredActivityId === id || menuOpenActivityId === id) && (
         <div className="absolute right-2 top-2 z-50">
           <SessionDropdownMenu
             session={session}
