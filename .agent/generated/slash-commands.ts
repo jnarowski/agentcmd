@@ -408,6 +408,8 @@ export interface CmdGeneratePrdResponse {
 export interface CmdImplementSpecResponse {
   /** Boolean - true if all tasks completed successfully, false if any tasks failed or were skipped */
   success: boolean;
+  /** String - 1-2 sentences describing what was implemented and key changes + 1 sentence on task/validation status */
+  summary: string;
   /** String - Timestamp-based spec ID (e.g., "2511131522") */
   spec_id: string;
   /** String - Full path to the spec file that was implemented */
@@ -524,7 +526,7 @@ export interface CmdReviewSpecImplementationResponse {
     code_quality: number;
   };
   /** Human-readable summary explaining why the review passed/failed, including highlights of key issues and what was fixed from previous reviews */
-  explanation: string;
+  summary: string;
 }
 
 /**

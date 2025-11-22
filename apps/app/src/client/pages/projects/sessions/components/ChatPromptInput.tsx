@@ -259,7 +259,7 @@ const ChatPromptInputInner = forwardRef<
                   <span className="inline-flex">
                     <PromptInputSubmit
                       className={cn(
-                        "h-8 w-8 transition-colors",
+                        "h-11 w-11 md:h-8 md:w-8 transition-colors",
                         permissionMode === "plan" &&
                           "bg-primary hover:bg-primary/90 text-primary-foreground",
                         permissionMode === "acceptEdits" &&

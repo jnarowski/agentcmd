@@ -42,18 +42,20 @@ export default defineWorkflow(
       let lastResponse: CmdImplementSpecResponse | undefined;
 
       for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-        const result = await step.agent<CmdImplementSpecResponse>(
-          `implement-c${cycle}-a${attempt}`,
-          {
-            agent: "claude",
-            json: true,
-            prompt: buildSlashCommand("/cmd:implement-spec", {
-              specIdOrNameOrPath: specFile,
-              format: "json",
-            }),
-            workingDir,
-          }
-        );
+        const stepName = `implement-cycle-${cycle}-attempt-${attempt}`;
+        const result = await step.agent<CmdImplementSpecResponse>(stepName, {
+          agent: "claude",
+          json: true,
+          prompt: buildSlashCommand("/cmd:implement-spec", {
+            specIdOrNameOrPath: specFile,
+            format: "json",
+          }),
+          workingDir,
+        });
+
+        step.annotation(`${stepName}-summary`, {
+          message: result.data.summary,
+        });
 
         lastResponse = result.data;
 
@@ -70,7 +72,7 @@ export default defineWorkflow(
      */
     async function reviewImplementation(cycle: number) {
       const result = await step.agent<CmdReviewSpecImplementationResponse>(
-        `review-c${cycle}`,
+        `review-cycle-${cycle}`,
         {
           agent: "claude",
           json: true,
@@ -94,7 +96,15 @@ export default defineWorkflow(
 
         // See success in <json_output> of .claude/commands/cmd/review-spec-implementation.md
         if (review.success) {
+          await step.annotation("review-cycle-completed", {
+            message: `Review cycle ${cycle} completed. ${review.summary}`,
+          });
+
           return { success: true, cycles_completed: cycle, impl, review };
+        } else {
+          await step.annotation("review-cycle-failed", {
+            message: `Review cycle ${cycle} failed. ${review.summary}`,
+          });
         }
 
         // See max_iterations_reached in <json_output> of .claude/commands/cmd/review-spec-implementation.md
