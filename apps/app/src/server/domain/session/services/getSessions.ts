@@ -32,7 +32,7 @@ export async function getSessions(filters: GetSessionsFilters): Promise<SessionR
     where: {
       user_id: userId,
       ...(projectId ? { project_id: projectId } : {}),
-      ...(type ? { type } : {}),
+      ...(type ? { type } : { type: { not: 'internal' } }), // Filter specific type OR exclude internal
       ...(permission_mode ? { permission_mode } : {}),
       ...(includeArchived ? {} : { is_archived: false }),
     },

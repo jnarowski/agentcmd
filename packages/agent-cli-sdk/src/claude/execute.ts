@@ -377,15 +377,14 @@ function buildArgs(options: ExecuteOptions): string[] {
     args.push('--disallowed-tools', options.toolSettings.disallowedTools.join(','));
   }
 
-  // Images
-  if (options.images && options.images.length > 0) {
-    for (const image of options.images) {
-      args.push('-i', image.path);
-    }
-  }
-
   // Prompt (must be last)
-  args.push(options.prompt);
+  // If images present, append their paths to the prompt
+  let finalPrompt = options.prompt;
+  if (options.images && options.images.length > 0) {
+    const imagePaths = options.images.map((img) => img.path).join(' ');
+    finalPrompt = `${options.prompt} ${imagePaths}`;
+  }
+  args.push(finalPrompt);
 
   return args;
 }

@@ -246,6 +246,7 @@ enum AgentType {
 enum SessionType {
   chat
   workflow
+  internal
 }
 
 enum SessionState {

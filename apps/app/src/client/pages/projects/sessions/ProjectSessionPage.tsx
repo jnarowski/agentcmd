@@ -188,7 +188,10 @@ export default function ProjectSessionPage() {
   };
 
   return (
-    <div className="absolute inset-0 flex flex-col overflow-hidden">
+    <div
+      className="absolute inset-0 flex flex-col overflow-hidden"
+      style={{ paddingTop: "env(safe-area-inset-top)" }}
+    >
       {/* Chat Messages Container - takes up remaining space */}
       <div className="flex-1 overflow-hidden">
         <AgentSessionViewer

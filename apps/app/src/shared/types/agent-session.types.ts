@@ -8,7 +8,7 @@ import type { AgentType } from './agent.types';
 /**
  * Session type enum
  */
-export type SessionType = 'chat' | 'workflow';
+export type SessionType = 'chat' | 'workflow' | 'internal';
 
 /**
  * Session metadata stored in AgentSession.metadata JSON field

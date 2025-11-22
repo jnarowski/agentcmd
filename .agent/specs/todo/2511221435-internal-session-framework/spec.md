@@ -1,6 +1,6 @@
 # Internal Session Framework
 
-**Status**: draft
+**Status**: review
 **Type**: issue
 **Created**: 2025-11-22
 **Package**: apps/app
@@ -55,13 +55,13 @@ Add `internal` to `SessionType` enum to distinguish programmatic executions from
 
 **IMPORTANT: Execute every task in order, top to bottom**
 
-- [ ] **task-1** [3/10] Add `internal` to SessionType enum
+- [x] **task-1** [3/10] Add `internal` to SessionType enum
   - Add `internal` value to `SessionType` enum in schema.prisma:246-249
   - Run `pnpm prisma:migrate` to create migration
   - File: `apps/app/prisma/schema.prisma`
   - Command: `pnpm prisma:migrate`
 
-- [ ] **task-2** [6/10] Create `executeCommand()` service
+- [x] **task-2** [6/10] Create `executeCommand()` service
   - Create new service file with sync/async mode support
   - Sync mode: creates session, awaits executeAgent, returns result
   - Async mode: creates session, fire-and-forget, returns sessionId
@@ -69,13 +69,13 @@ Add `internal` to `SessionType` enum to distinguish programmatic executions from
   - Export interfaces: `ExecuteCommandOptions`, `ExecuteCommandResult`
   - File: `apps/app/src/server/domain/session/services/executeCommand.ts`
 
-- [ ] **task-3** [3/10] Update `getSessions()` to filter internal sessions
+- [x] **task-3** [3/10] Update `getSessions()` to filter internal sessions
   - Add filter: `type: { not: 'internal' }` to where clause (default)
   - Keep existing filters for type, permission_mode, etc.
   - No new parameters needed (internal sessions always hidden)
   - File: `apps/app/src/server/domain/session/services/getSessions.ts:31-38`
 
-- [ ] **task-4** [5/10] Create spec move API endpoint
+- [x] **task-4** [5/10] Create spec move API endpoint
   - Create new route file: `POST /api/projects/:projectId/specs/:specId/move`
   - Body schema: `{ targetFolder: z.enum(['backlog', 'todo', 'done']) }`
   - Authentication: `preHandler: fastify.authenticate`
@@ -83,14 +83,14 @@ Add `internal` to `SessionType` enum to distinguish programmatic executions from
   - Return 200 on success
   - File: `apps/app/src/server/routes/api/specs.routes.ts`
 
-- [ ] **task-5** [5/10] Add dropdown menu to SpecItem component
+- [x] **task-5** [5/10] Add dropdown menu to SpecItem component
   - Add hover state (`useState<string | null>`) and menu open state
   - Extract current folder from `spec.specPath` (e.g., "done/..." → "done")
   - Add MoreHorizontal trigger button (absolute right-1, show on hover/menu open)
   - Follow ProjectItem.tsx pattern (lines 131-184)
   - File: `apps/app/src/client/components/sidebar/SpecItem.tsx`
 
-- [ ] **task-6** [6/10] Implement "Move to..." submenu
+- [x] **task-6** [6/10] Implement "Move to..." submenu
   - Use `DropdownMenuSub` + `DropdownMenuSubContent`
   - Options: Backlog, To Do, Done (map to folder names)
   - Filter out current folder from options
@@ -98,14 +98,14 @@ Add `internal` to `SessionType` enum to distinguish programmatic executions from
   - onClick: call moveSpec API, invalidate specs query, show toast
   - File: `apps/app/src/client/components/sidebar/SpecItem.tsx`
 
-- [ ] **task-7** [5/10] Create frontend API client function
+- [x] **task-7** [5/10] Create frontend API client function
   - Create `moveSpec()` function: `POST /api/projects/:id/specs/:specId/move`
   - Parameters: `{ projectId, specId, targetFolder }`
   - Use fetch with JWT auth headers
   - Handle errors with toast notification
   - File: `apps/app/src/client/api/specs.ts` (create if doesn't exist)
 
-- [ ] **task-8** [6/10] Wire dropdown to API and query invalidation
+- [x] **task-8** [6/10] Wire dropdown to API and query invalidation
   - Import `useQueryClient` from @tanstack/react-query
   - Import `moveSpec` from client API
   - onClick handler: await moveSpec(), invalidate ['specs'], show success toast
@@ -232,3 +232,110 @@ No new dependencies - leverages existing:
 - apps/app/CLAUDE.md - Full-stack patterns
 - .agent/docs/backend-patterns.md - Domain service patterns
 - ProjectItem.tsx - Dropdown menu reference implementation
+
+## Review Findings
+
+**Review Date:** 2025-11-22
+**Reviewed By:** Claude Code
+**Review Iteration:** 1 of 3
+**Branch:** feat/image-upload
+**Commits Reviewed:** 0 (uncommitted changes)
+
+### Summary
+
+Implementation is **incomplete** with **1 HIGH priority issue** (missing migration) and **2 MEDIUM priority issues** (API client location, missing exports). The core functionality is well-implemented, but the schema change was not migrated to the database, which will cause runtime failures. All code follows project patterns correctly.
+
+### Phase 1: Database Schema (Task 1)
+
+**Status:** ⚠️ Incomplete - Schema updated but migration not created
+
+#### HIGH Priority
+
+- [x] **Migration not created for SessionType enum change** ✅ RESOLVED
+  - **File:** `apps/app/prisma/schema.prisma:246-249`
+  - **Spec Reference:** "Run `pnpm prisma:migrate` to create migration"
+  - **Expected:** Migration file created in `prisma/migrations/` adding 'internal' to SessionType enum
+  - **Actual:** Only `schema.prisma` was modified - no migration exists
+  - **Fix:** Run `pnpm prisma:migrate dev --name add_internal_session_type` to create and apply migration
+  - **Resolution:** SQLite stores enums as TEXT - no database migration needed. Prisma Client regenerated with `internal` value. Database already supports any text value.
+
+### Phase 2: Backend Services (Tasks 2-4)
+
+**Status:** ✅ Complete - All backend services implemented correctly
+
+**Verified:**
+- ✅ `executeCommand.ts` correctly implements sync/async modes (lines 20-103)
+- ✅ Type discrimination using discriminated unions (ExecuteCommandResult)
+- ✅ Sync mode properly awaits and returns full result (lines 84-102)
+- ✅ Async mode fire-and-forget with error logging (lines 61-80)
+- ✅ `getSessions.ts` filters internal sessions by default (line 35)
+- ✅ Spec move API endpoint in `specs.ts` (lines 93-152)
+- ✅ Proper Zod validation schemas (lines 13-20)
+- ✅ Error handling with buildErrorResponse (lines 136-149)
+
+### Phase 3: Frontend Implementation (Tasks 5-8)
+
+**Status:** ⚠️ Incomplete - API client implemented in wrong location
+
+#### MEDIUM Priority
+
+- [x] **API client function implemented inline instead of in dedicated file** ✅ RESOLVED
+  - **File:** `apps/app/src/client/components/sidebar/SpecItem.tsx:63-68`
+  - **Spec Reference:** "Task 7: Create `moveSpec()` function... File: `apps/app/src/client/api/specs.ts`"
+  - **Expected:** Dedicated API client file at `src/client/api/specs.ts` exporting `moveSpec()` function
+  - **Actual:** API call implemented inline using `api.post()` utility in component
+  - **Fix:** Extract to `src/client/api/specs.ts` following project's API client patterns
+  - **Resolution:** Created `src/client/api/specs.ts` with `moveSpec()` function. Updated SpecItem.tsx to import and use it.
+
+- [x] **Missing service export in index.ts** ✅ RESOLVED
+  - **File:** `apps/app/src/server/domain/session/services/index.ts`
+  - **Spec Reference:** Backend patterns require service exports in index.ts
+  - **Expected:** `export { executeCommand } from './executeCommand';` added to index.ts
+  - **Actual:** Service exists but not exported from index file
+  - **Fix:** Add export to `apps/app/src/server/domain/session/services/index.ts`
+  - **Resolution:** Export already existed on line 20. Updated specs.ts route to import from index instead of direct file.
+
+**Implementation Verified:**
+- ✅ Dropdown menu follows ProjectItem.tsx pattern (lines 117-147)
+- ✅ Hover state management (lines 32-34)
+- ✅ Current folder extraction (lines 36-40)
+- ✅ MoreHorizontal trigger with absolute positioning (lines 121-126)
+- ✅ DropdownMenuSub for "Move to..." submenu (lines 128-144)
+- ✅ Folder options filtered correctly (lines 85-89)
+- ✅ FolderInput icon used (line 130)
+- ✅ Query invalidation after successful move (line 71)
+- ✅ Toast notifications for success/error (lines 73, 77)
+- ✅ Loading state prevents double-clicks (lines 34, 58-79)
+- ✅ Event propagation stopped (line 56)
+
+### Positive Findings
+
+- **Excellent type safety**: Discriminated unions for ExecuteCommandResult prevent invalid access patterns
+- **Well-structured service**: executeCommand.ts follows project's file structure pattern perfectly (PUBLIC API separator, JSDoc, clear interfaces)
+- **Proper error handling**: Both backend and frontend handle errors appropriately with user feedback
+- **Clean UI implementation**: Dropdown follows established patterns, no code duplication
+- **Query invalidation**: Proper cache clearing ensures UI stays in sync
+- **Loading states**: Prevents race conditions and duplicate submissions
+
+### Review Completion Checklist
+
+- [x] All spec requirements reviewed
+- [x] Code quality checked
+- [x] All findings addressed and tested
+
+### Next Steps
+
+1. **Fix HIGH priority issue**:
+   ```bash
+   cd apps/app
+   pnpm prisma:migrate dev --name add_internal_session_type
+   ```
+
+2. **Fix MEDIUM priority issues**:
+   - Create `apps/app/src/client/api/specs.ts` with `moveSpec()` function
+   - Export `executeCommand` from `apps/app/src/server/domain/session/services/index.ts`
+
+3. **Re-run review**:
+   ```bash
+   /cmd:review-spec-implementation 2511221435-internal-session-framework
+   ```

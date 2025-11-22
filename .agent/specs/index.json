@@ -151,17 +151,17 @@
       "folder": "2511221435-internal-session-framework",
       "path": "todo/2511221435-internal-session-framework/spec.md",
       "spec_type": "issue",
-      "status": "draft",
+      "status": "review",
       "created": "2025-11-22T14:35:00Z",
-      "updated": "2025-11-22T14:35:00Z"
+      "updated": "2025-11-22T20:22:38Z"
     },
     "2511220927": {
       "folder": "2511220927-image-upload-fix",
       "path": "todo/2511220927-image-upload-fix/spec.md",
       "spec_type": "issue",
-      "status": "draft",
+      "status": "review",
       "created": "2025-11-22T16:28:35Z",
-      "updated": "2025-11-22T16:28:35Z"
+      "updated": "2025-11-22T20:05:00Z"
     },
     "2511221205": {
       "folder": "2511221205-session-zustand-migration",

@@ -12,6 +12,14 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* iOS PWA Safe Area Support */
+  html,
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
   .chat-container .prose > :first-child {
     margin-top: 0 !important;
   }

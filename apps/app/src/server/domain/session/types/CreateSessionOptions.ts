@@ -10,7 +10,7 @@ export const createSessionOptionsSchema = z.object({
     userId: z.string().min(1, 'User ID required'),
     sessionId: z.string().min(1, 'Session ID required'),
     agent: z.enum(['claude', 'codex', 'cursor', 'gemini']).optional(),
-    type: z.enum(['chat', 'workflow']).optional(),
+    type: z.enum(['chat', 'workflow', 'internal']).optional(),
     permission_mode: z.enum(['default', 'plan', 'acceptEdits', 'bypassPermissions']).optional(),
     name: z.string().optional(),
     metadataOverride: z.record(z.string(), z.unknown()).optional(),

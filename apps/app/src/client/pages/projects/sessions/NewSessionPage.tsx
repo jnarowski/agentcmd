@@ -154,7 +154,10 @@ export default function NewSessionPage() {
   };
 
   return (
-    <div className="absolute inset-0 flex flex-col overflow-hidden">
+    <div
+      className="absolute inset-0 flex flex-col overflow-hidden"
+      style={{ paddingTop: "env(safe-area-inset-top)" }}
+    >
       {/* Empty state - chat starts here */}
       <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
         <div className="text-center space-y-4 max-w-2xl w-full">

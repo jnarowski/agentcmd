@@ -17,6 +17,7 @@ export { parseJSONLFile } from './parseJSONLFile';
 
 // WebSocket operations
 export { executeAgent } from './executeAgent';
+export { executeCommand } from './executeCommand';
 export { validateSessionOwnership } from './validateSessionOwnership';
 export { extractUsageFromEvents } from './extractUsageFromEvents';
 export { processImageUploads } from './processImageUploads';

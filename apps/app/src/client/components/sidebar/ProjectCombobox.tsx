@@ -96,7 +96,7 @@ export function ProjectCombobox() {
 
   const renderProjectItem = (project: Project) => (
     <div className="flex items-center justify-between w-full gap-2">
-      <span className="text-base">{project.name}</span>
+      <span className="text-base md:text-sm">{project.name}</span>
       <button
         type="button"
         onClick={(e) => handleToggleStar(e, project)}
