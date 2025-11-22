@@ -138,6 +138,14 @@
       "status": "completed",
       "created": "2025-11-21T21:09:00Z",
       "updated": "2025-11-22T14:34:01.954Z"
+    },
+    "2511221435": {
+      "folder": "2511221435-internal-session-framework",
+      "path": "todo/2511221435-internal-session-framework/spec.md",
+      "spec_type": "issue",
+      "status": "draft",
+      "created": "2025-11-22T14:35:00Z",
+      "updated": "2025-11-22T14:35:00Z"
     }
   }
 }
