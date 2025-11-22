@@ -90,7 +90,7 @@ export const ChatPromptInputSlashCommands = ({
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
-        <PromptInputButton className="h-11 w-11 md:h-8 md:w-8">
+        <PromptInputButton size="icon-responsive">
           <SlashIcon size={20} className="md:size-4" />
         </PromptInputButton>
       </PopoverTrigger>

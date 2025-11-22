@@ -588,6 +588,103 @@ export async function projectRoutes(fastify: FastifyInstance) {
   );
 
   /**
+   * GET /api/projects/:id/specs/content
+   * Get spec file content
+   */
+  fastify.get<{
+    Params: { id: string };
+    Querystring: { specPath: string };
+  }>(
+    "/api/projects/:id/specs/content",
+    {
+      preHandler: fastify.authenticate,
+      schema: {
+        params: projectIdSchema,
+        querystring: z.object({ specPath: z.string() }),
+        response: {
+          200: fileContentResponseSchema,
+          403: errorResponse,
+          404: errorResponse,
+        },
+      },
+    },
+    async (request, reply) => {
+      try {
+        const content = await readFile({
+          projectId: request.params.id,
+          filePath: `.agent/specs/${request.query.specPath}`
+        });
+        return reply.send({ content });
+      } catch (error) {
+        const errorMessage = (error as Error).message;
+        if (errorMessage === "Project not found") {
+          return reply
+            .code(404)
+            .send(buildErrorResponse(404, "Project not found"));
+        }
+        if (
+          errorMessage === "File not found or not accessible" ||
+          errorMessage === "Access denied: File is outside project directory"
+        ) {
+          return reply.code(403).send(buildErrorResponse(403, errorMessage));
+        }
+
+        throw error;
+      }
+    }
+  );
+
+  /**
+   * POST /api/projects/:id/specs/content
+   * Save spec file content
+   */
+  fastify.post<{
+    Params: { id: string };
+    Body: { specPath: string; content: string };
+  }>(
+    "/api/projects/:id/specs/content",
+    {
+      preHandler: fastify.authenticate,
+      schema: {
+        params: projectIdSchema,
+        body: z.object({
+          specPath: z.string(),
+          content: z.string(),
+        }),
+        response: {
+          200: fileContentSaveResponseSchema,
+          403: errorResponse,
+          404: errorResponse,
+        },
+      },
+    },
+    async (request, reply) => {
+      try {
+        await writeFile({
+          projectId: request.params.id,
+          filePath: `.agent/specs/${request.body.specPath}`,
+          content: request.body.content
+        });
+        return reply.send({ success: true });
+      } catch (error) {
+        const errorMessage = (error as Error).message;
+        if (errorMessage === "Project not found") {
+          return reply
+            .code(404)
+            .send(buildErrorResponse(404, "Project not found"));
+        }
+        if (
+          errorMessage === "Access denied: File is outside project directory"
+        ) {
+          return reply.code(403).send(buildErrorResponse(403, errorMessage));
+        }
+
+        throw error;
+      }
+    }
+  );
+
+  /**
    * GET /api/projects/:id/readme
    * Get README.md content for a project
    */

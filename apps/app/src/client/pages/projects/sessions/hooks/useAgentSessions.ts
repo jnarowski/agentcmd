@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { SessionResponse } from "@/shared/types";
+import type { SessionResponse, SessionType } from "@/shared/types";
 import type { UnifiedMessage } from "agent-cli-sdk";
 import { api } from "@/client/utils/api";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ export interface GetSessionsFilters {
   includeArchived?: boolean;
   orderBy?: "created_at" | "updated_at";
   order?: "asc" | "desc";
+  type?: SessionType;
 }
 
 /**
@@ -29,6 +30,7 @@ export function useSessions(filters?: GetSessionsFilters) {
       if (filters?.includeArchived) params.append("includeArchived", "true");
       if (filters?.orderBy) params.append("orderBy", filters.orderBy);
       if (filters?.order) params.append("order", filters.order);
+      if (filters?.type) params.append("type", filters.type);
 
       const result = await api.get<{ data: SessionResponse[] }>(
         `/api/sessions?${params.toString()}`

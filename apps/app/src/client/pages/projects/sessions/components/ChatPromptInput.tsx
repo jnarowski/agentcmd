@@ -83,7 +83,9 @@ const ChatPromptInputInner = forwardRef<
     const { project } = useActiveProject();
 
     // Session store for permission modes, model, and agent type
-    const permissionMode = useSessionStore((s) => s.form.permissionMode || "acceptEdits");
+    const permissionMode = useSessionStore(
+      (s) => s.form.permissionMode || "acceptEdits"
+    );
     const setPermissionMode = useSessionStore((s) => s.setPermissionMode);
     const sessionId = useSessionStore((s) => s.sessionId);
     const model = useSessionStore((s) => s.form.model);
@@ -97,15 +99,26 @@ const ChatPromptInputInner = forwardRef<
     // Wrapper function to update both local state and database
     const handlePermissionModeChange = (mode: string) => {
       // Validate permission mode before updating, fallback to default if invalid
-      const validModes = ['default', 'plan', 'acceptEdits', 'bypassPermissions'];
+      const validModes = [
+        "default",
+        "plan",
+        "acceptEdits",
+        "bypassPermissions",
+      ];
       let safeMode = mode;
       if (!validModes.includes(mode)) {
-        console.warn('[ChatPromptInput] Invalid permission mode:', mode, '- falling back to acceptEdits');
-        safeMode = 'acceptEdits';
+        console.warn(
+          "[ChatPromptInput] Invalid permission mode:",
+          mode,
+          "- falling back to acceptEdits"
+        );
+        safeMode = "acceptEdits";
       }
 
       // Update local state immediately
-      setPermissionMode(safeMode as 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions');
+      setPermissionMode(
+        safeMode as "default" | "plan" | "acceptEdits" | "bypassPermissions"
+      );
 
       // Persist to database if session exists
       if (sessionId) {
@@ -131,7 +144,8 @@ const ChatPromptInputInner = forwardRef<
       if (capabilities.models.length === 0) return "";
 
       // Check if stored model is valid for current agent
-      const isValidModel = model && capabilities.models.some((m) => m.id === model);
+      const isValidModel =
+        model && capabilities.models.some((m) => m.id === model);
 
       // Use stored model if valid, otherwise use first available model
       return isValidModel ? (model ?? "") : capabilities.models[0].id;
@@ -233,6 +247,7 @@ const ChatPromptInputInner = forwardRef<
                 />
               )}
               <PromptInputSpeechButton
+                size="icon-responsive"
                 onTranscriptionChange={controller.textInput.setInput}
                 textareaRef={textareaRef}
               />
@@ -259,7 +274,7 @@ const ChatPromptInputInner = forwardRef<
                   <span className="inline-flex">
                     <PromptInputSubmit
                       className={cn(
-                        "h-11 w-11 md:h-8 md:w-8 transition-colors",
+                        "h-9 w-10 transition-colors",
                         permissionMode === "plan" &&
                           "bg-primary hover:bg-primary/90 text-primary-foreground",
                         permissionMode === "acceptEdits" &&

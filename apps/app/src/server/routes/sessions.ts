@@ -36,6 +36,7 @@ export async function sessionRoutes(fastify: FastifyInstance) {
       includeArchived?: string;
       orderBy?: 'created_at' | 'updated_at';
       order?: 'asc' | 'desc';
+      type?: 'chat' | 'workflow';
     };
   }>(
     "/api/sessions",
@@ -55,6 +56,7 @@ export async function sessionRoutes(fastify: FastifyInstance) {
         includeArchived,
         orderBy = 'created_at',
         order = 'desc',
+        type,
       } = request.query;
 
       request.log.info({
@@ -64,6 +66,7 @@ export async function sessionRoutes(fastify: FastifyInstance) {
         includeArchived,
         orderBy,
         order,
+        type,
       }, 'Getting sessions with filters');
 
       const sessions = await getSessions({
@@ -73,6 +76,7 @@ export async function sessionRoutes(fastify: FastifyInstance) {
         includeArchived: includeArchived === 'true',
         orderBy,
         order,
+        type,
       });
 
       return reply.send({ data: sessions });

@@ -1190,7 +1190,7 @@ export const PromptInputSpeechButton = ({
   return (
     <PromptInputButton
       className={cn(
-        "relative transition-all duration-200 h-11 w-11 md:h-8 md:w-8",
+        "relative transition-all duration-200",
         isListening && "animate-pulse bg-accent text-accent-foreground",
         className
       )}

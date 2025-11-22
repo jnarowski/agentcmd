@@ -71,11 +71,13 @@ export function NavActivities() {
     settings?.userPreferences?.activity_filter || "all";
 
   // Use activeProjectId from navigationStore for filtering
+  // Only fetch manual/user sessions (exclude workflow-generated)
   const { data: sessions } = useSessions({
     projectId: activeProjectId || undefined,
     limit: 20,
     orderBy: 'created_at',
     order: 'desc',
+    type: 'chat',
   });
 
   // Fetch only active/in-progress runs from backend
