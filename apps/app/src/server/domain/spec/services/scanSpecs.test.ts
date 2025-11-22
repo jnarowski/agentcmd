@@ -24,7 +24,7 @@ describe("scanSpecs", () => {
     expect(result).toEqual([]);
   });
 
-  it("should filter only specs in todo/ folder", async () => {
+  it("should filter only specs in todo/ folder and exclude completed/draft", async () => {
     const mockIndex = {
       lastId: 251112070556,
       specs: {
@@ -33,6 +33,12 @@ describe("scanSpecs", () => {
           status: "draft",
           created: "2025-11-12T05:49:39.000Z",
           updated: "2025-11-12T05:49:39.000Z",
+        },
+        "251112054940": {
+          path: "todo/251112054940-active-spec",
+          status: "in-progress",
+          created: "2025-11-12T05:49:40.000Z",
+          updated: "2025-11-12T05:49:40.000Z",
         },
         "251112061640": {
           path: "done/251112061640-type-safe-workflow-steps",
@@ -54,9 +60,11 @@ describe("scanSpecs", () => {
 
     const result = await scanSpecs("/fake/project/path", "project-123");
 
+    // Should only return the in-progress spec in todo/ folder
     expect(result).toHaveLength(1);
-    expect(result[0].id).toBe("251112054939");
-    expect(result[0].specPath).toBe("todo/251112054939-workflow-resync");
+    expect(result[0].id).toBe("251112054940");
+    expect(result[0].specPath).toBe("todo/251112054940-active-spec");
+    expect(result[0].status).toBe("in-progress");
     expect(result[0].projectId).toBe("project-123");
   });
 
@@ -133,5 +141,47 @@ describe("scanSpecs", () => {
       status: "in-progress",
       created_at: "2025-11-12T07:05:56.000Z",
     });
+  });
+
+  it("should exclude draft and completed statuses", async () => {
+    const mockIndex = {
+      lastId: 251112070560,
+      specs: {
+        "251112070556": {
+          path: "todo/251112070556-draft-spec",
+          status: "draft",
+          created: "2025-11-12T07:05:56.000Z",
+          updated: "2025-11-12T07:05:56.000Z",
+        },
+        "251112070557": {
+          path: "todo/251112070557-completed-spec",
+          status: "completed",
+          created: "2025-11-12T07:05:57.000Z",
+          updated: "2025-11-12T07:05:57.000Z",
+        },
+        "251112070558": {
+          path: "todo/251112070558-in-progress-spec",
+          status: "in-progress",
+          created: "2025-11-12T07:05:58.000Z",
+          updated: "2025-11-12T07:05:58.000Z",
+        },
+        "251112070559": {
+          path: "todo/251112070559-review-spec",
+          status: "review",
+          created: "2025-11-12T07:05:59.000Z",
+          updated: "2025-11-12T07:05:59.000Z",
+        },
+      },
+    };
+
+    vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(mockIndex));
+    vi.mocked(path.join).mockReturnValue("/fake/path/index.json");
+
+    const result = await scanSpecs("/fake/project/path", "project-999");
+
+    // Should only include in-progress and review specs
+    expect(result).toHaveLength(2);
+    expect(result.map((s) => s.status)).toEqual(["in-progress", "review"]);
+    expect(result.map((s) => s.id)).toEqual(["251112070558", "251112070559"]);
   });
 });

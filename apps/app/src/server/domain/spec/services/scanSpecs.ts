@@ -4,11 +4,11 @@
 
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { Spec } from "@/shared/types/spec.types";
+import type { Spec, SpecStatus } from "@/shared/types/spec.types";
 
 interface SpecIndexEntry {
   path: string;
-  status: string;
+  status: SpecStatus;
   spec_type?: string | null;
   created: string;
   updated: string;
@@ -36,6 +36,11 @@ export async function scanSpecs(projectPath: string, projectId: string): Promise
     for (const [id, entry] of Object.entries(index.specs)) {
       // Only include specs in todo/ folder
       if (!entry.path.startsWith("todo/")) {
+        continue;
+      }
+
+      // Exclude completed and draft specs
+      if (entry.status === "completed" || entry.status === "draft") {
         continue;
       }
 

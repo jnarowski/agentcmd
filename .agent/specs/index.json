@@ -139,6 +139,14 @@
       "created": "2025-11-21T21:09:00Z",
       "updated": "2025-11-22T14:34:01.954Z"
     },
+    "2511220157": {
+      "folder": "2511220157-active-spec-watcher",
+      "path": "todo/2511220157-active-spec-watcher/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-22T01:57:00Z",
+      "updated": "2025-11-22T01:57:00Z"
+    },
     "2511221435": {
       "folder": "2511221435-internal-session-framework",
       "path": "todo/2511221435-internal-session-framework/spec.md",

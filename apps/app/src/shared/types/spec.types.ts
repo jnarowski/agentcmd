@@ -3,6 +3,11 @@
  */
 
 /**
+ * Valid spec status values
+ */
+export type SpecStatus = "draft" | "in-progress" | "completed" | "review";
+
+/**
  * Spec extracted from .agent/specs/index.json
  * Represents a spec in the todo/ folder
  */
@@ -11,7 +16,7 @@ export interface Spec {
   name: string; // Extracted from folder/file name
   specPath: string; // Path relative to .agent/specs/ (e.g., "todo/251117.../spec.md")
   projectId: string; // Project ID this spec belongs to
-  status: string; // From index.json (e.g., "draft", "in-progress")
+  status: SpecStatus; // From index.json
   spec_type: string; // Spec type (e.g., "feature", "test") - defaults to "feature" for legacy specs
   created_at: string; // ISO timestamp from index.json
 }
