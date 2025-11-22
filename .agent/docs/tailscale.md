@@ -4,32 +4,21 @@ Quick reference for Tailscale Serve and Funnel with this app.
 
 ## 1. Installation
 
-**macOS:**
-```bash
-brew install tailscale
-```
+**macOS (recommended):**
 
-**Start Tailscale:**
-```bash
-sudo tailscaled install-system-daemon
-tailscale up
-```
+Download and install [Tailscale for Mac](https://tailscale.com/download/mac).
 
 **Verify:**
 ```bash
 tailscale status
 ```
 
-## 2. Shell Alias (zsh)
+## 2. Shell Alias (macOS app users)
 
 Add to `~/.zshrc`:
 
 ```bash
-# Tailscale shortcuts
-alias ts='tailscale'
-alias tss='tailscale status'
-alias tsserve='tailscale serve status'
-alias tsfunnel='tailscale funnel status'
+alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
 ```
 
 Reload:
@@ -57,8 +46,6 @@ Replace `your-machine-name` with output from `tailscale status`.
 
 ## 4. Running Serve
 
-**Serve entire app (production mode):**
-
 ```bash
 # Build app first
 cd apps/app
@@ -72,16 +59,6 @@ tailscale serve --https=443 --bg localhost:3456
 ```
 
 **Access:** `https://your-machine-name.ts.net`
-
-**Serve dev server:**
-
-```bash
-# Start Vite
-pnpm dev
-
-# Serve via Tailscale
-tailscale serve --https=443 --bg localhost:5173
-```
 
 **Status:**
 ```bash
@@ -170,12 +147,11 @@ pm2 restart agentcmd
 ## Troubleshooting
 
 **CORS errors:**
-- Production (same origin): Shouldn't need `ALLOWED_ORIGINS`
-- Dev mode: Add Tailscale domain to `ALLOWED_ORIGINS`
+- Same origin requests shouldn't need `ALLOWED_ORIGINS`
+- If issues, add Tailscale domain to `ALLOWED_ORIGINS`
 
 **WebSocket issues:**
-- Production: Auto-detects wss:// (no config needed)
-- Dev: Set `VITE_WS_HOST=your-machine-name.ts.net` in `.env`
+- Auto-detects wss:// protocol (no config needed)
 
 **Can't access:**
 ```bash
