@@ -1,6 +1,6 @@
 # Hello World Example
 
-**Status**: draft
+**Status**: completed
 **Type**: issue
 **Created**: 2025-11-22
 **Package**: apps/app

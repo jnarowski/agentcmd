@@ -16,10 +16,11 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/client/components/ui/dropdown-menu";
-import { FileText, MoreHorizontal, FolderInput } from "lucide-react";
+import { FileText, MoreHorizontal, FolderInput, Eye } from "lucide-react";
 import { format } from "date-fns";
 import type { Spec } from "@/shared/types/spec.types";
 import { api } from "@/client/utils/api";
+import { SpecFileViewer } from "@/client/pages/projects/workflows/components/SpecFileViewer";
 
 interface SpecItemProps {
   spec: Spec;
@@ -32,6 +33,7 @@ export function SpecItem({ spec }: SpecItemProps) {
   const [hoveredSpecId, setHoveredSpecId] = useState<string | null>(null);
   const [menuOpenSpecId, setMenuOpenSpecId] = useState<string | null>(null);
   const [isMoving, setIsMoving] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
 
   // Extract current folder from specPath (e.g., "done/2511..." → "done")
   const currentFolder = spec.specPath.split("/")[0] as
@@ -119,6 +121,10 @@ export function SpecItem({ spec }: SpecItemProps) {
             <MoreHorizontal className="size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setViewerOpen(true)}>
+              <Eye className="size-4 mr-2" />
+              View Spec
+            </DropdownMenuItem>
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
                 <FolderInput className="size-4 mr-2" />
@@ -138,6 +144,14 @@ export function SpecItem({ spec }: SpecItemProps) {
             </DropdownMenuSub>
           </DropdownMenuContent>
         </DropdownMenu>
+      )}
+      {viewerOpen && (
+        <SpecFileViewer
+          projectId={spec.projectId}
+          specPath={spec.specPath}
+          specName={spec.name}
+          onClose={() => setViewerOpen(false)}
+        />
       )}
     </SidebarMenuItem>
   );

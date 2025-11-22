@@ -173,11 +173,11 @@
     },
     "2511221344": {
       "folder": "2511221344-hello-world",
-      "path": "todo/2511221344-hello-world/spec.md",
+      "path": "done/2511221344-hello-world/spec.md",
       "spec_type": "issue",
-      "status": "draft",
+      "status": "completed",
       "created": "2025-11-22T13:44:00Z",
-      "updated": "2025-11-22T13:44:00Z"
+      "updated": "2025-11-22T14:45:00Z"
     },
     "2511221350": {
       "folder": "2511221350-chat-grid-layout",

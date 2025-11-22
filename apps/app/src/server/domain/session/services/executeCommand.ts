@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { createSession } from "./createSession";
 import { executeAgent } from "./executeAgent";
 import type { PermissionMode } from "agent-cli-sdk";
@@ -32,7 +32,7 @@ export async function executeCommand<T = string>(
   } = options;
 
   // Generate unique session ID for internal execution
-  const sessionId = `internal-${randomBytes(8).toString("hex")}`;
+  const sessionId = randomUUID();
 
   // Create internal session (hidden from UI)
   const session = await createSession({
