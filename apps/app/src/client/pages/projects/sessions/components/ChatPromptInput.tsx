@@ -15,6 +15,7 @@ import {
 } from "@/client/components/ai-elements/PromptInput";
 import type { PromptInputMessage } from "@/client/components/ai-elements/PromptInput";
 import { useAgentCapabilities } from "@/client/hooks/useSettings";
+import { useIsPwa } from "@/client/hooks/use-pwa";
 import { ChatPromptInputFiles } from "./ChatPromptInputFiles";
 import { ChatPromptInputSlashCommands } from "./ChatPromptInputSlashCommands";
 import { PermissionModeSelector } from "./PermissionModeSelector";
@@ -74,6 +75,7 @@ const ChatPromptInputInner = forwardRef<
   ) => {
     const controller = usePromptInputController();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const isPwa = useIsPwa();
 
     // Get WebSocket connection status
     const { isConnected } = useWebSocket();
@@ -209,6 +211,11 @@ const ChatPromptInputInner = forwardRef<
             permissionMode === "bypassPermissions" &&
               "border-red-500 md:has-[[data-slot=input-group-control]:focus-visible]:border-red-500"
           )}
+          style={
+            isPwa
+              ? { paddingBottom: "env(safe-area-inset-bottom)" }
+              : undefined
+          }
         >
           <PromptInputBody>
             <PromptInputAttachments>
