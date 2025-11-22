@@ -207,3 +207,25 @@ export function useUploadArtifact() {
     },
   });
 }
+
+// Delete workflow run
+async function deleteWorkflowRun(runId: string): Promise<void> {
+  await api.delete(`/api/workflow-runs/${runId}`);
+}
+
+export function useDeleteWorkflowRun() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteWorkflowRun,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: workflowKeys.runs(),
+      });
+      toast.success('Workflow run deleted');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete workflow run');
+    },
+  });
+}

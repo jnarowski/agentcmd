@@ -1,15 +1,24 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
-import { XCircle, ExternalLink } from "lucide-react";
+import { useEffect, useState } from "react";
+import { XCircle, ExternalLink, Trash2, ChevronDown } from "lucide-react";
 import { WorkflowStatusBadge } from "./components/WorkflowStatusBadge";
 import { PhaseTimeline } from "./components/timeline/PhaseTimeline";
 import { WorkflowDetailPanel } from "./components/detail-panel/WorkflowDetailPanel";
+import { DeleteWorkflowRunDialog } from "./components/DeleteWorkflowRunDialog";
 import { useWorkflowRun } from "./hooks/useWorkflowRun";
 import { useWorkflowDefinition } from "./hooks/useWorkflowDefinition";
 import { useWorkflowWebSocket } from "./hooks/useWorkflowWebSocket";
 import { useWorkflowDetailPanel } from "./hooks/useWorkflowDetailPanel";
+import { useCancelWorkflow } from "./hooks/useWorkflowMutations";
 import { useProjectId } from "@/client/hooks/useProjectId";
 import { PageHeader } from "@/client/components/PageHeader";
+import { Button } from "@/client/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/client/components/ui/dropdown-menu";
 
 function WorkflowRunDetailPage() {
   const projectId = useProjectId();
@@ -18,6 +27,7 @@ function WorkflowRunDetailPage() {
     runId: string;
   }>();
   const navigate = useNavigate();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // Detail panel state
   const {
@@ -41,6 +51,23 @@ function WorkflowRunDetailPage() {
     isLoading: definitionLoading,
     isError: definitionError,
   } = useWorkflowDefinition(definitionId);
+
+  // Mutations
+  const cancelMutation = useCancelWorkflow();
+
+  // Handlers
+  const handleCancel = () => {
+    if (!runId) return;
+    cancelMutation.mutate(runId);
+  };
+
+  const handleDelete = () => {
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteSuccess = () => {
+    navigate(`/projects/${projectId}/workflows/${definitionId}`);
+  };
 
   // Clear selected session when runId changes
   useEffect(() => {
@@ -135,6 +162,45 @@ function WorkflowRunDetailPage() {
             )}
           </>
         }
+        actions={
+          <div className="flex items-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCancel}
+              disabled={
+                cancelMutation.isPending ||
+                run.status === "completed" ||
+                run.status === "failed" ||
+                run.status === "cancelled"
+              }
+              className="rounded-r-none border-r-0 h-9"
+            >
+              Cancel
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-l-none px-2 h-9"
+                >
+                  <ChevronDown className="h-4 w-4" />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={handleDelete}
+                  className="text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        }
         alerts={
           run.status === "failed" && run.error_message ? (
             <div className="rounded-md bg-red-500/10 border border-red-500/20 px-4 py-3">
@@ -185,6 +251,14 @@ function WorkflowRunDetailPage() {
           />
         </div>
       </div>
+
+      {/* Delete Dialog */}
+      <DeleteWorkflowRunDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        run={run}
+        onSuccess={handleDeleteSuccess}
+      />
     </div>
   );
 }

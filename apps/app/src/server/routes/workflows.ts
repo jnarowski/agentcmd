@@ -11,6 +11,7 @@ import {
   generateRunNames,
   getStepLogs,
   getInngestRunStatus,
+  deleteWorkflowRun,
 } from "@/server/domain/workflow/services";
 import type { WorkflowStatus } from "@/server/domain/workflow/types/workflow.types";
 import { readFile } from "@/server/domain/file/services/readFile";
@@ -185,6 +186,44 @@ export async function workflowRoutes(fastify: FastifyInstance) {
       }
 
       return reply.send({ data: run });
+    }
+  );
+
+  /**
+   * DELETE /api/workflow-runs/:id
+   * Delete a workflow run (hard delete)
+   */
+  fastify.delete<{
+    Params: z.infer<typeof runIdSchema>;
+  }>(
+    "/api/workflow-runs/:id",
+    {
+      preHandler: fastify.authenticate,
+      schema: {
+        params: runIdSchema,
+      },
+    },
+    async (request, reply) => {
+      const { id } = request.params;
+      const userId = (request.user! as { id: string }).id;
+
+      fastify.log.info({ userId, runId: id }, "Deleting workflow run");
+
+      const run = await getWorkflowRunById({ id });
+
+      if (!run) {
+        throw new NotFoundError("Workflow run not found");
+      }
+
+      if (run.user_id !== userId) {
+        return reply
+          .code(403)
+          .send({ error: { message: "Access denied", statusCode: 403 } });
+      }
+
+      await deleteWorkflowRun({ id });
+
+      return reply.code(204).send();
     }
   );
 
