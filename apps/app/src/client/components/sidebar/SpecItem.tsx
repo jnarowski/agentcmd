@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/client/components/ui/dropdown-menu";
 import { FileText, MoreHorizontal, FolderInput } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import type { Spec } from "@/shared/types/spec.types";
 import { api } from "@/client/utils/api";
 
@@ -97,14 +97,10 @@ export function SpecItem({ spec }: SpecItemProps) {
       >
         <FileText className="size-4 shrink-0 mr-1.5" />
         <div className="flex flex-1 flex-col gap-0 min-w-0">
-          <div className="flex items-center justify-between gap-2 min-w-0">
-            <span className="text-sm min-w-0 truncate">{spec.name}</span>
-            <span className="text-xs text-muted-foreground shrink-0">
-              {formatDistanceToNow(new Date(spec.created_at), {
-                addSuffix: true,
-              })}
-            </span>
-          </div>
+          <span className="text-sm min-w-0 truncate">{spec.name}</span>
+          <span className="text-xs text-muted-foreground pb-0.5 tabular-nums">
+            {format(new Date(spec.created_at), "MM/dd 'at' h:mma")}
+          </span>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <span>{spec.status}</span>
             <span>•</span>
