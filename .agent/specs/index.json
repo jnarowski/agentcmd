@@ -154,6 +154,14 @@
       "status": "draft",
       "created": "2025-11-22T14:35:00Z",
       "updated": "2025-11-22T14:35:00Z"
+    },
+    "2511220927": {
+      "folder": "2511220927-image-upload-fix",
+      "path": "todo/2511220927-image-upload-fix/spec.md",
+      "spec_type": "issue",
+      "status": "draft",
+      "created": "2025-11-22T16:28:35Z",
+      "updated": "2025-11-22T16:28:35Z"
     }
   }
 }

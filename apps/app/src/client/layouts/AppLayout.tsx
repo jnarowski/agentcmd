@@ -14,7 +14,6 @@ import { useIsMobile } from "@/client/hooks/use-mobile";
 import { AppSidebar } from "@/client/components/AppSidebar";
 import { SidebarInset, SidebarProvider } from "@/client/components/ui/sidebar";
 import { ConnectionStatusBanner } from "@/client/components/ConnectionStatusBanner";
-import EdgeSwipeZone from "@/client/components/EdgeSwipeZone";
 import { api } from "@/client/utils/api";
 import { workflowKeys } from "@/client/pages/projects/workflows/hooks/queryKeys";
 
@@ -114,7 +113,6 @@ function AppLayout() {
       }
     >
       <AppSidebar collapsible="offcanvas" />
-      <EdgeSwipeZone />
       <SidebarInset>
         <ConnectionStatusBanner
           readyState={readyState}
