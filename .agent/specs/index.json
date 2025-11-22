@@ -162,6 +162,14 @@
       "status": "draft",
       "created": "2025-11-22T16:28:35Z",
       "updated": "2025-11-22T16:28:35Z"
+    },
+    "2511221205": {
+      "folder": "2511221205-session-zustand-migration",
+      "path": "todo/2511221205-session-zustand-migration/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-22T19:08:23Z",
+      "updated": "2025-11-22T19:08:23Z"
     }
   }
 }
