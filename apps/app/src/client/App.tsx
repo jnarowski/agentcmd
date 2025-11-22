@@ -24,6 +24,7 @@ import WebhookDetailPage from "@/client/pages/projects/webhooks/WebhookDetailPag
 import LoginPage from "@/client/pages/auth/LoginPage";
 import SignupPage from "@/client/pages/auth/SignupPage";
 import ComponentsPage from "@/client/pages/ComponentsPage";
+import { ChatLayoutMock } from "@/client/pages/mock/ChatLayoutMock";
 
 function AppContent() {
   return (
@@ -32,6 +33,7 @@ function AppContent() {
         <Routes>
           {/* Public routes */}
           <Route path="/components" element={<ComponentsPage />} />
+          <Route path="/mock/chat-layout" element={<ChatLayoutMock />} />
 
           {/* Auth routes */}
           <Route element={<AuthLayout />}>
