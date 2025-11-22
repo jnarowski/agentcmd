@@ -71,11 +71,13 @@ export function NavActivities() {
     settings?.userPreferences?.activity_filter || "all";
 
   // Use activeProjectId from navigationStore for filtering
+  // Only fetch manual/user sessions (exclude workflow-generated)
   const { data: sessions } = useSessions({
     projectId: activeProjectId || undefined,
     limit: 20,
     orderBy: 'created_at',
     order: 'desc',
+    type: 'chat',
   });
 
   // Fetch only active/in-progress runs from backend
@@ -184,21 +186,21 @@ export function NavActivities() {
           <ToggleGroupItem
             value="all"
             aria-label="Show all"
-            className="h-6 px-2 text-xs"
+            className="h-8 px-3 text-sm md:h-6 md:px-2 md:text-xs"
           >
             All
           </ToggleGroupItem>
           <ToggleGroupItem
             value="sessions"
             aria-label="Show sessions only"
-            className="h-6 px-2 text-xs"
+            className="h-8 px-3 text-sm md:h-6 md:px-2 md:text-xs"
           >
             Sessions
           </ToggleGroupItem>
           <ToggleGroupItem
             value="workflows"
             aria-label="Show workflows only"
-            className="h-6 px-2 text-xs"
+            className="h-8 px-3 text-sm md:h-6 md:px-2 md:text-xs"
           >
             Workflows
           </ToggleGroupItem>
@@ -209,10 +211,10 @@ export function NavActivities() {
               <Button
                 size="sm"
                 variant="ghost"
-                className="ml-auto h-6 w-6 p-0 flex items-center justify-center"
+                className="ml-auto h-8 w-8 md:h-6 md:w-6 p-0 flex items-center justify-center"
                 aria-label="Create new session or workflow"
               >
-                <Plus className="size-3.5" />
+                <Plus className="size-5 md:size-3.5" />
               </Button>
             </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
@@ -265,7 +267,7 @@ export function NavActivities() {
           variant="ghost"
           onClick={handleRefresh}
           disabled={syncProjectsMutation.isPending}
-          className="h-6 w-6 p-0 flex items-center justify-center"
+          className="hidden md:flex h-6 w-6 p-0 items-center justify-center"
           aria-label="Refresh activities"
         >
           <RefreshCw className={`size-3.5 ${syncProjectsMutation.isPending ? "animate-spin" : ""}`} />

@@ -1198,7 +1198,7 @@ export const PromptInputSpeechButton = ({
       onClick={toggleListening}
       {...props}
     >
-      <MicIcon className="size-4" />
+      <MicIcon className="size-5 md:size-4" />
     </PromptInputButton>
   );
 };

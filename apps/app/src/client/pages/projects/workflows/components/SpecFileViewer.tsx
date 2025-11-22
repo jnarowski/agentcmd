@@ -1,87 +1,56 @@
 import { useState, useEffect, useCallback } from "react";
 import { X, Save, Maximize2, Minimize2 } from "lucide-react";
 import { Button } from "@/client/components/ui/button";
-import { CodeEditor, type SupportedLanguage } from "@/client/components/CodeEditor";
+import { CodeEditor } from "@/client/components/CodeEditor";
 import { api } from "@/client/utils/api";
 
-interface FileEditorProps {
+interface SpecFileViewerProps {
   projectId: string;
-  filePath: string;
-  fileName: string;
+  specPath: string;
+  specName: string;
   onClose: () => void;
 }
 
-// Get language based on file extension
-function getLanguageFromFilename(filename: string): SupportedLanguage | undefined {
-  const ext = filename.split(".").pop()?.toLowerCase();
-  switch (ext) {
-    case "js":
-      return "javascript";
-    case "jsx":
-      return "jsx";
-    case "ts":
-      return "typescript";
-    case "tsx":
-      return "tsx";
-    case "py":
-      return "python";
-    case "html":
-    case "htm":
-      return "html";
-    case "css":
-    case "scss":
-    case "less":
-      return "css";
-    case "json":
-      return "json";
-    case "md":
-    case "markdown":
-      return "markdown";
-    default:
-      return undefined;
-  }
-}
-
-export function FileEditor({
+export function SpecFileViewer({
   projectId,
-  filePath,
-  fileName,
+  specPath,
+  specName,
   onClose,
-}: FileEditorProps) {
+}: SpecFileViewerProps) {
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [wordWrap, setWordWrap] = useState(false);
+  const [wordWrap, setWordWrap] = useState(true); // Default to true for markdown
 
-  // Load file content
+  // Load spec content
   useEffect(() => {
-    const loadFileContent = async () => {
+    const loadSpecContent = async () => {
       try {
         setLoading(true);
         const data = await api.get<{ content: string }>(
-          `/api/projects/${projectId}/files/content?path=${encodeURIComponent(filePath)}`
+          `/api/projects/${projectId}/specs/content?specPath=${encodeURIComponent(specPath)}`
         );
         setContent(data.content);
       } catch (error) {
-        console.error("Error loading file:", error);
+        console.error("Error loading spec:", error);
         setContent(
-          `// Error loading file: ${error instanceof Error ? error.message : "Unknown error"}\n// File: ${fileName}\n// Path: ${filePath}`
+          `# Error Loading Spec\n\n${error instanceof Error ? error.message : "Unknown error"}\n\n**Spec:** ${specName}\n**Path:** ${specPath}`
         );
       } finally {
         setLoading(false);
       }
     };
 
-    loadFileContent();
-  }, [projectId, filePath, fileName]);
+    loadSpecContent();
+  }, [projectId, specPath, specName]);
 
   const handleSave = useCallback(async () => {
     setSaving(true);
     try {
-      await api.post(`/api/projects/${projectId}/files/content`, {
-        path: filePath,
+      await api.post(`/api/projects/${projectId}/specs/content`, {
+        specPath,
         content,
       });
 
@@ -89,14 +58,14 @@ export function FileEditor({
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2000);
     } catch (error) {
-      console.error("Error saving file:", error);
+      console.error("Error saving spec:", error);
       alert(
-        `Error saving file: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Error saving spec: ${error instanceof Error ? error.message : "Unknown error"}`
       );
     } finally {
       setSaving(false);
     }
-  }, [projectId, filePath, content]);
+  }, [projectId, specPath, content]);
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
@@ -109,16 +78,17 @@ export function FileEditor({
         if (e.key === "s") {
           e.preventDefault();
           handleSave();
-        } else if (e.key === "Escape") {
-          e.preventDefault();
-          onClose();
         }
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [content, onClose, handleSave]);
+  }, [onClose, handleSave]);
 
   if (loading) {
     return (
@@ -128,7 +98,7 @@ export function FileEditor({
         <div className="w-full h-full md:rounded-lg md:w-auto md:h-auto p-8 flex items-center justify-center bg-background border border-border/50">
           <div className="flex items-center gap-3">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-            <span>Loading {fileName}...</span>
+            <span>Loading {specName}...</span>
           </div>
         </div>
       </div>
@@ -154,16 +124,16 @@ export function FileEditor({
         <div className="flex items-center justify-between p-4 border-b flex-shrink-0 min-w-0">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="w-8 h-8 bg-primary rounded flex items-center justify-center flex-shrink-0">
-              <span className="text-primary-foreground text-sm font-mono">
-                {(fileName.split(".").pop()?.toUpperCase() || "FILE").slice(0, 3)}
+              <span className="text-primary-foreground text-sm font-mono font-bold">
+                MD
               </span>
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 min-w-0">
-                <h3 className="font-medium truncate">{fileName}</h3>
+                <h3 className="font-medium truncate">{specName}</h3>
               </div>
               <p className="text-sm text-muted-foreground truncate">
-                {filePath}
+                {specPath}
               </p>
             </div>
           </div>
@@ -241,11 +211,11 @@ export function FileEditor({
         </div>
 
         {/* Editor */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-auto">
           <CodeEditor
             value={content}
             onChange={setContent}
-            language={getLanguageFromFilename(fileName)}
+            language="markdown"
             height="100%"
             showLineNumbers={true}
             wordWrap={wordWrap}
@@ -257,13 +227,11 @@ export function FileEditor({
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <span>Lines: {content.split("\n").length}</span>
             <span>Characters: {content.length}</span>
-            <span>
-              Language: {fileName.split(".").pop()?.toUpperCase() || "Text"}
-            </span>
+            <span>Language: Markdown</span>
           </div>
 
           <div className="text-sm text-muted-foreground hidden md:block">
-            Press Ctrl+S to save • Esc to close
+            Press Cmd/Ctrl+S to save • Esc to close
           </div>
         </div>
       </div>

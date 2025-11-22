@@ -349,7 +349,7 @@ If the review finds zero HIGH or MEDIUM priority issues, use this simplified tem
 "incomplete_implementations": 2,
 "code_quality": 2
 },
-"explanation": "Implementation incomplete with 5 issues found (2 high, 3 medium priority). High priority issues include missing error handling in authentication service and incomplete validation logic. Medium priority issues involve code duplication and missing edge case handling. 3 issues from previous review were successfully resolved."
+"summary": "Implementation incomplete with 5 issues found (2 high, 3 medium priority). High priority issues include missing error handling in authentication service and incomplete validation logic. Medium priority issues involve code duplication and missing edge case handling. 3 issues from previous review were successfully resolved."
 }
 </json_output>
 
@@ -366,7 +366,7 @@ If the review finds zero HIGH or MEDIUM priority issues, use this simplified tem
 - `previous_issues_resolved`: Count of issues from previous review that were fixed (0 if first review)
 - `priority_breakdown`: Counts by priority level
 - `categories`: Counts by issue category
-- `explanation`: Human-readable summary explaining why the review passed/failed, including highlights of key issues and what was fixed from previous reviews
+- `summary`: Human-readable summary explaining why the review passed/failed, including highlights of key issues and what was fixed from previous reviews
 
 ### Text
 

@@ -155,8 +155,8 @@ export const ChatPromptInputFiles = ({
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
-        <PromptInputButton>
-          <AtSignIcon size={16} />
+        <PromptInputButton size="icon-responsive">
+          <AtSignIcon size={20} className="md:size-4" />
         </PromptInputButton>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-[calc(100vw-2rem)] md:w-[400px] p-0">

@@ -96,7 +96,7 @@ export function ProjectCombobox() {
 
   const renderProjectItem = (project: Project) => (
     <div className="flex items-center justify-between w-full gap-2">
-      <span>{project.name}</span>
+      <span className="text-base">{project.name}</span>
       <button
         type="button"
         onClick={(e) => handleToggleStar(e, project)}
@@ -247,7 +247,7 @@ export function ProjectCombobox() {
           </DrawerTrigger>
           <DrawerContent aria-describedby={undefined}>
             <DrawerTitle className="sr-only">Select project</DrawerTitle>
-            <div className="mt-4 border-t">
+            <div className="mt-4 border-t [&_[cmdk-item]]:py-3">
               {renderCommandContent()}
             </div>
           </DrawerContent>

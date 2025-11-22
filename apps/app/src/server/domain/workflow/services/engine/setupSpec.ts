@@ -4,7 +4,7 @@ import type { FastifyBaseLogger } from "fastify";
 import type { WorkflowRun } from "@prisma/client";
 import { getSpecCommand } from "../getSpecCommand";
 import { existsSync } from "fs";
-import { resolve, isAbsolute } from "path";
+import { resolve, isAbsolute, basename } from "path";
 
 /**
  * Setup spec file for workflow execution.
@@ -44,7 +44,10 @@ export async function setupSpec(params: {
       throw new Error(`Spec file not found: ${event.data.specFile}`);
     }
 
-    await step.annotation("spec-file-loaded", { message: specFilePath });
+    const specFileName = basename(specFilePath);
+    await step.annotation("spec-file-loaded", {
+      message: `Spec file verified: ${specFileName}`,
+    });
 
     return specFilePath;
   }

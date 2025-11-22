@@ -4,7 +4,7 @@
 /**
  * Union type of all available slash command names
  */
-export type SlashCommandName = "/audit-claude-md" | "/audit" | "/check" | "/cmd:add-spec" | "/cmd:generate-bug-spec" | "/cmd:generate-feature-spec" | "/cmd:generate-issue-spec" | "/cmd:generate-prd" | "/cmd:implement-spec" | "/cmd:list-specs" | "/cmd:move-spec" | "/cmd:review-spec-implementation" | "/commit-and-push" | "/commit" | "/document-cli-tool" | "/estimate-spec" | "/find-claude-session" | "/fix" | "/generate-research" | "/generate-slash-command" | "/linear:implement-issue" | "/prime" | "/pull-request" | "/refresh-docs" | "/refresh-spec-index" | "/remove-spec" | "/tools" | "/use-browser";
+export type SlashCommandName = "/audit-claude-md" | "/audit" | "/check" | "/cmd:add-spec" | "/cmd:generate-bug-spec" | "/cmd:generate-feature-spec" | "/cmd:generate-issue-spec" | "/cmd:generate-prd" | "/cmd:implement-spec" | "/cmd:list-specs" | "/cmd:move-spec" | "/cmd:review-spec-implementation" | "/commit-and-push" | "/commit" | "/document-cli-tool" | "/estimate-spec" | "/find-claude-session" | "/fix" | "/generate-e2e-test-plan" | "/generate-research" | "/generate-slash-command" | "/linear:implement-issue" | "/prime" | "/pull-request" | "/refresh-docs" | "/refresh-spec-index" | "/remove-spec" | "/tools" | "/use-browser";
 
 /**
  * Mapping of command names to their argument types
@@ -28,6 +28,7 @@ export interface SlashCommandArgs {
   "/estimate-spec": { "spec-id-or-path-or-name": string };
   "/find-claude-session": { "search-description": string; "project-path (optional)": string };
   "/fix": Record<string, never>;
+  "/generate-e2e-test-plan": { "specIdOrNameOrPath": string };
   "/generate-research": { "featureName": string; "researchTopic": string; "format": string };
   "/generate-slash-command": { "command-name": string; "description": string };
   "/linear:implement-issue": Record<string, never>;
@@ -63,6 +64,7 @@ export const SlashCommandArgOrder = {
   "/estimate-spec": ["spec-id-or-path-or-name"],
   "/find-claude-session": ["search-description", "project-path (optional)"],
   "/fix": [],
+  "/generate-e2e-test-plan": ["specIdOrNameOrPath"],
   "/generate-research": ["featureName", "researchTopic", "format"],
   "/generate-slash-command": ["command-name", "description"],
   "/linear:implement-issue": [],
@@ -240,6 +242,13 @@ export interface FindClaudeSessionArgs {
 export interface FixArgs {}
 
 /**
+ * Args type for /generate-e2e-test-plan command
+ */
+export interface GenerateE2eTestPlanArgs {
+  specIdOrNameOrPath: string;
+}
+
+/**
  * Args type for /generate-research command
  */
 export interface GenerateResearchArgs {
@@ -399,6 +408,8 @@ export interface CmdGeneratePrdResponse {
 export interface CmdImplementSpecResponse {
   /** Boolean - true if all tasks completed successfully, false if any tasks failed or were skipped */
   success: boolean;
+  /** String - 1-2 sentences describing what was implemented and key changes + 1 sentence on task/validation status */
+  summary: string;
   /** String - Timestamp-based spec ID (e.g., "2511131522") */
   spec_id: string;
   /** String - Full path to the spec file that was implemented */
@@ -515,7 +526,7 @@ export interface CmdReviewSpecImplementationResponse {
     code_quality: number;
   };
   /** Human-readable summary explaining why the review passed/failed, including highlights of key issues and what was fixed from previous reviews */
-  explanation: string;
+  summary: string;
 }
 
 /**
