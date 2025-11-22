@@ -428,6 +428,30 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]); // Reconnect when token changes
 
+  // Auto-reconnect when app regains focus (mobile background/foreground, desktop tab switch)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      // Only reconnect if:
+      // 1. Page became visible (not hidden)
+      // 2. Connection is closed
+      // 3. Not an intentional disconnect
+      if (
+        document.visibilityState === "visible" &&
+        readyState === ReadyState.CLOSED &&
+        !intentionalCloseRef.current
+      ) {
+        console.log("[WebSocket] 📱 App refocused, attempting reconnection");
+        reconnect();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [readyState, reconnect]);
+
   const contextValue: WebSocketContextValue = {
     sendMessage,
     readyState,
