@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BookOpen, ChevronsUpDown, FolderKanban, LogOut, Mail, Settings } from "lucide-react";
+import { BookOpen, ChevronsUpDown, FolderKanban, LogOut, Mail, RefreshCw, Settings } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -18,6 +18,7 @@ import {
 import { SettingsDialog } from "@/client/components/SettingsDialog";
 import { NewsletterDialog } from "@/client/components/NewsletterDialog";
 import { useWebSocket } from "@/client/hooks/useWebSocket";
+import { useIsPwa } from "@/client/hooks/use-pwa";
 import { ReadyState } from "@/shared/types/websocket.types";
 import { getWebsiteUrl } from "@/client/utils/envConfig";
 
@@ -36,6 +37,7 @@ export function NavUser({
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isNewsletterOpen, setIsNewsletterOpen] = useState(false);
   const { isConnected, readyState, reconnectAttempt } = useWebSocket();
+  const isPwa = useIsPwa();
 
   const getStatusColor = () => {
     if (isConnected) return "bg-green-500";
@@ -115,6 +117,12 @@ export function NavUser({
                 <Mail />
                 Subscribe to Newsletter
               </DropdownMenuItem>
+              {isPwa && (
+                <DropdownMenuItem onClick={() => window.location.reload()}>
+                  <RefreshCw />
+                  Reload App
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onLogout}>
                 <LogOut />
