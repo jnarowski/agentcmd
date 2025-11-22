@@ -262,7 +262,8 @@ None - all changes to existing files
 - Updated ChatInterface to use overflow-y-auto instead of h-full
 - Removed flex-1 from conversation.tsx StickToBottom component
 - Grid now controls height, scroll container only handles overflow
-- No deviations - scroll behavior working as expected
+- **CRITICAL FIX**: Added h-full back to Conversation alongside overflow-y-auto - required for proper height constraint chain (Grid row → AgentSessionViewer → ChatInterface → Conversation with h-full + overflow-y-auto)
+- **SAFE AREA REFINEMENT**: Moved safe-area-inset-bottom padding from outer wrapper to PromptInputFooter (inside background color) - removed PWA check, now works universally with CSS env() fallback
 
 ## Testing Strategy
 
@@ -411,6 +412,75 @@ No new dependencies required - uses existing:
 - ChatGPT layout pattern (industry standard)
 - CSS Grid guide: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Grid_Layout
 - Safe area insets: https://developer.mozilla.org/en-US/docs/Web/CSS/env
+
+## Revert Guide
+
+If layout issues occur, revert in this order:
+
+### 1. Revert Safe-Area Padding (if input positioning breaks)
+
+**ChatPromptInput.tsx** (line 231):
+```tsx
+// Remove:
+<PromptInputFooter className="pb-[calc(0.5rem+env(safe-area-inset-bottom))] md:pb-3">
+
+// Restore:
+<PromptInputFooter>
+```
+
+**ChatPromptInput.tsx** (lines 17-18, 76):
+```tsx
+// Add back:
+import { useIsPwa } from "@/client/hooks/use-pwa";
+const isPwa = useIsPwa();
+```
+
+**ChatPromptInput.tsx** (after line 213):
+```tsx
+// Add back:
+style={isPwa ? { paddingBottom: "env(safe-area-inset-bottom)" } : undefined}
+```
+
+### 2. Revert Scroll Fix (if messages don't scroll)
+
+**ChatInterface.tsx** (line 87):
+```tsx
+// Change from:
+className="h-full overflow-y-auto"
+
+// Back to:
+className="overflow-y-auto"
+```
+
+### 3. Revert to Original Layout (full revert)
+
+**ProjectSessionPage.tsx** - Restore absolute positioning:
+```tsx
+<div className="absolute inset-0 flex flex-col overflow-hidden">
+  <div className="flex-1 overflow-hidden">
+    <AgentSessionViewer ... />
+  </div>
+  <div className="md:pb-4 md:px-4">
+    <ChatPromptInput ... />
+  </div>
+</div>
+```
+
+**ProjectLoader.tsx** - Restore SessionHeader:
+```tsx
+{currentSession && <SessionHeader session={currentSession} />}
+```
+
+**ProjectHeader.tsx** - Remove sticky:
+```tsx
+// Change <header> back to <div>
+// Remove: sticky top-0 z-10
+```
+
+**SessionHeader.tsx** - Remove sticky:
+```tsx
+// Remove: sticky top-[52px] z-10
+```
 
 ## Next Steps
 
