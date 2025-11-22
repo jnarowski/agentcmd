@@ -66,7 +66,7 @@ function WorkflowRunDetailPage() {
   };
 
   const handleDeleteSuccess = () => {
-    navigate(`/projects/${projectId}/workflows/${definitionId}`);
+    navigate(`/projects/${projectId}/workflows`);
   };
 
   // Clear selected session when runId changes
