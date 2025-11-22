@@ -3,17 +3,17 @@
 **Status**: draft
 **Created**: 2025-11-22
 **Package**: apps/app
-**Total Complexity**: 156 points
+**Total Complexity**: 343 points
 **Phases**: 9
-**Tasks**: 55
-**Overall Avg Complexity**: 6.6/10
+**Tasks**: 56
+**Overall Avg Complexity**: 6.1/10
 
 ## Complexity Breakdown
 
 | Phase                          | Tasks | Total Points | Avg Complexity | Max Task |
 | ------------------------------ | ----- | ------------ | -------------- | -------- |
 | Phase 0: Backend Full Payloads | 3     | 14           | 4.7/10         | 6/10     |
-| Phase 1: Store Foundation      | 8     | 52           | 6.5/10         | 9/10     |
+| Phase 1: Store Foundation      | 9     | 57           | 6.3/10         | 9/10     |
 | Phase 2: API Layer             | 7     | 47           | 6.7/10         | 8/10     |
 | Phase 3: Query Hooks           | 6     | 36           | 6.0/10         | 7/10     |
 | Phase 4: WebSocket             | 5     | 30           | 6.0/10         | 7/10     |
@@ -21,7 +21,7 @@
 | Phase 6: Mutations             | 4     | 24           | 6.0/10         | 7/10     |
 | Phase 7: Testing               | 8     | 54           | 6.8/10         | 8/10     |
 | Phase 8: Cleanup               | 4     | 16           | 4.0/10         | 5/10     |
-| **Total**                      | **55** | **338**      | **6.1/10**     | **9/10** |
+| **Total**                      | **56** | **343**      | **6.1/10**     | **9/10** |
 
 ## Overview
 
@@ -35,15 +35,16 @@ So that race conditions are eliminated, state management is simplified, and the 
 
 ## Technical Approach
 
-Replace React Query hooks (`useSessions`, `useSession`, `useSessionMessages`) with Zustand store actions and selectors. Convert single-session store to Map-based architecture (`sessions: Map<sessionId, SessionData>`, `sessionLists: Map<projectId, SessionSummary[]>`). Remove all `queryClient.invalidateQueries()` and `queryClient.setQueryData()` calls from WebSocket handlers. Update 15+ components to read from Zustand instead of React Query. Maintain message deduplication and streaming message tracking to handle edge cases.
+Replace React Query hooks (`useSessions`, `useSession`, `useSessionMessages`) with Zustand store actions and selectors. Convert single-session store to Map-based architecture (`sessions: Map<sessionId, SessionData>`, `sessionLists: Map<projectId, SessionSummary[]>`). **Modify backend to send full SessionResponse in all WebSocket events** (SESSION_UPDATED, MESSAGE_COMPLETE) eliminating need for query invalidations and partial merges. Remove all `queryClient.invalidateQueries()` and `queryClient.setQueryData()` calls from WebSocket handlers. Update 15+ components to read from Zustand instead of React Query. Maintain message deduplication and streaming message tracking to handle edge cases.
 
 ## Key Design Decisions
 
-1. **Map-Based Store**: Use `Map<sessionId, SessionData>` instead of single session to support multi-session scenarios (modals, multi-tab) and eliminate store replacement race conditions
-2. **Single Source of Truth**: Zustand becomes the only state container for sessions - no dual RQ/Zustand sync logic needed
-3. **Explicit Loading Actions**: Replace React Query auto-fetching with explicit `loadSession()`/`loadSessionList()` actions called from hooks/effects
-4. **Keep React Query for Non-Session Data**: Projects, workflows, settings remain in React Query - only sessions migrate to Zustand
-5. **Message Deduplication**: Track `messageIds: Set<string>` per session to prevent duplicate messages on WebSocket reconnect
+1. **Full WebSocket Payloads**: Backend sends complete `SessionResponse` in all WebSocket events (SESSION_UPDATED, MESSAGE_COMPLETE), eliminating need for query invalidations and enabling direct Zustand Map updates. Backend already has full session data when emitting - zero performance penalty.
+2. **Map-Based Store**: Use `Map<sessionId, SessionData>` instead of single session to support multi-session scenarios (modals, multi-tab) and eliminate store replacement race conditions
+3. **Single Source of Truth**: Zustand becomes the only state container for sessions - no dual RQ/Zustand sync logic needed
+4. **Explicit Loading Actions**: Replace React Query auto-fetching with explicit `loadSession()`/`loadSessionList()` actions called from hooks/effects
+5. **Keep React Query for Non-Session Data**: Projects, workflows, settings remain in React Query - only sessions migrate to Zustand
+6. **Message Deduplication**: Track `messageIds: Set<string>` per session to prevent duplicate messages on WebSocket reconnect
 
 ## Architecture
 
@@ -80,8 +81,13 @@ apps/app/src/client/
 - `navigationStore.ts` - activeSessionId sync (unchanged)
 - React Query - Remove session-related queries/mutations
 
+**Backend**:
+- `server/domain/session/services/updateSession.ts` - Add full session to WebSocket broadcast
+- `server/websocket/handlers/session.handler.ts` - Send full session in MESSAGE_COMPLETE
+- `shared/types/websocket.types.ts` - Update event payload types
+
 **WebSocket**:
-- `useSessionWebSocket.ts` - Direct Zustand updates, no RQ invalidations
+- `useSessionWebSocket.ts` - Direct Zustand updates using full payloads, no RQ invalidations
 - `WebSocketProvider.tsx` - Connection layer (unchanged)
 
 **Components**:
@@ -160,34 +166,72 @@ New hooks abstract Zustand store access:
 1. `apps/app/src/client/hooks/useSession.ts` - Zustand-based session hook
 2. `apps/app/src/client/hooks/useSessionList.ts` - Zustand-based session list hook
 
-### Modified Files (18)
+### Modified Files (21)
 
-1. `apps/app/src/client/pages/projects/sessions/stores/sessionStore.ts` - Convert to Map architecture, add actions
-2. `apps/app/src/client/pages/projects/sessions/hooks/useSessionWebSocket.ts` - Remove all RQ calls, use Zustand Map updates
-3. `apps/app/src/client/pages/projects/sessions/hooks/useAgentSessions.ts` - DELETE all hooks (useSessions, useSession, useSessionMessages, mutations)
-4. `apps/app/src/client/utils/queryKeys.ts` - Remove sessionKeys factory
-5. `apps/app/src/client/components/AgentSessionViewer.tsx` - Remove RQ hooks, use useSession, remove sync logic
-6. `apps/app/src/client/components/sidebar/NavActivities.tsx` - Replace useSessions with useSessionList
-7. `apps/app/src/client/components/CommandMenu.tsx` - Replace useSessions with useSessionList
-8. `apps/app/src/client/pages/projects/sessions/NewSessionPage.tsx` - Use createSession action
-9. `apps/app/src/client/pages/projects/sessions/ProjectSessionPage.tsx` - Simplified (delegates to AgentSessionViewer)
-10. `apps/app/src/client/components/SessionHeader.tsx` - Use Zustand selector for metadata
-11. `apps/app/src/client/components/SessionDropdownMenu.tsx` - Use Zustand actions (archive/unarchive)
-12. `apps/app/src/client/components/sidebar/SessionListItem.tsx` - Props from Zustand list
-13. `apps/app/src/client/layouts/AppLayout.tsx` - Remove RQ session prefetch/invalidation
-14. `apps/app/src/client/pages/projects/components/ProjectHomeActivities.tsx` - Use useSessionList
-15. `apps/app/src/client/pages/projects/sessions/components/SessionStateBadge.tsx` - Verify props still work
-16. `apps/app/src/client/pages/projects/sessions/components/SessionItem.tsx` - Props from Zustand list
-17. `apps/app/src/client/pages/projects/sessions/hooks/queryKeys.ts` - DELETE (or remove session keys)
-18. `apps/app/src/client/providers/WebSocketProvider.tsx` - Verify compatibility (no changes)
+**Backend (3):**
+
+1. `apps/app/src/server/domain/session/services/updateSession.ts` - Add full session to WebSocket broadcast
+2. `apps/app/src/server/websocket/handlers/session.handler.ts` - Send full session in MESSAGE_COMPLETE
+3. `apps/app/src/shared/types/websocket.types.ts` - Add session field to event types
+
+**Frontend (18):**
+
+4. `apps/app/src/client/pages/projects/sessions/stores/sessionStore.ts` - Convert to Map architecture, add actions
+5. `apps/app/src/client/pages/projects/sessions/hooks/useSessionWebSocket.ts` - Use full payloads, remove all RQ calls
+6. `apps/app/src/client/pages/projects/sessions/hooks/useAgentSessions.ts` - DELETE all hooks (useSessions, useSession, useSessionMessages, mutations)
+7. `apps/app/src/client/utils/queryKeys.ts` - Remove sessionKeys factory
+8. `apps/app/src/client/components/AgentSessionViewer.tsx` - Remove RQ hooks, use useSession, remove sync logic
+9. `apps/app/src/client/components/sidebar/NavActivities.tsx` - Replace useSessions with useSessionList
+10. `apps/app/src/client/components/CommandMenu.tsx` - Replace useSessions with useSessionList
+11. `apps/app/src/client/pages/projects/sessions/NewSessionPage.tsx` - Use createSession action
+12. `apps/app/src/client/pages/projects/sessions/ProjectSessionPage.tsx` - Simplified (delegates to AgentSessionViewer)
+13. `apps/app/src/client/components/SessionHeader.tsx` - Use Zustand selector for metadata
+14. `apps/app/src/client/components/SessionDropdownMenu.tsx` - Use Zustand actions (archive/unarchive)
+15. `apps/app/src/client/components/sidebar/SessionListItem.tsx` - Props from Zustand list
+16. `apps/app/src/client/layouts/AppLayout.tsx` - Remove RQ session prefetch/invalidation
+17. `apps/app/src/client/pages/projects/components/ProjectHomeActivities.tsx` - Use useSessionList
+18. `apps/app/src/client/pages/projects/sessions/components/SessionStateBadge.tsx` - Verify props still work
+19. `apps/app/src/client/pages/projects/sessions/components/SessionItem.tsx` - Props from Zustand list
+20. `apps/app/src/client/pages/projects/sessions/hooks/queryKeys.ts` - DELETE (or remove session keys)
+21. `apps/app/src/client/providers/WebSocketProvider.tsx` - Verify compatibility (no changes)
 
 ## Step by Step Tasks
 
 **IMPORTANT: Execute every step in order, top to bottom**
 
+### Phase 0: Backend WebSocket Full Payloads
+
+**Phase Complexity**: 14 points (avg 4.7/10)
+
+- [ ] 0.1 [6/10] Modify SESSION_UPDATED event to send full SessionResponse
+  - Update `updateSession()` service to include full session in broadcast
+  - Change payload from partial `{ sessionId, state, name, ... }` to `{ sessionId, session: SessionResponse }`
+  - Backend already has full session object after update - no extra DB query needed
+  - Test that full session data is sent via WebSocket
+  - File: `apps/app/src/server/domain/session/services/updateSession.ts`
+
+- [ ] 0.2 [4/10] Modify MESSAGE_COMPLETE event to send full SessionResponse
+  - Query full session from DB in MESSAGE_COMPLETE handler
+  - Include full session in event payload: `{ sessionId, session: SessionResponse, usage, metadata }`
+  - Enables sidebar to update message counts and metadata without refetch
+  - File: `apps/app/src/server/websocket/handlers/session.handler.ts`
+
+- [ ] 0.3 [4/10] Update WebSocket event type definitions
+  - Add `session?: SessionResponse` field to `SessionUpdatedData` type
+  - Add `session?: SessionResponse` field to `MessageCompleteData` type
+  - Mark as optional for backward compatibility during migration
+  - File: `apps/app/src/shared/types/websocket.types.ts`
+
+#### Completion Notes
+
+- What was implemented:
+- Deviations from plan (if any):
+- Important context or decisions:
+- Known issues or follow-ups (if any):
+
 ### Phase 1: Store Foundation
 
-**Phase Complexity**: 52 points (avg 6.5/10)
+**Phase Complexity**: 57 points (avg 6.3/10)
 
 - [ ] 1.1 [9/10] Design and implement Map-based sessionStore architecture
   - Replace `session: SessionData | null` with `sessions: Map<sessionId, SessionData>`
@@ -238,7 +282,14 @@ New hooks abstract Zustand store access:
   - Add message deduplication (check messageIds Set)
   - File: `apps/app/src/client/pages/projects/sessions/stores/sessionStore.ts`
 
-- [ ] 1.8 [4/10] Implement memory management (LRU cache)
+- [ ] 1.8 [5/10] Add WebSocket payload actions (setSession, updateSessionInList)
+  - `setSession(sessionId, fullSession)` - Replace entire session with full payload from WebSocket
+  - `updateSessionInList(projectId, fullSession)` - Update session in sessionLists Map from WebSocket
+  - Enables sidebar to update in real-time without refetch
+  - Used by Phase 4 WebSocket handlers
+  - File: `apps/app/src/client/pages/projects/sessions/stores/sessionStore.ts`
+
+- [ ] 1.9 [4/10] Implement memory management (LRU cache)
   - Keep last 5 sessions in Map
   - Evict oldest by lastAccessedAt
   - Clear messageIds Sets on eviction
@@ -365,38 +416,40 @@ New hooks abstract Zustand store access:
 
 ### Phase 4: WebSocket Integration
 
-**Phase Complexity**: 38 points (avg 7.6/10)
+**Phase Complexity**: 30 points (avg 6.0/10)
 
-- [ ] 4.1 [9/10] Refactor useSessionWebSocket to use Zustand Map updates
-  - Remove ALL `queryClient.setQueryData()` calls (lines 191-210)
-  - Remove ALL `queryClient.invalidateQueries()` calls (lines 171-173, 213-215)
-  - Update STREAM_OUTPUT handler to use `sessionStore.updateStreamingMessage(sessionId, msgId, content)`
-  - Update MESSAGE_COMPLETE handler to use `sessionStore.finalizeMessage(sessionId, msgId)`
-  - Update SESSION_UPDATED handler to use `sessionStore.updateSession(sessionId, updates)`
+- [ ] 4.1 [7/10] Refactor useSessionWebSocket to use full WebSocket payloads and Zustand Map
+  - Remove ALL `queryClient.setQueryData()` calls (lines 191-210) - no RQ cache to update
+  - Remove ALL `queryClient.invalidateQueries()` calls (lines 171-173, 213-215) - not needed with full payloads
+  - Update MESSAGE_COMPLETE handler: Use `event.data.session` (full SessionResponse from Phase 0) to update Map
+  - Update SESSION_UPDATED handler: Use `event.data.session` (full SessionResponse from Phase 0) to update Map
+  - STREAM_OUTPUT handler unchanged: `sessionStore.updateStreamingMessage(sessionId, msgId, content)`
+  - Simplifies to: `sessionStore.setSession(sessionId, fullSession)` for both events
   - File: `apps/app/src/client/pages/projects/sessions/hooks/useSessionWebSocket.ts`
 
-- [ ] 4.2 [7/10] Add sessionId routing to WebSocket event handlers
+- [ ] 4.2 [6/10] Add sessionId routing to WebSocket event handlers
   - Extract sessionId from channel name (`session:${sessionId}`)
   - Pass sessionId to all store actions
   - Verify Map updates target correct session
   - Handle case where session not in Map (load it)
   - File: `apps/app/src/client/pages/projects/sessions/hooks/useSessionWebSocket.ts`
 
-- [ ] 4.3 [8/10] Update optimistic updates for session metadata
-  - Remove React Query optimistic cache updates
-  - Use Zustand `updateSession` for optimistic updates
-  - Update sessionLists Map entry in sync with sessions Map
-  - No rollback needed (WebSocket events are source of truth)
+- [ ] 4.3 [6/10] Update sidebar list from full session payloads
+  - When SESSION_UPDATED/MESSAGE_COMPLETE received with full session:
+  - Update sessionLists Map to reflect changes (state, name, metadata)
+  - Use `sessionStore.updateSessionInList(projectId, fullSession)` action
+  - Eliminates need for sidebar to refetch list from API
   - File: `apps/app/src/client/pages/projects/sessions/hooks/useSessionWebSocket.ts`
 
-- [ ] 4.4 [7/10] Verify WebSocket event sequencing
+- [ ] 4.4 [6/10] Verify WebSocket event sequencing
   - Test STREAM_OUTPUT → MESSAGE_COMPLETE → SESSION_UPDATED sequence
   - Verify message deduplication works on reconnect
   - Verify streaming message tracking handles interleaved streams
   - Test multi-session streaming (two sessions streaming simultaneously)
+  - Verify full session payloads update both detail Map AND list Map
   - File: `apps/app/src/client/pages/projects/sessions/hooks/useSessionWebSocket.ts`
 
-- [ ] 4.5 [7/10] Handle WebSocket error and reconnection scenarios
+- [ ] 4.5 [5/10] Handle WebSocket error and reconnection scenarios
   - On ERROR event: Set session error state in Map
   - On reconnection: Re-subscribe to session channels
   - Don't reload messages (use existing Map data)
