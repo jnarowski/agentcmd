@@ -130,6 +130,14 @@
       "status": "draft",
       "created": "2025-11-21T19:30:40Z",
       "updated": "2025-11-21T19:30:40Z"
+    },
+    "2511212109": {
+      "folder": "2511212109-mobile-edge-swipe",
+      "path": "todo/2511212109-mobile-edge-swipe/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-21T21:09:00Z",
+      "updated": "2025-11-21T21:09:00Z"
     }
   }
 }
