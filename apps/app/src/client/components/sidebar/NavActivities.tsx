@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { RefreshCw, Plus, MessageSquare, Workflow } from "lucide-react";
-import { SidebarMenu } from "@/client/components/ui/sidebar";
+import { SidebarMenu, useSidebar } from "@/client/components/ui/sidebar";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -54,6 +54,7 @@ export function NavActivities() {
   const { data: projects } = useProjects();
   const queryClient = useQueryClient();
   const syncProjectsMutation = useSyncProjectsMutation();
+  const { isMobile, setOpenMobile } = useSidebar();
 
   // Fetch workflow definitions for dropdown
   const { data: workflows } = useWorkflowDefinitions(
@@ -219,6 +220,9 @@ export function NavActivities() {
               onClick={() => {
                 if (activeProjectId) {
                   navigate(`/projects/${activeProjectId}/sessions/new`);
+                  if (isMobile) {
+                    setOpenMobile(false);
+                  }
                 }
               }}
             >
@@ -238,6 +242,9 @@ export function NavActivities() {
                       navigate(
                         `/projects/${activeProjectId}/workflows/${workflow.id}/new`
                       );
+                      if (isMobile) {
+                        setOpenMobile(false);
+                      }
                     }
                   }}
                 >

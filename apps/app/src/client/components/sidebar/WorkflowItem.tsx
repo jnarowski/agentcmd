@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import {
   SidebarMenuItem,
   SidebarMenuButton,
+  useSidebar,
 } from "@/client/components/ui/sidebar";
 import { Badge } from "@/client/components/ui/badge";
 import { getWorkflowStatusConfig } from "@/client/pages/projects/workflows/utils/workflowStatus";
@@ -27,9 +28,13 @@ export function WorkflowItem({
   isActive = false,
 }: WorkflowItemProps) {
   const navigate = useNavigate();
+  const { isMobile, setOpenMobile } = useSidebar();
 
   const handleActivityClick = () => {
     navigate(`/projects/${projectId}/workflows/${workflowDefinitionId}/runs/${id}`);
+    if (isMobile) {
+      setOpenMobile(false);
+    }
   };
 
   const getStatusColor = (status: string) => {
