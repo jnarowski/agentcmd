@@ -77,67 +77,71 @@
     },
     "2511181832": {
       "folder": "2511181832-branch-validation",
-      "path": "todo/2511181832-branch-validation/spec.md",
+      "path": "done/2511181832-branch-validation/spec.md",
       "spec_type": "feature",
       "status": "review",
       "created": "2025-11-18T18:32:00.000Z",
-      "updated": "2025-11-18T23:59:00.000Z"
+      "updated": "2025-11-22T14:34:01.954Z"
     },
     "2511190555": {
       "folder": "2511190555-session-theme-system",
-      "path": "todo/2511190555-session-theme-system/spec.md",
+      "path": "done/2511190555-session-theme-system/spec.md",
       "spec_type": "feature",
       "status": "draft",
       "created": "2025-11-19T12:57:47Z",
-      "updated": "2025-11-19T12:57:47Z"
+      "updated": "2025-11-22T14:34:01.954Z"
     },
     "2511191028": {
       "folder": "2511191028-webhook-system",
-      "path": "todo/2511191028-webhook-system/spec.md",
+      "path": "done/2511191028-webhook-system/spec.md",
       "spec_type": "feature",
       "status": "completed",
       "created": "2025-11-19T10:28:00Z",
-      "updated": "2025-11-19T18:57:00Z"
+      "updated": "2025-11-22T14:34:01.954Z"
     },
     "2511191054": {
       "folder": "2511191054-monospace-theme",
-      "path": "todo/2511191054-monospace-theme/spec.md",
+      "path": "done/2511191054-monospace-theme/spec.md",
       "spec_type": "feature",
       "status": "review",
       "created": "2025-11-19T10:54:00Z",
-      "updated": "2025-11-19T21:30:00Z"
+      "updated": "2025-11-22T14:34:01.954Z"
     },
     "2511191130": {
       "folder": "2511191130-webhook-frontend",
-      "path": "todo/2511191130-webhook-frontend/spec.md",
+      "path": "done/2511191130-webhook-frontend/spec.md",
       "spec_type": "feature",
       "status": "completed",
       "created": "2025-11-19T11:30:00Z",
-      "updated": "2025-11-19T20:55:00Z"
+      "updated": "2025-11-22T14:34:01.954Z"
     },
     "2511200630": {
       "folder": "2511200630-webhook-revamp",
-      "path": "todo/2511200630-webhook-revamp/spec.md",
+      "path": "done/2511200630-webhook-revamp/spec.md",
       "spec_type": "feature",
       "status": "completed",
       "created": "2025-11-20T06:30:00Z",
-      "updated": "2025-11-20T15:36:00Z"
+      "updated": "2025-11-22T14:34:01.954Z"
     },
     "2511211229": {
       "folder": "2511211229-fixed-layout-skeleton",
-      "path": "todo/2511211229-fixed-layout-skeleton/spec.md",
+      "path": "done/2511211229-fixed-layout-skeleton/spec.md",
       "spec_type": "issue",
       "status": "draft",
       "created": "2025-11-21T19:30:40Z",
-      "updated": "2025-11-21T19:30:40Z"
+      "updated": "2025-11-22T14:34:01.954Z"
     },
     "2511212109": {
       "folder": "2511212109-mobile-edge-swipe",
-      "path": "todo/2511212109-mobile-edge-swipe/spec.md",
+      "path": "done/2511212109-mobile-edge-swipe/spec.md",
       "spec_type": "feature",
       "status": "draft",
       "created": "2025-11-21T21:09:00Z",
+<<<<<<< Updated upstream
       "updated": "2025-11-21T21:09:00Z"
+=======
+      "updated": "2025-11-22T14:34:01.954Z"
+>>>>>>> Stashed changes
     }
   }
 }
