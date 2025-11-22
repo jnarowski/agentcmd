@@ -67,7 +67,7 @@ export function NewButtonDropdownMobile({ projectId }: NewButtonDropdownMobilePr
           <ChevronDown className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
+      <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuItem onClick={() => navigate(`/projects/${projectId}/sessions/new`)}>
           <MessageSquare className="h-4 w-4 mr-2" />
           New Session
