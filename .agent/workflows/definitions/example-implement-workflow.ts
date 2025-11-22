@@ -26,6 +26,7 @@ export default defineWorkflow(
     phases: [
       { id: "implement", label: "Implement" },
       { id: "review", label: "Review" },
+      { id: "complete", label: "Complete" },
     ],
   },
   async ({ event, step }) => {
@@ -83,6 +84,16 @@ export default defineWorkflow(
       }
 
       return response;
+    });
+
+    await step.phase("complete", async () => {
+      await step.agent("complete-spec", {
+        agent: "claude",
+        prompt: buildSlashCommand("/cmd:move-spec", {
+          specIdOrNameOrPath: specFile,
+          targetFolder: "done",
+        }),
+      });
     });
   }
 );

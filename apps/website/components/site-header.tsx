@@ -85,7 +85,7 @@ export function SiteHeader() {
     <>
       <header className="fixed left-0 top-0 z-50 w-full px-4 animate-fade-in border-b opacity-0 backdrop-blur-[12px] [--animation-delay:600ms]">
         <div className="container mx-auto flex h-[var(--navigation-height)] w-full items-center justify-between">
-          <Link href="/">
+          <Link href="/" className="inline-flex">
             <Logo />
           </Link>
 
@@ -126,7 +126,7 @@ export function SiteHeader() {
           )}
         >
           <div className="container mx-auto flex h-[var(--navigation-height)] items-center justify-between">
-            <Link href="/">
+            <Link href="/" className="inline-flex">
               <Logo />
             </Link>
 
