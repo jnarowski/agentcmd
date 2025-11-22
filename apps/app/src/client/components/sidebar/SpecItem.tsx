@@ -19,7 +19,7 @@ import {
 import { FileText, MoreHorizontal, FolderInput } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { Spec } from "@/shared/types/spec.types";
-import { moveSpec } from "@/client/api/specs";
+import { api } from "@/client/utils/api";
 
 interface SpecItemProps {
   spec: Spec;
@@ -60,11 +60,10 @@ export function SpecItem({ spec }: SpecItemProps) {
     setIsMoving(true);
 
     try {
-      await moveSpec({
-        projectId: spec.projectId,
-        specId: spec.id,
-        targetFolder,
-      });
+      await api.post(
+        `/api/projects/${spec.projectId}/specs/${spec.id}/move`,
+        { targetFolder }
+      );
 
       // Invalidate specs query to refetch
       queryClient.invalidateQueries({ queryKey: ["specs"] });
