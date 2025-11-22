@@ -11,11 +11,13 @@ Common issues and solutions for development in agentcmd.
 **Cause:** Prisma client out of sync with schema
 
 **Solution:**
+
 ```bash
 pnpm prisma:generate
 ```
 
 If persists:
+
 ```bash
 rm -rf node_modules
 pnpm install
@@ -29,6 +31,7 @@ pnpm prisma:generate
 **Cause:** Mixing database nulls with TypeScript undefined
 
 **Solution:**
+
 ```typescript
 // ✅ DO - Database fields use null
 interface Project {
@@ -53,6 +56,7 @@ interface Project {
 **Cause:** Wrong import paths or missing @/ alias
 
 **Solution:**
+
 ```typescript
 // ✅ DO - Use @/ aliases
 import { getProjectById } from "@/server/domain/project/services/getProjectById";
@@ -71,6 +75,7 @@ import { getProjectById } from "@/server/domain/project/services/getProjectById.
 **Cause:** Importing from deprecated services/ directory
 
 **Solution:**
+
 ```typescript
 // ✅ DO - Use domain services
 import { getProjectById } from "@/server/domain/project/services/getProjectById";
@@ -86,6 +91,7 @@ import { getProjectById } from "@/server/services/project.service";
 **Cause:** Using inline imports instead of top-level
 
 **Solution:**
+
 ```typescript
 // ✅ DO - Import at top
 import type { PhaseDefinition } from "agentcmd-workflows";
@@ -105,6 +111,7 @@ function foo(phase: import("agentcmd-workflows").PhaseDefinition) {}
 **Causes & Solutions:**
 
 **JWT Token Missing:**
+
 ```typescript
 // Check token in authStore
 const token = useAuthStore((state) => state.token);
@@ -112,6 +119,7 @@ console.log("Token:", token); // Should not be null
 ```
 
 **Server Not Running:**
+
 ```bash
 # Check if server is running
 curl http://localhost:3456/api/health
@@ -121,6 +129,7 @@ pnpm dev
 ```
 
 **CORS Issues:**
+
 ```typescript
 // Check CORS configuration in server
 // apps/app/src/server/index.ts
@@ -135,11 +144,13 @@ fastify.register(cors, {
 **Error:** `SQLITE_BUSY: database is locked`
 
 **Causes:**
+
 - Multiple node processes
 - Long transactions
 - Concurrent writes
 
 **Solution:**
+
 ```bash
 # Kill all node processes
 pkill node
@@ -159,6 +170,7 @@ pnpm prisma:reset
 **Causes & Solutions:**
 
 **CLI Not Installed:**
+
 ```bash
 # Check if Claude CLI installed
 which claude
@@ -168,6 +180,7 @@ which claude
 ```
 
 **Wrong Agent Type:**
+
 ```typescript
 // Verify agent type is correct
 const session = await executeAgent({
@@ -177,6 +190,7 @@ const session = await executeAgent({
 ```
 
 **Check Logs:**
+
 ```bash
 # Watch server logs
 tail -f apps/app/logs/app.log | jq .
@@ -192,6 +206,7 @@ grep "agent" apps/app/logs/app.log | jq 'select(.level >= 50)'
 **Cause:** Objects/arrays in useEffect dependencies
 
 **Solution:**
+
 ```typescript
 // ✅ DO - Extract primitives
 const { userId, projectId } = project;
@@ -213,6 +228,7 @@ useEffect(() => {
 **Cause:** Mutating state instead of replacing
 
 **Solution:**
+
 ```typescript
 // ✅ DO - Immutable updates
 set((state) => ({
@@ -233,6 +249,7 @@ set((state) => {
 **Error:** Build fails with type errors
 
 **Solutions:**
+
 ```bash
 # Clear and rebuild
 rm -rf dist
@@ -253,6 +270,7 @@ pnpm prisma:generate
 **Cause:** Missing dependencies or wrong imports
 
 **Solutions:**
+
 ```bash
 # Reinstall dependencies
 rm -rf node_modules
@@ -267,6 +285,7 @@ pnpm install
 **Error:** Build fails in Vite
 
 **Solutions:**
+
 ```bash
 # Clear Vite cache
 rm -rf node_modules/.vite
@@ -285,6 +304,7 @@ pnpm build
 **Error:** Port 3456 or 5173 already in use
 
 **Solution:**
+
 ```bash
 # Find process using port
 lsof -i :3456
@@ -305,6 +325,7 @@ pnpm dev
 **Symptoms:** Changes don't reflect in browser
 
 **Solutions:**
+
 ```bash
 # Restart dev server
 # Ctrl+C then pnpm dev
@@ -323,6 +344,7 @@ rm -rf node_modules/.vite
 **Error:** Migration conflict after git pull
 
 **Solution:**
+
 ```bash
 # Reset and reapply
 pnpm prisma migrate reset
@@ -338,6 +360,7 @@ pnpm prisma migrate reset
 **Error:** Migration failed to apply
 
 **Solution:**
+
 ```bash
 # Check migration SQL
 cat prisma/migrations/<migration>/migration.sql
@@ -356,6 +379,7 @@ pnpm prisma:migrate
 **Symptoms:** API responses slow, database queries taking long
 
 **Solutions:**
+
 ```typescript
 // Add indexes to frequently queried fields
 // In schema.prisma:
@@ -372,6 +396,7 @@ pnpm prisma:migrate
 ```
 
 **Use select to limit fields:**
+
 ```typescript
 // ✅ DO - Select only needed fields
 const project = await prisma.project.findUnique({
@@ -390,6 +415,7 @@ const project = await prisma.project.findUnique({
 **Symptoms:** Slow page load, large JavaScript files
 
 **Solutions:**
+
 ```typescript
 // Use dynamic imports for large dependencies
 const HeavyComponent = lazy(() => import("./HeavyComponent"));
@@ -403,6 +429,7 @@ const ProjectPage = lazy(() => import("./pages/ProjectPage"));
 ### Enable Debug Logging
 
 **Backend:**
+
 ```bash
 # Set log level in .env
 LOG_LEVEL=debug
@@ -412,6 +439,7 @@ pnpm dev:server
 ```
 
 **Frontend:**
+
 ```typescript
 // Enable React DevTools
 // Install: https://react.dev/learn/react-developer-tools
@@ -447,16 +475,19 @@ grep "error" apps/app/logs/app.log | jq .
 ### Browser DevTools
 
 **Network Tab:**
+
 - Check API requests/responses
 - View WebSocket messages
 - Verify authentication headers
 
 **Console Tab:**
+
 - Check for JavaScript errors
 - View console.log output
 - Test code snippets
 
 **React DevTools:**
+
 - Inspect component tree
 - View props/state
 - Profile performance

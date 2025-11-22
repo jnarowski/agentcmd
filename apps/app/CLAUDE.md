@@ -5,6 +5,7 @@ Full-stack application development guide for agentcmd.
 ## Overview
 
 **Tech Stack:**
+
 - **Frontend**: React 19, Vite, React Router, TanStack Query, Zustand, Tailwind v4
 - **Backend**: Fastify, Prisma (SQLite), Inngest, WebSocket, JWT auth
 - **AI**: Claude Code, OpenAI Codex, Gemini (via agent-cli-sdk)
@@ -34,7 +35,6 @@ pnpm dev:server     # Backend only
 pnpm prisma:generate   # Regenerate Prisma client
 pnpm prisma:migrate    # Create migration (prompts for name)
 pnpm prisma:studio     # Open database GUI (http://localhost:5555)
-pnpm prisma:reset      # Reset database (dev only, destructive)
 ```
 
 ### Quality Commands
@@ -57,11 +57,13 @@ Vitest 4 with parallel execution and database-per-worker isolation (4 workers lo
 ### Client ↔ Server Integration
 
 **REST APIs:**
+
 - Fastify routes at `/api/*`
 - JWT authentication via headers
 - Type-safe with shared types from `@/shared/types`
 
 **WebSocket (Real-time):**
+
 - Socket.IO + EventBus for decoupled event handling
 - Channels: colon notation (`session:123`)
 - Events: dot notation (`session.stream_output`)
@@ -80,6 +82,7 @@ shared/
 ```
 
 **Pattern:**
+
 ```typescript
 // Share enums and validation
 // src/shared/schemas/workflow.schemas.ts
@@ -135,12 +138,14 @@ server/domain/
 Workflows execute via **Inngest** (background jobs) with real-time updates via WebSocket.
 
 **Key Features:**
+
 - Visual workflow builder (@xyflow/react)
 - Step types: AI (Claude/Codex/Gemini), Bash, Conditional, Loop
 - Real-time execution monitoring
 - WebSocket streaming for live updates
 
 **Example Workflow:**
+
 ```typescript
 const workflow = {
   name: "AI Code Review",
@@ -223,12 +228,14 @@ pm2 start dist/server/index.js --name agentcmd
 ## Quick Reference
 
 **Ports:**
+
 - Frontend: 5173
 - Backend: 3456
 - Inngest: 8288
 - Prisma Studio: 5555
 
 **File Locations:**
+
 - Database: `prisma/dev.db`
 - Logs: `logs/app.log`
 - Migrations: `prisma/migrations/`
@@ -236,20 +243,24 @@ pm2 start dist/server/index.js --name agentcmd
 ## Detailed Documentation
 
 ### Architecture & Patterns
+
 - `.agent/docs/backend-patterns.md` - Domain services, routes, errors
 - `.agent/docs/frontend-patterns.md` - React, state management, hooks
 - `.agent/docs/architecture-decisions.md` - Why we chose these technologies
 
 ### Systems & Integration
+
 - `.agent/docs/workflow-system.md` - Workflow engine, Inngest
 - `.agent/docs/websocket-architecture.md` - Real-time communication
 - `.agent/docs/database-guide.md` - Prisma patterns, migrations
 
 ### Operations
+
 - `.agent/docs/testing-best-practices.md` - Testing patterns
 - `.agent/docs/troubleshooting.md` - Common issues
 - `.agent/docs/deployment.md` - Production deployment
 
 ### Component Guides
+
 - `apps/app/src/client/CLAUDE.md` - Frontend development
 - Root `CLAUDE.md` - Critical rules (imports, React, backend)
