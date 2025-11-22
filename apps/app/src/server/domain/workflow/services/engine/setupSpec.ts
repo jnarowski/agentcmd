@@ -44,7 +44,9 @@ export async function setupSpec(params: {
       throw new Error(`Spec file not found: ${event.data.specFile}`);
     }
 
-    await step.annotation("spec-file-loaded", { message: specFilePath });
+    await step.annotation("spec-file-loaded", {
+      message: `Spec file verified: ${specFilePath}`,
+    });
 
     return specFilePath;
   }

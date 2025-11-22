@@ -33,13 +33,17 @@ export function WorkflowEventAnnotationItem({
           {event.created_by_user && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <User className="h-3 w-3" />
-              <span className="font-medium">{event.created_by_user.username}</span>
+              <span className="font-medium">
+                {event.created_by_user.username}
+              </span>
             </div>
           )}
         </div>
       )}
 
-      <p className={`font-medium whitespace-pre-wrap ${(debugMode || event.created_by_user) ? "mt-1" : ""}`}>
+      <p
+        className={`text-sm whitespace-pre-wrap ${debugMode || event.created_by_user ? "mt-1" : ""}`}
+      >
         {message}
       </p>
 

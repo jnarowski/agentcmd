@@ -94,7 +94,7 @@ export const ChatPromptInputSlashCommands = ({
           <SlashIcon size={16} />
         </PromptInputButton>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-[calc(100vw-2rem)] md:w-[400px] p-0">
+      <PopoverContent align="start" className="w-[calc(100vw-2rem)] md:w-[450px] p-0">
         <PromptInputCommand>
           <PromptInputCommandInput
             ref={commandInputRef}
@@ -131,34 +131,20 @@ export const ChatPromptInputSlashCommands = ({
             {/* Project Commands Section */}
             {customCommands.length > 0 && (
               <PromptInputCommandGroup heading="Project Commands">
-                {customCommands.map((command) => {
-                  // Split command name to highlight namespace
-                  const parts = command.name.split(":");
-                  const hasNamespace = parts.length > 1;
-
-                  return (
-                    <PromptInputCommandItem
-                      key={command.fullCommand}
-                      onSelect={() => onCommandSelect({ command: command.fullCommand, immediateSubmit: false })}
-                    >
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <div className="flex flex-col min-w-0 flex-1">
-                          <div className="flex items-baseline gap-1">
-                            <span className="font-medium text-sm">
-                              {hasNamespace ? (
-                                <>
-                                  <span className="text-primary">
-                                    {parts.slice(0, -1).join(":")}:
-                                  </span>
-                                  <span>{parts[parts.length - 1]}</span>
-                                </>
-                              ) : (
-                                command.fullCommand
-                              )}
-                            </span>
+                {customCommands.map((command) => (
+                  <PromptInputCommandItem
+                    key={command.fullCommand}
+                    onSelect={() => onCommandSelect({ command: command.fullCommand, immediateSubmit: false })}
+                  >
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <div className="flex items-baseline gap-1">
+                          <span className="font-medium text-sm">
+                            {command.fullCommand}
+                          </span>
                             {command.argumentHints &&
                               command.argumentHints.length > 0 && (
-                                <span className="text-muted-foreground text-xs ml-2">
+                                <span className="text-muted-foreground text-sm ml-1">
                                   {command.argumentHints
                                     .map((arg) => `[${arg}]`)
                                     .join(" ")}
@@ -181,8 +167,7 @@ export const ChatPromptInputSlashCommands = ({
                         </button>
                       </div>
                     </PromptInputCommandItem>
-                  );
-                })}
+                ))}
               </PromptInputCommandGroup>
             )}
 
@@ -207,7 +192,7 @@ export const ChatPromptInputSlashCommands = ({
                           </span>
                           {command.argumentHints &&
                             command.argumentHints.length > 0 && (
-                              <span className="text-muted-foreground text-xs ml-2">
+                              <span className="text-muted-foreground text-sm ml-1">
                                 {command.argumentHints
                                   .map((arg) => `[${arg}]`)
                                   .join(" ")}
