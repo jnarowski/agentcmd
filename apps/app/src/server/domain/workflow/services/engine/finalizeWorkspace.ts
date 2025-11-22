@@ -44,6 +44,11 @@ export async function finalizeWorkspace(
       await finalizeStep("finalize-workspace", {
         workspaceResult: workspace,
       });
+
+      // Add success annotation so finalize phase always has at least one visible record
+      await extendedStep.annotation("workflow-completed", {
+        message: "Workflow completed successfully",
+      });
     });
 
     logger.info({ runId: run.id, mode: run.mode }, "Workspace finalized");
