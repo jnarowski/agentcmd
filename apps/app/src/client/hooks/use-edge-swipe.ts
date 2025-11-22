@@ -7,7 +7,7 @@ import { useIsMobile } from "@/client/hooks/use-mobile";
 export interface UseEdgeSwipeOptions {
   /** Callback triggered when swipe threshold is met */
   onSwipe: () => void;
-  /** Width of edge zone in pixels (default: 40) */
+  /** Width of edge zone in pixels (default: 100) */
   edgeWidth?: number;
   /** Horizontal movement threshold in pixels (default: 100) */
   threshold?: number;
@@ -20,12 +20,13 @@ export interface UseEdgeSwipeOptions {
  *
  * Only activates when gesture starts within the edge zone (< edgeWidth from left).
  * Triggers callback when either movement threshold or velocity threshold is exceeded.
+ * Prevents iOS Safari back navigation by calling preventDefault on touchstart.
  *
  * @example
  * ```tsx
  * const bind = useEdgeSwipe({
  *   onSwipe: () => setOpenMobile(true),
- *   edgeWidth: 40,
+ *   edgeWidth: 100,
  *   threshold: 100,
  *   velocity: 0.5
  * });
@@ -36,7 +37,7 @@ export interface UseEdgeSwipeOptions {
 export function useEdgeSwipe(options: UseEdgeSwipeOptions) {
   const {
     onSwipe,
-    edgeWidth = 40,
+    edgeWidth = 100,
     threshold = 100,
     velocity: velocityThreshold = 0.5,
   } = options;
@@ -45,7 +46,7 @@ export function useEdgeSwipe(options: UseEdgeSwipeOptions) {
   const triggered = useRef(false);
 
   const bind = useDrag(
-    ({ initial, movement, velocity, last }) => {
+    ({ event, initial, movement, velocity, last }) => {
       // Reset trigger state on gesture end
       if (last) {
         triggered.current = false;
@@ -56,6 +57,11 @@ export function useEdgeSwipe(options: UseEdgeSwipeOptions) {
       const startX = initial[0];
       if (startX >= edgeWidth) {
         return;
+      }
+
+      // Prevent Safari back navigation on left-edge horizontal swipes
+      if (event && "preventDefault" in event && typeof event.preventDefault === "function") {
+        event.preventDefault();
       }
 
       // Prevent multiple triggers during same gesture
@@ -81,6 +87,7 @@ export function useEdgeSwipe(options: UseEdgeSwipeOptions) {
       filterTaps: true,
       pointer: { touch: true },
       enabled: isMobile,
+      preventDefault: true,
     }
   );
 

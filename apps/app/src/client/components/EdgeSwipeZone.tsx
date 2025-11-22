@@ -6,8 +6,9 @@ import { useIsMobile } from "@/client/hooks/use-mobile";
  * Invisible edge zone component that detects left-to-right swipe gestures.
  *
  * Only renders on mobile when sidebar is closed.
- * Fixed position at left edge, 40px width, full viewport height.
+ * Fixed position at left edge, 100px width, full viewport height.
  * Uses touch-action: pan-y to allow vertical scroll while capturing horizontal swipe.
+ * Prevents iOS Safari back navigation for reliable drawer gesture.
  */
 export default function EdgeSwipeZone() {
   const { setOpenMobile, openMobile } = useSidebar();
@@ -15,7 +16,7 @@ export default function EdgeSwipeZone() {
 
   const bind = useEdgeSwipe({
     onSwipe: () => setOpenMobile(true),
-    edgeWidth: 40,
+    edgeWidth: 100,
     threshold: 100,
     velocity: 0.5,
   });
@@ -28,7 +29,7 @@ export default function EdgeSwipeZone() {
   return (
     <div
       {...bind()}
-      className="fixed left-0 top-0 h-screen w-[40px] z-40"
+      className="fixed left-0 top-0 h-screen w-[100px] z-40"
       style={{ touchAction: "pan-y" }}
       aria-hidden="true"
     />
