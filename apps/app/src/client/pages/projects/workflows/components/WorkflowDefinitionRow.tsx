@@ -30,31 +30,37 @@ export function WorkflowDefinitionRow({
 
   return (
     <TableRow>
-      <TableCell className="font-medium">
-        <Link
-          to={`/projects/${projectId}/workflows/${definition.id}`}
-          className="hover:underline"
-        >
-          {definition.name}
-        </Link>
-        {definition.load_error && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Badge variant="destructive" className="ml-2">
-                  <AlertCircle className="w-3 h-3 mr-1" />
-                  Error
-                </Badge>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-sm">
-                <p className="break-words">{definition.load_error}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-      </TableCell>
-      <TableCell className="max-w-md truncate">
-        {definition.description || '—'}
+      <TableCell>
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center font-medium">
+            <Link
+              to={`/projects/${projectId}/workflows/${definition.id}`}
+              className="hover:underline"
+            >
+              {definition.name}
+            </Link>
+            {definition.load_error && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge variant="destructive" className="ml-2">
+                      <AlertCircle className="w-3 h-3 mr-1" />
+                      Error
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-sm">
+                    <p className="break-words">{definition.load_error}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
+          {definition.description && (
+            <div className="text-sm text-muted-foreground max-w-md truncate">
+              {definition.description}
+            </div>
+          )}
+        </div>
       </TableCell>
       <TableCell className="text-center">{runCount}</TableCell>
       <TableCell className="text-right">
