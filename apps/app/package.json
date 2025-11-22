@@ -97,6 +97,7 @@
     "@types/bcrypt": "^6.0.0",
     "@types/bcryptjs": "^3.0.0",
     "@uiw/react-codemirror": "^4.23.13",
+    "@use-gesture/react": "^10.3.1",
     "@xterm/addon-clipboard": "^0.1.0",
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/addon-webgl": "^0.18.0",
