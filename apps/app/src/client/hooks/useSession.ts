@@ -1,0 +1,48 @@
+import { useEffect } from 'react';
+import { useSessionStore, selectSession } from '@/client/pages/projects/sessions/stores/sessionStore';
+import type { UIMessage } from '@/shared/types/message.types';
+import type { AgentSessionMetadata } from '@/shared/types/agent-session.types';
+import type { LoadingState } from '@/client/pages/projects/sessions/stores/sessionStore';
+
+/**
+ * Zustand-based session hook
+ * Auto-loads session from API if not in Map
+ * Returns session data with reactive updates
+ *
+ * @param sessionId - Session ID to load
+ * @param projectId - Project ID (required for API fetch)
+ * @returns Session data with messages, metadata, loading, error states
+ *
+ * @example
+ * const { messages, metadata, isLoading, isStreaming, error } = useSession(sessionId, projectId);
+ */
+export interface UseSessionReturn {
+  messages: UIMessage[];
+  metadata: AgentSessionMetadata | null;
+  isLoading: boolean;
+  isStreaming: boolean;
+  error: string | null;
+  loadingState: LoadingState;
+}
+
+export function useSession(sessionId: string, projectId: string): UseSessionReturn {
+  const loadSession = useSessionStore((s) => s.loadSession);
+  const session = useSessionStore(selectSession(sessionId));
+
+  // Auto-load session if not in Map or in error state
+  useEffect(() => {
+    if (!session || session.loadingState === 'idle' || session.loadingState === 'error') {
+      loadSession(sessionId, projectId);
+    }
+  }, [sessionId, projectId, session?.loadingState, loadSession]);
+
+  // Return stable references
+  return {
+    messages: session?.messages || [],
+    metadata: session?.metadata || null,
+    isLoading: session?.loadingState === 'loading',
+    isStreaming: session?.isStreaming || false,
+    error: session?.error || null,
+    loadingState: session?.loadingState || 'idle',
+  };
+}

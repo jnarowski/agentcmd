@@ -176,14 +176,49 @@ export async function handleSessionSendMessage(
     shouldBroadcast: false,
   });
 
+  // Query full session for MESSAGE_COMPLETE broadcast
+  const fullSession = await prisma.agentSession.findUnique({
+    where: { id: sessionId },
+  });
+
   // Cleanup and complete
   await cleanupSessionImages({ sessionId });
-  broadcast(Channels.session(sessionId), {
-    type: SessionEventTypes.MESSAGE_COMPLETE,
-    data: {
-      sessionId,
-    },
-  });
+
+  if (fullSession) {
+    // Broadcast MESSAGE_COMPLETE with full session data
+    broadcast(Channels.session(sessionId), {
+      type: SessionEventTypes.MESSAGE_COMPLETE,
+      data: {
+        sessionId,
+        session: {
+          id: fullSession.id,
+          projectId: fullSession.project_id,
+          userId: fullSession.user_id,
+          name: fullSession.name ?? undefined,
+          agent: fullSession.agent,
+          type: fullSession.type as 'chat' | 'workflow' | 'internal',
+          permission_mode: fullSession.permission_mode as 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions',
+          cli_session_id: fullSession.cli_session_id ?? undefined,
+          session_path: fullSession.session_path ?? undefined,
+          metadata: fullSession.metadata as unknown as import('@/shared/types/agent-session.types').AgentSessionMetadata,
+          state: fullSession.state as 'idle' | 'working' | 'error',
+          error_message: fullSession.error_message ?? undefined,
+          is_archived: fullSession.is_archived,
+          archived_at: fullSession.archived_at,
+          created_at: fullSession.created_at,
+          updated_at: fullSession.updated_at,
+        },
+      },
+    });
+  } else {
+    // Fallback if session not found (shouldn't happen)
+    broadcast(Channels.session(sessionId), {
+      type: SessionEventTypes.MESSAGE_COMPLETE,
+      data: {
+        sessionId,
+      },
+    });
+  }
 }
 
 /**

@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/client/utils/api";
-import { sessionKeys } from "./queryKeys";
 
 export interface SessionFileData {
   content: string;
@@ -13,7 +12,7 @@ export interface SessionFileData {
  */
 export function useSessionFile(sessionId: string, enabled = true) {
   return useQuery({
-    queryKey: sessionKeys.file(sessionId),
+    queryKey: ["sessionFile", sessionId],
     queryFn: async () => {
       const response = await api.get<{ data: SessionFileData }>(
         `/api/sessions/${sessionId}/file`

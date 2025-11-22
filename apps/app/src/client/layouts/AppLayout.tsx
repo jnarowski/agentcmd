@@ -4,7 +4,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/client/stores/index";
 import { useSyncProjects } from "@/client/pages/projects/hooks/useProjects";
 import { projectKeys } from "@/client/pages/projects/hooks/queryKeys";
-import { sessionKeys } from "@/client/pages/projects/sessions/hooks/queryKeys";
 import { settingsKeys } from "@/client/hooks/queryKeys";
 import { useSettings } from "@/client/hooks/useSettings";
 import { useSessionStore } from "@/client/pages/projects/sessions/stores/sessionStore";
@@ -88,7 +87,7 @@ function AppLayout() {
     if (isSuccess && syncResult) {
       // Invalidate projects list to show newly synced projects
       queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: sessionKeys.lists() });
+      // Note: Session lists now managed by Zustand, no React Query invalidation needed
 
       if (import.meta.env.DEV) {
         console.log(

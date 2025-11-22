@@ -11,7 +11,7 @@ import {
   useSessionStore,
   selectTotalTokens,
 } from "@/client/pages/projects/sessions/stores/sessionStore";
-import { useActiveProject, useActiveSession } from "@/client/hooks/navigation";
+import { useActiveProject } from "@/client/hooks/navigation";
 import { useNavigationStore } from "@/client/stores/index";
 import { generateUUID } from "@/client/utils/cn";
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
@@ -23,13 +23,32 @@ export default function ProjectSessionPage() {
   const navigate = useNavigate();
   const params = useParams<{ sessionId: string }>();
   const { projectId } = useActiveProject();
+  const sessionId = params.sessionId;
 
   // Get project and session names for title
   const { data: project } = useProject(projectId!);
-  const currentSession = useSessionStore((s) => s.session);
+  const currentSession = useSessionStore((s) =>
+    params.sessionId ? s.sessions.get(params.sessionId) : undefined
+  );
 
-  // Get session for header (needs SessionResponse type)
-  const { session: sessionForHeader } = useActiveSession();
+  // Get session for header - convert metadata to SessionResponse-like object
+  const sessionForHeader = currentSession?.metadata && sessionId && projectId ? {
+    id: sessionId,
+    projectId: projectId,
+    userId: '', // Not needed for SessionHeader
+    name: currentSession.name || currentSession.metadata.firstMessagePreview,
+    agent: currentSession.agent || 'claude',
+    type: 'chat' as const,
+    state: 'idle' as const,
+    permission_mode: 'default' as const,
+    error_message: currentSession.error || undefined,
+    session_path: undefined,
+    is_archived: false,
+    archived_at: null,
+    metadata: currentSession.metadata,
+    created_at: new Date(),
+    updated_at: new Date(),
+  } : null;
 
   useDocumentTitle(
     project?.name && currentSession?.name
@@ -40,9 +59,6 @@ export default function ProjectSessionPage() {
   );
   const setActiveSession = useNavigationStore((s) => s.setActiveSession);
 
-  // Get sessionId from URL params (required for this route)
-  const sessionId = params.sessionId;
-
   // Redirect to new session if no sessionId (shouldn't happen with proper routing)
   useEffect(() => {
     if (!sessionId && projectId) {
@@ -51,13 +67,15 @@ export default function ProjectSessionPage() {
   }, [sessionId, projectId, navigate]);
 
   // Get session from store
-  const session = useSessionStore((s) => s.session);
+  const session = useSessionStore((s) =>
+    sessionId ? s.sessions.get(sessionId) : undefined
+  );
   const addMessage = useSessionStore((s) => s.addMessage);
   const setStreaming = useSessionStore((s) => s.setStreaming);
-  const totalTokens = useSessionStore(selectTotalTokens);
-  const clearHandledPermissions = useSessionStore(
-    (s) => s.clearHandledPermissions
+  const totalTokens = useSessionStore((s) =>
+    sessionId ? selectTotalTokens(sessionId)(s) : 0
   );
+  const clearHandledPermissions = useSessionStore((s) => s.clearHandledPermissions);
   const clearToolResultError = useSessionStore((s) => s.clearToolResultError);
   const markPermissionHandled = useSessionStore((s) => s.markPermissionHandled);
 
@@ -97,7 +115,7 @@ export default function ProjectSessionPage() {
     const imagePaths = files ? await handleImageUpload(files) : undefined;
 
     // Add user message to store immediately
-    addMessage({
+    addMessage(sessionId, {
       id: generateUUID(),
       role: "user",
       content: [{ type: "text", text: message }],
@@ -107,7 +125,7 @@ export default function ProjectSessionPage() {
     });
 
     // Set streaming state immediately to show loading indicator
-    setStreaming(true);
+    setStreaming(sessionId, true);
 
     // Count assistant messages to determine if we should resume
     const assistantMessageCount =
@@ -182,10 +200,11 @@ export default function ProjectSessionPage() {
 
   // Permission approval handler
   const handlePermissionApproval = (toolUseId: string) => {
+    if (!sessionId) return;
     console.log("[ProjectSession] Permission approved:", toolUseId);
 
     // Clear the error flag to hide the permission UI immediately
-    clearToolResultError(toolUseId);
+    clearToolResultError(sessionId, toolUseId);
 
     // Mark as handled to prevent duplicate approvals
     markPermissionHandled(toolUseId);

@@ -1,6 +1,5 @@
 import { useRef, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   ChatPromptInput,
   type ChatPromptInputHandle,
@@ -9,8 +8,6 @@ import type { PromptInputMessage } from "@/client/components/ai-elements/PromptI
 import { useWebSocket } from "@/client/hooks/useWebSocket";
 import { useSessionStore } from "@/client/pages/projects/sessions/stores/sessionStore";
 import { useActiveProject } from "@/client/hooks/navigation";
-import { api } from "@/client/utils/api";
-import { sessionKeys } from "./hooks/queryKeys";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
 import { generateUUID } from "@/client/utils/cn";
 import { AgentSelector } from "@/client/components/AgentSelector";
@@ -24,7 +21,6 @@ export default function NewSessionPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { projectId } = useActiveProject();
-  const queryClient = useQueryClient();
   const chatInputRef = useRef<ChatPromptInputHandle>(null);
 
   // Get project name for title
@@ -87,43 +83,28 @@ export default function NewSessionPage() {
       const getPermissionMode = useSessionStore.getState().getPermissionMode;
       const permissionMode = getPermissionMode() || "acceptEdits";
 
-      // Create session via API
-      const { data: newSession } = await api.post<{ data: { id: string } }>(
-        `/api/projects/${projectId}/sessions`,
-        { sessionId: generateUUID(), agent, permission_mode: permissionMode }
-      );
-
-      // Invalidate all session lists to update sidebar immediately
-      queryClient.invalidateQueries({
-        queryKey: sessionKeys.all,
+      // Create session via Zustand store action
+      const sessionId = generateUUID();
+      const newSession = await useSessionStore.getState().createSession(projectId, {
+        sessionId,
+        agent,
+        permission_mode: permissionMode,
       });
 
       // No image upload for now - files parameter not used
       const imagePaths = undefined;
 
-      // Initialize session in store with optimistic message
-      // This prevents AgentSessionViewer from fetching when it mounts
-      useSessionStore.setState({
-        sessionId: newSession.id,
-        session: {
-          id: newSession.id,
-          name: undefined,
-          agent,
-          type: 'chat', // Default to chat type for new sessions
-          permission_mode: permissionMode,
-          messages: [{
-            id: generateUUID(),
-            role: "user",
-            content: [{ type: "text", text: message }],
-            timestamp: Date.now(),
-            _original: undefined,
-          }],
-          isStreaming: true, // Show loading indicator immediately
-          metadata: null,
-          loadingState: "loaded",
-          error: null,
-        },
+      // Add optimistic user message to session in store
+      useSessionStore.getState().addMessage(newSession.id, {
+        id: generateUUID(),
+        role: "user",
+        content: [{ type: "text", text: message }],
+        timestamp: Date.now(),
+        _original: undefined,
       });
+
+      // Set isStreaming to true to show loading indicator
+      useSessionStore.getState().setStreaming(newSession.id, true);
 
       // Immediately send message via app-wide WebSocket (after store setup)
       // This starts the assistant processing right away

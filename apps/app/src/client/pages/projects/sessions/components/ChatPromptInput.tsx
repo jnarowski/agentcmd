@@ -34,7 +34,6 @@ import { cn } from "@/client/utils/cn";
 import { TokenUsageCircle } from "./TokenUsageCircle";
 import { usePromptInputState } from "../hooks/usePromptInputState";
 import { useWebSocket } from "@/client/hooks/useWebSocket";
-import { useUpdateSession } from "../hooks/useAgentSessions";
 import {
   Tooltip,
   TooltipTrigger,
@@ -87,14 +86,14 @@ const ChatPromptInputInner = forwardRef<
       (s) => s.form.permissionMode || "acceptEdits"
     );
     const setPermissionMode = useSessionStore((s) => s.setPermissionMode);
-    const sessionId = useSessionStore((s) => s.sessionId);
+    const activeSessionId = useNavigationStore((s) => s.activeSessionId);
     const model = useSessionStore((s) => s.form.model);
     const setModel = useSessionStore((s) => s.setModel);
-    const sessionAgent = useSessionStore((s) => s.session?.agent);
+    const sessionAgent = useSessionStore((s) =>
+      activeSessionId ? s.sessions.get(activeSessionId)?.agent : undefined
+    );
     const formAgent = useSessionStore((s) => s.form.agent);
-
-    // Mutation for persisting permission mode changes
-    const updateSession = useUpdateSession();
+    const updateSession = useSessionStore((s) => s.updateSession);
 
     // Wrapper function to update both local state and database
     const handlePermissionModeChange = (mode: string) => {
@@ -121,10 +120,11 @@ const ChatPromptInputInner = forwardRef<
       );
 
       // Persist to database if session exists
-      if (sessionId) {
-        updateSession.mutate({
-          id: sessionId,
-          permission_mode: safeMode,
+      if (activeSessionId) {
+        updateSession(activeSessionId, {
+          permission_mode: safeMode as "default" | "plan" | "acceptEdits" | "bypassPermissions",
+        }).catch((error) => {
+          console.error("[ChatPromptInput] Failed to update session:", error);
         });
       }
     };

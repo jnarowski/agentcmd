@@ -71,6 +71,7 @@ export interface MessageCompleteData {
     cacheReadTokens?: number;
   };
   metadata?: Record<string, unknown>;
+  session?: import('./agent-session.types').SessionResponse; // Full session for Zustand direct updates
 }
 
 export interface SessionErrorData {
@@ -93,6 +94,7 @@ export interface SessionUpdatedData {
   metadata?: Record<string, unknown>;
   name?: string;
   updated_at?: Date | string;
+  session?: import('./agent-session.types').SessionResponse; // Full session for Zustand direct updates
 }
 
 /**
