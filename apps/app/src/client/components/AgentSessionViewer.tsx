@@ -16,7 +16,10 @@ import { useEffect } from "react";
 import { ChatInterface } from "@/client/pages/projects/sessions/components/ChatInterface";
 import { useSessionWebSocket } from "@/client/pages/projects/sessions/hooks/useSessionWebSocket";
 import { useSession } from "@/client/hooks/useSession";
-import { useSessionStore, selectActiveSession } from "@/client/pages/projects/sessions/stores/sessionStore";
+import {
+  useSessionStore,
+  selectActiveSession,
+} from "@/client/pages/projects/sessions/stores/sessionStore";
 import type { SessionData } from "@/client/pages/projects/sessions/stores/sessionStore";
 
 export interface AgentSessionViewerProps {
@@ -62,19 +65,14 @@ export function AgentSessionViewer({
   onApprove,
 }: AgentSessionViewerProps) {
   // Load session data via Zustand hook (auto-loads if not in store)
-  const { messages, isLoading, isStreaming, error } = useSession(sessionId, projectId);
+  const { messages, isLoading, isStreaming, error } = useSession(
+    sessionId,
+    projectId
+  );
 
   // Get full session data from store
   const session = useSessionStore(selectActiveSession);
   const clearSession = useSessionStore((s) => s.clearSession);
-  const setPermissionMode = useSessionStore((s) => s.setPermissionMode);
-
-  // Sync form permission mode when session loads
-  useEffect(() => {
-    if (session?.id === sessionId && session?.permission_mode) {
-      setPermissionMode(session.permission_mode);
-    }
-  }, [session?.id, session?.permission_mode, sessionId, setPermissionMode]);
 
   // Trigger onSessionLoad callback when data is loaded
   useEffect(() => {
@@ -92,15 +90,6 @@ export function AgentSessionViewer({
 
   // WebSocket subscription for real-time updates
   useSessionWebSocket({ sessionId, projectId });
-
-  // Cleanup on unmount if requested (useful for modals)
-  useEffect(() => {
-    return () => {
-      if (clearOnUnmount) {
-        clearSession(sessionId);
-      }
-    };
-  }, [clearOnUnmount, sessionId, clearSession]);
 
   // Render ChatInterface with session data
   return (
