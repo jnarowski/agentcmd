@@ -8,12 +8,12 @@ import {
 } from "@/client/components/ui/dropdown-menu";
 import { SessionDialog } from "./SessionDialog";
 import { SessionFileViewer } from "./SessionFileViewer";
-import { useUpdateSession, useArchiveSession, useUnarchiveSession } from "../hooks/useAgentSessions";
+import { useSessionStore, type SessionSummary } from "@/client/pages/projects/sessions/stores/sessionStore";
 import { cn } from "@/client/utils/cn";
-import type { SessionResponse } from "@/shared/types";
+import { toast } from "sonner";
 
 interface SessionDropdownMenuProps {
-  session: SessionResponse;
+  session: SessionSummary;
   onEditSuccess?: () => void;
   onMenuOpenChange?: (open: boolean) => void;
   triggerClassName?: string;
@@ -32,9 +32,9 @@ export function SessionDropdownMenu({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [fileViewerOpen, setFileViewerOpen] = useState(false);
-  const updateSessionMutation = useUpdateSession();
-  const archiveSessionMutation = useArchiveSession();
-  const unarchiveSessionMutation = useUnarchiveSession();
+  const updateSession = useSessionStore((s) => s.updateSession);
+  const archiveSession = useSessionStore((s) => s.archiveSession);
+  const unarchiveSession = useSessionStore((s) => s.unarchiveSession);
 
   const handleMenuOpenChange = (open: boolean) => {
     setIsMenuOpen(open);
@@ -55,23 +55,41 @@ export function SessionDropdownMenu({
     setFileViewerOpen(true);
   };
 
-  const handleArchive = (e: React.MouseEvent) => {
+  const handleArchive = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     handleMenuOpenChange(false);
-    archiveSessionMutation.mutate(session.id);
+    try {
+      await archiveSession(session.id);
+      toast.success("Session archived");
+    } catch (error) {
+      toast.error("Failed to archive session");
+      console.error("[SessionDropdownMenu] Archive error:", error);
+    }
   };
 
-  const handleUnarchive = (e: React.MouseEvent) => {
+  const handleUnarchive = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     handleMenuOpenChange(false);
-    unarchiveSessionMutation.mutate(session.id);
+    try {
+      await unarchiveSession(session.id);
+      toast.success("Session unarchived");
+    } catch (error) {
+      toast.error("Failed to unarchive session");
+      console.error("[SessionDropdownMenu] Unarchive error:", error);
+    }
   };
 
   const handleUpdateSession = async (sessionId: string, name: string) => {
-    await updateSessionMutation.mutateAsync({ id: sessionId, name });
-    onEditSuccess?.();
+    try {
+      await updateSession(sessionId, { name });
+      toast.success("Session updated");
+      onEditSuccess?.();
+    } catch (error) {
+      toast.error("Failed to update session");
+      console.error("[SessionDropdownMenu] Update error:", error);
+    }
   };
 
   return (

@@ -10,10 +10,10 @@ import { SessionStateBadge } from "@/client/pages/projects/sessions/components/S
 import { getSessionDisplayName } from "@/client/utils/getSessionDisplayName";
 import { getWorkflowStatusConfig } from "@/client/pages/projects/workflows/utils/workflowStatus";
 import { useProjects } from "@/client/pages/projects/hooks/useProjects";
-import { useSessions } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
+import { useSessionList } from "@/client/hooks/useSessionList";
 import { useAllWorkflowRuns } from "@/client/pages/projects/workflows/hooks/useAllWorkflowRuns";
 import type { AgentType } from "@/shared/types/agent.types";
-import type { SessionResponse } from "@/shared/types";
+import type { SessionSummary } from "@/client/pages/projects/sessions/stores/sessionStore";
 import type { WorkflowStatus } from "@/shared/schemas/workflow.schemas";
 import { format } from "date-fns";
 
@@ -28,7 +28,7 @@ interface Activity {
   status: string | WorkflowStatus;
   createdAt: Date;
   agent?: AgentType;
-  session?: SessionResponse;
+  session?: SessionSummary;
   workflowDefinitionId?: string;
 }
 
@@ -41,14 +41,15 @@ interface ProjectHomeActivitiesProps {
  * Shows combined Sessions + Workflow runs in table format
  * Filter is local state (not persisted)
  */
-export function ProjectHomeActivities({ projectId }: ProjectHomeActivitiesProps) {
+export function ProjectHomeActivities({
+  projectId,
+}: ProjectHomeActivitiesProps) {
   const navigate = useNavigate();
   const { data: projects } = useProjects();
   const [filter, setFilter] = useState<ActivityFilter>("all");
 
   // Fetch sessions for this project
-  const { data: sessions } = useSessions({
-    projectId,
+  const { sessions } = useSessionList(projectId, {
     limit: 20,
     orderBy: "created_at",
     order: "desc",
@@ -75,7 +76,7 @@ export function ProjectHomeActivities({ projectId }: ProjectHomeActivitiesProps)
         name: "",
         projectId: session.projectId,
         projectName:
-          projectName.length > 30
+          projectName && projectName.length > 30
             ? projectName.slice(0, 30) + "..."
             : projectName,
         status: session.state,
@@ -102,7 +103,7 @@ export function ProjectHomeActivities({ projectId }: ProjectHomeActivitiesProps)
         name: run.name.length > 50 ? run.name.slice(0, 50) + "..." : run.name,
         projectId: run.project_id,
         projectName:
-          projectName.length > 30
+          projectName && projectName.length > 30
             ? projectName.slice(0, 30) + "..."
             : projectName,
         status: run.status,
@@ -176,33 +177,57 @@ export function ProjectHomeActivities({ projectId }: ProjectHomeActivitiesProps)
           <table className="w-full">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground">Type</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground">Name</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground">Status</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground">Created</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground">
+                  Type
+                </th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground">
+                  Name
+                </th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground">
+                  Status
+                </th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground">
+                  Created
+                </th>
               </tr>
             </thead>
             <tbody>
               {filteredActivities.map((activity) => {
                 if (activity.type === "session" && activity.session) {
                   const displayName = getSessionDisplayName(activity.session);
-                  const timeAgo = format(new Date(activity.session.created_at), "MM/dd 'at' h:mma");
+                  const timeAgo = format(
+                    new Date(activity.session.created_at),
+                    "MM/dd 'at' h:mma"
+                  );
 
                   return (
                     <tr
                       key={activity.id}
                       className="border-b last:border-b-0 hover:bg-accent/50 cursor-pointer"
-                      onClick={() => navigate(`/projects/${activity.projectId}/sessions/${activity.id}`)}
+                      onClick={() =>
+                        navigate(
+                          `/projects/${activity.projectId}/sessions/${activity.id}`
+                        )
+                      }
                     >
                       <td className="p-2">
                         <div className="flex items-center gap-2">
-                          {activity.agent && <AgentIcon agent={activity.agent} className="size-4" />}
-                          <span className="text-xs text-muted-foreground">Session</span>
+                          {activity.agent && (
+                            <AgentIcon
+                              agent={activity.agent}
+                              className="size-4"
+                            />
+                          )}
+                          <span className="text-xs text-muted-foreground">
+                            Session
+                          </span>
                         </div>
                       </td>
                       <td className="p-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium truncate">{displayName}</span>
+                          <span className="text-sm font-medium truncate">
+                            {displayName}
+                          </span>
                           {activity.session.permission_mode === "plan" && (
                             <Badge
                               variant="secondary"
@@ -226,25 +251,35 @@ export function ProjectHomeActivities({ projectId }: ProjectHomeActivitiesProps)
                     </tr>
                   );
                 } else if (activity.type === "workflow") {
-                  const statusConfig = getWorkflowStatusConfig(activity.status as WorkflowStatus);
+                  const statusConfig = getWorkflowStatusConfig(
+                    activity.status as WorkflowStatus
+                  );
                   const StatusIcon = statusConfig.icon;
 
                   return (
                     <tr
                       key={activity.id}
                       className="border-b last:border-b-0 hover:bg-accent/50 cursor-pointer"
-                      onClick={() => navigate(`/projects/${activity.projectId}/workflows/${activity.workflowDefinitionId}/runs/${activity.id}`)}
+                      onClick={() =>
+                        navigate(
+                          `/projects/${activity.projectId}/workflows/${activity.workflowDefinitionId}/runs/${activity.id}`
+                        )
+                      }
                     >
                       <td className="p-2">
                         <div className="flex items-center gap-2">
                           <StatusIcon
                             className={`size-4 ${statusConfig.textColor} ${activity.status === "running" ? "animate-spin" : ""}`}
                           />
-                          <span className="text-xs text-muted-foreground">Workflow</span>
+                          <span className="text-xs text-muted-foreground">
+                            Workflow
+                          </span>
                         </div>
                       </td>
                       <td className="p-2">
-                        <span className="text-sm font-medium truncate">{activity.name}</span>
+                        <span className="text-sm font-medium truncate">
+                          {activity.name}
+                        </span>
                       </td>
                       <td className="p-2">
                         <Badge
@@ -253,17 +288,20 @@ export function ProjectHomeActivities({ projectId }: ProjectHomeActivitiesProps)
                             activity.status === "running"
                               ? "bg-blue-500/10 text-blue-500"
                               : activity.status === "completed"
-                              ? "bg-green-500/10 text-green-500"
-                              : activity.status === "failed"
-                              ? "bg-red-500/10 text-red-500"
-                              : "bg-gray-500/10 text-gray-500"
+                                ? "bg-green-500/10 text-green-500"
+                                : activity.status === "failed"
+                                  ? "bg-red-500/10 text-red-500"
+                                  : "bg-gray-500/10 text-gray-500"
                           }`}
                         >
                           {activity.status}
                         </Badge>
                       </td>
                       <td className="p-2 text-xs text-muted-foreground tabular-nums">
-                        {format(new Date(activity.createdAt), "MM/dd 'at' h:mma")}
+                        {format(
+                          new Date(activity.createdAt),
+                          "MM/dd 'at' h:mma"
+                        )}
                       </td>
                     </tr>
                   );

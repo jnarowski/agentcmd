@@ -46,7 +46,7 @@ export function AgentSessionModal({
     if (!open && sessionId) {
       // Delay cleanup slightly to allow for animations
       const timer = setTimeout(() => {
-        useSessionStore.getState().clearSession();
+        useSessionStore.getState().clearSession(sessionId);
       }, 300);
       return () => clearTimeout(timer);
     }

@@ -7,7 +7,7 @@ import { SessionDropdownMenu } from "@/client/pages/projects/sessions/components
 import { SessionStateBadge } from "@/client/pages/projects/sessions/components/SessionStateBadge";
 import type { SessionResponse } from "@/shared/types";
 import { getSessionDisplayName } from "@/client/utils/getSessionDisplayName";
-import { useSessionStore } from "@/client/pages/projects/sessions/stores/sessionStore";
+import { useSessionStore, selectSession } from "@/client/pages/projects/sessions/stores/sessionStore";
 import { copySessionToClipboard } from "@/client/pages/projects/sessions/utils/copySessionToClipboard";
 import { Button } from "@/client/components/ui/button";
 import { Input } from "@/client/components/ui/input";
@@ -16,8 +16,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/client/components/ui/tooltip";
-import { useUpdateSession } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
-
 interface SessionHeaderProps {
   session: SessionResponse;
 }
@@ -32,7 +30,8 @@ export function SessionHeader({ session }: SessionHeaderProps) {
   const [editValue, setEditValue] = useState("");
   const [isHovered, setIsHovered] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const updateSession = useUpdateSession();
+  const updateSession = useSessionStore((s) => s.updateSession);
+  const sessionData = useSessionStore(selectSession(session.id));
 
   // Get display name with consistent fallback logic, then truncate to 50 characters
   const displayName = getSessionDisplayName(session);
@@ -52,18 +51,17 @@ export function SessionHeader({ session }: SessionHeaderProps) {
     setIsEditing(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const trimmedValue = editValue.trim();
     if (trimmedValue && trimmedValue !== displayName) {
-      updateSession.mutate(
-        { id: session.id, name: trimmedValue },
-        {
-          onSuccess: () => {
-            setIsEditing(false);
-            toast.success("Session name updated");
-          },
-        }
-      );
+      try {
+        await updateSession(session.id, { name: trimmedValue });
+        setIsEditing(false);
+        toast.success("Session name updated");
+      } catch (error) {
+        console.error("[SessionHeader] Failed to update session name:", error);
+        toast.error("Failed to update session name");
+      }
     } else {
       setIsEditing(false);
     }
@@ -86,11 +84,10 @@ export function SessionHeader({ session }: SessionHeaderProps) {
 
   const handleCopySession = async () => {
     try {
-      // Get state when needed to avoid infinite loop from object recreation
-      const state = useSessionStore.getState();
+      // Use the sessionData from store (includes messages, metadata, etc.)
       const sessionState = {
-        session: state.session,
-        sessionId: state.sessionId,
+        session: sessionData || null,
+        sessionId: session.id,
       };
 
       await copySessionToClipboard(sessionState);

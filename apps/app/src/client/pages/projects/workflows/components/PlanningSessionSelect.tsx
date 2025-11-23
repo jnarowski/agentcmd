@@ -4,13 +4,13 @@ import { Combobox, type ComboboxOption } from "@/client/components/ui/combobox";
 import { Badge } from "@/client/components/ui/badge";
 import { AgentIcon } from "@/client/components/AgentIcon";
 import { SessionStateBadge } from "@/client/pages/projects/sessions/components/SessionStateBadge";
-import { useSessions } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
+import { useSessionList } from "@/client/hooks/useSessionList";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
 import { getSessionDisplayName } from "@/client/utils/getSessionDisplayName";
-import type { SessionResponse } from "@/shared/types";
+import type { SessionSummary } from "@/client/pages/projects/sessions/stores/sessionStore";
 
 interface PlanningSessionOption extends ComboboxOption<string> {
-  session: SessionResponse;
+  session: SessionSummary;
 }
 
 interface PlanningSessionSelectProps {
@@ -26,7 +26,7 @@ export function PlanningSessionSelect({
   onValueChange,
   disabled,
 }: PlanningSessionSelectProps) {
-  const { data: sessions } = useSessions({ projectId });
+  const { sessions } = useSessionList(projectId);
   const { data: project } = useProject(projectId);
   const projectName = project?.name || "Unknown Project";
 

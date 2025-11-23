@@ -11,7 +11,7 @@ import { SessionDropdownMenu } from "@/client/pages/projects/sessions/components
 import { SessionStateBadge } from "@/client/pages/projects/sessions/components/SessionStateBadge";
 import { getSessionDisplayName } from "@/client/utils/getSessionDisplayName";
 import { useNavigationStore } from "@/client/stores";
-import type { SessionResponse } from "@/shared/types";
+import type { SessionSummary } from "@/client/pages/projects/sessions/stores/sessionStore";
 import type { AgentType } from "@/shared/types/agent.types";
 import { format } from "date-fns";
 
@@ -21,7 +21,7 @@ interface SessionItemProps {
   projectName: string;
   status: string;
   agent?: AgentType;
-  session: SessionResponse;
+  session: SessionSummary;
   isActive?: boolean;
 }
 

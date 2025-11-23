@@ -68,6 +68,53 @@ Data fetching with caching and invalidation.
 
 **See:** `.agent/docs/frontend-patterns.md` for detailed patterns
 
+## API Calls
+
+**CRITICAL**: Always use the centralized API client for all HTTP requests.
+
+### Centralized API Client
+
+✅ **DO** - Use `api` from `@/client/utils/api.ts`:
+
+```typescript
+import { api } from "@/client/utils/api";
+
+// GET request
+const data = await api.get<{ data: Session[] }>("/api/sessions");
+
+// POST request
+const result = await api.post<{ data: Session }>("/api/sessions", {
+  name: "New Session"
+});
+
+// PATCH request
+const updated = await api.patch<{ data: Session }>("/api/sessions/123", {
+  name: "Updated"
+});
+
+// DELETE request
+await api.delete("/api/sessions/123");
+```
+
+❌ **DON'T** - Manual fetch with localStorage tokens:
+
+```typescript
+// Never do this - auth header injection missing, 401 handling missing
+const response = await fetch("/api/sessions", {
+  headers: {
+    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+  },
+});
+```
+
+**Why:**
+- Automatic auth header injection (no manual token handling)
+- Global 401 error handling (auto-redirect to login)
+- Consistent error handling across all API calls
+- Type-safe request/response types
+
+**Location:** `apps/app/src/client/utils/api.ts`
+
 ## WebSocket Client
 
 Feature-level hooks for real-time updates. Subscribe to channels (colon notation), listen for events (dot notation).
