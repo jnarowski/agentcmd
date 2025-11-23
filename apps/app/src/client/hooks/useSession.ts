@@ -36,17 +36,7 @@ export function useSession(sessionId: string, projectId: string): UseSessionRetu
   useEffect(() => {
     const willLoad = !session || session.loadingState === 'idle' || session.loadingState === 'error';
 
-    console.log('[useSession]', {
-      sessionId,
-      currentSessionId: currentSession?.id,
-      sessionExists: !!session,
-      loadingState: session?.loadingState,
-      messageCount: session?.messages.length || 0,
-      willLoad,
-    });
-
     if (willLoad) {
-      console.log('[useSession] Calling loadSession');
       loadSession(sessionId, projectId);
     }
   }, [sessionId, projectId, session?.loadingState, loadSession, currentSession?.id, session]);
