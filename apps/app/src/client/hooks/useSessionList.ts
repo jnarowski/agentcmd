@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { useSessionStore, selectSessionList } from '@/client/pages/projects/sessions/stores/sessionStore';
+import { useEffect, useMemo } from 'react';
+import { useSessionStore } from '@/client/pages/projects/sessions/stores/sessionStore';
 import type { SessionSummary } from '@/client/pages/projects/sessions/stores/sessionStore';
 
 /**
@@ -26,19 +26,32 @@ export function useSessionList(
   filters?: Record<string, unknown>
 ): UseSessionListReturn {
   const loadSessionList = useSessionStore((s) => s.loadSessionList);
-  const listData = useSessionStore((state) => selectSessionList(projectId)(state));
 
-  // Auto-load list if not in Map
+  // Use separate selectors for primitives/stable references - avoids creating new objects
+  const allSessions = useSessionStore((state) => state.sessionList.sessions);
+  const loading = useSessionStore((state) => state.sessionList.loading);
+  const error = useSessionStore((state) => state.sessionList.error);
+
+  // Filter in component with useMemo, not in Zustand selector
+  const sessions = useMemo(
+    () => projectId ? allSessions.filter(s => s.projectId === projectId) : allSessions,
+    [allSessions, projectId]
+  );
+
+  // Stringify filters for stable dependency (primitives only)
+  const filtersKey = useMemo(() => JSON.stringify(filters || {}), [filters]);
+
+  // Auto-load list if not loaded yet
   useEffect(() => {
-    if (!listData) {
+    if (!loading && sessions.length === 0 && !error) {
       loadSessionList(projectId, filters);
     }
-  }, [projectId, listData, loadSessionList, filters]);
+  }, [projectId, filtersKey, loadSessionList, filters, loading, sessions.length, error]);
 
   // Return stable references
   return {
-    sessions: listData?.sessions || [],
-    isLoading: listData?.loading || false,
-    error: listData?.error || null,
+    sessions,
+    isLoading: loading,
+    error,
   };
 }
