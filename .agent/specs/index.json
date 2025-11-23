@@ -210,6 +210,22 @@
       "status": "draft",
       "created": "2025-11-23T08:23:00Z",
       "updated": "2025-11-23T08:23:00Z"
+    },
+    "2511231018": {
+      "folder": "2511231018-aaaa",
+      "path": "todo/2511231018-aaaa/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-23T10:18:00Z",
+      "updated": "2025-11-23T10:18:00Z"
+    },
+    "2511231720": {
+      "folder": "2511231720-aaaa",
+      "path": "todo/2511231720-aaaa/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-23T17:20:00Z",
+      "updated": "2025-11-23T17:20:00Z"
     }
   }
 }
