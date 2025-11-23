@@ -62,13 +62,23 @@ export function ChatInterface({
     );
   }
 
-  // Empty state - show loading if history is being fetched
+  // Empty state - show loading if history is being fetched or waiting for first message
   if (messages.length === 0) {
     if (isLoadingHistory) {
       return (
         <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-4">
           <Loader2 className="h-12 w-12 mb-4 opacity-50 animate-spin" />
           <p className="text-lg font-medium">Loading conversation history...</p>
+        </div>
+      );
+    }
+
+    // Show loading indicator when streaming (waiting for first response)
+    if (isStreaming) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-4">
+          <Loader2 className="h-12 w-12 mb-4 opacity-50 animate-spin" />
+          <p className="text-lg font-medium">Starting session...</p>
         </div>
       );
     }

@@ -55,6 +55,14 @@ export default function NewSessionPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount only
 
+  // Clear current session on mount to ensure clean slate for new session creation
+  useEffect(() => {
+    const currentSessionId = useSessionStore.getState().currentSession?.id;
+    if (currentSessionId) {
+      useSessionStore.getState().clearSession(currentSessionId);
+    }
+  }, []);
+
   // App-wide WebSocket hook for sending messages during session creation
   const {
     sendMessage: globalSendMessage,
@@ -85,6 +93,7 @@ export default function NewSessionPage() {
 
       // Create session via Zustand store action
       const sessionId = generateUUID();
+
       const newSession = await useSessionStore.getState().createSession(projectId, {
         sessionId,
         agent,
@@ -95,8 +104,10 @@ export default function NewSessionPage() {
       const imagePaths = undefined;
 
       // Add optimistic user message to session in store
+      const optimisticMessageId = generateUUID();
+
       useSessionStore.getState().addMessage(newSession.id, {
-        id: generateUUID(),
+        id: optimisticMessageId,
         role: "user",
         content: [{ type: "text", text: message }],
         timestamp: Date.now(),
@@ -124,6 +135,7 @@ export default function NewSessionPage() {
       });
 
       // Navigate to the new session without query param
+
       navigate(
         `/projects/${projectId}/sessions/${newSession.id}`,
         {

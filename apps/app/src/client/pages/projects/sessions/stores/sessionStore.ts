@@ -809,12 +809,27 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
    */
   setSession: (sessionId: string, session: SessionResponse) => {
     set((state) => {
-      // Only update if this is the current session
-      if (state.currentSession?.id !== sessionId) return state;
+      console.log('[setSession]', {
+        sessionId,
+        currentSessionId: state.currentSession?.id,
+        currentSessionExists: state.currentSession !== null,
+      });
+
+      // Only update if this is the current session (or initializing when currentSession is null)
+      // Guards against WebSocket race conditions during session navigation
+      if (state.currentSession !== null && state.currentSession.id !== sessionId) {
+        console.log('[setSession] BLOCKED - different session active');
+        return state;
+      }
 
       const existing = state.currentSession;
       const messages = existing?.messages || [];
       const messageIds = existing?.messageIds || new Set<string>();
+
+      console.log('[setSession] Setting session', {
+        existingMessages: messages.length,
+        isInitializing: existing === null,
+      });
 
       const sessionData: SessionData = {
         ...session,
@@ -883,12 +898,40 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
    */
   addMessage: (sessionId: string, message: UIMessage) => {
     set((state) => {
-      if (state.currentSession?.id !== sessionId) return state;
+      const messagePreview = Array.isArray(message.content) && message.content[0]?.type === 'text'
+        ? message.content[0].text.substring(0, 50)
+        : '[non-text content]';
+
+      console.log('[addMessage]', {
+        sessionId,
+        currentSessionId: state.currentSession?.id,
+        messageRole: message.role,
+        messagePreview,
+        isOptimistic: message._optimistic,
+      });
+
+      // Only add to current session (or allow if initializing when currentSession is null)
+      // Guards against adding messages to wrong session during navigation
+      if (state.currentSession !== null && state.currentSession.id !== sessionId) {
+        console.log('[addMessage] BLOCKED - different session active');
+        return state;
+      }
+
+      // Safety check - should not happen after setSession
+      if (!state.currentSession) {
+        console.error('[addMessage] ERROR - currentSession is null, cannot add message');
+        return state;
+      }
 
       // Check for duplicate message
       if (state.currentSession.messageIds.has(message.id)) {
+        console.log('[addMessage] Skipping duplicate message');
         return state; // Skip duplicate
       }
+
+      console.log('[addMessage] Adding message to session', {
+        currentMessageCount: state.currentSession.messages.length,
+      });
 
       // Add message ID to set
       const newMessageIds = new Set(state.currentSession.messageIds);
