@@ -6,6 +6,8 @@ import { syncProjectSessions, bulkGenerateSessionNames } from "@/server/domain/s
 import { getClaudeProjectsDir } from "@/server/utils/path";
 import type { SyncProjectsResponse } from "@/shared/types/project-sync.types";
 import type { SyncFromClaudeProjectsOptions } from "@/server/domain/project/types/SyncFromClaudeProjectsOptions";
+import { hasEnoughSessions } from "./hasEnoughSessions";
+import { createOrUpdateProject } from "@/server/domain/project/services";
 
 /**
  * Decode filesystem-encoded project path back to real path
@@ -167,9 +169,6 @@ export async function syncFromClaudeProjects({ userId, logger }: SyncFromClaudeP
   // Filter for directories only
   const projectDirs = entries.filter((entry) => entry.isDirectory());
 
-  // Import hasEnoughSessions to avoid code duplication
-  const { hasEnoughSessions } = await import('./hasEnoughSessions');
-
   // Process each project directory
   for (const projectDir of projectDirs) {
     const projectName = projectDir.name;
@@ -185,9 +184,6 @@ export async function syncFromClaudeProjects({ userId, logger }: SyncFromClaudeP
 
     // Generate display name from last path segment
     const displayName = path.basename(actualPath);
-
-    // Dynamic import for testability (allows mocking in tests)
-    const { createOrUpdateProject } = await import("@/server/domain/project/services");
 
     // Create or update project
     const project = await createOrUpdateProject({

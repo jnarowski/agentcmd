@@ -1,13 +1,14 @@
 import {
-  buildSlashCommand,
   defineWorkflow,
   type WorkflowStep,
 } from "../../../packages/agentcmd-workflows/dist";
 
 // Type definitions from monorepo-wide generated types
-import type {
-  CmdImplementSpecResponse,
-  CmdReviewSpecImplementationResponse,
+import {
+  buildSlashCommand,
+  type CmdImplementSpecResponse,
+  type CmdReviewSpecImplementationResponse,
+  type CmdCreatePrResponse,
 } from "../../generated/slash-commands";
 
 /**
@@ -93,15 +94,12 @@ export default defineWorkflow(
       });
 
       // Create PR with implementation summary and review status
-      await step.git("create-pull-request", {
-        operation: "pr",
-        title: `feat: ${ctx.implement.feature_name}`,
-        body: generatePrBody({
-          summary: ctx.implement.summary,
-          issuesFound: ctx.review.issues_found,
-          specFile,
+      await step.agent<CmdCreatePrResponse>("commit-push-and-create-pr", {
+        agent: "claude",
+        json: true,
+        prompt: buildSlashCommand("/cmd:create-pr", {
+          title: `feat: ${event.data.name}`,
         }),
-        baseBranch: event.data.baseBranch,
       });
     });
   }

@@ -3,7 +3,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { getSpecs, clearSpecsCache } from "@/server/domain/spec/services/getSpecs";
-import { executeCommand } from "@/server/domain/session/services";
+import { moveSpec } from "@/server/domain/spec/services/moveSpec";
 import { buildErrorResponse } from "@/server/errors";
 
 const SpecsQuerySchema = z.object({
@@ -122,31 +122,20 @@ export async function specRoutes(fastify: FastifyInstance) {
       );
 
       try {
-        // Execute /cmd:move-spec command synchronously
-        const result = await executeCommand({
+        // Move spec directly using file operations
+        const result = await moveSpec({
           projectId,
-          userId,
-          prompt: `/cmd:move-spec ${specId} ${targetFolder}`,
-          mode: "sync",
-          json: true,
+          specId,
+          targetFolder,
         });
 
-        // Check if result is sync mode (discriminated union)
-        if (result.mode === "sync" && !result.success) {
-          return reply
-            .code(400)
-            .send(buildErrorResponse(400, result.error ?? "Failed to move spec"));
-        }
-
-        // Clear specs cache to force refresh
-        clearSpecsCache();
-
-        return reply.send({ success: true });
+        return reply.send({ success: true, spec: result.spec });
       } catch (error) {
         fastify.log.error({ error }, "Error moving spec");
+        const errorMessage = error instanceof Error ? error.message : "Failed to move spec";
         return reply
           .code(500)
-          .send(buildErrorResponse(500, "Failed to move spec"));
+          .send(buildErrorResponse(500, errorMessage));
       }
     }
   );

@@ -73,6 +73,8 @@ export interface WorkflowContext<
 export interface WorkflowEventData<TArgs = Record<string, unknown>> {
   /** Workflow run ID */
   runId: string;
+  /** Workflow run name */
+  name: string;
   /** Project ID */
   projectId: string;
   /** User ID who triggered the workflow */
