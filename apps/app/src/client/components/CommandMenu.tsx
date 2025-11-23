@@ -21,7 +21,7 @@ import {
   CommandSeparator,
 } from "@/client/components/ui/command";
 import { useProjects } from "@/client/pages/projects/hooks/useProjects";
-import { useSessions } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
+import { useSessionStore, selectAllSessions } from "@/client/pages/projects/sessions/stores/sessionStore";
 import { Button } from "@/client/components/ui/button";
 import { Input } from "@/client/components/ui/input";
 import { ProjectDialog } from "@/client/pages/projects/components/ProjectDialog";
@@ -38,8 +38,17 @@ export function CommandMenu({ onSearchChange }: CommandMenuProps) {
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
   const navigate = useNavigate();
   const { data: projects = [], isLoading: projectsLoading } = useProjects();
-  const { data: sessions = [] } = useSessions({ limit: 10, orderBy: 'updated_at', order: 'desc' });
+  const allSessions = useSessionStore(selectAllSessions);
   const { isMobile } = useSidebar();
+
+  // Sort and limit sessions for cross-project display
+  const sessions = allSessions
+    .sort((a, b) => {
+      const dateA = new Date(a.metadata.lastMessageAt || a.updated_at).getTime();
+      const dateB = new Date(b.metadata.lastMessageAt || b.updated_at).getTime();
+      return dateB - dateA; // Most recent first
+    })
+    .slice(0, 10); // Limit to 10 most recent across all projects
 
   const handleProjectCreated = (projectId: string) => {
     setProjectDialogOpen(false);

@@ -40,12 +40,14 @@ export interface ChannelEvent<T = string, D = unknown> {
 export const SessionEventTypes = {
   CANCEL: "session.cancel",
   ERROR: "session.error",
+  KILL_SESSION: "session.kill_session",
   MESSAGE_COMPLETE: "session.message_complete",
   SEND_MESSAGE: "session.send_message",
   SESSION_UPDATED: "session.session_updated",
   STREAM_OUTPUT: "session.stream_output",
   SUBSCRIBE: "session.subscribe",
   SUBSCRIBE_SUCCESS: "session.subscribe_success",
+  UNSUBSCRIBE: "session.unsubscribe",
 } as const;
 
 /**
@@ -71,6 +73,7 @@ export interface MessageCompleteData {
     cacheReadTokens?: number;
   };
   metadata?: Record<string, unknown>;
+  session?: import('./agent-session.types').SessionResponse; // Full session for Zustand direct updates
 }
 
 export interface SessionErrorData {
@@ -93,6 +96,7 @@ export interface SessionUpdatedData {
   metadata?: Record<string, unknown>;
   name?: string;
   updated_at?: Date | string;
+  session?: import('./agent-session.types').SessionResponse; // Full session for Zustand direct updates
 }
 
 /**

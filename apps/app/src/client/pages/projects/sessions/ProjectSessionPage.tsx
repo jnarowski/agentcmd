@@ -1,35 +1,53 @@
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AgentSessionViewer } from "@/client/components/AgentSessionViewer";
 import { ChatPromptInput } from "./components/ChatPromptInput";
 import type { PromptInputMessage } from "@/client/components/ai-elements/PromptInput";
 import type { FileUIPart } from "ai";
 import type { PermissionMode } from "agent-cli-sdk";
-import { useSessionWebSocket } from "./hooks/useSessionWebSocket";
 import { useWebSocket } from "@/client/hooks/useWebSocket";
 import {
   useSessionStore,
   selectTotalTokens,
 } from "@/client/pages/projects/sessions/stores/sessionStore";
-import { useActiveProject, useActiveSession } from "@/client/hooks/navigation";
+import { useActiveProject } from "@/client/hooks/navigation";
 import { useNavigationStore } from "@/client/stores/index";
 import { generateUUID } from "@/client/utils/cn";
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
 import { ProjectHeader } from "@/client/pages/projects/components/ProjectHeader";
 import { SessionHeader } from "@/client/components/SessionHeader";
+import { SessionEventTypes } from "@/shared/types/websocket.types";
+import { Channels } from "@/shared/websocket";
 
 export default function ProjectSessionPage() {
   const navigate = useNavigate();
   const params = useParams<{ sessionId: string }>();
   const { projectId } = useActiveProject();
+  const sessionId = params.sessionId;
 
   // Get project and session names for title
   const { data: project } = useProject(projectId!);
-  const currentSession = useSessionStore((s) => s.session);
+  const currentSession = useSessionStore((s) => s.currentSession);
 
-  // Get session for header (needs SessionResponse type)
-  const { session: sessionForHeader } = useActiveSession();
+  // Get session for header - convert metadata to SessionResponse-like object
+  const sessionForHeader = currentSession?.metadata && sessionId && projectId ? {
+    id: sessionId,
+    projectId: projectId,
+    userId: '', // Not needed for SessionHeader
+    name: currentSession.name || currentSession.metadata.firstMessagePreview,
+    agent: currentSession.agent || 'claude',
+    type: 'chat' as const,
+    state: 'idle' as const,
+    permission_mode: 'default' as const,
+    error_message: currentSession.error || undefined,
+    session_path: undefined,
+    is_archived: false,
+    archived_at: null,
+    metadata: currentSession.metadata,
+    created_at: new Date(),
+    updated_at: new Date(),
+  } : null;
 
   useDocumentTitle(
     project?.name && currentSession?.name
@@ -40,9 +58,6 @@ export default function ProjectSessionPage() {
   );
   const setActiveSession = useNavigationStore((s) => s.setActiveSession);
 
-  // Get sessionId from URL params (required for this route)
-  const sessionId = params.sessionId;
-
   // Redirect to new session if no sessionId (shouldn't happen with proper routing)
   useEffect(() => {
     if (!sessionId && projectId) {
@@ -51,24 +66,55 @@ export default function ProjectSessionPage() {
   }, [sessionId, projectId, navigate]);
 
   // Get session from store
-  const session = useSessionStore((s) => s.session);
+  const session = useSessionStore((s) => s.currentSession);
   const addMessage = useSessionStore((s) => s.addMessage);
   const setStreaming = useSessionStore((s) => s.setStreaming);
   const totalTokens = useSessionStore(selectTotalTokens);
-  const clearHandledPermissions = useSessionStore(
-    (s) => s.clearHandledPermissions
-  );
+  const clearHandledPermissions = useSessionStore((s) => s.clearHandledPermissions);
   const clearToolResultError = useSessionStore((s) => s.clearToolResultError);
   const markPermissionHandled = useSessionStore((s) => s.markPermissionHandled);
 
-  // App-wide WebSocket hook for connection status
-  const { isConnected: globalIsConnected } = useWebSocket();
+  // App-wide WebSocket hook (subscription handled by AgentSessionViewer)
+  const { isConnected: globalIsConnected, sendMessage: sendWsMessage } = useWebSocket();
 
-  // WebSocket hook (subscribes to session events)
-  const { sendMessage: wsSendMessage, killSession } = useSessionWebSocket({
-    sessionId: sessionId || "",
-    projectId: projectId || "",
-  });
+  // Send message to session (without subscribing - AgentSessionViewer handles that)
+  const wsSendMessage = useCallback(
+    (
+      message: string,
+      images: string[] | undefined,
+      config: {
+        resume?: boolean;
+        sessionId?: string;
+        permissionMode?: PermissionMode;
+        [key: string]: unknown;
+      }
+    ) => {
+      const channel = Channels.session(sessionId || "");
+      sendWsMessage(channel, {
+        type: SessionEventTypes.SEND_MESSAGE,
+        data: {
+          message,
+          images,
+          config,
+        },
+      });
+    },
+    [sessionId, sendWsMessage]
+  );
+
+  // Kill/interrupt session
+  const killSession = useCallback(() => {
+    const channel = Channels.session(sessionId || "");
+    const currentSessionId = sessionId || "";
+
+    sendWsMessage(channel, {
+      type: SessionEventTypes.KILL_SESSION,
+      data: { sessionId: currentSessionId },
+    });
+
+    // Update streaming state
+    useSessionStore.getState().setStreaming(currentSessionId, false);
+  }, [sessionId, sendWsMessage]);
 
   // Sync sessionId to navigationStore when it changes
   useEffect(() => {
@@ -97,17 +143,18 @@ export default function ProjectSessionPage() {
     const imagePaths = files ? await handleImageUpload(files) : undefined;
 
     // Add user message to store immediately
-    addMessage({
+    addMessage(sessionId, {
       id: generateUUID(),
       role: "user",
       content: [{ type: "text", text: message }],
       images: imagePaths,
       timestamp: Date.now(),
       _original: undefined,
+      _optimistic: true,
     });
 
     // Set streaming state immediately to show loading indicator
-    setStreaming(true);
+    setStreaming(sessionId, true);
 
     // Count assistant messages to determine if we should resume
     const assistantMessageCount =
@@ -182,10 +229,11 @@ export default function ProjectSessionPage() {
 
   // Permission approval handler
   const handlePermissionApproval = (toolUseId: string) => {
+    if (!sessionId) return;
     console.log("[ProjectSession] Permission approved:", toolUseId);
 
     // Clear the error flag to hide the permission UI immediately
-    clearToolResultError(toolUseId);
+    clearToolResultError(sessionId, toolUseId);
 
     // Mark as handled to prevent duplicate approvals
     markPermissionHandled(toolUseId);

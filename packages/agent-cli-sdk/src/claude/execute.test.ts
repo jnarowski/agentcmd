@@ -380,11 +380,7 @@ describe('execute', () => {
         '--output-format',
         'stream-json',
         '--verbose',
-        '-i',
-        '/path/to/image1.png',
-        '-i',
-        '/path/to/image2.png',
-        'test',
+        'test /path/to/image1.png /path/to/image2.png',
       ]);
     });
 

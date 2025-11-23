@@ -16,9 +16,9 @@ import {
 import {
   createSessionSchema,
   sessionIdSchema,
-  projectIdSchema,
   updateSessionSchema,
 } from "@/server/domain/session/schemas";
+import { projectIdSchema } from "@/server/domain/project/schemas";
 import type { CreateSessionRequest } from "@/shared/types/agent-session.types";
 import { buildErrorResponse } from "@/server/errors";
 import { prisma } from "@/shared/prisma";

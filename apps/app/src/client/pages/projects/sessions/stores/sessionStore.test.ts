@@ -1,491 +1,538 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { useSessionStore, selectTotalTokens } from "./sessionStore";
+import { useSessionStore, selectTotalTokens, mergeMessages } from "./sessionStore";
+import type { UIMessage } from '@/shared/types/message.types';
 
 // Mock the agents module
 vi.mock("@/client/utils/agents");
+
+// Mock api client
+vi.mock("@/client/utils/api", () => ({
+  api: {
+    get: vi.fn(),
+    post: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
+  }
+}));
 
 // Mock fetch globally
 global.fetch = vi.fn();
 
 describe("SessionStore", () => {
   beforeEach(() => {
-    // Reset store before each test
+    // Reset store to initial state before each test
     useSessionStore.setState({
-      sessionId: null,
-      session: null,
+      currentSession: null,
+      sessionList: {
+        sessions: [],
+        loading: false,
+        error: null,
+        lastFetched: 0,
+      },
       form: {
         permissionMode: "acceptEdits",
+        agent: "claude",
+        model: "",
       },
+      handledPermissions: new Set<string>(),
     });
 
-    // Reset fetch mock
+    // Reset all mocks
     vi.clearAllMocks();
   });
 
-  describe("Session Lifecycle", () => {
-    it("should clear current session and reset to null state", () => {
-      const { clearSession } = useSessionStore.getState();
+  describe("mergeMessages (Critical Optimistic Message Handling)", () => {
+    it("should match optimistic user message to server message by exact content", () => {
+      const inMemory: UIMessage[] = [{
+        id: 'uuid-client-123',
+        role: 'user',
+        content: [{ type: 'text', text: 'hello world' }],
+        timestamp: 1000,
+        tool: 'claude',
+        isStreaming: false,
+        _optimistic: true, // Optimistic client message
+      }];
 
-      // Manually set a session first
-      useSessionStore.setState({
-        sessionId: "test-session-id",
-        session: {
-          id: "test-session-id",
-          agent: "claude",
-          messages: [],
-          isStreaming: false,
-          metadata: null,
-          loadingState: "idle",
-          error: null,
-        },
-      });
+      const server: UIMessage[] = [{
+        id: 'msg_abc_server',
+        role: 'user',
+        content: [{ type: 'text', text: 'hello world' }],
+        timestamp: 1001,
+        tool: 'claude',
+        isStreaming: false,
+      }];
 
-      expect(useSessionStore.getState().sessionId).toBe("test-session-id");
+      const result = mergeMessages(inMemory, server);
 
-      clearSession();
-
-      const state = useSessionStore.getState();
-      expect(state.sessionId).toBeNull();
-      expect(state.session).toBeNull();
+      // Should replace optimistic with server version
+      expect(result.messages).toHaveLength(1);
+      expect(result.messages[0].id).toBe('msg_abc_server'); // Server ID wins
+      expect(result.messages[0]._optimistic).toBeUndefined(); // Not optimistic anymore
+      expect(result.messageIds.has('msg_abc_server')).toBe(true);
+      expect(result.messageIds.has('uuid-client-123')).toBe(false);
     });
 
-    // NOTE: loadSession tests removed - session loading now handled by React Query hooks
-    // (useSession + useSessionMessages) in AgentSessionViewer component
+    it("should keep orphaned optimistic messages (CLI hasn't written to disk yet)", () => {
+      const inMemory: UIMessage[] = [{
+        id: 'uuid-123',
+        role: 'user',
+        content: [{ type: 'text', text: 'hello' }],
+        timestamp: 1000,
+        tool: 'claude',
+        isStreaming: false,
+        _optimistic: true,
+      }];
+
+      const server: UIMessage[] = []; // Empty server - CLI hasn't written yet
+
+      const result = mergeMessages(inMemory, server);
+
+      // Should keep optimistic message
+      expect(result.messages).toHaveLength(1);
+      expect(result.messages[0].id).toBe('uuid-123');
+      expect(result.messages[0]._optimistic).toBe(true);
+      expect(result.messageIds.has('uuid-123')).toBe(true);
+    });
+
+    it("should preserve streaming assistant messages during merge", () => {
+      const inMemory: UIMessage[] = [{
+        id: 'msg_streaming',
+        role: 'assistant',
+        content: [{ type: 'text', text: 'Streaming response...' }],
+        timestamp: 1000,
+        tool: 'claude',
+        isStreaming: true, // Still streaming
+      }];
+
+      const server: UIMessage[] = []; // Server doesn't have streaming message yet
+
+      const result = mergeMessages(inMemory, server);
+
+      // Should keep streaming message
+      expect(result.messages).toHaveLength(1);
+      expect(result.messages[0].id).toBe('msg_streaming');
+      expect(result.messages[0].isStreaming).toBe(true);
+    });
+
+    it("should combine matched optimistic, unmatched server, and streaming messages", () => {
+      const inMemory: UIMessage[] = [
+        {
+          id: 'uuid-1',
+          role: 'user',
+          content: [{ type: 'text', text: 'first message' }],
+          timestamp: 1000,
+          tool: 'claude',
+          isStreaming: false,
+          _optimistic: true,
+        },
+        {
+          id: 'msg_streaming',
+          role: 'assistant',
+          content: [{ type: 'text', text: 'thinking...' }],
+          timestamp: 3000,
+          tool: 'claude',
+          isStreaming: true,
+        },
+      ];
+
+      const server: UIMessage[] = [
+        {
+          id: 'msg_server_1',
+          role: 'user',
+          content: [{ type: 'text', text: 'first message' }], // Matches optimistic
+          timestamp: 1001,
+          tool: 'claude',
+          isStreaming: false,
+        },
+        {
+          id: 'msg_server_2',
+          role: 'assistant',
+          content: [{ type: 'text', text: 'response to first' }],
+          timestamp: 2000,
+          tool: 'claude',
+          isStreaming: false,
+        },
+      ];
+
+      const result = mergeMessages(inMemory, server);
+
+      // Should have: matched optimistic (replaced by server), unmatched server, streaming
+      expect(result.messages).toHaveLength(3);
+
+      // Sort by timestamp
+      const sorted = result.messages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+      expect(sorted[0].id).toBe('msg_server_1'); // Matched optimistic → server
+      expect(sorted[1].id).toBe('msg_server_2'); // Unmatched server
+      expect(sorted[2].id).toBe('msg_streaming'); // Preserved streaming
+      expect(sorted[2].isStreaming).toBe(true);
+    });
+
+    it("should sort merged messages by timestamp chronologically", () => {
+      const inMemory: UIMessage[] = [{
+        id: 'uuid-late',
+        role: 'user',
+        content: [{ type: 'text', text: 'late message' }],
+        timestamp: 5000,
+        tool: 'claude',
+        isStreaming: false,
+        _optimistic: true,
+      }];
+
+      const server: UIMessage[] = [
+        {
+          id: 'msg_early',
+          role: 'user',
+          content: [{ type: 'text', text: 'early message' }],
+          timestamp: 1000,
+          tool: 'claude',
+          isStreaming: false,
+        },
+        {
+          id: 'msg_middle',
+          role: 'assistant',
+          content: [{ type: 'text', text: 'middle response' }],
+          timestamp: 3000,
+          tool: 'claude',
+          isStreaming: false,
+        },
+      ];
+
+      const result = mergeMessages(inMemory, server);
+
+      // Should be sorted: early (1000), middle (3000), late (5000)
+      expect(result.messages).toHaveLength(3);
+      expect(result.messages[0].id).toBe('msg_early');
+      expect(result.messages[1].id).toBe('msg_middle');
+      expect(result.messages[2].id).toBe('uuid-late');
+    });
+
+    it("should only match user messages, not assistant messages", () => {
+      const inMemory: UIMessage[] = [{
+        id: 'uuid-assistant',
+        role: 'assistant',
+        content: [{ type: 'text', text: 'response' }],
+        timestamp: 1000,
+        tool: 'claude',
+        isStreaming: false,
+        _optimistic: true, // Optimistic assistant (edge case, shouldn't happen)
+      }];
+
+      const server: UIMessage[] = [{
+        id: 'msg_server',
+        role: 'assistant',
+        content: [{ type: 'text', text: 'response' }],
+        timestamp: 1001,
+        tool: 'claude',
+        isStreaming: false,
+      }];
+
+      const result = mergeMessages(inMemory, server);
+
+      // Optimistic assistant is filtered out (only user messages are optimistic)
+      // Only server assistant message remains
+      expect(result.messages).toHaveLength(1);
+      expect(result.messages[0].id).toBe('msg_server');
+    });
+
+    it("should handle complex content with multiple blocks", () => {
+      const inMemory: UIMessage[] = [{
+        id: 'uuid-complex',
+        role: 'user',
+        content: [
+          { type: 'text', text: 'please run this:' },
+          { type: 'tool_use', id: 'tool-1', name: 'Bash', input: { command: 'ls' } },
+        ],
+        timestamp: 1000,
+        tool: 'claude',
+        isStreaming: false,
+        _optimistic: true,
+      }];
+
+      const server: UIMessage[] = [{
+        id: 'msg_server',
+        role: 'user',
+        content: [
+          { type: 'text', text: 'please run this:' },
+          { type: 'tool_use', id: 'tool-1', name: 'Bash', input: { command: 'ls' } },
+        ],
+        timestamp: 1001,
+        tool: 'claude',
+        isStreaming: false,
+      }];
+
+      const result = mergeMessages(inMemory, server);
+
+      // Should match by exact content (JSON.stringify)
+      expect(result.messages).toHaveLength(1);
+      expect(result.messages[0].id).toBe('msg_server');
+    });
+
+    it("should build correct messageIds Set for deduplication", () => {
+      const inMemory: UIMessage[] = [{
+        id: 'uuid-1',
+        role: 'user',
+        content: [{ type: 'text', text: 'hello' }],
+        timestamp: 1000,
+        tool: 'claude',
+        isStreaming: false,
+        _optimistic: true,
+      }];
+
+      const server: UIMessage[] = [
+        {
+          id: 'msg_1',
+          role: 'user',
+          content: [{ type: 'text', text: 'hello' }],
+          timestamp: 1001,
+          tool: 'claude',
+          isStreaming: false,
+        },
+        {
+          id: 'msg_2',
+          role: 'assistant',
+          content: [{ type: 'text', text: 'hi!' }],
+          timestamp: 2000,
+          tool: 'claude',
+          isStreaming: false,
+        },
+      ];
+
+      const result = mergeMessages(inMemory, server);
+
+      // messageIds should contain: msg_1 (matched), msg_2 (unmatched server)
+      expect(result.messageIds.size).toBe(2);
+      expect(result.messageIds.has('msg_1')).toBe(true);
+      expect(result.messageIds.has('msg_2')).toBe(true);
+      expect(result.messageIds.has('uuid-1')).toBe(false); // Replaced
+    });
   });
 
-  describe("Message Streaming", () => {
-    beforeEach(() => {
-      // Manually set up a session for testing
+  describe("Session Lifecycle", () => {
+    it("should clear current session", () => {
+      const { clearSession } = useSessionStore.getState();
+
+      // Set up a session first
       useSessionStore.setState({
-        sessionId: "test-session-id",
-        session: {
-          id: "test-session-id",
+        currentSession: {
+          id: "test-session",
+          projectId: "test-project",
+          userId: "test-user",
           agent: "claude",
+          type: "chat",
+          permission_mode: "default",
+          state: "idle",
+          is_archived: false,
+          archived_at: null,
+          created_at: new Date(),
+          updated_at: new Date(),
           messages: [],
           isStreaming: false,
           metadata: null,
-          loadingState: "idle",
+          loadingState: "loaded",
           error: null,
+          messageIds: new Set(),
+          streamingMessageId: null,
+        },
+      });
+
+      clearSession("test-session");
+
+      const state = useSessionStore.getState();
+      expect(state.currentSession).toBeNull();
+    });
+
+    it("should clear all sessions", () => {
+      const { clearAllSessions } = useSessionStore.getState();
+
+      // Set up state
+      useSessionStore.setState({
+        currentSession: {
+          id: "test-session",
+          projectId: "test-project",
+          userId: "test-user",
+          agent: "claude",
+          type: "chat",
+          permission_mode: "default",
+          state: "idle",
+          is_archived: false,
+          archived_at: null,
+          created_at: new Date(),
+          updated_at: new Date(),
+          messages: [],
+          isStreaming: false,
+          metadata: null,
+          loadingState: "loaded",
+          error: null,
+          messageIds: new Set(),
+          streamingMessageId: null,
+        },
+        sessionList: {
+          sessions: [
+            {
+              id: "session-1",
+              projectId: "proj-1",
+              userId: "user-1",
+              agent: "claude",
+              type: "chat",
+              state: "idle",
+              permission_mode: "default",
+              is_archived: false,
+              archived_at: null,
+              metadata: {
+                totalTokens: 0,
+                messageCount: 0,
+                lastMessageAt: null,
+                firstMessagePreview: null,
+              },
+              created_at: new Date(),
+              updated_at: new Date(),
+            },
+          ],
+          loading: false,
+          error: null,
+          lastFetched: Date.now(),
+        },
+      });
+
+      clearAllSessions();
+
+      const state = useSessionStore.getState();
+      expect(state.currentSession).toBeNull();
+      expect(state.sessionList.sessions).toHaveLength(0);
+    });
+  });
+
+  describe("Message Actions", () => {
+    beforeEach(() => {
+      // Set up a current session for testing
+      useSessionStore.setState({
+        currentSession: {
+          id: "test-session",
+          projectId: "test-project",
+          userId: "test-user",
+          agent: "claude",
+          type: "chat",
+          permission_mode: "default",
+          state: "idle",
+          is_archived: false,
+          archived_at: null,
+          created_at: new Date(),
+          updated_at: new Date(),
+          messages: [],
+          isStreaming: false,
+          metadata: null,
+          loadingState: "loaded",
+          error: null,
+          messageIds: new Set(),
+          streamingMessageId: null,
         },
       });
     });
 
-    it("should add user message and set firstMessage flag if appropriate", () => {
+    it("should add message to current session", () => {
       const { addMessage } = useSessionStore.getState();
 
-      addMessage({
+      addMessage("test-session", {
         id: "msg-1",
         role: "user",
         content: [{ type: "text", text: "Hello" }],
         timestamp: Date.now(),
+        tool: 'claude',
+        isStreaming: false,
       });
 
       const state = useSessionStore.getState();
-      expect(state.session?.messages).toHaveLength(1);
-      expect(state.session?.messages[0].role).toBe("user");
+      expect(state.currentSession?.messages).toHaveLength(1);
+      expect(state.currentSession?.messages[0].role).toBe("user");
+      expect(state.currentSession?.messageIds.has("msg-1")).toBe(true);
     });
 
-    it("should update streaming message by replacing content blocks", () => {
-      const { updateStreamingMessage } = useSessionStore.getState();
-      const messageId = "msg-1";
-
-      // First chunk
-      updateStreamingMessage(messageId, [{ type: "text", text: "Hello" }]);
-      let state = useSessionStore.getState();
-      expect(state.session?.messages).toHaveLength(1);
-      expect(state.session?.messages[0].role).toBe("assistant");
-      expect(state.session?.messages[0].content).toHaveLength(1);
-
-      // Second chunk - replaces content with same message ID (merging happens in WebSocket hook)
-      updateStreamingMessage(messageId, [{ type: "text", text: " world" }]);
-      state = useSessionStore.getState();
-      expect(state.session?.messages).toHaveLength(1);
-      expect(state.session?.messages[0].content).toHaveLength(1);
-      expect((state.session?.messages[0].content[0] as { type: string; text: string }).text).toBe(" world");
-    });
-
-    it("should handle multiple text blocks during streaming", () => {
-      const { updateStreamingMessage } = useSessionStore.getState();
-      const messageId = "msg-1";
-
-      updateStreamingMessage(messageId, [
-        { type: "text", text: "First block" },
-        { type: "text", text: "Second block" },
-      ]);
-
-      const state = useSessionStore.getState();
-      expect(state.session?.messages).toHaveLength(1);
-      expect(state.session?.messages[0].content).toHaveLength(2);
-    });
-
-    it("should handle tool_use blocks in streaming content", () => {
-      const { updateStreamingMessage } = useSessionStore.getState();
-      const messageId = "msg-1";
-
-      // Add initial content with tool_use
-      updateStreamingMessage(messageId, [
-        { type: "text", text: "Using tool" },
-        { type: "tool_use", id: "tool-1", name: "bash", input: { command: "ls" } },
-      ]);
-
-      const state = useSessionStore.getState();
-      expect(state.session?.messages[0].content).toHaveLength(2);
-      expect(state.session?.messages[0].content[0].type).toBe("text");
-      expect(state.session?.messages[0].content[1].type).toBe("tool_use");
-    });
-
-    it("should finalize message and clear streaming state", () => {
-      const { updateStreamingMessage, finalizeMessage } = useSessionStore.getState();
-      const messageId = "msg-1";
-
-      updateStreamingMessage(messageId, [{ type: "text", text: "Hello" }]);
-      finalizeMessage(messageId);
-
-      const state = useSessionStore.getState();
-      expect(state.session?.isStreaming).toBe(false);
-      expect(state.session?.messages).toHaveLength(1);
-      expect(state.session?.messages[0].role).toBe("assistant");
-      expect(state.session?.messages[0].isStreaming).toBe(false);
-    });
-
-    it("should handle empty content array in streaming update", () => {
-      const { updateStreamingMessage } = useSessionStore.getState();
-      const messageId = "msg-1";
-
-      updateStreamingMessage(messageId, []);
-
-      const state = useSessionStore.getState();
-      // Should create a message with empty content
-      expect(state.session?.messages.length).toBeGreaterThanOrEqual(0);
-    });
-
-    it("REGRESSION: should append multiple assistant messages during streaming, not replace them", () => {
-      const { updateStreamingMessage } = useSessionStore.getState();
-
-      // First assistant message with Read tool (simulates first stream event with msg_01)
-      updateStreamingMessage("msg_01", [
-        { type: "text", text: "Let me read that file" },
-        { type: "tool_use", id: "tool-1", name: "Read", input: { file_path: "/test.txt" } },
-      ]);
-
-      let state = useSessionStore.getState();
-      expect(state.session?.messages).toHaveLength(1);
-      expect(state.session?.messages[0].content).toHaveLength(2);
-      const firstContentBlock = state.session?.messages[0].content[1];
-      if (firstContentBlock && 'name' in firstContentBlock) {
-        expect(firstContentBlock.name).toBe("Read");
-      }
-
-      // Second assistant message with Glob tool (simulates second stream event with msg_02)
-      // FIXED: Different message ID means this should append as a NEW message
-      updateStreamingMessage("msg_02", [
-        { type: "text", text: "Now let me search for files" },
-        { type: "tool_use", id: "tool-2", name: "Glob", input: { pattern: "*.ts" } },
-      ]);
-
-      state = useSessionStore.getState();
-
-      // EXPECTED BEHAVIOR (FIXED): 2 messages exist, both visible
-      expect(state.session?.messages).toHaveLength(2);
-      const firstMsg = state.session?.messages[0].content[1];
-      if (firstMsg && 'name' in firstMsg) expect(firstMsg.name).toBe("Read");
-      const secondMsg = state.session?.messages[1].content[1];
-      if (secondMsg && 'name' in secondMsg) expect(secondMsg.name).toBe("Glob");
-    });
-
-    it("should handle message finalization with no streaming message gracefully", () => {
-      const { finalizeMessage } = useSessionStore.getState();
-
-      // Should not throw (even with empty string ID)
-      expect(() => finalizeMessage("")).not.toThrow();
-
-      const state = useSessionStore.getState();
-      expect(state.session?.isStreaming).toBe(false);
-    });
-  });
-
-  describe("State Transitions", () => {
-    beforeEach(() => {
-      // Manually set up a session for testing
-      useSessionStore.setState({
-        sessionId: "test-session-id",
-        session: {
-          id: "test-session-id",
-          agent: "claude",
-          messages: [],
-          isStreaming: false,
-          metadata: null,
-          loadingState: "idle",
-          error: null,
-        },
-      });
-    });
-
-    it("should toggle streaming state", () => {
-      const { setStreaming } = useSessionStore.getState();
-
-      setStreaming(true);
-      expect(useSessionStore.getState().session?.isStreaming).toBe(true);
-
-      setStreaming(false);
-      expect(useSessionStore.getState().session?.isStreaming).toBe(false);
-    });
-
-    it("should persist error state until cleared", () => {
-      const { setError } = useSessionStore.getState();
-
-      setError("Test error");
-      expect(useSessionStore.getState().session?.error).toBe("Test error");
-
-      setError(null);
-      expect(useSessionStore.getState().session?.error).toBeNull();
-    });
-
-    it("should transition loading states correctly", () => {
-      const { setLoadingState } = useSessionStore.getState();
-
-      setLoadingState("loading");
-      expect(useSessionStore.getState().session?.loadingState).toBe("loading");
-
-      setLoadingState("idle");
-      expect(useSessionStore.getState().session?.loadingState).toBe("idle");
-    });
-
-    it("should update metadata", () => {
-      const { updateMetadata } = useSessionStore.getState();
-
-      // updateMetadata now just merges metadata without computing tokens
-      updateMetadata({
-        totalTokens: 100,
-        messageCount: 2,
-        lastMessageAt: "2025-01-01T00:00:00Z",
-        firstMessagePreview: "Hello",
-      });
-
-      const metadata = useSessionStore.getState().session?.metadata;
-      expect(metadata?.totalTokens).toBe(100);
-      expect(metadata?.messageCount).toBe(2);
-      expect(metadata?.firstMessagePreview).toBe("Hello");
-    });
-  });
-
-  describe("Permission Modes", () => {
-    it("should set and get form permission mode", () => {
-      const { setPermissionMode, getPermissionMode } = useSessionStore.getState();
-
-      setPermissionMode("plan");
-
-      expect(getPermissionMode()).toBe("plan");
-      expect(useSessionStore.getState().form.permissionMode).toBe("plan");
-    });
-
-    it("should persist permission mode in form state", () => {
-      const { setPermissionMode } = useSessionStore.getState();
-
-      setPermissionMode("reject");
-
-      const state = useSessionStore.getState();
-      expect(state.form.permissionMode).toBe("reject");
-    });
-  });
-
-  describe("Message Queue Edge Cases", () => {
-    beforeEach(() => {
-      // Manually set up a session for testing
-      useSessionStore.setState({
-        sessionId: "test-session-id",
-        session: {
-          id: "test-session-id",
-          agent: "claude",
-          messages: [],
-          isStreaming: false,
-          metadata: null,
-          loadingState: "idle",
-          error: null,
-        },
-      });
-    });
-
-    it("should maintain order when adding multiple messages rapidly", () => {
+    it("should prevent duplicate messages", () => {
       const { addMessage } = useSessionStore.getState();
 
-      addMessage({
+      const message: UIMessage = {
         id: "msg-1",
         role: "user",
-        content: [{ type: "text", text: "Message 1" }],
+        content: [{ type: "text", text: "Hello" }],
         timestamp: Date.now(),
-      });
+        tool: 'claude',
+        isStreaming: false,
+      };
 
-      addMessage({
-        id: "msg-2",
-        role: "assistant",
-        content: [{ type: "text", text: "Response 1" }],
-        timestamp: Date.now(),
-      });
+      addMessage("test-session", message);
+      addMessage("test-session", message); // Duplicate
 
-      addMessage({
-        id: "msg-3",
-        role: "user",
-        content: [{ type: "text", text: "Message 2" }],
-        timestamp: Date.now(),
-      });
+      const state = useSessionStore.getState();
+      expect(state.currentSession?.messages).toHaveLength(1); // Only one
+    });
 
-      const messages = useSessionStore.getState().session?.messages;
-      expect(messages).toHaveLength(3);
-      expect((messages?.[0].content[0] as { type: string; text: string }).text).toBe("Message 1");
-      expect((messages?.[1].content[0] as { type: string; text: string }).text).toBe("Response 1");
-      expect((messages?.[2].content[0] as { type: string; text: string }).text).toBe("Message 2");
+    it("should update streaming message content", () => {
+      const { updateStreamingMessage } = useSessionStore.getState();
+
+      // First chunk
+      updateStreamingMessage("test-session", "msg-1", [{ type: "text", text: "Hello" }]);
+
+      let state = useSessionStore.getState();
+      expect(state.currentSession?.messages).toHaveLength(1);
+      expect(state.currentSession?.messages[0].isStreaming).toBe(true);
+      expect(state.currentSession?.isStreaming).toBe(true);
+
+      // Second chunk - replaces content
+      updateStreamingMessage("test-session", "msg-1", [{ type: "text", text: "Hello world" }]);
+
+      state = useSessionStore.getState();
+      expect(state.currentSession?.messages).toHaveLength(1);
+      const content = state.currentSession?.messages[0].content[0];
+      if (content && 'text' in content) {
+        expect(content.text).toBe("Hello world");
+      }
+    });
+
+    it("should finalize streaming message", () => {
+      const { updateStreamingMessage, finalizeMessage } = useSessionStore.getState();
+
+      updateStreamingMessage("test-session", "msg-1", [{ type: "text", text: "Done" }]);
+      finalizeMessage("test-session", "msg-1");
+
+      const state = useSessionStore.getState();
+      expect(state.currentSession?.isStreaming).toBe(false);
+      expect(state.currentSession?.streamingMessageId).toBeNull();
+      expect(state.currentSession?.messages[0]?.isStreaming).toBe(false);
     });
   });
 
-  // NOTE: System Message Filtering tests removed - filtering now handled by
-  // enrichMessagesWithToolResults() function which is called in AgentSessionViewer
-  // when syncing React Query data to Zustand store
-
   describe("selectTotalTokens Selector", () => {
-    it("should calculate total tokens from assistant messages with full usage data", () => {
-      // Set up session with 2 assistant messages with usage data
+    it("should calculate total tokens from currentSession messages", () => {
       useSessionStore.setState({
-        sessionId: "test-session",
-        session: {
+        currentSession: {
           id: "test-session",
+          projectId: "test-project",
+          userId: "test-user",
           agent: "claude",
+          type: "chat",
+          permission_mode: "default",
+          state: "idle",
+          is_archived: false,
+          archived_at: null,
+          created_at: new Date(),
+          updated_at: new Date(),
           messages: [
             {
               id: "msg-1",
               role: "user",
               content: [{ type: "text", text: "Hello" }],
               timestamp: Date.now(),
+              tool: 'claude',
+              isStreaming: false,
             },
             {
               id: "msg-2",
               role: "assistant",
               content: [{ type: "text", text: "Hi!" }],
               timestamp: Date.now(),
-              usage: {
-                inputTokens: 10,
-                outputTokens: 5,
-                totalTokens: 15,
-                cacheCreationTokens: 100,
-                cacheReadTokens: 50,
-              },
-            },
-            {
-              id: "msg-3",
-              role: "user",
-              content: [{ type: "text", text: "How are you?" }],
-              timestamp: Date.now(),
-            },
-            {
-              id: "msg-4",
-              role: "assistant",
-              content: [{ type: "text", text: "I'm good!" }],
-              timestamp: Date.now(),
-              usage: {
-                inputTokens: 20,
-                outputTokens: 10,
-                totalTokens: 30,
-                cacheCreationTokens: 0,
-                cacheReadTokens: 75,
-              },
-            },
-          ],
-          isStreaming: false,
-          metadata: null,
-          loadingState: "loaded",
-          error: null,
-        },
-        form: { permissionMode: "acceptEdits" },
-      });
-
-      const totalTokens = selectTotalTokens(useSessionStore.getState());
-      // Message 1: input(10) + output(5) = 15
-      // Message 2: input(20) + output(10) = 30
-      // Total: 15 + 30 = 45
-      // Note: Cache tokens NOT counted (optimization metrics only)
-      expect(totalTokens).toBe(45);
-    });
-
-    it("should return 0 for empty messages array", () => {
-      useSessionStore.setState({
-        sessionId: "test-session",
-        session: {
-          id: "test-session",
-          agent: "claude",
-          messages: [],
-          isStreaming: false,
-          metadata: null,
-          loadingState: "loaded",
-          error: null,
-        },
-        form: { permissionMode: "acceptEdits" },
-      });
-
-      const totalTokens = selectTotalTokens(useSessionStore.getState());
-      expect(totalTokens).toBe(0);
-    });
-
-    it("should return 0 for null session", () => {
-      useSessionStore.setState({
-        sessionId: null,
-        session: null,
-        form: { permissionMode: "acceptEdits" },
-      });
-
-      const totalTokens = selectTotalTokens(useSessionStore.getState());
-      expect(totalTokens).toBe(0);
-    });
-
-    it("should ignore user messages (they have no usage data)", () => {
-      useSessionStore.setState({
-        sessionId: "test-session",
-        session: {
-          id: "test-session",
-          agent: "claude",
-          messages: [
-            {
-              id: "msg-1",
-              role: "user",
-              content: [{ type: "text", text: "Hello" }],
-              timestamp: Date.now(),
-            },
-            {
-              id: "msg-2",
-              role: "user",
-              content: [{ type: "text", text: "How are you?" }],
-              timestamp: Date.now(),
-            },
-          ],
-          isStreaming: false,
-          metadata: null,
-          loadingState: "loaded",
-          error: null,
-        },
-        form: { permissionMode: "acceptEdits" },
-      });
-
-      const totalTokens = selectTotalTokens(useSessionStore.getState());
-      expect(totalTokens).toBe(0);
-    });
-
-    it("should handle mixed messages (user + assistant with/without usage)", () => {
-      useSessionStore.setState({
-        sessionId: "test-session",
-        session: {
-          id: "test-session",
-          agent: "claude",
-          messages: [
-            {
-              id: "msg-1",
-              role: "user",
-              content: [{ type: "text", text: "Hello" }],
-              timestamp: Date.now(),
-            },
-            {
-              id: "msg-2",
-              role: "assistant",
-              content: [{ type: "text", text: "Hi!" }],
-              timestamp: Date.now(),
+              tool: 'claude',
+              isStreaming: false,
               usage: {
                 inputTokens: 10,
                 outputTokens: 5,
@@ -495,28 +542,16 @@ describe("SessionStore", () => {
             },
             {
               id: "msg-3",
-              role: "user",
-              content: [{ type: "text", text: "What's up?" }],
-              timestamp: Date.now(),
-            },
-            {
-              id: "msg-4",
               role: "assistant",
-              content: [{ type: "text", text: "Streaming..." }],
+              content: [{ type: "text", text: "How can I help?" }],
               timestamp: Date.now(),
-              isStreaming: true,
-              // No usage data yet - still streaming
-            },
-            {
-              id: "msg-5",
-              role: "assistant",
-              content: [{ type: "text", text: "Done!" }],
-              timestamp: Date.now(),
+              tool: 'claude',
+              isStreaming: false,
               usage: {
                 inputTokens: 20,
                 outputTokens: 10,
-                cacheCreationInputTokens: 5,
-                cacheReadInputTokens: 15,
+                cacheCreationTokens: 5,
+                cacheReadTokens: 15,
               },
             },
           ],
@@ -524,16 +559,24 @@ describe("SessionStore", () => {
           metadata: null,
           loadingState: "loaded",
           error: null,
+          messageIds: new Set(["msg-1", "msg-2", "msg-3"]),
+          streamingMessageId: null,
         },
-        form: { permissionMode: "acceptEdits" },
       });
 
       const totalTokens = selectTotalTokens(useSessionStore.getState());
-      // Only count msg-2: input(10) + output(5) = 15
-      // And msg-5: input(20) + output(10) = 30
-      // msg-4 has no usage data (still streaming)
-      // Note: Cache tokens NOT counted (optimization metrics only)
-      expect(totalTokens).toBe(45); // 15 + 30
+      // Returns tokens from last assistant message only (msg-3)
+      // msg-3: 20 + 10 + 5 + 15 = 50 (includes cache tokens)
+      expect(totalTokens).toBe(50);
+    });
+
+    it("should return 0 for null currentSession", () => {
+      useSessionStore.setState({
+        currentSession: null,
+      });
+
+      const totalTokens = selectTotalTokens(useSessionStore.getState());
+      expect(totalTokens).toBe(0);
     });
   });
 });

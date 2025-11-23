@@ -5,15 +5,15 @@ import {
   SidebarMenuButton,
   useSidebar,
 } from "@/client/components/ui/sidebar";
-import { Badge } from "@/client/components/ui/badge";
 import { AgentIcon } from "@/client/components/AgentIcon";
 import { SessionDropdownMenu } from "@/client/pages/projects/sessions/components/SessionDropdownMenu";
 import { SessionStateBadge } from "@/client/pages/projects/sessions/components/SessionStateBadge";
 import { getSessionDisplayName } from "@/client/utils/getSessionDisplayName";
 import { useNavigationStore } from "@/client/stores";
-import type { SessionResponse } from "@/shared/types";
+import type { SessionSummary } from "@/client/pages/projects/sessions/stores/sessionStore";
 import type { AgentType } from "@/shared/types/agent.types";
 import { format } from "date-fns";
+import { PERMISSION_MODE_CONFIG } from "@/client/constants/permissionModes";
 
 interface SessionItemProps {
   id: string;
@@ -21,7 +21,7 @@ interface SessionItemProps {
   projectName: string;
   status: string;
   agent?: AgentType;
-  session: SessionResponse;
+  session: SessionSummary;
   isActive?: boolean;
 }
 
@@ -81,26 +81,13 @@ export function SessionItem({
               )}
             </div>
             <div className="flex items-center gap-1.5">
-              <Badge
-                variant="secondary"
-                className={`text-xs px-1.5 mt-0.5 py-0 h-4 shrink-0 ${
-                  session.permission_mode === "plan"
-                    ? "bg-green-500/10 text-green-600 border-green-500/20"
-                    : session.permission_mode === "acceptEdits"
-                      ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
-                      : session.permission_mode === "bypassPermissions"
-                        ? "bg-red-500/10 text-red-600 border-red-500/20"
-                        : "bg-gray-500/10 text-gray-600 border-gray-500/20"
+              <span
+                className={`text-xs ${
+                  PERMISSION_MODE_CONFIG[session.permission_mode].textColor
                 }`}
               >
-                {session.permission_mode === "plan"
-                  ? "Plan"
-                  : session.permission_mode === "acceptEdits"
-                    ? "Review"
-                    : session.permission_mode === "bypassPermissions"
-                      ? "Bypass"
-                      : "Code"}
-              </Badge>
+                {PERMISSION_MODE_CONFIG[session.permission_mode].label}
+              </span>
               <SessionStateBadge
                 state={session.state}
                 errorMessage={session.error_message}

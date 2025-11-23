@@ -275,48 +275,51 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
    * @param channel The channel to send to (e.g., 'session:123', 'global')
    * @param event The event object with type and data
    */
-  const sendMessage = (channel: string, event: ChannelEvent) => {
-    if (!socketRef.current) {
-      console.warn("[WebSocket] Cannot send message: no connection");
-      return;
-    }
-
-    // Queue message if not ready yet
-    if (!isReady) {
-      if (import.meta.env.DEV) {
-        console.log("[WebSocket] Queueing message (not ready yet):", {
-          channel,
-          type: event.type,
-        });
+  const sendMessage = useCallback(
+    (channel: string, event: ChannelEvent) => {
+      if (!socketRef.current) {
+        console.warn("[WebSocket] Cannot send message: no connection");
+        return;
       }
 
-      // Check queue size limit
-      if (messageQueueRef.current.length >= MAX_QUEUE_SIZE) {
-        // Drop oldest message
-        const dropped = messageQueueRef.current.shift();
-        console.warn(
-          `[WebSocket] Queue full (${MAX_QUEUE_SIZE}), dropped oldest message:`,
-          dropped
-        );
+      // Queue message if not ready yet
+      if (!isReady) {
+        if (import.meta.env.DEV) {
+          console.log("[WebSocket] Queueing message (not ready yet):", {
+            channel,
+            type: event.type,
+          });
+        }
+
+        // Check queue size limit
+        if (messageQueueRef.current.length >= MAX_QUEUE_SIZE) {
+          // Drop oldest message
+          const dropped = messageQueueRef.current.shift();
+          console.warn(
+            `[WebSocket] Queue full (${MAX_QUEUE_SIZE}), dropped oldest message:`,
+            dropped
+          );
+        }
+
+        messageQueueRef.current.push({ channel, event });
+        return;
       }
 
-      messageQueueRef.current.push({ channel, event });
-      return;
-    }
+      // Send message immediately if ready
+      if (socketRef.current.readyState === WebSocket.OPEN) {
+        const message = JSON.stringify({ channel, ...event });
+        socketRef.current.send(message);
+        wsMetrics.trackSent();
 
-    // Send message immediately if ready
-    if (socketRef.current.readyState === WebSocket.OPEN) {
-      const message = JSON.stringify({ channel, ...event });
-      socketRef.current.send(message);
-      wsMetrics.trackSent();
-
-      if (import.meta.env.DEV) {
-        console.log("[WebSocket] Sent:", { channel, type: event.type });
+        if (import.meta.env.DEV) {
+          console.log("[WebSocket] Sent:", { channel, type: event.type });
+        }
+      } else {
+        console.warn("[WebSocket] Cannot send message: connection not open");
       }
-    } else {
-      console.warn("[WebSocket] Cannot send message: connection not open");
-    }
-  };
+    },
+    [isReady]
+  );
 
   /**
    * Manually trigger reconnection (resets attempt counter)

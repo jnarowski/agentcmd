@@ -18,16 +18,18 @@ import {
 } from "@/client/components/ui/dropdown-menu";
 import { useSettings, useUpdateSettings } from "@/client/hooks/useSettings";
 import { useNavigationStore } from "@/client/stores";
-import { useProjects, useSyncProjectsMutation } from "@/client/pages/projects/hooks/useProjects";
-import { useSessions } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
-import { sessionKeys } from "@/client/pages/projects/sessions/hooks/queryKeys";
+import {
+  useProjects,
+  useSyncProjectsMutation,
+} from "@/client/pages/projects/hooks/useProjects";
+import { useSessionList } from "@/client/hooks/useSessionList";
 import { workflowKeys } from "@/client/pages/projects/workflows/hooks/queryKeys";
 import { useAllWorkflowRuns } from "@/client/pages/projects/workflows/hooks/useAllWorkflowRuns";
 import { useWorkflowDefinitions } from "@/client/pages/projects/workflows/hooks/useWorkflowDefinitions";
 import { SessionItem } from "@/client/components/sidebar/SessionItem";
 import { WorkflowItem } from "@/client/components/sidebar/WorkflowItem";
 import type { AgentType } from "@/shared/types/agent.types";
-import type { SessionResponse } from "@/shared/types";
+import type { SessionSummary } from "@/client/pages/projects/sessions/stores/sessionStore";
 import type { WorkflowStatus } from "@/shared/schemas/workflow.schemas";
 
 type ActivityFilter = "all" | "sessions" | "workflows";
@@ -41,7 +43,7 @@ interface Activity {
   status: string | WorkflowStatus;
   createdAt: Date;
   agent?: AgentType;
-  session?: SessionResponse;
+  session?: SessionSummary;
   workflowDefinitionId?: string;
 }
 
@@ -72,17 +74,17 @@ export function NavActivities() {
 
   // Use activeProjectId from navigationStore for filtering
   // Only fetch manual/user sessions (exclude workflow-generated)
-  const { data: sessions } = useSessions({
-    projectId: activeProjectId || undefined,
+  // Pass null when no project selected to fetch all sessions
+  const { sessions } = useSessionList(activeProjectId || null, {
     limit: 20,
-    orderBy: 'created_at',
-    order: 'desc',
-    type: 'chat',
+    orderBy: "created_at",
+    order: "desc",
+    type: "chat",
   });
 
   // Fetch only active/in-progress runs from backend
   const { data: allWorkflowRuns } = useAllWorkflowRuns(
-    ['pending', 'running', 'failed'],
+    ["pending", "running", "failed"],
     activeProjectId
   );
 
@@ -92,7 +94,7 @@ export function NavActivities() {
 
     const activities: Activity[] = [];
     for (const session of sessions) {
-      const project = projects?.find(p => p.id === session.projectId);
+      const project = projects?.find((p) => p.id === session.projectId);
 
       const projectName = project?.name ?? session.projectId;
       activities.push({
@@ -101,7 +103,7 @@ export function NavActivities() {
         name: "", // Not used for sessions - SessionItem computes internally
         projectId: session.projectId,
         projectName:
-          projectName.length > 30
+          projectName && projectName.length > 30
             ? projectName.slice(0, 30) + "..."
             : projectName,
         status: session.state,
@@ -119,7 +121,7 @@ export function NavActivities() {
 
     const activities: Activity[] = [];
     for (const run of allWorkflowRuns) {
-      const project = projects?.find(p => p.id === run.project_id);
+      const project = projects?.find((p) => p.id === run.project_id);
 
       const projectName = project?.name ?? run.project_id;
       activities.push({
@@ -128,7 +130,7 @@ export function NavActivities() {
         name: run.name.length > 50 ? run.name.slice(0, 50) + "..." : run.name,
         projectId: run.project_id,
         projectName:
-          projectName.length > 30
+          projectName && projectName.length > 30
             ? projectName.slice(0, 30) + "..."
             : projectName,
         status: run.status,
@@ -159,8 +161,10 @@ export function NavActivities() {
   const handleRefresh = () => {
     syncProjectsMutation.mutate(undefined, {
       onSuccess: () => {
-        // Invalidate sessions lists
-        queryClient.invalidateQueries({ queryKey: sessionKeys.all });
+        // Reload session list from Zustand store
+        if (activeProjectId) {
+          // TODO: Add loadSessionList call when needed
+        }
 
         // Invalidate all workflow runs
         queryClient.invalidateQueries({ queryKey: workflowKeys.allRuns() });
@@ -217,49 +221,52 @@ export function NavActivities() {
                 <Plus className="size-5 md:size-3.5" />
               </Button>
             </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem
-              onClick={() => {
-                if (activeProjectId) {
-                  navigate(`/projects/${activeProjectId}/sessions/new`);
-                  if (isMobile) {
-                    setOpenMobile(false);
-                  }
-                }
-              }}
-            >
-              <MessageSquare className="size-4" />
-              New Session
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel className="text-[10px] uppercase text-muted-foreground font-semibold">
-              Workflows
-            </DropdownMenuLabel>
-            {sortedWorkflows.length > 0 ? (
-              sortedWorkflows.map((workflow) => (
-                <DropdownMenuItem
-                  key={workflow.id}
-                  onClick={() => {
-                    if (activeProjectId) {
-                      navigate(
-                        `/projects/${activeProjectId}/workflows/${workflow.id}/new`
-                      );
-                      if (isMobile) {
-                        setOpenMobile(false);
-                      }
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem
+                onClick={() => {
+                  if (activeProjectId) {
+                    navigate(`/projects/${activeProjectId}/sessions/new`);
+                    if (isMobile) {
+                      setOpenMobile(false);
                     }
-                  }}
-                >
-                  <Workflow className="size-4 shrink-0" />
-                  <span className="truncate">{workflow.name}</span>
-                </DropdownMenuItem>
-              ))
-            ) : (
-              <DropdownMenuItem disabled className="text-muted-foreground text-xs">
-                No workflows defined
+                  }
+                }}
+              >
+                <MessageSquare className="size-4" />
+                New Session
               </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-[10px] uppercase text-muted-foreground font-semibold">
+                Workflows
+              </DropdownMenuLabel>
+              {sortedWorkflows.length > 0 ? (
+                sortedWorkflows.map((workflow) => (
+                  <DropdownMenuItem
+                    key={workflow.id}
+                    onClick={() => {
+                      if (activeProjectId) {
+                        navigate(
+                          `/projects/${activeProjectId}/workflows/${workflow.id}/new`
+                        );
+                        if (isMobile) {
+                          setOpenMobile(false);
+                        }
+                      }
+                    }}
+                  >
+                    <Workflow className="size-4 shrink-0" />
+                    <span className="truncate">{workflow.name}</span>
+                  </DropdownMenuItem>
+                ))
+              ) : (
+                <DropdownMenuItem
+                  disabled
+                  className="text-muted-foreground text-xs"
+                >
+                  No workflows defined
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
           </DropdownMenu>
         )}
         <Button
@@ -270,13 +277,17 @@ export function NavActivities() {
           className="hidden md:flex h-6 w-6 p-0 items-center justify-center"
           aria-label="Refresh activities"
         >
-          <RefreshCw className={`size-3.5 ${syncProjectsMutation.isPending ? "animate-spin" : ""}`} />
+          <RefreshCw
+            className={`size-3.5 ${syncProjectsMutation.isPending ? "animate-spin" : ""}`}
+          />
         </Button>
       </div>
       <div className="flex-1 overflow-y-auto px-2">
         {filteredActivities.length === 0 ? (
           <div className="py-4 text-center text-sm text-muted-foreground">
-            {activeProjectId ? "No items in this project" : "No recent activity"}
+            {activeProjectId
+              ? "No items in this project"
+              : "No recent activity"}
           </div>
         ) : (
           <SidebarMenu>

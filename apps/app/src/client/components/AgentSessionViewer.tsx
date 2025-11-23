@@ -5,8 +5,7 @@
  * Can be used in both full-page views and modal dialogs.
  *
  * Features:
- * - Loads session data via React Query hooks (useSession + useSessionMessages)
- * - Syncs React Query data to Zustand store for UI state
+ * - Loads session data via Zustand store (useSession hook)
  * - Subscribes to WebSocket for real-time updates
  * - Uses existing ChatInterface component internally
  * - Handles loading/error/empty states
@@ -16,8 +15,11 @@
 import { useEffect } from "react";
 import { ChatInterface } from "@/client/pages/projects/sessions/components/ChatInterface";
 import { useSessionWebSocket } from "@/client/pages/projects/sessions/hooks/useSessionWebSocket";
-import { useSession, useSessionMessages } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
-import { useSessionStore, enrichMessagesWithToolResults } from "@/client/pages/projects/sessions/stores/sessionStore";
+import { useSession } from "@/client/hooks/useSession";
+import {
+  useSessionStore,
+  selectActiveSession,
+} from "@/client/pages/projects/sessions/stores/sessionStore";
 import type { SessionData } from "@/client/pages/projects/sessions/stores/sessionStore";
 
 export interface AgentSessionViewerProps {
@@ -50,7 +52,7 @@ export interface AgentSessionViewerProps {
  * Self-contained session viewer that manages its own session loading and WebSocket subscription.
  * Renders the ChatInterface component with session data from the store.
  *
- * Data flow: React Query (source of truth) → Zustand (UI state only)
+ * Data flow: Zustand store (single source of truth) ← WebSocket updates
  */
 export function AgentSessionViewer({
   projectId,
@@ -62,124 +64,44 @@ export function AgentSessionViewer({
   clearOnUnmount = false,
   onApprove,
 }: AgentSessionViewerProps) {
-  // Check if store already has messages FOR THIS SESSION (skip fetch for optimistic case)
-  const storeSessionId = useSessionStore((s) => s.sessionId);
-  const hasMessages = useSessionStore((s) => (s.session?.messages.length ?? 0) > 0);
-  const shouldSkipFetch = hasMessages && storeSessionId === sessionId;
-
-  // Fetch session data via React Query (parallel fetching)
-  // Skip if store already has THIS SESSION's messages (optimistic loading case)
-  const { data: sessionData, isLoading: isLoadingSession, error: sessionError } = useSession(
-    shouldSkipFetch ? undefined : sessionId,
-    shouldSkipFetch ? undefined : projectId
-  );
-  const { data: messagesData, isLoading: isLoadingMessages, error: messagesError } = useSessionMessages(
-    shouldSkipFetch ? undefined : sessionId,
-    shouldSkipFetch ? undefined : projectId
+  // Load session data via Zustand hook (auto-loads if not in store)
+  const { messages, isLoading, isStreaming, error } = useSession(
+    sessionId,
+    projectId
   );
 
-  // Subscribe to current session from store
-  const session = useSessionStore((s) => s.session);
+  // Get full session data from store
+  const session = useSessionStore(selectActiveSession);
   const clearSession = useSessionStore((s) => s.clearSession);
 
-  // Sync React Query data → Zustand store (one-way flow)
+  // Trigger onSessionLoad callback when data is loaded
   useEffect(() => {
-    if (!sessionData) return;
-
-    // Check if we're loading a different session than what's in the store
-    const currentStoreSessionId = useSessionStore.getState().sessionId;
-    const isNewSession = currentStoreSessionId !== sessionData.id;
-
-    // If same session and we already have messages, just update form state (keep messages)
-    // This handles React Query cache refreshes without replacing optimistic/WebSocket messages
-    if (!isNewSession && hasMessages) {
-      useSessionStore.setState({
-        form: {
-          ...useSessionStore.getState().form,
-          permissionMode: sessionData.permission_mode,
-        },
-      });
-      return;
+    if (session && session.id === sessionId && !isLoading && onSessionLoad) {
+      onSessionLoad(session);
     }
+  }, [session, sessionId, isLoading, onSessionLoad]);
 
-    // Full sync for new session or first load
-    const enrichedMessages = messagesData ? enrichMessagesWithToolResults(messagesData) : [];
-
-    useSessionStore.setState({
-      sessionId: sessionData.id,
-      session: {
-        id: sessionData.id,
-        name: sessionData.name,
-        agent: sessionData.agent,
-        type: sessionData.type,
-        permission_mode: sessionData.permission_mode,
-        messages: enrichedMessages,
-        isStreaming: false,
-        metadata: sessionData.metadata,
-        loadingState: isLoadingMessages ? "loading" : "loaded",
-        error: null,
-      },
-      // Set form permission mode from session data
-      form: {
-        ...useSessionStore.getState().form,
-        permissionMode: sessionData.permission_mode,
-      },
-    });
-
-    // Trigger onSessionLoad callback
-    if (onSessionLoad && !isLoadingMessages) {
-      onSessionLoad({
-        id: sessionData.id,
-        name: sessionData.name,
-        agent: sessionData.agent,
-        type: sessionData.type,
-        permission_mode: sessionData.permission_mode,
-        messages: enrichedMessages,
-        isStreaming: false,
-        metadata: sessionData.metadata,
-        loadingState: "loaded",
-        error: null,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, sessionData, messagesData, isLoadingMessages, hasMessages]);
-
-  // Handle errors from React Query
+  // Handle errors
   useEffect(() => {
-    const error = sessionError || messagesError;
     if (error && onError) {
-      onError(error instanceof Error ? error : new Error(String(error)));
+      onError(new Error(error));
     }
-  }, [sessionError, messagesError, onError]);
+  }, [error, onError]);
 
   // WebSocket subscription for real-time updates
   useSessionWebSocket({ sessionId, projectId });
-
-  // Cleanup on unmount if requested (useful for modals)
-  useEffect(() => {
-    return () => {
-      if (clearOnUnmount) {
-        clearSession();
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clearOnUnmount]);
-
-  // Compute combined loading/error states
-  const isLoading = isLoadingSession || isLoadingMessages;
-  const error = sessionError || messagesError;
 
   // Render ChatInterface with session data
   return (
     <div className={className} style={{ height }}>
       <ChatInterface
         projectId={projectId}
-        sessionId={session?.id}
+        sessionId={sessionId}
         agent={session?.agent}
-        messages={session?.messages || []}
+        messages={messages}
         isLoading={isLoading}
-        error={error ? (error instanceof Error ? error : new Error(String(error))) : null}
-        isStreaming={session?.isStreaming || false}
+        error={error ? new Error(error) : null}
+        isStreaming={isStreaming}
         isLoadingHistory={isLoading}
         onApprove={onApprove}
       />

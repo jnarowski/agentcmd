@@ -39,8 +39,8 @@ export async function scanSpecs(projectPath: string, projectId: string): Promise
         continue;
       }
 
-      // Exclude completed specs
-      if (entry.status === "completed") {
+      // Exclude completed and draft specs
+      if (entry.status === "completed" || entry.status === "draft") {
         continue;
       }
 

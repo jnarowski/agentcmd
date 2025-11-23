@@ -35,9 +35,14 @@ export function PermissionModeSelector({
   // Ensure we always have a valid permission mode, fallback to 'acceptEdits'
   const safePermissionMode = permissionMode || 'acceptEdits';
 
+  // Wrapper to convert string to PermissionMode type
+  const handleValueChange = (value: string) => {
+    onPermissionModeChange(value as PermissionMode);
+  };
+
   return (
     <PromptInputPermissionModeSelect
-      onValueChange={onPermissionModeChange}
+      onValueChange={handleValueChange}
       value={safePermissionMode}
     >
       <PromptInputPermissionModeSelectTrigger>

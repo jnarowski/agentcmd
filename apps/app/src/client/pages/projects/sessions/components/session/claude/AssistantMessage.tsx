@@ -6,6 +6,7 @@
 import { AlertCircle } from "lucide-react";
 import type { UIMessage } from "@/shared/types/message.types";
 import { ContentBlockRenderer } from "./ContentBlockRenderer";
+import { isDebugMode } from "@/client/utils/isDebugMode";
 
 interface AssistantMessageProps {
   message: UIMessage;
@@ -92,7 +93,7 @@ export function AssistantMessage({ message, onApprove }: AssistantMessageProps) 
     if (block.type === 'text') {
       // Filter out empty or whitespace-only text blocks
       const isEmpty = !block.text || block.text.trim() === '';
-      if (isEmpty) {
+      if (import.meta.env.DEV && isDebugMode() && isEmpty) {
         console.warn('[AssistantMessage] Skipping empty text block in message:', message.id);
       }
       return !isEmpty;
@@ -103,15 +104,16 @@ export function AssistantMessage({ message, onApprove }: AssistantMessageProps) 
 
   // Don't render if no content after filtering - show debug box instead
   if (renderableContent.length === 0) {
-    const blockTypes = content.map(b => typeof b === 'string' ? 'string' : b.type);
-    console.log(`[RENDER] Message ${message.id} renders blank - role: assistant, content.length: ${content.length}, blocks: ${blockTypes.join(', ')}, parentId: ${message.parentId || 'none'}`);
+    if (import.meta.env.DEV && isDebugMode()) {
+      const blockTypes = content.map(b => typeof b === 'string' ? 'string' : b.type);
+      console.log(`[RENDER] Message ${message.id} renders blank - role: assistant, content.length: ${content.length}, blocks: ${blockTypes.join(', ')}, parentId: ${message.parentId || 'none'}`);
 
-    // Show debug box for empty messages
-    return (
-      <div className="w-full overflow-hidden session-message session-message-assistant session-message-debug">
-        <div className="rounded-lg border-2 border-red-500 bg-yellow-50 dark:bg-yellow-950/20 p-4">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+      // Show debug box for empty messages
+      return (
+        <div className="w-full overflow-hidden session-message session-message-assistant session-message-debug">
+          <div className="rounded-lg border-2 border-red-500 bg-yellow-50 dark:bg-yellow-950/20 p-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <div className="text-sm font-bold text-red-900 dark:text-red-100 mb-2">
                 DEBUG: Empty Message Detected
@@ -154,7 +156,10 @@ export function AssistantMessage({ message, onApprove }: AssistantMessageProps) 
           </div>
         </div>
       </div>
-    );
+      );
+    }
+    // In production, just don't render
+    return null;
   }
 
   // Render content blocks with proper formatting

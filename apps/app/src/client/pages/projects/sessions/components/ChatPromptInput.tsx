@@ -29,17 +29,18 @@ import {
 import { useNavigationStore } from "@/client/stores/navigationStore";
 import { useSessionStore } from "@/client/pages/projects/sessions/stores/sessionStore";
 import type { AgentType } from "@/shared/types/agent.types";
+import type { PermissionMode } from "agent-cli-sdk";
 import { useActiveProject } from "@/client/hooks/navigation/useActiveProject";
 import { cn } from "@/client/utils/cn";
 import { TokenUsageCircle } from "./TokenUsageCircle";
 import { usePromptInputState } from "../hooks/usePromptInputState";
 import { useWebSocket } from "@/client/hooks/useWebSocket";
-import { useUpdateSession } from "../hooks/useAgentSessions";
 import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
 } from "@/client/components/ui/tooltip";
+import { PERMISSION_MODE_CONFIG } from "@/client/constants/permissionModes";
 
 interface ChatPromptInputProps {
   onSubmit?: (message: PromptInputMessage) => void | Promise<void>;
@@ -87,44 +88,24 @@ const ChatPromptInputInner = forwardRef<
       (s) => s.form.permissionMode || "acceptEdits"
     );
     const setPermissionMode = useSessionStore((s) => s.setPermissionMode);
-    const sessionId = useSessionStore((s) => s.sessionId);
+    const activeSessionId = useNavigationStore((s) => s.activeSessionId);
     const model = useSessionStore((s) => s.form.model);
     const setModel = useSessionStore((s) => s.setModel);
-    const sessionAgent = useSessionStore((s) => s.session?.agent);
+    const sessionAgent = useSessionStore((s) => s.currentSession?.agent);
     const formAgent = useSessionStore((s) => s.form.agent);
-
-    // Mutation for persisting permission mode changes
-    const updateSession = useUpdateSession();
+    const updateSession = useSessionStore((s) => s.updateSession);
 
     // Wrapper function to update both local state and database
-    const handlePermissionModeChange = (mode: string) => {
-      // Validate permission mode before updating, fallback to default if invalid
-      const validModes = [
-        "default",
-        "plan",
-        "acceptEdits",
-        "bypassPermissions",
-      ];
-      let safeMode = mode;
-      if (!validModes.includes(mode)) {
-        console.warn(
-          "[ChatPromptInput] Invalid permission mode:",
-          mode,
-          "- falling back to acceptEdits"
-        );
-        safeMode = "acceptEdits";
-      }
-
+    const handlePermissionModeChange = (mode: PermissionMode) => {
       // Update local state immediately
-      setPermissionMode(
-        safeMode as "default" | "plan" | "acceptEdits" | "bypassPermissions"
-      );
+      setPermissionMode(mode);
 
       // Persist to database if session exists
-      if (sessionId) {
-        updateSession.mutate({
-          id: sessionId,
-          permission_mode: safeMode,
+      if (activeSessionId) {
+        updateSession(activeSessionId, {
+          permission_mode: mode,
+        }).catch((error) => {
+          console.error("[ChatPromptInput] Failed to update session:", error);
         });
       }
     };
@@ -202,12 +183,8 @@ const ChatPromptInputInner = forwardRef<
           inputGroupClassName={cn(
             "pb-2 md:pb-0",
             "transition-colors",
-            permissionMode === "plan" &&
-              "border-primary md:has-[[data-slot=input-group-control]:focus-visible]:border-primary",
-            permissionMode === "acceptEdits" &&
-              "border-purple-500 md:has-[[data-slot=input-group-control]:focus-visible]:border-purple-500",
-            permissionMode === "bypassPermissions" &&
-              "border-red-500 md:has-[[data-slot=input-group-control]:focus-visible]:border-red-500"
+            PERMISSION_MODE_CONFIG[permissionMode].borderClass,
+            `md:has-[[data-slot=input-group-control]:focus-visible]:${PERMISSION_MODE_CONFIG[permissionMode].borderClass}`
           )}
         >
           <PromptInputBody>
@@ -275,14 +252,7 @@ const ChatPromptInputInner = forwardRef<
                     <PromptInputSubmit
                       className={cn(
                         "h-9 w-10 transition-colors",
-                        permissionMode === "plan" &&
-                          "bg-primary hover:bg-primary/90 text-primary-foreground",
-                        permissionMode === "acceptEdits" &&
-                          "bg-purple-500 hover:bg-purple-600 text-white",
-                        permissionMode === "bypassPermissions" &&
-                          "bg-red-500 hover:bg-red-600 text-white",
-                        permissionMode === "default" &&
-                          "bg-gray-500 hover:bg-gray-600 text-white"
+                        PERMISSION_MODE_CONFIG[permissionMode].buttonClasses
                       )}
                       status={status}
                       disabled={disabled || !isConnected}

@@ -167,9 +167,9 @@
       "folder": "2511221205-session-zustand-migration",
       "path": "todo/2511221205-session-zustand-migration/spec.md",
       "spec_type": "feature",
-      "status": "draft",
+      "status": "review",
       "created": "2025-11-22T19:08:23Z",
-      "updated": "2025-11-22T19:08:23Z"
+      "updated": "2025-11-22T22:30:00Z"
     },
     "2511221344": {
       "folder": "2511221344-hello-world",
@@ -186,6 +186,54 @@
       "status": "review",
       "created": "2025-11-22T13:50:00Z",
       "updated": "2025-11-22T21:30:00Z"
+    },
+    "2511222039": {
+      "folder": "2511222039-css-layout-grid-overhaul",
+      "path": "todo/2511222039-css-layout-grid-overhaul/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-22T20:39:00Z",
+      "updated": "2025-11-22T20:39:00Z"
+    },
+    "2511230804": {
+      "folder": "2511230804-session-store-refactor",
+      "path": "todo/2511230804-session-store-refactor/spec.md",
+      "spec_type": "feature",
+      "status": "review",
+      "created": "2025-11-23T15:07:06Z",
+      "updated": "2025-11-23T08:46:00Z"
+    },
+    "2511230823": {
+      "folder": "2511230823-direct-spec-move",
+      "path": "todo/2511230823-direct-spec-move/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-23T08:23:00Z",
+      "updated": "2025-11-23T08:23:00Z"
+    },
+    "2511231018": {
+      "folder": "2511231018-aaaa",
+      "path": "todo/2511231018-aaaa/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-23T10:18:00Z",
+      "updated": "2025-11-23T10:18:00Z"
+    },
+    "2511231720": {
+      "folder": "2511231720-aaaa",
+      "path": "todo/2511231720-aaaa/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-23T17:20:00Z",
+      "updated": "2025-11-23T17:20:00Z"
+    },
+    "2511231021": {
+      "folder": "2511231021-abc-example",
+      "path": "todo/2511231021-abc-example/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-23T10:21:00Z",
+      "updated": "2025-11-23T10:21:00Z"
     }
   }
 }

@@ -5,6 +5,7 @@
 
 import type { UIMessage } from "@/shared/types/message.types";
 import { ContentBlockRenderer } from "./ContentBlockRenderer";
+import { isDebugMode } from "@/client/utils/isDebugMode";
 
 interface UserMessageProps {
   message: UIMessage;
@@ -14,8 +15,10 @@ export function UserMessage({ message }: UserMessageProps) {
   // Handle string content
   if (typeof message.content === 'string') {
     if (!message.content.trim()) {
-      const blockTypes = ['string (empty)'];
-      console.log(`[RENDER] Message ${message.id} renders blank - role: user, content.length: 0, blocks: ${blockTypes.join(', ')}, parentId: ${message.parentId || 'none'}`);
+      if (import.meta.env.DEV && isDebugMode()) {
+        const blockTypes = ['string (empty)'];
+        console.log(`[RENDER] Message ${message.id} renders blank - role: user, content.length: 0, blocks: ${blockTypes.join(', ')}, parentId: ${message.parentId || 'none'}`);
+      }
       return null;
     }
     return (
@@ -46,7 +49,7 @@ export function UserMessage({ message }: UserMessageProps) {
     // Filter out empty text blocks
     if (block.type === "text") {
       const isEmpty = !block.text || block.text.trim() === '';
-      if (isEmpty) {
+      if (import.meta.env.DEV && isDebugMode() && isEmpty) {
         console.warn('[UserMessage] Skipping empty text block in message:', message.id);
       }
       return !isEmpty;
@@ -57,11 +60,13 @@ export function UserMessage({ message }: UserMessageProps) {
 
   // If message has no renderable content, don't render
   if (renderableBlocks.length === 0) {
-    const blockTypes = Array.isArray(message.content)
-      ? message.content.map(b => typeof b === 'string' ? 'string' : b.type)
-      : [];
-    const contentLength = Array.isArray(message.content) ? message.content.length : 0;
-    console.log(`[RENDER] Message ${message.id} renders blank - role: user, content.length: ${contentLength}, blocks: ${blockTypes.join(', ')}, parentId: ${message.parentId || 'none'}`);
+    if (import.meta.env.DEV && isDebugMode()) {
+      const blockTypes = Array.isArray(message.content)
+        ? message.content.map(b => typeof b === 'string' ? 'string' : b.type)
+        : [];
+      const contentLength = Array.isArray(message.content) ? message.content.length : 0;
+      console.log(`[RENDER] Message ${message.id} renders blank - role: user, content.length: ${contentLength}, blocks: ${blockTypes.join(', ')}, parentId: ${message.parentId || 'none'}`);
+    }
     return null;
   }
 

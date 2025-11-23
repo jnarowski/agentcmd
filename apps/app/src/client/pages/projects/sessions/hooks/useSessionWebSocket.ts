@@ -1,5 +1,4 @@
 import { useEffect, useCallback, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useSessionStore } from "@/client/pages/projects/sessions/stores/sessionStore";
 import { useWebSocket } from "@/client/hooks/useWebSocket";
 import type { UnifiedContent, PermissionMode, AgentType } from "agent-cli-sdk";
@@ -8,9 +7,8 @@ import {
   type SessionEvent,
 } from "@/shared/types/websocket.types";
 import { Channels } from "@/shared/websocket";
-import { sessionKeys } from "./queryKeys";
 import { generateUUID } from "@/client/utils/cn";
-import type { SessionResponse } from "@/shared/types";
+import { isDebugMode } from "@/client/utils/isDebugMode";
 
 interface UseSessionWebSocketOptions {
   sessionId: string;
@@ -41,8 +39,6 @@ export function useSessionWebSocket({
     isConnected,
     eventBus,
   } = useWebSocket();
-
-  const queryClient = useQueryClient();
 
   // Refs to avoid recreating callbacks
   const sessionIdRef = useRef(sessionId);
@@ -75,33 +71,36 @@ export function useSessionWebSocket({
             }
 
             // Check for empty content blocks
-            const emptyTextBlocks = content.filter(
-              (block) =>
-                typeof block !== 'string' &&
-                block.type === "text" &&
-                (!block.text || block.text.trim() === "")
-            );
-            if (emptyTextBlocks.length > 0) {
-              console.warn(
-                "[useSessionWebSocket] Message contains",
-                emptyTextBlocks.length,
-                "empty text blocks"
+            if (import.meta.env.DEV && isDebugMode()) {
+              const emptyTextBlocks = content.filter(
+                (block) =>
+                  typeof block !== 'string' &&
+                  block.type === "text" &&
+                  (!block.text || block.text.trim() === "")
               );
-            }
+              if (emptyTextBlocks.length > 0) {
+                console.warn(
+                  "[useSessionWebSocket] Message contains",
+                  emptyTextBlocks.length,
+                  "empty text blocks"
+                );
+              }
 
-            if (content.length === 0) {
-              console.warn(
-                "[useSessionWebSocket] Message has EMPTY content array"
-              );
+              if (content.length === 0) {
+                console.warn(
+                  "[useSessionWebSocket] Message has EMPTY content array"
+                );
+              }
             }
 
             useSessionStore
               .getState()
               .updateStreamingMessage(
+                sessionIdRef.current,
                 message.id,
                 content as UnifiedContent[]
               );
-          } else {
+          } else if (import.meta.env.DEV && isDebugMode()) {
             console.warn(
               "[useSessionWebSocket] stream_output received without message"
             );
@@ -111,126 +110,51 @@ export function useSessionWebSocket({
 
         case SessionEventTypes.MESSAGE_COMPLETE: {
           const data = event.data;
-          console.log("[useSessionWebSocket] message_complete received:", data);
 
-          // Get current session and messages
-          const store = useSessionStore.getState();
-          const session = store.session;
+          // Use full session payload from WebSocket (Phase 0) to update Map
+          if (data.session) {
+            // Full session provided by backend - update Map directly
+            useSessionStore.getState().setSession(sessionIdRef.current, data.session);
 
-          if (!session?.messages.length) {
-            return;
-          }
-
-          // If usage data is provided, attach it to the last assistant message
-          if (data.usage) {
-            const messages = [...session.messages];
-            const lastMessageIndex = messages.length - 1;
-            const lastMessage = messages[lastMessageIndex];
-
-            if (lastMessage.role === "assistant") {
-              // Create updated message with usage data
-              messages[lastMessageIndex] = {
-                ...lastMessage,
-                usage: data.usage,
-                isStreaming: false,
-              };
-
-              // Update store with new messages array
-              useSessionStore.setState({
-                session: {
-                  ...session,
-                  messages,
-                  isStreaming: false,
-                },
-              });
-            }
+            // Also update session in list (for sidebar)
+            useSessionStore.getState().updateSessionInList(projectIdRef.current, data.session);
           } else {
-            // No usage data, just finalize the message
-            store.finalizeMessage(sessionIdRef.current);
-          }
-
-          // Update metadata if provided (for other fields like model, stop_reason)
-          if (data.metadata) {
-            store.updateMetadata(data.metadata);
-          }
-
-          // Update React Query cache to set state to idle when message completes
-          // This ensures SessionStateBadge shows correct state immediately
-          queryClient.setQueryData<SessionResponse>(
-            sessionKeys.detail(sessionIdRef.current, projectIdRef.current),
-            (old) => {
-              if (!old) return old;
-              return {
-                ...old,
-                state: "idle",
-              };
+            // Fallback: No full session, finalize message manually
+            if (data.messageId) {
+              const store = useSessionStore.getState();
+              store.finalizeMessage(sessionIdRef.current, data.messageId);
             }
-          );
 
-          // Invalidate all session lists to update sidebar
-          queryClient.invalidateQueries({
-            queryKey: sessionKeys.lists(),
-          });
+            // Update metadata if provided
+            if (import.meta.env.DEV && isDebugMode() && data.metadata) {
+              // Note: updateMetadata not in new store API, metadata comes from full session
+              console.warn("[useSessionWebSocket] Metadata received but no full session - ignoring");
+            }
+          }
+
+          // Explicitly clear streaming state (setSession preserves client state)
+          useSessionStore.getState().setStreaming(sessionIdRef.current, false);
+
+          // No React Query invalidations needed - Zustand is single source of truth
           break;
         }
 
         case SessionEventTypes.SESSION_UPDATED: {
           const data = event.data;
-          console.log("[useSessionWebSocket] session.updated received:", data);
 
-          // Prepare update object
-          const updates = {
-            ...(data.state && { state: data.state }),
-            ...(data.error_message !== undefined && { error_message: data.error_message || undefined }),
-            ...(data.name && { name: data.name }),
-            ...(data.updated_at && { updated_at: new Date(data.updated_at) }),
-          };
+          // Use full session payload from WebSocket (Phase 0) to update Map
+          if (data.session) {
+            // Full session provided by backend - update Map directly
+            useSessionStore.getState().setSession(sessionIdRef.current, data.session);
 
-          // Update session detail cache directly (optimistic update)
-          // Note: useSession returns unwrapped SessionResponse, not { data: SessionResponse }
-          queryClient.setQueryData<SessionResponse>(
-            sessionKeys.detail(sessionIdRef.current, projectIdRef.current),
-            (old) => {
-              if (!old) return old;
-              return { ...old, ...updates };
-            }
-          );
-
-          // Update session list caches directly (sidebar Activities)
-          queryClient.setQueryData<SessionResponse[]>(
-            sessionKeys.byProject(projectIdRef.current),
-            (old) => {
-              if (!old) return old;
-              return old.map((session) =>
-                session.id === sessionIdRef.current
-                  ? { ...session, ...updates }
-                  : session
-              );
-            }
-          );
-
-          // Invalidate all session queries (not just lists)
-          queryClient.invalidateQueries({
-            queryKey: sessionKeys.all,
-          });
-
-          // Sync sessionStore with database state
-          if (data.state === "error") {
-            // Session failed - stop streaming and show error
-            useSessionStore.getState().setStreaming(false);
-            useSessionStore
-              .getState()
-              .setError(data.error_message || "An error occurred");
-          } else if (data.state === "idle") {
-            // Session completed or cancelled - stop streaming and clear error
-            useSessionStore.getState().setStreaming(false);
-            useSessionStore.getState().setError(null);
-          } else if (data.state === "working") {
-            // Session started - begin streaming
-            useSessionStore.getState().setStreaming(true);
-            useSessionStore.getState().setError(null);
+            // Also update session in list (for sidebar)
+            useSessionStore.getState().updateSessionInList(projectIdRef.current, data.session);
+          } else if (import.meta.env.DEV && isDebugMode()) {
+            // Fallback: No full session, log warning (should not happen after Phase 0)
+            console.warn("[useSessionWebSocket] SESSION_UPDATED received without full session payload");
           }
 
+          // No React Query invalidations needed - Zustand is single source of truth
           break;
         }
 
@@ -252,8 +176,8 @@ export function useSessionWebSocket({
               ? `\n\nDetails: ${JSON.stringify(data.details, null, 2)}`
               : "";
 
-          // Add error message to store
-          useSessionStore.getState().addMessage({
+          // Add error message to session in Map
+          useSessionStore.getState().addMessage(sessionIdRef.current, {
             id: generateUUID(),
             role: "assistant",
             content: [
@@ -267,32 +191,30 @@ export function useSessionWebSocket({
             _original: undefined,
           });
 
-          // Set error in store
-          useSessionStore
-            .getState()
-            .setError(data.message || data.error || "An error occurred");
-          useSessionStore.getState().setStreaming(false);
+          // Set error in session
+          useSessionStore.getState().setError(sessionIdRef.current, errorMessage);
+          useSessionStore.getState().setStreaming(sessionIdRef.current, false);
           break;
         }
 
         case SessionEventTypes.SUBSCRIBE_SUCCESS: {
-          console.log(
-            "[useSessionWebSocket] Successfully subscribed to session channel"
-          );
+          // Successfully subscribed - no logging needed
           break;
         }
 
         default: {
           // Exhaustive checking - TypeScript will error if we miss a case
           const _exhaustive: never = event;
-          console.warn(
-            "[useSessionWebSocket] Unknown event type:",
-            _exhaustive
-          );
+          if (import.meta.env.DEV && isDebugMode()) {
+            console.warn(
+              "[useSessionWebSocket] Unknown event type:",
+              _exhaustive
+            );
+          }
         }
       }
     },
-    [queryClient]
+    [] // No dependencies - all state access via getState()
   );
 
   /**
@@ -316,6 +238,15 @@ export function useSessionWebSocket({
 
     // Cleanup subscriptions on unmount or sessionId change
     return () => {
+      // Send UNSUBSCRIBE to server
+      if (isConnected) {
+        sendWsMessage(channel, {
+          type: SessionEventTypes.UNSUBSCRIBE,
+          data: { sessionId },
+        });
+      }
+
+      // Remove EventBus listener
       eventBus.off(channel, handleEvent);
     };
   }, [sessionId, isConnected, eventBus, sendWsMessage, handleEvent]);
@@ -370,7 +301,7 @@ export function useSessionWebSocket({
     });
 
     // Add system message to UI
-    useSessionStore.getState().addMessage({
+    useSessionStore.getState().addMessage(currentSessionId, {
       id: generateUUID(),
       role: "user",
       content: [
@@ -384,7 +315,7 @@ export function useSessionWebSocket({
     });
 
     // Update streaming state
-    useSessionStore.getState().setStreaming(false);
+    useSessionStore.getState().setStreaming(currentSessionId, false);
   }, [sendWsMessage]);
 
   return {

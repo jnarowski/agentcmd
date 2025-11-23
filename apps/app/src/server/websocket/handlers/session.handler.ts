@@ -19,7 +19,7 @@ import {
   cancelSession,
   type AgentExecuteResult,
 } from "@/server/domain/session/services";
-import { broadcast, subscribe } from "../infrastructure/subscriptions";
+import { broadcast, subscribe, unsubscribe } from "../infrastructure/subscriptions";
 import {
   SessionEventTypes,
   GlobalEventTypes,
@@ -176,14 +176,49 @@ export async function handleSessionSendMessage(
     shouldBroadcast: false,
   });
 
+  // Query full session for MESSAGE_COMPLETE broadcast
+  const fullSession = await prisma.agentSession.findUnique({
+    where: { id: sessionId },
+  });
+
   // Cleanup and complete
   await cleanupSessionImages({ sessionId });
-  broadcast(Channels.session(sessionId), {
-    type: SessionEventTypes.MESSAGE_COMPLETE,
-    data: {
-      sessionId,
-    },
-  });
+
+  if (fullSession) {
+    // Broadcast MESSAGE_COMPLETE with full session data
+    broadcast(Channels.session(sessionId), {
+      type: SessionEventTypes.MESSAGE_COMPLETE,
+      data: {
+        sessionId,
+        session: {
+          id: fullSession.id,
+          projectId: fullSession.project_id,
+          userId: fullSession.user_id,
+          name: fullSession.name ?? undefined,
+          agent: fullSession.agent,
+          type: fullSession.type as 'chat' | 'workflow' | 'internal',
+          permission_mode: fullSession.permission_mode as 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions',
+          cli_session_id: fullSession.cli_session_id ?? undefined,
+          session_path: fullSession.session_path ?? undefined,
+          metadata: fullSession.metadata as unknown as import('@/shared/types/agent-session.types').AgentSessionMetadata,
+          state: fullSession.state as 'idle' | 'working' | 'error',
+          error_message: fullSession.error_message ?? undefined,
+          is_archived: fullSession.is_archived,
+          archived_at: fullSession.archived_at,
+          created_at: fullSession.created_at,
+          updated_at: fullSession.updated_at,
+        },
+      },
+    });
+  } else {
+    // Fallback if session not found (shouldn't happen)
+    broadcast(Channels.session(sessionId), {
+      type: SessionEventTypes.MESSAGE_COMPLETE,
+      data: {
+        sessionId,
+      },
+    });
+  }
 }
 
 /**
@@ -255,6 +290,48 @@ export async function handleSessionSubscribe(
 }
 
 /**
+ * Handle session unsubscribe event
+ *
+ * Unsubscribes the WebSocket from the session's broadcast channel.
+ * Called when a component unmounts or session changes.
+ */
+export async function handleSessionUnsubscribe(
+  socket: WebSocket,
+  sessionId: string,
+  userId: string,
+  fastify: FastifyInstance
+): Promise<void> {
+  // Validate session ownership
+  await validateSessionOwnership({ sessionId, userId });
+
+  // Unsubscribe socket from session channel
+  const channel = Channels.session(sessionId);
+  unsubscribe(channel, socket);
+
+  fastify.log.info(
+    { sessionId, channel },
+    "[WebSocket] Client unsubscribed from session channel"
+  );
+}
+
+/**
+ * Handle kill session event
+ *
+ * Kills the running agent process and returns session to idle state.
+ * Alias for handleSessionCancel for backwards compatibility.
+ */
+export async function handleKillSession(
+  socket: WebSocket,
+  sessionId: string,
+  data: unknown,
+  userId: string,
+  fastify: FastifyInstance
+): Promise<void> {
+  // Delegate to cancel handler (same functionality)
+  await handleSessionCancel(socket, sessionId, data, userId, fastify);
+}
+
+/**
  * Route session events to appropriate handler
  *
  * Main router for session-related WebSocket events. Extracts the session ID
@@ -310,8 +387,12 @@ export async function handleSessionEvent(
       );
     } else if (type === SessionEventTypes.CANCEL) {
       await handleSessionCancel(socket, sessionId, data, userId, fastify);
+    } else if (type === SessionEventTypes.KILL_SESSION) {
+      await handleKillSession(socket, sessionId, data, userId, fastify);
     } else if (type === SessionEventTypes.SUBSCRIBE) {
       await handleSessionSubscribe(socket, sessionId, userId, fastify);
+    } else if (type === SessionEventTypes.UNSUBSCRIBE) {
+      await handleSessionUnsubscribe(socket, sessionId, userId, fastify);
     } else {
       // Unknown session action
       broadcast(Channels.session(sessionId), {

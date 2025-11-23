@@ -5,6 +5,7 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CodeBlock } from "@/client/pages/projects/sessions/components/CodeBlock";
+import { isDebugMode } from "@/client/utils/isDebugMode";
 
 interface TextBlockProps {
   text: string;
@@ -18,7 +19,7 @@ export function TextBlock({ text, className = "", showDot = true }: TextBlockPro
     typeof text === "string" ? text : JSON.stringify(text, null, 2);
 
   // DEBUG: Log empty or whitespace-only text blocks
-  if (!text || (typeof text === 'string' && text.trim() === '')) {
+  if (import.meta.env.DEV && isDebugMode() && (!text || (typeof text === 'string' && text.trim() === ''))) {
     console.warn('[TextBlock] RENDERING EMPTY TEXT BLOCK:', {
       text,
       type: typeof text,

@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Copy, Check } from 'lucide-react';
-import { useSessionStore } from '@/client/pages/projects/sessions/stores/sessionStore';
-import type { UIMessage } from '@/shared/types/message.types';
+import { useSessionStore, selectActiveSession } from '@/client/pages/projects/sessions/stores/sessionStore';
+import type { UIMessage, UnifiedContent } from '@/shared/types/message.types';
 
 /**
  * Message structure inspector - shows current session messages with problem detection
  */
 export function MessagesTab() {
-  const currentSession = useSessionStore((s) => s.session);
+  const currentSession = useSessionStore(selectActiveSession);
   const [selectedMessageIndex, setSelectedMessageIndex] = useState<number | null>(null);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [filters, setFilters] = useState({
@@ -19,16 +19,16 @@ export function MessagesTab() {
   const messages = currentSession?.messages || [];
 
   // Apply filters
-  const filteredMessages = messages.filter((msg) => {
+  const filteredMessages = messages.filter((msg: UIMessage) => {
     if (filters.errorsOnly) {
       const hasError = Array.isArray(msg.content) && msg.content.some(
-        (block) => block.type === 'text' && block.text?.toLowerCase().includes('error')
+        (block: UnifiedContent) => block.type === 'text' && block.text?.toLowerCase().includes('error')
       );
       if (!hasError) return false;
     }
     if (filters.toolUsesOnly) {
       const hasToolUse = Array.isArray(msg.content) && msg.content.some(
-        (block) => block.type === 'tool_use'
+        (block: UnifiedContent) => block.type === 'tool_use'
       );
       if (!hasToolUse) return false;
     }
@@ -41,19 +41,19 @@ export function MessagesTab() {
   // Calculate statistics
   const stats = {
     total: messages.length,
-    emptyContent: messages.filter((m) => Array.isArray(m.content) && m.content.length === 0).length,
-    emptyTextBlocks: messages.reduce((count, msg) => {
+    emptyContent: messages.filter((m: UIMessage) => Array.isArray(m.content) && m.content.length === 0).length,
+    emptyTextBlocks: messages.reduce((count: number, msg: UIMessage) => {
       if (!Array.isArray(msg.content)) return count;
       const emptyTexts = msg.content.filter(
-        (block) => block.type === 'text' && (!block.text || block.text.trim() === '')
+        (block: UnifiedContent) => block.type === 'text' && (!block.text || block.text.trim() === '')
       );
       return count + emptyTexts.length;
     }, 0),
-    toolUseBlocks: messages.reduce((count, msg) => {
+    toolUseBlocks: messages.reduce((count: number, msg: UIMessage) => {
       if (!Array.isArray(msg.content)) return count;
-      return count + msg.content.filter((block) => block.type === 'tool_use').length;
+      return count + msg.content.filter((block: UnifiedContent) => block.type === 'tool_use').length;
     }, 0),
-    streamingMessages: messages.filter((m) => m.isStreaming).length,
+    streamingMessages: messages.filter((m: UIMessage) => m.isStreaming).length,
   };
 
   const copyMessageJson = async (msg: UIMessage) => {
@@ -155,11 +155,11 @@ export function MessagesTab() {
             No messages match the current filters
           </div>
         ) : (
-          filteredMessages.map((msg, index) => {
+          filteredMessages.map((msg: UIMessage, index: number) => {
             const isEmpty = Array.isArray(msg.content) && msg.content.length === 0;
             const hasEmptyText =
               Array.isArray(msg.content) &&
-              msg.content.some((block) => block.type === 'text' && (!block.text || block.text.trim() === ''));
+              msg.content.some((block: UnifiedContent) => block.type === 'text' && (!block.text || block.text.trim() === ''));
             const isSelected = selectedMessageIndex === index;
 
             return (
@@ -201,7 +201,7 @@ export function MessagesTab() {
                   </div>
                   {Array.isArray(msg.content) && msg.content.length > 0 && (
                     <div className="mt-1 text-gray-400 text-xs truncate">
-                      {msg.content.map((b) => b.type).join(', ')}
+                      {msg.content.map((b: UnifiedContent) => b.type).join(', ')}
                     </div>
                   )}
                 </button>
@@ -241,7 +241,7 @@ export function MessagesTab() {
                       <div>
                         <div className="text-gray-400 mb-1 font-medium">Content Blocks:</div>
                         <div className="space-y-1 ml-2">
-                          {msg.content.map((block, blockIndex) => {
+                          {msg.content.map((block: UnifiedContent, blockIndex: number) => {
                             const isEmptyText =
                               block.type === 'text' && (!block.text || block.text.trim() === '');
 
