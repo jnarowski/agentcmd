@@ -81,14 +81,26 @@ export function SessionItem({
               )}
             </div>
             <div className="flex items-center gap-1.5">
-              {session.permission_mode === "plan" && (
-                <Badge
-                  variant="secondary"
-                  className="text-xs px-1.5 mt-0.5 py-0 h-4 bg-green-500/10 text-green-600 border-green-500/20 shrink-0"
-                >
-                  Plan
-                </Badge>
-              )}
+              <Badge
+                variant="secondary"
+                className={`text-xs px-1.5 mt-0.5 py-0 h-4 shrink-0 ${
+                  session.permission_mode === "plan"
+                    ? "bg-green-500/10 text-green-600 border-green-500/20"
+                    : session.permission_mode === "acceptEdits"
+                      ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                      : session.permission_mode === "bypassPermissions"
+                        ? "bg-red-500/10 text-red-600 border-red-500/20"
+                        : "bg-gray-500/10 text-gray-600 border-gray-500/20"
+                }`}
+              >
+                {session.permission_mode === "plan"
+                  ? "Plan"
+                  : session.permission_mode === "acceptEdits"
+                    ? "Review"
+                    : session.permission_mode === "bypassPermissions"
+                      ? "Bypass"
+                      : "Code"}
+              </Badge>
               <SessionStateBadge
                 state={session.state}
                 errorMessage={session.error_message}
