@@ -27,9 +27,7 @@ export default function ProjectSessionPage() {
 
   // Get project and session names for title
   const { data: project } = useProject(projectId!);
-  const currentSession = useSessionStore((s) =>
-    params.sessionId ? s.sessions.get(params.sessionId) : undefined
-  );
+  const currentSession = useSessionStore((s) => s.currentSession);
 
   // Get session for header - convert metadata to SessionResponse-like object
   const sessionForHeader = currentSession?.metadata && sessionId && projectId ? {
@@ -67,14 +65,10 @@ export default function ProjectSessionPage() {
   }, [sessionId, projectId, navigate]);
 
   // Get session from store
-  const session = useSessionStore((s) =>
-    sessionId ? s.sessions.get(sessionId) : undefined
-  );
+  const session = useSessionStore((s) => s.currentSession);
   const addMessage = useSessionStore((s) => s.addMessage);
   const setStreaming = useSessionStore((s) => s.setStreaming);
-  const totalTokens = useSessionStore((s) =>
-    sessionId ? selectTotalTokens(sessionId)(s) : 0
-  );
+  const totalTokens = useSessionStore(selectTotalTokens);
   const clearHandledPermissions = useSessionStore((s) => s.clearHandledPermissions);
   const clearToolResultError = useSessionStore((s) => s.clearToolResultError);
   const markPermissionHandled = useSessionStore((s) => s.markPermissionHandled);
@@ -122,6 +116,7 @@ export default function ProjectSessionPage() {
       images: imagePaths,
       timestamp: Date.now(),
       _original: undefined,
+      _optimistic: true,
     });
 
     // Set streaming state immediately to show loading indicator

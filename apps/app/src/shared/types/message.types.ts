@@ -27,6 +27,7 @@ export type UIMessage = Omit<UnifiedMessage, 'tool'> & {
   images?: string[]; // Legacy support for images array (deprecated, use content blocks)
   parentId?: string | null; // Flattened from _original.parentUuid
   sessionId?: string; // Flattened from _original.sessionId
+  _optimistic?: boolean; // Flag for client-generated messages not yet confirmed by server
 };
 
 // Extended tool block with nested result

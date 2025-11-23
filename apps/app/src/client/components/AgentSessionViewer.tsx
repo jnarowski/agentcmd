@@ -16,7 +16,7 @@ import { useEffect } from "react";
 import { ChatInterface } from "@/client/pages/projects/sessions/components/ChatInterface";
 import { useSessionWebSocket } from "@/client/pages/projects/sessions/hooks/useSessionWebSocket";
 import { useSession } from "@/client/hooks/useSession";
-import { useSessionStore, selectSession } from "@/client/pages/projects/sessions/stores/sessionStore";
+import { useSessionStore, selectActiveSession } from "@/client/pages/projects/sessions/stores/sessionStore";
 import type { SessionData } from "@/client/pages/projects/sessions/stores/sessionStore";
 
 export interface AgentSessionViewerProps {
@@ -61,27 +61,27 @@ export function AgentSessionViewer({
   clearOnUnmount = false,
   onApprove,
 }: AgentSessionViewerProps) {
-  // Load session data via Zustand hook (auto-loads if not in Map)
+  // Load session data via Zustand hook (auto-loads if not in store)
   const { messages, isLoading, isStreaming, error } = useSession(sessionId, projectId);
 
-  // Get full session data from Map
-  const session = useSessionStore(selectSession(sessionId));
+  // Get full session data from store
+  const session = useSessionStore(selectActiveSession);
   const clearSession = useSessionStore((s) => s.clearSession);
   const setPermissionMode = useSessionStore((s) => s.setPermissionMode);
 
   // Sync form permission mode when session loads
   useEffect(() => {
-    if (session?.permission_mode) {
+    if (session?.id === sessionId && session?.permission_mode) {
       setPermissionMode(session.permission_mode);
     }
-  }, [session?.permission_mode, setPermissionMode]);
+  }, [session?.id, session?.permission_mode, sessionId, setPermissionMode]);
 
   // Trigger onSessionLoad callback when data is loaded
   useEffect(() => {
-    if (session && !isLoading && onSessionLoad) {
+    if (session && session.id === sessionId && !isLoading && onSessionLoad) {
       onSessionLoad(session);
     }
-  }, [session, isLoading, onSessionLoad]);
+  }, [session, sessionId, isLoading, onSessionLoad]);
 
   // Handle errors
   useEffect(() => {

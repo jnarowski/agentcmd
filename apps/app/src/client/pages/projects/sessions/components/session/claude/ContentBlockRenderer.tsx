@@ -11,6 +11,7 @@ import { TextBlock } from "./TextBlock";
 import { ThinkingBlock } from "./ThinkingBlock";
 import { ToolBlockRenderer } from "./ToolBlockRenderer";
 import { SlashCommandBlock } from "./blocks/SlashCommandBlock";
+import { isDebugMode } from "@/client/utils/isDebugMode";
 
 interface ContentBlockRendererProps {
   block: UnifiedContent;
@@ -29,11 +30,12 @@ export function ContentBlockRenderer({
     case "text": {
       // DEBUG: Check for empty text blocks
       if (!block.text || block.text.trim() === "") {
-        console.warn(
-          "[ContentBlockRenderer] EMPTY TEXT BLOCK DETECTED:",
-          block
-        );
-
+        if (import.meta.env.DEV && isDebugMode()) {
+          console.warn(
+            "[ContentBlockRenderer] EMPTY TEXT BLOCK DETECTED:",
+            block
+          );
+        }
         return null;
       }
 
@@ -74,8 +76,10 @@ export function ContentBlockRenderer({
 
     default: {
       // Unknown block type
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      console.warn("Unknown content block type:", (block as any).type, block);
+      if (import.meta.env.DEV && isDebugMode()) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        console.warn("Unknown content block type:", (block as any).type, block);
+      }
       return (
         <div className="text-sm text-muted-foreground italic">
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}

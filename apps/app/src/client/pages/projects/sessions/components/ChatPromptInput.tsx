@@ -89,9 +89,7 @@ const ChatPromptInputInner = forwardRef<
     const activeSessionId = useNavigationStore((s) => s.activeSessionId);
     const model = useSessionStore((s) => s.form.model);
     const setModel = useSessionStore((s) => s.setModel);
-    const sessionAgent = useSessionStore((s) =>
-      activeSessionId ? s.sessions.get(activeSessionId)?.agent : undefined
-    );
+    const sessionAgent = useSessionStore((s) => s.currentSession?.agent);
     const formAgent = useSessionStore((s) => s.form.agent);
     const updateSession = useSessionStore((s) => s.updateSession);
 

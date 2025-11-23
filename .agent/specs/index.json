@@ -194,6 +194,22 @@
       "status": "draft",
       "created": "2025-11-22T20:39:00Z",
       "updated": "2025-11-22T20:39:00Z"
+    },
+    "2511230804": {
+      "folder": "2511230804-session-store-refactor",
+      "path": "todo/2511230804-session-store-refactor/spec.md",
+      "spec_type": "feature",
+      "status": "review",
+      "created": "2025-11-23T15:07:06Z",
+      "updated": "2025-11-23T08:46:00Z"
+    },
+    "2511230823": {
+      "folder": "2511230823-direct-spec-move",
+      "path": "todo/2511230823-direct-spec-move/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-23T08:23:00Z",
+      "updated": "2025-11-23T08:23:00Z"
     }
   }
 }

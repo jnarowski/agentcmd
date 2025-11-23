@@ -26,7 +26,7 @@ export function useSessionList(
   filters?: Record<string, unknown>
 ): UseSessionListReturn {
   const loadSessionList = useSessionStore((s) => s.loadSessionList);
-  const listData = useSessionStore(selectSessionList(projectId));
+  const listData = useSessionStore((state) => selectSessionList(projectId)(state));
 
   // Auto-load list if not in Map
   useEffect(() => {

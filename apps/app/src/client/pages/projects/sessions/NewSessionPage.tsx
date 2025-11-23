@@ -101,6 +101,7 @@ export default function NewSessionPage() {
         content: [{ type: "text", text: message }],
         timestamp: Date.now(),
         _original: undefined,
+        _optimistic: true,
       });
 
       // Set isStreaming to true to show loading indicator

@@ -252,15 +252,6 @@ export function ProjectCombobox() {
             </div>
           </DrawerContent>
         </Drawer>
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-9 w-9 shrink-0"
-          onClick={handleNewProject}
-          aria-label="New project"
-        >
-          <Plus className="size-4" />
-        </Button>
       </div>
 
       <ProjectDialog

@@ -21,7 +21,7 @@ import {
   CommandSeparator,
 } from "@/client/components/ui/command";
 import { useProjects } from "@/client/pages/projects/hooks/useProjects";
-import { useSessionStore } from "@/client/pages/projects/sessions/stores/sessionStore";
+import { useSessionStore, selectAllSessions } from "@/client/pages/projects/sessions/stores/sessionStore";
 import { Button } from "@/client/components/ui/button";
 import { Input } from "@/client/components/ui/input";
 import { ProjectDialog } from "@/client/pages/projects/components/ProjectDialog";
@@ -38,12 +38,11 @@ export function CommandMenu({ onSearchChange }: CommandMenuProps) {
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
   const navigate = useNavigate();
   const { data: projects = [], isLoading: projectsLoading } = useProjects();
-  const sessionLists = useSessionStore((s) => s.sessionLists);
+  const allSessions = useSessionStore(selectAllSessions);
   const { isMobile } = useSidebar();
 
-  // Flatten all session lists into a single array for cross-project display
-  const sessions = Array.from(sessionLists.values())
-    .flatMap((list) => list.sessions)
+  // Sort and limit sessions for cross-project display
+  const sessions = allSessions
     .sort((a, b) => {
       const dateA = new Date(a.metadata.lastMessageAt || a.updated_at).getTime();
       const dateB = new Date(b.metadata.lastMessageAt || b.updated_at).getTime();

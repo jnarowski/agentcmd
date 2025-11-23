@@ -8,6 +8,7 @@ import {
 } from "@/shared/types/websocket.types";
 import { Channels } from "@/shared/websocket";
 import { generateUUID } from "@/client/utils/cn";
+import { isDebugMode } from "@/client/utils/isDebugMode";
 
 interface UseSessionWebSocketOptions {
   sessionId: string;
@@ -70,24 +71,26 @@ export function useSessionWebSocket({
             }
 
             // Check for empty content blocks
-            const emptyTextBlocks = content.filter(
-              (block) =>
-                typeof block !== 'string' &&
-                block.type === "text" &&
-                (!block.text || block.text.trim() === "")
-            );
-            if (emptyTextBlocks.length > 0) {
-              console.warn(
-                "[useSessionWebSocket] Message contains",
-                emptyTextBlocks.length,
-                "empty text blocks"
+            if (import.meta.env.DEV && isDebugMode()) {
+              const emptyTextBlocks = content.filter(
+                (block) =>
+                  typeof block !== 'string' &&
+                  block.type === "text" &&
+                  (!block.text || block.text.trim() === "")
               );
-            }
+              if (emptyTextBlocks.length > 0) {
+                console.warn(
+                  "[useSessionWebSocket] Message contains",
+                  emptyTextBlocks.length,
+                  "empty text blocks"
+                );
+              }
 
-            if (content.length === 0) {
-              console.warn(
-                "[useSessionWebSocket] Message has EMPTY content array"
-              );
+              if (content.length === 0) {
+                console.warn(
+                  "[useSessionWebSocket] Message has EMPTY content array"
+                );
+              }
             }
 
             useSessionStore
@@ -97,7 +100,7 @@ export function useSessionWebSocket({
                 message.id,
                 content as UnifiedContent[]
               );
-          } else {
+          } else if (import.meta.env.DEV && isDebugMode()) {
             console.warn(
               "[useSessionWebSocket] stream_output received without message"
             );
@@ -107,7 +110,6 @@ export function useSessionWebSocket({
 
         case SessionEventTypes.MESSAGE_COMPLETE: {
           const data = event.data;
-          console.log("[useSessionWebSocket] message_complete received:", data);
 
           // Use full session payload from WebSocket (Phase 0) to update Map
           if (data.session) {
@@ -124,7 +126,7 @@ export function useSessionWebSocket({
             }
 
             // Update metadata if provided
-            if (data.metadata) {
+            if (import.meta.env.DEV && isDebugMode() && data.metadata) {
               // Note: updateMetadata not in new store API, metadata comes from full session
               console.warn("[useSessionWebSocket] Metadata received but no full session - ignoring");
             }
@@ -139,7 +141,6 @@ export function useSessionWebSocket({
 
         case SessionEventTypes.SESSION_UPDATED: {
           const data = event.data;
-          console.log("[useSessionWebSocket] session.updated received:", data);
 
           // Use full session payload from WebSocket (Phase 0) to update Map
           if (data.session) {
@@ -148,7 +149,7 @@ export function useSessionWebSocket({
 
             // Also update session in list (for sidebar)
             useSessionStore.getState().updateSessionInList(projectIdRef.current, data.session);
-          } else {
+          } else if (import.meta.env.DEV && isDebugMode()) {
             // Fallback: No full session, log warning (should not happen after Phase 0)
             console.warn("[useSessionWebSocket] SESSION_UPDATED received without full session payload");
           }
@@ -190,32 +191,26 @@ export function useSessionWebSocket({
             _original: undefined,
           });
 
-          // Set error in session in Map
-          const session = useSessionStore.getState().sessions.get(sessionIdRef.current);
-          if (session) {
-            useSessionStore.getState().sessions.set(sessionIdRef.current, {
-              ...session,
-              error: errorMessage,
-              isStreaming: false,
-            });
-          }
+          // Set error in session
+          useSessionStore.getState().setError(sessionIdRef.current, errorMessage);
+          useSessionStore.getState().setStreaming(sessionIdRef.current, false);
           break;
         }
 
         case SessionEventTypes.SUBSCRIBE_SUCCESS: {
-          console.log(
-            "[useSessionWebSocket] Successfully subscribed to session channel"
-          );
+          // Successfully subscribed - no logging needed
           break;
         }
 
         default: {
           // Exhaustive checking - TypeScript will error if we miss a case
           const _exhaustive: never = event;
-          console.warn(
-            "[useSessionWebSocket] Unknown event type:",
-            _exhaustive
-          );
+          if (import.meta.env.DEV && isDebugMode()) {
+            console.warn(
+              "[useSessionWebSocket] Unknown event type:",
+              _exhaustive
+            );
+          }
         }
       }
     },

@@ -244,6 +244,118 @@ export function enrichMessagesWithToolResults(messages: (UnifiedMessage | UIMess
 }
 
 /**
+ * Merge in-memory messages with server messages using content-based matching.
+ *
+ * **Problem:** Client generates optimistic user messages with random UUIDs while CLI
+ * generates `msg_{hash}` IDs. These never match, so ID-based deduplication fails.
+ *
+ * **Solution:** Match optimistic user messages to server messages by exact content comparison.
+ * Replace matched optimistic with authoritative server version. Keep unmatched optimistic
+ * (orphaned due to CLI delay/crash). Preserve streaming assistant messages.
+ *
+ * **Algorithm:**
+ * 1. Extract optimistic user messages (have `_optimistic: true` flag)
+ * 2. Extract streaming assistant messages (have `isStreaming: true`)
+ * 3. For each optimistic message, find matching server message by content
+ * 4. If matched: use server version (authoritative ID, timestamp, etc.)
+ * 5. If not matched: keep optimistic (CLI hasn't written to disk yet or failed)
+ * 6. Take all other server messages as source of truth
+ * 7. Combine and sort by timestamp
+ *
+ * @param inMemoryMessages - Current messages in Zustand store (may have optimistic/streaming)
+ * @param serverMessages - Messages from API (authoritative, already enriched)
+ * @returns Merged messages array + updated messageIds Set for deduplication
+ *
+ * @example
+ * // Optimistic message matched to server
+ * mergeMessages(
+ *   [{ id: 'uuid-123', role: 'user', content: [{type: 'text', text: 'hello'}], _optimistic: true }],
+ *   [{ id: 'msg_abc', role: 'user', content: [{type: 'text', text: 'hello'}] }]
+ * )
+ * // Returns: { messages: [{ id: 'msg_abc', ... }], messageIds: Set(['msg_abc']) }
+ *
+ * @example
+ * // Orphaned optimistic (CLI hasn't written yet)
+ * mergeMessages(
+ *   [{ id: 'uuid-123', role: 'user', content: [{type: 'text', text: 'hello'}], _optimistic: true }],
+ *   []
+ * )
+ * // Returns: { messages: [{ id: 'uuid-123', ..., _optimistic: true }], messageIds: Set(['uuid-123']) }
+ *
+ * @example
+ * // Preserve streaming
+ * mergeMessages(
+ *   [{ id: 'msg_123', role: 'assistant', content: [...], isStreaming: true }],
+ *   []
+ * )
+ * // Returns: { messages: [{ id: 'msg_123', ..., isStreaming: true }], messageIds: Set(['msg_123']) }
+ */
+export function mergeMessages(
+  inMemoryMessages: UIMessage[],
+  serverMessages: UIMessage[]
+): { messages: UIMessage[]; messageIds: Set<string> } {
+  // Extract optimistic user messages (client-generated, may not be on server yet)
+  const optimisticMessages = inMemoryMessages.filter(
+    (msg) => msg._optimistic === true && msg.role === 'user'
+  );
+
+  // Extract streaming assistant messages (preserve streaming state)
+  const streamingMessages = inMemoryMessages.filter(
+    (msg) => msg.isStreaming === true && msg.role === 'assistant'
+  );
+
+  // Build content → server message lookup for matching
+  const serverByContent = new Map<string, UIMessage>();
+  for (const serverMsg of serverMessages) {
+    if (serverMsg.role === 'user') {
+      const contentKey = JSON.stringify(serverMsg.content);
+      serverByContent.set(contentKey, serverMsg);
+    }
+  }
+
+  // Match optimistic to server by content
+  const matchedServerIds = new Set<string>();
+  const mergedOptimistic: UIMessage[] = [];
+
+  for (const optimisticMsg of optimisticMessages) {
+    const contentKey = JSON.stringify(optimisticMsg.content);
+    const serverMatch = serverByContent.get(contentKey);
+
+    if (serverMatch) {
+      // Matched: use server version (authoritative)
+      mergedOptimistic.push(serverMatch);
+      matchedServerIds.add(serverMatch.id);
+    } else {
+      // Orphaned: keep optimistic (CLI hasn't written or failed)
+      mergedOptimistic.push(optimisticMsg);
+    }
+  }
+
+  // Take all server messages except those already matched to optimistic
+  const unmatchedServerMessages = serverMessages.filter(
+    (msg) => !matchedServerIds.has(msg.id)
+  );
+
+  // Combine: matched optimistic (now server versions) + unmatched server + streaming
+  const allMessages = [...mergedOptimistic, ...unmatchedServerMessages, ...streamingMessages];
+
+  // Sort by timestamp (chronological order)
+  const sortedMessages = allMessages.sort((a, b) => {
+    const aTime = a.timestamp || 0;
+    const bTime = b.timestamp || 0;
+    return aTime - bTime;
+  });
+
+  // Build messageIds Set for deduplication tracking
+  const messageIds = new Set<string>(sortedMessages.map((msg) => msg.id));
+
+  return {
+    messages: sortedMessages,
+    messageIds,
+  };
+}
+
+/**
  * Loading states for async operations
  */
 export type LoadingState = "idle" | "loading" | "loaded" | "error";
@@ -259,7 +371,7 @@ export interface FormState {
 }
 
 /**
- * Session data structure for Map-based storage
+ * Session data structure
  * Each session has its own data, messages, loading state, and metadata
  */
 export interface SessionData {
@@ -285,7 +397,6 @@ export interface SessionData {
   error: string | null;
   messageIds: Set<string>; // Deduplication tracking
   streamingMessageId: string | null; // Track which message is streaming
-  lastAccessedAt: number; // LRU cache timestamp
 }
 
 /**
@@ -321,27 +432,25 @@ export interface SessionSummary {
 }
 
 /**
- * SessionStore state and actions - Map-based architecture
- * Supports multiple concurrent sessions with Map-based storage
+ * SessionStore state and actions
+ * Manages single active session with simplified state model
  */
 export interface SessionStore {
-  // State - Map-based architecture
-  sessions: Map<string, SessionData>; // sessionId → SessionData
-  sessionLists: Map<string, SessionListData>; // projectId → SessionListData
-  activeSessionId: string | null;
+  // State - single session model
+  currentSession: SessionData | null;
+  sessionList: SessionListData; // Single list, filtered via selectors
   form: FormState;
   handledPermissions: Set<string>;
 
   // Session lifecycle actions
   loadSession: (sessionId: string, projectId: string) => Promise<void>;
-  loadSessionList: (projectId: string, filters?: Record<string, unknown>) => Promise<void>;
+  loadSessionList: (projectId: string | null, filters?: Record<string, unknown>) => Promise<void>;
   createSession: (projectId: string, data: { agent?: AgentType; permission_mode?: string; sessionId: string }) => Promise<SessionResponse>;
   updateSession: (sessionId: string, updates: Partial<SessionData>) => Promise<void>;
   archiveSession: (sessionId: string) => Promise<void>;
   unarchiveSession: (sessionId: string) => Promise<void>;
   clearSession: (sessionId: string) => void;
   clearAllSessions: () => void;
-  setActiveSession: (sessionId: string | null) => void;
 
   // WebSocket payload actions (Phase 0 integration)
   setSession: (sessionId: string, session: SessionResponse) => void;
@@ -379,17 +488,19 @@ export interface SessionStore {
   initializeFromSettings: (settings: { permissionMode?: PermissionMode; agent?: AgentType }) => void;
 }
 
-const MAX_SESSIONS_IN_CACHE = 5;
-
 /**
- * Session store - Map-based architecture
- * Manages multiple concurrent sessions with LRU cache
+ * Session store
+ * Manages single active session with simplified state model
  */
 export const useSessionStore = create<SessionStore>((set, get) => ({
-  // Initial state - Map-based
-  sessions: new Map<string, SessionData>(),
-  sessionLists: new Map<string, SessionListData>(),
-  activeSessionId: null,
+  // Initial state
+  currentSession: null,
+  sessionList: {
+    sessions: [],
+    loading: false,
+    error: null,
+    lastFetched: 0,
+  },
   form: {
     permissionMode: "acceptEdits",
     agent: "claude",
@@ -402,25 +513,43 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
   // ============================================================================
 
   /**
-   * Load session from API
-   * Fetches session metadata + messages and stores in Map
+   * Load session from API with optimistic message merge
+   * Fetches session metadata + messages, merges with in-memory optimistic/streaming messages
+   *
+   * **Merge Logic:**
+   * - Always loads messages from server (no early returns)
+   * - Merges server messages with in-memory optimistic user messages (content-based matching)
+   * - Preserves streaming assistant messages during merge
+   * - Handles 404 gracefully (new sessions without JSONL file yet)
+   * - Fails silently on errors (no throws, no toasts)
    */
   loadSession: async (sessionId: string, projectId: string) => {
     // Check if already loading to prevent duplicate requests
     const state = get();
-    const existing = state.sessions.get(sessionId);
-    if (existing?.loadingState === 'loading') {
+    if (state.currentSession?.id === sessionId && state.currentSession?.loadingState === 'loading') {
       return;
     }
 
+    // Capture in-memory messages before loading (for merge)
+    const inMemoryMessages = state.currentSession?.id === sessionId
+      ? state.currentSession.messages
+      : [];
+    const isStreaming = state.currentSession?.id === sessionId
+      ? state.currentSession.isStreaming
+      : false;
+    const streamingMessageId = state.currentSession?.id === sessionId
+      ? state.currentSession.streamingMessageId
+      : null;
+
     // Set loading state
-    const currentSession = state.sessions.get(sessionId) || createEmptySession(sessionId, projectId);
+    const session = state.currentSession?.id === sessionId
+      ? state.currentSession
+      : createEmptySession(sessionId, projectId);
     set({
-      sessions: new Map(state.sessions).set(sessionId, {
-        ...currentSession,
+      currentSession: {
+        ...session,
         loadingState: 'loading',
-        lastAccessedAt: Date.now(),
-      })
+      }
     });
 
     try {
@@ -428,12 +557,13 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
       const data = await api.get<{ data: SessionResponse }>(
         `/api/projects/${projectId}/sessions/${sessionId}`
       );
-      const session: SessionResponse = data.data;
+      const sessionResponse: SessionResponse = data.data;
 
       // Convert to SessionData and store
-      get().setSession(sessionId, session);
+      get().setSession(sessionId, sessionResponse);
 
-      // Fetch messages from API
+      // Fetch messages from API - always load (no early returns)
+      let serverMessages: UIMessage[] = [];
       try {
         const messagesData = await api.get<{ data: UnifiedMessage[] }>(
           `/api/projects/${projectId}/sessions/${sessionId}/messages`
@@ -441,97 +571,100 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
         const rawMessages = messagesData.data || [];
 
         // Enrich messages with tool results
-        const enrichedMessages = enrichMessagesWithToolResults(rawMessages);
-
-        // Update session with messages
-        set((state) => ({
-          sessions: new Map(state.sessions).set(sessionId, {
-            ...(state.sessions.get(sessionId) || createEmptySession(sessionId, projectId)),
-            messages: enrichedMessages,
-            loadingState: 'loaded',
-            lastAccessedAt: Date.now(),
-          })
-        }));
+        serverMessages = enrichMessagesWithToolResults(rawMessages);
       } catch (messageError) {
-        // If messages fail to load (e.g., 404 for new session), just continue with empty messages
-        console.warn(`[SessionStore] Failed to load messages for session ${sessionId}:`, messageError);
+        // 404 is expected for new sessions (no JSONL file yet)
+        // Use empty array for server messages, merge will preserve optimistic
+        if (import.meta.env.DEV) {
+          console.log(`[SessionStore] No messages file for session ${sessionId} (expected for new sessions)`);
+        }
       }
 
-      // Enforce LRU cache limit
-      evictOldestSessions(get, set);
+      // Merge in-memory messages with server messages
+      const { messages: mergedMessages, messageIds } = mergeMessages(
+        inMemoryMessages,
+        serverMessages
+      );
+
+      // Update session with merged messages
+      set((state) => {
+        if (state.currentSession?.id !== sessionId) return state;
+        return {
+          currentSession: {
+            ...(state.currentSession || createEmptySession(sessionId, projectId)),
+            messages: mergedMessages,
+            messageIds,
+            isStreaming, // Preserve streaming state
+            streamingMessageId, // Preserve streaming message ID
+            loadingState: 'loaded',
+          }
+        };
+      });
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load session';
 
-      set((state) => ({
-        sessions: new Map(state.sessions).set(sessionId, {
-          ...(state.sessions.get(sessionId) || createEmptySession(sessionId, projectId)),
-          loadingState: 'error',
-          error: errorMessage,
-          lastAccessedAt: Date.now(),
-        })
-      }));
+      set((state) => {
+        if (state.currentSession?.id !== sessionId) return state;
+        return {
+          currentSession: {
+            ...(state.currentSession || createEmptySession(sessionId, projectId)),
+            loadingState: 'error',
+            error: errorMessage,
+          }
+        };
+      });
     }
   },
 
   /**
    * Load session list from API
-   * Fetches list of sessions for a project and stores in Map
-   * Pass null for projectId to fetch all sessions across projects
+   * Fetches all sessions and stores in single list (filtered via selectors)
+   * projectId parameter preserved for API compatibility but loads all sessions
    */
-  loadSessionList: async (projectId: string | null, filters?: Record<string, unknown>) => {
-    const state = get();
-
-    // Use special key for "all sessions" when projectId is null
-    const cacheKey = projectId || '__all__';
-
+  loadSessionList: async (_projectId: string | null, filters?: Record<string, unknown>) => {
     // Set loading state
-    const currentList = state.sessionLists.get(cacheKey);
-    set({
-      sessionLists: new Map(state.sessionLists).set(cacheKey, {
-        sessions: currentList?.sessions || [],
+    set((state) => ({
+      sessionList: {
+        ...state.sessionList,
         loading: true,
         error: null,
-        lastFetched: Date.now(),
-      })
-    });
+      }
+    }));
 
     try {
-      // Build query params
+      // Build query params - always fetch all sessions
       const params = new URLSearchParams();
-      if (projectId) {
-        params.append('projectId', projectId);
-      }
       if (filters) {
         Object.entries(filters).forEach(([key, value]) => {
           params.append(key, String(value));
         });
       }
 
-      // Fetch sessions from API using centralized api client
-      // Use global /api/sessions endpoint (supports projectId query param)
+      // Fetch all sessions from API
       const data = await api.get<{ data: SessionSummary[] }>(
         `/api/sessions?${params}`
       );
       const sessions: SessionSummary[] = data.data;
 
-      set((state) => ({
-        sessionLists: new Map(state.sessionLists).set(cacheKey, {
+      set({
+        sessionList: {
           sessions,
           loading: false,
           error: null,
           lastFetched: Date.now(),
-        })
-      }));
+        }
+      });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load session list';
 
       set((state) => ({
-        sessionLists: new Map(state.sessionLists).set(cacheKey, {
-          sessions: state.sessionLists.get(cacheKey)?.sessions || [],
+        sessionList: {
+          ...state.sessionList,
           loading: false,
           error: errorMessage,
           lastFetched: Date.now(),
-        })
+        }
       }));
     }
   },
@@ -576,15 +709,8 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
       // Update sessions Map
       get().setSession(sessionId, session);
 
-      // Update sessionLists Map (find project and update)
-      const state = get();
-      for (const [projectId, listData] of state.sessionLists) {
-        const sessionIndex = listData.sessions.findIndex(s => s.id === sessionId);
-        if (sessionIndex !== -1) {
-          get().updateSessionInList(projectId, session);
-          break;
-        }
-      }
+      // Update session list
+      get().updateSessionInList(session.projectId, session);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to update session';
       throw new Error(errorMessage);
@@ -593,38 +719,31 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
 
   /**
    * Archive session
-   * POST to archive endpoint and update Map
+   * POST to archive endpoint and update current session
    */
   archiveSession: async (sessionId: string) => {
     try {
       await api.post(`/api/sessions/${sessionId}/archive`);
 
-      // Update sessions Map
+      // Update current session
       const state = get();
-      const session = state.sessions.get(sessionId);
-      if (session) {
+      if (state.currentSession?.id === sessionId) {
         set({
-          sessions: new Map(state.sessions).set(sessionId, {
-            ...session,
+          currentSession: {
+            ...state.currentSession,
             is_archived: true,
             archived_at: new Date(),
-            lastAccessedAt: Date.now(),
-          })
+          }
         });
       }
 
-      // Remove from all sessionLists (project-specific and "__all__")
-      const newSessionLists = new Map(state.sessionLists);
-      for (const [cacheKey, listData] of newSessionLists) {
-        const filtered = listData.sessions.filter(s => s.id !== sessionId);
-        if (filtered.length !== listData.sessions.length) {
-          newSessionLists.set(cacheKey, {
-            ...listData,
-            sessions: filtered,
-          });
+      // Remove from single session list
+      set((state) => ({
+        sessionList: {
+          ...state.sessionList,
+          sessions: state.sessionList.sessions.filter(s => s.id !== sessionId),
         }
-      }
-      set({ sessionLists: newSessionLists });
+      }));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to archive session';
       throw new Error(errorMessage);
@@ -642,16 +761,11 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
       );
       const session: SessionResponse = result.data;
 
-      // Update sessions Map
+      // Update currentSession if it matches
       get().setSession(sessionId, session);
 
-      // Add back to sessionLists Map
-      const state = get();
-      const projectId = session.projectId;
-      const listData = state.sessionLists.get(projectId);
-      if (listData) {
-        get().updateSessionInList(projectId, session);
-      }
+      // Add back to single session list
+      get().updateSessionInList(session.projectId, session);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to unarchive session';
       throw new Error(errorMessage);
@@ -659,49 +773,30 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
   },
 
   /**
-   * Clear specific session from Map
+   * Clear specific session
    */
   clearSession: (sessionId: string) => {
     set((state) => {
-      const newSessions = new Map(state.sessions);
-      newSessions.delete(sessionId);
+      if (state.currentSession?.id !== sessionId) return state;
       return {
-        sessions: newSessions,
-        activeSessionId: state.activeSessionId === sessionId ? null : state.activeSessionId,
+        currentSession: null,
       };
     });
   },
 
   /**
-   * Clear all sessions from Map
+   * Clear all sessions
    */
   clearAllSessions: () => {
     set({
-      sessions: new Map(),
-      sessionLists: new Map(),
-      activeSessionId: null,
+      currentSession: null,
+      sessionList: {
+        sessions: [],
+        loading: false,
+        error: null,
+        lastFetched: 0,
+      },
     });
-  },
-
-  /**
-   * Set active session ID
-   */
-  setActiveSession: (sessionId: string | null) => {
-    set({ activeSessionId: sessionId });
-
-    // Update lastAccessedAt for LRU cache
-    if (sessionId) {
-      const state = get();
-      const session = state.sessions.get(sessionId);
-      if (session) {
-        set({
-          sessions: new Map(state.sessions).set(sessionId, {
-            ...session,
-            lastAccessedAt: Date.now(),
-          })
-        });
-      }
-    }
   },
 
   // ============================================================================
@@ -714,7 +809,10 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
    */
   setSession: (sessionId: string, session: SessionResponse) => {
     set((state) => {
-      const existing = state.sessions.get(sessionId);
+      // Only update if this is the current session
+      if (state.currentSession?.id !== sessionId) return state;
+
+      const existing = state.currentSession;
       const messages = existing?.messages || [];
       const messageIds = existing?.messageIds || new Set<string>();
 
@@ -728,11 +826,10 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
         error: null,
         messageIds,
         streamingMessageId: existing?.streamingMessageId || null,
-        lastAccessedAt: Date.now(),
       };
 
       return {
-        sessions: new Map(state.sessions).set(sessionId, sessionData)
+        currentSession: sessionData
       };
     });
   },
@@ -742,7 +839,7 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
    * Used to update sidebar without refetch
    * Updates both project-specific list and "__all__" list if they exist
    */
-  updateSessionInList: (projectId: string, session: SessionResponse) => {
+  updateSessionInList: (_projectId: string, session: SessionResponse) => {
     set((state) => {
       const summary: SessionSummary = {
         id: session.id,
@@ -762,31 +859,18 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
         updated_at: session.updated_at,
       };
 
-      const newSessionLists = new Map(state.sessionLists);
+      // Find and update session in single list
+      const existingIndex = state.sessionList.sessions.findIndex(s => s.id === session.id);
+      const updatedSessions = existingIndex !== -1
+        ? state.sessionList.sessions.map((s, i) => i === existingIndex ? summary : s)
+        : [...state.sessionList.sessions, summary];
 
-      // Helper to update or add session to a list
-      const updateList = (cacheKey: string) => {
-        const listData = newSessionLists.get(cacheKey);
-        if (!listData) return;
-
-        const existingIndex = listData.sessions.findIndex(s => s.id === session.id);
-        const updatedSessions = existingIndex !== -1
-          ? listData.sessions.map((s, i) => i === existingIndex ? summary : s)
-          : [...listData.sessions, summary];
-
-        newSessionLists.set(cacheKey, {
-          ...listData,
+      return {
+        sessionList: {
+          ...state.sessionList,
           sessions: updatedSessions,
-        });
+        }
       };
-
-      // Update project-specific list
-      updateList(projectId);
-
-      // Also update "__all__" list if it exists
-      updateList('__all__');
-
-      return { sessionLists: newSessionLists };
     });
   },
 
@@ -799,25 +883,23 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
    */
   addMessage: (sessionId: string, message: UIMessage) => {
     set((state) => {
-      const session = state.sessions.get(sessionId);
-      if (!session) return state;
+      if (state.currentSession?.id !== sessionId) return state;
 
       // Check for duplicate message
-      if (session.messageIds.has(message.id)) {
+      if (state.currentSession.messageIds.has(message.id)) {
         return state; // Skip duplicate
       }
 
       // Add message ID to set
-      const newMessageIds = new Set(session.messageIds);
+      const newMessageIds = new Set(state.currentSession.messageIds);
       newMessageIds.add(message.id);
 
       return {
-        sessions: new Map(state.sessions).set(sessionId, {
-          ...session,
-          messages: [...session.messages, message],
+        currentSession: {
+          ...state.currentSession,
+          messages: [...state.currentSession.messages, message],
           messageIds: newMessageIds,
-          lastAccessedAt: Date.now(),
-        })
+        }
       };
     });
   },
@@ -828,16 +910,16 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
    */
   updateStreamingMessage: (sessionId: string, messageId: string, contentBlocks: UnifiedContent[]) => {
     set((state) => {
-      const session = state.sessions.get(sessionId);
-      if (!session) return state;
+      if (state.currentSession?.id !== sessionId) return state;
 
-      const messages = session.messages;
+      const messages = state.currentSession.messages;
 
       // Find message by ID anywhere in array (not just last)
       const messageIndex = messages.findIndex(m => m.id === messageId);
       const foundMessage = messageIndex !== -1 ? messages[messageIndex] : null;
 
       let updatedMessages: UIMessage[];
+      let newMessageIds = state.currentSession.messageIds;
 
       if (foundMessage && foundMessage.role === 'assistant' && foundMessage.isStreaming) {
         // Update existing streaming message
@@ -867,29 +949,18 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
         updatedMessages = [...messages, newMessage];
 
         // Add to messageIds set
-        const newMessageIds = new Set(session.messageIds);
+        newMessageIds = new Set(state.currentSession.messageIds);
         newMessageIds.add(messageId);
-
-        return {
-          sessions: new Map(state.sessions).set(sessionId, {
-            ...session,
-            messages: updatedMessages,
-            isStreaming: true,
-            streamingMessageId: messageId,
-            messageIds: newMessageIds,
-            lastAccessedAt: Date.now(),
-          })
-        };
       }
 
       return {
-        sessions: new Map(state.sessions).set(sessionId, {
-          ...session,
+        currentSession: {
+          ...state.currentSession,
           messages: updatedMessages,
           isStreaming: true,
           streamingMessageId: messageId,
-          lastAccessedAt: Date.now(),
-        })
+          messageIds: newMessageIds,
+        }
       };
     });
   },
@@ -899,11 +970,10 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
    */
   finalizeMessage: (sessionId: string, messageId: string) => {
     set((state) => {
-      const session = state.sessions.get(sessionId);
-      if (!session) return state;
+      if (state.currentSession?.id !== sessionId) return state;
 
       // Mark messages as no longer streaming
-      const messages = session.messages.map((msg) =>
+      const messages = state.currentSession.messages.map((msg) =>
         msg.id === messageId || msg.isStreaming
           ? { ...msg, isStreaming: false }
           : msg
@@ -913,13 +983,12 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
       const enrichedMessages = enrichMessagesWithToolResults(messages);
 
       return {
-        sessions: new Map(state.sessions).set(sessionId, {
-          ...session,
+        currentSession: {
+          ...state.currentSession,
           messages: enrichedMessages,
           isStreaming: false,
           streamingMessageId: null,
-          lastAccessedAt: Date.now(),
-        })
+        }
       };
     });
   },
@@ -930,29 +999,26 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
 
   setStreaming: (sessionId: string, isStreaming: boolean) => {
     set((state) => {
-      const session = state.sessions.get(sessionId);
-      if (!session) return state;
+      if (state.currentSession?.id !== sessionId) return state;
 
       return {
-        sessions: new Map(state.sessions).set(sessionId, {
-          ...session,
+        currentSession: {
+          ...state.currentSession,
           isStreaming,
-          lastAccessedAt: Date.now(),
-        })
+        }
       };
     });
   },
 
   updateMetadata: (sessionId: string, metadata: Partial<AgentSessionMetadata>) => {
     set((state) => {
-      const session = state.sessions.get(sessionId);
-      if (!session) return state;
+      if (state.currentSession?.id !== sessionId) return state;
 
       return {
-        sessions: new Map(state.sessions).set(sessionId, {
-          ...session,
+        currentSession: {
+          ...state.currentSession,
           metadata: {
-            ...(session.metadata || {
+            ...(state.currentSession.metadata || {
               totalTokens: 0,
               messageCount: 0,
               lastMessageAt: "",
@@ -960,38 +1026,33 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
             }),
             ...metadata,
           },
-          lastAccessedAt: Date.now(),
-        })
+        }
       };
     });
   },
 
   setError: (sessionId: string, error: string | null) => {
     set((state) => {
-      const session = state.sessions.get(sessionId);
-      if (!session) return state;
+      if (state.currentSession?.id !== sessionId) return state;
 
       return {
-        sessions: new Map(state.sessions).set(sessionId, {
-          ...session,
+        currentSession: {
+          ...state.currentSession,
           error,
-          lastAccessedAt: Date.now(),
-        })
+        }
       };
     });
   },
 
   setLoadingState: (sessionId: string, loadingState: LoadingState) => {
     set((state) => {
-      const session = state.sessions.get(sessionId);
-      if (!session) return state;
+      if (state.currentSession?.id !== sessionId) return state;
 
       return {
-        sessions: new Map(state.sessions).set(sessionId, {
-          ...session,
+        currentSession: {
+          ...state.currentSession,
           loadingState,
-          lastAccessedAt: Date.now(),
-        })
+        }
       };
     });
   },
@@ -1060,13 +1121,12 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
 
   clearToolResultError: (sessionId: string, toolUseId: string) => {
     set((state) => {
-      const session = state.sessions.get(sessionId);
-      if (!session) return state;
+      if (state.currentSession?.id !== sessionId) return state;
 
       return {
-        sessions: new Map(state.sessions).set(sessionId, {
-          ...session,
-          messages: session.messages.map((msg: UIMessage) => ({
+        currentSession: {
+          ...state.currentSession,
+          messages: state.currentSession.messages.map((msg: UIMessage) => ({
             ...msg,
             content: Array.isArray(msg.content)
               ? msg.content.map((block: UnifiedContent) => {
@@ -1077,8 +1137,7 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
                 })
               : msg.content
           })),
-          lastAccessedAt: Date.now(),
-        })
+        }
       };
     });
   },
@@ -1121,76 +1180,69 @@ function createEmptySession(sessionId: string, projectId: string): SessionData {
     error: null,
     messageIds: new Set(),
     streamingMessageId: null,
-    lastAccessedAt: Date.now(),
   };
 }
 
 /**
- * Evict oldest sessions from Map when limit exceeded (LRU cache)
+ * Selector to calculate context window token usage from last assistant message
+ * Matches CLI behavior - shows current context window usage, not cumulative total
  */
-function evictOldestSessions(
-  get: () => SessionStore,
-  set: (partial: Partial<SessionStore> | ((state: SessionStore) => Partial<SessionStore>)) => void
-) {
-  const state = get();
+export const selectTotalTokens = (state: SessionStore): number => {
+  if (!state.currentSession?.messages) return 0;
 
-  if (state.sessions.size <= MAX_SESSIONS_IN_CACHE) {
-    return; // Under limit
+  // Find last assistant message with usage data
+  const messages = state.currentSession.messages;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const message = messages[i];
+    if (message.role === "assistant" && message.usage) {
+      const usage = message.usage;
+      return (
+        (usage.inputTokens || 0) +
+        (usage.outputTokens || 0) +
+        (usage.cacheCreationTokens || 0) +
+        (usage.cacheReadTokens || 0)
+      );
+    }
   }
 
-  // Sort sessions by lastAccessedAt
-  const sorted = Array.from(state.sessions.entries())
-    .sort((a, b) => a[1].lastAccessedAt - b[1].lastAccessedAt);
-
-  // Keep most recent MAX_SESSIONS_IN_CACHE sessions
-  const toKeep = sorted.slice(-MAX_SESSIONS_IN_CACHE);
-
-  set({
-    sessions: new Map(toKeep),
-  });
-}
-
-/**
- * Memoized selector to calculate total tokens from all assistant messages in a session
- */
-export const selectTotalTokens = (sessionId: string) => (state: SessionStore): number => {
-  const session = state.sessions.get(sessionId);
-  if (!session?.messages) return 0;
-
-  return session.messages.reduce((total, message) => {
-    if (message.role !== "assistant" || !message.usage) {
-      return total;
-    }
-
-    const usage = message.usage;
-    return (
-      total +
-      (usage.inputTokens || 0) +
-      (usage.outputTokens || 0)
-    );
-  }, 0);
+  return 0;
 };
 
 /**
- * Selector to get session by ID
+ * Selector to get all sessions
  */
-export const selectSession = (sessionId: string) => (state: SessionStore): SessionData | undefined => {
-  return state.sessions.get(sessionId);
+export const selectAllSessions = (state: SessionStore): SessionSummary[] => {
+  return state.sessionList.sessions;
+};
+
+/**
+ * Selector to get sessions filtered by project ID
+ */
+export const selectProjectSessions = (projectId: string) => (state: SessionStore): SessionSummary[] => {
+  return state.sessionList.sessions.filter(s => s.projectId === projectId);
 };
 
 /**
  * Selector to get session list by project ID
  * Pass null to get all sessions across projects
+ * Returns SessionListData structure for backward compatibility
  */
-export const selectSessionList = (projectId: string | null) => (state: SessionStore): SessionListData | undefined => {
-  const cacheKey = projectId || '__all__';
-  return state.sessionLists.get(cacheKey);
+export const selectSessionList = (projectId: string | null) => (state: SessionStore): SessionListData => {
+  const sessions = projectId
+    ? state.sessionList.sessions.filter(s => s.projectId === projectId)
+    : state.sessionList.sessions;
+
+  return {
+    sessions,
+    loading: state.sessionList.loading,
+    error: state.sessionList.error,
+    lastFetched: state.sessionList.lastFetched,
+  };
 };
 
 /**
- * Selector to get active session
+ * Selector to get current session
  */
-export const selectActiveSession = (state: SessionStore): SessionData | undefined => {
-  if (!state.activeSessionId) return undefined;
-  return state.sessions.get(state.activeSessionId);
+export const selectActiveSession = (state: SessionStore): SessionData | null => {
+  return state.currentSession;
 };

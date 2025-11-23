@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
-import { useSessionStore, selectSession } from '@/client/pages/projects/sessions/stores/sessionStore';
+import { useSessionStore, selectActiveSession } from '@/client/pages/projects/sessions/stores/sessionStore';
 import type { UIMessage } from '@/shared/types/message.types';
 import type { AgentSessionMetadata } from '@/shared/types/agent-session.types';
 import type { LoadingState } from '@/client/pages/projects/sessions/stores/sessionStore';
 
 /**
  * Zustand-based session hook
- * Auto-loads session from API if not in Map
+ * Auto-loads session from API if not in store
  * Returns session data with reactive updates
  *
  * @param sessionId - Session ID to load
@@ -27,9 +27,12 @@ export interface UseSessionReturn {
 
 export function useSession(sessionId: string, projectId: string): UseSessionReturn {
   const loadSession = useSessionStore((s) => s.loadSession);
-  const session = useSessionStore(selectSession(sessionId));
+  const currentSession = useSessionStore(selectActiveSession);
 
-  // Auto-load session if not in Map or in error state
+  // Get session data only if it matches the requested sessionId
+  const session = currentSession?.id === sessionId ? currentSession : null;
+
+  // Auto-load session if not in store or in error state
   useEffect(() => {
     if (!session || session.loadingState === 'idle' || session.loadingState === 'error') {
       loadSession(sessionId, projectId);
