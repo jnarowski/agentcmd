@@ -24,7 +24,6 @@ Move a spec folder between workflow folders (backlog/todo/done), update index.js
 ## Workflow
 
 1. **Find the Spec Folder or File**
-
    - **Parse and resolve $specIdOrNameOrPath:**
      - If it's a full path (contains `/`):
        - Use the path as-is
@@ -39,22 +38,18 @@ Move a spec folder between workflow folders (backlog/todo/done), update index.js
    - If still not found, report error and exit
 
 2. **Validate Target Folder**
-
    - Ensure $targetFolder is one of: "backlog", "todo", or "done"
    - If invalid, report error and exit
 
 3. **Check for Conflicts**
-
    - Check if a folder/file with the same name already exists in target folder
    - If conflict exists, report error and exit
 
 4. **Move the Folder**
-
    - Move entire folder from current location to `.agent/specs/${targetFolder}/[foldername]`
    - Preserve the original folder name
 
 5. **Update Index**
-
    - Read index.json
    - Update the spec's `path` field to match new location (e.g., `todo/folder/spec.md` → `done/folder/spec.md`)
    - Preserve the filename, only update the folder portion of the path
@@ -63,10 +58,9 @@ Move a spec folder between workflow folders (backlog/todo/done), update index.js
    - Write updated index back to `.agent/specs/index.json`
 
 6. **Update Status Field**
-
    - Read spec.md file content
    - Update Status field in spec.md based on target folder:
-     - Moving to "backlog": Set to "draft"
+     - Moving to "backlog": Set to "backlog"
      - Moving to "todo": Keep current status (typically "draft" or "in-progress")
      - Moving to "done": Set to "completed"
    - Also update status in index.json (step 5)
@@ -74,7 +68,6 @@ Move a spec folder between workflow folders (backlog/todo/done), update index.js
    **Status Lifecycle**: `draft` → `in-progress` → `review` → `completed`
 
 7. **Report Results**
-
    - Display old path
    - Display new path
    - Display status field update (if any)
@@ -83,21 +76,27 @@ Move a spec folder between workflow folders (backlog/todo/done), update index.js
 ## Examples
 
 **Example 1: Move by timestamp spec ID**
+
 ```bash
 /cmd:move-spec 2510241201 done
 ```
+
 Finds `2510241201-*/` folder and moves it to `done/`, updates index
 
 **Example 2: Move back to todo**
+
 ```bash
 /cmd:move-spec 2511131522 todo
 ```
+
 Finds `2511131522-*/` folder and moves it to `todo/`
 
 **Example 3: Move by feature name**
+
 ```bash
 /cmd:move-spec workflow-safety done
 ```
+
 Finds `*-workflow-safety/` folder and moves it to `done/`
 
 ## Report
@@ -106,16 +105,16 @@ Finds `*-workflow-safety/` folder and moves it to `done/`
 
 <json_output>
 {
-  "success": true,
-  "spec_id": "2510241201",
-  "spec_folder": "2510241201-workflow-safety",
-  "old_path": "todo/2510241201-workflow-safety/spec.md",
-  "new_path": "done/2510241201-workflow-safety/spec.md",
-  "old_folder": "todo",
-  "new_folder": "done",
-  "old_status": "draft",
-  "new_status": "completed",
-  "message": "Spec moved successfully and status updated"
+"success": true,
+"spec_id": "2510241201",
+"spec_folder": "2510241201-workflow-safety",
+"old_path": "todo/2510241201-workflow-safety/spec.md",
+"new_path": "done/2510241201-workflow-safety/spec.md",
+"old_folder": "todo",
+"new_folder": "done",
+"old_status": "draft",
+"new_status": "completed",
+"message": "Spec moved successfully and status updated"
 }
 </json_output>
 
@@ -135,6 +134,7 @@ Finds `*-workflow-safety/` folder and moves it to `done/`
 **Output Examples:**
 
 ✅ **Successful Move:**
+
 ```json
 {
   "success": true,
@@ -151,6 +151,7 @@ Finds `*-workflow-safety/` folder and moves it to `done/`
 ```
 
 ✅ **Already in Target (No-Op):**
+
 ```json
 {
   "success": true,
@@ -167,6 +168,7 @@ Finds `*-workflow-safety/` folder and moves it to `done/`
 ```
 
 ❌ **Error - Spec Not Found:**
+
 ```json
 {
   "success": false,
@@ -179,6 +181,7 @@ Finds `*-workflow-safety/` folder and moves it to `done/`
 ```
 
 ❌ **Error - Target Conflict:**
+
 ```json
 {
   "success": false,
@@ -191,6 +194,7 @@ Finds `*-workflow-safety/` folder and moves it to `done/`
 ```
 
 ❌ **Error - Invalid Target:**
+
 ```json
 {
   "success": false,

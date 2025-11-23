@@ -4,7 +4,7 @@
 /**
  * Union type of all available slash command names
  */
-export type SlashCommandName = "/cmd:add-spec" | "/cmd:audit" | "/cmd:generate-bug-spec" | "/cmd:generate-feature-spec" | "/cmd:generate-issue-spec" | "/cmd:generate-prd" | "/cmd:generate-spec" | "/cmd:implement-spec" | "/cmd:list-specs" | "/cmd:move-spec" | "/cmd:review-spec-implementation";
+export type SlashCommandName = "/cmd:add-spec" | "/cmd:audit" | "/cmd:create-pr" | "/cmd:generate-bug-spec" | "/cmd:generate-feature-spec" | "/cmd:generate-issue-spec" | "/cmd:generate-prd" | "/cmd:generate-spec" | "/cmd:implement-spec" | "/cmd:list-specs" | "/cmd:move-spec" | "/cmd:review-spec-implementation";
 
 /**
  * Mapping of command names to their argument types
@@ -12,6 +12,7 @@ export type SlashCommandName = "/cmd:add-spec" | "/cmd:audit" | "/cmd:generate-b
 export interface SlashCommandArgs {
   "/cmd:add-spec": { "specId": string };
   "/cmd:audit": { "mode"?: string; "scope"?: string };
+  "/cmd:create-pr": { "title"?: string };
   "/cmd:generate-bug-spec": { "context"?: string };
   "/cmd:generate-feature-spec": { "context"?: string };
   "/cmd:generate-issue-spec": { "context"?: string };
@@ -30,6 +31,7 @@ export interface SlashCommandArgs {
 export const SlashCommandArgOrder = {
   "/cmd:add-spec": ["specId"],
   "/cmd:audit": ["mode", "scope"],
+  "/cmd:create-pr": ["title"],
   "/cmd:generate-bug-spec": ["context"],
   "/cmd:generate-feature-spec": ["context"],
   "/cmd:generate-issue-spec": ["context"],
@@ -89,6 +91,13 @@ export interface CmdAddSpecArgs {
 export interface CmdAuditArgs {
   mode?: string;
   scope?: string;
+}
+
+/**
+ * Args type for /cmd:create-pr command
+ */
+export interface CmdCreatePrArgs {
+  title?: string;
 }
 
 /**
@@ -160,6 +169,26 @@ export interface CmdReviewSpecImplementationArgs {
 }
 
 // Response type interfaces
+/**
+ * Response type for /cmd:create-pr command
+ */
+export interface CmdCreatePrResponse {
+  /** Boolean - true if PR created successfully, false if failed */
+  success: boolean;
+  /** String - GitHub pull request URL (e.g., "https://github.com/owner/repo/pull/123") or empty string if failed */
+  pr_url: string;
+  /** String - Git commit SHA (7+ chars) or empty string if failed */
+  commit_sha: string;
+  /** String - Current git branch name */
+  branch_name: string;
+  /** String - PR title and commit message (conventional commit format) or empty string if failed */
+  title: string;
+  /** String - PR description summarizing changes or empty string if failed */
+  body: string;
+  /** String - Human-readable success/error message */
+  message: string;
+}
+
 /**
  * Response type for /cmd:generate-bug-spec command
  */
@@ -280,6 +309,8 @@ export interface CmdGenerateSpecResponse {
 export interface CmdImplementSpecResponse {
   /** Boolean - true if all tasks completed successfully, false if any tasks failed or were skipped */
   success: boolean;
+  /** String - 1-2 sentences describing what was implemented and key changes + 1 sentence on task/validation status */
+  summary: string;
   /** String - Timestamp-based spec ID (e.g., "2511131522") */
   spec_id: string;
   /** String - Full path to the spec file that was implemented */
@@ -396,13 +427,14 @@ export interface CmdReviewSpecImplementationResponse {
     code_quality: number;
   };
   /** Human-readable summary explaining why the review passed/failed, including highlights of key issues and what was fixed from previous reviews */
-  explanation: string;
+  summary: string;
 }
 
 /**
  * Mapping of slash commands to their JSON response types
  */
 export interface SlashCommandResponses {
+  "/cmd:create-pr": CmdCreatePrResponse;
   "/cmd:generate-bug-spec": CmdGenerateBugSpecResponse;
   "/cmd:generate-feature-spec": CmdGenerateFeatureSpecResponse;
   "/cmd:generate-issue-spec": CmdGenerateIssueSpecResponse;
