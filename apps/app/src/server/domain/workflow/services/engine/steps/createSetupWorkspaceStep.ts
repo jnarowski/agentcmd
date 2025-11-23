@@ -18,6 +18,33 @@ import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId"
 const DEFAULT_SETUP_WORKSPACE_TIMEOUT = 120000; // 2 minutes
 
 /**
+ * Parse command string and log to workflow timeline
+ * Handles full command strings like "git add ." or "git checkout -b branch"
+ */
+async function logCommandsToTimeline(
+  context: RuntimeContext,
+  commandStrings: string[],
+  totalDuration: number
+): Promise<void> {
+  const durationPerCommand = totalDuration / commandStrings.length;
+
+  for (const cmdString of commandStrings) {
+    const parts = cmdString.split(/\s+/);
+    if (parts.length === 0) continue;
+
+    const command = parts[0];
+    const args = parts.slice(1);
+
+    await createWorkflowEventCommand(
+      context,
+      command,
+      args,
+      durationPerCommand
+    );
+  }
+}
+
+/**
  * Create setupWorkspace step factory function
  * Decides workspace strategy (worktree, branch, or stay) and executes it
  */
@@ -107,12 +134,7 @@ async function executeSetupWorkspace(
         files: ["."],
       });
       const commitDuration = Date.now() - commitStartTime;
-      await createWorkflowEventCommand(
-        context,
-        "git",
-        commitResult.commands,
-        commitDuration
-      );
+      await logCommandsToTimeline(context, commitResult.commands, commitDuration);
     }
 
     // Create and switch to branch
@@ -123,12 +145,7 @@ async function executeSetupWorkspace(
       from: baseBranch,
     });
     const checkoutDuration = Date.now() - checkoutStartTime;
-    await createWorkflowEventCommand(
-      context,
-      "git",
-      branchResult.commands,
-      checkoutDuration
-    );
+    await logCommandsToTimeline(context, branchResult.commands, checkoutDuration);
 
     return {
       workingDir: projectPath,

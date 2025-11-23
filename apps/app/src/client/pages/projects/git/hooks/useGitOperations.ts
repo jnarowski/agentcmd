@@ -177,8 +177,8 @@ export function useCreateBranch() {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: gitKeys.branches(variables.path) });
       queryClient.invalidateQueries({ queryKey: gitKeys.status(variables.path) });
-      // Invalidate projects query to update current_branch in ProjectHeader
-      queryClient.invalidateQueries({ queryKey: projectKeys.list() });
+      // Invalidate project queries to update gitCapabilities in ProjectHeader
+      queryClient.invalidateQueries({ queryKey: projectKeys.details() });
       toast.success(`Branch created: ${data.name}`);
     },
     onError: (error: Error) => {
@@ -204,8 +204,8 @@ export function useSwitchBranch() {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: gitKeys.branches(variables.path) });
       queryClient.invalidateQueries({ queryKey: gitKeys.status(variables.path) });
-      // Invalidate projects query to update current_branch in ProjectHeader
-      queryClient.invalidateQueries({ queryKey: projectKeys.list() });
+      // Invalidate project queries to update gitCapabilities in ProjectHeader
+      queryClient.invalidateQueries({ queryKey: projectKeys.details() });
       toast.success(`Switched to branch: ${data.name}`);
     },
     onError: (error: Error) => {

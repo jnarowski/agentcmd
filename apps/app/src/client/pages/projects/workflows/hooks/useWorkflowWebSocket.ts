@@ -18,6 +18,7 @@ import type {
   WorkflowArtifact,
 } from "@/client/pages/projects/workflows/types";
 import { workflowKeys } from "./queryKeys";
+import { projectKeys } from "@/client/pages/projects/hooks/queryKeys";
 
 export function useWorkflowWebSocket(projectId: string) {
   const { eventBus, sendMessage, isConnected } = useWebSocket();
@@ -62,6 +63,13 @@ export function useWorkflowWebSocket(projectId: string) {
         toast.error(`Workflow failed: ${changes.error_message || "Unknown error"}`);
       } else if (changes.status === "cancelled") {
         toast.info("Workflow cancelled");
+      }
+
+      // Invalidate project query on terminal states to refresh gitCapabilities
+      if (changes.status === "completed" || changes.status === "failed" || changes.status === "cancelled") {
+        queryClient.invalidateQueries({
+          queryKey: projectKeys.detail(data.project_id),
+        });
       }
     },
     [queryClient]

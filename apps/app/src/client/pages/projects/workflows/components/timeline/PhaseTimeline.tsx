@@ -40,7 +40,7 @@ export function PhaseTimeline({ run, projectId, onSelectSession, onSelectStep, o
       // Filter steps for this phase (use ID for matching)
       const phaseSteps = steps.filter((step) => step.phase === phaseId);
 
-      // Filter events for this phase (includes lifecycle + annotations)
+      // Filter events for this phase (includes lifecycle + annotations + commands)
       const phaseEvents = events.filter((event) => {
         // Phase-level lifecycle events
         if (
@@ -72,6 +72,11 @@ export function PhaseTimeline({ run, projectId, onSelectSession, onSelectStep, o
 
         // Annotations - match by phase column
         if (event.event_type === "annotation_added") {
+          return event.phase === phaseId;
+        }
+
+        // Command executed events - match by phase column
+        if (event.event_type === "command_executed") {
           return event.phase === phaseId;
         }
 

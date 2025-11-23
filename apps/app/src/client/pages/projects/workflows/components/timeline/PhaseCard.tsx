@@ -142,7 +142,7 @@ export function PhaseCard({
       items.push({ type: "artifact", data: artifact });
     });
 
-    // Add lifecycle and annotation events
+    // Add lifecycle, annotation, and command events
     // Note: phase_started/phase_completed excluded from display (used for header metadata only)
     events.forEach((event) => {
       const isLifecycle = [
@@ -154,8 +154,9 @@ export function PhaseCard({
         "step_failed",
       ].includes(event.event_type);
       const isAnnotation = event.event_type === "annotation_added";
+      const isCommand = event.event_type === "command_executed";
 
-      if (isLifecycle || isAnnotation) {
+      if (isLifecycle || isAnnotation || isCommand) {
         items.push({ type: "event", data: event });
       }
     });
