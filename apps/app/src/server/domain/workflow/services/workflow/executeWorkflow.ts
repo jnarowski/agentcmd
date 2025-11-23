@@ -292,6 +292,7 @@ function buildWorkflowEventData(
 ) {
   return {
     runId: execution.id,
+    name: execution.name,
     projectId: execution.project_id,
     projectPath: execution.project.path,
     userId: execution.user_id,
