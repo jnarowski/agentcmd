@@ -226,7 +226,7 @@ const ChatPromptInputInner = forwardRef<
               }
             />
           </PromptInputBody>
-          <PromptInputFooter className="pb-[calc(0.5rem+env(safe-area-inset-bottom))] md:pb-3">
+          <PromptInputFooter className="pb-[calc(0.25rem+env(safe-area-inset-bottom))] md:pb-3">
             <PromptInputTools>
               <ChatPromptInputFiles
                 open={isAtMenuOpen}
