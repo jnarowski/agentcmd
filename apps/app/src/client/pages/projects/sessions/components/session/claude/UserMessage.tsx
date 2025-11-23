@@ -28,8 +28,8 @@ export function UserMessage({ message }: UserMessageProps) {
         data-message-role={message.role}
         data-content-type="string"
       >
-        <div className="max-w-[85%] rounded-lg border border-border bg-muted/50 px-3 py-2 session-message-bubble session-message-user-bubble">
-          <div className="whitespace-pre-wrap break-words session-message-text">{message.content}</div>
+        <div className="max-w-[85%] rounded-lg border border-primary bg-primary px-4 py-2.5 shadow-sm session-message-bubble session-message-user-bubble">
+          <div className="whitespace-pre-wrap break-words text-primary-foreground session-message-text">{message.content}</div>
         </div>
       </div>
     );
@@ -77,11 +77,13 @@ export function UserMessage({ message }: UserMessageProps) {
       data-message-role={message.role}
       data-content-blocks={renderableBlocks.length}
     >
-      <div className="max-w-[85%] rounded-lg border border-border bg-muted/50 px-3 py-2 session-message-bubble session-message-user-bubble">
+      <div className="max-w-[85%] rounded-lg border border-primary bg-primary px-4 py-2.5 shadow-sm session-message-bubble session-message-user-bubble">
         {/* Render all content blocks (text, slash_command, etc.) */}
-        {renderableBlocks.map((block, index) => (
-          <ContentBlockRenderer key={index} block={block} showDot={false} />
-        ))}
+        <div className="text-primary-foreground">
+          {renderableBlocks.map((block, index) => (
+            <ContentBlockRenderer key={index} block={block} showDot={false} />
+          ))}
+        </div>
       </div>
     </div>
   );

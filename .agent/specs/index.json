@@ -2,13 +2,13 @@
   "specs": {
     "2511081930": {
       "path": "backlog/2511081930-inngest-human-in-the-loop/spec.md",
-      "status": "draft",
+      "status": "backlog",
       "created": "2025-11-08T00:00:00.000Z",
       "updated": "2025-11-12T00:00:00.000Z"
     },
     "2511090000": {
       "path": "backlog/2511090000-message-queue/spec.md",
-      "status": "draft",
+      "status": "backlog",
       "created": "2025-11-09T00:00:00.000Z",
       "updated": "2025-11-12T00:00:00.000Z"
     },
@@ -79,7 +79,7 @@
       "folder": "2511181832-branch-validation",
       "path": "done/2511181832-branch-validation/spec.md",
       "spec_type": "feature",
-      "status": "review",
+      "status": "completed",
       "created": "2025-11-18T18:32:00.000Z",
       "updated": "2025-11-22T14:34:01.954Z"
     },
@@ -87,7 +87,7 @@
       "folder": "2511190555-session-theme-system",
       "path": "done/2511190555-session-theme-system/spec.md",
       "spec_type": "feature",
-      "status": "draft",
+      "status": "completed",
       "created": "2025-11-19T12:57:47Z",
       "updated": "2025-11-22T14:34:01.954Z"
     },
@@ -103,7 +103,7 @@
       "folder": "2511191054-monospace-theme",
       "path": "done/2511191054-monospace-theme/spec.md",
       "spec_type": "feature",
-      "status": "review",
+      "status": "completed",
       "created": "2025-11-19T10:54:00Z",
       "updated": "2025-11-22T14:34:01.954Z"
     },
@@ -127,7 +127,7 @@
       "folder": "2511211229-fixed-layout-skeleton",
       "path": "done/2511211229-fixed-layout-skeleton/spec.md",
       "spec_type": "issue",
-      "status": "draft",
+      "status": "completed",
       "created": "2025-11-21T19:30:40Z",
       "updated": "2025-11-22T14:34:01.954Z"
     },
@@ -147,29 +147,13 @@
       "created": "2025-11-22T01:57:00Z",
       "updated": "2025-11-22T01:57:00Z"
     },
-    "2511221435": {
-      "folder": "2511221435-internal-session-framework",
-      "path": "todo/2511221435-internal-session-framework/spec.md",
-      "spec_type": "issue",
-      "status": "review",
-      "created": "2025-11-22T14:35:00Z",
-      "updated": "2025-11-22T20:22:38Z"
-    },
     "2511220927": {
       "folder": "2511220927-image-upload-fix",
-      "path": "todo/2511220927-image-upload-fix/spec.md",
+      "path": "done/2511220927-image-upload-fix/spec.md",
       "spec_type": "issue",
-      "status": "review",
+      "status": "completed",
       "created": "2025-11-22T16:28:35Z",
-      "updated": "2025-11-22T20:05:00Z"
-    },
-    "2511221205": {
-      "folder": "2511221205-session-zustand-migration",
-      "path": "todo/2511221205-session-zustand-migration/spec.md",
-      "spec_type": "feature",
-      "status": "review",
-      "created": "2025-11-22T19:08:23Z",
-      "updated": "2025-11-22T22:30:00Z"
+      "updated": "2025-11-23T18:17:00Z"
     },
     "2511221344": {
       "folder": "2511221344-hello-world",
@@ -181,27 +165,35 @@
     },
     "2511221350": {
       "folder": "2511221350-chat-grid-layout",
-      "path": "todo/2511221350-chat-grid-layout/spec.md",
+      "path": "done/2511221350-chat-grid-layout/spec.md",
       "spec_type": "feature",
-      "status": "review",
+      "status": "completed",
       "created": "2025-11-22T13:50:00Z",
-      "updated": "2025-11-22T21:30:00Z"
+      "updated": "2025-11-23T18:14:00Z"
     },
-    "2511222039": {
-      "folder": "2511222039-css-layout-grid-overhaul",
-      "path": "todo/2511222039-css-layout-grid-overhaul/spec.md",
+    "2511221435": {
+      "folder": "2511221435-internal-session-framework",
+      "path": "done/2511221435-internal-session-framework/spec.md",
+      "spec_type": "issue",
+      "status": "completed",
+      "created": "2025-11-22T14:35:00Z",
+      "updated": "2025-11-23T18:15:00Z"
+    },
+    "2511221515": {
+      "folder": "2511221515-three-tab-sidebar",
+      "path": "todo/2511221515-three-tab-sidebar/spec.md",
       "spec_type": "feature",
       "status": "draft",
-      "created": "2025-11-22T20:39:00Z",
-      "updated": "2025-11-22T20:39:00Z"
+      "created": "2025-11-22T15:15:00Z",
+      "updated": "2025-11-23T19:53:57.112Z"
     },
     "2511230804": {
       "folder": "2511230804-session-store-refactor",
-      "path": "todo/2511230804-session-store-refactor/spec.md",
+      "path": "done/2511230804-session-store-refactor/spec.md",
       "spec_type": "feature",
-      "status": "review",
+      "status": "completed",
       "created": "2025-11-23T15:07:06Z",
-      "updated": "2025-11-23T08:46:00Z"
+      "updated": "2025-11-23T18:16:00Z"
     },
     "2511230823": {
       "folder": "2511230823-direct-spec-move",
@@ -210,30 +202,6 @@
       "status": "draft",
       "created": "2025-11-23T08:23:00Z",
       "updated": "2025-11-23T08:23:00Z"
-    },
-    "2511231018": {
-      "folder": "2511231018-aaaa",
-      "path": "todo/2511231018-aaaa/spec.md",
-      "spec_type": "feature",
-      "status": "draft",
-      "created": "2025-11-23T10:18:00Z",
-      "updated": "2025-11-23T10:18:00Z"
-    },
-    "2511231720": {
-      "folder": "2511231720-aaaa",
-      "path": "todo/2511231720-aaaa/spec.md",
-      "spec_type": "feature",
-      "status": "draft",
-      "created": "2025-11-23T17:20:00Z",
-      "updated": "2025-11-23T17:20:00Z"
-    },
-    "2511231021": {
-      "folder": "2511231021-abc-example",
-      "path": "todo/2511231021-abc-example/spec.md",
-      "spec_type": "feature",
-      "status": "draft",
-      "created": "2025-11-23T10:21:00Z",
-      "updated": "2025-11-23T10:21:00Z"
     }
   }
 }

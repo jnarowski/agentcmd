@@ -1,6 +1,6 @@
 # Image Upload Fix - Claude CLI Integration
 
-**Status**: review
+**Status**: completed
 **Type**: issue
 **Created**: 2025-11-22
 **Package**: agent-cli-sdk

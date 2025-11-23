@@ -1,6 +1,6 @@
 # Internal Session Framework
 
-**Status**: review
+**Status**: completed
 **Type**: issue
 **Created**: 2025-11-22
 **Package**: apps/app
