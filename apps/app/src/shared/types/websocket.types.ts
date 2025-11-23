@@ -40,12 +40,14 @@ export interface ChannelEvent<T = string, D = unknown> {
 export const SessionEventTypes = {
   CANCEL: "session.cancel",
   ERROR: "session.error",
+  KILL_SESSION: "session.kill_session",
   MESSAGE_COMPLETE: "session.message_complete",
   SEND_MESSAGE: "session.send_message",
   SESSION_UPDATED: "session.session_updated",
   STREAM_OUTPUT: "session.stream_output",
   SUBSCRIBE: "session.subscribe",
   SUBSCRIBE_SUCCESS: "session.subscribe_success",
+  UNSUBSCRIBE: "session.unsubscribe",
 } as const;
 
 /**

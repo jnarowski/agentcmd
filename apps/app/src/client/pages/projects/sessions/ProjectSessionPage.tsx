@@ -1,11 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AgentSessionViewer } from "@/client/components/AgentSessionViewer";
 import { ChatPromptInput } from "./components/ChatPromptInput";
 import type { PromptInputMessage } from "@/client/components/ai-elements/PromptInput";
 import type { FileUIPart } from "ai";
 import type { PermissionMode } from "agent-cli-sdk";
-import { useSessionWebSocket } from "./hooks/useSessionWebSocket";
 import { useWebSocket } from "@/client/hooks/useWebSocket";
 import {
   useSessionStore,
@@ -18,6 +17,8 @@ import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
 import { ProjectHeader } from "@/client/pages/projects/components/ProjectHeader";
 import { SessionHeader } from "@/client/components/SessionHeader";
+import { SessionEventTypes } from "@/shared/types/websocket.types";
+import { Channels } from "@/shared/websocket";
 
 export default function ProjectSessionPage() {
   const navigate = useNavigate();
@@ -73,14 +74,47 @@ export default function ProjectSessionPage() {
   const clearToolResultError = useSessionStore((s) => s.clearToolResultError);
   const markPermissionHandled = useSessionStore((s) => s.markPermissionHandled);
 
-  // App-wide WebSocket hook for connection status
-  const { isConnected: globalIsConnected } = useWebSocket();
+  // App-wide WebSocket hook (subscription handled by AgentSessionViewer)
+  const { isConnected: globalIsConnected, sendMessage: sendWsMessage } = useWebSocket();
 
-  // WebSocket hook (subscribes to session events)
-  const { sendMessage: wsSendMessage, killSession } = useSessionWebSocket({
-    sessionId: sessionId || "",
-    projectId: projectId || "",
-  });
+  // Send message to session (without subscribing - AgentSessionViewer handles that)
+  const wsSendMessage = useCallback(
+    (
+      message: string,
+      images: string[] | undefined,
+      config: {
+        resume?: boolean;
+        sessionId?: string;
+        permissionMode?: PermissionMode;
+        [key: string]: unknown;
+      }
+    ) => {
+      const channel = Channels.session(sessionId || "");
+      sendWsMessage(channel, {
+        type: SessionEventTypes.SEND_MESSAGE,
+        data: {
+          message,
+          images,
+          config,
+        },
+      });
+    },
+    [sessionId, sendWsMessage]
+  );
+
+  // Kill/interrupt session
+  const killSession = useCallback(() => {
+    const channel = Channels.session(sessionId || "");
+    const currentSessionId = sessionId || "";
+
+    sendWsMessage(channel, {
+      type: SessionEventTypes.KILL_SESSION,
+      data: { sessionId: currentSessionId },
+    });
+
+    // Update streaming state
+    useSessionStore.getState().setStreaming(currentSessionId, false);
+  }, [sessionId, sendWsMessage]);
 
   // Sync sessionId to navigationStore when it changes
   useEffect(() => {

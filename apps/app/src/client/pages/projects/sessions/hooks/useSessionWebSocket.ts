@@ -238,6 +238,15 @@ export function useSessionWebSocket({
 
     // Cleanup subscriptions on unmount or sessionId change
     return () => {
+      // Send UNSUBSCRIBE to server
+      if (isConnected) {
+        sendWsMessage(channel, {
+          type: SessionEventTypes.UNSUBSCRIBE,
+          data: { sessionId },
+        });
+      }
+
+      // Remove EventBus listener
       eventBus.off(channel, handleEvent);
     };
   }, [sessionId, isConnected, eventBus, sendWsMessage, handleEvent]);

@@ -8,7 +8,6 @@ import {
 } from "@/client/components/ui/empty";
 import { AgentSessionViewer } from "@/client/components/AgentSessionViewer";
 import { useSession } from "@/client/hooks/useSession";
-import { useSessionWebSocket } from "@/client/pages/projects/sessions/hooks/useSessionWebSocket";
 
 interface SessionViewerProps {
   projectId: string;
@@ -19,11 +18,7 @@ export function SessionViewer({ projectId, sessionId }: SessionViewerProps) {
   // Get session from Zustand
   const { messages, isLoading } = useSession(sessionId, projectId);
 
-  // Subscribe to WebSocket for real-time updates
-  useSessionWebSocket({
-    sessionId,
-    projectId,
-  });
+  // WebSocket subscription handled by AgentSessionViewer
 
   // Show loading state when session has no messages yet (agent hasn't started)
   const hasMessages = messages && messages.length > 0;
