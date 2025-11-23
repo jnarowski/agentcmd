@@ -43,13 +43,21 @@ Commits all changes, pushes the current branch to remote, and creates a GitHub p
 
 4. **Commit and Push**
    - Run `git add -A` to stage all changes
-   - Run `git commit -m "$title"` using title from step 2
-   - Capture commit SHA from output
-   - Run `git push -u origin <branch-name>`
-   - Handle errors (nothing to commit, push failures, etc.)
+   - Check if there are changes to commit with `git status --porcelain`
+   - If changes exist: Run `git commit -m "$title"` using title from step 2
+   - If no changes: Skip commit (already committed previously)
+   - Capture commit SHA from `git rev-parse HEAD`
+   - Run `git push -u origin <branch-name>` (works even if already pushed)
+   - Only fail if git commands return errors (not if nothing to commit)
 
 5. **Create PR with GitHub CLI**
-   - Use `gh pr create --title "$title" --body "$body" --base main`
+   - Use heredoc to handle multiline body:
+     ```bash
+     gh pr create --title "$title" --body "$(cat <<'EOF'
+     $body
+     EOF
+     )" --base main
+     ```
    - Capture the PR URL from gh output
    - gh will create the PR via GitHub API and return the real PR URL
 
@@ -86,10 +94,11 @@ Return this exact structure:
 
 ## Common Pitfalls
 
-- Don't create PR if no changes to commit (check git status first)
+- Don't fail if no changes to commit - skip commit step and proceed to push + PR
 - Don't fail if branch already pushed (git push may show "everything up-to-date")
 - Don't generate vague titles like "update files" - be specific about what changed
 - Don't include git command output in JSON - only structured data
+- Only return success: false if git/gh commands fail (auth errors, network issues, etc.)
 - Ensure gh CLI is installed and authenticated (`gh auth status`)
 - Extract PR URL from gh output (look for "https://github.com/.../pull/\d+")
 
