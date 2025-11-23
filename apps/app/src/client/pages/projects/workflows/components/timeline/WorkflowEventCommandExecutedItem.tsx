@@ -1,4 +1,4 @@
-import { Terminal } from "lucide-react";
+import { SquareChevronRight } from "lucide-react";
 import type { WorkflowEvent } from "@/client/pages/projects/workflows/types";
 import { TimelineRow } from "./TimelineRow";
 
@@ -12,25 +12,28 @@ export function WorkflowEventCommandExecutedItem({
   const data = event.event_data || {};
   const command = String(data.command || "Unknown command");
   const args = Array.isArray(data.args) ? data.args : [];
-  const exitCode = typeof data.exitCode === "number" ? data.exitCode : undefined;
-  const duration = typeof data.duration === "number" ? data.duration : undefined;
+  const exitCode =
+    typeof data.exitCode === "number" ? data.exitCode : undefined;
+  const duration =
+    typeof data.duration === "number" ? data.duration : undefined;
 
   // Build full command string for display and tooltip
-  const fullCommand = args.length > 0 ? `${command} ${args.join(" ")}` : command;
+  const fullCommand =
+    args.length > 0 ? `${command} ${args.join(" ")}` : command;
 
   return (
     <TimelineRow
-      icon={<Terminal className="h-5 w-5 text-slate-500" />}
-      tooltipLabel="Command Executed"
+      icon={<SquareChevronRight className="h-5 w-5 text-slate-500" />}
+      tooltipLabel="Command"
       rightContent={
-        <span className="text-xs text-muted-foreground tabular-nums">
-          {new Date(event.created_at).toLocaleTimeString()}
+        <span className="px-2 py-1 text-xs font-medium rounded bg-background/50 text-muted-foreground">
+          Command
         </span>
       }
     >
       <div className="flex flex-wrap items-center gap-2 md:gap-3">
         <code
-          className="text-xs font-mono break-all md:truncate"
+          className="font-medium font-mono break-all md:truncate"
           title={fullCommand}
         >
           {fullCommand}
@@ -51,6 +54,10 @@ export function WorkflowEventCommandExecutedItem({
             {duration}ms
           </span>
         )}
+      </div>
+
+      <div className="text-xs text-muted-foreground mt-1">
+        {new Date(event.created_at).toLocaleString()}
       </div>
     </TimelineRow>
   );
