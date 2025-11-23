@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { BookOpen, ChevronsUpDown, FolderKanban, LogOut, Mail, RefreshCw, Settings } from "lucide-react";
+import pkg from "../../../../package.json";
 
 import {
   DropdownMenu,
@@ -93,6 +94,9 @@ export function NavUser({
                     <span className="truncate text-[10px] text-muted-foreground">
                       {getStatusText()}
                     </span>
+                  </div>
+                  <div className="px-2 py-0.5 text-[10px] font-medium bg-primary/10 text-primary rounded">
+                    v{pkg.version}
                   </div>
                 </div>
               </DropdownMenuLabel>

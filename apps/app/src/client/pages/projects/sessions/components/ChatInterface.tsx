@@ -74,19 +74,10 @@ export function ChatInterface({
     }
 
     // Show loading indicator when streaming (waiting for first response)
-    if (isStreaming) {
-      return (
-        <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-4">
-          <Loader2 className="h-12 w-12 mb-4 opacity-50 animate-spin" />
-          <p className="text-lg font-medium">Starting session...</p>
-        </div>
-      );
-    }
-
     return (
       <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-4">
-        <MessageCircle className="h-12 w-12 mb-4 opacity-50" />
-        <p className="text-lg font-medium">New Session</p>
+        <Loader2 className="h-12 w-12 mb-4 opacity-50 animate-spin" />
+        <p className="text-lg font-medium">Starting session...</p>
       </div>
     );
   }
