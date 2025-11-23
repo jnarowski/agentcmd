@@ -5,11 +5,11 @@
 /**
  * Valid spec status values
  */
-export type SpecStatus = "draft" | "in-progress" | "completed" | "review";
+export type SpecStatus = "backlog" | "draft" | "in-progress" | "completed" | "review";
 
 /**
  * Spec extracted from .agent/specs/index.json
- * Represents a spec in the todo/ folder
+ * Excludes backlog and completed specs
  */
 export interface Spec {
   id: string; // Timestamp ID from index.json

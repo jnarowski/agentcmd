@@ -20,7 +20,7 @@ interface SpecIndex {
 }
 
 /**
- * Read specs index.json and return Spec[] for todo/ folder
+ * Read specs index.json and return Spec[] excluding backlog and completed statuses
  * @param projectPath - Absolute path to the project directory
  * @param projectId - Project ID to associate with specs
  */
@@ -34,13 +34,8 @@ export async function scanSpecs(projectPath: string, projectId: string): Promise
     const specs: Spec[] = [];
 
     for (const [id, entry] of Object.entries(index.specs)) {
-      // Only include specs in todo/ folder
-      if (!entry.path.startsWith("todo/")) {
-        continue;
-      }
-
-      // Exclude completed and draft specs
-      if (entry.status === "completed" || entry.status === "draft") {
+      // Exclude completed and backlog specs
+      if (entry.status === "completed" || entry.status === "backlog") {
         continue;
       }
 

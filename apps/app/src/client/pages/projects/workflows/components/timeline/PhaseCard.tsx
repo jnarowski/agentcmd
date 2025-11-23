@@ -289,6 +289,13 @@ export function PhaseCard({
             </div>
           )}
 
+          {/* Empty state for pending phase with no items */}
+          {metadata.status === "pending" && timelineItems.length === 0 && (
+            <div className="px-4 py-4 flex items-center justify-center text-sm text-muted-foreground">
+              <span>Waiting to start</span>
+            </div>
+          )}
+
           {/* Loading indicator at bottom when phase is actively running and has no steps yet */}
           {metadata.status === "running" && steps.length === 0 && (
             <div className="px-4 py-4 flex items-center gap-2 text-sm text-muted-foreground">

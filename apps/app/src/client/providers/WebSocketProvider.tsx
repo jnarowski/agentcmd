@@ -24,6 +24,7 @@ import {
   Channels,
   isWebSocketMessage,
 } from "@/shared/websocket";
+import { isDebugMode } from "@/client/utils/isDebugMode";
 
 /**
  * WebSocketProvider Props
@@ -206,7 +207,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
           // Track received message
           wsMetrics.trackReceived();
 
-          if (import.meta.env.DEV) {
+          if (isDebugMode()) {
             if (type === SessionEventTypes.STREAM_OUTPUT) {
               const streamData = data as Record<string, unknown>;
               const message = streamData.message as Record<string, unknown> | undefined;
@@ -226,7 +227,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
 
           // Handle global.connected event
           if (type === GlobalEventTypes.CONNECTED && channel === "global") {
-            if (import.meta.env.DEV) {
+            if (isDebugMode()) {
               console.log("[WebSocket] ✓ Received connected from server");
               console.log(
                 "[WebSocket] ✓ Connection fully established and ready"
@@ -249,7 +250,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
               const msg = JSON.stringify({ channel: qChannel, ...qEvent });
               socket.send(msg);
               wsMetrics.trackSent();
-              if (import.meta.env.DEV) {
+              if (isDebugMode()) {
                 console.log("[WebSocket] Sent queued message:", {
                   channel: qChannel,
                   type: qEvent.type,
@@ -284,7 +285,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
 
       // Queue message if not ready yet
       if (!isReady) {
-        if (import.meta.env.DEV) {
+        if (isDebugMode()) {
           console.log("[WebSocket] Queueing message (not ready yet):", {
             channel,
             type: event.type,
@@ -311,7 +312,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
         socketRef.current.send(message);
         wsMetrics.trackSent();
 
-        if (import.meta.env.DEV) {
+        if (isDebugMode()) {
           console.log("[WebSocket] Sent:", { channel, type: event.type });
         }
       } else {
@@ -380,7 +381,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     connect();
 
     return () => {
-      if (import.meta.env.DEV) {
+      if (isDebugMode()) {
         console.log("[WebSocket] Provider unmounting, closing connection");
       }
       intentionalCloseRef.current = true;
