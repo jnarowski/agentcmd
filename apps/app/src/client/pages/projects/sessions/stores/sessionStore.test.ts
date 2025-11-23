@@ -365,8 +365,9 @@ describe("SessionStore", () => {
               usage: {
                 inputTokens: 10,
                 outputTokens: 5,
-                cacheCreationInputTokens: 100,
-                cacheReadInputTokens: 50,
+                totalTokens: 15,
+                cacheCreationTokens: 100,
+                cacheReadTokens: 50,
               },
             },
             {
@@ -383,8 +384,9 @@ describe("SessionStore", () => {
               usage: {
                 inputTokens: 20,
                 outputTokens: 10,
-                cacheCreationInputTokens: 0,
-                cacheReadInputTokens: 75,
+                totalTokens: 30,
+                cacheCreationTokens: 0,
+                cacheReadTokens: 75,
               },
             },
           ],
