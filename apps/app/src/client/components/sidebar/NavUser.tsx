@@ -95,7 +95,7 @@ export function NavUser({
                       {getStatusText()}
                     </span>
                   </div>
-                  <div className="px-2 py-0.5 text-[10px] font-medium bg-primary/10 text-primary rounded">
+                  <div className="px-2.5 py-1 text-xs font-medium bg-primary/10 text-primary rounded">
                     v{pkg.version}
                   </div>
                 </div>
