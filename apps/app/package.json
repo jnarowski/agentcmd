@@ -30,7 +30,7 @@
     "preview": "vite preview",
     "prisma:generate": "PRISMA_HIDE_UPDATE_MESSAGE=true prisma generate --no-hints",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:reset": "rm -rf prisma/migrations/ && rm -f prisma/dev.db && PRISMA_HIDE_UPDATE_MESSAGE=true prisma generate --no-hints && prisma migrate dev --name init && pnpm prisma:seed",
+    "prisma:reset": "rm -rf prisma/migrations/ && rm -f prisma/dev.db && PRISMA_HIDE_UPDATE_MESSAGE=true prisma generate --no-hints && prisma migrate dev --name init",
     "prisma:seed": "tsx prisma/seed.ts",
     "prisma:seed:hide:projects": "tsx prisma/seed-hide-projects.ts",
     "prisma:seed:workflows": "tsx prisma/seed-workflows.ts",
