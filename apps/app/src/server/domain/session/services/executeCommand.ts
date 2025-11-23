@@ -3,6 +3,7 @@ import { createSession } from "./createSession";
 import { executeAgent } from "./executeAgent";
 import type { PermissionMode } from "agent-cli-sdk";
 import type { SessionType } from "@/shared/types/agent-session.types";
+import { prisma } from "@/shared/prisma";
 
 // ============================================================================
 // PUBLIC API
@@ -48,7 +49,6 @@ export async function executeCommand<T = string>(
   });
 
   // Get project path for execution
-  const { prisma } = await import("@/shared/prisma");
   const project = await prisma.project.findUnique({
     where: { id: projectId },
   });

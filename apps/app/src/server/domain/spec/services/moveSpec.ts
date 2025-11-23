@@ -6,6 +6,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { SpecStatus } from "@/shared/types/spec.types";
 import { clearSpecsCache } from "@/server/domain/spec/services/getSpecs";
+import { prisma } from "@/shared/prisma";
 
 // TYPES
 
@@ -43,7 +44,6 @@ export async function moveSpec(params: MoveSpecParams): Promise<MoveSpecResult> 
   const { projectId, specId, targetFolder } = params;
 
   // Get project path
-  const { prisma } = await import("@/shared/prisma");
   const project = await prisma.project.findUnique({
     where: { id: projectId },
     select: { path: true },

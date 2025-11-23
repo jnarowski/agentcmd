@@ -12,6 +12,7 @@ import { createWorkflowEventCommand } from "@/server/domain/workflow/services/en
 import { generateInngestStepId } from "@/server/domain/workflow/services/engine/steps/utils/generateInngestStepId";
 import { withTimeout } from "@/server/domain/workflow/services/engine/steps/utils/withTimeout";
 import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
+import { prisma } from "@/shared/prisma";
 
 const DEFAULT_FINALIZE_WORKSPACE_TIMEOUT = 120000; // 2 minutes
 
@@ -52,7 +53,6 @@ async function executeFinalizeWorkspace(
   const { workspaceResult } = config;
 
   // Get workflow run name for commit message
-  const { prisma } = await import("@/shared/prisma");
   const run = await prisma.workflowRun.findUnique({
     where: { id: context.runId }
   });
