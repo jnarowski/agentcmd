@@ -709,8 +709,8 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
       // Update sessions Map
       get().setSession(sessionId, session);
 
-      // Update session list
-      get().updateSessionInList(session.projectId, session);
+      // Note: Session list update handled by WebSocket SESSION_UPDATED event
+      // to avoid duplicate updates and list jitter
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to update session';
       throw new Error(errorMessage);

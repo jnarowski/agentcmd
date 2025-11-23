@@ -4,14 +4,14 @@ import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useActiveSession } from "./useActiveSession";
 import { useNavigationStore } from "@/client/stores/index";
-import { useSession } from "@/client/pages/projects/sessions/hooks/useAgentSessions";
+import { useSession } from "@/client/hooks/useSession";
 
 // Mock the stores and hooks
 vi.mock("@/client/stores/index", () => ({
   useNavigationStore: vi.fn(),
 }));
 
-vi.mock("@/client/pages/projects/sessions/hooks/useAgentSessions", () => ({
+vi.mock("@/client/hooks/useSession", () => ({
   useSession: vi.fn(),
 }));
 
@@ -57,9 +57,12 @@ describe("useActiveSession", () => {
       selector({ activeProjectId: "project-1", activeSessionId: "session-1" })
     );
     vi.mocked(useSession).mockReturnValue({
-      data: mockSession1,
+      messages: [],
+      metadata: mockSession1,
       isLoading: false,
+      isStreaming: false,
       error: null,
+      loadingState: 'loaded' as const,
     } as never);
 
     const { result } = renderHook(() => useActiveSession(), { wrapper });
@@ -77,9 +80,12 @@ describe("useActiveSession", () => {
       })
     );
     vi.mocked(useSession).mockReturnValue({
-      data: undefined,
+      messages: [],
+      metadata: null,
       isLoading: false,
+      isStreaming: false,
       error: null,
+      loadingState: 'loaded' as const,
     } as never);
 
     const { result } = renderHook(() => useActiveSession(), { wrapper });
@@ -93,9 +99,12 @@ describe("useActiveSession", () => {
       selector({ activeProjectId: "project-1", activeSessionId: "session-1" })
     );
     vi.mocked(useSession).mockReturnValue({
-      data: undefined,
+      messages: [],
+      metadata: null,
       isLoading: true,
+      isStreaming: false,
       error: null,
+      loadingState: 'loading' as const,
     } as never);
 
     const { result } = renderHook(() => useActiveSession(), { wrapper });
@@ -105,14 +114,17 @@ describe("useActiveSession", () => {
   });
 
   it("should handle error state", () => {
-    const mockError = new Error("Failed to fetch sessions");
+    const mockError = "Failed to fetch sessions";
     vi.mocked(useNavigationStore).mockImplementation((selector: (state: Record<string, unknown>) => unknown) =>
       selector({ activeProjectId: "project-1", activeSessionId: "session-1" })
     );
     vi.mocked(useSession).mockReturnValue({
-      data: undefined,
+      messages: [],
+      metadata: null,
       isLoading: false,
+      isStreaming: false,
       error: mockError,
+      loadingState: 'error' as const,
     } as never);
 
     const { result } = renderHook(() => useActiveSession(), { wrapper });
@@ -126,9 +138,12 @@ describe("useActiveSession", () => {
       selector({ activeProjectId: null, activeSessionId: "session-1" })
     );
     vi.mocked(useSession).mockReturnValue({
-      data: undefined,
+      messages: [],
+      metadata: null,
       isLoading: false,
+      isStreaming: false,
       error: null,
+      loadingState: 'loaded' as const,
     } as never);
 
     const { result } = renderHook(() => useActiveSession(), { wrapper });
