@@ -24,6 +24,8 @@ pnpm prisma:generate     # Regenerate Prisma client
 pnpm prisma:migrate      # Create migration
 pnpm prisma:studio       # Open database GUI (port 5555)
 
+# IMPORTANT: Always create migrations for schema changes (never reset in production)
+
 # Testing
 pnpm test                # Run all tests (parallel workers)
 pnpm test:watch          # Watch mode

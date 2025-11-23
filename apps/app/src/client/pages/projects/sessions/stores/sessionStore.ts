@@ -572,7 +572,7 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
 
         // Enrich messages with tool results
         serverMessages = enrichMessagesWithToolResults(rawMessages);
-      } catch (messageError) {
+      } catch {
         // 404 is expected for new sessions (no JSONL file yet)
         // Use empty array for server messages, merge will preserve optimistic
         if (import.meta.env.DEV) {

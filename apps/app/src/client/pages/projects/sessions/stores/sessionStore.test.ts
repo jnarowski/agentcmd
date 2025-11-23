@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { useSessionStore, selectTotalTokens, mergeMessages, enrichMessagesWithToolResults } from "./sessionStore";
+import { useSessionStore, selectTotalTokens, mergeMessages } from "./sessionStore";
 import type { UIMessage } from '@/shared/types/message.types';
 
 // Mock the agents module
@@ -550,8 +550,8 @@ describe("SessionStore", () => {
               usage: {
                 inputTokens: 20,
                 outputTokens: 10,
-                cacheCreationInputTokens: 5,
-                cacheReadInputTokens: 15,
+                cacheCreationTokens: 5,
+                cacheReadTokens: 15,
               },
             },
           ],
@@ -565,10 +565,9 @@ describe("SessionStore", () => {
       });
 
       const totalTokens = selectTotalTokens(useSessionStore.getState());
-      // msg-2: 10 + 5 = 15
-      // msg-3: 20 + 10 = 30
-      // Total: 45 (cache tokens not counted)
-      expect(totalTokens).toBe(45);
+      // Returns tokens from last assistant message only (msg-3)
+      // msg-3: 20 + 10 + 5 + 15 = 50 (includes cache tokens)
+      expect(totalTokens).toBe(50);
     });
 
     it("should return 0 for null currentSession", () => {

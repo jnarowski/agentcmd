@@ -72,7 +72,7 @@ describe("Template files packaging", () => {
     const templatesDir = getTemplatesDir();
     const exampleWorkflowPath = path.join(
       templatesDir,
-      ".agent/workflows/definitions/example-implement-review-workflow.ts"
+      ".agent/workflows/definitions/implement-review-workflow.ts"
     );
 
     const fileExists = await exists(exampleWorkflowPath);

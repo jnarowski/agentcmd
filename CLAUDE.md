@@ -188,6 +188,10 @@ interface Project {
 }
 ```
 
+### Database Changes
+
+**Always create migrations** - Never reset the database. Use `pnpm prisma:migrate` for every schema change.
+
 ### WebSocket Conventions
 
 ✅ **DO** - Colon notation for channels:

@@ -29,6 +29,7 @@ import {
 import { useNavigationStore } from "@/client/stores/navigationStore";
 import { useSessionStore } from "@/client/pages/projects/sessions/stores/sessionStore";
 import type { AgentType } from "@/shared/types/agent.types";
+import type { PermissionMode } from "agent-cli-sdk";
 import { useActiveProject } from "@/client/hooks/navigation/useActiveProject";
 import { cn } from "@/client/utils/cn";
 import { TokenUsageCircle } from "./TokenUsageCircle";
@@ -95,33 +96,14 @@ const ChatPromptInputInner = forwardRef<
     const updateSession = useSessionStore((s) => s.updateSession);
 
     // Wrapper function to update both local state and database
-    const handlePermissionModeChange = (mode: string) => {
-      // Validate permission mode before updating, fallback to default if invalid
-      const validModes = [
-        "default",
-        "plan",
-        "acceptEdits",
-        "bypassPermissions",
-      ];
-      let safeMode = mode;
-      if (!validModes.includes(mode)) {
-        console.warn(
-          "[ChatPromptInput] Invalid permission mode:",
-          mode,
-          "- falling back to acceptEdits"
-        );
-        safeMode = "acceptEdits";
-      }
-
+    const handlePermissionModeChange = (mode: PermissionMode) => {
       // Update local state immediately
-      setPermissionMode(
-        safeMode as "default" | "plan" | "acceptEdits" | "bypassPermissions"
-      );
+      setPermissionMode(mode);
 
       // Persist to database if session exists
       if (activeSessionId) {
         updateSession(activeSessionId, {
-          permission_mode: safeMode as "default" | "plan" | "acceptEdits" | "bypassPermissions",
+          permission_mode: mode,
         }).catch((error) => {
           console.error("[ChatPromptInput] Failed to update session:", error);
         });
