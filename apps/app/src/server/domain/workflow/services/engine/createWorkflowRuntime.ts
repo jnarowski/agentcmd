@@ -229,11 +229,13 @@ export function createWorkflowRuntime(
                 event.data.workingDir = workspace.workingDir;
 
                 // Setup spec file (generate if needed)
+                // File verification is memoized to prevent replay errors
                 const specFile = await setupSpec({
                   run,
                   event: event as WorkflowEvent,
                   step,
                   logger,
+                  inngestStep,
                 });
 
                 // Update event with spec file path

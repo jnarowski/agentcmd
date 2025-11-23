@@ -2,6 +2,7 @@ import type { WorkflowStep, WorkflowEvent } from "agentcmd-workflows";
 import { type CmdGenerateSpecResponse } from "agentcmd-workflows";
 import type { FastifyBaseLogger } from "fastify";
 import type { WorkflowRun } from "@prisma/client";
+import type { GetStepTools } from "inngest";
 import { getSpecCommand } from "../getSpecCommand";
 import { existsSync } from "fs";
 import { resolve, isAbsolute, basename } from "path";
@@ -23,33 +24,36 @@ export async function setupSpec(params: {
   event: WorkflowEvent;
   step: WorkflowStep;
   logger: FastifyBaseLogger;
+  inngestStep: GetStepTools<any>;
 }): Promise<string | null> {
-  const { run, event, step } = params;
+  const { run, event, step, inngestStep } = params;
 
   // Guard: Skip if event has no data payload
   if (!event.data) {
     return null;
   }
 
-  // CASE 1: Spec file already provided - just validate it exists
+  // CASE 1: Spec file already provided - verify it exists (memoized to prevent replay errors)
   if (event.data.specFile) {
-    // Convert relative paths to absolute
-    // event.data.specFile is relative to .agent/specs/ (e.g., "todo/251117.../spec.md")
-    const specFilePath = resolveProjectPath(
-      run.project.path,
-      `.agent/specs/${event.data.specFile}`
-    );
+    return await inngestStep.run("verify-spec-file", async () => {
+      // Convert relative paths to absolute
+      // event.data.specFile is relative to .agent/specs/ (e.g., "todo/251117.../spec.md")
+      const specFilePath = resolveProjectPath(
+        run.project.path,
+        `.agent/specs/${event.data.specFile}`
+      );
 
-    if (!existsSync(specFilePath)) {
-      throw new Error(`Spec file not found: ${event.data.specFile}`);
-    }
+      if (!existsSync(specFilePath)) {
+        throw new Error(`Spec file not found: ${event.data.specFile}`);
+      }
 
-    const specFileName = basename(specFilePath);
-    await step.annotation("spec-file-loaded", {
-      message: `Spec file verified: ${specFileName}`,
+      const specFileName = basename(specFilePath);
+      await step.annotation("spec-file-loaded", {
+        message: `Spec file verified: ${specFileName}`,
+      });
+
+      return specFilePath;
     });
-
-    return specFilePath;
   }
 
   // CASE 2: No spec file - generate one via AI agent
