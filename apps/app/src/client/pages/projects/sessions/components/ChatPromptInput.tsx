@@ -39,6 +39,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@/client/components/ui/tooltip";
+import { PERMISSION_MODE_CONFIG } from "@/client/constants/permissionModes";
 
 interface ChatPromptInputProps {
   onSubmit?: (message: PromptInputMessage) => void | Promise<void>;
@@ -200,12 +201,8 @@ const ChatPromptInputInner = forwardRef<
           inputGroupClassName={cn(
             "pb-2 md:pb-0",
             "transition-colors",
-            permissionMode === "plan" &&
-              "border-primary md:has-[[data-slot=input-group-control]:focus-visible]:border-primary",
-            permissionMode === "acceptEdits" &&
-              "border-purple-500 md:has-[[data-slot=input-group-control]:focus-visible]:border-purple-500",
-            permissionMode === "bypassPermissions" &&
-              "border-red-500 md:has-[[data-slot=input-group-control]:focus-visible]:border-red-500"
+            PERMISSION_MODE_CONFIG[permissionMode].borderClass,
+            `md:has-[[data-slot=input-group-control]:focus-visible]:${PERMISSION_MODE_CONFIG[permissionMode].borderClass}`
           )}
         >
           <PromptInputBody>
@@ -273,14 +270,7 @@ const ChatPromptInputInner = forwardRef<
                     <PromptInputSubmit
                       className={cn(
                         "h-9 w-10 transition-colors",
-                        permissionMode === "plan" &&
-                          "bg-primary hover:bg-primary/90 text-primary-foreground",
-                        permissionMode === "acceptEdits" &&
-                          "bg-purple-500 hover:bg-purple-600 text-white",
-                        permissionMode === "bypassPermissions" &&
-                          "bg-red-500 hover:bg-red-600 text-white",
-                        permissionMode === "default" &&
-                          "bg-gray-500 hover:bg-gray-600 text-white"
+                        PERMISSION_MODE_CONFIG[permissionMode].buttonClasses
                       )}
                       status={status}
                       disabled={disabled || !isConnected}
