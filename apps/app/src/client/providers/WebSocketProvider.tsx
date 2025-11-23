@@ -344,19 +344,16 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
 
         // Only show retry button if we haven't exhausted reconnection attempts
         if (reconnectAttemptRef.current < 5) {
-          toast.error("WebSocket Error", {
-            description:
-              error || "An error occurred with the WebSocket connection",
+          toast.error("WebSocket disconnected", {
+            description: error || "Connection lost",
             action: {
-              label: "Retry",
+              label: "Connect",
               onClick: () => reconnect(),
             },
           });
         } else {
-          toast.error(error || "WebSocket Error", {
-            description:
-              event.data.error ||
-              "An error occurred with the WebSocket connection",
+          toast.error(error || "WebSocket disconnected", {
+            description: event.data.error || "Connection lost",
           });
         }
       }

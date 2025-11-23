@@ -203,7 +203,7 @@ export function ProjectCombobox() {
           <Button
             variant="outline"
             size="icon"
-            className="h-9 w-9 shrink-0"
+            className="h-9 w-9 shrink-0 hidden md:flex"
             onClick={handleNewProject}
             aria-label="New project"
           >
