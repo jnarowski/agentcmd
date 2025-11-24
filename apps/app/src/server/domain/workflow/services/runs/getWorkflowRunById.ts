@@ -1,6 +1,7 @@
 import { prisma } from '@/shared/prisma';
 import type { WorkflowRun } from '@prisma/client';
 import type { GetWorkflowRunByIdOptions } from '@/server/domain/workflow/types/GetWorkflowRunByIdOptions';
+import { SYSTEM_PHASES } from '@/shared/constants/workflow';
 
 /**
  * Gets a single workflow run by ID with all relations
@@ -60,16 +61,16 @@ export async function getWorkflowRunById({ id }: GetWorkflowRunByIdOptions): Pro
     : [];
 
   // Conditionally inject system phases if they have steps/events
-  const hasSystemSetup = run.steps.some(step => step.phase === '_system_setup') ||
-                         allEvents.some(event => event.phase === '_system_setup');
-  const hasSystemFinalize = run.steps.some(step => step.phase === '_system_finalize') ||
-                            allEvents.some(event => event.phase === '_system_finalize');
+  const hasSystemSetup = run.steps.some(step => step.phase === SYSTEM_PHASES.setup.id) ||
+                         allEvents.some(event => event.phase === SYSTEM_PHASES.setup.id);
+  const hasSystemFinalize = run.steps.some(step => step.phase === SYSTEM_PHASES.finalize.id) ||
+                            allEvents.some(event => event.phase === SYSTEM_PHASES.finalize.id);
 
   if (hasSystemSetup) {
-    phases = [{ id: '_system_setup', label: 'System Setup' }, ...phases];
+    phases = [SYSTEM_PHASES.setup, ...phases];
   }
   if (hasSystemFinalize) {
-    phases = [...phases, { id: '_system_finalize', label: 'System Finalize' }];
+    phases = [...phases, SYSTEM_PHASES.finalize];
   }
 
   const parsedRun = {

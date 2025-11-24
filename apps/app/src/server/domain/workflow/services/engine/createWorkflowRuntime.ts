@@ -29,6 +29,7 @@ import {
 import { setupWorkspace } from "./setupWorkspace";
 import { setupSpec } from "./setupSpec";
 import { finalizeWorkspace } from "./finalizeWorkspace";
+import { SYSTEM_PHASES } from "@/shared/constants/workflow";
 
 /**
  * @fileoverview Workflow Runtime Adapter
@@ -70,20 +71,6 @@ type ExtractPhaseId<TPhases extends PhasesConstraint> =
         ? Id
         : string
     : string;
-
-// ============================================================================
-// Constants
-// ============================================================================
-
-/**
- * System-reserved phase names for internal workflow operations
- */
-const SYSTEM_PHASES = {
-  /** Workspace setup phase (runs before user workflow) */
-  SETUP: "_system_setup",
-  /** Workspace cleanup phase (runs after user workflow) */
-  FINALIZE: "_system_finalize",
-} as const;
 
 // ============================================================================
 // Public API
@@ -215,7 +202,7 @@ export function createWorkflowRuntime(
             const step = extendedStep; // Type narrowing for closure
 
             await step.phase(
-              SYSTEM_PHASES.SETUP as ExtractPhaseId<TPhases>,
+              SYSTEM_PHASES.setup.id as ExtractPhaseId<TPhases>,
               async () => {
                 // Setup workspace (may fail)
                 workspace = await setupWorkspace({

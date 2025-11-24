@@ -6,6 +6,8 @@ import type { GetStepTools } from "inngest";
 import { getSpecCommand } from "../getSpecCommand";
 import { existsSync } from "fs";
 import { resolve, isAbsolute, basename } from "path";
+import { createWorkflowEvent } from "@/server/domain/workflow/services/events/createWorkflowEvent";
+import { SYSTEM_PHASES } from "@/shared/constants/workflow";
 
 /**
  * Setup spec file for workflow execution.
@@ -26,7 +28,7 @@ export async function setupSpec(params: {
   logger: FastifyBaseLogger;
   inngestStep: GetStepTools<any>;
 }): Promise<string | null> {
-  const { run, event, step, inngestStep } = params;
+  const { run, event, step, logger, inngestStep } = params;
 
   // Guard: Skip if event has no data payload
   if (!event.data) {
@@ -48,8 +50,12 @@ export async function setupSpec(params: {
       }
 
       const specFileName = basename(specFilePath);
-      await step.annotation("spec-file-loaded", {
-        message: `Spec file verified: ${specFileName}`,
+      await createWorkflowEvent({
+        workflow_run_id: run.id,
+        event_type: "annotation_added",
+        event_data: { message: `Spec file verified: ${specFileName}` },
+        phase: SYSTEM_PHASES.setup.id,
+        logger,
       });
 
       return specFilePath;
