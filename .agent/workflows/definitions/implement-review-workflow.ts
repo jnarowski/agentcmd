@@ -67,6 +67,12 @@ export default defineWorkflow(
         workingDir,
         ctx,
       });
+
+      // Commit implementation changes
+      await step.git("commit-implementation", {
+        operation: "commit",
+        message: `feat: implement ${event.data.name}`,
+      });
     });
 
     await step.phase("review", async () => {
@@ -75,6 +81,12 @@ export default defineWorkflow(
         specFile,
         workingDir,
         ctx,
+      });
+
+      // Commit review changes (safe even if no changes)
+      await step.git("commit-review-fixes", {
+        operation: "commit",
+        message: `chore: address review feedback`,
       });
     });
 

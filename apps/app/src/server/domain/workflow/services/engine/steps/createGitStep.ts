@@ -76,6 +76,23 @@ async function executeGitOperation(
       if (!config.message) {
         throw new Error("Commit message is required for commit operation");
       }
+
+      // Check for changes before attempting commit
+      const status = await getGitStatus({ projectPath });
+      const hasChanges = status.files.length > 0;
+
+      if (!hasChanges) {
+        // No changes to commit - return success with hadChanges: false
+        return {
+          data: {
+            hadChanges: false,
+          },
+          success: true,
+          trace: [],
+        };
+      }
+
+      // Commit changes
       const startTime = Date.now();
       const { commitSha, commands } = await commitChanges({
         projectPath,
@@ -87,6 +104,7 @@ async function executeGitOperation(
       return {
         data: {
           commitSha,
+          hadChanges: true,
         },
         success: true,
         trace: commands.map((cmd) => ({ command: cmd, duration })),

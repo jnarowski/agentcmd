@@ -228,7 +228,7 @@ export default function ProjectSessionPage() {
   }, [session?.isStreaming, killSession]);
 
   // Permission approval handler
-  const handlePermissionApproval = (toolUseId: string) => {
+  const handlePermissionApproval = useCallback((toolUseId: string) => {
     if (!sessionId) return;
     console.log("[ProjectSession] Permission approved:", toolUseId);
 
@@ -240,7 +240,7 @@ export default function ProjectSessionPage() {
 
     // Send follow-up message with acceptEdits permission mode to retry the operation
     handleSubmit({ text: "yes, proceed" }, "acceptEdits");
-  };
+  }, [sessionId, clearToolResultError, markPermissionHandled, handleSubmit]);
 
   return (
     <div

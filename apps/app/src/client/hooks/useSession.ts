@@ -4,6 +4,9 @@ import type { UIMessage } from '@/shared/types/message.types';
 import type { AgentSessionMetadata } from '@/shared/types/agent-session.types';
 import type { LoadingState } from '@/client/pages/projects/sessions/stores/sessionStore';
 
+// Stable empty array to avoid creating new references
+const EMPTY_ARRAY: UIMessage[] = [];
+
 /**
  * Zustand-based session hook
  * Auto-loads session from API if not in store
@@ -43,7 +46,7 @@ export function useSession(sessionId: string, projectId: string): UseSessionRetu
 
   // Return stable references
   return {
-    messages: session?.messages || [],
+    messages: session?.messages || EMPTY_ARRAY,
     metadata: session?.metadata || null,
     isLoading: session?.loadingState === 'loading',
     isStreaming: session?.isStreaming || false,
