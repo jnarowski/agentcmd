@@ -12,6 +12,7 @@ import { Badge } from "@/client/components/ui/badge";
 import { CodeBlock } from "@/client/pages/projects/sessions/components/CodeBlock";
 import { ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
+import { formatDate as formatDateUtil } from "@/shared/utils/formatDate";
 
 interface EventDetailDialogProps {
   event: WebhookEvent;
@@ -40,10 +41,7 @@ export function EventDetailDialog({ event, webhookId, projectId, open, onOpenCha
   };
 
   const formatDate = (date: Date | string) => {
-    return new Intl.DateTimeFormat("en-US", {
-      dateStyle: "medium",
-      timeStyle: "medium",
-    }).format(new Date(date));
+    return formatDateUtil(date, "MMM d, yyyy 'at' h:mm a");
   };
 
   return (

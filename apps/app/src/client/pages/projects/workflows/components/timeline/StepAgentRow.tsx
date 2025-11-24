@@ -7,15 +7,23 @@ import {
   MinusCircle,
 } from "lucide-react";
 import { AgentSessionModal } from "@/client/pages/projects/workflows/components/AgentSessionModal";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/client/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/client/components/ui/tooltip";
 import { Button } from "@/client/components/ui/button";
 import { useIsMobile } from "@/client/hooks/use-mobile";
 import { useDebugMode } from "@/client/hooks/useDebugMode";
-import type { WorkflowRunStep, StepOutput } from "@/shared/types/workflow-step.types";
+import type {
+  WorkflowRunStep,
+  StepOutput,
+} from "@/shared/types/workflow-step.types";
 import type { WorkflowTab } from "@/client/pages/projects/workflows/hooks/useWorkflowDetailPanel";
 import type { TraceEntry } from "agentcmd-workflows";
 import { TimelineRow } from "./TimelineRow";
-import { formatDateShort } from "@/client/pages/projects/workflows/utils/dateFormatting";
+import { formatDate } from "@/shared/utils/formatDate";
+import { formatDuration } from "../../utils/formatDuration";
 
 interface StepAgentRowProps {
   step: WorkflowRunStep;
@@ -25,7 +33,13 @@ interface StepAgentRowProps {
   onSetActiveTab?: (tab: WorkflowTab) => void;
 }
 
-export function StepAgentRow({ step, projectId, onSelectSession, onSelectStep, onSetActiveTab }: StepAgentRowProps) {
+export function StepAgentRow({
+  step,
+  projectId,
+  onSelectSession,
+  onSelectStep,
+  onSetActiveTab,
+}: StepAgentRowProps) {
   const [showSessionModal, setShowSessionModal] = useState(false);
   const isMobile = useIsMobile();
   const debugMode = useDebugMode();
@@ -58,20 +72,12 @@ export function StepAgentRow({ step, projectId, onSelectSession, onSelectStep, o
         new Date(step.started_at).getTime()
       : null;
 
-  const formatDuration = (ms: number) => {
-    const seconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(seconds / 60);
-    if (minutes > 0) {
-      return `${minutes}m ${seconds % 60}s`;
-    }
-    return `${seconds}s`;
-  };
-
   // Format step type for tooltip
-  const tooltipLabel = step.step_type
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ") + " Step";
+  const tooltipLabel =
+    step.step_type
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ") + " Step";
 
   return (
     <>
@@ -101,10 +107,9 @@ export function StepAgentRow({ step, projectId, onSelectSession, onSelectStep, o
           )}
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-          <span>
-            {formatDateShort(step.created_at)}
-          </span>
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+          <span>{formatDate(step.created_at)}</span>
+          <span>•</span>
           {duration && <span>{formatDuration(duration)}</span>}
           {step.error_message && (
             <span className="text-red-500">{step.error_message}</span>
@@ -140,14 +145,18 @@ export function StepAgentRow({ step, projectId, onSelectSession, onSelectStep, o
                 <span className="text-blue-400 flex-shrink-0">$</span>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="truncate flex-1 min-w-0">{entry.command}</span>
+                    <span className="truncate flex-1 min-w-0">
+                      {entry.command}
+                    </span>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="max-w-md break-words">
                     {entry.command}
                   </TooltipContent>
                 </Tooltip>
                 {entry.duration && (
-                  <span className="text-gray-500 flex-shrink-0">({entry.duration}ms)</span>
+                  <span className="text-gray-500 flex-shrink-0">
+                    ({entry.duration}ms)
+                  </span>
                 )}
               </div>
             ))}

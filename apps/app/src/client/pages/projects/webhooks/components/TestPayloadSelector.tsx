@@ -9,7 +9,7 @@ import {
 } from "@/client/components/ui/select";
 import { useWebhookEvents } from "../hooks/useWebhookEvents";
 import { PayloadViewDialog } from "./PayloadViewDialog";
-import { formatDistanceToNow } from "date-fns";
+import { formatDate } from "@/shared/utils/formatDate";
 
 interface TestPayloadSelectorProps {
   webhookId: string;
@@ -69,10 +69,7 @@ export function TestPayloadSelector({
         <SelectContent>
           {events.map((event) => (
             <SelectItem key={event.id} value={event.id}>
-              {formatDistanceToNow(new Date(event.created_at), {
-                addSuffix: true,
-              })}{" "}
-              - {event.status}
+              {formatDate(event.created_at)} - {event.status}
             </SelectItem>
           ))}
         </SelectContent>

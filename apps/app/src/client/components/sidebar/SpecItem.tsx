@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/client/components/ui/dropdown-menu";
 import { FileText, MoreHorizontal, FolderInput, Eye } from "lucide-react";
-import { format } from "date-fns";
+import { formatDate } from "@/shared/utils/formatDate";
 import type { Spec } from "@/shared/types/spec.types";
 import { api } from "@/client/utils/api";
 import { SpecFileViewer } from "@/client/pages/projects/workflows/components/SpecFileViewer";
@@ -101,7 +101,7 @@ export function SpecItem({ spec }: SpecItemProps) {
         <div className="flex flex-1 flex-col gap-0 min-w-0">
           <span className="text-sm min-w-0 truncate">{spec.name}</span>
           <span className="text-xs text-muted-foreground pb-0.5 tabular-nums">
-            {format(new Date(spec.created_at), "MM/dd 'at' h:mma")}
+            {formatDate(spec.created_at)}
           </span>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <span>{spec.status}</span>

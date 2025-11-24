@@ -1,5 +1,5 @@
 import simpleGit from 'simple-git'
-import { formatDistanceToNow } from 'date-fns'
+import { formatDate } from '@/shared/utils/formatDate'
 import type { GitCommit } from '@/shared/types/git.types'
 import type { GetCommitsSinceBaseOptions } from '../types/GetCommitsSinceBaseOptions'
 
@@ -22,7 +22,7 @@ export async function getCommitsSinceBase({
       author: commit.author_name,
       email: commit.author_email,
       date: date.toISOString(),
-      relativeDate: formatDistanceToNow(date, { addSuffix: true }),
+      relativeDate: formatDate(date),
     };
   });
 

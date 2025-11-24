@@ -15,7 +15,7 @@ import {
   ExternalLink,
   Sparkles,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDate } from "@/shared/utils/formatDate";
 import { getWebsiteUrl } from "@/client/utils/envConfig";
 
 interface ProjectHomeSpecsProps {
@@ -112,9 +112,7 @@ export function ProjectHomeSpecs({ projectId }: ProjectHomeSpecsProps) {
                             {task.name}
                           </span>
                           <span className="text-xs text-muted-foreground shrink-0">
-                            {formatDistanceToNow(new Date(task.created_at), {
-                              addSuffix: true,
-                            })}
+                            {formatDate(task.created_at)}
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

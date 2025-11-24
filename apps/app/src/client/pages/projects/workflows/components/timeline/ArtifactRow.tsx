@@ -3,7 +3,7 @@ import { useDebugMode } from "@/client/hooks/useDebugMode";
 import type { WorkflowArtifact } from "@/client/pages/projects/workflows/types";
 import { formatFileSize } from "@/client/pages/projects/workflows/utils/workflowFormatting";
 import { TimelineRow } from "./TimelineRow";
-import { formatDateShort } from "@/client/pages/projects/workflows/utils/dateFormatting";
+import { formatDate } from "@/shared/utils/formatDate";
 
 interface ArtifactRowProps {
   artifact: WorkflowArtifact;
@@ -52,7 +52,7 @@ export function ArtifactRow({ artifact }: ArtifactRowProps) {
       </div>
 
       <div className="text-xs text-muted-foreground mt-1">
-        {formatDateShort(artifact.created_at)}
+        {formatDate(artifact.created_at)}
       </div>
     </TimelineRow>
   );

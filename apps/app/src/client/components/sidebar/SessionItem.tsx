@@ -12,7 +12,7 @@ import { getSessionDisplayName } from "@/client/utils/getSessionDisplayName";
 import { useNavigationStore } from "@/client/stores";
 import type { SessionSummary } from "@/client/pages/projects/sessions/stores/sessionStore";
 import type { AgentType } from "@/shared/types/agent.types";
-import { format } from "date-fns";
+import { formatDate } from "@/shared/utils/formatDate";
 import { PERMISSION_MODE_CONFIG } from "@/client/constants/permissionModes";
 
 interface SessionItemProps {
@@ -42,7 +42,7 @@ export function SessionItem({
     null
   );
   const displayName = getSessionDisplayName(session);
-  const timeAgo = format(new Date(session.created_at), "MM/dd 'at' h:mma");
+  const timeAgo = formatDate(session.created_at);
 
   return (
     <SidebarMenuItem

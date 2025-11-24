@@ -1,6 +1,7 @@
 import { Pause, Play, X } from 'lucide-react';
 import { WorkflowStatusBadge } from './WorkflowStatusBadge';
 import type { WorkflowRun } from '../types';
+import { formatDate } from '@/shared/utils/formatDate';
 
 interface WorkflowRunHeaderProps {
   run: WorkflowRun;
@@ -15,9 +16,9 @@ export function WorkflowRunHeader({
   onResume,
   onCancel,
 }: WorkflowRunHeaderProps) {
-  const formatDate = (date: Date | null) => {
+  const formatDateOrNA = (date: Date | string | null) => {
     if (!date) return 'N/A';
-    return new Date(date).toLocaleString();
+    return formatDate(date);
   };
 
   const isRunning = run.status === 'running';
@@ -36,11 +37,11 @@ export function WorkflowRunHeader({
         <div className="flex items-center gap-4 text-sm min-w-0 flex-1">
           <div className="flex items-center gap-1.5 shrink-0">
             <span className="text-muted-foreground">Started:</span>
-            <span className="whitespace-nowrap">{formatDate(run.started_at)}</span>
+            <span className="whitespace-nowrap">{formatDateOrNA(run.started_at)}</span>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             <span className="text-muted-foreground">Completed:</span>
-            <span className="whitespace-nowrap">{formatDate(run.completed_at)}</span>
+            <span className="whitespace-nowrap">{formatDateOrNA(run.completed_at)}</span>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             <span className="text-muted-foreground">Current Phase:</span>

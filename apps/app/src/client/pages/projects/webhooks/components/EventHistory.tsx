@@ -5,6 +5,7 @@ import type { WebhookEventStatus, WebhookEvent } from "../types/webhook.types";
 import { Badge } from "@/client/components/ui/badge";
 import { Button } from "@/client/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/client/components/ui/card";
+import { formatDate as formatDateUtil } from "@/shared/utils/formatDate";
 import {
   Select,
   SelectContent,
@@ -46,13 +47,7 @@ export function EventHistory({ webhookId, projectId }: EventHistoryProps) {
   const totalPages = Math.ceil(total / limit);
 
   const formatDate = (date: Date | string) => {
-    return new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    }).format(new Date(date));
+    return formatDateUtil(date, "MMM d, h:mm:ss a");
   };
 
   return (

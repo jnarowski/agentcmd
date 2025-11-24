@@ -9,7 +9,7 @@ import {
 import { useDebugMode } from "@/client/hooks/useDebugMode";
 import type { WorkflowEvent } from "@/client/pages/projects/workflows/types";
 import { TimelineRow } from "./TimelineRow";
-import { formatDateShort } from "@/client/pages/projects/workflows/utils/dateFormatting";
+import { formatDate } from "@/shared/utils/formatDate";
 
 // Format event type for display
 const formatEventType = (type: string) => {
@@ -158,7 +158,7 @@ export function WorkflowEventDefaultItem({
       )}
 
       <div className="text-xs text-muted-foreground mt-1">
-        {formatDateShort(event.created_at)}
+        {formatDate(event.created_at)}
       </div>
     </TimelineRow>
   );

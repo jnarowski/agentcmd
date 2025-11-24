@@ -7,6 +7,7 @@ import { Skeleton } from '@/client/components/ui/skeleton';
 import { Badge } from '@/client/components/ui/badge';
 import { Calendar, User, Hash } from 'lucide-react';
 import { DiffViewer } from '@/client/components/DiffViewer';
+import { formatDate } from '@/shared/utils/formatDate';
 
 interface CommitDiffViewProps {
   path: string | undefined;
@@ -63,7 +64,7 @@ export function CommitDiffView({
         <div className="flex items-start gap-2 text-sm">
           <Calendar className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
           <div className="flex-1 text-muted-foreground text-xs">
-            {new Date(commitDiff.date).toLocaleString()}
+            {formatDate(commitDiff.date)}
           </div>
         </div>
 

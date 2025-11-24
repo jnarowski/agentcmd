@@ -9,7 +9,8 @@ import { useDebugMode } from "@/client/hooks/useDebugMode";
 import type { WorkflowRunStep } from "@/shared/types/workflow-step.types";
 import type { WorkflowTab } from "@/client/pages/projects/workflows/hooks/useWorkflowDetailPanel";
 import { TimelineRow } from "./TimelineRow";
-import { formatDateShort } from "@/client/pages/projects/workflows/utils/dateFormatting";
+import { formatDate } from "@/shared/utils/formatDate";
+import { formatDuration } from "../../utils/formatDuration";
 
 interface StepDefaultRowProps {
   step: WorkflowRunStep;
@@ -17,7 +18,11 @@ interface StepDefaultRowProps {
   onSetActiveTab?: (tab: WorkflowTab) => void;
 }
 
-export function StepDefaultRow({ step, onSelectStep, onSetActiveTab }: StepDefaultRowProps) {
+export function StepDefaultRow({
+  step,
+  onSelectStep,
+  onSetActiveTab,
+}: StepDefaultRowProps) {
   const debugMode = useDebugMode();
 
   // Status icon
@@ -45,20 +50,12 @@ export function StepDefaultRow({ step, onSelectStep, onSetActiveTab }: StepDefau
         new Date(step.started_at).getTime()
       : null;
 
-  const formatDuration = (ms: number) => {
-    const seconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(seconds / 60);
-    if (minutes > 0) {
-      return `${minutes}m ${seconds % 60}s`;
-    }
-    return `${seconds}s`;
-  };
-
   // Format step type for tooltip
-  const tooltipLabel = step.step_type
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ") + " Step";
+  const tooltipLabel =
+    step.step_type
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ") + " Step";
 
   return (
     <>
@@ -89,9 +86,8 @@ export function StepDefaultRow({ step, onSelectStep, onSetActiveTab }: StepDefau
         </div>
 
         <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-          <span>
-            {formatDateShort(step.created_at)}
-          </span>
+          <span>{formatDate(step.created_at)}</span>
+          <span className="mx-1">•</span>
           {duration && <span>{formatDuration(duration)}</span>}
           {step.error_message && (
             <span className="text-red-500">{step.error_message}</span>

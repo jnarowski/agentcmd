@@ -11,6 +11,7 @@ import {
 } from "@/client/components/ai-elements/conversation";
 import { SyntaxHighlighter } from "@/client/utils/syntaxHighlighter";
 import { Copy, Check } from "lucide-react";
+import { formatDate } from "@/shared/utils/formatDate";
 
 interface LogsTabProps {
   run: WorkflowRun;
@@ -188,7 +189,7 @@ function LogEntry({ log, selectedStepId }: LogEntryProps) {
       {/* Timestamp + Step + Level + Status */}
       <div className="flex items-baseline gap-2 text-muted-foreground">
         <span className="flex-shrink-0">
-          {log.timestamp.toLocaleTimeString()}
+          {formatDate(log.timestamp, "h:mm:ss a")}
         </span>
         {log.stepName && (
           <span className="text-xs bg-muted px-1.5 py-0.5 rounded text-muted-foreground">

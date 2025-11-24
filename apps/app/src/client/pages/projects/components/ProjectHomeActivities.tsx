@@ -15,7 +15,7 @@ import { useAllWorkflowRuns } from "@/client/pages/projects/workflows/hooks/useA
 import type { AgentType } from "@/shared/types/agent.types";
 import type { SessionSummary } from "@/client/pages/projects/sessions/stores/sessionStore";
 import type { WorkflowStatus } from "@/shared/schemas/workflow.schemas";
-import { format } from "date-fns";
+import { formatDate } from "@/shared/utils/formatDate";
 
 type ActivityFilter = "all" | "sessions" | "workflows";
 
@@ -195,10 +195,7 @@ export function ProjectHomeActivities({
               {filteredActivities.map((activity) => {
                 if (activity.type === "session" && activity.session) {
                   const displayName = getSessionDisplayName(activity.session);
-                  const timeAgo = format(
-                    new Date(activity.session.created_at),
-                    "MM/dd 'at' h:mma"
-                  );
+                  const timeAgo = formatDate(activity.session.created_at);
 
                   return (
                     <tr
@@ -298,10 +295,7 @@ export function ProjectHomeActivities({
                         </Badge>
                       </td>
                       <td className="p-2 text-xs text-muted-foreground tabular-nums">
-                        {format(
-                          new Date(activity.createdAt),
-                          "MM/dd 'at' h:mma"
-                        )}
+                        {formatDate(activity.createdAt)}
                       </td>
                     </tr>
                   );

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useWebSocket } from '@/client/hooks/useWebSocket';
 import { wsMetrics } from '@/client/utils/WebSocketMetrics';
 import type { ChannelEvent } from '@/shared/types/websocket.types';
+import { formatDate } from '@/shared/utils/formatDate';
 
 interface MessageLogEntry {
   id: string;
@@ -56,14 +57,7 @@ export function WebSocketTab() {
     : messageLog;
 
   const formatTime = (timestamp: number) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString('en-US', {
-      hour12: false,
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      fractionalSecondDigits: 3,
-    });
+    return formatDate(timestamp, "HH:mm:ss.SSS");
   };
 
   const toggleSection = (section: keyof typeof isCollapsedSections) => {

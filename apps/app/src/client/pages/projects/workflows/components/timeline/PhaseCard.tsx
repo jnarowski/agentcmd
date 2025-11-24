@@ -3,6 +3,7 @@ import { ChevronDown, ChevronRight, Loader2, Clock } from "lucide-react";
 import { StepRow } from "./StepRow";
 import { ArtifactRow } from "./ArtifactRow";
 import { EventRow } from "./EventRow";
+import { formatDuration } from "../../utils/formatDuration";
 import type {
   WorkflowRunStep,
   WorkflowEvent,
@@ -178,22 +179,6 @@ export function PhaseCard({
     completed: "bg-primary",
     failed: "bg-red-500",
   }[metadata.status];
-
-  // Format duration
-  const formatDuration = (ms: number | null) => {
-    if (!ms) return null;
-    const seconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-
-    if (hours > 0) {
-      return `${hours}h ${minutes % 60}m`;
-    } else if (minutes > 0) {
-      return `${minutes}m ${seconds % 60}s`;
-    } else {
-      return `${seconds}s`;
-    }
-  };
 
   // Detect system phases (check phaseId, not phaseName)
   const isSystemPhase = phaseId.startsWith("_system_");

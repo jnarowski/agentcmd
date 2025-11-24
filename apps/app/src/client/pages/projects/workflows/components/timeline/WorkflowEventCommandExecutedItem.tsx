@@ -1,7 +1,7 @@
 import { SquareChevronRight } from "lucide-react";
 import type { WorkflowEvent } from "@/client/pages/projects/workflows/types";
 import { TimelineRow } from "./TimelineRow";
-import { formatDateShort } from "@/client/pages/projects/workflows/utils/dateFormatting";
+import { formatDate } from "@/shared/utils/formatDate";
 
 interface WorkflowEventCommandExecutedItemProps {
   event: WorkflowEvent;
@@ -42,7 +42,7 @@ export function WorkflowEventCommandExecutedItem({
       </div>
 
       <div className="text-xs text-muted-foreground mt-1">
-        {formatDateShort(event.created_at)}
+        {formatDate(event.created_at)}
         {duration !== undefined && (
           <>
             <span className="mx-1">•</span>

@@ -25,6 +25,7 @@ import { FolderOpen, Star, ChevronRight } from "lucide-react";
 import { truncatePath } from "@/client/utils/cn";
 import type { Project } from "@/shared/types/project.types";
 import { ProjectDropdownMenu } from "./ProjectDropdownMenu";
+import { formatDate } from "@/shared/utils/formatDate";
 
 interface ProjectsListProps {
   projects: Project[];
@@ -67,11 +68,7 @@ function ProjectRow({ project }: { project: Project }) {
         </TooltipProvider>
       </TableCell>
       <TableCell className="text-right text-muted-foreground">
-        {new Date(project.created_at).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })}
+        {formatDate(project.created_at, "MMM d, yyyy")}
       </TableCell>
       <TableCell>
         <ProjectDropdownMenu project={project} />

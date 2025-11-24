@@ -1,6 +1,7 @@
 import type { WorkflowRun } from "@/client/pages/projects/workflows/types";
 import { StepStatusValues } from "@/shared/schemas/workflow.schemas";
 import { isStepTerminal } from "./workflowStatus";
+import { formatDuration } from "./formatDuration";
 
 /**
  * Estimate time remaining for a workflow run
@@ -42,32 +43,6 @@ export function estimateTimeRemaining(run: WorkflowRun): string {
   const estimatedMs = avgStepDuration * remainingSteps;
 
   return formatDuration(estimatedMs);
-}
-
-/**
- * Format duration in milliseconds to human-readable string
- * Examples: "2m 34s", "1h 5m", "45s"
- */
-export function formatDuration(ms: number): string {
-  if (ms < 0) return "0s";
-
-  const seconds = Math.floor((ms / 1000) % 60);
-  const minutes = Math.floor((ms / (1000 * 60)) % 60);
-  const hours = Math.floor(ms / (1000 * 60 * 60));
-
-  const parts: string[] = [];
-
-  if (hours > 0) {
-    parts.push(`${hours}h`);
-  }
-  if (minutes > 0) {
-    parts.push(`${minutes}m`);
-  }
-  if (seconds > 0 || parts.length === 0) {
-    parts.push(`${seconds}s`);
-  }
-
-  return parts.join(" ");
 }
 
 /**

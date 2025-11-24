@@ -1,4 +1,4 @@
-import { formatDistanceToNow } from "date-fns";
+import { formatDate } from "@/shared/utils/formatDate";
 import { Github, Box, Webhook } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { Webhook as WebhookType } from "../types/webhook.types";
@@ -46,9 +46,7 @@ export function WebhookCard({ webhook, projectId }: WebhookCardProps) {
   };
 
   const lastTriggered = webhook.last_triggered_at
-    ? formatDistanceToNow(new Date(webhook.last_triggered_at), {
-        addSuffix: true,
-      })
+    ? formatDate(webhook.last_triggered_at)
     : "Never";
 
   return (

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { formatDistanceToNow } from "date-fns";
+import { formatDate } from "@/shared/utils/formatDate";
 import type { SessionResponse } from "@/shared/types";
 import { cn } from "@/client/utils/cn";
 import { AgentIcon } from "@/client/components/AgentIcon";
@@ -29,9 +29,7 @@ export function SessionListItem({
   const [isHovered, setIsHovered] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const timeAgo = formatDistanceToNow(new Date(created_at), {
-    addSuffix: true,
-  });
+  const timeAgo = formatDate(created_at);
 
   // Use utility function for consistent session naming
   const displayName = getSessionDisplayName(session);

@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { WorkflowRun } from "@/client/pages/projects/workflows/types";
 import { useInngestRunStatus } from "@/client/pages/projects/workflows/hooks/useInngestRunStatus";
 import { Button } from "@/client/components/ui/button";
+import { formatDate } from "@/shared/utils/formatDate";
 
 interface DetailsTabProps {
   run: WorkflowRun;
@@ -76,20 +77,20 @@ export function DetailsTab({ run }: DetailsTabProps) {
 
           <div className="grid grid-cols-2 gap-2 py-2">
             <dt className="text-muted-foreground">Created:</dt>
-            <dd>{new Date(run.created_at).toLocaleString()}</dd>
+            <dd>{formatDate(run.created_at)}</dd>
           </div>
 
           {run.started_at && (
             <div className="grid grid-cols-2 gap-2 py-2">
               <dt className="text-muted-foreground">Started:</dt>
-              <dd>{new Date(run.started_at).toLocaleString()}</dd>
+              <dd>{formatDate(run.started_at)}</dd>
             </div>
           )}
 
           {run.completed_at && (
             <div className="grid grid-cols-2 gap-2 py-2">
               <dt className="text-muted-foreground">Completed:</dt>
-              <dd>{new Date(run.completed_at).toLocaleString()}</dd>
+              <dd>{formatDate(run.completed_at)}</dd>
             </div>
           )}
 

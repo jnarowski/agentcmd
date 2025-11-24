@@ -1,3 +1,5 @@
+import { formatDate } from "@/shared/utils/formatDate";
+
 /**
  * Format file size in bytes to human-readable string
  * Examples: "1.2 MB", "345 KB", "5.6 GB", "128 B"
@@ -57,14 +59,7 @@ export function formatRelativeTime(date: Date | string): string {
  * Examples: "Jan 3, 2025 at 2:34 PM"
  */
 export function formatAbsoluteTime(date: Date | string): string {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  }).format(new Date(date));
+  return formatDate(date, "MMM d, yyyy 'at' h:mm a");
 }
 
 /**

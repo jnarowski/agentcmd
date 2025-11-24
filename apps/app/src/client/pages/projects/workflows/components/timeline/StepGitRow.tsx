@@ -9,6 +9,7 @@ import { useDebugMode } from "@/client/hooks/useDebugMode";
 import type { WorkflowRunStep, StepOutput } from "@/shared/types/workflow-step.types";
 import type { WorkflowTab } from "@/client/pages/projects/workflows/hooks/useWorkflowDetailPanel";
 import { TimelineRow } from "./TimelineRow";
+import { formatDuration } from "../../utils/formatDuration";
 
 interface StepGitRowProps {
   step: WorkflowRunStep;
@@ -48,16 +49,6 @@ export function StepGitRow({ step, onSelectStep, onSetActiveTab }: StepGitRowPro
       ? new Date(step.completed_at).getTime() -
         new Date(step.started_at).getTime()
       : null;
-
-  const formatDuration = (ms: number) => {
-    const seconds = Math.floor(ms / 1000);
-    if (seconds < 1) return "<1s";
-    const minutes = Math.floor(seconds / 60);
-    if (minutes > 0) {
-      return `${minutes}m ${seconds % 60}s`;
-    }
-    return `${seconds}s`;
-  };
 
   // Format step type for tooltip
   const tooltipLabel = step.step_type

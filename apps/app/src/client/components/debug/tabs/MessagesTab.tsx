@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Copy, Check } from 'lucide-react';
 import { useSessionStore, selectActiveSession } from '@/client/pages/projects/sessions/stores/sessionStore';
 import type { UIMessage, UnifiedContent } from '@/shared/types/message.types';
+import { formatDate } from '@/shared/utils/formatDate';
 
 /**
  * Message structure inspector - shows current session messages with problem detection
@@ -232,7 +233,7 @@ export function MessagesTab() {
                     <div>
                       <span className="text-gray-400">Timestamp:</span>{' '}
                       <span className="text-gray-300">
-                        {new Date(msg.timestamp).toLocaleTimeString()}
+                        {formatDate(msg.timestamp, "h:mm:ss a")}
                       </span>
                     </div>
 

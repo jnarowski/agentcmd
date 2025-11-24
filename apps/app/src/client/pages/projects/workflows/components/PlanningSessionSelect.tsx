@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { format } from "date-fns";
+import { formatDate } from "@/shared/utils/formatDate";
 import { Combobox, type ComboboxOption } from "@/client/components/ui/combobox";
 import { Badge } from "@/client/components/ui/badge";
 import { AgentIcon } from "@/client/components/AgentIcon";
@@ -58,7 +58,7 @@ export function PlanningSessionSelect({
         if (!session) return <span>{planningOption.label}</span>;
 
         const displayName = getSessionDisplayName(session);
-        const timeAgo = format(new Date(session.created_at), "MM/dd 'at' h:mma");
+        const timeAgo = formatDate(session.created_at);
 
         return (
           <div className="flex items-center gap-2 w-full min-w-0">
@@ -78,7 +78,7 @@ export function PlanningSessionSelect({
         if (!session) return <span>{planningOption.label}</span>;
 
         const displayName = getSessionDisplayName(session);
-        const timeAgo = format(new Date(session.created_at), "MM/dd 'at' h:mma");
+        const timeAgo = formatDate(session.created_at);
 
         return (
           <div className="flex items-start gap-2 w-full py-1">
