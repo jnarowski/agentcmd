@@ -1,6 +1,7 @@
 import { defineWorkflow, type WorkflowStep } from "agentcmd-workflows";
 
-// Type definitions from monorepo-wide generated types
+// Type-safe wrappers for slash commands defined in .claude/commands/
+// After editing commands, regenerate: npx agentcmd-workflows generate-slash-types
 import {
   buildSlashCommand,
   type CmdCreatePrResponse,
