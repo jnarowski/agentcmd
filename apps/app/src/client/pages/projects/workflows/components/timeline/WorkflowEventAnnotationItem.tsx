@@ -2,6 +2,7 @@ import { MessageSquare, User } from "lucide-react";
 import { useDebugMode } from "@/client/hooks/useDebugMode";
 import type { WorkflowEvent } from "@/client/pages/projects/workflows/types";
 import { TimelineRow } from "./TimelineRow";
+import { formatDateShort } from "@/client/pages/projects/workflows/utils/dateFormatting";
 
 interface WorkflowEventAnnotationItemProps {
   event: WorkflowEvent;
@@ -48,7 +49,7 @@ export function WorkflowEventAnnotationItem({
       </p>
 
       <div className="text-xs text-muted-foreground mt-1">
-        {new Date(event.created_at).toLocaleString()}
+        {formatDateShort(event.created_at)}
       </div>
     </TimelineRow>
   );

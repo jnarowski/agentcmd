@@ -9,6 +9,7 @@ import { useDebugMode } from "@/client/hooks/useDebugMode";
 import type { WorkflowRunStep } from "@/shared/types/workflow-step.types";
 import type { WorkflowTab } from "@/client/pages/projects/workflows/hooks/useWorkflowDetailPanel";
 import { TimelineRow } from "./TimelineRow";
+import { formatDateShort } from "@/client/pages/projects/workflows/utils/dateFormatting";
 
 interface StepDefaultRowProps {
   step: WorkflowRunStep;
@@ -89,7 +90,7 @@ export function StepDefaultRow({ step, onSelectStep, onSetActiveTab }: StepDefau
 
         <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
           <span>
-            {new Date(step.created_at).toLocaleString()}
+            {formatDateShort(step.created_at)}
           </span>
           {duration && <span>{formatDuration(duration)}</span>}
           {step.error_message && (

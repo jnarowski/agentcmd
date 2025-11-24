@@ -15,6 +15,7 @@ import type { WorkflowRunStep, StepOutput } from "@/shared/types/workflow-step.t
 import type { WorkflowTab } from "@/client/pages/projects/workflows/hooks/useWorkflowDetailPanel";
 import type { TraceEntry } from "agentcmd-workflows";
 import { TimelineRow } from "./TimelineRow";
+import { formatDateShort } from "@/client/pages/projects/workflows/utils/dateFormatting";
 
 interface StepAgentRowProps {
   step: WorkflowRunStep;
@@ -102,7 +103,7 @@ export function StepAgentRow({ step, projectId, onSelectSession, onSelectStep, o
 
         <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
           <span>
-            {new Date(step.created_at).toLocaleString()}
+            {formatDateShort(step.created_at)}
           </span>
           {duration && <span>{formatDuration(duration)}</span>}
           {step.error_message && (

@@ -148,14 +148,16 @@ function WorkflowRunDetailPage() {
           </>
         }
         actions={
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleDelete}
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete
-          </Button>
+          <div className="hidden md:block">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDelete}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </Button>
+          </div>
         }
         alerts={
           run.status === "failed" && run.error_message ? (
@@ -181,7 +183,7 @@ function WorkflowRunDetailPage() {
       <div className="flex-1 grid grid-cols-1 md:grid-cols-2 overflow-hidden">
         {/* Left Pane - Phase Timeline */}
         <div className="flex flex-col overflow-hidden">
-          <div className="border-b px-6 py-4">
+          <div className="hidden md:block border-b px-6 py-4">
             <h2 className="text-xl font-bold">Execution Timeline</h2>
           </div>
           <div className="flex-1 overflow-y-auto">
