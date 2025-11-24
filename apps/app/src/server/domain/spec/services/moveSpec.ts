@@ -138,8 +138,7 @@ function mapFolderToStatus(folder: string, currentStatus: SpecStatus): SpecStatu
       // Keep current status if it's draft or in-progress, otherwise set to draft
       return currentStatus === "in-progress" ? "in-progress" : "draft";
     case "done":
-      // Keep current status if it's review or completed, otherwise set to review
-      return currentStatus === "completed" ? "completed" : "review";
+      return "completed";
     default:
       return currentStatus;
   }

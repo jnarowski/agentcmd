@@ -3,20 +3,14 @@
  * Provides quick access to common git operations from project header
  */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { BaseDialog } from "@/client/components/BaseDialog";
 import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
 } from "@/client/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/client/components/ui/select";
+import { Combobox } from "@/client/components/ui/combobox";
 import { Button } from "@/client/components/ui/button";
 import { LoadingButton } from "@/client/components/ui/loading-button";
 import { Textarea } from "@/client/components/ui/textarea";
@@ -97,6 +91,16 @@ export function GitOperationsModal({
   const pullMutation = usePull();
   const generateCommitMessageMutation = useGenerateCommitMessage();
   const createPrMutation = useCreatePr();
+
+  // Convert branches to combobox options
+  const branchOptions = useMemo(() => {
+    if (!branches) return [];
+    return branches.map((branch) => ({
+      value: branch.name,
+      label: branch.name,
+      badge: branch.current ? "current" : undefined,
+    }));
+  }, [branches]);
 
   // Handlers
   const handleSwitchBranch = async (branchName: string) => {
@@ -242,31 +246,30 @@ export function GitOperationsModal({
             <div className="space-y-3">
               <Label className="text-sm font-medium">Branch</Label>
               <div className="flex gap-2">
-                <Select
+                <Combobox
                   value={currentBranch}
                   onValueChange={handleSwitchBranch}
-                >
-                  <SelectTrigger className="flex-1">
-                    <div className="flex items-center gap-2 min-w-0">
+                  options={branchOptions}
+                  placeholder="Select branch"
+                  searchPlaceholder="Search branches..."
+                  buttonClassName="flex-1 justify-start"
+                  renderTrigger={(selectedOption) => (
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
                       <GitBranch className="h-4 w-4 shrink-0" />
-                      <SelectValue placeholder="Select branch" />
+                      <span className="truncate">{selectedOption?.label || "Select branch"}</span>
                     </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {branches?.map((branch) => (
-                      <SelectItem key={branch.name} value={branch.name}>
-                        <div className="flex items-center gap-2">
-                          <span>{branch.name}</span>
-                          {branch.current && (
-                            <Badge variant="outline" className="ml-auto">
-                              <Check className="h-3 w-3" />
-                            </Badge>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  )}
+                  renderOption={(option) => (
+                    <div className="flex items-center gap-2 w-full">
+                      <span className="flex-1">{option.label}</span>
+                      {option.badge && (
+                        <Badge variant="outline" className="ml-auto">
+                          <Check className="h-3 w-3" />
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                />
                 <Button
                   variant="outline"
                   size="icon"

@@ -16,6 +16,14 @@ function isGitUserError(errorMessage: string): boolean {
     /permission denied/i,
     /does not exist/i,
     /invalid path/i,
+    /please commit your changes/i,
+    /working tree.*not clean/i,
+    /cannot switch/i,
+    /cannot checkout/i,
+    /pathspec.*did not match/i,
+    /merge conflict/i,
+    /uncommitted changes/i,
+    /would be overwritten/i,
   ];
   return userErrorPatterns.some(pattern => pattern.test(errorMessage));
 }
@@ -144,9 +152,40 @@ export async function gitRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const { path, name } = request.body;
+      const userId = request.user?.id;
 
-      const branch = await gitService.switchBranch({ projectPath: path, branchName: name });
-      return reply.send(buildSuccessResponse(branch));
+      try {
+        // Check if path exists
+        if (!fs.existsSync(path)) {
+          throw new ValidationError(`Path doesn't exist: ${path}`);
+        }
+
+        fastify.log.debug({ userId, projectPath: path, branchName: name }, 'Switching branch');
+        const branch = await gitService.switchBranch({ projectPath: path, branchName: name });
+        return reply.send(buildSuccessResponse(branch));
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        fastify.log.error(
+          {
+            err,
+            userId,
+            projectPath: path,
+            branchName: name,
+            operation: 'switchBranch',
+          },
+          `Failed to switch branch: ${err.message}`
+        );
+
+        if (error instanceof ValidationError) {
+          throw error; // Already a ValidationError
+        }
+
+        if (isGitUserError(err.message)) {
+          throw new ValidationError(err.message);
+        }
+
+        throw err; // Re-throw to be handled by global error handler
+      }
     }
   );
 

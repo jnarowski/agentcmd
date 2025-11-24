@@ -74,6 +74,12 @@ export default defineWorkflow(
           ctx,
         });
 
+        // Commit implementation changes
+        await step.git(`commit-implementation-cycle-${cycle}`, {
+          operation: "commit",
+          message: `feat: implement ${event.data.name} (cycle ${cycle})`,
+        });
+
         // Review implementation (updates ctx.lastReview)
         const review = await reviewImplementation({
           cycle,
@@ -81,6 +87,12 @@ export default defineWorkflow(
           specFile,
           workingDir,
           ctx,
+        });
+
+        // Commit review changes
+        await step.git(`commit-review-cycle-${cycle}`, {
+          operation: "commit",
+          message: `chore: address review feedback (cycle ${cycle})`,
         });
 
         await step.annotation("review-cycle-completed", {
