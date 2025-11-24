@@ -185,15 +185,21 @@
       "spec_type": "feature",
       "status": "review",
       "created": "2025-11-22T15:15:00Z",
-      "updated": "2025-11-24T21:30:00.000Z"
+      "updated": "2025-11-24T21:30:00.000Z",
+      "totalComplexity": 64,
+      "phaseCount": 4,
+      "taskCount": 16
     },
     "2511232135": {
       "folder": "2511232135-spec-complexity-tracking",
       "path": "todo/2511232135-spec-complexity-tracking/spec.md",
       "spec_type": "feature",
-      "status": "draft",
+      "status": "review",
       "created": "2025-11-23T21:35:00Z",
-      "updated": "2025-11-24T21:30:00.000Z"
+      "updated": "2025-11-24T21:40:00.000Z",
+      "totalComplexity": 89,
+      "phaseCount": 4,
+      "taskCount": 10
     },
     "2511230804": {
       "folder": "2511230804-session-store-refactor",

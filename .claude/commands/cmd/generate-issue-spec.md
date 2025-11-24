@@ -90,11 +90,15 @@ Assign based on **context window usage and cognitive load**:
            "spec_type": "issue",
            "status": "draft",
            "created": "2025-11-13T14:22:00Z",
-           "updated": "2025-11-13T14:22:00Z"
+           "updated": "2025-11-13T14:22:00Z",
+           "totalComplexity": 35,
+           "phaseCount": 3,
+           "taskCount": 7
          }
        }
      }
      ```
+   - Complexity values match spec.md metadata from step 6
 
 9. **Output Report** - Do NOT implement. Output JSON only.
 
@@ -285,6 +289,7 @@ Reuses folder, uses explicit context, adds: `.agent/specs/todo/251113150000-expo
 - **Wrong directory**: Always `.agent/specs/todo/`, not `.agent/specs/`
 - **Folder structure**: `{timestampId}-{issue}/spec.md` inside
 - **Index not updated**: Must update index.json
+- **Missing complexity in index**: Always add totalComplexity, phaseCount, taskCount to index.json entry
 - **Generic placeholders**: Replace all `<placeholders>`
 - **Missing complexity**: EVERY task needs `[X/10]`
 - **Hour estimates**: Never include hours

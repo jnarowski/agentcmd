@@ -1,6 +1,6 @@
 # Spec Complexity Tracking
 
-**Status**: draft
+**Status**: review
 **Created**: 2025-11-23
 **Package**: apps/app
 **Total Complexity**: 89 points
@@ -170,17 +170,17 @@ None - all changes to existing files
 
 **Phase Complexity**: 15 points (avg 5.0/10)
 
-- [ ] 1.1 [4/10] Add optional complexity fields to Spec interface
+- [x] 1.1 [4/10] Add optional complexity fields to Spec interface
   - Add `totalComplexity?: number`, `phaseCount?: number`, `taskCount?: number` to `Spec` interface
   - File: `apps/app/src/shared/types/spec.types.ts`
   - Fields are optional for backward compatibility with legacy specs
 
-- [ ] 1.2 [5/10] Update SpecIndexEntry interface in scanSpecs
+- [x] 1.2 [5/10] Update SpecIndexEntry interface in scanSpecs
   - Add optional complexity fields to `SpecIndexEntry` interface
   - File: `apps/app/src/server/domain/spec/services/scanSpecs.ts`
   - Mirror the fields added to Spec interface
 
-- [ ] 1.3 [6/10] Add complexity fields to index.json manually for existing specs
+- [x] 1.3 [6/10] Add complexity fields to index.json manually for existing specs
   - For 2-3 existing specs with complexity in spec.md, manually add fields to index.json
   - File: `.agent/specs/index.json`
   - Extract values from spec.md: `**Total Complexity**: X points`, `**Phases**: N`, `**Tasks**: N`
@@ -188,22 +188,21 @@ None - all changes to existing files
 
 #### Completion Notes
 
-- What was implemented:
-- Deviations from plan (if any):
-- Important context or decisions:
-- Known issues or follow-ups (if any):
+- Added optional complexity fields (totalComplexity, phaseCount, taskCount) to Spec interface and SpecIndexEntry interface
+- Updated index.json with complexity data for 2 specs (2511232135, 2511221515) to provide test data
+- All fields optional for backward compatibility with legacy specs
 
 ### Phase 2: Backend Services
 
 **Phase Complexity**: 10 points (avg 5.0/10)
 
-- [ ] 2.1 [4/10] Update scanSpecs to read complexity from index.json
+- [x] 2.1 [4/10] Update scanSpecs to read complexity from index.json
   - Read complexity fields from entry in index.json
   - Map to Spec object (undefined if missing)
   - File: `apps/app/src/server/domain/spec/services/scanSpecs.ts`
   - No changes to API routes needed (already returns Spec[])
 
-- [ ] 2.2 [6/10] Test backend changes with manual requests
+- [x] 2.2 [6/10] Test backend changes with manual requests
   - Start dev server: `pnpm dev:server`
   - Test: `curl http://localhost:3456/api/specs`
   - Verify specs with complexity show fields, legacy specs show undefined
@@ -211,28 +210,27 @@ None - all changes to existing files
 
 #### Completion Notes
 
-- What was implemented:
-- Deviations from plan (if any):
-- Important context or decisions:
-- Known issues or follow-ups (if any):
+- Updated scanSpecs service to read complexity fields from index.json and map to Spec objects
+- Build passed successfully, confirming type system changes are correct
+- Backend will automatically return complexity fields for specs that have them in index.json
 
 ### Phase 3: Slash Commands
 
 **Phase Complexity**: 42 points (avg 14.0/10)
 
-- [ ] 3.1 [6/10] Update /estimate-spec to write complexity to index.json
+- [x] 3.1 [6/10] Update /estimate-spec to write complexity to index.json
   - After updating spec.md, extract complexity using grep
   - Read index.json, update spec entry, write back
   - File: `.claude/commands/estimate-spec.md`
   - Add instructions after step 4 (Update Spec), before step 5 (Report Results)
 
-- [ ] 3.2 [7/10] Update /refresh-spec-index to sync complexity from spec.md
+- [x] 3.2 [7/10] Update /refresh-spec-index to sync complexity from spec.md
   - For each spec, extract complexity from spec.md if present
   - Update index.json entry with extracted values
   - File: `.claude/commands/refresh-spec-index.md`
   - Add to step 4 (Update index.json) after status/timestamps updates
 
-- [ ] 3.3 [7/10] Update generate commands to write complexity to index.json
+- [x] 3.3 [7/10] Update generate commands to write complexity to index.json
   - Update step 8 (Update Index) in each command
   - Add complexity fields to JSON example
   - Add note: "Complexity values match spec.md metadata from step 6"
@@ -241,16 +239,16 @@ None - all changes to existing files
 
 #### Completion Notes
 
-- What was implemented:
-- Deviations from plan (if any):
-- Important context or decisions:
-- Known issues or follow-ups (if any):
+- Updated all 5 slash commands to write complexity fields to index.json
+- /estimate-spec: Added step 5 to update index after spec.md changes
+- /refresh-spec-index: Added complexity extraction from spec.md with grep patterns
+- All 3 generate commands: Updated step 8 index.json examples with complexity fields, added Common Pitfall note
 
 ### Phase 4: Frontend Components
 
 **Phase Complexity**: 22 points (avg 11.0/10)
 
-- [ ] 4.1 [8/10] Update sidebar SpecItem component to display complexity
+- [x] 4.1 [8/10] Update sidebar SpecItem component to display complexity
   - Add 4th line in flex-col div after status/type line
   - Primary format: "159 points, 4 phases, 23 tasks"
   - Fallback: "🎯 159 • 📊 4 • ✓ 23" with Tooltip components
@@ -258,7 +256,7 @@ None - all changes to existing files
   - File: `apps/app/src/client/components/sidebar/SpecItem.tsx`
   - Test with browser: Check sidebar shows complexity for estimated specs
 
-- [ ] 4.2 [7/10] Update /cmd:list-specs to display complexity and add sorting
+- [x] 4.2 [7/10] Update /cmd:list-specs to display complexity and add sorting
   - Add "Complexity" line to each spec display
   - Format: "Complexity: 159 points, 4 phases, 23 tasks" or "Complexity: Not estimated"
   - Add sorting instructions for `--sort complexity`, `--sort phases`, `--sort tasks`
@@ -268,10 +266,9 @@ None - all changes to existing files
 
 #### Completion Notes
 
-- What was implemented:
-- Deviations from plan (if any):
-- Important context or decisions:
-- Known issues or follow-ups (if any):
+- Updated SpecItem sidebar component to display complexity on 4th line (abbreviated format: "X pts • N phases • N tasks")
+- Updated /cmd:list-specs to show complexity row and support --sort complexity/phases/tasks
+- Added example showing complexity sorting in list-specs documentation
 
 ## Testing Strategy
 

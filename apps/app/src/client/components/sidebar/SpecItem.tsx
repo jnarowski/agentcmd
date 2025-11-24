@@ -118,6 +118,15 @@ export function SpecItem({ spec, projectName }: SpecItemProps) {
             <span>•</span>
             <span className="truncate">{spec.spec_type}</span>
           </div>
+          {spec.totalComplexity !== undefined && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground/70">
+              <span>{spec.totalComplexity} pts</span>
+              <span>•</span>
+              <span>{spec.phaseCount} phases</span>
+              <span>•</span>
+              <span>{spec.taskCount} tasks</span>
+            </div>
+          )}
         </div>
       </SidebarMenuButton>
       {(hoveredSpecId === spec.id || menuOpenSpecId === spec.id) && (

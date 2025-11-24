@@ -116,12 +116,16 @@ Assign complexity based on **context window usage and cognitive load**, not time
            "spec_type": "feature",
            "status": "draft",
            "created": "2025-11-13T15:22:00Z",
-           "updated": "2025-11-13T15:22:00Z"
+           "updated": "2025-11-13T15:22:00Z",
+           "totalComplexity": 89,
+           "phaseCount": 4,
+           "taskCount": 10
          }
        }
      }
      ```
 
+   - Complexity values match spec.md metadata from step 6
    - Write updated index back to `.agent/specs/index.json`
 
 9. **Output Report** - Do NOT implement. Output JSON only.
@@ -403,6 +407,7 @@ Uses explicit context, generates ID `2511131522`, creates: `.agent/specs/todo/25
 - **Wrong directory**: Always create folder in `.agent/specs/todo/`, not `.agent/specs/` or `.agents/specs/`
 - **Folder structure**: Must create folder `{timestampId}-{feature}/` with `spec.md` inside (e.g., `2511131522-oauth-support/`)
 - **Index not updated**: Always update index.json after creating spec
+- **Missing complexity in index**: Always add totalComplexity, phaseCount, taskCount to index.json entry
 - **Generic placeholders**: Replace all `<placeholders>` with actual content
 - **Missing complexity scores**: EVERY task must have a `[X/10]` complexity score
 - **Including hours**: Do NOT include hour estimates - use complexity points only

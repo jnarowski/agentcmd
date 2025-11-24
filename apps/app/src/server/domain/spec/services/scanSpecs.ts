@@ -12,6 +12,9 @@ interface SpecIndexEntry {
   spec_type?: string | null;
   created: string;
   updated: string;
+  totalComplexity?: number;
+  phaseCount?: number;
+  taskCount?: number;
 }
 
 interface SpecIndex {
@@ -66,6 +69,9 @@ export async function scanSpecs(projectPath: string, projectId: string): Promise
         status: entry.status,
         spec_type: entry.spec_type ?? "feature", // Default to "feature" for legacy specs
         created_at: entry.created,
+        totalComplexity: entry.totalComplexity,
+        phaseCount: entry.phaseCount,
+        taskCount: entry.taskCount,
       });
     }
 
