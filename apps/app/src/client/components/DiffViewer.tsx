@@ -284,7 +284,7 @@ export function DiffViewer({
               htmlLines.push(`
                 <div class="diff-line" style="background: ${bgColor}; display: grid; grid-template-columns: 2ch 1fr; align-items: center; line-height: 1.5;">
                   <div class="diff-gutter" style="text-align: center; color: #888; background: ${colors.gutterBackground}; padding: 0 4px; user-select: none; border-right: 1px solid ${colors.border};">${symbol}</div>
-                  <div class="diff-code" style="overflow-x: auto; padding: 0 8px;"><code style="white-space: pre;">${codeContent}</code></div>
+                  <div class="diff-code" style="padding: 0 8px;"><code style="white-space: pre;">${codeContent}</code></div>
                 </div>
               `);
             } catch (lineError) {
@@ -293,7 +293,7 @@ export function DiffViewer({
               htmlLines.push(`
                 <div class="diff-line" style="background: ${bgColor}; display: grid; grid-template-columns: 2ch 1fr; align-items: center; line-height: 1.5;">
                   <div class="diff-gutter" style="text-align: center; color: #888; background: ${colors.gutterBackground}; padding: 0 4px; user-select: none; border-right: 1px solid ${colors.border};">${symbol}</div>
-                  <div class="diff-code" style="overflow-x: auto; padding: 0 8px;"><code style="white-space: pre;">${escapeHtml(line)}</code></div>
+                  <div class="diff-code" style="padding: 0 8px;"><code style="white-space: pre;">${escapeHtml(line)}</code></div>
                 </div>
               `);
             }
@@ -348,6 +348,7 @@ export function DiffViewer({
         backgroundColor: colors.background,
         paddingTop: "8px",
         paddingBottom: "8px",
+        overflowX: "auto",
       }}
       dangerouslySetInnerHTML={{ __html: html }}
     />

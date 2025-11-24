@@ -11,6 +11,9 @@ import {
   projectExistsByPath,
   syncFromClaudeProjects,
 } from "@/server/domain/project/services";
+import { broadcast } from "@/server/websocket/infrastructure/subscriptions";
+import { GlobalEventTypes } from "@/shared/types/websocket.types";
+import { Channels } from "@/shared/websocket";
 import { getAvailableSpecTypes } from "@/server/domain/workflow/services/getAvailableSpecTypes";
 import { installWorkflowPackage } from "@/server/domain/project/services/installWorkflowPackage";
 import { getBranches, validateBranch } from "@/server/domain/git/services";
@@ -25,7 +28,6 @@ import {
   hideProjectSchema,
   starProjectSchema,
   projectResponseSchema,
-  projectSyncResponseSchema,
 } from "@/server/domain/project/schemas";
 import {
   fileTreeResponseSchema,
@@ -58,7 +60,7 @@ export async function projectRoutes(fastify: FastifyInstance) {
 
   /**
    * POST /api/projects/sync
-   * Sync projects from ~/.claude/projects/ directory
+   * Sync projects from ~/.claude/projects/ directory (fire-and-forget)
    */
   fastify.post(
     "/api/projects/sync",
@@ -66,7 +68,7 @@ export async function projectRoutes(fastify: FastifyInstance) {
       preHandler: fastify.authenticate,
       schema: {
         response: {
-          200: projectSyncResponseSchema,
+          200: z.object({ data: z.object({ status: z.literal("syncing") }) }),
           401: errorResponse,
           500: errorResponse,
         },
@@ -80,21 +82,49 @@ export async function projectRoutes(fastify: FastifyInstance) {
           return reply.code(401).send(buildErrorResponse(401, "Unauthorized"));
         }
 
-        const syncResults = await syncFromClaudeProjects({ userId, logger: request.log });
+        // Return immediately
+        reply.send({ data: { status: "syncing" } });
 
-        // Trigger workflow rescan to detect workflows in newly synced projects
-        if (fastify.reloadWorkflowEngine) {
-          await fastify.reloadWorkflowEngine().catch(() => {
-            // Error already logged by decorator, don't break sync flow
+        // Run sync in background
+        syncFromClaudeProjects({ userId, logger: request.log })
+          .then(async (syncResults) => {
+            // Trigger workflow rescan to detect workflows in newly synced projects
+            if (fastify.reloadWorkflowEngine) {
+              await fastify.reloadWorkflowEngine().catch(() => {
+                // Error already logged by decorator, don't break sync flow
+              });
+            }
+
+            // Emit WebSocket event on global channel
+            const eventData = {
+              type: GlobalEventTypes.PROJECTS_SYNC_COMPLETED,
+              data: {
+                userId,
+                stats: {
+                  projectsImported: syncResults.projectsImported,
+                  projectsUpdated: syncResults.projectsUpdated,
+                  sessionsImported: syncResults.totalSessionsSynced,
+                },
+                timestamp: Date.now(),
+              },
+            };
+
+            broadcast(Channels.global(), eventData);
+
+            fastify.log.info(
+              { userId, syncResults },
+              "Projects sync completed successfully"
+            );
+          })
+          .catch((error) => {
+            // Log error but don't throw (already returned response)
+            fastify.log.error({ error, userId }, "Error syncing projects");
           });
-        }
-
-        return reply.send({ data: syncResults });
       } catch (error) {
-        fastify.log.error({ error }, "Error syncing projects");
+        fastify.log.error({ error }, "Error initiating project sync");
         return reply
           .code(500)
-          .send(buildErrorResponse(500, "Failed to sync projects"));
+          .send(buildErrorResponse(500, "Failed to initiate sync"));
       }
     }
   );

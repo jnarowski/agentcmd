@@ -141,6 +141,7 @@ export const GlobalEventTypes = {
   PONG: "global.pong",
   SUBSCRIPTION_SUCCESS: "global.subscription_success",
   SUBSCRIPTION_ERROR: "global.subscription_error",
+  PROJECTS_SYNC_COMPLETED: "projects.sync.completed",
 } as const;
 
 /**
@@ -176,6 +177,16 @@ export interface SubscriptionErrorData {
   timestamp?: number;
 }
 
+export interface ProjectsSyncCompletedData {
+  userId: string;
+  stats: {
+    projectsImported: number;
+    projectsUpdated: number;
+    sessionsImported: number;
+  };
+  timestamp: number;
+}
+
 /**
  * Discriminated union for all global events
  */
@@ -203,6 +214,10 @@ export type GlobalEvent =
   | {
       type: typeof GlobalEventTypes.SUBSCRIPTION_ERROR;
       data: SubscriptionErrorData;
+    }
+  | {
+      type: typeof GlobalEventTypes.PROJECTS_SYNC_COMPLETED;
+      data: ProjectsSyncCompletedData;
     };
 
 // ============================================================================

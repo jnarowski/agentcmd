@@ -120,6 +120,14 @@ export async function validateChannelAccess(
       };
     }
 
+    case "global": {
+      // Global channel is accessible to all authenticated users
+      // Used for app-level events like project sync completion
+      return {
+        allowed: true,
+      };
+    }
+
     default:
       return {
         allowed: false,
