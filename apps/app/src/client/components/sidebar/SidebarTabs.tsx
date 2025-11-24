@@ -1,5 +1,3 @@
-import { useEffect } from "react";
-import { useParams } from "react-router-dom";
 import {
   Tabs,
   TabsContent,
@@ -7,7 +5,6 @@ import {
   TabsTrigger,
 } from "@/client/components/ui/tabs";
 import { useSettings, useUpdateSettings } from "@/client/hooks/useSettings";
-import { useNavigationStore } from "@/client/stores/navigationStore";
 import { useProjects } from "@/client/pages/projects/hooks/useProjects";
 import { Skeleton } from "@/client/components/ui/skeleton";
 import { NavSpecs } from "./NavSpecs";
@@ -16,10 +13,8 @@ import { NavWorkflows } from "./NavWorkflows";
 import { ProjectCombobox } from "./ProjectCombobox";
 
 export function SidebarTabs() {
-  const { data: settings } = useSettings();
+  const { data: settings, isLoading: settingsLoading } = useSettings();
   const updateSettings = useUpdateSettings();
-  const { activeSessionId } = useNavigationStore();
-  const { runId } = useParams();
   const { isLoading: projectsLoading } = useProjects();
 
   // Migration fallback: old values → new values
@@ -38,25 +33,14 @@ export function SidebarTabs() {
     }
   }
 
-  // Auto-switch to Sessions tab when entering session, Workflows tab when entering workflow run
-  // (Comment out this useEffect to disable auto-switching behavior)
-  useEffect(() => {
-    if (activeSessionId && activeTab !== "sessions") {
-      updateSettings.mutate({ sidebar_active_tab: "sessions" });
-    } else if (runId && activeTab !== "workflows") {
-      updateSettings.mutate({ sidebar_active_tab: "workflows" });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeSessionId, runId]);
-
   const handleTabChange = (value: string) => {
     updateSettings.mutate({
       sidebar_active_tab: value as "sessions" | "workflows" | "specs",
     });
   };
 
-  // Show loading state while projects load to prevent project ID flash
-  if (projectsLoading) {
+  // Show loading state while projects or settings load
+  if (projectsLoading || settingsLoading) {
     return (
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         <div className="p-2">
