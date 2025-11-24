@@ -12,7 +12,7 @@ List all specs in the `.agent/specs/` directory, organized by workflow folder an
 - $folder: $1 (optional) - Filter by folder: "backlog", "todo", "done", or "all" (defaults to "all")
 - $status: $2 (optional) - Filter by status field: "draft", "ready", "in-progress", "review", "completed", or "any" (defaults to "any")
 - --search: (optional) - Search keyword to fuzzy match in spec names/paths
-- --sort: (optional) - Sort field: "created", "updated", or "id" (defaults to "created")
+- --sort: (optional) - Sort field: "created", "updated", "id", "complexity", "phases", or "tasks" (defaults to "created")
 
 ## Instructions
 
@@ -65,6 +65,9 @@ List all specs in the `.agent/specs/` directory, organized by workflow folder an
      - "created": Sort by created timestamp (oldest first)
      - "updated": Sort by updated timestamp (newest first)
      - "id": Sort by spec ID (chronological order)
+     - "complexity": Sort by totalComplexity (highest first, specs without complexity at end)
+     - "phases": Sort by phaseCount (highest first, specs without phases at end)
+     - "tasks": Sort by taskCount (highest first, specs without tasks at end)
 
 4. **Group Multi-Spec Folders**
 
@@ -82,6 +85,7 @@ List all specs in the `.agent/specs/` directory, organized by workflow folder an
      - Created date (from index)
      - Updated date (from index) if different from created
      - Status (from index)
+     - Complexity (from index) if present: "X pts, N phases, N tasks" or "Not estimated"
    - For multi-spec folders (multiple specs in same folder):
      - Display folder header once
      - Indent individual spec entries
@@ -98,16 +102,19 @@ Spec Files
 ────────────────────────────────────────────────────────────
   251110140500  future-feature            [draft]
                 Created: 2025-11-10
+                Complexity: Not estimated
                 .agent/specs/backlog/251110140500-future-feature/spec.md
 
 📋 TODO (2 specs)
 ────────────────────────────────────────────────────────────
   251108120000  workflow-safety           [in-progress]
                 Created: 2025-11-08  Updated: 2025-11-10
+                Complexity: 89 pts, 4 phases, 10 tasks
                 .agent/specs/todo/251108120000-workflow-safety/spec.md
 
   251108130500  gemini-integration        [draft]
                 Created: 2025-11-08
+                Complexity: 64 pts, 4 phases, 16 tasks
                 .agent/specs/todo/251108130500-gemini-integration/spec.md
 
 ✅ DONE (11 specs)
@@ -236,6 +243,34 @@ Spec Files (todo, sorted by updated)
   251108130500  gemini-integration        [draft]
                 Created: 2025-11-08
                 .agent/specs/todo/251108130500-gemini-integration/spec.md
+
+Total: 3 specs
+```
+
+**Sort by complexity:**
+```bash
+/list-specs todo --sort complexity
+```
+
+```text
+Spec Files (todo, sorted by complexity)
+
+📋 TODO (3 specs)
+────────────────────────────────────────────────────────────
+  251108120000  workflow-safety           [in-progress]
+                Created: 2025-11-08  Updated: 2025-11-10
+                Complexity: 89 pts, 4 phases, 10 tasks
+                .agent/specs/todo/251108120000-workflow-safety/spec.md
+
+  251108130500  gemini-integration        [draft]
+                Created: 2025-11-08
+                Complexity: 64 pts, 4 phases, 16 tasks
+                .agent/specs/todo/251108130500-gemini-integration/spec.md
+
+  251112070712  auth-frontend             [in-progress]
+                Created: 2025-11-12  Updated: 2025-11-12
+                Complexity: Not estimated
+                .agent/specs/todo/251112070712-auth-frontend/spec.md
 
 Total: 3 specs
 ```

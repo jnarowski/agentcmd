@@ -19,6 +19,9 @@ export interface Spec {
   status: SpecStatus; // From index.json
   spec_type: string; // Spec type (e.g., "feature", "test") - defaults to "feature" for legacy specs
   created_at: string; // ISO timestamp from index.json
+  totalComplexity?: number; // Total complexity points from spec.md
+  phaseCount?: number; // Number of phases from spec.md
+  taskCount?: number; // Number of tasks from spec.md
 }
 
 /**

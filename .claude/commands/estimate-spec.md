@@ -81,7 +81,17 @@ Assign complexity based on **context window usage and cognitive load**, not time
    - Preserve all other content unchanged
    - Write updated spec back to original file
 
-5. **Report Results**:
+5. **Update Index**:
+   - Read `.agent/specs/index.json`
+   - Extract spec ID from path
+   - Update spec entry with complexity fields:
+     - `totalComplexity`: Total complexity points (number)
+     - `phaseCount`: Number of phases (number)
+     - `taskCount`: Number of tasks (number)
+   - Update `updated` timestamp to current time
+   - Write updated index back to file
+
+6. **Report Results**:
    - Show file path
    - Display complexity summary
    - List phase breakdowns

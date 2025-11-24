@@ -35,6 +35,11 @@ Scans spec folders and reconciles with index.json, removing orphaned entries, ad
    - Remove orphaned entries (folder deleted)
    - Add missing entries with default values
    - Update status/timestamps for mismatches
+   - Extract and sync complexity fields from spec.md for each spec:
+     - `totalComplexity`: Parse from `**Total Complexity**: X points`
+     - `phaseCount`: Parse from `**Phases**: N`
+     - `taskCount`: Parse from `**Tasks**: N`
+     - If fields not found in spec.md, omit from index.json (optional fields)
    - Preserve `lastId` field
    - Write back to file
 
@@ -66,6 +71,18 @@ grep -m 1 '^\*\*Status\*\*:' spec.md | sed 's/\*\*Status\*\*: //'
 To extract created date:
 ```bash
 grep -m 1 '^\*\*Created\*\*:' spec.md | sed 's/\*\*Created\*\*: //'
+```
+
+To extract complexity fields:
+```bash
+# Total Complexity
+grep -m 1 '^\*\*Total Complexity\*\*:' spec.md | sed 's/\*\*Total Complexity\*\*: \([0-9]*\) points/\1/'
+
+# Phase Count
+grep -m 1 '^\*\*Phases\*\*:' spec.md | sed 's/\*\*Phases\*\*: //'
+
+# Task Count
+grep -m 1 '^\*\*Tasks\*\*:' spec.md | sed 's/\*\*Tasks\*\*: //'
 ```
 
 ## Report Format
