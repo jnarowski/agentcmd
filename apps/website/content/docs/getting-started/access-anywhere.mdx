@@ -67,7 +67,7 @@ Access your local <AgentCmd /> server from anywhere with [Tailscale's](https://t
     Set the WebSocket host environment variable before starting <AgentCmd />:
 
     ```bash
-    export VITE_WS_HOST=your-machine-name.tail-scale-name.ts.net:3456
+    export VITE_WS_HOST=your-machine-name.tail-scale-name.ts.net:4100
     npx agentcmd start
     ```
 
@@ -80,7 +80,7 @@ Access your local <AgentCmd /> server from anywhere with [Tailscale's](https://t
     On your phone/tablet (with Tailscale app connected):
 
     ```
-    http://your-machine-name.tail-scale-name.ts.net:3456
+    http://your-machine-name.tail-scale-name.ts.net:4100
     ```
 
     Your machine name appears in the Tailscale admin console.
@@ -98,7 +98,7 @@ Access your local <AgentCmd /> server from anywhere with [Tailscale's](https://t
 Connect to your home/office network via VPN and access:
 
 ```
-http://localhost:3456
+http://localhost:4100
 ```
 
 Works with any VPN: WireGuard, OpenVPN, corporate VPN, etc.
@@ -118,10 +118,10 @@ See [Deployment](/docs/deployment) for production setup with HTTPS and authentic
 Quick one-off access via SSH port forwarding:
 
 ```bash
-ssh -L 3456:localhost:3456 your-dev-machine
+ssh -L 4100:localhost:4100 your-dev-machine
 ```
 
-Then access `http://localhost:3456` on your local machine.
+Then access `http://localhost:4100` on your local machine.
 
 ## Security Considerations
 

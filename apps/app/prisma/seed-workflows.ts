@@ -2130,8 +2130,8 @@ async function main() {
 
   // Output direct links to workflow executions for easy preview
   const baseUrl = process.env.VITE_WS_HOST
-    ? `http://${process.env.VITE_WS_HOST}:${process.env.VITE_PORT || 5173}`
-    : `http://localhost:${process.env.VITE_PORT || 5173}`;
+    ? `http://${process.env.VITE_WS_HOST}:${process.env.VITE_PORT || 4101}`
+    : `http://localhost:${process.env.VITE_PORT || 4101}`;
 
   console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   console.log("📋 WORKFLOW RUN PREVIEW LINKS");

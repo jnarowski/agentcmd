@@ -122,7 +122,7 @@ console.log("Token:", token); // Should not be null
 
 ```bash
 # Check if server is running
-curl http://localhost:3456/api/health
+curl http://localhost:4100/api/health
 
 # If not, start it
 pnpm dev
@@ -134,7 +134,7 @@ pnpm dev
 // Check CORS configuration in server
 // apps/app/src/server/index.ts
 fastify.register(cors, {
-  origin: ["http://localhost:5173"],
+  origin: ["http://localhost:4101"],
   credentials: true,
 });
 ```
@@ -301,14 +301,14 @@ pnpm build
 
 ### 14. Port Already in Use
 
-**Error:** Port 3456 or 5173 already in use
+**Error:** Port 4100 or 4101 already in use
 
 **Solution:**
 
 ```bash
 # Find process using port
-lsof -i :3456
-lsof -i :5173
+lsof -i :4100
+lsof -i :4101
 
 # Kill process
 kill -9 <PID>
@@ -454,7 +454,7 @@ socket.onAny((event, data) => {
 
 ```bash
 # Verify server is healthy
-curl http://localhost:3456/api/health
+curl http://localhost:4100/api/health
 
 # Should return: { "status": "ok" }
 ```

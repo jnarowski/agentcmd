@@ -53,7 +53,7 @@ DATABASE_URL=file:./prod.db
 
 ```bash
 # Server configuration
-PORT=3456
+PORT=4100
 HOST=0.0.0.0
 NODE_ENV=production
 LOG_LEVEL=info
@@ -155,7 +155,7 @@ module.exports = {
     exec_mode: "fork",
     env: {
       NODE_ENV: "production",
-      PORT: 3456,
+      PORT: 4100,
     },
   }],
 };
@@ -187,7 +187,7 @@ RUN pnpm build
 RUN pnpm prisma migrate deploy
 
 # Expose port
-EXPOSE 3456
+EXPOSE 4100
 
 # Start server
 CMD ["node", "apps/app/dist/server/index.js"]
@@ -201,7 +201,7 @@ services:
   app:
     build: .
     ports:
-      - "3456:3456"
+      - "4100:4100"
     environment:
       - NODE_ENV=production
       - DATABASE_URL=file:/data/prod.db
@@ -294,7 +294,7 @@ server {
 
   # API
   location /api {
-    proxy_pass http://localhost:3456;
+    proxy_pass http://localhost:4100;
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection 'upgrade';
@@ -304,7 +304,7 @@ server {
 
   # WebSocket
   location /socket.io {
-    proxy_pass http://localhost:3456;
+    proxy_pass http://localhost:4100;
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection 'upgrade';
@@ -373,7 +373,7 @@ pm2 logs agentcmd
 
 ```bash
 # Check server health
-curl http://localhost:3456/api/health
+curl http://localhost:4100/api/health
 
 # Response:
 {
@@ -386,7 +386,7 @@ curl http://localhost:3456/api/health
 
 ```bash
 # Add to cron for monitoring
-*/5 * * * * curl -f http://localhost:3456/api/health || systemctl restart agentcmd
+*/5 * * * * curl -f http://localhost:4100/api/health || systemctl restart agentcmd
 ```
 
 ## Performance
@@ -499,7 +499,7 @@ pm2 start ecosystem.config.js
 pm2 logs agentcmd
 
 # Health check
-curl http://localhost:3456/api/health
+curl http://localhost:4100/api/health
 
 # Backup database
 cp apps/app/prisma/prod.db backups/prod_$(date +%Y%m%d).db

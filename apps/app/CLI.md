@@ -75,8 +75,8 @@ Next steps:
   2. Run: agentcmd-ui start
 
 Default configuration:
-  UI Port:     5173
-  Server Port: 3456
+  UI Port:     4101
+  Server Port: 4100
   Database:    ~/.agent/database.db
 ```
 
@@ -114,8 +114,8 @@ The CLI creates a configuration file at `~/.agents/agentcmd-ui-config.json`.
 
 ```json
 {
-  "uiPort": 5173,
-  "serverPort": 3456,
+  "uiPort": 4101,
+  "serverPort": 4100,
   "dbPath": "~/.agent/database.db",
   "logLevel": "info"
 }
@@ -125,8 +125,8 @@ The CLI creates a configuration file at `~/.agents/agentcmd-ui-config.json`.
 
 | Option       | Type   | Default                | Description                                                       |
 | ------------ | ------ | ---------------------- | ----------------------------------------------------------------- |
-| `uiPort`     | number | `5173`                 | Port for Vite dev server                                          |
-| `serverPort` | number | `3456`                 | Port for Fastify backend                                          |
+| `uiPort`     | number | `4101`                 | Port for Vite dev server                                          |
+| `serverPort` | number | `4100`                 | Port for Fastify backend                                          |
 | `dbPath`     | string | `~/.agent/database.db` | Path to SQLite database (tilde expands to home directory)         |
 | `logLevel`   | string | `info`                 | Logging level: `trace`, `debug`, `info`, `warn`, `error`, `fatal` |
 
@@ -188,7 +188,7 @@ node dist/server/index.js
 
 The server will:
 
-- Serve the API on port 3456 (or configured `serverPort`)
+- Serve the API on port 4100 (or configured `serverPort`)
 - Serve the frontend from `dist/client/`
 
 ## Troubleshooting

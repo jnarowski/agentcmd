@@ -10,7 +10,7 @@ import { z } from "zod";
  * Server configuration schema
  */
 const ServerConfigSchema = z.object({
-  port: z.coerce.number().int().positive().default(3456),
+  port: z.coerce.number().int().positive().default(4100),
   host: z.string().default("0.0.0.0"),
   nodeEnv: z.enum(["development", "production", "test"]).default("development"),
   logLevel: z
@@ -25,7 +25,7 @@ const ServerConfigSchema = z.object({
 const CorsConfigSchema = z.object({
   allowedOrigins: z
     .string()
-    .default("http://localhost:5173")
+    .default("http://localhost:4101")
     .transform((val) => val.split(",")),
 });
 

@@ -4,6 +4,7 @@ import type {
   CleanupWorkspaceConfig,
   StepOptions,
 } from "agentcmd-workflows";
+import { existsSync } from "node:fs";
 import { getGitStatus } from "@/server/domain/git/services/getGitStatus";
 import { commitChanges } from "@/server/domain/git/services/commitChanges";
 import { switchBranch } from "@/server/domain/git/services/switchBranch";
@@ -60,6 +61,27 @@ async function executeFinalizeWorkspace(
 
   // Step 1: Check for uncommitted changes and auto-commit
   const workingDir = workspaceResult.workingDir;
+
+  // Handle retry after partial completion (worktree already removed)
+  // This makes the step idempotent - safe to retry after failure
+  if (!existsSync(workingDir)) {
+    context.logger.info(
+      { workingDir, mode: workspaceResult.mode },
+      "Working directory already cleaned up, skipping git operations"
+    );
+
+    // For worktree mode, still switch back to original branch in main project
+    if (workspaceResult.mode === "worktree" && workspaceResult.worktreePath) {
+      const projectPath = workspaceResult.worktreePath.replace(/\/\.worktrees\/[^/]+$/, "");
+      const originalBranch = (workspaceResult as { originalBranch?: string }).originalBranch;
+      if (originalBranch) {
+        await switchBranch({ projectPath, branchName: originalBranch });
+        context.logger.info({ originalBranch }, "Restored original branch after retry");
+      }
+    }
+    return;
+  }
+
   const status = await getGitStatus({ projectPath: workingDir });
 
   if (status.files.length > 0) {

@@ -38,7 +38,7 @@ The CLI config file (`~/.agentcmd/config.json`) uses a **flat structure**:
 
 ```json title="~/.agentcmd/config.json"
 {
-  "port": 3456,
+  "port": 4100,
   "inngestPort": 8288,
   "host": "0.0.0.0",
   "logLevel": "info",
@@ -46,7 +46,7 @@ The CLI config file (`~/.agentcmd/config.json`) uses a **flat structure**:
   "anthropicApiKey": "",
   "openaiApiKey": "",
   "jwtSecret": "",
-  "allowedOrigins": "http://localhost:3456"
+  "allowedOrigins": "http://localhost:4100"
 }
 ```
 
@@ -54,7 +54,7 @@ The CLI config file (`~/.agentcmd/config.json`) uses a **flat structure**:
 
 | Key | Type | Description | Default |
 |-----|------|-------------|---------|
-| `port` | number | Backend API port | `3456` |
+| `port` | number | Backend API port | `4100` |
 | `inngestPort` | number | Inngest dev server port | `8288` |
 | `host` | string | Bind address | `0.0.0.0` |
 | `logLevel` | string | Log verbosity | `info` |
@@ -62,13 +62,13 @@ The CLI config file (`~/.agentcmd/config.json`) uses a **flat structure**:
 | `anthropicApiKey` | string | Anthropic API key | `""` |
 | `openaiApiKey` | string | OpenAI API key | `""` |
 | `jwtSecret` | string | JWT signing secret | `""` |
-| `allowedOrigins` | string | CORS allowed origins | `http://localhost:3456` |
+| `allowedOrigins` | string | CORS allowed origins | `http://localhost:4100` |
 
 **Example:**
 ```bash
 # Get current port
 agentcmd config --get port
-# 3456
+# 4100
 
 # Change port
 agentcmd config --set port=4000
@@ -89,7 +89,7 @@ Environment variables override config file values. The server uses additional en
 
 ```bash
 # Server
-export PORT=3456
+export PORT=4100
 export HOST=0.0.0.0
 export NODE_ENV=development
 export LOG_LEVEL=info
@@ -102,7 +102,7 @@ export DATABASE_URL=file:./dev.db
 export JWT_SECRET=$(openssl rand -base64 32)
 
 # CORS
-export ALLOWED_ORIGINS=http://localhost:5173
+export ALLOWED_ORIGINS=http://localhost:4101
 
 # Webhooks (optional)
 # Public webhook endpoint base URL (for Tailscale Funnel, ngrok, etc.)
@@ -161,7 +161,7 @@ Default paths used by <AgentCmd />:
 # .env (local development)
 NODE_ENV=development
 LOG_LEVEL=debug
-PORT=3456
+PORT=4100
 DATABASE_URL=file:./dev.db
 
 # API keys (keep in shell profile or .env)
@@ -173,7 +173,7 @@ export JWT_SECRET=$(openssl rand -base64 32)
 ```bash
 # .env.example (check into git)
 NODE_ENV=development
-PORT=3456
+PORT=4100
 HOST=0.0.0.0
 LOG_LEVEL=info
 DATABASE_URL=file:./dev.db
@@ -207,7 +207,7 @@ JWT_SECRET=${{ secrets.JWT_SECRET }}
 # Production environment
 NODE_ENV=production
 LOG_LEVEL=info
-PORT=3456
+PORT=4100
 HOST=0.0.0.0
 
 # Database (persistent)
@@ -302,7 +302,7 @@ Configuration values are loaded in this order (later overrides earlier):
 
 **Example:**
 ```bash
-# Config file: port = 3456
+# Config file: port = 4100
 # Environment: PORT=4000
 # CLI flag: --port 5000
 
@@ -318,7 +318,7 @@ agentcmd start              # Uses 4000 (env wins)
 # Valid config
 agentcmd start
 ✓ Configuration valid
-✓ Server starting on port 3456
+✓ Server starting on port 4100
 
 # Invalid config (missing JWT_SECRET)
 agentcmd start

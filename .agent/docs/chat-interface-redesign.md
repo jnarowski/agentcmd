@@ -334,7 +334,7 @@ Alternatives (native CSS `overflow-anchor`, custom hooks, `react-scroll-to-botto
 
 ### Phase 2: Validate Mock
 - [ ] Run dev server: `pnpm dev`
-- [ ] Visit: `http://localhost:5173/mock/chat-layout`
+- [ ] Visit: `http://localhost:4101/mock/chat-layout`
 - [ ] Test long message lists (scroll behavior)
 - [ ] Test short message lists (no layout break)
 - [ ] Test scroll-to-bottom button
@@ -404,7 +404,7 @@ Alternatives (native CSS `overflow-anchor`, custom hooks, `react-scroll-to-botto
 
 ## Access Mock Page
 
-**URL:** `http://localhost:5173/mock/chat-layout`
+**URL:** `http://localhost:4101/mock/chat-layout`
 
 **File:** `apps/app/src/client/pages/mock/ChatLayoutMock.tsx`
 

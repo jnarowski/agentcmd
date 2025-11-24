@@ -33,7 +33,7 @@ source ~/.zshrc
 ```bash
 # Bind to localhost only
 HOST=127.0.0.1
-PORT=3456
+PORT=4100
 
 # CORS (optional - test without first)
 ALLOWED_ORIGINS=https://your-machine-name.ts.net
@@ -55,7 +55,7 @@ pnpm build
 pnpm start  # or use PM2
 
 # Serve via Tailscale (port 443)
-tailscale serve --https=443 --bg localhost:3456
+tailscale serve --https=443 --bg localhost:4100
 ```
 
 **Access:** `https://your-machine-name.ts.net`
@@ -78,7 +78,7 @@ tailscale serve --https=443 off
 
 ```bash
 # Set up Serve first
-tailscale serve --https=443 --bg localhost:3456
+tailscale serve --https=443 --bg localhost:4100
 
 # Enable public access
 tailscale funnel --bg 443 on
@@ -88,7 +88,7 @@ tailscale funnel --bg 443 on
 
 ```bash
 # Serve specific path
-tailscale serve --https=443 --bg --set-path=/api/webhooks http://127.0.0.1:3456
+tailscale serve --https=443 --bg --set-path=/api/webhooks http://127.0.0.1:4100
 
 # Enable Funnel
 tailscale funnel --bg 443 on
@@ -109,7 +109,7 @@ tailscale funnel 443 off
 **Tailscale Serve:**
 ```bash
 # --bg flag persists across reboots
-tailscale serve --https=443 --bg localhost:3456
+tailscale serve --https=443 --bg localhost:4100
 ```
 
 **Your app (PM2):**
@@ -162,7 +162,7 @@ tailscale status
 tailscale serve status
 
 # Check app running
-curl http://localhost:3456/api/health
+curl http://localhost:4100/api/health
 
 # Check PM2
 pm2 status

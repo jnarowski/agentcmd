@@ -107,6 +107,23 @@ export function DetailsTab({ run }: DetailsTabProps) {
               <dd className="font-mono text-xs">{run.planning_session_id}</dd>
             </div>
           )}
+
+          {run.pr_url && (
+            <div className="grid grid-cols-2 gap-2 py-2">
+              <dt className="text-muted-foreground">Pull Request:</dt>
+              <dd>
+                <a
+                  href={run.pr_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                >
+                  View PR
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              </dd>
+            </div>
+          )}
         </dl>
       </div>
 

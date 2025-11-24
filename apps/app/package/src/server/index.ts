@@ -534,7 +534,7 @@ export async function createServer() {
         reply.code(200).send({
           message: "Development mode: Frontend not built",
           hint: 'Run "pnpm dev" to start both frontend (Vite) and backend servers',
-          viteUrl: "http://localhost:5173",
+          viteUrl: "http://localhost:4101",
           apiUrl: `http://${config.server.host}:${config.server.port}/api`,
         });
       }

@@ -321,7 +321,7 @@ export function useWebSocket() {
   useEffect(() => {
     if (!token) return;
 
-    const newSocket = io("http://localhost:3456", {
+    const newSocket = io("http://localhost:4100", {
       auth: { token },
     });
 

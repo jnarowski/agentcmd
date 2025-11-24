@@ -125,8 +125,8 @@ pnpm dev
 
 This starts:
 
-- **Frontend**: http://localhost:5173 (Vite dev server with HMR)
-- **Backend**: http://localhost:3456 (Fastify API server)
+- **Frontend**: http://localhost:4101 (Vite dev server with HMR)
+- **Backend**: http://localhost:4100 (Fastify API server)
 
 **Individual dev servers:**
 
@@ -325,7 +325,7 @@ node apps/app/dist/cli.js install
 
 ### WebSocket
 
-- `ws://localhost:3456/ws/chat` - Real-time chat streaming
+- `ws://localhost:4100/ws/chat` - Real-time chat streaming
 
 ## WebSocket Events
 
@@ -362,10 +362,10 @@ node apps/app/dist/cli.js install
 | `ANTHROPIC_API_KEY` | No       | -                       | Anthropic API key for AI session naming                           |
 | `LOG_LEVEL`         | No       | `info`                  | Logging level: `trace`, `debug`, `info`, `warn`, `error`, `fatal` |
 | `LOG_FILE`          | No       | `./logs/app.log`        | Path to log file                                                  |
-| `PORT`              | No       | `3456`                  | Fastify server port                                               |
+| `PORT`              | No       | `4100`                  | Fastify server port                                               |
 | `HOST`              | No       | `127.0.0.1`             | Fastify server host                                               |
-| `VITE_PORT`         | No       | `5173`                  | Vite dev server port                                              |
-| `ALLOWED_ORIGINS`   | No       | `http://localhost:5173` | CORS allowed origins (comma-separated)                            |
+| `VITE_PORT`         | No       | `4101`                  | Vite dev server port                                              |
+| `ALLOWED_ORIGINS`   | No       | `http://localhost:4101` | CORS allowed origins (comma-separated)                            |
 | `NODE_ENV`          | No       | `development`           | Environment: `development`, `production`, `test`                  |
 | `DATABASE_URL`      | No       | `file:./prisma/dev.db`  | SQLite database path                                              |
 

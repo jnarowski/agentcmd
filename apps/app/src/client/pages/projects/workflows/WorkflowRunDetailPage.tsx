@@ -132,11 +132,9 @@ function WorkflowRunDetailPage() {
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
             )}
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {(run as any).pr_url && (
+            {run.pr_url && (
               <a
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                href={(run as any).pr_url}
+                href={run.pr_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-sm text-blue-500 hover:text-blue-600"

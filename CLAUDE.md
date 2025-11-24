@@ -237,8 +237,8 @@ pnpm check          # lint + type-check
 
 # App development (from apps/app/)
 pnpm dev            # Both client + server (auto-runs prisma migrate deploy)
-pnpm dev:client     # Frontend only (port 5173)
-pnpm dev:server     # Backend only (port 3456)
+pnpm dev:client     # Frontend only (port 4101)
+pnpm dev:server     # Backend only (port 4100)
 
 # Database
 pnpm prisma:generate   # Regenerate Prisma client
@@ -304,8 +304,8 @@ pnpm test:e2e            # E2E tests with real CLI
 
 **Ports:**
 
-- Frontend: 5173
-- Backend: 3456
+- Frontend: 4101
+- Backend: 4100
 - Inngest UI: 8288
 
 **File Locations:**
@@ -332,7 +332,7 @@ tail -f apps/app/logs/app.log | jq .
 **Health Check:**
 
 ```bash
-curl http://localhost:3456/api/health
+curl http://localhost:4100/api/health
 ```
 
 **See:** `.agent/docs/troubleshooting.md` for common issues.

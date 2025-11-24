@@ -148,7 +148,7 @@ Zod-validated config with sensible defaults:
 ```typescript
 import { config } from "@/server/config";
 
-const port = config.server.port;        // 3456
+const port = config.server.port;        // 4100
 const jwtSecret = config.jwt.secret;    // Required
 const dbUrl = config.database.url;      // file:./dev.db
 const inngestAppId = config.workflow.appId;
@@ -157,7 +157,7 @@ const inngestAppId = config.workflow.appId;
 **Environment Variables:**
 - `JWT_SECRET` - **Required** (validation fails without it)
 - `DATABASE_URL` - Default: `file:./dev.db`
-- `PORT` - Default: 3456
+- `PORT` - Default: 4100
 - `HOST` - Default: 127.0.0.1
 - `NODE_ENV` - Default: development
 - `LOG_LEVEL` - Default: info
@@ -512,7 +512,7 @@ import { getProjectById } from "../../../domain/project/services/getProjectById.
 ## Health Check
 
 ```bash
-curl http://localhost:3456/api/health
+curl http://localhost:4100/api/health
 ```
 
 **Response:**

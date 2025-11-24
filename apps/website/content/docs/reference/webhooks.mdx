@@ -17,7 +17,7 @@ Complete technical reference for webhook triggers, including configuration schem
 
 Environment variable that sets the base URL for webhook endpoints.
 
-**Why needed:** External services (GitHub, Linear, Jira) need to send webhooks to a publicly accessible URL. By default, agentcmd uses `http://localhost:3456` which only works locally.
+**Why needed:** External services (GitHub, Linear, Jira) need to send webhooks to a publicly accessible URL. By default, agentcmd uses `http://localhost:4100` which only works locally.
 
 **Configuration:** Set in your `.env` file.
 
@@ -28,7 +28,7 @@ Environment variable that sets the base URL for webhook endpoints.
 | **Tailscale** | `https://your-machine.ts.net` | Local development with secure mesh network |
 | **ngrok** | `https://abc123.ngrok.io` | Temporary public tunnel for testing |
 | **Production** | `https://agentcmd.example.com` | Production deployment with custom domain |
-| **Local only** | (not set) | Defaults to `http://127.0.0.1:3456` - won't work for external webhooks |
+| **Local only** | (not set) | Defaults to `http://127.0.0.1:4100` - won't work for external webhooks |
 
 **How it works:** The webhook URL shown in the UI automatically uses `WEBHOOK_BASE_URL` when configured. Without it, external services can't reach your local server. With it set to a public URL (like your Tailscale domain), services like GitHub can successfully send webhooks to your server.
 

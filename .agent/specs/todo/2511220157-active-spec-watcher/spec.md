@@ -303,7 +303,7 @@ pnpm lint
 **Manual Verification:**
 
 1. Start application: `pnpm dev`
-2. Navigate to: `http://localhost:5173/projects`
+2. Navigate to: `http://localhost:4101/projects`
 3. Verify: One-time rescan triggered (check network tab for `/api/specs/rescan`)
 4. Open any project
 5. Verify: Server logs show "Spec watcher started for project {id}"

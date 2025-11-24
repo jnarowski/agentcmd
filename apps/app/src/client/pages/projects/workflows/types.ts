@@ -59,6 +59,7 @@ export interface WorkflowRun {
   base_branch: string | null;
   branch_name: string | null;
   worktree_name: string | null;
+  pr_url: string | null;
   current_step: string | null;
   current_phase: string | null;
   error_message: string | null;
@@ -214,6 +215,7 @@ export interface WorkflowRunDetail {
   issue_id: string | null;
   issue_url: string | null;
   issue_source: string | null;
+  pr_url: string | null;
   current_step: string | null;
   current_phase: string | null;
   error_message: string | null;

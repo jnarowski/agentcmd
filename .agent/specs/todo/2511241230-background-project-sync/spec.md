@@ -119,7 +119,7 @@ None - using existing infrastructure
   - Verify projects appear after sync completes
   - Verify returning users see cached data immediately
   - Test with network tab: sync endpoint returns instantly
-  - Commands: `pnpm dev`, open http://localhost:5173
+  - Commands: `pnpm dev`, open http://localhost:4101
 
 #### Completion Notes
 - Type checking passed: `pnpm check-types` ✓
@@ -164,7 +164,7 @@ pnpm build
 **Manual:**
 
 1. Start app: `pnpm dev`
-2. Open browser: http://localhost:5173
+2. Open browser: http://localhost:4101
 3. Clear cache and hard reload (first-time user simulation)
 4. Verify: App loads instantly
 5. Verify: "Importing Projects" spinner shows

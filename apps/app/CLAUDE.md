@@ -20,8 +20,8 @@ pnpm dev
 
 # Auto-runs: prisma migrate deploy on start
 # Starts:
-# - Frontend: http://localhost:5173
-# - Backend: http://localhost:3456
+# - Frontend: http://localhost:4101
+# - Backend: http://localhost:4100
 # - Inngest: http://localhost:8288
 
 # Or run separately:
@@ -198,7 +198,7 @@ DATABASE_URL=file:./dev.db
 ### Optional
 
 ```bash
-PORT=3456
+PORT=4100
 HOST=127.0.0.1
 NODE_ENV=development
 LOG_LEVEL=info
@@ -233,8 +233,8 @@ pm2 start dist/server/index.js --name agentcmd
 
 **Ports:**
 
-- Frontend: 5173
-- Backend: 3456
+- Frontend: 4101
+- Backend: 4100
 - Inngest: 8288
 - Prisma Studio: 5555
 

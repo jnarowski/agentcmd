@@ -133,7 +133,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
       const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
 
       // Allow override via VITE_WS_HOST for VPN/remote access
-      // Examples: "10.0.1.100:3456", "vpn.example.com:3456"
+      // Examples: "10.0.1.100:4100", "vpn.example.com:4100"
       // In dev, Vite proxy forwards /ws to backend port
       const wsHost =
         import.meta.env.VITE_WS_HOST ||

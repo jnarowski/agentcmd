@@ -26,14 +26,14 @@ Guide for exposing webhook endpoints publicly using Tailscale Funnel.
 # From apps/app/
 pnpm dev:server
 
-# Server runs on http://localhost:3456
+# Server runs on http://localhost:4100
 ```
 
 ### 2. Expose Webhook Endpoint
 
 ```bash
 # Expose only the webhook event endpoint
-tailscale serve --bg --https=443 --set-path=/api/webhooks http://127.0.0.1:3456
+tailscale serve --bg --https=443 --set-path=/api/webhooks http://127.0.0.1:4100
 
 # Enable public access
 tailscale funnel --bg 443 on
@@ -79,7 +79,7 @@ Create `tailscale-serve.json` to expose only webhook event endpoint:
     "${TS_CERT_DOMAIN}:443": {
       "Handlers": {
         "/api/webhooks/": {
-          "Proxy": "http://127.0.0.1:3456"
+          "Proxy": "http://127.0.0.1:4100"
         }
       }
     }
@@ -107,7 +107,7 @@ tailscale funnel 443 on
     "${TS_CERT_DOMAIN}:443": {
       "Handlers": {
         "/api/webhooks/([^/]+)/events": {
-          "Proxy": "http://127.0.0.1:3456"
+          "Proxy": "http://127.0.0.1:4100"
         }
       }
     }
@@ -121,7 +121,7 @@ tailscale funnel 443 on
 
 ```bash
 # Simple - expose all webhook paths
-tailscale serve --bg --https=443 --set-path=/api/webhooks http://127.0.0.1:3456
+tailscale serve --bg --https=443 --set-path=/api/webhooks http://127.0.0.1:4100
 tailscale funnel --bg 443 on
 ```
 
@@ -160,7 +160,7 @@ These should NEVER be exposed via Funnel:
 - `POST /api/webhooks/:webhookId/rotate-secret` - Rotate secret
 - `GET /api/webhooks/:webhookId/events` - Get event history
 
-Access these via `http://localhost:3456` or Tailscale (non-Funnel).
+Access these via `http://localhost:4100` or Tailscale (non-Funnel).
 
 ### Supported Webhook Sources
 
@@ -187,7 +187,7 @@ Access these via `http://localhost:3456` or Tailscale (non-Funnel).
 
 ```json
 "/api/webhooks/([^/]+)/events": {
-  "Proxy": "http://127.0.0.1:3456"
+  "Proxy": "http://127.0.0.1:4100"
 }
 ```
 
@@ -195,7 +195,7 @@ Access these via `http://localhost:3456` or Tailscale (non-Funnel).
 
 ```json
 "/api/webhooks/": {
-  "Proxy": "http://127.0.0.1:3456"
+  "Proxy": "http://127.0.0.1:4100"
 }
 ```
 
@@ -335,7 +335,7 @@ Create webhook with conditions, send events that match/don't match:
 
 ```typescript
 // In browser console (when authenticated)
-const socket = io("http://localhost:3456");
+const socket = io("http://localhost:4100");
 
 socket.emit("subscribe", { channel: "project:your-project-id" });
 
@@ -428,13 +428,13 @@ tailscale funnel status
 
 ```bash
 tailscale serve status
-# Should show proxy to localhost:3456
+# Should show proxy to localhost:4100
 ```
 
 **Check server running:**
 
 ```bash
-curl http://localhost:3456/api/health
+curl http://localhost:4100/api/health
 # Should return 200
 ```
 

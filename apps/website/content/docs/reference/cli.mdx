@@ -80,7 +80,7 @@ agentcmd start [options]
 **Options**:
 | Option | Description | Default |
 |--------|-------------|---------|
-| `-p, --port <number>` | Backend API server port | `3456` |
+| `-p, --port <number>` | Backend API server port | `4100` |
 | `--inngest-port <number>` | Inngest dev UI port | `8288` |
 | `--host <address>` | Server host address | `127.0.0.1` |
 
@@ -102,7 +102,7 @@ agentcmd start --host 0.0.0.0
 **Services Started**:
 | Service | Default Port | Access |
 |---------|--------------|--------|
-| **AgentCmd UI & API** | 3456 | http://localhost:3456 |
+| **AgentCmd UI & API** | 4100 | http://localhost:4100 |
 | **Inngest Dev UI** | 8288 | http://localhost:8288 |
 
 **Environment Variables**:
@@ -152,7 +152,7 @@ agentcmd config --show
     "url": "file:/Users/you/.agentcmd/agentcmd.db"
   },
   "server": {
-    "port": 3456,
+    "port": 4100,
     "host": "127.0.0.1"
   },
   "inngest": {
@@ -168,7 +168,7 @@ agentcmd config --get server.port
 
 # Output:
 ```text title="Config Value Output"
-3456
+4100
 ```
 </Tab>
 <Tab value="Set Value">
@@ -217,7 +217,7 @@ The default config file at `~/.agentcmd/config.json`:
     "url": "file:~/.agentcmd/agentcmd.db"
   },
   "server": {
-    "port": 3456,
+    "port": 4100,
     "host": "127.0.0.1"
   },
   "inngest": {
@@ -258,7 +258,7 @@ The default config file at `~/.agentcmd/config.json`:
 **Server Configuration** (`server`):
 | Key | Type | Description | Default |
 |-----|------|-------------|---------|
-| `port` | number | Backend API port | `3456` |
+| `port` | number | Backend API port | `4100` |
 | `host` | string | Server bind address | `127.0.0.1` |
 
 **Inngest Configuration** (`inngest`):
@@ -292,7 +292,7 @@ The default config file at `~/.agentcmd/config.json`:
 |----------|-------------|---------|
 | `NODE_ENV` | Environment mode | `development` |
 | `LOG_LEVEL` | Logging verbosity | `info` |
-| `PORT` | Backend server port | `3456` |
+| `PORT` | Backend server port | `4100` |
 | `HOST` | Server host address | `127.0.0.1` |
 | `DATABASE_URL` | Database connection string | `file:~/.agentcmd/agentcmd.db` |
 

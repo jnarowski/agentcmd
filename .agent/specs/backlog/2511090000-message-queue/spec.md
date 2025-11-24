@@ -304,7 +304,7 @@ pnpm check
 **Manual Verification:**
 
 1. Start application: `pnpm dev`
-2. Navigate to: `http://localhost:5173/projects/[project-id]/sessions/[session-id]`
+2. Navigate to: `http://localhost:4101/projects/[project-id]/sessions/[session-id]`
 3. Verify:
    - Send first message, immediately send 2 more while processing
    - See 2 messages with "Queued (1/2)" and "Queued (2/2)" badges

@@ -8,8 +8,8 @@ export default defineConfig(({ mode }) => {
   // Load env from apps/app directory (where .env file is located)
   const envDir = path.resolve(__dirname, "./");
   const env = loadEnv(mode, envDir, "");
-  const serverPort = parseInt(env.PORT) || 3456;
-  const vitePort = parseInt(env.VITE_PORT) || 5173;
+  const serverPort = parseInt(env.PORT) || 4100;
+  const vitePort = parseInt(env.VITE_PORT) || 4101;
 
   return {
     envDir: envDir, // Tell Vite where to find .env files

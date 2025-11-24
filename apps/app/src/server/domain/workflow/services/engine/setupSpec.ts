@@ -39,10 +39,13 @@ export async function setupSpec(params: {
   // CASE 1: Spec file already provided - verify it exists (memoized to prevent replay errors)
   if (event.data.specFile) {
     return await inngestStep.run("verify-spec-file", async () => {
+      // Use workingDir (worktree) if available, otherwise fall back to project path
+      const basePath = event.data.workingDir ?? run.project.path;
+
       // Convert relative paths to absolute
       // event.data.specFile is relative to .agent/specs/ (e.g., "todo/251117.../spec.md")
       const specFilePath = resolveProjectPath(
-        run.project.path,
+        basePath,
         `.agent/specs/${event.data.specFile}`
       );
 
@@ -72,7 +75,8 @@ export async function setupSpec(params: {
   // Verify the slash command exists before calling agent
   // Command format: /cmd:generate-{specType}-spec
   // Example: /cmd:generate-feature-spec, /cmd:generate-bug-spec
-  const commandPath = `${run.project.path}/.claude/commands/cmd/generate-${specType}-spec.md`;
+  const basePath = event.data.workingDir ?? run.project.path;
+  const commandPath = `${basePath}/.claude/commands/cmd/generate-${specType}-spec.md`;
 
   if (!existsSync(commandPath)) {
     throw new Error(

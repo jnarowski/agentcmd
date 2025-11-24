@@ -6,7 +6,7 @@
 export const CLI_NAME = "agentcmd";
 
 // Default port configuration
-export const DEFAULT_PORT = 3456;
+export const DEFAULT_PORT = 4100;
 export const DEFAULT_INNGEST_PORT = 8288;
 export const DEFAULT_HOST = "0.0.0.0";
 

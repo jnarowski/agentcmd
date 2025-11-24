@@ -27,7 +27,7 @@ Install and run as standalone application:
 # First-time setup (creates ~/.agentcmd/)
 npx agentcmd install
 
-# Start server - Access at http://localhost:3456
+# Start server - Access at http://localhost:4100
 npx agentcmd start
 
 # Customize ports
@@ -57,8 +57,8 @@ pnpm dev
 
 **Access at:**
 
-- Frontend: [http://localhost:5173](http://localhost:5173)
-- Backend: [http://localhost:3456](http://localhost:3456)
+- Frontend: [http://localhost:4101](http://localhost:4101)
+- Backend: [http://localhost:4100](http://localhost:4100)
 - Inngest UI: [http://localhost:8288](http://localhost:8288)
 
 ### For Production (pm2)
@@ -109,8 +109,8 @@ Or manually edit `~/.agentcmd/config.json`.
 
 | Service         | Default | Configure Via                                         |
 | --------------- | ------- | ----------------------------------------------------- |
-| Fastify Server  | 3456    | `PORT` env var or `--port` flag                       |
-| Vite Dev Server | 5173    | `VITE_PORT` env var (dev only)                        |
+| Fastify Server  | 4100    | `PORT` env var or `--port` flag                       |
+| Vite Dev Server | 4101    | `VITE_PORT` env var (dev only)                        |
 | Inngest Dev UI  | 8288    | `inngestPort` in config.json, `INNGEST_PORT` env var, or `--inngest-port` flag |
 
 **Priority:** CLI flags > config.json > .env > defaults

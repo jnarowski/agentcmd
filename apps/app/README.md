@@ -111,8 +111,8 @@ apps/app/
    # Optional
    ANTHROPIC_API_KEY=your-anthropic-api-key  # For AI-powered session naming
    LOG_LEVEL=info
-   PORT=3456
-   VITE_PORT=5173
+   PORT=4100
+   VITE_PORT=4101
    ```
 
 ### Development
@@ -125,8 +125,8 @@ pnpm dev
 
 This starts:
 
-- **Frontend**: http://localhost:5173 (Vite dev server with HMR)
-- **Backend**: http://localhost:3456 (Fastify API server)
+- **Frontend**: http://localhost:4101 (Vite dev server with HMR)
+- **Backend**: http://localhost:4100 (Fastify API server)
 
 **Individual dev servers:**
 
@@ -138,7 +138,7 @@ pnpm dev:server    # Fastify server only
 **Kill dev servers:**
 
 ```bash
-pnpm dev:kill      # Kill processes on ports 3456 and 5173
+pnpm dev:kill      # Kill processes on ports 4100 and 4101
 ```
 
 ### Building
@@ -215,7 +215,7 @@ export JWT_SECRET="your-secure-random-secret"  # Generate with: openssl rand -ba
 export NODE_ENV="production"
 
 # Optional overrides
-export PORT=3456
+export PORT=4100
 export HOST=0.0.0.0  # To allow external connections
 export DATABASE_URL="file:/var/lib/agentcmd/database.db"
 export LOG_LEVEL=warn
@@ -325,7 +325,7 @@ node apps/app/dist/cli.js install
 
 ### WebSocket
 
-- `ws://localhost:3456/ws/chat` - Real-time chat streaming
+- `ws://localhost:4100/ws/chat` - Real-time chat streaming
 
 ## WebSocket Events
 
@@ -362,10 +362,10 @@ node apps/app/dist/cli.js install
 | `ANTHROPIC_API_KEY` | No       | -                       | Anthropic API key for AI session naming                           |
 | `LOG_LEVEL`         | No       | `info`                  | Logging level: `trace`, `debug`, `info`, `warn`, `error`, `fatal` |
 | `LOG_FILE`          | No       | `./logs/app.log`        | Path to log file                                                  |
-| `PORT`              | No       | `3456`                  | Fastify server port                                               |
+| `PORT`              | No       | `4100`                  | Fastify server port                                               |
 | `HOST`              | No       | `127.0.0.1`             | Fastify server host                                               |
-| `VITE_PORT`         | No       | `5173`                  | Vite dev server port                                              |
-| `ALLOWED_ORIGINS`   | No       | `http://localhost:5173` | CORS allowed origins (comma-separated)                            |
+| `VITE_PORT`         | No       | `4101`                  | Vite dev server port                                              |
+| `ALLOWED_ORIGINS`   | No       | `http://localhost:4101` | CORS allowed origins (comma-separated)                            |
 | `NODE_ENV`          | No       | `development`           | Environment: `development`, `production`, `test`                  |
 | `DATABASE_URL`      | No       | `file:./prisma/dev.db`  | SQLite database path                                              |
 
@@ -437,7 +437,7 @@ When adding response fields, update both:
 ### Port Already in Use
 
 ```bash
-pnpm dev:kill  # Kill processes on ports 3456 and 5173
+pnpm dev:kill  # Kill processes on ports 4100 and 4101
 ```
 
 ### Database Issues
