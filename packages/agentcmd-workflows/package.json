@@ -1,6 +1,6 @@
 {
   "name": "agentcmd-workflows",
-  "version": "1.1.9",
+  "version": "1.1.10",
   "description": "Type-safe workflow SDK for agentcmd workflow engine",
   "type": "module",
   "main": "./dist/index.js",
@@ -40,7 +40,7 @@
     "sync:workflows": "node scripts/sync-workflows.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepublishOnly": "pnpm sync:commands && generate:command:types && pnpm build && pnpm test",
+    "prepublishOnly": "pnpm sync:commands && pnpm generate:command:types && pnpm build && pnpm test",
     "ship": "pnpm build && pnpm test && npm version patch && (git commit -am \"bump version\" || true) && npm publish"
   },
   "keywords": [
