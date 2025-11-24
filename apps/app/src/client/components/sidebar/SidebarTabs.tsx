@@ -81,14 +81,14 @@ export function SidebarTabs() {
         className="flex-1 flex flex-col min-h-0 overflow-hidden"
       >
         <div className="pl-2 pr-2 pt-2 shrink-0">
-          <TabsList className="w-full grid grid-cols-3 h-7 p-0.5">
-            <TabsTrigger value="sessions" className="text-xs h-full px-1.5">
+          <TabsList className="w-full grid grid-cols-3 h-9 md:h-7 p-0.5">
+            <TabsTrigger value="sessions" className="text-sm md:text-xs h-full px-1.5">
               Sessions
             </TabsTrigger>
-            <TabsTrigger value="workflows" className="text-xs h-full px-1.5">
+            <TabsTrigger value="workflows" className="text-sm md:text-xs h-full px-1.5">
               Workflows
             </TabsTrigger>
-            <TabsTrigger value="specs" className="text-xs h-full px-1.5">
+            <TabsTrigger value="specs" className="text-sm md:text-xs h-full px-1.5">
               Specs
             </TabsTrigger>
           </TabsList>
