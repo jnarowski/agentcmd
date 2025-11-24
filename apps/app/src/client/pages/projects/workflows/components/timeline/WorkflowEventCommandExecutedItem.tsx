@@ -1,6 +1,7 @@
 import { SquareChevronRight } from "lucide-react";
 import type { WorkflowEvent } from "@/client/pages/projects/workflows/types";
 import { TimelineRow } from "./TimelineRow";
+import { TimelineItemHeader } from "./TimelineItemHeader";
 import { formatDate } from "@/shared/utils/formatDate";
 
 interface WorkflowEventCommandExecutedItemProps {
@@ -32,24 +33,17 @@ export function WorkflowEventCommandExecutedItem({
         </span>
       }
     >
-      <div className="flex flex-wrap items-center gap-2 md:gap-3">
-        <code
-          className="font-medium font-mono break-all md:truncate"
-          title={fullCommand}
-        >
-          {fullCommand}
-        </code>
-      </div>
-
-      <div className="text-xs text-muted-foreground mt-1">
-        {formatDate(event.created_at)}
-        {duration !== undefined && (
-          <>
-            <span className="mx-1">•</span>
-            <span>{duration}ms</span>
-          </>
-        )}
-      </div>
+      <TimelineItemHeader
+        title={
+          <code className="text-workflow-row-title text-base font-mono">
+            {fullCommand}
+          </code>
+        }
+        date={formatDate(event.created_at)}
+        duration={duration}
+        id={event.id}
+        truncate={true}
+      />
     </TimelineRow>
   );
 }

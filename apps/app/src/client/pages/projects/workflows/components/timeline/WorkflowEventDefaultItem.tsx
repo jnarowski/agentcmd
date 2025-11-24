@@ -6,9 +6,9 @@ import {
   MessageSquare,
   type LucideIcon,
 } from "lucide-react";
-import { useDebugMode } from "@/client/hooks/useDebugMode";
 import type { WorkflowEvent } from "@/client/pages/projects/workflows/types";
 import { TimelineRow } from "./TimelineRow";
+import { TimelineItemHeader } from "./TimelineItemHeader";
 import { formatDate } from "@/shared/utils/formatDate";
 
 // Format event type for display
@@ -111,8 +111,6 @@ interface WorkflowEventDefaultItemProps {
 export function WorkflowEventDefaultItem({
   event,
 }: WorkflowEventDefaultItemProps) {
-  const debugMode = useDebugMode();
-
   // Get config for this event type, or use default
   const config = EVENT_CONFIG[event.event_type] ?? DEFAULT_CONFIG;
 
@@ -130,14 +128,16 @@ export function WorkflowEventDefaultItem({
         </span>
       }
     >
-      <div className="flex items-center gap-2">
-        <span className="font-medium">{title}</span>
-        {debugMode && (
-          <span className="text-xs text-muted-foreground font-mono">
-            [EVENT: {event.id}]
-          </span>
-        )}
-      </div>
+      <TimelineItemHeader
+        title={title}
+        date={formatDate(event.created_at)}
+        duration={
+          typeof event.event_data?.duration === "number"
+            ? event.event_data.duration
+            : null
+        }
+        id={event.id}
+      />
 
       {body && (
         <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">
@@ -156,10 +156,6 @@ export function WorkflowEventDefaultItem({
           Attempt #{event.event_data.attempt}
         </p>
       )}
-
-      <div className="text-xs text-muted-foreground mt-1">
-        {formatDate(event.created_at)}
-      </div>
     </TimelineRow>
   );
 }

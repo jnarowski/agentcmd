@@ -5,10 +5,16 @@ import {
   XCircle,
   MinusCircle,
 } from "lucide-react";
-import { useDebugMode } from "@/client/hooks/useDebugMode";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/client/components/ui/tooltip";
 import type { WorkflowRunStep, StepOutput } from "@/shared/types/workflow-step.types";
 import type { WorkflowTab } from "@/client/pages/projects/workflows/hooks/useWorkflowDetailPanel";
 import { TimelineRow } from "./TimelineRow";
+import { TimelineItemHeader } from "./TimelineItemHeader";
+import { formatDate } from "@/shared/utils/formatDate";
 import { formatDuration } from "../../utils/formatDuration";
 
 interface StepGitRowProps {
@@ -18,8 +24,6 @@ interface StepGitRowProps {
 }
 
 export function StepGitRow({ step, onSelectStep, onSetActiveTab }: StepGitRowProps) {
-  const debugMode = useDebugMode();
-
   // Type-safe output access
   const output = step.step_type === "git" || step.step_type === "cli"
     ? (step.output as StepOutput<"git"> | StepOutput<"cli">)
@@ -74,37 +78,35 @@ export function StepGitRow({ step, onSelectStep, onSetActiveTab }: StepGitRowPro
         onSetActiveTab?.("logs");
       }}
     >
-      <div className="flex flex-col gap-2">
-        <div className="flex flex-wrap items-center gap-2 md:gap-3">
-          <span className="font-medium">{step.name}</span>
-          {debugMode && (
-            <span className="text-xs text-muted-foreground font-mono">
-              [STEP: {step.id}]
-            </span>
-          )}
-          {duration && (
-            <span className="text-xs text-muted-foreground">{formatDuration(duration)}</span>
-          )}
-          {step.error_message && (
-            <span className="text-xs text-red-500 break-words md:truncate w-full md:w-auto">{step.error_message}</span>
-          )}
-        </div>
+      <TimelineItemHeader
+        title={step.name}
+        date={formatDate(step.created_at)}
+        duration={duration}
+        id={step.id}
+        errorMessage={step.error_message}
+      />
 
-        {/* Trace display */}
-        {output?.trace && output.trace.length > 0 && (
-          <div className="text-xs font-mono text-muted-foreground space-y-1">
-            {output.trace.map((entry, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                <span className="text-blue-400">$</span>
-                <span>{entry.command}</span>
-                {entry.duration && (
-                  <span className="text-gray-500">({entry.duration}ms)</span>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Trace display */}
+      {output?.trace && output.trace.length > 0 && (
+        <div className="text-xs font-mono text-muted-foreground space-y-1 mt-2">
+          {output.trace.map((entry, idx) => (
+            <div key={idx} className="flex items-center gap-2 min-w-0">
+              <span className="text-blue-400 flex-shrink-0">$</span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="truncate flex-1 min-w-0">{entry.command}</span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-md break-words">
+                  {entry.command}
+                </TooltipContent>
+              </Tooltip>
+              {entry.duration && (
+                <span className="text-gray-500 flex-shrink-0">({entry.duration}ms)</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </TimelineRow>
   );
 }

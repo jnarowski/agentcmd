@@ -1,7 +1,7 @@
 import { MessageSquare, User } from "lucide-react";
-import { useDebugMode } from "@/client/hooks/useDebugMode";
 import type { WorkflowEvent } from "@/client/pages/projects/workflows/types";
 import { TimelineRow } from "./TimelineRow";
+import { TimelineItemHeader } from "./TimelineItemHeader";
 import { formatDate } from "@/shared/utils/formatDate";
 
 interface WorkflowEventAnnotationItemProps {
@@ -11,7 +11,6 @@ interface WorkflowEventAnnotationItemProps {
 export function WorkflowEventAnnotationItem({
   event,
 }: WorkflowEventAnnotationItemProps) {
-  const debugMode = useDebugMode();
   const message = event.event_data?.message || "Annotation";
 
   return (
@@ -24,33 +23,20 @@ export function WorkflowEventAnnotationItem({
         </span>
       }
     >
-      {(debugMode || event.created_by_user) && (
-        <div className="flex items-center gap-2">
-          {debugMode && (
-            <span className="text-xs text-muted-foreground font-mono">
-              [EVENT: {event.id}]
-            </span>
-          )}
-          {event.created_by_user && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <User className="h-3 w-3" />
-              <span className="font-medium">
-                {event.created_by_user.username}
-              </span>
-            </div>
-          )}
+      <TimelineItemHeader
+        title="Annotation"
+        date={formatDate(event.created_at)}
+        id={event.id}
+      />
+
+      <p className="text-sm whitespace-pre-wrap mt-1">{message}</p>
+
+      {event.created_by_user && (
+        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+          <User className="h-3 w-3" />
+          <span className="font-medium">{event.created_by_user.username}</span>
         </div>
       )}
-
-      <p
-        className={`text-sm whitespace-pre-wrap ${debugMode || event.created_by_user ? "mt-1" : ""}`}
-      >
-        {message}
-      </p>
-
-      <div className="text-xs text-muted-foreground mt-1">
-        {formatDate(event.created_at)}
-      </div>
     </TimelineRow>
   );
 }

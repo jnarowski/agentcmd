@@ -1,8 +1,8 @@
 import { FileText, Download } from "lucide-react";
-import { useDebugMode } from "@/client/hooks/useDebugMode";
 import type { WorkflowArtifact } from "@/client/pages/projects/workflows/types";
 import { formatFileSize } from "@/client/pages/projects/workflows/utils/workflowFormatting";
 import { TimelineRow } from "./TimelineRow";
+import { TimelineItemHeader } from "./TimelineItemHeader";
 import { formatDate } from "@/shared/utils/formatDate";
 
 interface ArtifactRowProps {
@@ -10,8 +10,6 @@ interface ArtifactRowProps {
 }
 
 export function ArtifactRow({ artifact }: ArtifactRowProps) {
-  const debugMode = useDebugMode();
-
   const handleDownload = () => {
     window.open(`/api/artifacts/${artifact.id}/download`, "_blank");
   };
@@ -35,24 +33,15 @@ export function ArtifactRow({ artifact }: ArtifactRowProps) {
         </div>
       }
     >
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="font-medium break-words md:truncate" title={artifact.name}>
-          {artifact.name}
-        </span>
-        {debugMode && (
-          <span className="text-xs text-muted-foreground font-mono">
-            [ARTIFACT: {artifact.id}]
-          </span>
-        )}
-      </div>
+      <TimelineItemHeader
+        title={artifact.name}
+        date={formatDate(artifact.created_at)}
+        id={artifact.id}
+      />
 
       <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
         <span>{artifact.file_type}</span>
         <span>{formatFileSize(artifact.size_bytes)}</span>
-      </div>
-
-      <div className="text-xs text-muted-foreground mt-1">
-        {formatDate(artifact.created_at)}
       </div>
     </TimelineRow>
   );

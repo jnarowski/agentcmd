@@ -5,10 +5,10 @@ import {
   XCircle,
   MinusCircle,
 } from "lucide-react";
-import { useDebugMode } from "@/client/hooks/useDebugMode";
 import type { WorkflowRunStep } from "@/shared/types/workflow-step.types";
 import type { WorkflowTab } from "@/client/pages/projects/workflows/hooks/useWorkflowDetailPanel";
 import { TimelineRow } from "./TimelineRow";
+import { TimelineItemHeader } from "./TimelineItemHeader";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatDuration } from "../../utils/formatDuration";
 
@@ -23,8 +23,6 @@ export function StepDefaultRow({
   onSelectStep,
   onSetActiveTab,
 }: StepDefaultRowProps) {
-  const debugMode = useDebugMode();
-
   // Status icon
   const StatusIcon = {
     pending: Circle,
@@ -76,23 +74,13 @@ export function StepDefaultRow({
           onSetActiveTab?.("logs");
         }}
       >
-        <div className="flex items-center gap-2">
-          <span className="font-medium">{step.name}</span>
-          {debugMode && (
-            <span className="text-xs text-muted-foreground font-mono">
-              [STEP: {step.id}]
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-          <span>{formatDate(step.created_at)}</span>
-          <span className="mx-1">•</span>
-          {duration && <span>{formatDuration(duration)}</span>}
-          {step.error_message && (
-            <span className="text-red-500">{step.error_message}</span>
-          )}
-        </div>
+        <TimelineItemHeader
+          title={step.name}
+          date={formatDate(step.created_at)}
+          duration={duration}
+          id={step.id}
+          errorMessage={step.error_message}
+        />
       </TimelineRow>
     </>
   );

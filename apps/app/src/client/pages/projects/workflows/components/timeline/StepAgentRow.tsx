@@ -14,7 +14,6 @@ import {
 } from "@/client/components/ui/tooltip";
 import { Button } from "@/client/components/ui/button";
 import { useIsMobile } from "@/client/hooks/use-mobile";
-import { useDebugMode } from "@/client/hooks/useDebugMode";
 import type {
   WorkflowRunStep,
   StepOutput,
@@ -22,6 +21,7 @@ import type {
 import type { WorkflowTab } from "@/client/pages/projects/workflows/hooks/useWorkflowDetailPanel";
 import type { TraceEntry } from "agentcmd-workflows";
 import { TimelineRow } from "./TimelineRow";
+import { TimelineItemHeader } from "./TimelineItemHeader";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatDuration } from "../../utils/formatDuration";
 
@@ -42,7 +42,6 @@ export function StepAgentRow({
 }: StepAgentRowProps) {
   const [showSessionModal, setShowSessionModal] = useState(false);
   const isMobile = useIsMobile();
-  const debugMode = useDebugMode();
 
   // Type-safe output access for trace
   const output = step.output as StepOutput<typeof step.step_type> | null;
@@ -98,23 +97,13 @@ export function StepAgentRow({
           onSetActiveTab?.("logs");
         }}
       >
-        <div className="flex items-center gap-2">
-          <span className="font-medium">{step.name}</span>
-          {debugMode && (
-            <span className="text-xs text-muted-foreground font-mono">
-              [STEP: {step.id}]
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
-          <span>{formatDate(step.created_at)}</span>
-          <span>•</span>
-          {duration && <span>{formatDuration(duration)}</span>}
-          {step.error_message && (
-            <span className="text-red-500">{step.error_message}</span>
-          )}
-        </div>
+        <TimelineItemHeader
+          title={step.name}
+          date={formatDate(step.created_at)}
+          duration={duration}
+          id={step.id}
+          errorMessage={step.error_message}
+        />
 
         {step.agent_session_id && (
           <Button
