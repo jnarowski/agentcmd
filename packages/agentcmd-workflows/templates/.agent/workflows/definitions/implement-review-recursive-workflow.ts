@@ -1,11 +1,12 @@
+import { defineWorkflow, type WorkflowStep } from "agentcmd-workflows";
+
+// Type definitions from monorepo-wide generated types
 import {
   buildSlashCommand,
-  defineWorkflow,
-  type WorkflowStep,
   type CmdCreatePrResponse,
   type CmdImplementSpecResponse,
   type CmdReviewSpecImplementationResponse,
-} from "agentcmd-workflows";
+} from "../../generated/slash-commands";
 
 /**
  * Workflow context for sharing state between phases via closure.
@@ -243,38 +244,4 @@ async function reviewImplementation({
 
   ctx.lastReview = result.data;
   return result.data;
-}
-
-/**
- * Generate PR body from implementation and review data.
- *
- * Creates a formatted markdown description including:
- * - Implementation summary
- * - Spec file reference
- * - Review status (ready or issues count)
- * - Workflow attribution
- *
- * @param summary - Implementation summary text
- * @param issuesFound - Number of issues found in review
- * @param specFile - Spec file path for reference
- * @returns Formatted PR body markdown
- */
-function generatePrBody({
-  summary,
-  issuesFound,
-  specFile,
-}: {
-  summary: string;
-  issuesFound: number;
-  specFile: string;
-}): string {
-  const status =
-    issuesFound === 0 ? "Ready for review" : `${issuesFound} issues found`;
-
-  return `${summary}
-
-**Spec**: \`${specFile}\`
-**Status**: ${status}
-
-🤖 Generated with implement-review-workflow`;
 }

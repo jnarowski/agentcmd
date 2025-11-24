@@ -82,9 +82,9 @@ export interface WorkflowEventData<TArgs = Record<string, unknown>> {
   /** Project filesystem path */
   projectPath: string;
   /** Working directory (set after workspace setup, falls back to projectPath) */
-  workingDir?: string;
+  workingDir: string;
   /** Spec file path */
-  specFile?: string;
+  specFile: string;
   /** Spec file content */
   specContent?: string;
   /** Spec type (e.g., "feature", "bug", "patch") - routes to /cmd:generate-{type}-spec */

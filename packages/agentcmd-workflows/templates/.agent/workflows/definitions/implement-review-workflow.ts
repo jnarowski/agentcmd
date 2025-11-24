@@ -1,11 +1,12 @@
+import { defineWorkflow, type WorkflowStep } from "agentcmd-workflows";
+
+// Type definitions from monorepo-wide generated types
 import {
   buildSlashCommand,
-  defineWorkflow,
-  type WorkflowStep,
   type CmdCreatePrResponse,
   type CmdImplementSpecResponse,
   type CmdReviewSpecImplementationResponse,
-} from "agentcmd-workflows";
+} from "../../generated/slash-commands";
 
 /**
  * Workflow context for sharing state between phases via closure.
