@@ -192,11 +192,11 @@
     },
     "2511232135": {
       "folder": "2511232135-spec-complexity-tracking",
-      "path": "todo/2511232135-spec-complexity-tracking/spec.md",
+      "path": "done/2511232135-spec-complexity-tracking/spec.md",
       "spec_type": "feature",
       "status": "completed",
       "created": "2025-11-23T21:35:00Z",
-      "updated": "2025-11-24T19:44:09.000Z",
+      "updated": "2025-11-24T21:52:00.000Z",
       "totalComplexity": 89,
       "phaseCount": 4,
       "taskCount": 10
