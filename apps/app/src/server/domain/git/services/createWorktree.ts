@@ -36,13 +36,49 @@ export async function createWorktree({
       await git.raw(["worktree", "remove", absolutePath, "--force"]);
     }
 
-    // Create new worktree
-    await git.raw(["worktree", "add", absolutePath, branch]);
+    // Check if branch exists (locally or remotely)
+    const branchExists = await checkBranchExists(git, branch);
+
+    if (branchExists) {
+      // Checkout existing branch
+      await git.raw(["worktree", "add", absolutePath, branch]);
+    } else {
+      // Create new branch from current HEAD
+      await git.raw(["worktree", "add", "-b", branch, absolutePath]);
+    }
 
     return absolutePath;
   } catch (error) {
     throw new Error(
       `Failed to create worktree at ${absolutePath}: ${error instanceof Error ? error.message : String(error)}`
     );
+  }
+}
+
+// ============================================================================
+// PRIVATE HELPERS
+// ============================================================================
+
+async function checkBranchExists(
+  git: ReturnType<typeof simpleGit>,
+  branch: string
+): Promise<boolean> {
+  try {
+    // Check local branches
+    const localBranches = await git.branchLocal();
+    if (localBranches.all.includes(branch)) {
+      return true;
+    }
+
+    // Check remote branches (origin/<branch>)
+    const remoteBranches = await git.branch(["-r"]);
+    const remoteBranchName = `origin/${branch}`;
+    if (remoteBranches.all.includes(remoteBranchName)) {
+      return true;
+    }
+
+    return false;
+  } catch {
+    return false;
   }
 }

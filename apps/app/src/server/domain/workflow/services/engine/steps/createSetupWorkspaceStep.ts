@@ -6,10 +6,8 @@ import type {
   StepOptions,
 } from "agentcmd-workflows";
 import { getCurrentBranch } from "@/server/domain/git/services/getCurrentBranch";
-import { commitChanges } from "@/server/domain/git/services/commitChanges";
 import { createAndSwitchBranch } from "@/server/domain/git/services/createAndSwitchBranch";
 import { createWorktree } from "@/server/domain/git/services/createWorktree";
-import { getGitStatus } from "@/server/domain/git/services/getGitStatus";
 import { createWorkflowEventCommand } from "@/server/domain/workflow/services/engine/steps/utils/createWorkflowEventCommand";
 import { generateInngestStepId } from "@/server/domain/workflow/services/engine/steps/utils/generateInngestStepId";
 import { withTimeout } from "@/server/domain/workflow/services/engine/steps/utils/withTimeout";
@@ -123,21 +121,7 @@ async function executeSetupWorkspace(
 
   // Mode 2: Branch switch/create
   if (branch && branch !== currentBranch) {
-    // Check for uncommitted changes
-    const status = await getGitStatus({ projectPath });
-    if (status.files.length > 0) {
-      // Auto-commit uncommitted changes before branching
-      const commitStartTime = Date.now();
-      const commitResult = await commitChanges({
-        projectPath,
-        message: "WIP: Auto-commit before branching",
-        files: ["."],
-      });
-      const commitDuration = Date.now() - commitStartTime;
-      await logCommandsToTimeline(context, commitResult.commands, commitDuration);
-    }
-
-    // Create and switch to branch
+    // Create and switch to branch (handles uncommitted changes internally)
     const checkoutStartTime = Date.now();
     const branchResult = await createAndSwitchBranch({
       projectPath,
