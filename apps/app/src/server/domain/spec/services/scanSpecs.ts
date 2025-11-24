@@ -20,7 +20,7 @@ interface SpecIndex {
 }
 
 /**
- * Read specs index.json and return Spec[] excluding backlog and completed statuses
+ * Read specs index.json and return Spec[] (excludes completed and backlog statuses)
  * @param projectPath - Absolute path to the project directory
  * @param projectId - Project ID to associate with specs
  */
@@ -34,8 +34,8 @@ export async function scanSpecs(projectPath: string, projectId: string): Promise
     const specs: Spec[] = [];
 
     for (const [id, entry] of Object.entries(index.specs)) {
-      // Exclude draft, completed and backlog specs
-      if (entry.status === "draft" || entry.status === "completed" || entry.status === "backlog") {
+      // Exclude completed and backlog specs
+      if (entry.status === "completed" || entry.status === "backlog") {
         continue;
       }
 
