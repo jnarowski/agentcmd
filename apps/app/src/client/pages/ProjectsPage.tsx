@@ -1,4 +1,5 @@
-import { useProjects, useSyncProjects } from "@/client/pages/projects/hooks/useProjects";
+import { useProjects } from "@/client/pages/projects/hooks/useProjects";
+import { useProjectsStore } from "@/client/stores/useProjectsStore";
 import { AppHeader } from "@/client/components/AppHeader";
 import { Skeleton } from "@/client/components/ui/skeleton";
 import { Button } from "@/client/components/ui/button";
@@ -20,7 +21,7 @@ import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
 export default function ProjectsPage() {
   useDocumentTitle("Projects | Agent Workflows");
   const { data: projects, isLoading } = useProjects();
-  const { isLoading: isSyncing } = useSyncProjects();
+  const isSyncing = useProjectsStore((state) => state.isSyncing);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   // Loading state

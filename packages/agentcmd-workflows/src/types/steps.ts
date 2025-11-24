@@ -620,4 +620,11 @@ export interface WorkflowStep<TPhaseId extends string = string> extends InngestS
     warn(...args: unknown[]): void;
     error(...args: unknown[]): void;
   };
+
+  /**
+   * Update workflow run metadata (e.g., pr_url)
+   * Automatically broadcasts changes via WebSocket
+   * @param data - Fields to update on the workflow run
+   */
+  updateRun: (data: { pr_url?: string }) => Promise<void>;
 }

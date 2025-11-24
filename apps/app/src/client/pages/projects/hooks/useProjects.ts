@@ -13,9 +13,9 @@ import type {
   ProjectsResponse,
   ProjectResponse,
 } from "@/shared/types/project.types";
-import type { SyncProjectsResponse } from "@/shared/types/project-sync.types";
 import { api } from "@/client/utils/api";
 import { projectKeys } from "./queryKeys";
+import { useProjectsStore } from "@/client/stores/useProjectsStore";
 
 // Re-export projectKeys for backward compatibility
 export { projectKeys };
@@ -203,59 +203,55 @@ export function useDeleteProject(): UseMutationResult<Project, Error, string> {
 }
 
 /**
- * Sync projects from Claude CLI
+ * Sync projects from Claude CLI (fire-and-forget)
  */
-async function syncProjects(): Promise<SyncProjectsResponse> {
-  const data = await api.post<{ data: SyncProjectsResponse }>(
+async function syncProjects(): Promise<{ status: string }> {
+  const data = await api.post<{ data: { status: string } }>(
     "/api/projects/sync"
   );
   return data.data;
 }
 
 /**
- * Hook to sync projects from Claude CLI (automatic with 5-minute caching)
- * This hook uses TanStack Query's native caching to prevent unnecessary syncs.
+ * Hook to trigger project sync (fire-and-forget pattern)
+ * Returns isSyncing state and triggerSync function
+ * Completion handled via WebSocket event in AppLayout
  */
-export function useSyncProjects(): UseQueryResult<SyncProjectsResponse, Error> {
-  return useQuery({
-    queryKey: projectKeys.sync(),
-    queryFn: () => syncProjects(),
-    gcTime: 10 * 60 * 1000,        // 10 minutes - keep in cache
-    staleTime: 10 * 60 * 1000,     // 10 minutes - don't refetch if data is fresh
-    refetchOnMount: false,          // Don't auto-refetch on component mount
-    refetchOnWindowFocus: false,    // Don't refetch when window gains focus
-    refetchOnReconnect: false,      // Don't refetch on network reconnect
-    retry: 1,                       // Only retry once on failure
-  });
+export function useSyncProjects() {
+  const isSyncing = useProjectsStore((state) => state.isSyncing);
+  const setIsSyncing = useProjectsStore((state) => state.setIsSyncing);
+
+  const triggerSync = async () => {
+    setIsSyncing(true);
+    try {
+      await syncProjects();
+      // Note: isSyncing will be set to false by WebSocket listener in AppLayout
+    } catch (error) {
+      console.error("[useSyncProjects] Failed to trigger sync:", error);
+      setIsSyncing(false);
+    }
+  };
+
+  return { isSyncing, triggerSync, setIsSyncing };
 }
 
 /**
- * Hook to manually sync projects from Claude CLI (bypasses cache)
+ * Hook to manually sync projects from Claude CLI (fire-and-forget)
  * Use this for a "Sync Now" button or manual refresh action.
+ * Note: This is now fire-and-forget. Completion is handled by WebSocket event.
  */
 export function useSyncProjectsMutation(): UseMutationResult<
-  SyncProjectsResponse,
+  { status: string },
   Error,
   void
 > {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: () => syncProjects(),
-    onSuccess: (data) => {
-      // Update the sync query cache with fresh data
-      queryClient.setQueryData(projectKeys.sync(), data);
-
-      // Invalidate projects list to trigger refetch
-      queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
-
-      // Show success toast with sync stats
-      toast.success(
-        `Projects synced: ${data.projectsImported} imported, ${data.projectsUpdated} updated`
-      );
+    onSuccess: () => {
+      toast.success("Project sync initiated");
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to sync projects");
+      toast.error(error.message || "Failed to initiate sync");
     },
   });
 }

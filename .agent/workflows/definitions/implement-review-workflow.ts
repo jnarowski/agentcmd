@@ -105,14 +105,39 @@ export default defineWorkflow(
         }),
       });
 
-      // Create PR with implementation summary and review status
-      await step.agent<CmdCreatePrResponse>("commit-push-and-create-pr", {
-        agent: "claude",
-        json: true,
-        prompt: buildSlashCommand("/cmd:create-pr", {
-          title: `feat: ${event.data.name}`,
-        }),
-      });
+      // Option 1: Use step.git for commit + push + PR (3 separate steps)
+      //
+      // await step.git("final-commit", {
+      //   operation: "commit",
+      //   message: `feat: ${event.data.name}`,
+      // });
+      //
+      // await step.cli("push-branch", { command: "git push -u origin HEAD" });
+      //
+      // await step.git("create-pull-request", {
+      //   operation: "pr",
+      //   title: `feat: ${event.data.name}`,
+      //   body: `${ctx.implement.summary}\n\n**Spec**: \`${specFile}\``,
+      //   baseBranch: event.data.baseBranch,
+      // });
+
+      // Option 2: Use step.agent with /cmd:create-pr (more flexible, handles commit+push+pr)
+      const prResult = await step.agent<CmdCreatePrResponse>(
+        "commit-push-and-create-pr",
+        {
+          agent: "claude",
+          json: true,
+          prompt: buildSlashCommand("/cmd:create-pr", {
+            title: `feat: ${event.data.name}`,
+          }),
+        }
+      );
+
+      if (!prResult.data.success) {
+        throw new Error(`PR creation failed: ${prResult.data.message}`);
+      }
+
+      await step.updateRun({ pr_url: prResult.data.pr_url });
     });
   }
 );
@@ -212,38 +237,4 @@ async function reviewImplementation({
   await step.annotation("review-completed", {
     message: `Review ${response.data.success ? "passed" : "failed"}. ${response.data.summary}`,
   });
-}
-
-/**
- * Generate PR body from implementation and review data.
- *
- * Creates a formatted markdown description including:
- * - Implementation summary
- * - Spec file reference
- * - Review status (ready or issues count)
- * - Workflow attribution
- *
- * @param summary - Implementation summary text
- * @param issuesFound - Number of issues found in review
- * @param specFile - Spec file path for reference
- * @returns Formatted PR body markdown
- */
-function generatePrBody({
-  summary,
-  issuesFound,
-  specFile,
-}: {
-  summary: string;
-  issuesFound: number;
-  specFile: string;
-}): string {
-  const status =
-    issuesFound === 0 ? "Ready for review" : `${issuesFound} issues found`;
-
-  return `${summary}
-
-**Spec**: \`${specFile}\`
-**Status**: ${status}
-
-🤖 Generated with implement-review-workflow`;
 }

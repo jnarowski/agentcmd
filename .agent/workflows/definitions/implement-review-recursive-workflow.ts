@@ -123,13 +123,23 @@ export default defineWorkflow(
       });
 
       // Create PR with implementation summary and review status
-      await step.agent<CmdCreatePrResponse>("commit-push-and-create-pr", {
-        agent: "claude",
-        json: true,
-        prompt: buildSlashCommand("/cmd:create-pr", {
-          title: `feat: ${event.data.name}`,
-        }),
-      });
+      const prResult = await step.agent<CmdCreatePrResponse>(
+        "commit-push-and-create-pr",
+        {
+          agent: "claude",
+          json: true,
+          prompt: buildSlashCommand("/cmd:create-pr", {
+            title: `feat: ${event.data.name}`,
+          }),
+        }
+      );
+
+      if (!prResult.data.success) {
+        throw new Error(`PR creation failed: ${prResult.data.message}`);
+      }
+
+      // Links the created PR url to the run
+      await step.updateRun({ pr_url: prResult.data.pr_url });
     });
   }
 );

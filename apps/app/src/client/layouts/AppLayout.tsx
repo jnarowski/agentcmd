@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/client/stores/index";
@@ -15,6 +15,8 @@ import { SidebarInset, SidebarProvider } from "@/client/components/ui/sidebar";
 import { ConnectionStatusBanner } from "@/client/components/ConnectionStatusBanner";
 import { api } from "@/client/utils/api";
 import { workflowKeys } from "@/client/pages/projects/workflows/hooks/queryKeys";
+import { Channels } from "@/shared/websocket";
+import { GlobalEventTypes } from "@/shared/types/websocket.types";
 
 /**
  * Main authenticated app layout
@@ -29,8 +31,9 @@ function AppLayout() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const queryClient = useQueryClient();
   const initializeFromSettings = useSessionStore((s) => s.initializeFromSettings);
+  const loadSessionList = useSessionStore((s) => s.loadSessionList);
   const { setTheme } = useTheme();
-  const { readyState, reconnectAttempt, reconnect } = useWebSocket();
+  const { readyState, reconnectAttempt, reconnect, eventBus, sendMessage, isConnected } = useWebSocket();
   const isMobile = useIsMobile();
 
   // Prefetch settings and workflow definitions on mount to prevent race conditions
@@ -82,25 +85,67 @@ function AppLayout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings?.userPreferences]);
 
-  // Sync projects from Claude CLI on mount
-  // TanStack Query handles caching automatically (5-minute stale time)
-  const { data: syncResult, isSuccess } = useSyncProjects();
+  // Sync projects from Claude CLI on mount (fire-and-forget)
+  const { triggerSync, setIsSyncing } = useSyncProjects();
+  const userId = useAuthStore((state) => state.user?.id);
+  const syncTriggeredRef = useRef(false);
 
-  // Invalidate projects list when sync completes successfully
+  // Trigger sync on mount (only once per session, handles StrictMode double-mount)
   useEffect(() => {
-    if (isSuccess && syncResult) {
-      // Invalidate projects list to show newly synced projects
-      queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
-      // Note: Session lists now managed by Zustand, no React Query invalidation needed
-
-      if (import.meta.env.DEV) {
-        console.log(
-          `Projects synced: ${syncResult.projectsImported} imported, ${syncResult.projectsUpdated} updated`
-        );
-      }
+    if (!syncTriggeredRef.current) {
+      syncTriggeredRef.current = true;
+      triggerSync();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSuccess, syncResult]);
+  }, []);
+
+  // Subscribe to global channel when WebSocket is connected
+  useEffect(() => {
+    if (!isConnected) return;
+
+    const globalChannel = Channels.global();
+
+    // Send subscribe message to server
+    sendMessage(globalChannel, {
+      type: "subscribe",
+      data: {
+        channels: [globalChannel],
+      },
+    });
+  }, [isConnected, sendMessage]);
+
+  // Listen for sync completion event on global WebSocket channel
+  useEffect(() => {
+    const globalChannel = Channels.global();
+
+    const handleGlobalEvent = (event: { type: string; data: { userId: string; stats: { projectsImported: number; projectsUpdated: number; sessionsImported: number } } }) => {
+      // Only handle projects.sync.completed events
+      if (event.type !== GlobalEventTypes.PROJECTS_SYNC_COMPLETED) {
+        return;
+      }
+
+      // Filter by userId (current user only)
+      if (event.data.userId !== userId) {
+        return;
+      }
+
+      // Update syncing state
+      setIsSyncing(false);
+
+      // Invalidate projects list to show newly synced projects
+      queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
+
+      // Reload session list to show newly synced sessions
+      loadSessionList(null);
+    };
+
+    // Subscribe to global channel events
+    eventBus.on(globalChannel, handleGlobalEvent);
+
+    return () => {
+      eventBus.off(globalChannel, handleGlobalEvent);
+    };
+  }, [userId, setIsSyncing, queryClient, eventBus, loadSessionList]);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
