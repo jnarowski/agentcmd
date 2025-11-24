@@ -226,6 +226,14 @@
       "status": "draft",
       "created": "2025-11-24T08:20:00Z",
       "updated": "2025-11-24T21:30:00.000Z"
+    },
+    "2511241230": {
+      "folder": "2511241230-background-project-sync",
+      "path": "todo/2511241230-background-project-sync/spec.md",
+      "spec_type": "issue",
+      "status": "draft",
+      "created": "2025-11-24T12:30:00Z",
+      "updated": "2025-11-24T12:30:00Z"
     }
   }
 }

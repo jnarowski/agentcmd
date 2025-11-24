@@ -42,6 +42,7 @@ const AGENT_CAPABILITIES_MAP: Record<AgentType, Omit<AgentCapabilities, 'install
     supportsModels: true,
     models: [
       { id: 'claude-sonnet-4-5-20250929', name: 'Sonnet 4.5' },
+      { id: 'claude-opus-4-5-20251124', name: 'Opus 4.5' },
       { id: 'claude-opus-4-20250514', name: 'Opus 4.1' },
       { id: 'haiku', name: 'Haiku 4.5' },
     ],
