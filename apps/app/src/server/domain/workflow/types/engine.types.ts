@@ -17,8 +17,10 @@ export interface RuntimeContext<
   currentPhase: string | null;
   /** Fastify logger instance */
   logger: FastifyBaseLogger;
-  /** Project filesystem path */
+  /** Project filesystem path (original location) */
   projectPath: string;
+  /** Working directory for execution (worktree path or projectPath) */
+  workingDir: string;
   /** Workflow configuration (for phase validation) */
   config: WorkflowConfig<TPhases>;
 }

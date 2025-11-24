@@ -52,7 +52,7 @@ export default defineWorkflow(
     ],
   },
   async ({ event, step }) => {
-    const { workingDir, specFile } = event.data;
+    const { specFile } = event.data;
 
     // Context object shared across phases via closure
     // Helper functions mutate this to pass data between steps
@@ -64,7 +64,6 @@ export default defineWorkflow(
       await implementUntilComplete({
         step,
         specFile,
-        workingDir,
         ctx,
       });
 
@@ -79,7 +78,6 @@ export default defineWorkflow(
       await reviewImplementation({
         step,
         specFile,
-        workingDir,
         ctx,
       });
 
@@ -154,7 +152,6 @@ export default defineWorkflow(
  *
  * @param step - Workflow step interface
  * @param specFile - Spec file path or identifier
- * @param workingDir - Project working directory
  * @param ctx - Shared context object (mutated)
  *
  * Calls: /cmd:implement-spec (see .claude/commands/cmd/implement-spec.md)
@@ -162,12 +159,10 @@ export default defineWorkflow(
 async function implementUntilComplete({
   step,
   specFile,
-  workingDir,
   ctx,
 }: {
   step: WorkflowStep;
   specFile: string;
-  workingDir: string;
   ctx: WorkflowContext;
 }) {
   const MAX_ITERATIONS = 10; // Adjustable based on complexity
@@ -180,7 +175,6 @@ async function implementUntilComplete({
       prompt: buildSlashCommand("/cmd:implement-spec", {
         specIdOrNameOrPath: specFile,
       }),
-      workingDir,
     });
 
     ctx.implement = result.data;
@@ -203,7 +197,6 @@ async function implementUntilComplete({
  *
  * @param step - Workflow step interface
  * @param specFile - Spec file path or identifier
- * @param workingDir - Project working directory
  * @param ctx - Shared context object (mutated)
  *
  * Calls: /cmd:review-spec-implementation (see .claude/commands/cmd/review-spec-implementation.md)
@@ -211,12 +204,10 @@ async function implementUntilComplete({
 async function reviewImplementation({
   step,
   specFile,
-  workingDir,
   ctx,
 }: {
   step: WorkflowStep;
   specFile: string;
-  workingDir: string;
   ctx: WorkflowContext;
 }) {
   const response = await step.agent<CmdReviewSpecImplementationResponse>(
@@ -228,7 +219,6 @@ async function reviewImplementation({
         specIdOrNameOrPath: specFile,
         format: "json",
       }),
-      workingDir,
     }
   );
 

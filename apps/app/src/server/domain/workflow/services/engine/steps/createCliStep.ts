@@ -39,8 +39,8 @@ export function createCliStep(
       inngestStep,
       input: config,
       fn: async () => {
-      const { projectPath, logger } = context;
-      const cwd = config.cwd ?? projectPath;
+      const { workingDir, logger } = context;
+      const cwd = config.cwd ?? workingDir;
       const env = { ...process.env, ...config.env };
 
       logger.debug({ command, cwd }, "Executing CLI command");

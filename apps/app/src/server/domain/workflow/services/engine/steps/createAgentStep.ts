@@ -92,7 +92,7 @@ export function createAgentStep(
               resume: shouldResume,
               agent: config.agent as "claude" | "codex",
               prompt: config.prompt,
-              workingDir: config.workingDir ?? context.projectPath,
+              workingDir: config.workingDir ?? context.workingDir,
               permissionMode: "bypassPermissions", // Hardcoded to bypass permissions in workflows
               mcpConfig: config.mcpConfig,
               json: config.json,

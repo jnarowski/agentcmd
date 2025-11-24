@@ -40,10 +40,10 @@ export function createGitStep(
       inngestStep,
       input: config,
       fn: async () => {
-        const { projectPath } = context;
+        const { workingDir } = context;
 
         const operation = await withTimeout(
-          executeGitOperation(projectPath, config),
+          executeGitOperation(workingDir, config),
           timeout,
           "Git operation"
         );

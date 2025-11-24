@@ -154,6 +154,7 @@ export function createWorkflowRuntime(
             currentPhase: null,
             logger,
             projectPath,
+            workingDir: projectPath, // Initialize to projectPath, updated after workspace setup
             config,
           };
 
@@ -213,8 +214,9 @@ export function createWorkflowRuntime(
                   logger,
                 });
 
-                // Add workingDir to event.data for workflows to use
+                // Update workingDir for all subsequent steps
                 event.data.workingDir = workspace.workingDir;
+                context.workingDir = workspace.workingDir;
 
                 // Setup spec file (generate if needed)
                 // File verification is memoized to prevent replay errors
