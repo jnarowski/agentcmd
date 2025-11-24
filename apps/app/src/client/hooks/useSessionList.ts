@@ -31,6 +31,7 @@ export function useSessionList(
   const allSessions = useSessionStore((state) => state.sessionList.sessions);
   const loading = useSessionStore((state) => state.sessionList.loading);
   const error = useSessionStore((state) => state.sessionList.error);
+  const lastFetched = useSessionStore((state) => state.sessionList.lastFetched);
 
   // Filter in component with useMemo, not in Zustand selector
   const sessions = useMemo(
@@ -41,12 +42,12 @@ export function useSessionList(
   // Stringify filters for stable dependency (primitives only)
   const filtersKey = useMemo(() => JSON.stringify(filters || {}), [filters]);
 
-  // Auto-load list if not loaded yet
+  // Auto-load list if not loaded yet (check lastFetched, not sessions.length to avoid infinite loop)
   useEffect(() => {
-    if (!loading && sessions.length === 0 && !error) {
+    if (!loading && lastFetched === 0 && !error) {
       loadSessionList(projectId, filters);
     }
-  }, [projectId, filtersKey, loadSessionList, filters, loading, sessions.length, error]);
+  }, [projectId, filtersKey, loadSessionList, filters, loading, lastFetched, error]);
 
   // Return stable references
   return {
