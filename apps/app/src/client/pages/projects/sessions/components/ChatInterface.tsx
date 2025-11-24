@@ -3,7 +3,7 @@
  * Displays conversation history with auto-scroll and WebSocket streaming support
  */
 
-import { MessageCircle, AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { ChatSkeleton } from "./ChatSkeleton";
 import { Alert, AlertDescription } from "@/client/components/ui/alert";
 import type { UIMessage } from "@/shared/types/message.types";

@@ -6,6 +6,7 @@ import {
 
 // Type definitions from monorepo-wide generated types
 import type {
+  CmdCreatePrResponse,
   CmdImplementSpecResponse,
   CmdReviewSpecImplementationResponse,
 } from "../../generated/slash-commands";
@@ -100,11 +101,6 @@ export default defineWorkflow(
     });
 
     await step.phase("complete", async () => {
-      // Safety check: ensure we have implementation and review data
-      if (!ctx.lastImplement || !ctx.lastReview) {
-        throw new Error("Missing implementation or review data");
-      }
-
       // Move spec to done folder and updates index.json
       await step.agent("complete-spec", {
         agent: "claude",
@@ -115,15 +111,12 @@ export default defineWorkflow(
       });
 
       // Create PR with implementation summary and review status
-      await step.git("create-pull-request", {
-        operation: "pr",
-        title: `feat: ${ctx.lastImplement.feature_name}`,
-        body: generatePrBody({
-          summary: ctx.lastImplement.summary,
-          issuesFound: ctx.lastReview.issues_found,
-          specFile,
+      await step.agent<CmdCreatePrResponse>("commit-push-and-create-pr", {
+        agent: "claude",
+        json: true,
+        prompt: buildSlashCommand("/cmd:create-pr", {
+          title: `feat: ${event.data.name}`,
         }),
-        baseBranch: event.data.baseBranch,
       });
     });
   }

@@ -3,7 +3,7 @@ import { ChevronDown, ChevronRight, Loader2, Clock } from "lucide-react";
 import { StepRow } from "./StepRow";
 import { ArtifactRow } from "./ArtifactRow";
 import { EventRow } from "./EventRow";
-import { formatDuration } from "../../utils/formatDuration";
+import { formatDuration } from "@/client/utils/formatDuration";
 import type {
   WorkflowRunStep,
   WorkflowEvent,

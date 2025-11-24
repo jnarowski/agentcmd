@@ -8,7 +8,7 @@ import { updateSession } from "@/server/domain/session/services/updateSession";
 import { storeCliSessionId } from "@/server/domain/session/services/storeCliSessionId";
 import { updateWorkflowStep } from "@/server/domain/workflow/services/steps/updateWorkflowStep";
 import { withTimeout } from "@/server/domain/workflow/services/engine/steps/utils/withTimeout";
-import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
+import { slugify as toId } from "@/server/utils/slugify";
 import { toName } from "@/server/domain/workflow/services/engine/steps/utils/toName";
 import { generateInngestStepId } from "@/server/domain/workflow/services/engine/steps/utils/generateInngestStepId";
 import { findOrCreateStep } from "@/server/domain/workflow/services/engine/steps/utils/findOrCreateStep";

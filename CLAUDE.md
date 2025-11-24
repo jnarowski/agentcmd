@@ -117,6 +117,14 @@ set((state) => {
 - **Private types** - keep in file (not exported)
 - **Non-shared exported types** - can stay in file
 
+**Utils Organization:**
+
+Scan before creating (one export per file):
+- `shared/utils/` - Pure functions used by BOTH frontend and backend
+- `server/utils/` - Server-only utilities (cross-domain)
+- `server/domain/*/utils/` - Domain-specific server utilities
+- `client/utils/` - Client-only utilities (browser APIs, DOM, UI)
+
 ```
 domain/
 ├── project/services/

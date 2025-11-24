@@ -6,7 +6,7 @@ import type { CliStepConfig, CliStepResult } from "agentcmd-workflows";
 import type { CliStepOptions } from "@/server/domain/workflow/types/event.types";
 import { executeStep } from "@/server/domain/workflow/services/engine/steps/utils/executeStep";
 import { withTimeout } from "@/server/domain/workflow/services/engine/steps/utils/withTimeout";
-import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
+import { slugify as toId } from "@/server/utils/slugify";
 import { toName } from "@/server/domain/workflow/services/engine/steps/utils/toName";
 
 const execAsync = promisify(exec);

@@ -13,7 +13,6 @@ export function SessionViewer({ projectId, sessionId }: SessionViewerProps) {
       sessionId={sessionId}
       height="100%"
       className="h-full"
-      clearOnUnmount={true}
     />
   );
 }

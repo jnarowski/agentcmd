@@ -99,6 +99,10 @@ export interface WorkflowRun {
 }
 ```
 
+### Utils
+
+Scan before creating (one export per file): `shared/utils/` (both) / `server/utils/` (server) / `client/utils/` (client)
+
 ## Feature Organization
 
 ### Frontend - Feature-Based

@@ -14,8 +14,6 @@ export function WorkflowEventCommandExecutedItem({
   const data = event.event_data || {};
   const command = String(data.command || "Unknown command");
   const args = Array.isArray(data.args) ? data.args : [];
-  const exitCode =
-    typeof data.exitCode === "number" ? data.exitCode : undefined;
   const duration =
     typeof data.duration === "number" ? data.duration : undefined;
 

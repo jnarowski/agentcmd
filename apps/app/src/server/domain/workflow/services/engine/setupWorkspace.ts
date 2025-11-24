@@ -4,7 +4,7 @@ import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types
 import type { FastifyBaseLogger } from "fastify";
 import type { WorkflowRun } from "@prisma/client";
 import { getCurrentBranch } from "@/server/domain/git/services/getCurrentBranch";
-import { sanitizeBranchForDirectory } from "@/server/domain/git/utils";
+import { sanitizeBranchForDirectory } from "@/shared/utils/sanitizeBranchForDirectory";
 import { createSetupWorkspaceStep } from "./steps";
 
 /**

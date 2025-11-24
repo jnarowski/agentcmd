@@ -4,7 +4,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@/client/components/ui/tooltip";
-import { formatDuration } from "../../utils/formatDuration";
+import { formatDuration } from "@/client/utils/formatDuration";
 
 interface TimelineItemHeaderProps {
   title: string | React.ReactNode;

@@ -330,14 +330,17 @@ describe("executeWorkflow validation", () => {
         name: `workflow.${testProject.id}.test-workflow.triggered`,
         data: {
           runId: workflowRun.id,
+          name: "Test Run",
           projectId: testProject.id,
           projectPath: testProject.path,
           userId: testUser.id,
           specFile: undefined,
           specContent: undefined,
+          specType: undefined,
+          mode: undefined,
+          planningSessionId: undefined,
           baseBranch: undefined,
           branchName: undefined,
-          worktreeName: undefined,
           args: {},
         },
       });

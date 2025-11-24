@@ -9,7 +9,7 @@ import type {
 import { createWorkflowArtifact } from "@/server/domain/workflow/services/artifacts/createWorkflowArtifact";
 import { generateInngestStepId } from "@/server/domain/workflow/services/engine/steps/utils/generateInngestStepId";
 import { emitArtifactCreatedEvent } from "@/server/domain/workflow/services/engine/steps/utils/emitArtifactCreatedEvent";
-import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
+import { slugify as toId } from "@/server/utils/slugify";
 
 /**
  * Get MIME type from file extension

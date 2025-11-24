@@ -11,7 +11,7 @@ import { removeWorktree } from "@/server/domain/git/services/removeWorktree";
 import { createWorkflowEventCommand } from "@/server/domain/workflow/services/engine/steps/utils/createWorkflowEventCommand";
 import { generateInngestStepId } from "@/server/domain/workflow/services/engine/steps/utils/generateInngestStepId";
 import { withTimeout } from "@/server/domain/workflow/services/engine/steps/utils/withTimeout";
-import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
+import { slugify as toId } from "@/server/utils/slugify";
 import { prisma } from "@/shared/prisma";
 
 const DEFAULT_FINALIZE_WORKSPACE_TIMEOUT = 120000; // 2 minutes

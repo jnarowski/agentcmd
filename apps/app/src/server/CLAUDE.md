@@ -41,6 +41,12 @@ pnpm build:server        # Production build (esbuild)
 
 ## Architecture
 
+### Utils
+
+Scan first: `shared/utils/` → `server/utils/` → `domain/*/utils/` (one export per file). Cross-domain pure function → extract to server utils.
+
+See `.agent/docs/backend-patterns.md` for patterns.
+
 ### Domain-Driven Services
 
 Business logic organized by domain with **one function per file**:

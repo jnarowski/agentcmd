@@ -11,7 +11,7 @@ import type {
 import { MODELS } from "@/shared/constants/ai";
 import { executeStep } from "@/server/domain/workflow/services/engine/steps/utils/executeStep";
 import { withTimeout } from "@/server/domain/workflow/services/engine/steps/utils/withTimeout";
-import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
+import { slugify as toId } from "@/server/utils/slugify";
 import { toName } from "@/server/domain/workflow/services/engine/steps/utils/toName";
 import { config as appConfig } from "@/server/config";
 

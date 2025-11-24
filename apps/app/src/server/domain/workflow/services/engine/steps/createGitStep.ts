@@ -9,7 +9,7 @@ import { getCurrentBranch } from "@/server/domain/git/services/getCurrentBranch"
 import { getGitStatus } from "@/server/domain/git/services/getGitStatus";
 import { executeStep } from "@/server/domain/workflow/services/engine/steps/utils/executeStep";
 import { withTimeout } from "@/server/domain/workflow/services/engine/steps/utils/withTimeout";
-import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
+import { slugify as toId } from "@/server/utils/slugify";
 import { prisma } from "@/shared/prisma";
 
 const DEFAULT_GIT_TIMEOUT = 120000; // 2 minutes

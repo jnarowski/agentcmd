@@ -1,7 +1,7 @@
 import type { WorkflowRun } from "@/client/pages/projects/workflows/types";
 import { StepStatusValues } from "@/shared/schemas/workflow.schemas";
 import { isStepTerminal } from "./workflowStatus";
-import { formatDuration } from "./formatDuration";
+import { formatDuration } from "@/client/utils/formatDuration";
 
 /**
  * Estimate time remaining for a workflow run

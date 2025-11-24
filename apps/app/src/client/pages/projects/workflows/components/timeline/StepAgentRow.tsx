@@ -23,7 +23,6 @@ import type { TraceEntry } from "agentcmd-workflows";
 import { TimelineRow } from "./TimelineRow";
 import { TimelineItemHeader } from "./TimelineItemHeader";
 import { formatDate } from "@/shared/utils/formatDate";
-import { formatDuration } from "../../utils/formatDuration";
 
 interface StepAgentRowProps {
   step: WorkflowRunStep;

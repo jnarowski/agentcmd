@@ -8,7 +8,7 @@ import { removeWorktree } from "@/server/domain/git/services/removeWorktree";
 import { createWorkflowEventCommand } from "@/server/domain/workflow/services/engine/steps/utils/createWorkflowEventCommand";
 import { generateInngestStepId } from "@/server/domain/workflow/services/engine/steps/utils/generateInngestStepId";
 import { withTimeout } from "@/server/domain/workflow/services/engine/steps/utils/withTimeout";
-import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
+import { slugify as toId } from "@/server/utils/slugify";
 
 const DEFAULT_CLEANUP_WORKSPACE_TIMEOUT = 60000; // 1 minute
 

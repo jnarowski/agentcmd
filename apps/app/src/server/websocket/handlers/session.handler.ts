@@ -24,8 +24,7 @@ import {
   SessionEventTypes,
   GlobalEventTypes,
 } from "@/shared/types/websocket.types";
-import { Channels } from "@/shared/websocket";
-import { parseChannel } from "../infrastructure/channels";
+import { Channels, parseChannel } from "@/shared/websocket";
 
 // ============================================================================
 // Public API - Session Event Handlers

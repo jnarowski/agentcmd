@@ -13,7 +13,7 @@ import { getGitStatus } from "@/server/domain/git/services/getGitStatus";
 import { createWorkflowEventCommand } from "@/server/domain/workflow/services/engine/steps/utils/createWorkflowEventCommand";
 import { generateInngestStepId } from "@/server/domain/workflow/services/engine/steps/utils/generateInngestStepId";
 import { withTimeout } from "@/server/domain/workflow/services/engine/steps/utils/withTimeout";
-import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
+import { slugify as toId } from "@/server/utils/slugify";
 
 const DEFAULT_SETUP_WORKSPACE_TIMEOUT = 120000; // 2 minutes
 

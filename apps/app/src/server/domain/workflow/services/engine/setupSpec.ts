@@ -26,6 +26,7 @@ export async function setupSpec(params: {
   event: WorkflowEvent;
   step: WorkflowStep;
   logger: FastifyBaseLogger;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   inngestStep: GetStepTools<any>;
 }): Promise<string | null> {
   const { run, event, step, logger, inngestStep } = params;

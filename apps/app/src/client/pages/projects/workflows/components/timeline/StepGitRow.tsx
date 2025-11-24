@@ -15,7 +15,6 @@ import type { WorkflowTab } from "@/client/pages/projects/workflows/hooks/useWor
 import { TimelineRow } from "./TimelineRow";
 import { TimelineItemHeader } from "./TimelineItemHeader";
 import { formatDate } from "@/shared/utils/formatDate";
-import { formatDuration } from "../../utils/formatDuration";
 
 interface StepGitRowProps {
   step: WorkflowRunStep;

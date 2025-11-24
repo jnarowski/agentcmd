@@ -66,7 +66,6 @@ export function AgentSessionModal({
             projectId={projectId}
             sessionId={sessionId}
             height="100%"
-            clearOnUnmount={false} // Manual cleanup via useEffect above
           />
         </div>
       </DialogContent>

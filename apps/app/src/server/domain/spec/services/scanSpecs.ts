@@ -34,8 +34,8 @@ export async function scanSpecs(projectPath: string, projectId: string): Promise
     const specs: Spec[] = [];
 
     for (const [id, entry] of Object.entries(index.specs)) {
-      // Exclude completed and backlog specs
-      if (entry.status === "completed" || entry.status === "backlog") {
+      // Exclude draft, completed and backlog specs
+      if (entry.status === "draft" || entry.status === "completed" || entry.status === "backlog") {
         continue;
       }
 

@@ -54,6 +54,10 @@ pages/projects/sessions/    # Feature
 
 **Example:** `apps/app/src/client/pages/projects/sessions/`
 
+## Utils
+
+Scan first: `shared/utils/` → `client/utils/` (one export per file). Pure logic used 2+ places → extract to client utils.
+
 ## State Management
 
 ### Zustand (Client State)

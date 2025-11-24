@@ -4,7 +4,7 @@ import { generateInngestStepId } from "@/server/domain/workflow/services/engine/
 import { findOrCreateStep } from "@/server/domain/workflow/services/engine/steps/utils/findOrCreateStep";
 import { updateStepStatus } from "@/server/domain/workflow/services/engine/steps/utils/updateStepStatus";
 import { handleStepFailure } from "@/server/domain/workflow/services/engine/steps/utils/handleStepFailure";
-import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
+import { slugify as toId } from "@/server/utils/slugify";
 import { toName } from "@/server/domain/workflow/services/engine/steps/utils/toName";
 
 /**

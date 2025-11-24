@@ -2,7 +2,7 @@ import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types
 import type { PhaseDefinition } from "agentcmd-workflows";
 import { updateWorkflowRun } from "@/server/domain/workflow/services/runs/updateWorkflowRun";
 import { findOrCreateWorkflowEvent } from "@/server/domain/workflow/services/events/findOrCreateWorkflowEvent";
-import { toId } from "@/server/domain/workflow/services/engine/steps/utils/toId";
+import { slugify as toId } from "@/server/utils/slugify";
 import { toName } from "@/server/domain/workflow/services/engine/steps/utils/toName";
 
 /**

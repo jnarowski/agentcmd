@@ -41,9 +41,6 @@ export interface AgentSessionViewerProps {
   /** Optional: Callback on error */
   onError?: (error: Error) => void;
 
-  /** Optional: Clear session data on unmount (default: false) */
-  clearOnUnmount?: boolean;
-
   /** Optional: Callback for permission approval */
   onApprove?: (toolUseId: string) => void;
 }
@@ -61,7 +58,6 @@ export function AgentSessionViewer({
   className,
   onSessionLoad,
   onError,
-  clearOnUnmount = false,
   onApprove,
 }: AgentSessionViewerProps) {
   // Load session data via Zustand hook (auto-loads if not in store)
@@ -72,7 +68,6 @@ export function AgentSessionViewer({
 
   // Get full session data from store
   const session = useSessionStore(selectActiveSession);
-  const clearSession = useSessionStore((s) => s.clearSession);
 
   // Trigger onSessionLoad callback when data is loaded
   useEffect(() => {

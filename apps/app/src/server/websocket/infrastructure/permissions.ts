@@ -1,5 +1,5 @@
 import { prisma } from "@/shared/prisma";
-import { parseChannel } from "./channels";
+import { parseChannel } from "@/shared/websocket";
 
 /**
  * Permission Validation Utilities
