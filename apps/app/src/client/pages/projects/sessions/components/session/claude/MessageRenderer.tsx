@@ -16,6 +16,8 @@ interface MessageRendererProps {
 }
 
 export function MessageRenderer({ message, onApprove }: MessageRendererProps) {
+  console.log('[RENDER] MessageRenderer', message.id.substring(0, 8), message.role);
+
   const isDebugMode = useDebugMode();
   const [isJsonExpanded, setIsJsonExpanded] = useState(false);
   const [isCopied, setIsCopied] = useState(false);

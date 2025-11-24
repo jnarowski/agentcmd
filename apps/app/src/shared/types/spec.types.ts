@@ -9,7 +9,7 @@ export type SpecStatus = "backlog" | "draft" | "in-progress" | "completed" | "re
 
 /**
  * Spec extracted from .agent/specs/index.json
- * Excludes backlog and completed specs
+ * Includes all spec statuses
  */
 export interface Spec {
   id: string; // Timestamp ID from index.json

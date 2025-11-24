@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/client/stores/index";
-import { useSyncProjects } from "@/client/pages/projects/hooks/useProjects";
+import { useSyncProjects, useProjects } from "@/client/pages/projects/hooks/useProjects";
 import { projectKeys } from "@/client/pages/projects/hooks/queryKeys";
 import { settingsKeys } from "@/client/hooks/queryKeys";
 import { useSettings } from "@/client/hooks/useSettings";
@@ -62,6 +62,10 @@ function AppLayout() {
   // Load settings early so they're available for all protected routes
   // Settings are cached by TanStack Query (5-minute stale time)
   const { data: settings } = useSettings();
+
+  // Load projects early so they're cached for sidebar components
+  // Prevents project ID flash in sidebar before project names resolve
+  useProjects();
 
   // Initialize session store defaults and theme from user preferences
   useEffect(() => {

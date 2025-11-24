@@ -21,15 +21,18 @@ import { formatDate } from "@/shared/utils/formatDate";
 import type { Spec } from "@/shared/types/spec.types";
 import { api } from "@/client/utils/api";
 import { SpecFileViewer } from "@/client/pages/projects/workflows/components/SpecFileViewer";
+import { useNavigationStore } from "@/client/stores";
 
 interface SpecItemProps {
   spec: Spec;
+  projectName: string;
 }
 
-export function SpecItem({ spec }: SpecItemProps) {
+export function SpecItem({ spec, projectName }: SpecItemProps) {
   const navigate = useNavigate();
   const { isMobile, setOpenMobile } = useSidebar();
   const queryClient = useQueryClient();
+  const activeProjectId = useNavigationStore((s) => s.activeProjectId);
   const [hoveredSpecId, setHoveredSpecId] = useState<string | null>(null);
   const [menuOpenSpecId, setMenuOpenSpecId] = useState<string | null>(null);
   const [isMoving, setIsMoving] = useState(false);
@@ -100,9 +103,16 @@ export function SpecItem({ spec }: SpecItemProps) {
         <FileText className="size-4 shrink-0 mr-1.5" />
         <div className="flex flex-1 flex-col gap-0 min-w-0">
           <span className="text-sm min-w-0 truncate">{spec.name}</span>
-          <span className="text-xs text-muted-foreground pb-0.5 tabular-nums">
-            {formatDate(spec.created_at)}
-          </span>
+          {!activeProjectId && (
+            <div className="mb-1 text-xs text-muted-foreground/70 truncate">
+              {projectName}
+            </div>
+          )}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-muted-foreground pb-0.5 tabular-nums">
+              {formatDate(spec.created_at)}
+            </span>
+          </div>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <span>{spec.status}</span>
             <span>•</span>

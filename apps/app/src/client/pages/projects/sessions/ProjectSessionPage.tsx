@@ -128,7 +128,34 @@ export default function ProjectSessionPage() {
     clearHandledPermissions();
   }, [sessionId, clearHandledPermissions]);
 
-  const handleSubmit = async (
+  const handleImageUpload = useCallback(async (files: FileUIPart[]): Promise<string[]> => {
+    // FileUIPart.url is already a blob URL or data URL
+    // If it's a blob URL, we need to fetch it and convert to data URL
+    return Promise.all(
+      files.map(async (fileUIPart) => {
+        const url = fileUIPart.url;
+        // If already a data URL, return as-is
+        if (url.startsWith("data:")) {
+          return url;
+        }
+        // If blob URL, convert to data URL
+        if (url.startsWith("blob:")) {
+          const response = await fetch(url);
+          const blob = await response.blob();
+          return new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+        }
+        // Otherwise return the URL as-is
+        return url;
+      })
+    );
+  }, []);
+
+  const handleSubmit = useCallback(async (
     { text, files }: PromptInputMessage,
     permissionModeOverride?: PermissionMode
   ) => {
@@ -172,34 +199,7 @@ export default function ProjectSessionPage() {
     };
 
     wsSendMessage(message, imagePaths, config);
-  };
-
-  const handleImageUpload = async (files: FileUIPart[]): Promise<string[]> => {
-    // FileUIPart.url is already a blob URL or data URL
-    // If it's a blob URL, we need to fetch it and convert to data URL
-    return Promise.all(
-      files.map(async (fileUIPart) => {
-        const url = fileUIPart.url;
-        // If already a data URL, return as-is
-        if (url.startsWith("data:")) {
-          return url;
-        }
-        // If blob URL, convert to data URL
-        if (url.startsWith("blob:")) {
-          const response = await fetch(url);
-          const blob = await response.blob();
-          return new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-          });
-        }
-        // Otherwise return the URL as-is
-        return url;
-      })
-    );
-  };
+  }, [projectId, sessionId, addMessage, setStreaming, session, wsSendMessage, handleImageUpload]);
 
   // Determine if input should be blocked
   // Count assistant messages

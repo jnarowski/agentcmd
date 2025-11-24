@@ -28,8 +28,7 @@ interface UserPreferences {
   session_theme: 'default' | 'nature' | 'monospace';
   default_agent: AgentType;
   onboarding_dismissed?: boolean;
-  activity_filter?: 'all' | 'sessions' | 'workflows';
-  sidebar_active_tab?: 'activities' | 'tasks';
+  sidebar_active_tab?: 'sessions' | 'workflows' | 'specs';
   project_home_active_tab?: 'activities' | 'tasks';
   dismissed_content?: Record<string, boolean>;
 }

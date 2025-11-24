@@ -69,16 +69,15 @@ export function SessionItem({
             <div className="flex items-center gap-1.5">
               <span className="truncate text-sm">{displayName}</span>
             </div>
+            {!activeProjectId && (
+              <div className="mb-1 text-xs text-muted-foreground/70 truncate">
+                {projectName}
+              </div>
+            )}
             <div className="flex items-center gap-1.5">
               <div className="text-xs text-muted-foreground tabular-nums">
                 {timeAgo}
               </div>
-              {!activeProjectId && (
-                <>
-                  <div className="text-xs text-muted-foreground">•</div>
-                  <div className="text-xs text-muted-foreground">{projectName}</div>
-                </>
-              )}
             </div>
             <div className="flex items-center gap-1.5">
               <span

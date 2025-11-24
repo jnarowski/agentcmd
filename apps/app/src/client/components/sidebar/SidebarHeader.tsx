@@ -10,7 +10,7 @@ export function AppSidebarHeader() {
           href={getWebsiteUrl()}
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:opacity-80 transition-opacity"
+          className="hover:opacity-80 transition-opacity pointer-events-none md:pointer-events-auto"
         >
           <Logo size="sm" />
         </a>

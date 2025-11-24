@@ -20,7 +20,7 @@ interface SpecIndex {
 }
 
 /**
- * Read specs index.json and return Spec[] (excludes completed and backlog statuses)
+ * Read specs index.json and return Spec[] (includes all statuses)
  * @param projectPath - Absolute path to the project directory
  * @param projectId - Project ID to associate with specs
  */
@@ -34,10 +34,6 @@ export async function scanSpecs(projectPath: string, projectId: string): Promise
     const specs: Spec[] = [];
 
     for (const [id, entry] of Object.entries(index.specs)) {
-      // Exclude completed and backlog specs
-      if (entry.status === "completed" || entry.status === "backlog") {
-        continue;
-      }
 
       // Read spec.md file to extract header
       const specFilePath = path.join(projectPath, ".agent", "specs", entry.path);

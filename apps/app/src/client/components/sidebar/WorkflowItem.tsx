@@ -4,9 +4,10 @@ import {
   SidebarMenuButton,
   useSidebar,
 } from "@/client/components/ui/sidebar";
-import { Badge } from "@/client/components/ui/badge";
 import { getWorkflowStatusConfig } from "@/client/pages/projects/workflows/utils/workflowStatus";
 import type { WorkflowStatus } from "@/shared/schemas/workflow.schemas";
+import { formatDate } from "@/shared/utils/formatDate";
+import { useNavigationStore } from "@/client/stores";
 
 interface WorkflowItemProps {
   id: string;
@@ -15,6 +16,7 @@ interface WorkflowItemProps {
   projectName: string;
   status: WorkflowStatus;
   workflowDefinitionId: string;
+  createdAt: Date;
   isActive?: boolean;
 }
 
@@ -25,10 +27,12 @@ export function WorkflowItem({
   projectName,
   status,
   workflowDefinitionId,
+  createdAt,
   isActive = false,
 }: WorkflowItemProps) {
   const navigate = useNavigate();
   const { isMobile, setOpenMobile } = useSidebar();
+  const activeProjectId = useNavigationStore((s) => s.activeProjectId);
 
   const handleActivityClick = () => {
     navigate(`/projects/${projectId}/workflows/${workflowDefinitionId}/runs/${id}`);
@@ -37,47 +41,34 @@ export function WorkflowItem({
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "running":
-        return "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20";
-      case "completed":
-        return "bg-green-500/10 text-green-500 hover:bg-green-500/20";
-      case "failed":
-        return "bg-red-500/10 text-red-500 hover:bg-red-500/20";
-      default:
-        return "bg-gray-500/10 text-gray-500 hover:bg-gray-500/20";
-    }
-  };
-
   const statusConfig = getWorkflowStatusConfig(status);
   const StatusIcon = statusConfig.icon;
+  const timeAgo = formatDate(createdAt);
 
   return (
     <SidebarMenuItem key={id}>
       <SidebarMenuButton
         onClick={handleActivityClick}
         isActive={isActive}
-        className="h-auto min-h-[28px] px-2 py-1"
+        className="h-auto min-h-[28px] px-2 py-1.5"
       >
         <StatusIcon
-          className={`size-4 shrink-0 mr-1 ${statusConfig.textColor} ${status === "running" ? "animate-spin" : ""}`}
+          className={`size-4 shrink-0 mr-1.5 ${statusConfig.textColor} ${status === "running" ? "animate-spin" : ""}`}
         />
-        <div className="flex flex-1 flex-col gap-0.5 min-w-0">
+        <div className="flex flex-1 flex-col gap-0 min-w-0">
           <span className="text-sm min-w-0 truncate">{name}</span>
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <Badge
-              variant="secondary"
-              className={`h-4 px-1.5 text-[10px] w-12 shrink-0 justify-center ${getStatusColor(status)}`}
-            >
-              {status}
-            </Badge>
-            <Badge
-              variant="secondary"
-              className="h-4 px-1.5 text-[10px] bg-muted/50 text-muted-foreground hover:bg-muted/50 truncate"
-            >
+          {!activeProjectId && (
+            <div className="mb-1 text-xs text-muted-foreground/70 truncate">
               {projectName}
-            </Badge>
+            </div>
+          )}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-muted-foreground pb-0.5 tabular-nums">
+              {timeAgo}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span>{status}</span>
           </div>
         </div>
       </SidebarMenuButton>

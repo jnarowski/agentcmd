@@ -220,9 +220,12 @@ export function useSyncProjects(): UseQueryResult<SyncProjectsResponse, Error> {
   return useQuery({
     queryKey: projectKeys.sync(),
     queryFn: () => syncProjects(),
-    gcTime: 10 * 60 * 1000,    // 10 minutes - keep in cache
-    refetchOnMount: false,      // Don't auto-refetch on component mount
-    retry: 1,                   // Only retry once on failure
+    gcTime: 10 * 60 * 1000,        // 10 minutes - keep in cache
+    staleTime: 10 * 60 * 1000,     // 10 minutes - don't refetch if data is fresh
+    refetchOnMount: false,          // Don't auto-refetch on component mount
+    refetchOnWindowFocus: false,    // Don't refetch when window gains focus
+    refetchOnReconnect: false,      // Don't refetch on network reconnect
+    retry: 1,                       // Only retry once on failure
   });
 }
 
