@@ -68,7 +68,7 @@ async function executeFinalizeWorkspace(
     const commitStartTime = Date.now();
     await commitChanges({
       projectPath: workingDir,
-      message: `wip: Workflow '${workflowName}' auto-commit`,
+      message: `chore: Workflow '${workflowName}' auto-commit`,
       files: ["."],
     });
     const commitDuration = Date.now() - commitStartTime;
@@ -76,7 +76,7 @@ async function executeFinalizeWorkspace(
     await createWorkflowEventCommand(
       context,
       "git",
-      ["commit", "-m", `wip: Workflow '${workflowName}' auto-commit`],
+      ["commit", "-m", `chore: Workflow '${workflowName}' auto-commit`],
       commitDuration
     );
   } else {

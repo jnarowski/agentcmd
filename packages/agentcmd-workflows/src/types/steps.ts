@@ -170,8 +170,10 @@ interface BaseGitStepResult {
  */
 export interface GitCommitResult extends BaseGitStepResult {
   data: {
-    /** Commit SHA */
-    commitSha: string;
+    /** Commit SHA (undefined if no changes to commit) */
+    commitSha?: string;
+    /** Whether there were changes to commit */
+    hadChanges: boolean;
   };
 }
 
