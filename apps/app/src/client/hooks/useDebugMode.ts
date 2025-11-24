@@ -53,7 +53,7 @@ export function useDebugMode(): boolean {
     // Also check periodically in case localStorage changed in same window
     const interval = setInterval(() => {
       setDebugEnabled(isDebugMode());
-    }, 100);
+    }, 1000);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);

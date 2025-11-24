@@ -3,7 +3,7 @@
  * Dispatches to UserMessage or AssistantMessage based on role
  */
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import type { UIMessage } from "@/shared/types/message.types";
 import { UserMessage } from './UserMessage';
 import { AssistantMessage } from './AssistantMessage';
@@ -15,10 +15,12 @@ interface MessageRendererProps {
   onApprove?: (toolUseId: string) => void;
 }
 
-export function MessageRenderer({ message, onApprove }: MessageRendererProps) {
-  console.log('[RENDER] MessageRenderer', message.id.substring(0, 8), message.role);
-
+export const MessageRenderer = memo(function MessageRenderer({ message, onApprove }: MessageRendererProps) {
   const isDebugMode = useDebugMode();
+
+  if (isDebugMode) {
+    console.log('[RENDER] MessageRenderer', message.id.substring(0, 8), message.role);
+  }
   const [isJsonExpanded, setIsJsonExpanded] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
@@ -113,4 +115,10 @@ export function MessageRenderer({ message, onApprove }: MessageRendererProps) {
       )}
     </div>
   );
-}
+}, (prev, next) => {
+  // Only re-render if message ID changes or streaming state changes
+  // Ignore onApprove reference changes (callback may be recreated)
+  return prev.message.id === next.message.id &&
+         prev.message.isStreaming === next.message.isStreaming &&
+         prev.message.content === next.message.content;
+});
