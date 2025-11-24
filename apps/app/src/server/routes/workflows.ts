@@ -464,6 +464,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
     Body: {
       projectId: string;
       specFile: string;
+      specType?: string;
     };
   }>(
     "/api/workflows/generate-names-from-spec",
@@ -473,15 +474,16 @@ export async function workflowRoutes(fastify: FastifyInstance) {
         body: z.object({
           projectId: z.string().cuid(),
           specFile: z.string().min(1),
+          specType: z.string().optional(),
         }),
       },
     },
     async (request, reply) => {
       const userId = (request.user! as { id: string }).id;
-      const { projectId, specFile } = request.body;
+      const { projectId, specFile, specType } = request.body;
 
       fastify.log.info(
-        { userId, projectId, specFile },
+        { userId, projectId, specFile, specType },
         "Generating run names from spec"
       );
 
@@ -511,7 +513,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
       }
 
       // Generate names using AI
-      const names = await generateRunNames({ specContent });
+      const names = await generateRunNames({ specContent, specType });
 
       return reply.send({ data: names });
     }

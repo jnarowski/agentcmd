@@ -191,6 +191,7 @@ export function NewRunForm({
         }>("/api/workflows/generate-names-from-spec", {
           projectId,
           specFile,
+          specType,
         });
 
         const names = response.data;
@@ -206,7 +207,7 @@ export function NewRunForm({
     };
 
     generateNames();
-  }, [specFile, projectId, name]);
+  }, [specFile, projectId, name, specType]);
 
   // Auto-generate branch name from run name
   useEffect(() => {

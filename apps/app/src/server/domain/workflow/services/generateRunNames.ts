@@ -3,6 +3,7 @@ import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
 import { config } from "@/server/config";
 import { MODELS } from "@/shared/constants/ai";
+import { addBranchPrefix } from "@/server/domain/workflow/utils/addBranchPrefix";
 
 /**
  * Options for generating run names
@@ -10,6 +11,8 @@ import { MODELS } from "@/shared/constants/ai";
 export interface GenerateRunNamesOptions {
   /** The spec file content to base names on */
   specContent: string;
+  /** The spec type (e.g., "feature", "bug", "issue") for branch prefix */
+  specType?: string;
 }
 
 /**
@@ -27,26 +30,27 @@ export interface GenerateRunNamesResult {
  *
  * Uses AI to extract the main goal/feature from the spec and create:
  * - Run name: 3-6 words, Title Case, descriptive
- * - Branch name: 2-4 words, kebab-case, git-friendly
+ * - Branch name: 2-4 words, kebab-case, git-friendly with spec type prefix
  *
  * Returns null if ANTHROPIC_API_KEY is not configured (silent fallback).
  *
- * @param options - Configuration object with specContent
+ * @param options - Configuration object with specContent and optional specType
  * @returns Generated names or null if API key not available
  *
  * @example
  * const result = await generateRunNames({
- *   specContent: "# Spec\n\nFix authentication flow bug..."
+ *   specContent: "# Spec\n\nFix authentication flow bug...",
+ *   specType: "bug"
  * });
  * // Returns: {
  * //   runName: "Fix Auth Flow Bug",
- * //   branchName: "fix-auth-flow"
+ * //   branchName: "bug/fix-auth-flow"
  * // }
  */
 export async function generateRunNames(
   options: GenerateRunNamesOptions
 ): Promise<GenerateRunNamesResult | null> {
-  const { specContent } = options;
+  const { specContent, specType } = options;
 
   const apiKey = config.apiKeys.anthropicApiKey;
 
@@ -111,9 +115,12 @@ Extract the core feature/goal and generate appropriate names.`,
       temperature: 0.7,
     });
 
+    // Add spec type prefix to branch name if specType provided
+    const branchName = addBranchPrefix(result.object.branchName, specType);
+
     return {
       runName: result.object.runName,
-      branchName: result.object.branchName,
+      branchName,
     };
   } catch {
     // Silently fall back to null on error - this is an optional feature
