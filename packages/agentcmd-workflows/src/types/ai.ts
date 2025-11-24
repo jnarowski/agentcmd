@@ -16,7 +16,7 @@ export const MODELS = {
     SONNET_3_7: "claude-3-7-sonnet-20250219",
     SONNET_4_5: "claude-sonnet-4-5-20250929",
     OPUS_4: "claude-opus-4-20250514",
-    OPUS_4_5: "claude-opus-4-5-20251124",
+    OPUS_4_5: "claude-opus-4-5",
   },
   openai: {
     GPT_4: "gpt-4",

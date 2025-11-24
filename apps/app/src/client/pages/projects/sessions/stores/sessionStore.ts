@@ -866,7 +866,7 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
       const existingIndex = state.sessionList.sessions.findIndex(s => s.id === session.id);
       const updatedSessions = existingIndex !== -1
         ? state.sessionList.sessions.map((s, i) => i === existingIndex ? summary : s)
-        : [...state.sessionList.sessions, summary];
+        : [summary, ...state.sessionList.sessions];
 
       return {
         sessionList: {

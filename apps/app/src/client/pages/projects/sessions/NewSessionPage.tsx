@@ -86,10 +86,12 @@ export default function NewSessionPage() {
     const message = text || "";
 
     try {
-      // Get current agent and permission mode from store
+      // Get current agent, permission mode, and model from store
       const agent = useSessionStore.getState().getAgent();
       const getPermissionMode = useSessionStore.getState().getPermissionMode;
       const permissionMode = getPermissionMode() || "acceptEdits";
+      const getModel = useSessionStore.getState().getModel;
+      const model = getModel();
 
       // Create session via Zustand store action
       const sessionId = generateUUID();
@@ -130,6 +132,7 @@ export default function NewSessionPage() {
             resume: false,
             sessionId: newSession.id,
             permissionMode,
+            model: model || undefined,
           },
         },
       });

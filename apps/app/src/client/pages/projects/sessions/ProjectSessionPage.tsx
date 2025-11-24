@@ -192,10 +192,15 @@ export default function ProjectSessionPage() {
     const getPermissionMode = useSessionStore.getState().getPermissionMode;
     const permissionMode = permissionModeOverride || getPermissionMode();
 
+    // Get model selection from form
+    const getModel = useSessionStore.getState().getModel;
+    const model = getModel();
+
     const config = {
       resume,
       sessionId,
       permissionMode,
+      model: model || undefined, // Only include if set
     };
 
     wsSendMessage(message, imagePaths, config);
