@@ -40,7 +40,7 @@
     "sync:workflows": "node scripts/sync-workflows.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepublishOnly": "pnpm sync:commands && pnpm sync:workflows && pnpm build && pnpm test",
+    "prepublishOnly": "pnpm sync:commands && generate:command:types && pnpm build && pnpm test",
     "ship": "pnpm build && pnpm test && npm version patch && (git commit -am \"bump version\" || true) && npm publish"
   },
   "keywords": [

@@ -5,7 +5,7 @@
  * No args, just writes a random file for git commit testing.
  *
  * Features:
- * - 3 phases (Research → Write → Review)
+ * - 2 phases (Research → Write)
  * - Agent steps with JSON responses
  * - Annotations for progress
  * - Random file generation
@@ -13,6 +13,10 @@
  */
 
 import { defineWorkflow } from "../../../packages/agentcmd-workflows/dist";
+import {
+  buildSlashCommand,
+  type CmdCreatePrResponse,
+} from "../../generated/slash-commands";
 
 // Prompts
 const RESEARCH_PROMPT = (topic: string) => `Research the topic: "${topic}"
@@ -36,17 +40,6 @@ Return JSON with:
 }
 
 Note: This is a TEST workflow - keep it simple and brief.`;
-
-const REVIEW_PROMPT = (topic: string) => `Review the article about "${topic}"
-
-Return JSON with:
-{
-  "quality": number (1-10 rating),
-  "readability": "easy|medium|hard",
-  "approved": true
-}
-
-Note: This is a TEST workflow - always approve with good scores.`;
 
 const FILE_CONTENT = (params: {
   title?: string;
@@ -82,11 +75,11 @@ export default defineWorkflow(
     phases: [
       { id: "research", label: "Research" },
       { id: "write", label: "Write" },
-      { id: "review", label: "Review" },
+      { id: "complete", label: "Complete " },
     ],
   },
   async ({ event, step }) => {
-    const projectPath = (event.data.projectPath as string) || process.cwd();
+    const { workingDir, specFile } = event.data;
 
     // Generate random topic for variety
     const topics = [
@@ -115,7 +108,7 @@ export default defineWorkflow(
         agent: "claude",
         json: true,
         prompt: RESEARCH_PROMPT(randomTopic),
-        workingDir: projectPath,
+        workingDir,
       });
 
       await step.annotation("research-complete", {
@@ -144,12 +137,12 @@ export default defineWorkflow(
         agent: "claude",
         json: true,
         prompt: WRITE_PROMPT(randomTopic),
-        workingDir: projectPath,
+        workingDir,
       });
 
       // Create random test file
       const filename = `test-article-${timestamp}.md`;
-      const filepath = `${projectPath}/.agent/generated/${filename}`;
+      const filepath = `${workingDir}/.agent/generated/${filename}`;
 
       const fileContent = FILE_CONTENT({
         title: writeResult.data.title,
@@ -163,7 +156,7 @@ export default defineWorkflow(
         command: `mkdir -p .agent/generated && cat > .agent/generated/${filename} << 'EOF'
 ${fileContent}
 EOF`,
-        cwd: projectPath,
+        cwd: workingDir,
       });
 
       await step.annotation("write-complete", {
@@ -190,38 +183,39 @@ EOF`,
           2
         ),
       });
-    });
-
-    // ========================================
-    // PHASE 3: Review
-    // ========================================
-    await step.phase("review", async () => {
-      await step.annotation("start-review", {
-        message: "Reviewing generated content",
-      });
-
-      const reviewResult = await step.agent<{
-        quality: number;
-        readability: string;
-        approved: boolean;
-      }>("review-content", {
-        agent: "claude",
-        json: true,
-        prompt: REVIEW_PROMPT(randomTopic),
-        workingDir: projectPath,
-      });
-
-      await step.annotation("review-complete", {
-        message: `Review: ${reviewResult.data.quality || 8}/10 quality, ${reviewResult.data.approved ? "✓ approved" : "✗ rejected"}`,
-      });
-
-      console.log(
-        `[Review] Quality: ${reviewResult.data.quality}/10, Approved: ${reviewResult.data.approved}`
-      );
 
       await step.annotation("workflow-complete", {
         message: `✓ Workflow complete - file ready for git testing`,
       });
+    });
+
+    await step.phase("complete", async () => {
+      // Move spec to done folder and updates index.json
+      await step.agent("complete-spec", {
+        agent: "claude",
+        prompt: buildSlashCommand("/cmd:move-spec", {
+          specIdOrNameOrPath: specFile,
+          targetFolder: "done",
+        }),
+      });
+
+      // Option 2: Use step.agent with /cmd:create-pr (more flexible, handles commit+push+pr)
+      const prResult = await step.agent<CmdCreatePrResponse>(
+        "commit-push-and-create-pr",
+        {
+          agent: "claude",
+          json: true,
+          prompt: buildSlashCommand("/cmd:create-pr", {
+            title: `feat: ${event.data.name}`,
+          }),
+        }
+      );
+
+      if (!prResult.data.success) {
+        throw new Error(`PR creation failed: ${prResult.data.message}`);
+      }
+
+      await step.updateRun({ pr_url: prResult.data.pr_url });
     });
 
     // Return summary
@@ -229,7 +223,7 @@ EOF`,
       success: true,
       topic: randomTopic,
       timestamp,
-      phasesCompleted: 3,
+      phasesCompleted: 2,
       completedAt: new Date().toISOString(),
     };
   }

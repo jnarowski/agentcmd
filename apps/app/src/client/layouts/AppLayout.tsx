@@ -118,7 +118,7 @@ function AppLayout() {
   useEffect(() => {
     const globalChannel = Channels.global();
 
-    const handleGlobalEvent = (event: { type: string; data: { userId: string; stats: { projectsImported: number; projectsUpdated: number; sessionsImported: number } } }) => {
+    const handleGlobalEvent = async (event: { type: string; data: { userId: string; stats: { projectsImported: number; projectsUpdated: number; sessionsImported: number } } }) => {
       // Only handle projects.sync.completed events
       if (event.type !== GlobalEventTypes.PROJECTS_SYNC_COMPLETED) {
         return;
@@ -129,14 +129,14 @@ function AppLayout() {
         return;
       }
 
-      // Update syncing state
-      setIsSyncing(false);
-
-      // Invalidate projects list to show newly synced projects
-      queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
+      // Refetch projects and wait for completion before hiding sync UI
+      await queryClient.refetchQueries({ queryKey: projectKeys.lists() });
 
       // Reload session list to show newly synced sessions
       loadSessionList(null);
+
+      // Update syncing state (after data is loaded to prevent flash)
+      setIsSyncing(false);
     };
 
     // Subscribe to global channel events
