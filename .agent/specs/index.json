@@ -202,6 +202,14 @@
       "status": "completed",
       "created": "2025-11-23T08:23:00Z",
       "updated": "2025-11-23T20:54:50.000Z"
+    },
+    "2511240127": {
+      "folder": "2511240127-messagelist-memoization",
+      "path": "todo/2511240127-messagelist-memoization/spec.md",
+      "spec_type": "issue",
+      "status": "draft",
+      "created": "2025-11-24T01:27:00Z",
+      "updated": "2025-11-24T01:27:00Z"
     }
   }
 }
