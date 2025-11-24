@@ -181,10 +181,18 @@
     },
     "2511221515": {
       "folder": "2511221515-three-tab-sidebar",
-      "path": "todo/2511221515-three-tab-sidebar/spec.md",
+      "path": "done/2511221515-three-tab-sidebar/spec.md",
       "spec_type": "feature",
       "status": "review",
       "created": "2025-11-22T15:15:00Z",
+      "updated": "2025-11-24T21:30:00.000Z"
+    },
+    "2511232135": {
+      "folder": "2511232135-spec-complexity-tracking",
+      "path": "todo/2511232135-spec-complexity-tracking/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-23T21:35:00Z",
       "updated": "2025-11-24T21:30:00.000Z"
     },
     "2511230804": {
@@ -213,11 +221,11 @@
     },
     "2511240820": {
       "folder": "2511240820-shared-utils-consolidation",
-      "path": "todo/2511240820-shared-utils-consolidation/spec.md",
+      "path": "done/2511240820-shared-utils-consolidation/spec.md",
       "spec_type": "feature",
-      "status": "review",
+      "status": "draft",
       "created": "2025-11-24T08:20:00Z",
-      "updated": "2025-11-24T17:35:00Z"
+      "updated": "2025-11-24T21:30:00.000Z"
     }
   }
 }
