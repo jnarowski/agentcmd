@@ -74,7 +74,6 @@ export async function syncProjectSessions({
       allSessionIds.map((session) => session.id)
     );
 
-    const jsonlSessionIds = new Set<string>();
     const sessionsToCreate: Array<{
       id: string;
       project_id: string;
@@ -97,7 +96,6 @@ export async function syncProjectSessions({
     for (const file of jsonlFiles) {
       const sessionId = path.basename(file, '.jsonl');
       const filePath = path.join(projectSessionsDir, file);
-      jsonlSessionIds.add(sessionId);
 
       try {
         // Parse JSONL file to extract metadata
@@ -192,42 +190,11 @@ export async function syncProjectSessions({
       updated = sessionsToUpdate.length;
     }
 
-    // Batch delete orphaned Claude sessions (only)
-    // Other agent types are not checked since they have different storage locations
-    // IMPORTANT: Only delete sessions that are:
-    // 1. Not in the JSONL files (orphaned)
-    // 2. In "idle" state (not actively being created/used)
-    // 3. Older than 5 seconds (to avoid race conditions with new session creation)
-    const fiveSecondsAgo = new Date(Date.now() - 5000);
-    const orphanedSessionIds = dbClaudeSessions
-      .filter((session) => {
-        // Keep if session has a JSONL file
-        if (jsonlSessionIds.has(session.id)) {
-          return false;
-        }
-
-        // Keep if session is actively being worked on
-        if (session.state === 'working') {
-          return false;
-        }
-
-        // Keep if session was created very recently (race condition protection)
-        if (session.created_at > fiveSecondsAgo) {
-          return false;
-        }
-
-        // This session is truly orphaned and safe to delete
-        return true;
-      })
-      .map((session) => session.id);
-
-    if (orphanedSessionIds.length > 0) {
-      await prisma.agentSession.deleteMany({
-        where: {
-          id: { in: orphanedSessionIds },
-        },
-      });
-    }
+    // NOTE: Orphan deletion removed - too dangerous due to cascade deletes
+    // WorkflowRunStep has onDelete: Cascade on agent_session_id, so deleting
+    // "orphaned" sessions was inadvertently deleting workflow steps.
+    // Workflow sessions don't have JSONL files by design (they're created
+    // programmatically), so they were incorrectly identified as orphaned.
   } catch (error: unknown) {
     // Directory doesn't exist or can't be accessed
     const err = error instanceof Error ? error : new Error(String(error));

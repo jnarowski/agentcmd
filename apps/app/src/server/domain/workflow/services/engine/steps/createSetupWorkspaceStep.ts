@@ -3,7 +3,6 @@ import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types
 import type {
   SetupWorkspaceConfig,
   WorkspaceResult,
-  StepOptions,
 } from "agentcmd-workflows";
 import path from "node:path";
 import { getCurrentBranch } from "@/server/domain/git/services/getCurrentBranch";
@@ -11,10 +10,7 @@ import { createAndSwitchBranch } from "@/server/domain/git/services/createAndSwi
 import { createWorktree } from "@/server/domain/git/services/createWorktree";
 import { createWorkflowEventCommand } from "@/server/domain/workflow/services/engine/steps/utils/createWorkflowEventCommand";
 import { executeStep } from "@/server/domain/workflow/services/engine/steps/utils/executeStep";
-import { withTimeout } from "@/server/domain/workflow/services/engine/steps/utils/withTimeout";
 import { slugify as toId } from "@/server/utils/slugify";
-
-const DEFAULT_SETUP_WORKSPACE_TIMEOUT = 120000; // 2 minutes
 
 /**
  * Parse command string and log to workflow timeline
@@ -54,11 +50,8 @@ export function createSetupWorkspaceStep(
 ) {
   return async function setupWorkspace(
     _idOrName: string,
-    config: SetupWorkspaceConfig,
-    options?: StepOptions
+    config: SetupWorkspaceConfig
   ): Promise<WorkspaceResult> {
-    const timeout = options?.timeout ?? DEFAULT_SETUP_WORKSPACE_TIMEOUT;
-
     // Use provided config with defaults
     const finalConfig: SetupWorkspaceConfig = {
       projectPath: config.projectPath || context.projectPath,
@@ -67,11 +60,7 @@ export function createSetupWorkspaceStep(
       worktreeName: config.worktreeName,
     };
 
-    return await withTimeout(
-      executeSetupWorkspace(finalConfig, context, inngestStep),
-      timeout,
-      "Setup workspace"
-    );
+    return await executeSetupWorkspace(finalConfig, context, inngestStep);
   };
 }
 
