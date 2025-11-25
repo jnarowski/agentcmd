@@ -28,6 +28,7 @@ program
   .option("-p, --port <number>", "Server port", parseInt)
   .option("--inngest-port <number>", "Inngest dev UI port", parseInt)
   .option("--host <address>", "Server host address")
+  .option("-v, --verbose", "Show detailed output")
   .action(startCommand);
 
 program
