@@ -25,6 +25,8 @@ export interface FinalizeWorkspaceConfig {
   worktreePath?: string;
   /** Workflow name for commit message */
   workflowName?: string;
+  /** If true, preserve work context for review (stay on branch / keep worktree) */
+  preserve?: boolean;
 }
 
 // ============================================================================
@@ -63,7 +65,15 @@ async function executeFinalizeWorkspace(
   config: FinalizeWorkspaceConfig,
   context: RuntimeContext
 ): Promise<void> {
-  const { mode, baseBranch, projectPath, workingDir, worktreePath, workflowName = "Workflow" } = config;
+  const {
+    mode,
+    baseBranch,
+    projectPath,
+    workingDir,
+    worktreePath,
+    workflowName = "Workflow",
+    preserve = false,
+  } = config;
 
   if (!workingDir || !mode) {
     return;
@@ -76,16 +86,7 @@ async function executeFinalizeWorkspace(
       { workingDir, mode },
       "Working directory already cleaned up, skipping git operations"
     );
-
-    // For worktree mode, still switch back to original branch in main project
-    if (mode === "worktree" && worktreePath && baseBranch) {
-      await restoreBranch(projectPath, baseBranch, context);
-      context.logger.info(
-        { baseBranch },
-        "Restored original branch after retry"
-      );
-    }
-
+    // Worktree mode: main project is NEVER touched, so nothing to do on retry
     return;
   }
 
@@ -99,19 +100,23 @@ async function executeFinalizeWorkspace(
       break;
 
     case "branch":
-      if (baseBranch) {
+      if (!preserve && baseBranch) {
         await restoreBranch(workingDir, baseBranch, context);
         context.logger.info({ baseBranch }, "Restored original branch");
+      } else {
+        context.logger.info("Staying on feature branch for review");
       }
       break;
 
     case "worktree":
+      // IMPORTANT: Main project is NEVER touched in worktree mode
       if (worktreePath) {
-        await cleanupWorktree(projectPath, worktreePath, baseBranch, context);
-        context.logger.info(
-          { baseBranch, worktreePath },
-          "Removed worktree and restored original branch"
-        );
+        if (!preserve) {
+          await removeWorktree({ projectPath, worktreePath });
+          context.logger.info({ worktreePath }, "Removed worktree");
+        } else {
+          context.logger.info({ worktreePath }, "Keeping worktree for review");
+        }
       }
       break;
   }
@@ -167,26 +172,3 @@ async function restoreBranch(
   );
 }
 
-async function cleanupWorktree(
-  projectPath: string,
-  worktreePath: string,
-  baseBranch: string | null,
-  context: RuntimeContext
-): Promise<void> {
-  // Remove worktree
-  const removeStartTime = Date.now();
-  await removeWorktree({ projectPath, worktreePath });
-  const removeDuration = Date.now() - removeStartTime;
-
-  await createWorkflowEventCommand(
-    context,
-    "git",
-    ["worktree", "remove", worktreePath],
-    removeDuration
-  );
-
-  // Restore original branch in main project
-  if (baseBranch) {
-    await restoreBranch(projectPath, baseBranch, context);
-  }
-}

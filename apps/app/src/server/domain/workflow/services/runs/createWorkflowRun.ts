@@ -38,6 +38,7 @@ export async function createWorkflowRun(
       mode: data.mode,
       base_branch: data.base_branch,
       branch_name: data.branch_name,
+      preserve: data.preserve,
       triggered_by: data.triggered_by || 'manual',
       webhook_event_id: data.webhook_event_id,
       issue_id: data.issue_id,

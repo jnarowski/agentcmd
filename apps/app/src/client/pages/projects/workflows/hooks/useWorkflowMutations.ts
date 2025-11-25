@@ -17,6 +17,7 @@ interface CreateWorkflowInput {
   mode?: string;
   base_branch?: string;
   branch_name?: string;
+  preserve?: boolean;
 }
 
 interface CreateWorkflowResponse {
@@ -38,6 +39,7 @@ async function createWorkflow(input: CreateWorkflowInput): Promise<WorkflowRun> 
       mode: input.mode,
       base_branch: input.base_branch,
       branch_name: input.branch_name,
+      preserve: input.preserve,
     }
   );
   return response.data;

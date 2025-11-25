@@ -24,6 +24,7 @@ export interface CreateWorkflowRunInput {
   mode?: string;
   base_branch?: string;
   branch_name?: string;
+  preserve?: boolean;
   inngest_run_id?: string;
   triggered_by?: 'manual' | 'webhook' | 'api' | 'scheduled';
   webhook_event_id?: string;

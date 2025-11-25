@@ -66,6 +66,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
         mode: body.mode,
         base_branch: body.base_branch,
         branch_name: body.branch_name,
+        preserve: body.preserve,
         triggered_by: body.triggered_by,
         webhook_event_id: body.webhook_event_id,
         issue_id: body.issue_id,

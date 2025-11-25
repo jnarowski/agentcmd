@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Input } from "@/client/components/ui/input";
 import { Label } from "@/client/components/ui/label";
 import { Button } from "@/client/components/ui/button";
+import { Checkbox } from "@/client/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/client/components/ui/radio-group";
 import {
   Tabs,
@@ -75,6 +76,7 @@ export function NewRunForm({
   const [baseBranch, setBaseBranch] = useState("main");
   const [mode, setMode] = useState<"stay" | "branch" | "worktree">("branch");
   const [branchName, setBranchName] = useState("");
+  const [preserve, setPreserve] = useState(false);
   const [isGeneratingNames, setIsGeneratingNames] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -317,6 +319,7 @@ export function NewRunForm({
         mode: mode,
         base_branch: mode !== "stay" ? baseBranch || undefined : undefined,
         branch_name: mode !== "stay" ? branchName || undefined : undefined,
+        preserve: mode !== "stay" ? preserve : undefined,
       });
 
       onSuccess(run);
@@ -680,6 +683,24 @@ export function NewRunForm({
                     )}
                   />
                 </div>
+                {/* Preserve option */}
+                <div className="flex items-center space-x-2 pt-2">
+                  <Checkbox
+                    id="preserve-branch"
+                    checked={preserve}
+                    onCheckedChange={(checked) => setPreserve(checked === true)}
+                    disabled={createWorkflow.isPending}
+                  />
+                  <Label
+                    htmlFor="preserve-branch"
+                    className="text-sm font-normal cursor-pointer"
+                  >
+                    Keep branch checked out after workflow completes
+                  </Label>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Don't switch back to base branch when done
+                </p>
               </div>
             )}
           </div>
@@ -778,6 +799,24 @@ export function NewRunForm({
                     )}
                   />
                 </div>
+                {/* Preserve option */}
+                <div className="flex items-center space-x-2 pt-2">
+                  <Checkbox
+                    id="preserve-worktree"
+                    checked={preserve}
+                    onCheckedChange={(checked) => setPreserve(checked === true)}
+                    disabled={createWorkflow.isPending}
+                  />
+                  <Label
+                    htmlFor="preserve-worktree"
+                    className="text-sm font-normal cursor-pointer"
+                  >
+                    Keep worktree after workflow completes
+                  </Label>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Don't remove the worktree directory when done
+                </p>
               </div>
             )}
           </div>

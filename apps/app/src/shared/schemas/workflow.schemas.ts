@@ -188,6 +188,7 @@ export const createWorkflowRunSchema = z
     mode: z.enum(['stay', 'branch', 'worktree']).optional(),
     base_branch: z.string().optional(),
     branch_name: z.string().optional(),
+    preserve: z.boolean().optional(),
     inngest_run_id: z.string().optional(),
     triggered_by: triggeredBySchema.optional(),
     webhook_event_id: z.string().cuid().optional(),

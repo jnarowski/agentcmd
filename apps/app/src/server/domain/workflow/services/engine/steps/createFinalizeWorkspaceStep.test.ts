@@ -207,7 +207,7 @@ describe("createFinalizeWorkspaceStep", () => {
   });
 
   describe("MODE 2: Branch mode", () => {
-    it("commits and restores original branch", async () => {
+    it("commits and restores original branch by default (preserve: false)", async () => {
       const config = createConfig({ mode: "branch", baseBranch: "main" });
 
       vi.mocked(getGitStatus).mockResolvedValue({
@@ -234,6 +234,31 @@ describe("createFinalizeWorkspaceStep", () => {
       );
     });
 
+    it("stays on feature branch when preserve: true", async () => {
+      const config = createConfig({
+        mode: "branch",
+        baseBranch: "main",
+        preserve: true,
+      });
+
+      vi.mocked(getGitStatus).mockResolvedValue({
+        files: [{ path: "file.ts", status: "modified" }],
+      });
+      vi.mocked(commitChanges).mockResolvedValue();
+
+      const finalizeWorkspace = createFinalizeWorkspaceStep(
+        mockContext,
+        mockInngestStep as never
+      );
+      await finalizeWorkspace("finalize-workspace", config);
+
+      expect(commitChanges).toHaveBeenCalled();
+      expect(switchBranch).not.toHaveBeenCalled();
+      expect(mockContext.logger.info).toHaveBeenCalledWith(
+        "Staying on feature branch for review"
+      );
+    });
+
     it("skips checkout when baseBranch not provided", async () => {
       const config = createConfig({ mode: "branch", baseBranch: null });
 
@@ -250,7 +275,7 @@ describe("createFinalizeWorkspaceStep", () => {
   });
 
   describe("MODE 3: Worktree mode", () => {
-    it("commits, removes worktree, and restores original branch", async () => {
+    it("commits and removes worktree by default (preserve: false), NEVER touches main project", async () => {
       const config = createConfig({
         mode: "worktree",
         baseBranch: "main",
@@ -263,7 +288,6 @@ describe("createFinalizeWorkspaceStep", () => {
       });
       vi.mocked(commitChanges).mockResolvedValue();
       vi.mocked(removeWorktree).mockResolvedValue();
-      vi.mocked(switchBranch).mockResolvedValue();
 
       const finalizeWorkspace = createFinalizeWorkspaceStep(
         mockContext,
@@ -280,20 +304,44 @@ describe("createFinalizeWorkspaceStep", () => {
         projectPath: "/test/project",
         worktreePath: "/test/project/.worktrees/run-123-feat",
       });
-      expect(switchBranch).toHaveBeenCalledWith({
-        projectPath: "/test/project",
-        branchName: "main",
-      });
+      // IMPORTANT: Main project should NEVER be touched in worktree mode
+      expect(switchBranch).not.toHaveBeenCalled();
       expect(mockContext.logger.info).toHaveBeenCalledWith(
-        {
-          baseBranch: "main",
-          worktreePath: "/test/project/.worktrees/run-123-feat",
-        },
-        "Removed worktree and restored original branch"
+        { worktreePath: "/test/project/.worktrees/run-123-feat" },
+        "Removed worktree"
       );
     });
 
-    it("handles worktree removal without baseBranch", async () => {
+    it("keeps worktree when preserve: true", async () => {
+      const config = createConfig({
+        mode: "worktree",
+        baseBranch: "main",
+        workingDir: "/test/project/.worktrees/run-123-feat",
+        worktreePath: "/test/project/.worktrees/run-123-feat",
+        preserve: true,
+      });
+
+      vi.mocked(getGitStatus).mockResolvedValue({
+        files: [{ path: "file.ts", status: "modified" }],
+      });
+      vi.mocked(commitChanges).mockResolvedValue();
+
+      const finalizeWorkspace = createFinalizeWorkspaceStep(
+        mockContext,
+        mockInngestStep as never
+      );
+      await finalizeWorkspace("finalize-workspace", config);
+
+      expect(commitChanges).toHaveBeenCalled();
+      expect(removeWorktree).not.toHaveBeenCalled();
+      expect(switchBranch).not.toHaveBeenCalled();
+      expect(mockContext.logger.info).toHaveBeenCalledWith(
+        { worktreePath: "/test/project/.worktrees/run-123-feat" },
+        "Keeping worktree for review"
+      );
+    });
+
+    it("never touches main project even without baseBranch", async () => {
       const config = createConfig({
         mode: "worktree",
         baseBranch: null,
@@ -311,7 +359,7 @@ describe("createFinalizeWorkspaceStep", () => {
       await finalizeWorkspace("finalize-workspace", config);
 
       expect(removeWorktree).toHaveBeenCalled();
-      expect(switchBranch).not.toHaveBeenCalled(); // No baseBranch to restore
+      expect(switchBranch).not.toHaveBeenCalled();
     });
   });
 

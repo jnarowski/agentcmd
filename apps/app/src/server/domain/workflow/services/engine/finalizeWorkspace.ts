@@ -58,6 +58,7 @@ export async function finalizeWorkspace({
         workingDir,
         worktreePath: event.data?.worktreePath,
         workflowName: event.data?.name,
+        preserve: run.preserve ?? false,
       });
 
       // Add success annotation so finalize phase always has at least one visible record
