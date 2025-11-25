@@ -41,11 +41,9 @@ export async function createAndSwitchBranch({
 
   // If there are uncommitted changes, commit them first
   if (hasChanges) {
-    commands.push('git add .');
-    await git.add('.');
-
     const message = `Auto-commit before switching to branch "${branchName}"`;
-    commands.push(`git commit -m "${message.replace(/"/g, '\\"')}"`);
+    commands.push(`git add . && git commit -m "${message.replace(/"/g, '\\"')}"`);
+    await git.add('.');
     await git.commit(message);
   }
 
@@ -54,13 +52,14 @@ export async function createAndSwitchBranch({
     commands.push(`git checkout ${branchName}`);
     await git.checkout(branchName);
   } else {
-    // Branch doesn't exist - checkout from base and create
+    // Branch doesn't exist - create from base branch
     if (from) {
-      commands.push(`git checkout ${from}`);
-      await git.checkout(from);
+      commands.push(`git checkout -b ${branchName} ${from}`);
+      await git.checkoutBranch(branchName, from);
+    } else {
+      commands.push(`git checkout -b ${branchName}`);
+      await git.checkoutLocalBranch(branchName);
     }
-    commands.push(`git checkout -b ${branchName}`);
-    await git.checkoutLocalBranch(branchName);
   }
 
   return {

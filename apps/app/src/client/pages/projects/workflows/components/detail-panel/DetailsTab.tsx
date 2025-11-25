@@ -101,6 +101,20 @@ export function DetailsTab({ run }: DetailsTabProps) {
             </div>
           )}
 
+          {run.mode && (
+            <div className="grid grid-cols-2 gap-2 py-2">
+              <dt className="text-muted-foreground">Mode:</dt>
+              <dd className="capitalize">{run.mode}</dd>
+            </div>
+          )}
+
+          {run.preserve !== null && run.preserve !== undefined && (
+            <div className="grid grid-cols-2 gap-2 py-2">
+              <dt className="text-muted-foreground">Preserve:</dt>
+              <dd>{run.preserve ? "Yes" : "No"}</dd>
+            </div>
+          )}
+
           {run.planning_session_id && (
             <div className="grid grid-cols-2 gap-2 py-2">
               <dt className="text-muted-foreground">Planning Session:</dt>
@@ -108,22 +122,6 @@ export function DetailsTab({ run }: DetailsTabProps) {
             </div>
           )}
 
-          {run.pr_url && (
-            <div className="grid grid-cols-2 gap-2 py-2">
-              <dt className="text-muted-foreground">Pull Request:</dt>
-              <dd>
-                <a
-                  href={run.pr_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-                >
-                  View PR
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </a>
-              </dd>
-            </div>
-          )}
         </dl>
       </div>
 

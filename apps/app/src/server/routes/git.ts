@@ -239,9 +239,9 @@ export async function gitRoutes(fastify: FastifyInstance) {
       preHandler: fastify.authenticate,
     },
     async (request, reply) => {
-      const { path, message, files } = request.body;
+      const { path, message } = request.body;
 
-      const result = await gitService.commitChanges({ projectPath: path, message, files });
+      const result = await gitService.commitChanges({ projectPath: path, message });
       return reply.code(201).send(buildSuccessResponse({ hash: result.commitSha }));
     }
   );

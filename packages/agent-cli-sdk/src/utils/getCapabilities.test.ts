@@ -34,12 +34,12 @@ describe('getCapabilities', () => {
       expect(caps.supportsModels).toBe(true);
       expect(caps.models).toHaveLength(3);
       expect(caps.models[0]).toEqual({
-        id: 'claude-sonnet-4-5-20250929',
-        name: 'Sonnet 4.5',
+        id: 'claude-opus-4-5',
+        name: 'Opus 4.5',
       });
       expect(caps.models[1]).toEqual({
-        id: 'claude-opus-4-20250514',
-        name: 'Opus 4.1',
+        id: 'claude-sonnet-4-5-20250929',
+        name: 'Sonnet 4.5',
       });
       expect(caps.models[2]).toEqual({
         id: 'haiku',

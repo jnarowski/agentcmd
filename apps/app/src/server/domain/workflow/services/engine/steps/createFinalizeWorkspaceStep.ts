@@ -140,19 +140,22 @@ async function autoCommitIfNeeded(
   );
 
   const commitStartTime = Date.now();
-  await commitChanges({
+  const { commands } = await commitChanges({
     projectPath: workingDir,
     message: `chore: Workflow '${workflowName}' auto-commit`,
-    files: ["."],
   });
   const commitDuration = Date.now() - commitStartTime;
 
-  await createWorkflowEventCommand(
-    context,
-    "git",
-    ["commit", "-m", `chore: Workflow '${workflowName}' auto-commit`],
-    commitDuration
-  );
+  // Log the combined command returned by commitChanges
+  for (const cmd of commands) {
+    const parts = cmd.split(/\s+/);
+    await createWorkflowEventCommand(
+      context,
+      parts[0],
+      parts.slice(1),
+      commitDuration / commands.length
+    );
+  }
 }
 
 async function restoreBranch(

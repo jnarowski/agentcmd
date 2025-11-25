@@ -132,21 +132,26 @@ function WorkflowRunDetailPage() {
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
             )}
-            {run.pr_url && (
-              <a
-                href={run.pr_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm text-blue-500 hover:text-blue-600"
-              >
-                View PR
-                <ExternalLink className="h-3.5 w-3.5" />
-              </a>
-            )}
           </>
         }
         actions={
-          <div className="hidden md:block">
+          <div className="hidden md:flex gap-2">
+            {run.pr_url && (
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+              >
+                <a
+                  href={run.pr_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  View PR
+                </a>
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"

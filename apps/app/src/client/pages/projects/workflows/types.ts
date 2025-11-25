@@ -56,9 +56,11 @@ export interface WorkflowRun {
   spec_content: string | null;
   spec_type: string | null;
   planning_session_id: string | null;
+  mode: string | null;
   base_branch: string | null;
   branch_name: string | null;
   worktree_name: string | null;
+  preserve: boolean | null;
   pr_url: string | null;
   current_step: string | null;
   current_phase: string | null;
@@ -207,9 +209,11 @@ export interface WorkflowRunDetail {
   spec_content: string | null;
   spec_type: string | null;
   planning_session_id: string | null;
+  mode: string | null;
   base_branch: string | null;
   branch_name: string | null;
   worktree_name: string | null;
+  preserve: boolean | null;
   triggered_by: string;
   webhook_event_id: string | null;
   issue_id: string | null;

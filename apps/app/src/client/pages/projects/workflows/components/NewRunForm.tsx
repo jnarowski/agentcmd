@@ -354,503 +354,520 @@ export function NewRunForm({
               Not a Git Repository
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              This project is not initialized with git. Branch and worktree modes
-              are unavailable.
+              This project is not initialized with git. Branch and worktree
+              modes are unavailable.
             </p>
           </div>
         )}
 
-      {/* Workflow definition selection - always show */}
-      <div>
-        <Label>Workflow</Label>
-        <Combobox
-          value={selectedDefinitionId}
-          onValueChange={setSelectedDefinitionId}
-          options={definitionOptions}
-          placeholder={
-            definitions
-              ? "Select workflow definition..."
-              : "Loading definitions..."
-          }
-          searchPlaceholder="Search definitions..."
-          emptyMessage="No workflow definitions found"
-          disabled={createWorkflow.isPending || !definitions}
-          renderTrigger={(selectedOption) =>
-            selectedOption ? (
-              <div className="flex items-center gap-2 w-full min-w-0">
-                <span className="truncate font-medium">
-                  {selectedOption.label}
-                </span>
-                {selectedOption.description && (
-                  <span className="hidden sm:inline text-xs text-muted-foreground/60 truncate">
-                    {selectedOption.description}
-                  </span>
-                )}
-              </div>
-            ) : (
-              <span>Select workflow definition...</span>
-            )
-          }
-        />
-      </div>
-
-      {/* Spec input type selection */}
-      <div>
-        <Label className="mb-2">Spec</Label>
-        <p className="text-xs text-muted-foreground mb-3">
-          Every workflow run requires a spec file that defines what to build.{" "}
-          <a
-            href={`${websiteUrl}/docs/concepts/workflows/workflow-runs`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline"
-          >
-            Learn More
-          </a>
-          {" · "}
-          <a
-            href={`${websiteUrl}/docs/concepts/spec-driven-development`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline"
-          >
-            Spec-Driven Development
-          </a>
-        </p>
-        <div className="sm:rounded-lg sm:border bg-card">
-          <Tabs
-            value={specInputType}
-            onValueChange={(v) =>
-              setSpecInputType(v as "file" | "planning" | "content")
+        {/* Workflow definition selection - always show */}
+        <div>
+          <Label>Workflow</Label>
+          <Combobox
+            value={selectedDefinitionId}
+            onValueChange={setSelectedDefinitionId}
+            options={definitionOptions}
+            placeholder={
+              definitions
+                ? "Select workflow definition..."
+                : "Loading definitions..."
             }
-            className="w-full !gap-0"
-          >
-            <TabsList className="w-full rounded-t-lg rounded-b-none border-b h-auto p-0 bg-transparent">
-              <TabsTrigger
-                value="file"
-                className="flex-1 rounded-none data-[state=active]:border-b data-[state=active]:border-primary data-[state=active]:-mb-px rounded-tl-lg text-xs sm:text-sm px-2 sm:px-4"
-              >
-                <span className="hidden sm:inline">Select File</span>
-                <span className="sm:hidden">File</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="planning"
-                className="flex-1 rounded-none data-[state=active]:border-b data-[state=active]:border-primary data-[state=active]:-mb-px text-xs sm:text-sm px-2 sm:px-4"
-              >
-                <span className="hidden sm:inline">From Planning Session</span>
-                <span className="sm:hidden">Planning</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="content"
-                className="flex-1 rounded-none data-[state=active]:border-b data-[state=active]:border-primary data-[state=active]:-mb-px rounded-tr-lg text-xs sm:text-sm px-2 sm:px-4"
-              >
-                <span className="hidden sm:inline">Write Custom</span>
-                <span className="sm:hidden">Custom</span>
-              </TabsTrigger>
-            </TabsList>
+            searchPlaceholder="Search definitions..."
+            emptyMessage="No workflow definitions found"
+            disabled={createWorkflow.isPending || !definitions}
+            renderTrigger={(selectedOption) =>
+              selectedOption ? (
+                <div className="flex items-center gap-2 w-full min-w-0">
+                  <span className="truncate font-medium">
+                    {selectedOption.label}
+                  </span>
+                  {selectedOption.description && (
+                    <span className="hidden sm:inline text-xs text-muted-foreground/60 truncate">
+                      {selectedOption.description}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <span>Select workflow definition...</span>
+              )
+            }
+          />
+        </div>
 
-            <TabsContent value="file" className="space-y-3 p-3 m-0">
-              <p className="text-sm text-muted-foreground">
-                Generate spec files by running cmd slash commands like{" "}
-                <code className="px-1.5 py-0.5 rounded bg-muted text-foreground font-mono text-xs">
-                  /cmd:generate-feature-spec
-                </code>
-                .{" "}
-              </p>
-              <SpecFileSelect
-                projectId={projectId}
-                value={specFile}
-                onValueChange={setSpecFile}
-                disabled={createWorkflow.isPending}
-                onSpecTypeChange={setSpecType}
-              />
+        {/* Spec input type selection */}
+        <div>
+          <Label className="mb-2">Spec</Label>
+          <p className="text-xs text-muted-foreground mb-3">
+            Every workflow run requires a spec file that defines what to build.{" "}
+            <a
+              href={`${websiteUrl}/docs/concepts/workflows/workflow-runs`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              Learn More
+            </a>
+            {" · "}
+            <a
+              href={`${websiteUrl}/docs/concepts/spec-driven-development`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              Spec-Driven Development
+            </a>
+          </p>
+          <div className="sm:rounded-lg sm:border bg-card">
+            <Tabs
+              value={specInputType}
+              onValueChange={(v) =>
+                setSpecInputType(v as "file" | "planning" | "content")
+              }
+              className="w-full !gap-0"
+            >
+              <TabsList className="w-full rounded-t-lg rounded-b-none border-b h-auto p-0 bg-transparent">
+                <TabsTrigger
+                  value="file"
+                  className="flex-1 rounded-none data-[state=active]:border-b data-[state=active]:border-primary data-[state=active]:-mb-px rounded-tl-lg text-xs sm:text-sm px-2 sm:px-4"
+                >
+                  <span className="hidden sm:inline">Select File</span>
+                  <span className="sm:hidden">File</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="planning"
+                  className="flex-1 rounded-none data-[state=active]:border-b data-[state=active]:border-primary data-[state=active]:-mb-px text-xs sm:text-sm px-2 sm:px-4"
+                >
+                  <span className="hidden sm:inline">
+                    From Planning Session
+                  </span>
+                  <span className="sm:hidden">Planning</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="content"
+                  className="flex-1 rounded-none data-[state=active]:border-b data-[state=active]:border-primary data-[state=active]:-mb-px rounded-tr-lg text-xs sm:text-sm px-2 sm:px-4"
+                >
+                  <span className="hidden sm:inline">Write Custom</span>
+                  <span className="sm:hidden">Custom</span>
+                </TabsTrigger>
+              </TabsList>
 
-              {/* Show spec type when file is selected */}
-              {specFile && (
+              <TabsContent value="file" className="space-y-3 p-3 m-0">
+                <p className="text-sm text-muted-foreground">
+                  Generate spec files by running cmd slash commands like{" "}
+                  <code className="px-1.5 py-0.5 rounded bg-muted text-foreground font-mono text-xs">
+                    /cmd:generate-feature-spec
+                  </code>
+                  .{" "}
+                </p>
+                <SpecFileSelect
+                  projectId={projectId}
+                  value={specFile}
+                  onValueChange={setSpecFile}
+                  disabled={createWorkflow.isPending}
+                  onSpecTypeChange={setSpecType}
+                />
+
+                {/* Show spec type when file is selected */}
+                {specFile && (
+                  <div className="space-y-2">
+                    <Label>Type</Label>
+                    <SpecTypeSelect
+                      projectId={projectId}
+                      value={specType}
+                      onValueChange={setSpecType}
+                      disabled={true}
+                    />
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="planning" className="space-y-3 p-3 m-0">
+                <p className="text-sm text-muted-foreground">
+                  Generate a spec from a previous planning session. The AI will
+                  analyze the session and create a detailed spec.{" "}
+                </p>
+                <PlanningSessionSelect
+                  projectId={projectId}
+                  value={planningSessionId}
+                  onValueChange={setPlanningSessionId}
+                  disabled={createWorkflow.isPending}
+                />
+              </TabsContent>
+
+              <TabsContent value="content" className="space-y-3 m-0 p-0">
+                <div className="text-sm text-muted-foreground p-3 pb-0">
+                  Write your spec directly in markdown below. Describe what you
+                  want to build or fix.
+                </div>
+                <CodeEditor
+                  value={specContent}
+                  onChange={setSpecContent}
+                  language="markdown"
+                  minHeight="200px"
+                  height="auto"
+                  showLineNumbers={true}
+                  wordWrap={true}
+                  readOnly={createWorkflow.isPending}
+                  transparentBackground={true}
+                  fontSize="13px"
+                  className="rounded-b-lg"
+                />
+              </TabsContent>
+            </Tabs>
+
+            {/* Run Name and Spec Type - Only for Planning/Content modes */}
+            {(specInputType === "planning" || specInputType === "content") && (
+              <div className="px-4 pb-4 pt-4 border-t space-y-4">
+                {/* Run Name */}
                 <div className="space-y-2">
-                  <Label>Type</Label>
+                  <Label htmlFor="run-name">Name</Label>
+                  <div className="relative">
+                    <Input
+                      id="run-name"
+                      placeholder="e.g., Feature Implementation - API v2"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      disabled={createWorkflow.isPending || isGeneratingNames}
+                      aria-invalid={showValidation && !name.trim()}
+                    />
+                    {isGeneratingNames && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <svg
+                          className="animate-spin h-4 w-4 text-muted-foreground"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  {isGeneratingNames && (
+                    <p className="text-xs text-muted-foreground">
+                      Generating names from spec...
+                    </p>
+                  )}
+                  {showValidation && !name.trim() && (
+                    <p className="text-xs text-red-600 dark:text-red-400">
+                      Name is required
+                    </p>
+                  )}
+                </div>
+
+                {/* Spec Type */}
+                <div className="space-y-2">
+                  <Label htmlFor="spec-type">Type</Label>
                   <SpecTypeSelect
                     projectId={projectId}
                     value={specType}
                     onValueChange={setSpecType}
-                    disabled={true}
+                    disabled={createWorkflow.isPending}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    This determines which slash command will be used to generate
+                    the spec file from the above content.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Setup: stay, branch, or worktree */}
+        <div className="space-y-3">
+          <Label>Git Workspace</Label>
+          <div className="text-xs text-muted-foreground pb-3">
+            Choose where this workflow will run
+          </div>
+          <RadioGroup
+            value={mode}
+            onValueChange={(v) => setMode(v as "stay" | "branch" | "worktree")}
+          >
+            {/* Branch option */}
+            <div className="space-y-1">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem
+                  value="branch"
+                  id="mode-branch"
+                  disabled={!isGitRepo}
+                />
+                <Label
+                  htmlFor="mode-branch"
+                  className={cn(
+                    "font-normal cursor-pointer",
+                    !isGitRepo && "opacity-50 cursor-not-allowed"
+                  )}
+                >
+                  Create a Branch
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground ml-6">
+                Switches to a new branch in your current directory
+                {!isGitRepo && " (requires git)"}
+              </p>
+              {mode === "branch" && (
+                <div className="ml-2 space-y-3 border-l-2 border-muted pl-3.5 py-3 [&>div]:space-y-2">
+                  {/* Branch Name */}
+                  <div>
+                    <Label htmlFor="branch-name">Branch Name</Label>
+                    <Input
+                      id="branch-name"
+                      placeholder="Auto-generated from name"
+                      value={branchName}
+                      onChange={(e) => setBranchName(e.target.value)}
+                      disabled={createWorkflow.isPending}
+                    />
+                    {branchValidation.isValidating && (
+                      <p className="text-xs text-muted-foreground">
+                        Validating branch name...
+                      </p>
+                    )}
+                    {branchValidation.branchExists && (
+                      <p className="text-xs text-red-600 dark:text-red-400">
+                        Branch already exists. Please choose a different name.
+                      </p>
+                    )}
+                    {branchValidation.error &&
+                      !branchValidation.branchExists && (
+                        <p className="text-xs text-red-600 dark:text-red-400">
+                          {branchValidation.error}
+                        </p>
+                      )}
+                  </div>
+                  {/* Branch From (optional) */}
+                  <div>
+                    <Label htmlFor="branch-from">Branch From</Label>
+                    <Combobox
+                      value={baseBranch}
+                      onValueChange={setBaseBranch}
+                      options={branchOptions}
+                      placeholder="Select branch (defaults to main)..."
+                      searchPlaceholder="Search branches..."
+                      emptyMessage="No branches found"
+                      disabled={createWorkflow.isPending}
+                      renderOption={(option, selected) => (
+                        <div className="flex items-center gap-2 flex-1">
+                          {selected && (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="size-4 shrink-0"
+                            >
+                              <path d="M20 6 9 17l-5-5" />
+                            </svg>
+                          )}
+                          <span className="flex-1">{option.label}</span>
+                          {option.badge && (
+                            <span className="text-xs text-muted-foreground">
+                              {option.badge}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    />
+                  </div>
+                  {/* Preserve option */}
+                  <div className="flex items-center space-x-2 pt-2">
+                    <Checkbox
+                      id="preserve-branch"
+                      checked={preserve}
+                      className="mb-0"
+                      onCheckedChange={(checked) =>
+                        setPreserve(checked === true)
+                      }
+                      disabled={createWorkflow.isPending}
+                    />
+                    <Label
+                      htmlFor="preserve-branch"
+                      className="text-sm font-normal cursor-pointer leading-none"
+                    >
+                      Keep branch checked out after workflow completes
+                    </Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Don't switch back to base branch when done
+                  </p>
                 </div>
               )}
-            </TabsContent>
+            </div>
 
-            <TabsContent value="planning" className="space-y-3 p-3 m-0">
-              <p className="text-sm text-muted-foreground">
-                Generate a spec from a previous planning session. The AI will
-                analyze the session and create a detailed spec.{" "}
+            {/* Worktree option */}
+            <div className="space-y-1">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem
+                  value="worktree"
+                  id="mode-worktree"
+                  disabled={!isGitRepo}
+                />
+                <Label
+                  htmlFor="mode-worktree"
+                  className={cn(
+                    "font-normal cursor-pointer",
+                    !isGitRepo && "opacity-50 cursor-not-allowed"
+                  )}
+                >
+                  Create a Worktree
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground ml-6">
+                Creates a new worktree directory for isolated parallel work
+                {!isGitRepo && " (requires git)"}
               </p>
-              <PlanningSessionSelect
-                projectId={projectId}
-                value={planningSessionId}
-                onValueChange={setPlanningSessionId}
+              {mode === "worktree" && (
+                <div className="ml-2 space-y-3 border-l-2 border-muted pl-3.5 py-3 [&>div]:space-y-2">
+                  {/* Branch Name */}
+                  <div>
+                    <Label htmlFor="worktree-branch-name">Branch Name</Label>
+                    <Input
+                      id="worktree-branch-name"
+                      placeholder="Auto-generated from name"
+                      value={branchName}
+                      onChange={(e) => setBranchName(e.target.value)}
+                      disabled={createWorkflow.isPending}
+                    />
+                    {branchValidation.isValidating && (
+                      <p className="text-xs text-muted-foreground">
+                        Validating branch name...
+                      </p>
+                    )}
+                    {branchValidation.branchExists && (
+                      <p className="text-xs text-red-600 dark:text-red-400">
+                        Branch already exists. Please choose a different name.
+                      </p>
+                    )}
+                    {branchValidation.error &&
+                      !branchValidation.branchExists && (
+                        <p className="text-xs text-red-600 dark:text-red-400">
+                          {branchValidation.error}
+                        </p>
+                      )}
+                    {branchName && (
+                      <p className="text-xs text-muted-foreground">
+                        → Worktree directory:{" "}
+                        <code className="text-xs">
+                          .worktrees/run-&lt;id&gt;-
+                          {sanitizeBranchForDirectory(branchName)}
+                        </code>
+                      </p>
+                    )}
+                  </div>
+                  {/* Branch From (optional) */}
+                  <div>
+                    <Label htmlFor="worktree-branch-from">Branch From</Label>
+                    <Combobox
+                      value={baseBranch}
+                      onValueChange={setBaseBranch}
+                      options={branchOptions}
+                      placeholder="Select branch (defaults to main)..."
+                      searchPlaceholder="Search branches..."
+                      emptyMessage="No branches found"
+                      disabled={createWorkflow.isPending}
+                      renderOption={(option, selected) => (
+                        <div className="flex items-center gap-2 flex-1">
+                          {selected && (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="size-4 shrink-0"
+                            >
+                              <path d="M20 6 9 17l-5-5" />
+                            </svg>
+                          )}
+                          <span className="flex-1">{option.label}</span>
+                          {option.badge && (
+                            <span className="text-xs text-muted-foreground">
+                              {option.badge}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    />
+                  </div>
+                  {/* Preserve option */}
+                  <div className="flex items-center space-x-2 pt-2">
+                    <Checkbox
+                      id="preserve-worktree"
+                      checked={preserve}
+                      className="mb-0"
+                      onCheckedChange={(checked) =>
+                        setPreserve(checked === true)
+                      }
+                      disabled={createWorkflow.isPending}
+                    />
+                    <Label
+                      htmlFor="preserve-worktree"
+                      className="text-sm font-normal cursor-pointer leading-none"
+                    >
+                      Keep worktree after workflow completes
+                    </Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Don't remove the worktree directory when done
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Skip Setup option */}
+            <div className="space-y-1">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="stay" id="mode-stay" />
+                <Label
+                  htmlFor="mode-stay"
+                  className="font-normal cursor-pointer"
+                >
+                  Stay in Current Branch
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground ml-6">
+                Runs in your current branch and directory
+              </p>
+            </div>
+          </RadioGroup>
+        </div>
+
+        {/* Args input - only show if workflow has args_schema with properties */}
+        {actualDefinition?.args_schema?.properties &&
+          Object.keys(actualDefinition.args_schema.properties).length > 0 && (
+            <div>
+              <Label htmlFor="run-args" className="text-base pb-2 pt-3">
+                Arguments
+              </Label>
+              <NewRunFormDialogArgSchemaFields
+                argsSchema={actualDefinition.args_schema}
+                values={args}
+                onChange={setArgs}
                 disabled={createWorkflow.isPending}
               />
-            </TabsContent>
-
-            <TabsContent value="content" className="space-y-3 m-0 p-0">
-              <div className="text-sm text-muted-foreground p-3 pb-0">
-                Write your spec directly in markdown below. Describe what you
-                want to build or fix.
-              </div>
-              <CodeEditor
-                value={specContent}
-                onChange={setSpecContent}
-                language="markdown"
-                minHeight="200px"
-                height="auto"
-                showLineNumbers={true}
-                wordWrap={true}
-                readOnly={createWorkflow.isPending}
-                transparentBackground={true}
-                fontSize="13px"
-                className="rounded-b-lg"
-              />
-            </TabsContent>
-          </Tabs>
-
-          {/* Run Name and Spec Type - Only for Planning/Content modes */}
-          {(specInputType === "planning" || specInputType === "content") && (
-            <div className="px-4 pb-4 pt-4 border-t space-y-4">
-              {/* Run Name */}
-              <div className="space-y-2">
-                <Label htmlFor="run-name">Name</Label>
-                <div className="relative">
-                  <Input
-                    id="run-name"
-                    placeholder="e.g., Feature Implementation - API v2"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    disabled={createWorkflow.isPending || isGeneratingNames}
-                    aria-invalid={showValidation && !name.trim()}
-                  />
-                  {isGeneratingNames && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <svg
-                        className="animate-spin h-4 w-4 text-muted-foreground"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-                {isGeneratingNames && (
-                  <p className="text-xs text-muted-foreground">
-                    Generating names from spec...
-                  </p>
-                )}
-                {showValidation && !name.trim() && (
-                  <p className="text-xs text-red-600 dark:text-red-400">
-                    Name is required
-                  </p>
-                )}
-              </div>
-
-              {/* Spec Type */}
-              <div className="space-y-2">
-                <Label htmlFor="spec-type">Type</Label>
-                <SpecTypeSelect
-                  projectId={projectId}
-                  value={specType}
-                  onValueChange={setSpecType}
-                  disabled={createWorkflow.isPending}
-                />
-                <p className="text-xs text-muted-foreground">
-                  This determines which slash command will be used to generate
-                  the spec file from the above content.
-                </p>
-              </div>
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Setup: stay, branch, or worktree */}
-      <div className="space-y-3">
-        <Label>Git Workspace</Label>
-        <div className="text-xs text-muted-foreground pb-3">
-          Choose where this workflow will run
-        </div>
-        <RadioGroup
-          value={mode}
-          onValueChange={(v) => setMode(v as "stay" | "branch" | "worktree")}
-        >
-          {/* Branch option */}
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem
-                value="branch"
-                id="mode-branch"
-                disabled={!isGitRepo}
-              />
-              <Label
-                htmlFor="mode-branch"
-                className={cn(
-                  "font-normal cursor-pointer",
-                  !isGitRepo && "opacity-50 cursor-not-allowed"
-                )}
-              >
-                Create a Branch
-              </Label>
-            </div>
-            <p className="text-xs text-muted-foreground ml-6">
-              Switches to a new branch in your current directory
-              {!isGitRepo && " (requires git)"}
-            </p>
-            {mode === "branch" && (
-              <div className="ml-2 space-y-3 border-l-2 border-muted pl-3.5 py-3 [&>div]:space-y-2">
-                {/* Branch Name */}
-                <div>
-                  <Label htmlFor="branch-name">Branch Name</Label>
-                  <Input
-                    id="branch-name"
-                    placeholder="Auto-generated from name"
-                    value={branchName}
-                    onChange={(e) => setBranchName(e.target.value)}
-                    disabled={createWorkflow.isPending}
-                  />
-                  {branchValidation.isValidating && (
-                    <p className="text-xs text-muted-foreground">
-                      Validating branch name...
-                    </p>
-                  )}
-                  {branchValidation.branchExists && (
-                    <p className="text-xs text-red-600 dark:text-red-400">
-                      Branch already exists. Please choose a different name.
-                    </p>
-                  )}
-                  {branchValidation.error && !branchValidation.branchExists && (
-                    <p className="text-xs text-red-600 dark:text-red-400">
-                      {branchValidation.error}
-                    </p>
-                  )}
-                </div>
-                {/* Branch From (optional) */}
-                <div>
-                  <Label htmlFor="branch-from">Branch From</Label>
-                  <Combobox
-                    value={baseBranch}
-                    onValueChange={setBaseBranch}
-                    options={branchOptions}
-                    placeholder="Select branch (defaults to main)..."
-                    searchPlaceholder="Search branches..."
-                    emptyMessage="No branches found"
-                    disabled={createWorkflow.isPending}
-                    renderOption={(option, selected) => (
-                      <div className="flex items-center gap-2 flex-1">
-                        {selected && (
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="size-4 shrink-0"
-                          >
-                            <path d="M20 6 9 17l-5-5" />
-                          </svg>
-                        )}
-                        <span className="flex-1">{option.label}</span>
-                        {option.badge && (
-                          <span className="text-xs text-muted-foreground">
-                            {option.badge}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  />
-                </div>
-                {/* Preserve option */}
-                <div className="flex items-center space-x-2 pt-2">
-                  <Checkbox
-                    id="preserve-branch"
-                    checked={preserve}
-                    onCheckedChange={(checked) => setPreserve(checked === true)}
-                    disabled={createWorkflow.isPending}
-                  />
-                  <Label
-                    htmlFor="preserve-branch"
-                    className="text-sm font-normal cursor-pointer"
-                  >
-                    Keep branch checked out after workflow completes
-                  </Label>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Don't switch back to base branch when done
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Worktree option */}
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem
-                value="worktree"
-                id="mode-worktree"
-                disabled={!isGitRepo}
-              />
-              <Label
-                htmlFor="mode-worktree"
-                className={cn(
-                  "font-normal cursor-pointer",
-                  !isGitRepo && "opacity-50 cursor-not-allowed"
-                )}
-              >
-                Create a Worktree
-              </Label>
-            </div>
-            <p className="text-xs text-muted-foreground ml-6">
-              Creates a new worktree directory for isolated parallel work
-              {!isGitRepo && " (requires git)"}
-            </p>
-            {mode === "worktree" && (
-              <div className="ml-2 space-y-3 border-l-2 border-muted pl-3.5 py-3 [&>div]:space-y-2">
-                {/* Branch Name */}
-                <div>
-                  <Label htmlFor="worktree-branch-name">Branch Name</Label>
-                  <Input
-                    id="worktree-branch-name"
-                    placeholder="Auto-generated from name"
-                    value={branchName}
-                    onChange={(e) => setBranchName(e.target.value)}
-                    disabled={createWorkflow.isPending}
-                  />
-                  {branchValidation.isValidating && (
-                    <p className="text-xs text-muted-foreground">
-                      Validating branch name...
-                    </p>
-                  )}
-                  {branchValidation.branchExists && (
-                    <p className="text-xs text-red-600 dark:text-red-400">
-                      Branch already exists. Please choose a different name.
-                    </p>
-                  )}
-                  {branchValidation.error && !branchValidation.branchExists && (
-                    <p className="text-xs text-red-600 dark:text-red-400">
-                      {branchValidation.error}
-                    </p>
-                  )}
-                  {branchName && (
-                    <p className="text-xs text-muted-foreground">
-                      → Worktree directory: <code className="text-xs">.worktrees/run-&lt;id&gt;-{sanitizeBranchForDirectory(branchName)}</code>
-                    </p>
-                  )}
-                </div>
-                {/* Branch From (optional) */}
-                <div>
-                  <Label htmlFor="worktree-branch-from">Branch From</Label>
-                  <Combobox
-                    value={baseBranch}
-                    onValueChange={setBaseBranch}
-                    options={branchOptions}
-                    placeholder="Select branch (defaults to main)..."
-                    searchPlaceholder="Search branches..."
-                    emptyMessage="No branches found"
-                    disabled={createWorkflow.isPending}
-                    renderOption={(option, selected) => (
-                      <div className="flex items-center gap-2 flex-1">
-                        {selected && (
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="size-4 shrink-0"
-                          >
-                            <path d="M20 6 9 17l-5-5" />
-                          </svg>
-                        )}
-                        <span className="flex-1">{option.label}</span>
-                        {option.badge && (
-                          <span className="text-xs text-muted-foreground">
-                            {option.badge}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  />
-                </div>
-                {/* Preserve option */}
-                <div className="flex items-center space-x-2 pt-2">
-                  <Checkbox
-                    id="preserve-worktree"
-                    checked={preserve}
-                    onCheckedChange={(checked) => setPreserve(checked === true)}
-                    disabled={createWorkflow.isPending}
-                  />
-                  <Label
-                    htmlFor="preserve-worktree"
-                    className="text-sm font-normal cursor-pointer"
-                  >
-                    Keep worktree after workflow completes
-                  </Label>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Don't remove the worktree directory when done
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Skip Setup option */}
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="stay" id="mode-stay" />
-              <Label htmlFor="mode-stay" className="font-normal cursor-pointer">
-                Stay in Current Branch
-              </Label>
-            </div>
-            <p className="text-xs text-muted-foreground ml-6">
-              Runs in your current branch and directory
-            </p>
-          </div>
-        </RadioGroup>
-      </div>
-
-      {/* Args input - only show if workflow has args_schema with properties */}
-      {actualDefinition?.args_schema?.properties &&
-        Object.keys(actualDefinition.args_schema.properties).length > 0 && (
-          <div>
-            <Label htmlFor="run-args" className="text-base pb-2 pt-3">
-              Arguments
-            </Label>
-            <NewRunFormDialogArgSchemaFields
-              argsSchema={actualDefinition.args_schema}
-              values={args}
-              onChange={setArgs}
-              disabled={createWorkflow.isPending}
-            />
-          </div>
-        )}
 
         {/* Error message */}
         {error && (

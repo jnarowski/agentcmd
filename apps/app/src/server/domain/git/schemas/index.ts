@@ -41,7 +41,6 @@ export const gitStageFilesBodySchema = z.object({
 export const gitCommitBodySchema = z.object({
   path: z.string().min(1),
   message: z.string().min(1),
-  files: z.array(z.string()).min(1),
 });
 
 // Push schema

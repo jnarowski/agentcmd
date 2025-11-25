@@ -97,7 +97,6 @@ async function executeGitOperation(
       const { commitSha, commands } = await commitChanges({
         projectPath,
         message: config.message,
-        files: ["."],
       });
       const duration = Date.now() - startTime;
 
@@ -180,7 +179,6 @@ async function executeGitOperation(
           const result = await commitChanges({
             projectPath,
             message: commitMessage,
-            files: ["."],
           });
           commitSha = result.commitSha;
           allCommands.push(...result.commands);
@@ -212,7 +210,6 @@ async function executeGitOperation(
         const result = await commitChanges({
           projectPath,
           message: commitMessage,
-          files: ["."],
         });
         commitSha = result.commitSha;
         allCommands.push(...result.commands);

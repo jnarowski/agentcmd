@@ -35,9 +35,9 @@ export function useSession(sessionId: string, projectId: string): UseSessionRetu
   // Get session data only if it matches the requested sessionId
   const session = currentSession?.id === sessionId ? currentSession : null;
 
-  // Auto-load session if not in store or in error state
+  // Auto-load session if not in store (don't auto-retry on error to avoid infinite loops)
   useEffect(() => {
-    const willLoad = !session || session.loadingState === 'idle' || session.loadingState === 'error';
+    const willLoad = !session || session.loadingState === 'idle';
 
     if (willLoad) {
       loadSession(sessionId, projectId);

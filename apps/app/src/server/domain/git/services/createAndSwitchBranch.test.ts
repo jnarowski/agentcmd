@@ -13,6 +13,7 @@ describe("createAndSwitchBranch", () => {
     commit: ReturnType<typeof vi.fn>;
     checkout: ReturnType<typeof vi.fn>;
     checkoutLocalBranch: ReturnType<typeof vi.fn>;
+    checkoutBranch: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(async () => {
@@ -24,6 +25,7 @@ describe("createAndSwitchBranch", () => {
       commit: vi.fn().mockResolvedValue({ commit: "abc123" }),
       checkout: vi.fn().mockResolvedValue(undefined),
       checkoutLocalBranch: vi.fn().mockResolvedValue(undefined),
+      checkoutBranch: vi.fn().mockResolvedValue(undefined),
     };
     vi.mocked(simpleGit.default).mockReturnValue(mockGit as unknown as SimpleGit);
   });
