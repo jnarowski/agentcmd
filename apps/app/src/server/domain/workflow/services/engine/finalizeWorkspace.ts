@@ -11,6 +11,19 @@ import { createFinalizeWorkspaceStep } from "./steps";
 const SYSTEM_FINALIZE_PHASE = "_system_finalize";
 
 /**
+ * Options for finalizing workspace
+ */
+interface FinalizeWorkspaceOptions {
+  run: WorkflowRun;
+  workspace: WorkspaceResult | null;
+  context: RuntimeContext;
+  event: { data?: { name?: string } };
+  extendedStep: WorkflowStep;
+  inngestStep: GetStepTools<Inngest.Any>;
+  logger: FastifyBaseLogger;
+}
+
+/**
  * Finalize workspace cleanup (non-fatal).
  * Runs in finally block to ensure cleanup even on workflow failure. Errors are logged but don't fail workflow.
  *
@@ -18,29 +31,28 @@ const SYSTEM_FINALIZE_PHASE = "_system_finalize";
  * - Worktree mode: Removes temporary worktree and cleans up git objects
  * - Stay mode: No cleanup needed (uses original project directory)
  * - No mode: Skips cleanup
- *
- * @param run - Workflow run with mode information
- * @param workspace - Workspace result from setup (null if setup was skipped)
- * @param context - Runtime execution context
- * @param extendedStep - Extended step object for phase tracking
- * @param inngestStep - Base Inngest step tools
- * @param logger - Logger instance
  */
-export async function finalizeWorkspace(
-  run: WorkflowRun,
-  workspace: WorkspaceResult | null,
-  context: RuntimeContext,
-  extendedStep: WorkflowStep,
-  inngestStep: GetStepTools<Inngest.Any>,
-  logger: FastifyBaseLogger
-): Promise<void> {
+export async function finalizeWorkspace({
+  run,
+  workspace,
+  context,
+  event,
+  extendedStep,
+  inngestStep,
+  logger,
+}: FinalizeWorkspaceOptions): Promise<void> {
   if (!workspace || !run.mode) {
     return;
   }
 
   try {
     await extendedStep.phase(SYSTEM_FINALIZE_PHASE, async () => {
-      const finalizeStep = createFinalizeWorkspaceStep(context, inngestStep);
+      const finalizeStep = createFinalizeWorkspaceStep(
+        context,
+        inngestStep,
+        event
+      );
+
       await finalizeStep("finalize-workspace", {
         workspaceResult: workspace,
       });

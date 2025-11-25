@@ -37,7 +37,7 @@ export function NavUser({
   const { isMobile } = useSidebar();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isNewsletterOpen, setIsNewsletterOpen] = useState(false);
-  const { isConnected, readyState, reconnectAttempt } = useWebSocket();
+  const { isConnected, readyState, reconnectAttempt, reconnect } = useWebSocket();
   const isPwa = useIsPwa();
 
   const getStatusColor = () => {
@@ -95,9 +95,21 @@ export function NavUser({
                       {getStatusText()}
                     </span>
                   </div>
-                  <div className="px-2.5 py-1 text-xs font-medium bg-primary/10 text-primary rounded">
-                    v{pkg.version}
-                  </div>
+                  {isConnected ? (
+                    <div className="px-2.5 py-1 text-xs font-medium bg-primary/10 text-primary rounded">
+                      v{pkg.version}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        reconnect();
+                      }}
+                      className="px-2.5 py-1 text-xs font-medium bg-destructive/10 text-destructive rounded hover:bg-destructive/20 transition-colors"
+                    >
+                      Reconnect
+                    </button>
+                  )}
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />

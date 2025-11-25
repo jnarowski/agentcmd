@@ -261,14 +261,15 @@ export function createWorkflowRuntime(
           } finally {
             // Always attempt cleanup (non-fatal)
             if (run && workspace && extendedStep) {
-              await finalizeWorkspace(
+              await finalizeWorkspace({
                 run,
                 workspace,
                 context,
+                event,
                 extendedStep,
                 inngestStep,
-                logger
-              );
+                logger,
+              });
             }
           }
         }

@@ -209,7 +209,7 @@ export function NewRunForm({
     generateNames();
   }, [specFile, projectId, name, specType]);
 
-  // Auto-generate branch name from run name
+  // Auto-generate branch name from run name with spec type prefix
   useEffect(() => {
     if (name && mode !== "stay") {
       const slug = name
@@ -217,9 +217,9 @@ export function NewRunForm({
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "");
 
-      setBranchName(slug);
+      setBranchName(`${specType}/${slug}`);
     }
-  }, [name, mode]);
+  }, [name, mode, specType]);
 
   // Force stay mode if git is not available
   useEffect(() => {

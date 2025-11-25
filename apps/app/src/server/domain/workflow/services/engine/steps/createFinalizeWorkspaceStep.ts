@@ -1,9 +1,6 @@
 import type { GetStepTools } from "inngest";
 import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
-import type {
-  CleanupWorkspaceConfig,
-  StepOptions,
-} from "agentcmd-workflows";
+import type { CleanupWorkspaceConfig, StepOptions } from "agentcmd-workflows";
 import { existsSync } from "node:fs";
 import { getGitStatus } from "@/server/domain/git/services/getGitStatus";
 import { commitChanges } from "@/server/domain/git/services/commitChanges";
@@ -13,9 +10,15 @@ import { createWorkflowEventCommand } from "@/server/domain/workflow/services/en
 import { generateInngestStepId } from "@/server/domain/workflow/services/engine/steps/utils/generateInngestStepId";
 import { withTimeout } from "@/server/domain/workflow/services/engine/steps/utils/withTimeout";
 import { slugify as toId } from "@/server/utils/slugify";
-import { prisma } from "@/shared/prisma";
 
 const DEFAULT_FINALIZE_WORKSPACE_TIMEOUT = 120000; // 2 minutes
+
+/**
+ * Event data passed to finalize step
+ */
+interface FinalizeEvent {
+  data?: { name?: string };
+}
 
 /**
  * Create finalizeWorkspace step factory function
@@ -24,7 +27,8 @@ const DEFAULT_FINALIZE_WORKSPACE_TIMEOUT = 120000; // 2 minutes
 export function createFinalizeWorkspaceStep(
   context: RuntimeContext,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  inngestStep: GetStepTools<any>
+  inngestStep: GetStepTools<any>,
+  event: FinalizeEvent
 ) {
   return async function finalizeWorkspace(
     idOrName: string,
@@ -39,7 +43,7 @@ export function createFinalizeWorkspaceStep(
 
     await inngestStep.run(inngestStepId, async () => {
       await withTimeout(
-        executeFinalizeWorkspace(config, context),
+        executeFinalizeWorkspace(config, context, event),
         timeout,
         "Finalize workspace"
       );
@@ -49,15 +53,11 @@ export function createFinalizeWorkspaceStep(
 
 async function executeFinalizeWorkspace(
   config: CleanupWorkspaceConfig,
-  context: RuntimeContext
+  context: RuntimeContext,
+  event: FinalizeEvent
 ): Promise<void> {
   const { workspaceResult } = config;
-
-  // Get workflow run name for commit message
-  const run = await prisma.workflowRun.findUnique({
-    where: { id: context.runId }
-  });
-  const workflowName = run?.name || "Workflow";
+  const workflowName = event.data?.name || "Workflow";
 
   // Step 1: Check for uncommitted changes and auto-commit
   const workingDir = workspaceResult.workingDir;
@@ -72,20 +72,28 @@ async function executeFinalizeWorkspace(
 
     // For worktree mode, still switch back to original branch in main project
     if (workspaceResult.mode === "worktree" && workspaceResult.worktreePath) {
-      const projectPath = workspaceResult.worktreePath.replace(/\/\.worktrees\/[^/]+$/, "");
-      const originalBranch = (workspaceResult as { originalBranch?: string }).originalBranch;
+      const projectPath = context.projectPath;
+      const originalBranch = (workspaceResult as { originalBranch?: string })
+        .originalBranch;
       if (originalBranch) {
         await switchBranch({ projectPath, branchName: originalBranch });
-        context.logger.info({ originalBranch }, "Restored original branch after retry");
+        context.logger.info(
+          { originalBranch },
+          "Restored original branch after retry"
+        );
       }
     }
+
     return;
   }
 
   const status = await getGitStatus({ projectPath: workingDir });
 
   if (status.files.length > 0) {
-    context.logger.info({ workingDir, fileCount: status.files.length }, "Auto-committing changes...");
+    context.logger.info(
+      { workingDir, fileCount: status.files.length },
+      "Auto-committing changes..."
+    );
 
     const commitStartTime = Date.now();
     await commitChanges({
@@ -111,7 +119,9 @@ async function executeFinalizeWorkspace(
     context.logger.info({ mode: "stay" }, "Finalized in stay mode");
   } else if (workspaceResult.mode === "branch") {
     // Branch mode: Checkout original branch
-    const originalBranch = (workspaceResult as { mode: string; originalBranch?: string }).originalBranch;
+    const originalBranch = (
+      workspaceResult as { mode: string; originalBranch?: string }
+    ).originalBranch;
     if (originalBranch) {
       const checkoutStartTime = Date.now();
       const projectPath = workingDir;
@@ -131,11 +141,13 @@ async function executeFinalizeWorkspace(
 
       context.logger.info({ originalBranch }, "Restored original branch");
     }
-  } else if (workspaceResult.mode === "worktree" && workspaceResult.worktreePath) {
+  } else if (
+    workspaceResult.mode === "worktree" &&
+    workspaceResult.worktreePath
+  ) {
     // Worktree mode: Remove worktree and restore original branch
     const worktreePath = workspaceResult.worktreePath;
-    // Extract project path from worktree path
-    const projectPath = worktreePath.replace(/\/\.worktrees\/[^/]+$/, "");
+    const projectPath = context.projectPath;
 
     const removeStartTime = Date.now();
     await removeWorktree({
@@ -152,7 +164,13 @@ async function executeFinalizeWorkspace(
     );
 
     // Checkout original branch in main project
-    const originalBranch = (workspaceResult as { mode: string; originalBranch?: string; worktreePath?: string }).originalBranch;
+    const originalBranch = (
+      workspaceResult as {
+        mode: string;
+        originalBranch?: string;
+        worktreePath?: string;
+      }
+    ).originalBranch;
     if (originalBranch) {
       const checkoutStartTime = Date.now();
 
@@ -169,7 +187,10 @@ async function executeFinalizeWorkspace(
         checkoutDuration
       );
 
-      context.logger.info({ originalBranch, worktreePath }, "Removed worktree and restored original branch");
+      context.logger.info(
+        { originalBranch, worktreePath },
+        "Removed worktree and restored original branch"
+      );
     }
   }
 }
