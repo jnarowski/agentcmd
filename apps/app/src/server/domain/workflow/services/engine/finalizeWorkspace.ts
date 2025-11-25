@@ -1,5 +1,5 @@
 import type { Inngest, GetStepTools } from "inngest";
-import type { WorkflowStep, WorkspaceResult } from "agentcmd-workflows";
+import type { WorkflowStep } from "agentcmd-workflows";
 import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 import type { FastifyBaseLogger } from "fastify";
 import type { WorkflowRun } from "@prisma/client";
@@ -15,9 +15,10 @@ const SYSTEM_FINALIZE_PHASE = "_system_finalize";
  */
 interface FinalizeWorkspaceOptions {
   run: WorkflowRun;
-  workspace: WorkspaceResult | null;
   context: RuntimeContext;
-  event: { data?: { name?: string } };
+  event: {
+    data?: { name?: string; workingDir?: string; worktreePath?: string };
+  };
   extendedStep: WorkflowStep;
   inngestStep: GetStepTools<Inngest.Any>;
   logger: FastifyBaseLogger;
@@ -34,27 +35,29 @@ interface FinalizeWorkspaceOptions {
  */
 export async function finalizeWorkspace({
   run,
-  workspace,
   context,
   event,
   extendedStep,
   inngestStep,
   logger,
 }: FinalizeWorkspaceOptions): Promise<void> {
-  if (!workspace || !run.mode) {
+  const { workingDir } = event.data ?? {};
+
+  if (!workingDir || !run.mode) {
     return;
   }
 
   try {
     await extendedStep.phase(SYSTEM_FINALIZE_PHASE, async () => {
-      const finalizeStep = createFinalizeWorkspaceStep(
-        context,
-        inngestStep,
-        event
-      );
+      const finalizeStep = createFinalizeWorkspaceStep(context, inngestStep);
 
       await finalizeStep("finalize-workspace", {
-        workspaceResult: workspace,
+        mode: run.mode,
+        baseBranch: run.base_branch,
+        projectPath: context.projectPath,
+        workingDir,
+        worktreePath: event.data?.worktreePath,
+        workflowName: event.data?.name,
       });
 
       // Add success annotation so finalize phase always has at least one visible record

@@ -22,7 +22,6 @@ export type {
   AiGenerationMetadata,
   SetupWorkspaceConfig,
   WorkspaceResult,
-  CleanupWorkspaceConfig,
 } from "./steps";
 
 export type {

@@ -214,8 +214,9 @@ export function createWorkflowRuntime(
                   logger,
                 });
 
-                // Update workingDir for all subsequent steps
+                // Update workingDir and worktreePath for all subsequent steps
                 event.data.workingDir = workspace.workingDir;
+                event.data.worktreePath = workspace.worktreePath;
                 context.workingDir = workspace.workingDir;
 
                 // Setup spec file (generate if needed)
@@ -260,10 +261,9 @@ export function createWorkflowRuntime(
             throw error;
           } finally {
             // Always attempt cleanup (non-fatal)
-            if (run && workspace && extendedStep) {
+            if (run && extendedStep) {
               await finalizeWorkspace({
                 run,
-                workspace,
                 context,
                 event,
                 extendedStep,

@@ -3,9 +3,11 @@ import type { GitBranch } from '@/shared/types/git.types'
 import type { CreateAndSwitchBranchOptions } from '../types/CreateAndSwitchBranchOptions'
 
 /**
- * Create and switch to a new branch
- * Automatically commits any uncommitted changes before creating the branch
- * Returns branch info and commands executed
+ * Create and switch to a branch (idempotent)
+ * - If already on target branch → no-op
+ * - If branch exists → switch to it
+ * - If branch doesn't exist → create from base branch
+ * Automatically commits any uncommitted changes before switching
  */
 export async function createAndSwitchBranch({
   projectPath,
@@ -20,37 +22,49 @@ export async function createAndSwitchBranch({
   const git = simpleGit(projectPath);
   const commands: string[] = [];
 
+  // Check current branch and if target branch exists
+  const branches = await git.branchLocal();
+  const currentBranch = branches.current;
+  const branchExists = branches.all.includes(branchName);
+
+  // Already on target branch - idempotent success
+  if (currentBranch === branchName) {
+    return {
+      branch: { name: branchName, current: true },
+      commands: [],
+    };
+  }
+
   // Check for uncommitted changes
   const status = await git.status();
   const hasChanges = status.files.length > 0;
 
   // If there are uncommitted changes, commit them first
   if (hasChanges) {
-    // Stage all files (including untracked)
     commands.push('git add .');
     await git.add('.');
 
-    // Commit with auto-generated message
-    const message = `Auto-commit before creating branch "${branchName}"`;
+    const message = `Auto-commit before switching to branch "${branchName}"`;
     commands.push(`git commit -m "${message.replace(/"/g, '\\"')}"`);
     await git.commit(message);
   }
 
-  // If from branch is specified, checkout from that branch first
-  if (from) {
-    commands.push(`git checkout ${from}`);
-    await git.checkout(from);
+  if (branchExists) {
+    // Branch exists - just switch to it
+    commands.push(`git checkout ${branchName}`);
+    await git.checkout(branchName);
+  } else {
+    // Branch doesn't exist - checkout from base and create
+    if (from) {
+      commands.push(`git checkout ${from}`);
+      await git.checkout(from);
+    }
+    commands.push(`git checkout -b ${branchName}`);
+    await git.checkoutLocalBranch(branchName);
   }
 
-  // Create and switch to new branch
-  commands.push(`git checkout -b ${branchName}`);
-  await git.checkoutLocalBranch(branchName);
-
   return {
-    branch: {
-      name: branchName,
-      current: true,
-    },
+    branch: { name: branchName, current: true },
     commands,
   };
 }

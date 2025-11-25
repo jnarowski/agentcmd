@@ -26,6 +26,7 @@ export interface AgentExecuteConfig {
   images?: { path: string }[];
   json?: boolean;
   timeout?: number; // Optional timeout in milliseconds
+  appendSystemPrompt?: string; // Append to default system prompt (for behavioral instructions)
   onEvent?: (data: { raw: string; event: unknown; message: unknown | null }) => void;
   onStart?: (process: ChildProcess) => void;
 }
@@ -64,6 +65,7 @@ export async function executeAgent<T = string>(
     images,
     json,
     timeout,
+    appendSystemPrompt,
     onEvent,
   } = config;
 
@@ -82,6 +84,7 @@ export async function executeAgent<T = string>(
       images,
       json,
       timeout,
+      appendSystemPrompt,
     // @ts-ignore - onStart optional callback
       onStart: (process) => {
         // Store process by DB session ID for consistent tracking/cancellation

@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
-import { createFinalizeWorkspaceStep } from "./createFinalizeWorkspaceStep";
+import {
+  createFinalizeWorkspaceStep,
+  type FinalizeWorkspaceConfig,
+} from "./createFinalizeWorkspaceStep";
 import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
-import type { CleanupWorkspaceConfig, WorkspaceResult } from "agentcmd-workflows";
 
 // Mock all git service dependencies
 vi.mock("@/server/domain/git/services/getGitStatus", () => ({
@@ -24,12 +26,8 @@ vi.mock("./utils/createWorkflowEventCommand", () => ({
   createWorkflowEventCommand: vi.fn(),
 }));
 
-vi.mock("@/shared/prisma", () => ({
-  prisma: {
-    workflowRun: {
-      findUnique: vi.fn(),
-    },
-  },
+vi.mock("node:fs", () => ({
+  existsSync: vi.fn(() => true), // Default to true for tests
 }));
 
 // Import mocked functions
@@ -37,13 +35,20 @@ import { getGitStatus } from "@/server/domain/git/services/getGitStatus";
 import { commitChanges } from "@/server/domain/git/services/commitChanges";
 import { switchBranch } from "@/server/domain/git/services/switchBranch";
 import { removeWorktree } from "@/server/domain/git/services/removeWorktree";
-import { prisma } from "@/shared/prisma";
 
 describe("createFinalizeWorkspaceStep", () => {
   let mockContext: RuntimeContext;
-  let mockInngestStep: {
-    run: Mock;
-  };
+  let mockInngestStep: { run: Mock };
+
+  const createConfig = (
+    overrides: Partial<FinalizeWorkspaceConfig> = {}
+  ): FinalizeWorkspaceConfig => ({
+    mode: "stay",
+    baseBranch: null,
+    projectPath: "/test/project",
+    workingDir: "/test/project",
+    ...overrides,
+  });
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -51,6 +56,7 @@ describe("createFinalizeWorkspaceStep", () => {
     mockContext = {
       workflowId: "test-workflow-id",
       runId: "test-run-id",
+      projectPath: "/test/project",
       logger: {
         info: vi.fn(),
         error: vi.fn(),
@@ -67,46 +73,15 @@ describe("createFinalizeWorkspaceStep", () => {
         return await callback();
       }),
     };
-
-    // Mock prisma to return workflow run with name
-    vi.mocked(prisma.workflowRun.findUnique).mockResolvedValue({
-      id: "test-run-id",
-      name: "Test Workflow Run",
-      project_id: "test-project-id",
-      user_id: "test-user-id",
-      workflow_definition_id: "test-definition-id",
-      args: {},
-      spec_file: null,
-      spec_content: null,
-      mode: null,
-      branch_name: null,
-      base_branch: null,
-      current_phase: null,
-      current_step_index: 0,
-      status: "running",
-      error_message: null,
-      inngest_run_id: null,
-      started_at: new Date(),
-      completed_at: null,
-      paused_at: null,
-      cancelled_at: null,
-      created_at: new Date(),
-      updated_at: new Date(),
-    });
   });
 
   describe("Auto-commit behavior", () => {
     it("commits changes when present", async () => {
-      const workspaceResult: WorkspaceResult = {
-        workingDir: "/test/project",
-        branch: "feat/test",
+      const config = createConfig({
         mode: "branch",
-        originalBranch: "main",
-      };
-
-      const config: CleanupWorkspaceConfig = {
-        workspaceResult,
-      };
+        baseBranch: "main",
+        workflowName: "Test Workflow",
+      });
 
       vi.mocked(getGitStatus).mockResolvedValue({
         files: [
@@ -127,7 +102,7 @@ describe("createFinalizeWorkspaceStep", () => {
       });
       expect(commitChanges).toHaveBeenCalledWith({
         projectPath: "/test/project",
-        message: "wip: Workflow 'Test Workflow Run' auto-commit",
+        message: "chore: Workflow 'Test Workflow' auto-commit",
         files: ["."],
       });
       expect(mockContext.logger.info).toHaveBeenCalledWith(
@@ -137,15 +112,7 @@ describe("createFinalizeWorkspaceStep", () => {
     });
 
     it("skips commit when no changes", async () => {
-      const workspaceResult: WorkspaceResult = {
-        workingDir: "/test/project",
-        branch: "main",
-        mode: "stay",
-      };
-
-      const config: CleanupWorkspaceConfig = {
-        workspaceResult,
-      };
+      const config = createConfig({ mode: "stay" });
 
       vi.mocked(getGitStatus).mockResolvedValue({
         files: [],
@@ -168,39 +135,9 @@ describe("createFinalizeWorkspaceStep", () => {
     });
 
     it("uses workflow name in commit message", async () => {
-      const workspaceResult: WorkspaceResult = {
-        workingDir: "/test/project",
-        branch: "main",
+      const config = createConfig({
         mode: "stay",
-      };
-
-      const config: CleanupWorkspaceConfig = {
-        workspaceResult,
-      };
-
-      vi.mocked(prisma.workflowRun.findUnique).mockResolvedValue({
-        id: "test-run-id",
-        name: "Feature Implementation - API v2",
-        project_id: "test-project-id",
-        user_id: "test-user-id",
-        workflow_definition_id: "test-definition-id",
-        args: {},
-        spec_file: null,
-        spec_content: null,
-        mode: null,
-        branch_name: null,
-        base_branch: null,
-        current_phase: null,
-        current_step_index: 0,
-        status: "running",
-        error_message: null,
-        inngest_run_id: null,
-        started_at: new Date(),
-        completed_at: null,
-        paused_at: null,
-        cancelled_at: null,
-        created_at: new Date(),
-        updated_at: new Date(),
+        workflowName: "Feature Implementation - API v2",
       });
 
       vi.mocked(getGitStatus).mockResolvedValue({
@@ -216,23 +153,14 @@ describe("createFinalizeWorkspaceStep", () => {
 
       expect(commitChanges).toHaveBeenCalledWith({
         projectPath: "/test/project",
-        message: "wip: Workflow 'Feature Implementation - API v2' auto-commit",
+        message:
+          "chore: Workflow 'Feature Implementation - API v2' auto-commit",
         files: ["."],
       });
     });
 
-    it("defaults to 'Workflow' when run name not found", async () => {
-      const workspaceResult: WorkspaceResult = {
-        workingDir: "/test/project",
-        branch: "main",
-        mode: "stay",
-      };
-
-      const config: CleanupWorkspaceConfig = {
-        workspaceResult,
-      };
-
-      vi.mocked(prisma.workflowRun.findUnique).mockResolvedValue(null);
+    it("defaults to 'Workflow' when name not provided", async () => {
+      const config = createConfig({ mode: "stay" });
 
       vi.mocked(getGitStatus).mockResolvedValue({
         files: [{ path: "file.ts", status: "modified" }],
@@ -247,7 +175,7 @@ describe("createFinalizeWorkspaceStep", () => {
 
       expect(commitChanges).toHaveBeenCalledWith({
         projectPath: "/test/project",
-        message: "wip: Workflow 'Workflow' auto-commit",
+        message: "chore: Workflow 'Workflow' auto-commit",
         files: ["."],
       });
     });
@@ -255,15 +183,7 @@ describe("createFinalizeWorkspaceStep", () => {
 
   describe("MODE 1: Stay mode", () => {
     it("only commits changes without checkout", async () => {
-      const workspaceResult: WorkspaceResult = {
-        workingDir: "/test/project",
-        branch: "main",
-        mode: "stay",
-      };
-
-      const config: CleanupWorkspaceConfig = {
-        workspaceResult,
-      };
+      const config = createConfig({ mode: "stay" });
 
       vi.mocked(getGitStatus).mockResolvedValue({
         files: [{ path: "file.ts", status: "modified" }],
@@ -288,16 +208,7 @@ describe("createFinalizeWorkspaceStep", () => {
 
   describe("MODE 2: Branch mode", () => {
     it("commits and restores original branch", async () => {
-      const workspaceResult: WorkspaceResult = {
-        workingDir: "/test/project",
-        branch: "feat/new",
-        mode: "branch",
-        originalBranch: "main",
-      };
-
-      const config: CleanupWorkspaceConfig = {
-        workspaceResult,
-      };
+      const config = createConfig({ mode: "branch", baseBranch: "main" });
 
       vi.mocked(getGitStatus).mockResolvedValue({
         files: [{ path: "file.ts", status: "modified" }],
@@ -318,22 +229,13 @@ describe("createFinalizeWorkspaceStep", () => {
       });
       expect(removeWorktree).not.toHaveBeenCalled();
       expect(mockContext.logger.info).toHaveBeenCalledWith(
-        { originalBranch: "main" },
+        { baseBranch: "main" },
         "Restored original branch"
       );
     });
 
-    it("skips checkout when originalBranch not provided", async () => {
-      const workspaceResult: WorkspaceResult = {
-        workingDir: "/test/project",
-        branch: "feat/new",
-        mode: "branch",
-        // No originalBranch
-      };
-
-      const config: CleanupWorkspaceConfig = {
-        workspaceResult,
-      };
+    it("skips checkout when baseBranch not provided", async () => {
+      const config = createConfig({ mode: "branch", baseBranch: null });
 
       vi.mocked(getGitStatus).mockResolvedValue({ files: [] });
 
@@ -349,17 +251,12 @@ describe("createFinalizeWorkspaceStep", () => {
 
   describe("MODE 3: Worktree mode", () => {
     it("commits, removes worktree, and restores original branch", async () => {
-      const workspaceResult: WorkspaceResult = {
-        workingDir: "/test/project/.worktrees/run-123-feat",
-        branch: "feat/new",
+      const config = createConfig({
         mode: "worktree",
+        baseBranch: "main",
+        workingDir: "/test/project/.worktrees/run-123-feat",
         worktreePath: "/test/project/.worktrees/run-123-feat",
-        originalBranch: "main",
-      };
-
-      const config: CleanupWorkspaceConfig = {
-        workspaceResult,
-      };
+      });
 
       vi.mocked(getGitStatus).mockResolvedValue({
         files: [{ path: "file.ts", status: "modified" }],
@@ -376,7 +273,7 @@ describe("createFinalizeWorkspaceStep", () => {
 
       expect(commitChanges).toHaveBeenCalledWith({
         projectPath: "/test/project/.worktrees/run-123-feat",
-        message: "wip: Workflow 'Test Workflow Run' auto-commit",
+        message: "chore: Workflow 'Workflow' auto-commit",
         files: ["."],
       });
       expect(removeWorktree).toHaveBeenCalledWith({
@@ -388,23 +285,21 @@ describe("createFinalizeWorkspaceStep", () => {
         branchName: "main",
       });
       expect(mockContext.logger.info).toHaveBeenCalledWith(
-        { originalBranch: "main", worktreePath: "/test/project/.worktrees/run-123-feat" },
+        {
+          baseBranch: "main",
+          worktreePath: "/test/project/.worktrees/run-123-feat",
+        },
         "Removed worktree and restored original branch"
       );
     });
 
-    it("handles worktree removal without originalBranch", async () => {
-      const workspaceResult: WorkspaceResult = {
-        workingDir: "/test/project/.worktrees/run-123-feat",
-        branch: "feat/new",
+    it("handles worktree removal without baseBranch", async () => {
+      const config = createConfig({
         mode: "worktree",
+        baseBranch: null,
+        workingDir: "/test/project/.worktrees/run-123-feat",
         worktreePath: "/test/project/.worktrees/run-123-feat",
-        // No originalBranch
-      };
-
-      const config: CleanupWorkspaceConfig = {
-        workspaceResult,
-      };
+      });
 
       vi.mocked(getGitStatus).mockResolvedValue({ files: [] });
       vi.mocked(removeWorktree).mockResolvedValue();
@@ -416,54 +311,13 @@ describe("createFinalizeWorkspaceStep", () => {
       await finalizeWorkspace("finalize-workspace", config);
 
       expect(removeWorktree).toHaveBeenCalled();
-      expect(switchBranch).not.toHaveBeenCalled(); // No originalBranch to restore
-    });
-
-    it("extracts project path from worktree path correctly", async () => {
-      const workspaceResult: WorkspaceResult = {
-        workingDir: "/home/user/projects/myapp/.worktrees/run-abc-feature",
-        branch: "feature",
-        mode: "worktree",
-        worktreePath: "/home/user/projects/myapp/.worktrees/run-abc-feature",
-        originalBranch: "develop",
-      };
-
-      const config: CleanupWorkspaceConfig = {
-        workspaceResult,
-      };
-
-      vi.mocked(getGitStatus).mockResolvedValue({ files: [] });
-      vi.mocked(removeWorktree).mockResolvedValue();
-      vi.mocked(switchBranch).mockResolvedValue();
-
-      const finalizeWorkspace = createFinalizeWorkspaceStep(
-        mockContext,
-        mockInngestStep as never
-      );
-      await finalizeWorkspace("finalize-workspace", config);
-
-      expect(removeWorktree).toHaveBeenCalledWith({
-        projectPath: "/home/user/projects/myapp",
-        worktreePath: "/home/user/projects/myapp/.worktrees/run-abc-feature",
-      });
-      expect(switchBranch).toHaveBeenCalledWith({
-        projectPath: "/home/user/projects/myapp",
-        branchName: "develop",
-      });
+      expect(switchBranch).not.toHaveBeenCalled(); // No baseBranch to restore
     });
   });
 
   describe("Error handling", () => {
     it("propagates errors from getGitStatus", async () => {
-      const workspaceResult: WorkspaceResult = {
-        workingDir: "/test/project",
-        branch: "main",
-        mode: "stay",
-      };
-
-      const config: CleanupWorkspaceConfig = {
-        workspaceResult,
-      };
+      const config = createConfig({ mode: "stay" });
 
       vi.mocked(getGitStatus).mockRejectedValue(
         new Error("Not a git repository")
@@ -480,15 +334,7 @@ describe("createFinalizeWorkspaceStep", () => {
     });
 
     it("propagates errors from commitChanges", async () => {
-      const workspaceResult: WorkspaceResult = {
-        workingDir: "/test/project",
-        branch: "main",
-        mode: "stay",
-      };
-
-      const config: CleanupWorkspaceConfig = {
-        workspaceResult,
-      };
+      const config = createConfig({ mode: "stay" });
 
       vi.mocked(getGitStatus).mockResolvedValue({
         files: [{ path: "file.ts", status: "modified" }],
@@ -508,16 +354,7 @@ describe("createFinalizeWorkspaceStep", () => {
     });
 
     it("propagates errors from switchBranch", async () => {
-      const workspaceResult: WorkspaceResult = {
-        workingDir: "/test/project",
-        branch: "feat/new",
-        mode: "branch",
-        originalBranch: "main",
-      };
-
-      const config: CleanupWorkspaceConfig = {
-        workspaceResult,
-      };
+      const config = createConfig({ mode: "branch", baseBranch: "main" });
 
       vi.mocked(getGitStatus).mockResolvedValue({ files: [] });
       vi.mocked(switchBranch).mockRejectedValue(
@@ -535,17 +372,12 @@ describe("createFinalizeWorkspaceStep", () => {
     });
 
     it("propagates errors from removeWorktree", async () => {
-      const workspaceResult: WorkspaceResult = {
-        workingDir: "/test/project/.worktrees/run-123-feat",
-        branch: "feat/new",
+      const config = createConfig({
         mode: "worktree",
+        baseBranch: "main",
+        workingDir: "/test/project/.worktrees/run-123-feat",
         worktreePath: "/test/project/.worktrees/run-123-feat",
-        originalBranch: "main",
-      };
-
-      const config: CleanupWorkspaceConfig = {
-        workspaceResult,
-      };
+      });
 
       vi.mocked(getGitStatus).mockResolvedValue({ files: [] });
       vi.mocked(removeWorktree).mockRejectedValue(
@@ -567,15 +399,7 @@ describe("createFinalizeWorkspaceStep", () => {
     it("generates correct step ID with phase prefix", async () => {
       mockContext.currentPhase = "cleanup";
 
-      const workspaceResult: WorkspaceResult = {
-        workingDir: "/test/project",
-        branch: "main",
-        mode: "stay",
-      };
-
-      const config: CleanupWorkspaceConfig = {
-        workspaceResult,
-      };
+      const config = createConfig({ mode: "stay" });
 
       vi.mocked(getGitStatus).mockResolvedValue({ files: [] });
 
@@ -590,35 +414,31 @@ describe("createFinalizeWorkspaceStep", () => {
         expect.any(Function)
       );
     });
+  });
 
-    it("applies custom timeout", async () => {
-      const workspaceResult: WorkspaceResult = {
-        workingDir: "/test/project",
-        branch: "main",
-        mode: "stay",
-      };
-
-      const config: CleanupWorkspaceConfig = {
-        workspaceResult,
-      };
-
-      // Mock a slow operation
-      vi.mocked(getGitStatus).mockImplementation(
-        () =>
-          new Promise((resolve) =>
-            setTimeout(() => resolve({ files: [] }), 200)
-          )
-      );
+  describe("Skip conditions", () => {
+    it("skips when workingDir is empty", async () => {
+      const config = createConfig({ mode: "stay", workingDir: "" });
 
       const finalizeWorkspace = createFinalizeWorkspaceStep(
         mockContext,
         mockInngestStep as never
       );
+      await finalizeWorkspace("finalize-workspace", config);
 
-      // Short timeout should cause failure
-      await expect(
-        finalizeWorkspace("workspace-cleanup", config, { timeout: 50 })
-      ).rejects.toThrow("Finalize workspace timed out after 50ms");
+      expect(getGitStatus).not.toHaveBeenCalled();
+    });
+
+    it("skips when mode is null", async () => {
+      const config = createConfig({ mode: null });
+
+      const finalizeWorkspace = createFinalizeWorkspaceStep(
+        mockContext,
+        mockInngestStep as never
+      );
+      await finalizeWorkspace("finalize-workspace", config);
+
+      expect(getGitStatus).not.toHaveBeenCalled();
     });
   });
 });

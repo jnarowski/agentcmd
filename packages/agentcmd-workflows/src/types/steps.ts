@@ -48,6 +48,8 @@ export interface AgentStepConfig {
   json?: boolean;
   /** CLI session ID to resume (e.g., planning session's cli_session_id) */
   resume?: string;
+  /** Append to the default system prompt (for behavioral instructions) */
+  appendSystemPrompt?: string;
 }
 
 /**
@@ -143,14 +145,6 @@ export interface SetupWorkspaceConfig {
   baseBranch?: string;
   /** Worktree name (if provided, creates worktree instead of switching branches) */
   worktreeName?: string;
-}
-
-/**
- * Configuration for workspace cleanup step
- */
-export interface CleanupWorkspaceConfig {
-  /** Workspace result from setupWorkspace step */
-  workspaceResult: WorkspaceResult;
 }
 
 /**

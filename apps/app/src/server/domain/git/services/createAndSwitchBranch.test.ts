@@ -7,6 +7,7 @@ vi.mock("simple-git");
 
 describe("createAndSwitchBranch", () => {
   let mockGit: {
+    branchLocal: ReturnType<typeof vi.fn>;
     status: ReturnType<typeof vi.fn>;
     add: ReturnType<typeof vi.fn>;
     commit: ReturnType<typeof vi.fn>;
@@ -17,6 +18,7 @@ describe("createAndSwitchBranch", () => {
   beforeEach(async () => {
     const simpleGit = await import("simple-git");
     mockGit = {
+      branchLocal: vi.fn().mockResolvedValue({ current: "main", all: ["main"] }),
       status: vi.fn().mockResolvedValue({ files: [] }),
       add: vi.fn().mockResolvedValue(undefined),
       commit: vi.fn().mockResolvedValue({ commit: "abc123" }),
@@ -72,14 +74,14 @@ describe("createAndSwitchBranch", () => {
     // Assert
     expect(mockGit.add).toHaveBeenCalledWith(".");
     expect(mockGit.commit).toHaveBeenCalledWith(
-      'Auto-commit before creating branch "feature/auto-commit"'
+      'Auto-commit before switching to branch "feature/auto-commit"'
     );
     expect(mockGit.checkoutLocalBranch).toHaveBeenCalledWith(
       "feature/auto-commit"
     );
     expect(result.commands).toContain("git add .");
     expect(result.commands).toContain(
-      'git commit -m "Auto-commit before creating branch \\"feature/auto-commit\\""'
+      'git commit -m "Auto-commit before switching to branch \\"feature/auto-commit\\""'
     );
     expect(result.commands).toContain("git checkout -b feature/auto-commit");
   });
@@ -152,20 +154,46 @@ describe("createAndSwitchBranch", () => {
     }
   });
 
-  it("handles duplicate branch name error", async () => {
-    // Arrange
-    mockGit.checkoutLocalBranch.mockRejectedValue(
-      new Error("A branch named 'feature/exists' already exists")
-    );
+  it("switches to existing branch instead of failing (idempotent)", async () => {
+    // Arrange - branch already exists
+    mockGit.branchLocal.mockResolvedValue({
+      current: "main",
+      all: ["main", "feature/exists"],
+    });
     const options = {
       projectPath: "/tmp/test-project",
       branchName: "feature/exists",
     };
 
-    // Act & Assert
-    await expect(createAndSwitchBranch(options)).rejects.toThrow(
-      "already exists"
-    );
+    // Act
+    const result = await createAndSwitchBranch(options);
+
+    // Assert - should checkout existing branch, not create
+    expect(mockGit.checkout).toHaveBeenCalledWith("feature/exists");
+    expect(mockGit.checkoutLocalBranch).not.toHaveBeenCalled();
+    expect(result.commands).toEqual(["git checkout feature/exists"]);
+  });
+
+  it("returns early if already on target branch (idempotent)", async () => {
+    // Arrange - already on target branch
+    mockGit.branchLocal.mockResolvedValue({
+      current: "feature/current",
+      all: ["main", "feature/current"],
+    });
+    const options = {
+      projectPath: "/tmp/test-project",
+      branchName: "feature/current",
+    };
+
+    // Act
+    const result = await createAndSwitchBranch(options);
+
+    // Assert - no-op, return success
+    expect(mockGit.status).not.toHaveBeenCalled();
+    expect(mockGit.checkout).not.toHaveBeenCalled();
+    expect(mockGit.checkoutLocalBranch).not.toHaveBeenCalled();
+    expect(result.commands).toEqual([]);
+    expect(result.branch.name).toBe("feature/current");
   });
 
   it("handles git status error", async () => {

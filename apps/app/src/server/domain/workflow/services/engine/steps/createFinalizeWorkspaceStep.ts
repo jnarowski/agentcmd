@@ -1,6 +1,5 @@
 import type { GetStepTools } from "inngest";
 import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
-import type { CleanupWorkspaceConfig, StepOptions } from "agentcmd-workflows";
 import { existsSync } from "node:fs";
 import { getGitStatus } from "@/server/domain/git/services/getGitStatus";
 import { commitChanges } from "@/server/domain/git/services/commitChanges";
@@ -8,189 +7,186 @@ import { switchBranch } from "@/server/domain/git/services/switchBranch";
 import { removeWorktree } from "@/server/domain/git/services/removeWorktree";
 import { createWorkflowEventCommand } from "@/server/domain/workflow/services/engine/steps/utils/createWorkflowEventCommand";
 import { generateInngestStepId } from "@/server/domain/workflow/services/engine/steps/utils/generateInngestStepId";
-import { withTimeout } from "@/server/domain/workflow/services/engine/steps/utils/withTimeout";
 import { slugify as toId } from "@/server/utils/slugify";
 
-const DEFAULT_FINALIZE_WORKSPACE_TIMEOUT = 120000; // 2 minutes
-
 /**
- * Event data passed to finalize step
+ * Config for finalize workspace step
  */
-interface FinalizeEvent {
-  data?: { name?: string };
+export interface FinalizeWorkspaceConfig {
+  /** Workspace mode: stay, branch, or worktree */
+  mode: string | null;
+  /** Base branch to restore after cleanup */
+  baseBranch: string | null;
+  /** Original project path (for worktree cleanup) */
+  projectPath: string;
+  /** Working directory path (project or worktree) */
+  workingDir: string;
+  /** Worktree path (only for worktree mode) */
+  worktreePath?: string;
+  /** Workflow name for commit message */
+  workflowName?: string;
 }
 
+// ============================================================================
+// PUBLIC API
+// ============================================================================
+
 /**
- * Create finalizeWorkspace step factory function
- * Auto-commits changes and performs mode-specific cleanup
+ * Create finalizeWorkspace step factory function.
+ * Factory takes minimal params, step call takes explicit config.
+ *
+ * Auto-commits changes and performs mode-specific cleanup.
  */
 export function createFinalizeWorkspaceStep(
   context: RuntimeContext,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  inngestStep: GetStepTools<any>,
-  event: FinalizeEvent
+  inngestStep: GetStepTools<any>
 ) {
   return async function finalizeWorkspace(
     idOrName: string,
-    config: CleanupWorkspaceConfig,
-    options?: StepOptions
+    config: FinalizeWorkspaceConfig
   ): Promise<void> {
     const id = toId(idOrName);
-    const timeout = options?.timeout ?? DEFAULT_FINALIZE_WORKSPACE_TIMEOUT;
-
-    // Generate phase-prefixed Inngest step ID
     const inngestStepId = generateInngestStepId(context, id);
 
     await inngestStep.run(inngestStepId, async () => {
-      await withTimeout(
-        executeFinalizeWorkspace(config, context, event),
-        timeout,
-        "Finalize workspace"
-      );
+      await executeFinalizeWorkspace(config, context);
     });
   };
 }
 
-async function executeFinalizeWorkspace(
-  config: CleanupWorkspaceConfig,
-  context: RuntimeContext,
-  event: FinalizeEvent
-): Promise<void> {
-  const { workspaceResult } = config;
-  const workflowName = event.data?.name || "Workflow";
+// ============================================================================
+// PRIVATE HELPERS
+// ============================================================================
 
-  // Step 1: Check for uncommitted changes and auto-commit
-  const workingDir = workspaceResult.workingDir;
+async function executeFinalizeWorkspace(
+  config: FinalizeWorkspaceConfig,
+  context: RuntimeContext
+): Promise<void> {
+  const { mode, baseBranch, projectPath, workingDir, worktreePath, workflowName = "Workflow" } = config;
+
+  if (!workingDir || !mode) {
+    return;
+  }
 
   // Handle retry after partial completion (worktree already removed)
   // This makes the step idempotent - safe to retry after failure
   if (!existsSync(workingDir)) {
     context.logger.info(
-      { workingDir, mode: workspaceResult.mode },
+      { workingDir, mode },
       "Working directory already cleaned up, skipping git operations"
     );
 
     // For worktree mode, still switch back to original branch in main project
-    if (workspaceResult.mode === "worktree" && workspaceResult.worktreePath) {
-      const projectPath = context.projectPath;
-      const originalBranch = (workspaceResult as { originalBranch?: string })
-        .originalBranch;
-      if (originalBranch) {
-        await switchBranch({ projectPath, branchName: originalBranch });
-        context.logger.info(
-          { originalBranch },
-          "Restored original branch after retry"
-        );
-      }
+    if (mode === "worktree" && worktreePath && baseBranch) {
+      await restoreBranch(projectPath, baseBranch, context);
+      context.logger.info(
+        { baseBranch },
+        "Restored original branch after retry"
+      );
     }
 
     return;
   }
 
-  const status = await getGitStatus({ projectPath: workingDir });
-
-  if (status.files.length > 0) {
-    context.logger.info(
-      { workingDir, fileCount: status.files.length },
-      "Auto-committing changes..."
-    );
-
-    const commitStartTime = Date.now();
-    await commitChanges({
-      projectPath: workingDir,
-      message: `chore: Workflow '${workflowName}' auto-commit`,
-      files: ["."],
-    });
-    const commitDuration = Date.now() - commitStartTime;
-
-    await createWorkflowEventCommand(
-      context,
-      "git",
-      ["commit", "-m", `chore: Workflow '${workflowName}' auto-commit`],
-      commitDuration
-    );
-  } else {
-    context.logger.info({ workingDir }, "No changes to commit");
-  }
+  // Step 1: Auto-commit uncommitted changes
+  await autoCommitIfNeeded(workingDir, workflowName, context);
 
   // Step 2: Mode-specific cleanup
-  if (workspaceResult.mode === "stay") {
-    // Stay mode: No checkout needed, already committed
-    context.logger.info({ mode: "stay" }, "Finalized in stay mode");
-  } else if (workspaceResult.mode === "branch") {
-    // Branch mode: Checkout original branch
-    const originalBranch = (
-      workspaceResult as { mode: string; originalBranch?: string }
-    ).originalBranch;
-    if (originalBranch) {
-      const checkoutStartTime = Date.now();
-      const projectPath = workingDir;
+  switch (mode) {
+    case "stay":
+      context.logger.info({ mode: "stay" }, "Finalized in stay mode");
+      break;
 
-      await switchBranch({
-        projectPath,
-        branchName: originalBranch,
-      });
-      const checkoutDuration = Date.now() - checkoutStartTime;
-
-      await createWorkflowEventCommand(
-        context,
-        "git",
-        ["checkout", originalBranch],
-        checkoutDuration
-      );
-
-      context.logger.info({ originalBranch }, "Restored original branch");
-    }
-  } else if (
-    workspaceResult.mode === "worktree" &&
-    workspaceResult.worktreePath
-  ) {
-    // Worktree mode: Remove worktree and restore original branch
-    const worktreePath = workspaceResult.worktreePath;
-    const projectPath = context.projectPath;
-
-    const removeStartTime = Date.now();
-    await removeWorktree({
-      projectPath,
-      worktreePath,
-    });
-    const removeDuration = Date.now() - removeStartTime;
-
-    await createWorkflowEventCommand(
-      context,
-      "git",
-      ["worktree", "remove", worktreePath],
-      removeDuration
-    );
-
-    // Checkout original branch in main project
-    const originalBranch = (
-      workspaceResult as {
-        mode: string;
-        originalBranch?: string;
-        worktreePath?: string;
+    case "branch":
+      if (baseBranch) {
+        await restoreBranch(workingDir, baseBranch, context);
+        context.logger.info({ baseBranch }, "Restored original branch");
       }
-    ).originalBranch;
-    if (originalBranch) {
-      const checkoutStartTime = Date.now();
+      break;
 
-      await switchBranch({
-        projectPath,
-        branchName: originalBranch,
-      });
-      const checkoutDuration = Date.now() - checkoutStartTime;
+    case "worktree":
+      if (worktreePath) {
+        await cleanupWorktree(projectPath, worktreePath, baseBranch, context);
+        context.logger.info(
+          { baseBranch, worktreePath },
+          "Removed worktree and restored original branch"
+        );
+      }
+      break;
+  }
+}
 
-      await createWorkflowEventCommand(
-        context,
-        "git",
-        ["checkout", originalBranch],
-        checkoutDuration
-      );
+async function autoCommitIfNeeded(
+  workingDir: string,
+  workflowName: string,
+  context: RuntimeContext
+): Promise<void> {
+  const status = await getGitStatus({ projectPath: workingDir });
 
-      context.logger.info(
-        { originalBranch, worktreePath },
-        "Removed worktree and restored original branch"
-      );
-    }
+  if (status.files.length === 0) {
+    context.logger.info({ workingDir }, "No changes to commit");
+    return;
+  }
+
+  context.logger.info(
+    { workingDir, fileCount: status.files.length },
+    "Auto-committing changes..."
+  );
+
+  const commitStartTime = Date.now();
+  await commitChanges({
+    projectPath: workingDir,
+    message: `chore: Workflow '${workflowName}' auto-commit`,
+    files: ["."],
+  });
+  const commitDuration = Date.now() - commitStartTime;
+
+  await createWorkflowEventCommand(
+    context,
+    "git",
+    ["commit", "-m", `chore: Workflow '${workflowName}' auto-commit`],
+    commitDuration
+  );
+}
+
+async function restoreBranch(
+  projectPath: string,
+  branchName: string,
+  context: RuntimeContext
+): Promise<void> {
+  const startTime = Date.now();
+  await switchBranch({ projectPath, branchName });
+  const duration = Date.now() - startTime;
+
+  await createWorkflowEventCommand(
+    context,
+    "git",
+    ["checkout", branchName],
+    duration
+  );
+}
+
+async function cleanupWorktree(
+  projectPath: string,
+  worktreePath: string,
+  baseBranch: string | null,
+  context: RuntimeContext
+): Promise<void> {
+  // Remove worktree
+  const removeStartTime = Date.now();
+  await removeWorktree({ projectPath, worktreePath });
+  const removeDuration = Date.now() - removeStartTime;
+
+  await createWorkflowEventCommand(
+    context,
+    "git",
+    ["worktree", "remove", worktreePath],
+    removeDuration
+  );
+
+  // Restore original branch in main project
+  if (baseBranch) {
+    await restoreBranch(projectPath, baseBranch, context);
   }
 }

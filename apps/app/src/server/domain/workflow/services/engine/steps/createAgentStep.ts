@@ -96,6 +96,7 @@ export function createAgentStep(
               permissionMode: "bypassPermissions", // Hardcoded to bypass permissions in workflows
               mcpConfig: config.mcpConfig,
               json: config.json,
+              appendSystemPrompt: config.appendSystemPrompt,
               timeout,
               onEvent: async ({ message }) => {
                 // Set agent_session_id on first message (only once)

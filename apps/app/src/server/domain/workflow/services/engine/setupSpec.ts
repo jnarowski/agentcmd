@@ -72,19 +72,21 @@ export async function setupSpec(params: {
   // Defaults to "feature" if not specified
   const specType = event.data.specType ?? "feature";
 
-  // Verify the slash command exists before calling agent
+  // Verify the slash command exists before calling agent (memoized for retry safety)
   // Command format: /cmd:generate-{specType}-spec
   // Example: /cmd:generate-feature-spec, /cmd:generate-bug-spec
-  const basePath = event.data.workingDir ?? run.project.path;
-  const commandPath = `${basePath}/.claude/commands/cmd/generate-${specType}-spec.md`;
+  await inngestStep.run("validate-spec-command", () => {
+    const basePath = event.data.workingDir ?? run.project.path;
+    const commandPath = `${basePath}/.claude/commands/cmd/generate-${specType}-spec.md`;
 
-  if (!existsSync(commandPath)) {
-    throw new Error(
-      `Spec command not found: /cmd:generate-${specType}-spec\n` +
-        `Expected file: ${commandPath}\n` +
-        `Available spec types can be found in .claude/commands/cmd/`
-    );
-  }
+    if (!existsSync(commandPath)) {
+      throw new Error(
+        `Spec command not found: /cmd:generate-${specType}-spec\n` +
+          `Expected file: ${commandPath}\n` +
+          `Available spec types can be found in .claude/commands/cmd/`
+      );
+    }
+  });
 
   // Call agent to generate spec - handles both fresh generation and resuming from planning
   const specFile = await generateSpecFileWithAgent(event, step);
@@ -117,13 +119,21 @@ async function generateSpecFileWithAgent(
   event: WorkflowEvent,
   step: WorkflowStep
 ): Promise<string> {
+  const {
+    specFile,
+    planningSessionId,
+    specType,
+    specCommandOverride,
+    specContent,
+    workingDir,
+  } = event.data;
   // Guard: If spec file already exists, return it
-  if (event.data.specFile) {
-    return event.data.specFile;
+  if (specFile) {
+    return specFile;
   }
 
-  const promptSuffix =
-    "\n\nCRITICAL: You are in an automated workflow. Users CANNOT respond to questions. Make all decisions autonomously using existing patterns and best practices. Document assumptions.";
+  const appendSystemPrompt =
+    "CRITICAL: You are in an automated workflow. Users CANNOT respond to questions. Make all decisions autonomously using existing patterns and best practices. Document assumptions.";
 
   // Determine which slash command to use for generation
   // specType: Type of spec to generate (e.g., "feature", "bug", "prd", "issue")
@@ -131,26 +141,25 @@ async function generateSpecFileWithAgent(
   //   - Examples: "feature" → /cmd:generate-feature-spec
   //              "bug" → /cmd:generate-bug-spec
   //              "prd" → /cmd:generate-prd-spec
-  const specType = event.data.specType ?? "feature";
-
+  //
   // getSpecCommand(specType): Converts spec type to slash command format
   //   Input:  "feature"
   //   Output: "/cmd:generate-feature-spec"
   // specCommandOverride: Allows manually specifying a different command (bypasses type mapping)
-  const command = event.data.specCommandOverride ?? getSpecCommand(specType);
+  const command = specCommandOverride ?? getSpecCommand(specType ?? "feature");
 
   // MODE 1: Resume from existing planning session
   // Uses session history as context for spec generation
-  if (event.data.planningSessionId) {
-    const prompt = `${command} ${promptSuffix}`;
+  if (planningSessionId) {
     const response = await step.agent<CmdGenerateSpecResponse>(
       "Generating Spec From Planning Session",
       {
         agent: "claude", // Use Claude for spec generation
         json: true, // Expect structured JSON response
-        prompt,
-        resume: event.data.planningSessionId, // Resume from this session
-        workingDir: event.data.workingDir,
+        prompt: command,
+        resume: planningSessionId, // Resume from this session
+        workingDir,
+        appendSystemPrompt,
       }
     );
 
@@ -164,7 +173,7 @@ async function generateSpecFileWithAgent(
     return response.data.spec_file;
   }
 
-  const prompt = `${command} '${event.data.specContent}' ${promptSuffix}`;
+  const prompt = `${command} '${specContent}'`;
 
   await step.log("Generating spec from provided context, prompt:", prompt);
 
@@ -176,7 +185,8 @@ async function generateSpecFileWithAgent(
       agent: "claude",
       json: true, // Expect structured JSON response with spec_file path
       prompt,
-      workingDir: event.data.workingDir,
+      workingDir,
+      appendSystemPrompt,
     }
   );
 
