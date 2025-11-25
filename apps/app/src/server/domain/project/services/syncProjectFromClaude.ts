@@ -2,7 +2,10 @@ import fs from "fs/promises";
 import fsSync from "fs";
 import path from "path";
 import readline from "readline";
-import { syncProjectSessions, bulkGenerateSessionNames } from "@/server/domain/session/services";
+import {
+  syncProjectSessions,
+  bulkGenerateSessionNames,
+} from "@/server/domain/session/services";
 import { getClaudeProjectsDir } from "@/server/utils/path";
 import type { SyncProjectsResponse } from "@/shared/types/project-sync.types";
 import type { SyncFromClaudeProjectsOptions } from "@/server/domain/project/types/SyncFromClaudeProjectsOptions";
@@ -27,7 +30,7 @@ function decodeProjectPath(projectName: string): string {
  * @returns True if valid session file, false otherwise
  */
 function isValidSessionFile(filename: string): boolean {
-  return filename.endsWith('.jsonl') && !filename.startsWith('agent-');
+  return filename.endsWith(".jsonl") && !filename.startsWith("agent-");
 }
 
 /**
@@ -72,9 +75,7 @@ async function extractProjectDirectory(projectName: string): Promise<string> {
                 cwdCounts.set(entry.cwd, (cwdCounts.get(entry.cwd) || 0) + 1);
 
                 // Track the most recent cwd
-                const timestamp = new Date(
-                  entry.timestamp || 0
-                ).getTime();
+                const timestamp = new Date(entry.timestamp || 0).getTime();
                 if (timestamp > latestTimestamp) {
                   latestTimestamp = timestamp;
                   latestCwd = entry.cwd;
@@ -115,8 +116,7 @@ async function extractProjectDirectory(projectName: string): Promise<string> {
 
         // Fallback (shouldn't reach here)
         if (!extractedPath) {
-          extractedPath =
-            latestCwd || decodeProjectPath(projectName);
+          extractedPath = latestCwd || decodeProjectPath(projectName);
         }
       }
     }
@@ -125,7 +125,7 @@ async function extractProjectDirectory(projectName: string): Promise<string> {
   } catch (error: unknown) {
     // If the directory doesn't exist, just use the decoded project name
     const err = error instanceof Error ? error : new Error(String(error));
-    if ('code' in err && (err as NodeJS.ErrnoException).code === "ENOENT") {
+    if ("code" in err && (err as NodeJS.ErrnoException).code === "ENOENT") {
       extractedPath = decodeProjectPath(projectName);
     } else {
       // Fall back to decoded project name for other errors
@@ -142,7 +142,10 @@ async function extractProjectDirectory(projectName: string): Promise<string> {
  * @param options - Options object with userId
  * @returns Sync statistics
  */
-export async function syncFromClaudeProjects({ userId, logger }: SyncFromClaudeProjectsOptions): Promise<SyncProjectsResponse> {
+export async function syncFromClaudeProjects({
+  userId,
+  logger,
+}: SyncFromClaudeProjectsOptions): Promise<SyncProjectsResponse> {
   let projectsImported = 0;
   let projectsUpdated = 0;
   let totalSessionsSynced = 0;
@@ -169,6 +172,7 @@ export async function syncFromClaudeProjects({ userId, logger }: SyncFromClaudeP
   // Filter for directories only, excluding worktree directories (pattern: run-{cuid}-{branch})
   const projectDirs = entries
     .filter((entry) => entry.isDirectory())
+    // Exclude worktree directories (pattern: run-{cuid}-{branch})
     .filter((entry) => !entry.name.match(/^run-c[a-z0-9]{20,}-/));
 
   // Process each project directory
@@ -190,7 +194,7 @@ export async function syncFromClaudeProjects({ userId, logger }: SyncFromClaudeP
     // Create or update project
     const project = await createOrUpdateProject({
       name: displayName,
-      path: actualPath
+      path: actualPath,
     });
 
     // Determine if project was created or updated
