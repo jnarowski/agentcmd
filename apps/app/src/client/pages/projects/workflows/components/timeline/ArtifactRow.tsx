@@ -19,22 +19,17 @@ export function ArtifactRow({ artifact }: ArtifactRowProps) {
       icon={<FileText className="h-5 w-5 text-amber-500" />}
       tooltipLabel="Artifact"
       rightContent={
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleDownload}
-            className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 px-2 py-1 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90"
-            aria-label={`Download ${artifact.name}`}
-          >
-            <Download className="h-3 w-3" />
-          </button>
-          <span className="px-2 py-1 text-xs font-medium rounded bg-background/50 text-muted-foreground">
-            Artifact
-          </span>
-        </div>
+        <button
+          onClick={handleDownload}
+          className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 px-2 py-1 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90"
+          aria-label={`Download ${artifact.name}`}
+        >
+          <Download className="h-3 w-3" />
+        </button>
       }
     >
       <TimelineItemHeader
-        title={artifact.name}
+        title={`Artifact: ${artifact.name}`}
         date={formatDate(artifact.created_at)}
         id={artifact.id}
       />

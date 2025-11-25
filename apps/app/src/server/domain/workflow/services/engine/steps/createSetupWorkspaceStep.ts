@@ -10,7 +10,7 @@ import { getCurrentBranch } from "@/server/domain/git/services/getCurrentBranch"
 import { createAndSwitchBranch } from "@/server/domain/git/services/createAndSwitchBranch";
 import { createWorktree } from "@/server/domain/git/services/createWorktree";
 import { createWorkflowEventCommand } from "@/server/domain/workflow/services/engine/steps/utils/createWorkflowEventCommand";
-import { generateInngestStepId } from "@/server/domain/workflow/services/engine/steps/utils/generateInngestStepId";
+import { executeStep } from "@/server/domain/workflow/services/engine/steps/utils/executeStep";
 import { withTimeout } from "@/server/domain/workflow/services/engine/steps/utils/withTimeout";
 import { slugify as toId } from "@/server/utils/slugify";
 
@@ -53,37 +53,33 @@ export function createSetupWorkspaceStep(
   inngestStep: GetStepTools<any>
 ) {
   return async function setupWorkspace(
-    idOrName: string,
+    _idOrName: string,
     config: SetupWorkspaceConfig,
     options?: StepOptions
   ): Promise<WorkspaceResult> {
-    const id = toId(idOrName);
     const timeout = options?.timeout ?? DEFAULT_SETUP_WORKSPACE_TIMEOUT;
 
     // Use provided config with defaults
     const finalConfig: SetupWorkspaceConfig = {
       projectPath: config.projectPath || context.projectPath,
       branch: config.branch,
-      baseBranch: config.baseBranch || 'main',
+      baseBranch: config.baseBranch || "main",
       worktreeName: config.worktreeName,
     };
 
-    // Generate phase-prefixed Inngest step ID
-    const inngestStepId = generateInngestStepId(context, id);
-
-    return await inngestStep.run(inngestStepId, async () => {
-      return await withTimeout(
-        executeSetupWorkspace(finalConfig, context),
-        timeout,
-        "Setup workspace"
-      );
-    });
+    return await withTimeout(
+      executeSetupWorkspace(finalConfig, context, inngestStep),
+      timeout,
+      "Setup workspace"
+    );
   };
 }
 
 async function executeSetupWorkspace(
   config: SetupWorkspaceConfig,
-  context: RuntimeContext
+  context: RuntimeContext,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  inngestStep: GetStepTools<any>
 ): Promise<WorkspaceResult> {
   const { projectPath, branch, baseBranch, worktreeName } = config;
 
@@ -94,30 +90,58 @@ async function executeSetupWorkspace(
 
   const currentBranch = await getCurrentBranch({ projectPath });
 
-  // Mode 1: Worktree
+  // Mode 1: Worktree - uses executeStep for proper Git Step display
   if (worktreeName) {
     const targetBranch = branch ?? currentBranch ?? "main";
-    const customWorktreePath = path.join(projectPath, ".worktrees", worktreeName);
-
-    const startTime = Date.now();
-    const worktreePath = await createWorktree({
+    const customWorktreePath = path.join(
       projectPath,
-      branch: targetBranch,
-      worktreePath: customWorktreePath,
-    });
-    const duration = Date.now() - startTime;
-    await createWorkflowEventCommand(
-      context,
-      "git",
-      ["worktree", "add", worktreePath, targetBranch],
-      duration
+      ".worktrees",
+      worktreeName
     );
 
+    const { result } = await executeStep({
+      context,
+      stepId: toId(`setup-worktree-${worktreeName}`),
+      stepName: `setup-worktree`,
+      stepType: "git",
+      inngestStep,
+      input: {
+        operation: "worktree-add",
+        projectPath,
+        branch: targetBranch,
+        worktreeName,
+      },
+      fn: async () => {
+        const startTime = Date.now();
+        const absoluteWorktreePath = await createWorktree({
+          projectPath,
+          branch: targetBranch,
+          worktreePath: customWorktreePath,
+        });
+        const duration = Date.now() - startTime;
+
+        return {
+          data: {
+            worktreePath: absoluteWorktreePath,
+            branch: targetBranch,
+            worktreeName,
+          },
+          success: true,
+          trace: [
+            {
+              command: `git worktree add ${absoluteWorktreePath} ${targetBranch}`,
+              duration,
+            },
+          ],
+        };
+      },
+    });
+
     return {
-      workingDir: worktreePath,
+      workingDir: result.data.worktreePath,
       branch: targetBranch,
       mode: "worktree",
-      worktreePath,
+      worktreePath: result.data.worktreePath,
       worktreeName,
       originalBranch: currentBranch ?? "main",
     };
@@ -133,7 +157,11 @@ async function executeSetupWorkspace(
       from: baseBranch,
     });
     const checkoutDuration = Date.now() - checkoutStartTime;
-    await logCommandsToTimeline(context, branchResult.commands, checkoutDuration);
+    await logCommandsToTimeline(
+      context,
+      branchResult.commands,
+      checkoutDuration
+    );
 
     return {
       workingDir: projectPath,

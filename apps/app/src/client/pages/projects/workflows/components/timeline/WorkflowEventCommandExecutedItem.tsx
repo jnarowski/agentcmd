@@ -30,11 +30,6 @@ export function WorkflowEventCommandExecutedItem({
     <TimelineRow
       icon={<SquareChevronRight className="h-5 w-5 text-slate-500" />}
       tooltipLabel="Command"
-      rightContent={
-        <span className="px-2 py-1 text-xs font-medium rounded bg-background/50 text-muted-foreground">
-          Command
-        </span>
-      }
     >
       <TimelineItemHeader
         title="Command"

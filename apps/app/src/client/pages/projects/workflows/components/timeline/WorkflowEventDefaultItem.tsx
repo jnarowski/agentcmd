@@ -122,11 +122,6 @@ export function WorkflowEventDefaultItem({
     <TimelineRow
       icon={<Icon className={`h-5 w-5 ${iconColor}`} />}
       tooltipLabel={formatEventType(event.event_type)}
-      rightContent={
-        <span className="px-2 py-1 text-xs font-medium rounded bg-background/50 text-muted-foreground">
-          {formatEventType(event.event_type)}
-        </span>
-      }
     >
       <TimelineItemHeader
         title={title}

@@ -9,6 +9,7 @@ import { formatDuration } from "@/client/utils/formatDuration";
 interface TimelineItemHeaderProps {
   title: string | React.ReactNode;
   titleClassName?: string;
+  badge?: string;
   date: string;
   duration?: number | null;
   id?: string;
@@ -19,6 +20,7 @@ interface TimelineItemHeaderProps {
 export function TimelineItemHeader({
   title,
   titleClassName = "text-workflow-row-title text-base font-medium",
+  badge,
   date,
   duration,
   id,
@@ -56,12 +58,17 @@ export function TimelineItemHeader({
 
   return (
     <div>
-      {/* Title + Debug ID */}
+      {/* Title + Badge + Debug ID */}
       <div className="flex items-center gap-2">
         {renderTitle()}
         {debugMode && id && (
           <span className="text-xs text-muted-foreground font-mono">
             [{id}]
+          </span>
+        )}
+        {badge && (
+          <span className="ml-auto text-xs bg-muted text-muted-foreground rounded-full px-2 py-0.5 capitalize">
+            {badge}
           </span>
         )}
       </div>

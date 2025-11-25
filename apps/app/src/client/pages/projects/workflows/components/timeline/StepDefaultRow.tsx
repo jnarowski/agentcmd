@@ -48,11 +48,7 @@ export function StepDefaultRow({
       : null;
 
   // Format step type for tooltip
-  const tooltipLabel =
-    step.step_type
-      .split("_")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ") + " Step";
+  const typeLabel = step.step_type.charAt(0).toUpperCase() + step.step_type.slice(1);
 
   return (
     <>
@@ -62,12 +58,7 @@ export function StepDefaultRow({
             className={`h-5 w-5 ${statusColor} ${step.status === "running" ? "animate-spin" : ""}`}
           />
         }
-        tooltipLabel={tooltipLabel}
-        rightContent={
-          <span className="px-2 py-1 text-xs font-medium rounded bg-background/50 text-muted-foreground">
-            {tooltipLabel}
-          </span>
-        }
+        tooltipLabel={`${typeLabel} Step`}
         onClick={() => {
           onSelectStep?.(step.id);
           onSetActiveTab?.("logs");
@@ -75,6 +66,7 @@ export function StepDefaultRow({
       >
         <TimelineItemHeader
           title={step.name}
+          badge={step.step_type}
           date={formatDate(step.created_at)}
           duration={duration}
           id={step.id}

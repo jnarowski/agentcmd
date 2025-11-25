@@ -17,11 +17,6 @@ export function WorkflowEventAnnotationItem({
     <TimelineRow
       icon={<MessageSquare className="h-5 w-5 text-purple-500" />}
       tooltipLabel="Annotation"
-      rightContent={
-        <span className="px-2 py-1 text-xs font-medium rounded bg-background/50 text-muted-foreground">
-          Annotation
-        </span>
-      }
     >
       <TimelineItemHeader
         title="Annotation"

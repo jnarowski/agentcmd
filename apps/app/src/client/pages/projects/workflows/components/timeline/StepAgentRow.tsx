@@ -70,13 +70,6 @@ export function StepAgentRow({
         new Date(step.started_at).getTime()
       : null;
 
-  // Format step type for tooltip
-  const tooltipLabel =
-    step.step_type
-      .split("_")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ") + " Step";
-
   return (
     <>
       <TimelineRow
@@ -85,12 +78,7 @@ export function StepAgentRow({
             className={`h-5 w-5 ${statusColor} ${step.status === "running" ? "animate-spin" : ""}`}
           />
         }
-        tooltipLabel={tooltipLabel}
-        rightContent={
-          <span className="px-2 py-1 text-xs font-medium rounded bg-background/50 text-muted-foreground">
-            {tooltipLabel}
-          </span>
-        }
+        tooltipLabel="Agent Step"
         onClick={() => {
           onSelectStep?.(step.id);
           onSetActiveTab?.("logs");
@@ -98,6 +86,7 @@ export function StepAgentRow({
       >
         <TimelineItemHeader
           title={step.name}
+          badge="agent"
           date={formatDate(step.created_at)}
           duration={duration}
           id={step.id}

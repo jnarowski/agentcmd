@@ -2,7 +2,6 @@ import type { GetStepTools } from "inngest";
 import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 import type { GitStepConfig, GitStepResult } from "agentcmd-workflows";
 import type { GitStepOptions } from "@/server/domain/workflow/types/event.types";
-import path from "node:path";
 import { commitChanges } from "@/server/domain/git/services/commitChanges";
 import { createAndSwitchBranch } from "@/server/domain/git/services/createAndSwitchBranch";
 import { createPullRequest } from "@/server/domain/git/services/createPullRequest";
@@ -242,14 +241,10 @@ async function executeGitOperation(
     case "worktree-add": {
       const startTime = Date.now();
 
-      // Compute worktree path if not provided
-      const worktreePath = config.worktreePath ??
-        path.join(config.projectPath, ".worktrees", config.worktreeName);
-
       const absoluteWorktreePath = await createWorktree({
         projectPath: config.projectPath,
         branch: config.branch,
-        worktreePath,
+        worktreePath: config.worktreePath,
       });
 
       const duration = Date.now() - startTime;
@@ -269,28 +264,17 @@ async function executeGitOperation(
     case "worktree-remove": {
       const startTime = Date.now();
 
-      // Need to find the main repo path from the worktree path
-      // The worktree is typically at .worktrees/<name> inside the project
-      const worktreeAbsPath = path.resolve(config.worktreePath);
-
-      // Extract project path from worktree path (go up from .worktrees/<name>)
-      const parentDir = path.dirname(worktreeAbsPath);
-      const grandParentDir = path.dirname(parentDir);
-      const projectPath = path.basename(parentDir) === ".worktrees"
-        ? grandParentDir
-        : parentDir;
-
       await removeWorktree({
-        projectPath,
-        worktreePath: worktreeAbsPath,
+        projectPath: config.projectPath,
+        worktreePath: config.worktreePath,
       });
 
       const duration = Date.now() - startTime;
-      const command = `git worktree remove ${worktreeAbsPath} --force`;
+      const command = `git worktree remove ${config.worktreePath} --force`;
 
       return {
         data: {
-          worktreePath: worktreeAbsPath,
+          worktreePath: config.worktreePath,
         },
         success: true,
         trace: [{ command, duration }],

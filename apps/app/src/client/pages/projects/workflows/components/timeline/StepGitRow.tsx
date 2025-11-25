@@ -61,11 +61,8 @@ export function StepGitRow({ step, onSelectStep, onSetActiveTab }: StepGitRowPro
         new Date(step.started_at).getTime()
       : null;
 
-  // Format step type for tooltip
-  const tooltipLabel = step.step_type
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ") + " Step";
+  // Badge label for step type
+  const badgeLabel = step.step_type === "git" ? "git" : "cli";
 
   return (
     <TimelineRow
@@ -74,12 +71,7 @@ export function StepGitRow({ step, onSelectStep, onSetActiveTab }: StepGitRowPro
           className={`h-5 w-5 ${statusColor} ${step.status === "running" ? "animate-spin" : ""}`}
         />
       }
-      tooltipLabel={tooltipLabel}
-      rightContent={
-        <span className="px-2 py-1 text-xs font-medium rounded bg-background/50 text-muted-foreground">
-          {tooltipLabel}
-        </span>
-      }
+      tooltipLabel={`${badgeLabel.charAt(0).toUpperCase() + badgeLabel.slice(1)} Step`}
       onClick={() => {
         onSelectStep?.(step.id);
         onSetActiveTab?.("logs");
@@ -87,6 +79,7 @@ export function StepGitRow({ step, onSelectStep, onSetActiveTab }: StepGitRowPro
     >
       <TimelineItemHeader
         title={toTitleCase(step.name)}
+        badge={badgeLabel}
         date={formatDate(step.created_at)}
         duration={duration}
         id={step.id}
