@@ -166,8 +166,10 @@ export async function syncFromClaudeProjects({ userId, logger }: SyncFromClaudeP
     withFileTypes: true,
   });
 
-  // Filter for directories only
-  const projectDirs = entries.filter((entry) => entry.isDirectory());
+  // Filter for directories only, excluding worktree directories (pattern: run-{cuid}-{branch})
+  const projectDirs = entries
+    .filter((entry) => entry.isDirectory())
+    .filter((entry) => !entry.name.match(/^run-c[a-z0-9]{20,}-/));
 
   // Process each project directory
   for (const projectDir of projectDirs) {
