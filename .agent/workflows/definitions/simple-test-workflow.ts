@@ -79,7 +79,7 @@ export default defineWorkflow(
     ],
   },
   async ({ event, step }) => {
-    const { workingDir, specFile } = event.data;
+    const { specFile } = event.data;
 
     // Generate random topic for variety
     const topics = [
@@ -108,7 +108,6 @@ export default defineWorkflow(
         agent: "claude",
         json: true,
         prompt: RESEARCH_PROMPT(randomTopic),
-        workingDir,
       });
 
       await step.annotation("research-complete", {
@@ -137,12 +136,10 @@ export default defineWorkflow(
         agent: "claude",
         json: true,
         prompt: WRITE_PROMPT(randomTopic),
-        workingDir,
       });
 
       // Create random test file
       const filename = `test-article-${timestamp}.md`;
-      const filepath = `${workingDir}/.agent/generated/${filename}`;
 
       const fileContent = FILE_CONTENT({
         title: writeResult.data.title,
@@ -156,7 +153,6 @@ export default defineWorkflow(
         command: `mkdir -p .agent/generated && cat > .agent/generated/${filename} << 'EOF'
 ${fileContent}
 EOF`,
-        cwd: workingDir,
       });
 
       await step.annotation("write-complete", {
