@@ -87,12 +87,14 @@ describe("createSetupWorkspaceStep", () => {
       expect(createWorktree).toHaveBeenCalledWith({
         projectPath: "/test/project",
         branch: "feat/new",
+        worktreePath: "/test/project/.worktrees/feature-wt",
       });
       expect(result).toEqual({
         workingDir: "/test/project/.worktrees/feat/new",
         branch: "feat/new",
         mode: "worktree",
         worktreePath: "/test/project/.worktrees/feat/new",
+        worktreeName: "feature-wt",
         originalBranch: "main",
       });
     });
@@ -116,6 +118,7 @@ describe("createSetupWorkspaceStep", () => {
       expect(createWorktree).toHaveBeenCalledWith({
         projectPath: "/test/project",
         branch: "develop", // Uses current branch
+        worktreePath: "/test/project/.worktrees/current-wt",
       });
       expect(result.branch).toBe("develop");
     });
@@ -138,13 +141,14 @@ describe("createSetupWorkspaceStep", () => {
       expect(createWorktree).toHaveBeenCalledWith({
         projectPath: "/test/project",
         branch: "main", // Defaults to main
+        worktreePath: "/test/project/.worktrees/main-wt",
       });
       expect(result.branch).toBe("main");
     });
   });
 
   describe("MODE 2: Branch switching", () => {
-    it("switches to branch when different from current and no uncommitted changes", async () => {
+    it("switches to branch when different from current", async () => {
       const config: SetupWorkspaceConfig = {
         projectPath: "/test/project",
         branch: "feat/new",
@@ -152,7 +156,6 @@ describe("createSetupWorkspaceStep", () => {
       };
 
       vi.mocked(getCurrentBranch).mockResolvedValue("main");
-      vi.mocked(getGitStatus).mockResolvedValue({ files: [] });
       vi.mocked(createAndSwitchBranch).mockResolvedValue({
         branch: { name: "feat/new", current: true },
         commands: ["git checkout -b feat/new"],
@@ -164,8 +167,9 @@ describe("createSetupWorkspaceStep", () => {
       );
       const result = await setupWorkspace("setup-workspace", config);
 
-      expect(getGitStatus).toHaveBeenCalledWith({ projectPath: "/test/project" });
-      expect(commitChanges).not.toHaveBeenCalled(); // No uncommitted changes
+      // getGitStatus and commitChanges are now handled internally by createAndSwitchBranch
+      expect(getGitStatus).not.toHaveBeenCalled();
+      expect(commitChanges).not.toHaveBeenCalled();
       expect(createAndSwitchBranch).toHaveBeenCalledWith({
         projectPath: "/test/project",
         branchName: "feat/new",
@@ -179,26 +183,20 @@ describe("createSetupWorkspaceStep", () => {
       });
     });
 
-    it("auto-commits uncommitted changes before branch switch", async () => {
+    it("delegates uncommitted changes handling to createAndSwitchBranch", async () => {
+      // createAndSwitchBranch now handles uncommitted changes internally
       const config: SetupWorkspaceConfig = {
         projectPath: "/test/project",
         branch: "feat/dirty",
       };
 
       vi.mocked(getCurrentBranch).mockResolvedValue("main");
-      vi.mocked(getGitStatus).mockResolvedValue({
-        files: [
-          { path: "file1.ts", status: "modified" },
-          { path: "file2.ts", status: "added" },
-        ],
-      });
-      vi.mocked(commitChanges).mockResolvedValue({
-        commitSha: "abc123",
-        commands: ["git add .", "git commit -m \"Auto-commit\""],
-      });
       vi.mocked(createAndSwitchBranch).mockResolvedValue({
-        branch: { name: "feat/new", current: true },
-        commands: ["git checkout -b feat/new"],
+        branch: { name: "feat/dirty", current: true },
+        commands: [
+          'git add . && git commit -m "Auto-commit before switching to branch \\"feat/dirty\\""',
+          "git checkout -b feat/dirty",
+        ],
       });
 
       const setupWorkspace = createSetupWorkspaceStep(
@@ -207,11 +205,8 @@ describe("createSetupWorkspaceStep", () => {
       );
       await setupWorkspace("setup-workspace", config);
 
-      expect(commitChanges).toHaveBeenCalledWith({
-        projectPath: "/test/project",
-        message: "WIP: Auto-commit before branching",
-        files: ["."],
-      });
+      // commitChanges is now handled internally by createAndSwitchBranch
+      expect(commitChanges).not.toHaveBeenCalled();
       expect(createAndSwitchBranch).toHaveBeenCalled();
     });
 
@@ -246,10 +241,9 @@ describe("createSetupWorkspaceStep", () => {
       };
 
       vi.mocked(getCurrentBranch).mockResolvedValue("main");
-      vi.mocked(getGitStatus).mockResolvedValue({ files: [] });
       vi.mocked(createAndSwitchBranch).mockResolvedValue({
-        branch: { name: "feat/new", current: true },
-        commands: ["git checkout -b feat/new"],
+        branch: { name: "feat/based-on-dev", current: true },
+        commands: ["git checkout -b feat/based-on-dev develop"],
       });
 
       const setupWorkspace = createSetupWorkspaceStep(
@@ -424,7 +418,6 @@ describe("createSetupWorkspaceStep", () => {
       };
 
       vi.mocked(getCurrentBranch).mockResolvedValue("main");
-      vi.mocked(getGitStatus).mockResolvedValue({ files: [] });
       vi.mocked(createAndSwitchBranch).mockRejectedValue(
         new Error("Branch already exists")
       );
@@ -439,17 +432,16 @@ describe("createSetupWorkspaceStep", () => {
       ).rejects.toThrow("Branch already exists");
     });
 
-    it("propagates errors from commitChanges", async () => {
+    it("propagates commit errors from createAndSwitchBranch", async () => {
+      // Since commitChanges is now handled internally by createAndSwitchBranch,
+      // commit errors bubble up from there
       const config: SetupWorkspaceConfig = {
         projectPath: "/test/project",
         branch: "feat/commit-fail",
       };
 
       vi.mocked(getCurrentBranch).mockResolvedValue("main");
-      vi.mocked(getGitStatus).mockResolvedValue({
-        files: [{ path: "file.ts", status: "modified" }],
-      });
-      vi.mocked(commitChanges).mockRejectedValue(
+      vi.mocked(createAndSwitchBranch).mockRejectedValue(
         new Error("Nothing to commit")
       );
 
@@ -513,7 +505,6 @@ describe("createSetupWorkspaceStep", () => {
       };
 
       vi.mocked(getCurrentBranch).mockResolvedValue("main");
-      vi.mocked(getGitStatus).mockResolvedValue({ files: [] });
       vi.mocked(createAndSwitchBranch).mockResolvedValue({
         branch: { name: "feat/new", current: true },
         commands: ["git checkout -b feat/new"],
@@ -582,7 +573,6 @@ describe("createSetupWorkspaceStep", () => {
       };
 
       vi.mocked(getCurrentBranch).mockResolvedValue("main");
-      vi.mocked(getGitStatus).mockResolvedValue({ files: [] });
       vi.mocked(createAndSwitchBranch).mockResolvedValue({
         branch: { name: "feat/new", current: true },
         commands: ["git checkout -b feat/new"],

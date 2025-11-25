@@ -230,6 +230,8 @@ export interface WorkspaceResult {
   mode: "worktree" | "branch" | "stay";
   /** Absolute path to worktree (only if mode is worktree) */
   worktreePath?: string;
+  /** Worktree directory name (only if mode is worktree, e.g., run-abc123-feature-x) */
+  worktreeName?: string;
   /** Original branch before workspace setup (for cleanup) */
   originalBranch?: string;
 }

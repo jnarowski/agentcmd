@@ -219,6 +219,15 @@ export function createWorkflowRuntime(
                 event.data.worktreePath = workspace.worktreePath;
                 context.workingDir = workspace.workingDir;
 
+                // Save worktree_name to run if created
+                if (workspace.worktreeName) {
+                  await updateWorkflowRun({
+                    runId,
+                    data: { worktree_name: workspace.worktreeName },
+                    logger,
+                  });
+                }
+
                 // Setup spec file (generate if needed)
                 // File verification is memoized to prevent replay errors
                 const specFile = await setupSpec({

@@ -5,6 +5,7 @@ import type {
   WorkspaceResult,
   StepOptions,
 } from "agentcmd-workflows";
+import path from "node:path";
 import { getCurrentBranch } from "@/server/domain/git/services/getCurrentBranch";
 import { createAndSwitchBranch } from "@/server/domain/git/services/createAndSwitchBranch";
 import { createWorktree } from "@/server/domain/git/services/createWorktree";
@@ -96,11 +97,13 @@ async function executeSetupWorkspace(
   // Mode 1: Worktree
   if (worktreeName) {
     const targetBranch = branch ?? currentBranch ?? "main";
+    const customWorktreePath = path.join(projectPath, ".worktrees", worktreeName);
 
     const startTime = Date.now();
     const worktreePath = await createWorktree({
       projectPath,
       branch: targetBranch,
+      worktreePath: customWorktreePath,
     });
     const duration = Date.now() - startTime;
     await createWorkflowEventCommand(
@@ -115,6 +118,7 @@ async function executeSetupWorkspace(
       branch: targetBranch,
       mode: "worktree",
       worktreePath,
+      worktreeName,
       originalBranch: currentBranch ?? "main",
     };
   }

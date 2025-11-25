@@ -24,50 +24,30 @@ describe("commitChanges", () => {
     vi.clearAllMocks();
   });
 
-  it("stages and commits files successfully", async () => {
+  it("stages all and commits successfully", async () => {
     // Arrange
     const options = {
       projectPath: "/tmp/test-project",
       message: "feat: add new feature",
-      files: ["src/app.ts", "src/utils.ts"],
     };
 
     // Act
     const result = await commitChanges(options);
 
     // Assert
-    expect(mockGit.add).toHaveBeenCalledWith(["src/app.ts", "src/utils.ts"]);
+    expect(mockGit.add).toHaveBeenCalledWith(".");
     expect(mockGit.commit).toHaveBeenCalledWith("feat: add new feature");
     expect(result.commitSha).toBe("abc123def456");
     expect(result.commands).toEqual([
-      "git add src/app.ts src/utils.ts",
-      'git commit -m "feat: add new feature"',
+      'git add . && git commit -m "feat: add new feature"',
     ]);
   });
 
-  it("commits single file", async () => {
-    // Arrange
-    const options = {
-      projectPath: "/tmp/test-project",
-      message: "fix: bug in calculation",
-      files: ["src/calculator.ts"],
-    };
-
-    // Act
-    const result = await commitChanges(options);
-
-    // Assert
-    expect(mockGit.add).toHaveBeenCalledWith(["src/calculator.ts"]);
-    expect(mockGit.commit).toHaveBeenCalledWith("fix: bug in calculation");
-    expect(result.commitSha).toBe("abc123def456");
-  });
-
-  it("escapes double quotes in commit message", async () => {
+  it("escapes double quotes in commit message for command string", async () => {
     // Arrange
     const options = {
       projectPath: "/tmp/test-project",
       message: 'feat: add "feature"',
-      files: ["src/app.ts"],
     };
 
     // Act
@@ -75,26 +55,7 @@ describe("commitChanges", () => {
 
     // Assert
     expect(mockGit.commit).toHaveBeenCalledWith('feat: add "feature"');
-    expect(result.commands[1]).toBe('git commit -m "feat: add \\"feature\\""');
-  });
-
-  it("handles multiple files with spaces in names", async () => {
-    // Arrange
-    const options = {
-      projectPath: "/tmp/test-project",
-      message: "docs: update readme",
-      files: ["README.md", "docs/Getting Started.md"],
-    };
-
-    // Act
-    const result = await commitChanges(options);
-
-    // Assert
-    expect(mockGit.add).toHaveBeenCalledWith([
-      "README.md",
-      "docs/Getting Started.md",
-    ]);
-    expect(result.commands[0]).toBe("git add README.md docs/Getting Started.md");
+    expect(result.commands[0]).toBe('git add . && git commit -m "feat: add \\"feature\\""');
   });
 
   it("returns correct commit SHA", async () => {
@@ -103,7 +64,6 @@ describe("commitChanges", () => {
     const options = {
       projectPath: "/tmp/test-project",
       message: "test: add tests",
-      files: ["tests/app.test.ts"],
     };
 
     // Act
@@ -119,7 +79,6 @@ describe("commitChanges", () => {
     const options = {
       projectPath: "/tmp/test-project",
       message: "test commit",
-      files: ["src/app.ts"],
     };
 
     // Act & Assert
@@ -132,7 +91,6 @@ describe("commitChanges", () => {
     const options = {
       projectPath: "/tmp/test-project",
       message: "test commit",
-      files: ["src/app.ts"],
     };
 
     // Act & Assert
@@ -144,7 +102,6 @@ describe("commitChanges", () => {
     const options = {
       projectPath: "/tmp/test-project",
       message: "",
-      files: ["src/app.ts"],
     };
 
     // Act
@@ -152,23 +109,7 @@ describe("commitChanges", () => {
 
     // Assert
     expect(mockGit.commit).toHaveBeenCalledWith("");
-    expect(result.commands[1]).toBe('git commit -m ""');
-  });
-
-  it("commits all tracked files when array contains '.'", async () => {
-    // Arrange
-    const options = {
-      projectPath: "/tmp/test-project",
-      message: "chore: update all files",
-      files: ["."],
-    };
-
-    // Act
-    const result = await commitChanges(options);
-
-    // Assert
-    expect(mockGit.add).toHaveBeenCalledWith(["."]);
-    expect(result.commands[0]).toBe("git add .");
+    expect(result.commands[0]).toBe('git add . && git commit -m ""');
   });
 
   it("handles long commit messages", async () => {
@@ -177,7 +118,6 @@ describe("commitChanges", () => {
     const options = {
       projectPath: "/tmp/test-project",
       message: longMessage,
-      files: ["src/app.ts"],
     };
 
     // Act
@@ -193,7 +133,6 @@ describe("commitChanges", () => {
     const options = {
       projectPath: "/tmp/test-project",
       message: "feat: new feature\n\nDetailed description here",
-      files: ["src/app.ts"],
     };
 
     // Act
@@ -213,7 +152,6 @@ describe("commitChanges", () => {
     const options = {
       projectPath: "/tmp/test-project",
       message: "fix: resolve conflicts",
-      files: ["src/app.ts"],
     };
 
     // Act & Assert
@@ -222,20 +160,19 @@ describe("commitChanges", () => {
     );
   });
 
-  it("tracks command execution order", async () => {
+  it("returns single combined command", async () => {
     // Arrange
     const options = {
       projectPath: "/tmp/test-project",
-      message: "test: verify order",
-      files: ["file1.ts", "file2.ts"],
+      message: "test: verify command",
     };
 
     // Act
     const result = await commitChanges(options);
 
-    // Assert
-    expect(result.commands).toHaveLength(2);
+    // Assert - now uses combined command
+    expect(result.commands).toHaveLength(1);
     expect(result.commands[0]).toContain("git add");
-    expect(result.commands[1]).toContain("git commit");
+    expect(result.commands[0]).toContain("git commit");
   });
 });

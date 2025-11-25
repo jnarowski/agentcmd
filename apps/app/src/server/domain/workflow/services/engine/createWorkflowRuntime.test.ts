@@ -672,6 +672,7 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
       expect(createWorktree).toHaveBeenCalledWith({
         projectPath: project.path,
         branch: "feat/auto-generated",
+        worktreePath: expect.stringMatching(/\.worktrees\/run-.*-feat-auto-generated$/),
       });
     });
   });

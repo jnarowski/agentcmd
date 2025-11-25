@@ -52,6 +52,7 @@ model WorkflowRun {
   mode                   String? // Workspace mode: "stay" | "branch" | "worktree"
   branch_name            String? // New branch name for execution
   base_branch            String? // Branch to create new branch from
+  worktree_name          String? // Worktree directory name (e.g., run-abc123-feature-x)
   preserve               Boolean?  @default(false) // Keep work context for review (stay on branch / keep worktree)
   pr_url                 String? // Pull request URL (set by step.git operation: "pr")
   triggered_by           String         @default("manual") // How run was triggered: "manual" | "webhook" | "api" | "scheduled"

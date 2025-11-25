@@ -81,11 +81,10 @@ describe("createAndSwitchBranch", () => {
     expect(mockGit.checkoutLocalBranch).toHaveBeenCalledWith(
       "feature/auto-commit"
     );
-    expect(result.commands).toContain("git add .");
-    expect(result.commands).toContain(
-      'git commit -m "Auto-commit before switching to branch \\"feature/auto-commit\\""'
-    );
-    expect(result.commands).toContain("git checkout -b feature/auto-commit");
+    // Commands are combined as a single add && commit command
+    expect(result.commands).toHaveLength(2);
+    expect(result.commands[0]).toContain("git add . && git commit -m");
+    expect(result.commands[1]).toBe("git checkout -b feature/auto-commit");
   });
 
   it("creates branch from specified base branch", async () => {
@@ -100,13 +99,16 @@ describe("createAndSwitchBranch", () => {
     // Act
     const result = await createAndSwitchBranch(options);
 
-    // Assert
-    expect(mockGit.checkout).toHaveBeenCalledWith("develop");
-    expect(mockGit.checkoutLocalBranch).toHaveBeenCalledWith(
-      "feature/from-develop"
+    // Assert - uses checkoutBranch which creates from base in one step
+    expect(mockGit.checkoutBranch).toHaveBeenCalledWith(
+      "feature/from-develop",
+      "develop"
     );
-    expect(result.commands).toContain("git checkout develop");
-    expect(result.commands).toContain("git checkout -b feature/from-develop");
+    expect(mockGit.checkout).not.toHaveBeenCalled();
+    expect(mockGit.checkoutLocalBranch).not.toHaveBeenCalled();
+    expect(result.commands).toEqual([
+      "git checkout -b feature/from-develop develop",
+    ]);
   });
 
   it("validates branch name - allows valid names", async () => {
@@ -214,7 +216,7 @@ describe("createAndSwitchBranch", () => {
 
   it("handles git checkout error from base branch", async () => {
     // Arrange
-    mockGit.checkout.mockRejectedValue(new Error("Branch 'develop' not found"));
+    mockGit.checkoutBranch.mockRejectedValue(new Error("Branch 'develop' not found"));
     const options = {
       projectPath: "/tmp/test-project",
       branchName: "feature/test",
@@ -275,12 +277,10 @@ describe("createAndSwitchBranch", () => {
     // Act
     const result = await createAndSwitchBranch(options);
 
-    // Assert
-    expect(result.commands).toHaveLength(4);
-    expect(result.commands[0]).toBe("git add .");
-    expect(result.commands[1]).toContain("git commit");
-    expect(result.commands[2]).toBe("git checkout develop");
-    expect(result.commands[3]).toBe("git checkout -b feature/test");
+    // Assert - commands are combined: add && commit, then checkout -b with base
+    expect(result.commands).toHaveLength(2);
+    expect(result.commands[0]).toContain("git add . && git commit -m");
+    expect(result.commands[1]).toBe("git checkout -b feature/test develop");
   });
 
   it("handles empty project path", async () => {

@@ -7,10 +7,12 @@ import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types
 import * as commitChangesModule from "@/server/domain/git/services/commitChanges";
 import * as createAndSwitchBranchModule from "@/server/domain/git/services/createAndSwitchBranch";
 import * as createPullRequestModule from "@/server/domain/git/services/createPullRequest";
+import * as getGitStatusModule from "@/server/domain/git/services/getGitStatus";
 
 vi.mock("@/server/domain/git/services/commitChanges");
 vi.mock("@/server/domain/git/services/createAndSwitchBranch");
 vi.mock("@/server/domain/git/services/createPullRequest");
+vi.mock("@/server/domain/git/services/getGitStatus");
 
 describe("createGitStep", () => {
   beforeEach(async () => {
@@ -24,6 +26,12 @@ describe("createGitStep", () => {
 
   it("executes commit operation with message", async () => {
     // Arrange
+    const mockGetGitStatus = vi.mocked(getGitStatusModule.getGitStatus);
+    mockGetGitStatus.mockResolvedValue({
+      files: [{ path: "src/app.ts", status: "M" }],
+      branch: "main",
+      isClean: false,
+    });
     const mockCommitChanges = vi.mocked(commitChangesModule.commitChanges);
     mockCommitChanges.mockResolvedValue({
       commitSha: "abc123",
@@ -38,9 +46,11 @@ describe("createGitStep", () => {
       runId: execution.id,
       projectId: "project-123",
       projectPath: "/tmp/test",
+      workingDir: "/tmp/test",
       userId: "user-123",
       currentPhase: "release",
       logger: console as unknown as RuntimeContext["logger"],
+      config: { name: "test" },
     };
 
     const mockInngestStep = {
@@ -64,7 +74,6 @@ describe("createGitStep", () => {
     expect(mockCommitChanges).toHaveBeenCalledWith({
       projectPath: "/tmp/test",
       message: "feat: add new feature",
-      files: ["."]
     });
   });
 
@@ -86,9 +95,11 @@ describe("createGitStep", () => {
       runId: execution.id,
       projectId: "project-123",
       projectPath: "/tmp/test",
+      workingDir: "/tmp/test",
       userId: "user-123",
       currentPhase: "setup",
       logger: console as unknown as RuntimeContext["logger"],
+      config: { name: "test" },
     };
 
     const mockInngestStep = {
@@ -136,9 +147,11 @@ describe("createGitStep", () => {
       runId: execution.id,
       projectId: "project-123",
       projectPath: "/tmp/test",
+      workingDir: "/tmp/test",
       userId: "user-123",
       currentPhase: "release",
       logger: console as unknown as RuntimeContext["logger"],
+      config: { name: "test" },
     };
 
     const mockInngestStep = {
@@ -194,9 +207,11 @@ describe("createGitStep", () => {
       runId: execution.id,
       projectId: "project-123",
       projectPath: "/tmp/test",
+      workingDir: "/tmp/test",
       userId: "user-123",
       currentPhase: "release",
       logger: console as unknown as RuntimeContext["logger"],
+      config: { name: "test" },
     };
 
     const mockInngestStep = {
@@ -228,6 +243,12 @@ describe("createGitStep", () => {
 
   it("does not update pr_url for commit operations", async () => {
     // Arrange
+    const mockGetGitStatus = vi.mocked(getGitStatusModule.getGitStatus);
+    mockGetGitStatus.mockResolvedValue({
+      files: [{ path: "src/app.ts", status: "M" }],
+      branch: "main",
+      isClean: false,
+    });
     const mockCommitChanges = vi.mocked(commitChangesModule.commitChanges);
     mockCommitChanges.mockResolvedValue({
       commitSha: "abc123",
@@ -242,9 +263,11 @@ describe("createGitStep", () => {
       runId: execution.id,
       projectId: "project-123",
       projectPath: "/tmp/test",
+      workingDir: "/tmp/test",
       userId: "user-123",
       currentPhase: "release",
       logger: console as unknown as RuntimeContext["logger"],
+      config: { name: "test" },
     };
 
     const mockInngestStep = {
@@ -271,6 +294,12 @@ describe("createGitStep", () => {
 
   it("accepts sentence case and converts to kebab-case ID", async () => {
     // Arrange
+    const mockGetGitStatus = vi.mocked(getGitStatusModule.getGitStatus);
+    mockGetGitStatus.mockResolvedValue({
+      files: [{ path: "src/app.ts", status: "M" }],
+      branch: "main",
+      isClean: false,
+    });
     const mockCommitChanges = vi.mocked(commitChangesModule.commitChanges);
     mockCommitChanges.mockResolvedValue({
       commitSha: "def456",
@@ -285,9 +314,11 @@ describe("createGitStep", () => {
       runId: execution.id,
       projectId: "project-123",
       projectPath: "/tmp/test2",
+      workingDir: "/tmp/test2",
       userId: "user-123",
       currentPhase: "release",
       logger: console as unknown as RuntimeContext["logger"],
+      config: { name: "test" },
     };
 
     const mockInngestStep = {
@@ -314,6 +345,12 @@ describe("createGitStep", () => {
 
   it("both formats produce same Inngest step ID", async () => {
     // Arrange
+    const mockGetGitStatus = vi.mocked(getGitStatusModule.getGitStatus);
+    mockGetGitStatus.mockResolvedValue({
+      files: [{ path: "src/app.ts", status: "M" }],
+      branch: "main",
+      isClean: false,
+    });
     const mockCommitChanges = vi.mocked(commitChangesModule.commitChanges);
     mockCommitChanges.mockResolvedValue({
       commitSha: "ghi789",
@@ -328,9 +365,11 @@ describe("createGitStep", () => {
       runId: execution.id,
       projectId: "project-123",
       projectPath: "/tmp/test3",
+      workingDir: "/tmp/test3",
       userId: "user-123",
       currentPhase: "release",
       logger: console as unknown as RuntimeContext["logger"],
+      config: { name: "test" },
     };
 
     const mockInngestStep = {

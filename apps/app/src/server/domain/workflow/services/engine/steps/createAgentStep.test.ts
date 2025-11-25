@@ -89,9 +89,11 @@ describe("createAgentStep", () => {
       runId: execution.id,
       projectId: "project-456",
       projectPath: "/tmp/test",
+      workingDir: "/tmp/test",
       userId: "user-789",
       currentPhase: "build",
       logger: console as unknown as RuntimeContext["logger"],
+      config: { name: "test" },
     };
 
     const mockInngestStep = {
@@ -192,9 +194,11 @@ describe("createAgentStep", () => {
       runId: execution.id,
       projectId: "project-456",
       projectPath: "/tmp/test",
+      workingDir: "/tmp/test",
       userId: "user-789",
       currentPhase: "build",
       logger: console as unknown as RuntimeContext["logger"],
+      config: { name: "test" },
     };
 
     const mockInngestStep = {
@@ -279,9 +283,11 @@ describe("createAgentStep", () => {
       runId: execution.id,
       projectId: "project-456",
       projectPath: "/tmp/test",
+      workingDir: "/tmp/test",
       userId: "user-789",
       currentPhase: "build",
       logger: console as unknown as RuntimeContext["logger"],
+      config: { name: "test" },
     };
 
     const mockInngestStep = {
@@ -366,9 +372,11 @@ describe("createAgentStep", () => {
       runId: execution.id,
       projectId: "project-456",
       projectPath: "/tmp/test",
+      workingDir: "/tmp/test",
       userId: "user-789",
       currentPhase: "build",
       logger: console as unknown as RuntimeContext["logger"],
+      config: { name: "test" },
     };
 
     const mockInngestStep = {

@@ -115,6 +115,27 @@ export function DetailsTab({ run }: DetailsTabProps) {
             </div>
           )}
 
+          {run.branch_name && (
+            <div className="grid grid-cols-2 gap-2 py-2">
+              <dt className="text-muted-foreground">Branch:</dt>
+              <dd className="font-mono text-xs">{run.branch_name}</dd>
+            </div>
+          )}
+
+          {run.base_branch && (
+            <div className="grid grid-cols-2 gap-2 py-2">
+              <dt className="text-muted-foreground">Base Branch:</dt>
+              <dd className="font-mono text-xs">{run.base_branch}</dd>
+            </div>
+          )}
+
+          {run.worktree_name && (
+            <div className="grid grid-cols-2 gap-2 py-2">
+              <dt className="text-muted-foreground">Worktree:</dt>
+              <dd className="font-mono text-xs">{run.worktree_name}</dd>
+            </div>
+          )}
+
           {run.planning_session_id && (
             <div className="grid grid-cols-2 gap-2 py-2">
               <dt className="text-muted-foreground">Planning Session:</dt>

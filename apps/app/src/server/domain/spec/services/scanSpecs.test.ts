@@ -24,7 +24,7 @@ describe("scanSpecs", () => {
     expect(result).toEqual([]);
   });
 
-  it("should filter only specs in todo/ folder and exclude completed/draft", async () => {
+  it("should return all specs regardless of folder or status", async () => {
     const mockIndex = {
       lastId: 251112070556,
       specs: {
@@ -60,12 +60,11 @@ describe("scanSpecs", () => {
 
     const result = await scanSpecs("/fake/project/path", "project-123");
 
-    // Should only return the in-progress spec in todo/ folder
-    expect(result).toHaveLength(1);
-    expect(result[0].id).toBe("251112054940");
-    expect(result[0].specPath).toBe("todo/251112054940-active-spec");
-    expect(result[0].status).toBe("in-progress");
-    expect(result[0].projectId).toBe("project-123");
+    // Should return ALL specs (no filtering by folder or status)
+    expect(result).toHaveLength(4);
+    expect(result.map(s => s.id).sort()).toEqual(["251108000000", "251112054939", "251112054940", "251112061640"]);
+    // Verify projectId is set correctly
+    expect(result.every(s => s.projectId === "project-123")).toBe(true);
   });
 
   it("should extract display name from folder name", async () => {
@@ -143,7 +142,7 @@ describe("scanSpecs", () => {
     });
   });
 
-  it("should exclude draft and completed statuses", async () => {
+  it("should return all statuses without filtering", async () => {
     const mockIndex = {
       lastId: 251112070560,
       specs: {
@@ -179,9 +178,9 @@ describe("scanSpecs", () => {
 
     const result = await scanSpecs("/fake/project/path", "project-999");
 
-    // Should only include in-progress and review specs
-    expect(result).toHaveLength(2);
-    expect(result.map((s) => s.status)).toEqual(["in-progress", "review"]);
-    expect(result.map((s) => s.id)).toEqual(["251112070558", "251112070559"]);
+    // Should return ALL specs regardless of status
+    expect(result).toHaveLength(4);
+    expect(result.map((s) => s.status).sort()).toEqual(["completed", "draft", "in-progress", "review"]);
+    expect(result.map((s) => s.id).sort()).toEqual(["251112070556", "251112070557", "251112070558", "251112070559"]);
   });
 });

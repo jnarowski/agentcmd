@@ -89,7 +89,10 @@ describe("createFinalizeWorkspaceStep", () => {
           { path: "file2.ts", status: "added" },
         ],
       });
-      vi.mocked(commitChanges).mockResolvedValue();
+      vi.mocked(commitChanges).mockResolvedValue({
+        commitSha: "abc123",
+        commands: ["git add . && git commit -m \"chore: Workflow 'Test Workflow' auto-commit\""],
+      });
 
       const finalizeWorkspace = createFinalizeWorkspaceStep(
         mockContext,
@@ -103,7 +106,6 @@ describe("createFinalizeWorkspaceStep", () => {
       expect(commitChanges).toHaveBeenCalledWith({
         projectPath: "/test/project",
         message: "chore: Workflow 'Test Workflow' auto-commit",
-        files: ["."],
       });
       expect(mockContext.logger.info).toHaveBeenCalledWith(
         { workingDir: "/test/project", fileCount: 2 },
@@ -143,7 +145,10 @@ describe("createFinalizeWorkspaceStep", () => {
       vi.mocked(getGitStatus).mockResolvedValue({
         files: [{ path: "file.ts", status: "modified" }],
       });
-      vi.mocked(commitChanges).mockResolvedValue();
+      vi.mocked(commitChanges).mockResolvedValue({
+        commitSha: "abc123",
+        commands: ["git add . && git commit -m \"chore: Workflow 'Test Workflow' auto-commit\""],
+      });
 
       const finalizeWorkspace = createFinalizeWorkspaceStep(
         mockContext,
@@ -155,7 +160,6 @@ describe("createFinalizeWorkspaceStep", () => {
         projectPath: "/test/project",
         message:
           "chore: Workflow 'Feature Implementation - API v2' auto-commit",
-        files: ["."],
       });
     });
 
@@ -165,7 +169,10 @@ describe("createFinalizeWorkspaceStep", () => {
       vi.mocked(getGitStatus).mockResolvedValue({
         files: [{ path: "file.ts", status: "modified" }],
       });
-      vi.mocked(commitChanges).mockResolvedValue();
+      vi.mocked(commitChanges).mockResolvedValue({
+        commitSha: "abc123",
+        commands: ["git add . && git commit -m \"chore: Workflow 'Test Workflow' auto-commit\""],
+      });
 
       const finalizeWorkspace = createFinalizeWorkspaceStep(
         mockContext,
@@ -176,7 +183,6 @@ describe("createFinalizeWorkspaceStep", () => {
       expect(commitChanges).toHaveBeenCalledWith({
         projectPath: "/test/project",
         message: "chore: Workflow 'Workflow' auto-commit",
-        files: ["."],
       });
     });
   });
@@ -188,7 +194,10 @@ describe("createFinalizeWorkspaceStep", () => {
       vi.mocked(getGitStatus).mockResolvedValue({
         files: [{ path: "file.ts", status: "modified" }],
       });
-      vi.mocked(commitChanges).mockResolvedValue();
+      vi.mocked(commitChanges).mockResolvedValue({
+        commitSha: "abc123",
+        commands: ["git add . && git commit -m \"chore: Workflow 'Test Workflow' auto-commit\""],
+      });
 
       const finalizeWorkspace = createFinalizeWorkspaceStep(
         mockContext,
@@ -213,7 +222,10 @@ describe("createFinalizeWorkspaceStep", () => {
       vi.mocked(getGitStatus).mockResolvedValue({
         files: [{ path: "file.ts", status: "modified" }],
       });
-      vi.mocked(commitChanges).mockResolvedValue();
+      vi.mocked(commitChanges).mockResolvedValue({
+        commitSha: "abc123",
+        commands: ["git add . && git commit -m \"chore: Workflow 'Test Workflow' auto-commit\""],
+      });
       vi.mocked(switchBranch).mockResolvedValue();
 
       const finalizeWorkspace = createFinalizeWorkspaceStep(
@@ -244,7 +256,10 @@ describe("createFinalizeWorkspaceStep", () => {
       vi.mocked(getGitStatus).mockResolvedValue({
         files: [{ path: "file.ts", status: "modified" }],
       });
-      vi.mocked(commitChanges).mockResolvedValue();
+      vi.mocked(commitChanges).mockResolvedValue({
+        commitSha: "abc123",
+        commands: ["git add . && git commit -m \"chore: Workflow 'Test Workflow' auto-commit\""],
+      });
 
       const finalizeWorkspace = createFinalizeWorkspaceStep(
         mockContext,
@@ -286,7 +301,10 @@ describe("createFinalizeWorkspaceStep", () => {
       vi.mocked(getGitStatus).mockResolvedValue({
         files: [{ path: "file.ts", status: "modified" }],
       });
-      vi.mocked(commitChanges).mockResolvedValue();
+      vi.mocked(commitChanges).mockResolvedValue({
+        commitSha: "abc123",
+        commands: ["git add . && git commit -m \"chore: Workflow 'Test Workflow' auto-commit\""],
+      });
       vi.mocked(removeWorktree).mockResolvedValue();
 
       const finalizeWorkspace = createFinalizeWorkspaceStep(
@@ -298,7 +316,6 @@ describe("createFinalizeWorkspaceStep", () => {
       expect(commitChanges).toHaveBeenCalledWith({
         projectPath: "/test/project/.worktrees/run-123-feat",
         message: "chore: Workflow 'Workflow' auto-commit",
-        files: ["."],
       });
       expect(removeWorktree).toHaveBeenCalledWith({
         projectPath: "/test/project",
@@ -324,7 +341,10 @@ describe("createFinalizeWorkspaceStep", () => {
       vi.mocked(getGitStatus).mockResolvedValue({
         files: [{ path: "file.ts", status: "modified" }],
       });
-      vi.mocked(commitChanges).mockResolvedValue();
+      vi.mocked(commitChanges).mockResolvedValue({
+        commitSha: "abc123",
+        commands: ["git add . && git commit -m \"chore: Workflow 'Test Workflow' auto-commit\""],
+      });
 
       const finalizeWorkspace = createFinalizeWorkspaceStep(
         mockContext,
