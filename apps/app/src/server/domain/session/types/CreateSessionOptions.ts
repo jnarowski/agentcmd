@@ -15,6 +15,7 @@ export const createSessionOptionsSchema = z.object({
     name: z.string().optional(),
     metadataOverride: z.record(z.string(), z.unknown()).optional(),
     cli_session_id: z.string().optional(),
+    session_path: z.string().optional(),
   }),
 });
 

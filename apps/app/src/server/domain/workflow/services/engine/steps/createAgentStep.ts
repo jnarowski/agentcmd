@@ -9,6 +9,7 @@ import { storeCliSessionId } from "@/server/domain/session/services/storeCliSess
 import { updateWorkflowStep } from "@/server/domain/workflow/services/steps/updateWorkflowStep";
 import { withTimeout } from "@/server/domain/workflow/services/engine/steps/utils/withTimeout";
 import { slugify as toId } from "@/server/utils/slugify";
+import { getSessionFilePath } from "@/server/utils/path";
 import { toName } from "@/server/domain/workflow/services/engine/steps/utils/toName";
 import { generateInngestStepId } from "@/server/domain/workflow/services/engine/steps/utils/generateInngestStepId";
 import { findOrCreateStep } from "@/server/domain/workflow/services/engine/steps/utils/findOrCreateStep";
@@ -59,6 +60,9 @@ export function createAgentStep(
       try {
         // Create agent session using domain service
         const sessionId = randomUUID();
+        // Calculate session path based on actual working directory (may be worktree)
+        const actualWorkingDir = config.workingDir ?? context.workingDir;
+        const sessionPath = getSessionFilePath(actualWorkingDir, sessionId);
         const session = await createSession({
           data: {
             projectId,
@@ -69,6 +73,7 @@ export function createAgentStep(
             name,
             metadataOverride: {}, // Empty metadata for workflow sessions
             cli_session_id: config.resume ?? sessionId, // Set CLI session ID (resume or new)
+            session_path: sessionPath, // Use actual working dir for correct path
           },
         });
 

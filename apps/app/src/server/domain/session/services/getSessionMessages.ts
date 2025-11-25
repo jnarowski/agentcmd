@@ -5,7 +5,7 @@ import type { GetSessionMessagesOptions } from '../types/GetSessionMessagesOptio
 
 /**
  * Get messages for a specific session
- * Uses SDK to load and parse messages
+ * Uses session_path directly when available, falls back to projectPath for legacy sessions
  */
 export async function getSessionMessages({
   sessionId,
@@ -25,20 +25,18 @@ export async function getSessionMessages({
     throw new Error('Unauthorized access to session');
   }
 
-  // Use cli_session_id if available (CLI-generated ID), otherwise fall back to database ID
-  // This allows loading sessions for both Claude and Codex using their native session IDs
-  const cliSessionId = session.cli_session_id || sessionId;
-
   // Check if agent is supported by SDK
   if (session.agent === 'cursor') {
     throw new Error('Cursor sessions are not yet supported by the SDK');
   }
 
-  // Use SDK to load session messages
+  const cliSessionId = session.cli_session_id || sessionId;
+
+  // Use SDK with sessionPath (handles worktrees correctly)
   const messages = await loadMessages({
     tool: session.agent,
     sessionId: cliSessionId,
-    projectPath: session.project.path
+    sessionPath: session.session_path ?? undefined
   });
 
   return messages;

@@ -12,8 +12,10 @@ import { parse } from './parse';
 interface LoadSessionOptions {
   /** Unique identifier for the Claude session */
   sessionId: string;
-  /** Absolute path to the project directory */
-  projectPath: string;
+  /** Absolute path to the project directory (used to construct session file path) */
+  projectPath?: string;
+  /** Direct absolute path to the session JSONL file (bypasses path construction) */
+  sessionPath?: string;
 }
 
 /**
@@ -36,8 +38,10 @@ interface LoadSessionOptions {
  * ```
  */
 export async function loadSession(options: LoadSessionOptions): Promise<UnifiedMessage[]> {
-  const { sessionId, projectPath } = options;
-  const filePath = `${getClaudeProjectDir(projectPath)}/${sessionId}.jsonl`;
+  const { sessionId, projectPath, sessionPath } = options;
+
+  // Use direct sessionPath if provided, otherwise construct from projectPath
+  const filePath = sessionPath ?? `${getClaudeProjectDir(projectPath ?? process.cwd())}/${sessionId}.jsonl`;
 
   try {
     const content = await fs.readFile(filePath, 'utf-8');

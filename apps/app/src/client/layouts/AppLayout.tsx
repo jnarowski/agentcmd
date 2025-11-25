@@ -132,8 +132,8 @@ function AppLayout() {
       // Refetch projects and wait for completion before hiding sync UI
       await queryClient.refetchQueries({ queryKey: projectKeys.lists() });
 
-      // Reload session list to show newly synced sessions
-      loadSessionList(null);
+      // Reload session list to show newly synced sessions (chat only, exclude workflow)
+      loadSessionList(null, { type: "chat" });
 
       // Update syncing state (after data is loaded to prevent flash)
       setIsSyncing(false);

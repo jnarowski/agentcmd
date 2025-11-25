@@ -20,7 +20,8 @@ export async function createSession({
     permission_mode,
     name,
     metadataOverride,
-    cli_session_id
+    cli_session_id,
+    session_path: providedSessionPath
   } = data;
   // Get project to determine session file path
   const project = await prisma.project.findUnique({
@@ -31,8 +32,8 @@ export async function createSession({
     throw new Error(`Project not found: ${projectId}`);
   }
 
-  // Calculate the full absolute path to the session JSONL file
-  const sessionPath = getSessionFilePath(project.path, sessionId);
+  // Use provided session path or calculate from project path
+  const sessionPath = providedSessionPath ?? getSessionFilePath(project.path, sessionId);
 
   // Initialize with empty metadata or use override
   const metadata: AgentSessionMetadata = metadataOverride

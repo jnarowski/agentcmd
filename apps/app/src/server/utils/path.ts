@@ -9,16 +9,18 @@ import path from 'node:path';
 import os from 'node:os';
 
 /**
- * Encode a project path by replacing slashes with dashes
+ * Encode a project path by replacing slashes and dots with dashes
+ * This matches Claude CLI's encoding behavior for project directories
  *
  * @param projectPath - The project path to encode (e.g., "/Users/john/project")
  * @returns Encoded path (e.g., "-Users-john-project")
  *
  * @example
  * encodeProjectPath('/Users/john/my-app') // => '-Users-john-my-app'
+ * encodeProjectPath('/Users/john/app/.worktrees/run-1') // => '-Users-john-app--worktrees-run-1'
  */
 export function encodeProjectPath(projectPath: string): string {
-  return projectPath.replace(/\//g, '-');
+  return projectPath.replace(/[\/\.]/g, '-');
 }
 
 /**

@@ -37,6 +37,8 @@ export interface LoadMessagesOptions {
   sessionId: string;
   /** Path to the project directory (defaults to current working directory) */
   projectPath?: string;
+  /** Direct absolute path to the session file (bypasses path construction, Claude only) */
+  sessionPath?: string;
 }
 
 /**
@@ -67,7 +69,8 @@ export async function loadMessages(options: LoadMessagesOptions): Promise<Unifie
     case 'claude':
       return await loadClaudeMessages({
         sessionId: options.sessionId,
-        projectPath: options.projectPath || process.cwd(),
+        projectPath: options.projectPath,
+        sessionPath: options.sessionPath,
       });
     case 'codex':
       return await loadCodexMessages({
