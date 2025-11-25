@@ -10,7 +10,7 @@ import { spawnSync } from "node:child_process";
 export function checkPendingMigrations(schemaPath: string): string[] {
   const result = spawnSync(
     "npx",
-    ["prisma", "migrate", "status", "--schema", schemaPath],
+    ["prisma@6.19.0", "migrate", "status", "--schema", schemaPath],
     {
       encoding: "utf-8",
       cwd: dirname(schemaPath),
