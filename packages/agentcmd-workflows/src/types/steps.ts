@@ -125,13 +125,43 @@ export interface GitCommitAndBranchConfig extends BaseGitStepConfig {
 }
 
 /**
+ * Configuration for git worktree add operation
+ */
+export interface GitWorktreeAddConfig extends BaseGitStepConfig {
+  operation: "worktree-add";
+  /** Project/repository path */
+  projectPath: string;
+  /** Branch name for the worktree */
+  branch: string;
+  /** Custom worktree path (optional, defaults to .worktrees/{worktreeName}) */
+  worktreePath?: string;
+  /** Worktree directory name (e.g., run-abc123-feature-x) */
+  worktreeName: string;
+}
+
+/**
+ * Configuration for git worktree remove operation
+ */
+export interface GitWorktreeRemoveConfig extends BaseGitStepConfig {
+  operation: "worktree-remove";
+  /** Project/repository path (main repo, not worktree) */
+  projectPath: string;
+  /** Path to the worktree to remove */
+  worktreePath: string;
+  /** Force removal even if worktree is dirty */
+  force?: boolean;
+}
+
+/**
  * Type-safe discriminated union for git operation configurations
  */
 export type GitStepConfig =
   | GitCommitConfig
   | GitBranchConfig
   | GitPrConfig
-  | GitCommitAndBranchConfig;
+  | GitCommitAndBranchConfig
+  | GitWorktreeAddConfig
+  | GitWorktreeRemoveConfig;
 
 /**
  * Configuration for workspace setup step
@@ -210,13 +240,39 @@ export interface GitCommitAndBranchResult extends BaseGitStepResult {
 }
 
 /**
+ * Result from git worktree add operation
+ */
+export interface GitWorktreeAddResult extends BaseGitStepResult {
+  data: {
+    /** Absolute path to the created worktree */
+    worktreePath: string;
+    /** Branch name in the worktree */
+    branch: string;
+    /** Worktree directory name */
+    worktreeName: string;
+  };
+}
+
+/**
+ * Result from git worktree remove operation
+ */
+export interface GitWorktreeRemoveResult extends BaseGitStepResult {
+  data: {
+    /** Path of removed worktree */
+    worktreePath: string;
+  };
+}
+
+/**
  * Type-safe discriminated union for git operation results
  */
 export type GitStepResult =
   | GitCommitResult
   | GitBranchResult
   | GitPrResult
-  | GitCommitAndBranchResult;
+  | GitCommitAndBranchResult
+  | GitWorktreeAddResult
+  | GitWorktreeRemoveResult;
 
 /**
  * Result from workspace setup operation
@@ -551,6 +607,30 @@ export interface WorkflowStep<TPhaseId extends string = string> extends InngestS
     config: GitCommitAndBranchConfig,
     options?: StepOptions
   ): Promise<GitCommitAndBranchResult>;
+
+  /**
+   * Execute a git worktree add operation
+   * @param id - Step ID
+   * @param config - Worktree add configuration
+   * @param options - Step options (timeout)
+   */
+  git(
+    id: string,
+    config: GitWorktreeAddConfig,
+    options?: StepOptions
+  ): Promise<GitWorktreeAddResult>;
+
+  /**
+   * Execute a git worktree remove operation
+   * @param id - Step ID
+   * @param config - Worktree remove configuration
+   * @param options - Step options (timeout)
+   */
+  git(
+    id: string,
+    config: GitWorktreeRemoveConfig,
+    options?: StepOptions
+  ): Promise<GitWorktreeRemoveResult>;
 
   /**
    * Execute a git operation (general overload)

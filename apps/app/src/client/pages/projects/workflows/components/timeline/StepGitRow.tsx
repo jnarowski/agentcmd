@@ -16,6 +16,14 @@ import { TimelineRow } from "./TimelineRow";
 import { TimelineItemHeader } from "./TimelineItemHeader";
 import { formatDate } from "@/shared/utils/formatDate";
 
+/** Convert kebab-case to Title Case (e.g., "commit-implementation-cycle-1" → "Commit Implementation Cycle 1") */
+function toTitleCase(str: string): string {
+  return str
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 interface StepGitRowProps {
   step: WorkflowRunStep;
   onSelectStep?: (stepId: string) => void;
@@ -78,7 +86,7 @@ export function StepGitRow({ step, onSelectStep, onSetActiveTab }: StepGitRowPro
       }}
     >
       <TimelineItemHeader
-        title={step.name}
+        title={toTitleCase(step.name)}
         date={formatDate(step.created_at)}
         duration={duration}
         id={step.id}

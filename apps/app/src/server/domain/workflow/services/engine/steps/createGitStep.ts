@@ -2,11 +2,14 @@ import type { GetStepTools } from "inngest";
 import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
 import type { GitStepConfig, GitStepResult } from "agentcmd-workflows";
 import type { GitStepOptions } from "@/server/domain/workflow/types/event.types";
+import path from "node:path";
 import { commitChanges } from "@/server/domain/git/services/commitChanges";
 import { createAndSwitchBranch } from "@/server/domain/git/services/createAndSwitchBranch";
 import { createPullRequest } from "@/server/domain/git/services/createPullRequest";
+import { createWorktree } from "@/server/domain/git/services/createWorktree";
 import { getCurrentBranch } from "@/server/domain/git/services/getCurrentBranch";
 import { getGitStatus } from "@/server/domain/git/services/getGitStatus";
+import { removeWorktree } from "@/server/domain/git/services/removeWorktree";
 import { executeStep } from "@/server/domain/workflow/services/engine/steps/utils/executeStep";
 import { withTimeout } from "@/server/domain/workflow/services/engine/steps/utils/withTimeout";
 import { slugify as toId } from "@/server/utils/slugify";
@@ -233,6 +236,64 @@ async function executeGitOperation(
         },
         success: true,
         trace: allCommands.map((cmd) => ({ command: cmd, duration })),
+      };
+    }
+
+    case "worktree-add": {
+      const startTime = Date.now();
+
+      // Compute worktree path if not provided
+      const worktreePath = config.worktreePath ??
+        path.join(config.projectPath, ".worktrees", config.worktreeName);
+
+      const absoluteWorktreePath = await createWorktree({
+        projectPath: config.projectPath,
+        branch: config.branch,
+        worktreePath,
+      });
+
+      const duration = Date.now() - startTime;
+      const command = `git worktree add ${absoluteWorktreePath} ${config.branch}`;
+
+      return {
+        data: {
+          worktreePath: absoluteWorktreePath,
+          branch: config.branch,
+          worktreeName: config.worktreeName,
+        },
+        success: true,
+        trace: [{ command, duration }],
+      };
+    }
+
+    case "worktree-remove": {
+      const startTime = Date.now();
+
+      // Need to find the main repo path from the worktree path
+      // The worktree is typically at .worktrees/<name> inside the project
+      const worktreeAbsPath = path.resolve(config.worktreePath);
+
+      // Extract project path from worktree path (go up from .worktrees/<name>)
+      const parentDir = path.dirname(worktreeAbsPath);
+      const grandParentDir = path.dirname(parentDir);
+      const projectPath = path.basename(parentDir) === ".worktrees"
+        ? grandParentDir
+        : parentDir;
+
+      await removeWorktree({
+        projectPath,
+        worktreePath: worktreeAbsPath,
+      });
+
+      const duration = Date.now() - startTime;
+      const command = `git worktree remove ${worktreeAbsPath} --force`;
+
+      return {
+        data: {
+          worktreePath: worktreeAbsPath,
+        },
+        success: true,
+        trace: [{ command, duration }],
       };
     }
 

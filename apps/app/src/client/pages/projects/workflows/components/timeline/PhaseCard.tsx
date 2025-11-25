@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { ChevronDown, ChevronRight, Loader2, Clock } from "lucide-react";
+import { ChevronDown, ChevronRight, Loader2, Clock, Layers } from "lucide-react";
 import { StepRow } from "./StepRow";
 import { ArtifactRow } from "./ArtifactRow";
 import { EventRow } from "./EventRow";
@@ -194,23 +194,23 @@ export function PhaseCard({
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className={`w-full flex flex-col md:flex-row md:items-center md:justify-between py-4 md:py-5 px-4 transition-colors border-l-2 gap-3 md:gap-0 ${
+        className={`w-full flex items-center justify-between py-4 md:py-5 px-4 transition-colors border-l-2 gap-3 ${
           isSystemPhase
             ? "bg-muted/30 hover:bg-muted/50 border-muted-foreground/20"
             : "bg-background hover:bg-muted/80 border-primary/20"
         }`}
       >
-        <div className="flex items-center gap-2 md:gap-3">
+        <div className="flex items-start gap-2 md:gap-3">
           {isExpanded ? (
-            <ChevronDown className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+            <ChevronDown className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
           ) : (
-            <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+            <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
           )}
 
-          <div className="flex items-center gap-2 flex-wrap min-w-0 flex-1">
-            <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
               <h3
-                className={`text-lg md:text-xl font-bold ${
+                className={`text-lg md:text-xl font-bold text-left leading-none ${
                   isSystemPhase ? "text-muted-foreground" : ""
                 }`}
               >
@@ -218,36 +218,37 @@ export function PhaseCard({
               </h3>
 
               {isSystemPhase && (
-                <span className="text-xs text-muted-foreground uppercase tracking-wider leading-none">
+                <span className="px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground bg-muted rounded uppercase">
                   system
                 </span>
               )}
             </div>
 
-            <span
-              className={`px-1.5 py-0.5 text-[10px] font-medium text-white rounded uppercase ${statusColor} flex-shrink-0`}
-            >
-              {metadata.status}
-            </span>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              {metadata.duration && (
+                <span className="flex items-center gap-1 whitespace-nowrap">
+                  <Clock className="h-3 w-3" />
+                  {formatDuration(metadata.duration)}
+                </span>
+              )}
+              <span className="flex items-center gap-1 whitespace-nowrap">
+                <Layers className="h-3 w-3" />
+                {timelineItems.length} items
+              </span>
+              {metadata.retryCount > 0 && (
+                <span className="whitespace-nowrap">
+                  Retries: {metadata.retryCount}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 text-xs md:text-sm text-muted-foreground flex-wrap md:flex-nowrap pl-7 md:pl-0">
-          {metadata.retryCount > 0 && (
-            <span className="whitespace-nowrap">
-              Retries: {metadata.retryCount}
-            </span>
-          )}
-          {metadata.duration && (
-            <span className="flex items-center gap-1 whitespace-nowrap">
-              <Clock className="h-3 w-3" />
-              {formatDuration(metadata.duration)}
-            </span>
-          )}
-          <span className="whitespace-nowrap">
-            {timelineItems.length} items
-          </span>
-        </div>
+        <span
+          className={`px-1.5 py-0.5 text-[10px] font-medium text-white rounded uppercase ${statusColor} flex-shrink-0 self-start`}
+        >
+          {metadata.status}
+        </span>
       </button>
 
       {/* Body */}
