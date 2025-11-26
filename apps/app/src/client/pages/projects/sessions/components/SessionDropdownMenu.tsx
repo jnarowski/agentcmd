@@ -6,12 +6,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/client/components/ui/dropdown-menu";
+import { Kbd } from "@/client/components/ui/kbd";
 import { SessionDialog } from "./SessionDialog";
 import { SessionFileViewer } from "./SessionFileViewer";
 import { useSessionStore, type SessionSummary, selectActiveSession } from "@/client/pages/projects/sessions/stores/sessionStore";
 import { cn } from "@/client/utils/cn";
 import { toast } from "sonner";
 import { copySessionToClipboard } from "@/client/pages/projects/sessions/utils/copySessionToClipboard";
+import { useDropdownMenuHotkeys, type HotkeyAction } from "@/client/hooks/useDropdownMenuHotkeys";
 
 interface SessionDropdownMenuProps {
   session: SessionSummary;
@@ -44,23 +46,23 @@ export function SessionDropdownMenu({
     onMenuOpenChange?.(open);
   };
 
-  const handleEdit = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleEdit = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     handleMenuOpenChange(false);
     setEditDialogOpen(true);
   };
 
-  const handleViewFile = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleViewFile = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     handleMenuOpenChange(false);
     setFileViewerOpen(true);
   };
 
-  const handleArchive = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleArchive = async (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     handleMenuOpenChange(false);
     try {
       await archiveSession(session.id);
@@ -71,9 +73,9 @@ export function SessionDropdownMenu({
     }
   };
 
-  const handleUnarchive = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleUnarchive = async (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     handleMenuOpenChange(false);
     try {
       await unarchiveSession(session.id);
@@ -95,9 +97,9 @@ export function SessionDropdownMenu({
     }
   };
 
-  const handleCopySession = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleCopySession = async (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     handleMenuOpenChange(false);
     try {
       const sessionState = {
@@ -115,6 +117,17 @@ export function SessionDropdownMenu({
       });
     }
   };
+
+  // Define hotkey actions
+  const hotkeyActions: HotkeyAction[] = [
+    { key: "e", handler: handleEdit },
+    { key: "v", handler: handleViewFile, enabled: !!session.session_path },
+    { key: "c", handler: handleCopySession },
+    { key: "a", handler: session.is_archived ? handleUnarchive : handleArchive },
+  ];
+
+  // Enable hotkeys when menu is open
+  useDropdownMenuHotkeys(isMenuOpen, hotkeyActions);
 
   return (
     <>
@@ -138,26 +151,31 @@ export function SessionDropdownMenu({
           <DropdownMenuItem onClick={handleEdit}>
             <Pencil className="h-4 w-4" />
             <span>Edit</span>
+            <Kbd className="ml-auto">E</Kbd>
           </DropdownMenuItem>
           {session.session_path && (
             <DropdownMenuItem onClick={handleViewFile}>
               <FileJson className="h-4 w-4" />
               <span>View Session File</span>
+              <Kbd className="ml-auto">V</Kbd>
             </DropdownMenuItem>
           )}
           <DropdownMenuItem onClick={handleCopySession}>
             <Copy className="h-4 w-4" />
             <span>Copy Session JSON</span>
+            <Kbd className="ml-auto">C</Kbd>
           </DropdownMenuItem>
           {session.is_archived ? (
             <DropdownMenuItem onClick={handleUnarchive}>
               <ArchiveRestore className="h-4 w-4" />
               <span>Unarchive</span>
+              <Kbd className="ml-auto">A</Kbd>
             </DropdownMenuItem>
           ) : (
             <DropdownMenuItem onClick={handleArchive}>
               <Archive className="h-4 w-4" />
               <span>Archive</span>
+              <Kbd className="ml-auto">A</Kbd>
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>

@@ -1,0 +1,47 @@
+# Dependencies
+node_modules
+
+# Build outputs
+dist
+.turbo
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+logs
+*.log
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Git
+.git
+.gitignore
+.github
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage
+.cache
+playwright-report
+test-results
+
+# Misc
+*.tgz
+.npmrc
+.yarnrc
