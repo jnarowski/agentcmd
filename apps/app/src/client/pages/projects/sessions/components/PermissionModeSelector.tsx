@@ -1,12 +1,15 @@
+import { useState } from "react";
 import {
-  PromptInputPermissionModeSelect,
-  PromptInputPermissionModeSelectContent,
-  PromptInputPermissionModeSelectItem,
-  PromptInputPermissionModeSelectTrigger,
-  PromptInputPermissionModeSelectValue,
-} from "@/client/components/ai-elements/PromptInput";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/client/components/ui/dropdown-menu";
+import { Kbd } from "@/client/components/ui/kbd";
 import { PERMISSION_MODES } from "@/client/utils/permissionModes";
 import type { PermissionMode } from "agent-cli-sdk";
+import { useDropdownMenuHotkeys, type HotkeyAction } from "@/client/hooks/useDropdownMenuHotkeys";
+import { cn } from "@/client/utils/cn";
 
 export interface PermissionModeSelectorProps {
   permissionMode: PermissionMode;
@@ -25,6 +28,12 @@ export interface PermissionModeSelectorProps {
  * Shows a colored dot indicator with short name on mobile,
  * full name with dot on desktop.
  *
+ * Supports keyboard shortcuts when dropdown is open:
+ * - D: Default mode
+ * - P: Plan mode
+ * - A: Accept Edits mode
+ * - B: Bypass Permissions mode
+ *
  * @param props.permissionMode - Current permission mode
  * @param props.onPermissionModeChange - Callback when mode changes
  */
@@ -32,46 +41,74 @@ export function PermissionModeSelector({
   permissionMode,
   onPermissionModeChange,
 }: PermissionModeSelectorProps) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   // Ensure we always have a valid permission mode, fallback to 'acceptEdits'
   const safePermissionMode = permissionMode || 'acceptEdits';
+  const currentMode = PERMISSION_MODES.find((m) => m.id === safePermissionMode);
 
-  // Wrapper to convert string to PermissionMode type
-  const handleValueChange = (value: string) => {
-    onPermissionModeChange(value as PermissionMode);
+  const handleModeChange = (mode: PermissionMode) => {
+    onPermissionModeChange(mode);
+    setIsMenuOpen(false);
   };
 
+  // Define hotkey actions
+  const hotkeyActions: HotkeyAction[] = [
+    { key: "d", handler: () => handleModeChange("default") },
+    { key: "p", handler: () => handleModeChange("plan") },
+    { key: "a", handler: () => handleModeChange("acceptEdits") },
+    { key: "b", handler: () => handleModeChange("bypassPermissions") },
+  ];
+
+  // Enable hotkeys when menu is open
+  useDropdownMenuHotkeys(isMenuOpen, hotkeyActions);
+
   return (
-    <PromptInputPermissionModeSelect
-      onValueChange={handleValueChange}
-      value={safePermissionMode}
-    >
-      <PromptInputPermissionModeSelectTrigger>
+    <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+      <DropdownMenuTrigger
+        className={cn(
+          "border-none bg-transparent font-medium text-muted-foreground shadow-none transition-colors",
+          "hover:bg-accent hover:text-foreground",
+          "data-[state=open]:bg-accent data-[state=open]:text-foreground",
+          "rounded-md px-2 py-1.5 text-sm"
+        )}
+      >
         <div className="flex items-center gap-2">
-          {/* Show dot + short name on mobile */}
+          {/* Mobile: dot + short name */}
           <div
-            className={`size-2 rounded-full md:hidden ${
-              PERMISSION_MODES.find((m) => m.id === safePermissionMode)?.color
-            }`}
+            className={`size-2 rounded-full md:hidden ${currentMode?.color}`}
           />
-          <span className="md:hidden">
-            {PERMISSION_MODES.find((m) => m.id === safePermissionMode)?.shortName}
-          </span>
-          {/* Show full name with dot on desktop (via SelectValue) */}
-          <span className="hidden md:inline">
-            <PromptInputPermissionModeSelectValue />
-          </span>
+          <span className="md:hidden">{currentMode?.shortName}</span>
+
+          {/* Desktop: dot + full name */}
+          <div className="hidden md:flex md:items-center md:gap-2">
+            <div className={`size-2 rounded-full ${currentMode?.color}`} />
+            <span>{currentMode?.name}</span>
+          </div>
         </div>
-      </PromptInputPermissionModeSelectTrigger>
-      <PromptInputPermissionModeSelectContent>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
         {PERMISSION_MODES.map((mode) => (
-          <PromptInputPermissionModeSelectItem key={mode.id} value={mode.id}>
+          <DropdownMenuItem
+            key={mode.id}
+            onClick={() => handleModeChange(mode.id)}
+          >
             <div className="flex items-center gap-2">
               <div className={`size-2 rounded-full ${mode.color}`} />
               <span>{mode.name}</span>
             </div>
-          </PromptInputPermissionModeSelectItem>
+            <Kbd className="ml-auto">
+              {mode.id === "default"
+                ? "D"
+                : mode.id === "plan"
+                  ? "P"
+                  : mode.id === "acceptEdits"
+                    ? "A"
+                    : "B"}
+            </Kbd>
+          </DropdownMenuItem>
         ))}
-      </PromptInputPermissionModeSelectContent>
-    </PromptInputPermissionModeSelect>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
