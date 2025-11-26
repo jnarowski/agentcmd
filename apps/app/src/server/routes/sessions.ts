@@ -89,7 +89,7 @@ export async function sessionRoutes(fastify: FastifyInstance) {
    */
   fastify.get<{
     Params: { id: string };
-    Querystring: { includeArchived?: string };
+    Querystring: { includeArchived?: string; limit?: string };
   }>(
     "/api/projects/:id/sessions",
     {
@@ -107,14 +107,16 @@ export async function sessionRoutes(fastify: FastifyInstance) {
       }
 
       const includeArchived = request.query.includeArchived === 'true';
+      const limit = request.query.limit ? parseInt(request.query.limit, 10) : undefined;
 
-      request.log.info({ projectId: request.params.id, userId, includeArchived }, 'Getting sessions by project');
+      request.log.info({ projectId: request.params.id, userId, includeArchived, limit }, 'Getting sessions by project');
 
       const sessions = await getSessionsByProject({
         filters: {
           projectId: request.params.id,
           userId,
           includeArchived,
+          limit,
         },
       });
 

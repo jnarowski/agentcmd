@@ -28,6 +28,7 @@ program
   .option("-p, --port <number>", "Server port", parseInt)
   .option("--inngest-port <number>", "Inngest dev UI port", parseInt)
   .option("--host <address>", "Server host address")
+  .option("--external-host <address>", "External host for service URLs (e.g., Tailscale IP)")
   .option("-v, --verbose", "Show detailed output")
   .action(startCommand);
 

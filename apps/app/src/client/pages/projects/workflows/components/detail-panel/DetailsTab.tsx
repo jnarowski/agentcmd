@@ -2,6 +2,7 @@ import { ExternalLink, Copy, Check } from "lucide-react";
 import { useState } from "react";
 import type { WorkflowRun } from "@/client/pages/projects/workflows/types";
 import { useInngestRunStatus } from "@/client/pages/projects/workflows/hooks/useInngestRunStatus";
+import { useInngestUrl } from "@/client/hooks/useSettings";
 import { Button } from "@/client/components/ui/button";
 import { formatDate } from "@/shared/utils/formatDate";
 
@@ -12,6 +13,7 @@ interface DetailsTabProps {
 export function DetailsTab({ run }: DetailsTabProps) {
   const hasArgs = run.args && Object.keys(run.args).length > 0;
   const { data: inngestStatus, isLoading: inngestLoading } = useInngestRunStatus(run.id);
+  const inngestUrl = useInngestUrl();
   const [copied, setCopied] = useState(false);
 
   const handleCopyRunId = async () => {
@@ -176,7 +178,7 @@ export function DetailsTab({ run }: DetailsTabProps) {
                   <span className="font-medium">{inngestStatus.data.status}</span>
                 </div>
                 <a
-                  href={`http://localhost:8288/run?runID=${run.inngest_run_id}`}
+                  href={`${inngestUrl}/run?runID=${run.inngest_run_id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
@@ -191,7 +193,7 @@ export function DetailsTab({ run }: DetailsTabProps) {
                   {inngestStatus?.error || "Failed to fetch Inngest run status"}
                 </div>
                 <a
-                  href={`http://localhost:8288/run?runID=${run.inngest_run_id}`}
+                  href={`${inngestUrl}/run?runID=${run.inngest_run_id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-sm text-primary hover:underline"

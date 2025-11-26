@@ -7,7 +7,7 @@ import { toSessionResponse } from '../utils';
  * Get all sessions for a project
  */
 export async function getSessionsByProject({
-  filters: { projectId, userId, includeArchived = false, type, permission_mode }
+  filters: { projectId, userId, includeArchived = false, type, permission_mode, limit }
 }: GetSessionsByProjectOptions): Promise<SessionResponse[]> {
   const sessions = await prisma.agentSession.findMany({
     where: {
@@ -26,7 +26,7 @@ export async function getSessionsByProject({
 
   // Sort by created_at (most recent first)
   // created_at is stable and doesn't change during sync operations
-  return mappedSessions.sort((a, b) => {
+  const sorted = mappedSessions.sort((a, b) => {
     const aTime = new Date(a.created_at).getTime();
     const bTime = new Date(b.created_at).getTime();
 
@@ -37,4 +37,7 @@ export async function getSessionsByProject({
 
     return bTime - aTime; // Descending order (most recent first)
   });
+
+  // Apply limit if specified
+  return limit ? sorted.slice(0, limit) : sorted;
 }

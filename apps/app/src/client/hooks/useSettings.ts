@@ -40,6 +40,9 @@ interface Settings {
     ghCliEnabled: boolean;
   };
   agents: Record<AgentType, AgentCapabilities>;
+  inngest: {
+    url: string;
+  };
   userPreferences: UserPreferences;
   version: string;
 }
@@ -71,6 +74,15 @@ export function useIsAiEnabled() {
 export function useIsGhCliEnabled() {
   const { data: settings } = useSettings();
   return settings?.features.ghCliEnabled ?? false;
+}
+
+/**
+ * Get the Inngest dev UI base URL
+ * Uses externalHost + inngestPort from server config
+ */
+export function useInngestUrl() {
+  const { data: settings } = useSettings();
+  return settings?.inngest?.url ?? '';
 }
 
 /**

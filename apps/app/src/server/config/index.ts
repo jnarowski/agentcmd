@@ -16,6 +16,7 @@ const rawConfig = {
     port: process.env.PORT,
     vitePort: process.env.VITE_PORT,
     host: process.env.HOST,
+    externalHost: process.env.EXTERNAL_HOST,
     nodeEnv: process.env.NODE_ENV,
     logLevel: process.env.LOG_LEVEL,
     logFile: process.env.LOG_FILE,

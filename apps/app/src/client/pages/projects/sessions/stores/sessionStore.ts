@@ -619,10 +619,10 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
 
   /**
    * Load session list from API
-   * Fetches all sessions and stores in single list (filtered via selectors)
-   * projectId parameter preserved for API compatibility but loads all sessions
+   * Uses project-specific endpoint when projectId provided (limit=20)
+   * Uses global endpoint otherwise (limit=50)
    */
-  loadSessionList: async (_projectId: string | null, filters?: Record<string, unknown>) => {
+  loadSessionList: async (projectId: string | null, filters?: Record<string, unknown>) => {
     // Set loading state
     set((state) => ({
       sessionList: {
@@ -633,7 +633,7 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
     }));
 
     try {
-      // Build query params - always fetch all sessions
+      // Build query params
       const params = new URLSearchParams();
       if (filters) {
         Object.entries(filters).forEach(([key, value]) => {
@@ -641,10 +641,13 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
         });
       }
 
-      // Fetch all sessions from API
-      const data = await api.get<{ data: SessionSummary[] }>(
-        `/api/sessions?${params}`
-      );
+      // Use project-specific endpoint with limit=20 when projectId provided
+      // Use global endpoint with limit=50 otherwise
+      const url = projectId
+        ? `/api/projects/${projectId}/sessions?${params}&limit=20`
+        : `/api/sessions?${params}&limit=50`;
+
+      const data = await api.get<{ data: SessionSummary[] }>(url);
       const sessions: SessionSummary[] = data.data;
 
       set({

@@ -9,6 +9,7 @@ import {
   DEFAULT_PORT,
   DEFAULT_INNGEST_PORT,
   DEFAULT_HOST,
+  DEFAULT_EXTERNAL_HOST,
   DEFAULT_LOG_LEVEL,
   DEFAULT_ALLOWED_ORIGINS,
 } from "./constants";
@@ -20,6 +21,7 @@ export const configSchema = z.object({
   port: z.number().int().min(1).max(65535),
   inngestPort: z.number().int().min(1).max(65535),
   host: z.string(),
+  externalHost: z.string(),
   logLevel: z.enum(["trace", "debug", "info", "warn", "error", "fatal"]),
   anthropicApiKey: z.string().optional(),
   openaiApiKey: z.string().optional(),
@@ -37,6 +39,7 @@ export function getDefaultConfig(): Config {
     port: DEFAULT_PORT,
     inngestPort: DEFAULT_INNGEST_PORT,
     host: DEFAULT_HOST,
+    externalHost: DEFAULT_EXTERNAL_HOST,
     logLevel: DEFAULT_LOG_LEVEL,
     anthropicApiKey: "",
     openaiApiKey: "",
@@ -100,6 +103,7 @@ export function mergeWithFlags(
     port?: number;
     inngestPort?: number;
     host?: string;
+    externalHost?: string;
   }
 ): Config {
   return {
@@ -107,5 +111,6 @@ export function mergeWithFlags(
     ...(flags.port !== undefined && { port: flags.port }),
     ...(flags.inngestPort !== undefined && { inngestPort: flags.inngestPort }),
     ...(flags.host !== undefined && { host: flags.host }),
+    ...(flags.externalHost !== undefined && { externalHost: flags.externalHost }),
   };
 }

@@ -13,6 +13,7 @@ const ServerConfigSchema = z.object({
   port: z.coerce.number().int().positive().default(4100),
   vitePort: z.coerce.number().int().positive().default(4101),
   host: z.string().default("127.0.0.1"),
+  externalHost: z.string().default("localhost"),
   nodeEnv: z.enum(["development", "production", "test"]).default("development"),
   logLevel: z
     .enum(["trace", "debug", "info", "warn", "error", "fatal"])

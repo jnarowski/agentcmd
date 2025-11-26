@@ -95,6 +95,9 @@ export async function settingsRoutes(fastify: FastifyInstance) {
           cursor: await getCapabilities("cursor"),
           gemini: await getCapabilities("gemini"),
         },
+        inngest: {
+          url: `http://${config.server.externalHost}:${config.workflow.inngestDevPort}`,
+        },
         userPreferences,
         version: "0.1.0",
       };
@@ -157,6 +160,9 @@ export async function settingsRoutes(fastify: FastifyInstance) {
           codex: await getCapabilities("codex"),
           cursor: await getCapabilities("cursor"),
           gemini: await getCapabilities("gemini"),
+        },
+        inngest: {
+          url: `http://${config.server.externalHost}:${config.workflow.inngestDevPort}`,
         },
         userPreferences: updatedSettings,
         version: "0.1.0",

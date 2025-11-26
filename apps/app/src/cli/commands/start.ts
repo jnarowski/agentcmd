@@ -20,6 +20,7 @@ interface StartOptions {
   port?: number;
   inngestPort?: number;
   host?: string;
+  externalHost?: string;
   verbose?: boolean;
 }
 
@@ -35,9 +36,10 @@ export async function startCommand(options: StartOptions): Promise<void> {
       port: options.port,
       inngestPort: options.inngestPort,
       host: options.host,
+      externalHost: options.externalHost,
     });
 
-    const { port, inngestPort, host } = mergedConfig;
+    const { port, inngestPort, host, externalHost } = mergedConfig;
     const dbPath = getDbPath();
     const configPath = getConfigPath();
     const logPath = getLogFilePath();
@@ -53,6 +55,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
     // 3. Set environment variables from config
     process.env.PORT = port.toString();
     process.env.HOST = host;
+    process.env.EXTERNAL_HOST = externalHost;
     process.env.NODE_ENV = "production"; // Use production logger (no pino-pretty)
     process.env.DATABASE_URL = `file:${dbPath}`;
     process.env.JWT_SECRET = mergedConfig.jwtSecret;

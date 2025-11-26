@@ -11,6 +11,7 @@ import { useWorkflowWebSocket } from "./hooks/useWorkflowWebSocket";
 import { useWorkflowDetailPanel } from "./hooks/useWorkflowDetailPanel";
 import { useCancelWorkflow } from "./hooks/useWorkflowMutations";
 import { useProjectId } from "@/client/hooks/useProjectId";
+import { useInngestUrl } from "@/client/hooks/useSettings";
 import { PageHeader } from "@/client/components/PageHeader";
 import { Button } from "@/client/components/ui/button";
 import {
@@ -29,6 +30,7 @@ import {
 
 function WorkflowRunDetailPage() {
   const projectId = useProjectId();
+  const inngestUrl = useInngestUrl();
   const { definitionId, runId } = useParams<{
     definitionId: string;
     runId: string;
@@ -78,8 +80,8 @@ function WorkflowRunDetailPage() {
   };
 
   const handleViewOnInngest = () => {
-    if (run?.inngest_run_id) {
-      window.open(`http://localhost:8288/stream/${run.inngest_run_id}`, '_blank');
+    if (run?.inngest_run_id && inngestUrl) {
+      window.open(`${inngestUrl}/stream/${run.inngest_run_id}`, '_blank');
     }
   };
 

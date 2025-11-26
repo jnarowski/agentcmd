@@ -11,6 +11,7 @@ export const getSessionsByProjectOptionsSchema = z.object({
     includeArchived: z.boolean().optional().default(false),
     type: z.enum(['chat', 'workflow']).optional(),
     permission_mode: z.enum(['default', 'plan', 'acceptEdits', 'bypassPermissions']).optional(),
+    limit: z.number().optional(),
   }),
 });
 
