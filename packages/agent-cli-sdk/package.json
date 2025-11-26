@@ -1,6 +1,6 @@
 {
   "name": "agent-cli-sdk",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "TypeScript SDK for orchestrating AI-powered CLI tools (Claude Code, OpenAI Codex) in development workflows",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
