@@ -1,16 +1,20 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { Button } from "@/client/components/ui/button";
 import { useProjectId } from "@/client/hooks/useProjectId";
 import { WebhookList } from "./components/WebhookList";
 import { WebhookEmptyState } from "./components/WebhookEmptyState";
+import { DeleteWebhookDialog } from "./components/DeleteWebhookDialog";
 import { useWebhooks } from "./hooks/useWebhooks";
 import { WorkflowTabs } from "../workflows/components/WorkflowTabs";
 import { PageHeader } from "@/client/components/PageHeader";
+import type { Webhook } from "./types/webhook.types";
 
 export default function ProjectWebhooksPage() {
   const projectId = useProjectId();
   const navigate = useNavigate();
+  const [deleteTarget, setDeleteTarget] = useState<Webhook | null>(null);
 
   const { data: webhooks, isLoading } = useWebhooks(projectId);
 
@@ -63,10 +67,23 @@ export default function ProjectWebhooksPage() {
         ) : (
           <div>
             <h2 className="text-lg font-semibold mb-4">Webhooks</h2>
-            <WebhookList webhooks={webhooks || []} projectId={projectId} />
+            <WebhookList
+              webhooks={webhooks || []}
+              projectId={projectId}
+              onDelete={setDeleteTarget}
+            />
           </div>
         )}
       </div>
+
+      {/* Delete dialog at page level - outside clickable elements */}
+      {deleteTarget && (
+        <DeleteWebhookDialog
+          open={!!deleteTarget}
+          onOpenChange={(open) => !open && setDeleteTarget(null)}
+          webhook={deleteTarget}
+        />
+      )}
     </div>
   );
 }

@@ -416,9 +416,7 @@ export default function WebhookDetailPage() {
           open={deleteDialogOpen}
           onOpenChange={setDeleteDialogOpen}
           webhook={webhook}
-          onSuccess={() =>
-            navigate(`/projects/${projectId}/workflows/triggers`)
-          }
+          onSuccess={() => navigate(`/projects/${projectId}/workflows/triggers`)}
         />
       </div>
     </div>

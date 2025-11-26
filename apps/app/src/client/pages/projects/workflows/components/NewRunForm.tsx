@@ -265,6 +265,12 @@ export function NewRunForm({
       setError("Planning session is required");
       return;
     }
+    if (specInputType === "planning" && mode === "worktree") {
+      setError(
+        "Planning sessions cannot be used with worktree mode. Please select 'Create a Branch' or 'Stay in Current Branch' instead."
+      );
+      return;
+    }
     if (specInputType === "content" && !specContent.trim()) {
       setError("Spec content is required");
       return;

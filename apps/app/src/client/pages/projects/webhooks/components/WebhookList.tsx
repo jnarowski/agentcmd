@@ -4,9 +4,10 @@ import { WebhookCard } from "./WebhookCard";
 export interface WebhookListProps {
   webhooks: Webhook[];
   projectId: string;
+  onDelete: (webhook: Webhook) => void;
 }
 
-export function WebhookList({ webhooks, projectId }: WebhookListProps) {
+export function WebhookList({ webhooks, projectId, onDelete }: WebhookListProps) {
   if (webhooks.length === 0) {
     return null;
   }
@@ -14,7 +15,12 @@ export function WebhookList({ webhooks, projectId }: WebhookListProps) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
       {webhooks.map((webhook) => (
-        <WebhookCard key={webhook.id} webhook={webhook} projectId={projectId} />
+        <WebhookCard
+          key={webhook.id}
+          webhook={webhook}
+          projectId={projectId}
+          onDelete={() => onDelete(webhook)}
+        />
       ))}
     </div>
   );

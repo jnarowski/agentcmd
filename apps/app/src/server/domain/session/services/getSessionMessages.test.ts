@@ -20,7 +20,6 @@ describe("getSessionMessages", () => {
   let userId: string;
   let otherUserId: string;
   let projectId: string;
-  let projectPath: string;
 
   beforeEach(async () => {
     const user = await createTestUser(prisma);
@@ -38,7 +37,6 @@ describe("getSessionMessages", () => {
       path: "/test/project",
     });
     projectId = project.id;
-    projectPath = project.path;
   });
 
   afterEach(async () => {
@@ -79,7 +77,7 @@ describe("getSessionMessages", () => {
     expect(loadMessages).toHaveBeenCalledWith({
       tool: session.agent,
       sessionId: session.cli_session_id ?? session.id,
-      projectPath,
+      sessionPath: session.session_path ?? undefined,
     });
   });
 
@@ -101,7 +99,7 @@ describe("getSessionMessages", () => {
     expect(loadMessages).toHaveBeenCalledWith({
       tool: session.agent,
       sessionId: cliSessionId,
-      projectPath,
+      sessionPath: session.session_path ?? undefined,
     });
   });
 
@@ -122,7 +120,7 @@ describe("getSessionMessages", () => {
     expect(loadMessages).toHaveBeenCalledWith({
       tool: session.agent,
       sessionId: session.id,
-      projectPath,
+      sessionPath: session.session_path ?? undefined,
     });
   });
 
@@ -228,7 +226,7 @@ describe("getSessionMessages", () => {
     expect(loadMessages).toHaveBeenCalledWith({
       tool: "codex",
       sessionId: session.cli_session_id ?? session.id,
-      projectPath,
+      sessionPath: session.session_path ?? undefined,
     });
   });
 
@@ -352,10 +350,10 @@ describe("getSessionMessages", () => {
       userId,
     });
 
-    // Verify project.path was used in loadMessages call
+    // Verify sessionPath was used in loadMessages call (replaces old projectPath)
     expect(loadMessages).toHaveBeenCalledWith(
       expect.objectContaining({
-        projectPath,
+        sessionPath: undefined, // Default session has no session_path
       })
     );
   });

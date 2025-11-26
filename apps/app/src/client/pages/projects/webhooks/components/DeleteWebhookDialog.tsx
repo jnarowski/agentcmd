@@ -6,7 +6,7 @@ interface DeleteWebhookDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   webhook: Webhook;
-  onSuccess?: () => void;
+  onSuccess?: () => void | Promise<void>;
 }
 
 export function DeleteWebhookDialog({
@@ -22,8 +22,9 @@ export function DeleteWebhookDialog({
       { webhookId: webhook.id },
       {
         onSuccess: () => {
-          onSuccess?.();
           onOpenChange(false);
+          onSuccess?.();
+          // Cache invalidation + toast handled by hook
         },
       }
     );

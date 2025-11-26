@@ -165,9 +165,10 @@ async function generateSpecFileWithAgent(
 
     // Validate response contains spec file path
     if (!response.data?.spec_file) {
-      // In test environments, agent mocks may not return spec_file
-      // Return empty string instead of throwing to allow tests to proceed
-      return "";
+      throw new Error(
+        `Spec generation failed: Planning session ${planningSessionId} did not return a spec_file. ` +
+          `This may happen if the planning session was interrupted or didn't complete spec generation.`
+      );
     }
 
     return response.data.spec_file;
@@ -192,9 +193,10 @@ async function generateSpecFileWithAgent(
 
   // Validate response contains spec file path
   if (!response.data?.spec_file) {
-    // In test environments, agent mocks may not return spec_file
-    // Return empty string instead of throwing to allow tests to proceed
-    return "";
+    throw new Error(
+      `Spec generation failed: The generate-${specType ?? "feature"}-spec command did not return a spec_file. ` +
+        `Check the command output for errors.`
+    );
   }
 
   return response.data.spec_file;

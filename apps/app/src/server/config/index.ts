@@ -14,6 +14,7 @@ import type { AppConfig } from './types';
 const rawConfig = {
   server: {
     port: process.env.PORT,
+    vitePort: process.env.VITE_PORT,
     host: process.env.HOST,
     nodeEnv: process.env.NODE_ENV,
     logLevel: process.env.LOG_LEVEL,

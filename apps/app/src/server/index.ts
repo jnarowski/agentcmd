@@ -432,12 +432,28 @@ export async function createServer() {
   // Initialize workflow engine (includes project scanning)
   await initializeWorkflowEngine(fastify);
 
-  // Serve static files from dist/client/ (production build only)
-  // In production, the built client files are in dist/client/
+  // Static file serving configuration
   const distDir = join(__dirname, "../../dist/client");
   const hasDistDir = existsSync(distDir);
+  const isDevelopment = config.server.nodeEnv === "development";
+  const viteUrl = `http://localhost:${config.server.vitePort}`;
 
-  if (hasDistDir) {
+  if (isDevelopment) {
+    // Development mode: redirect to Vite dev server for HMR
+    fastify.setNotFoundHandler((request, reply) => {
+      if (
+        request.url.startsWith("/api") ||
+        request.url.startsWith("/ws") ||
+        request.url.startsWith("/shell")
+      ) {
+        reply.code(404).send({ error: "Not found" });
+      } else {
+        // Redirect browser to Vite for HMR support
+        reply.redirect(viteUrl + request.url);
+      }
+    });
+  } else if (hasDistDir) {
+    // Production mode: serve static files from dist/client/
     await fastify.register(fastifyStatic, {
       root: distDir,
       prefix: "/",
@@ -456,7 +472,7 @@ export async function createServer() {
       }
     });
   } else {
-    // Development mode: no static files, just API and WebSocket
+    // Production mode without build: return error
     fastify.setNotFoundHandler((request, reply) => {
       if (
         request.url.startsWith("/api") ||
@@ -465,11 +481,9 @@ export async function createServer() {
       ) {
         reply.code(404).send({ error: "Not found" });
       } else {
-        reply.code(200).send({
-          message: "Development mode: Frontend not built",
-          hint: 'Run "pnpm dev" to start both frontend (Vite) and backend servers',
-          viteUrl: "http://localhost:4101",
-          apiUrl: `http://${config.server.host}:${config.server.port}/api`,
+        reply.code(503).send({
+          error: "Frontend not available",
+          message: "Static files not found. Run 'pnpm build' first.",
         });
       }
     });

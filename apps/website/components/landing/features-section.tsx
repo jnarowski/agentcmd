@@ -173,7 +173,91 @@ export default function FeaturesSection() {
         </div>
       </section>
 
-      {/* Feature 3: Git Integration */}
+      {/* Feature 3: Workflow Execution Timeline */}
+      <section className="mx-auto max-w-[80rem] px-6 md:px-8">
+        <div className="py-20">
+          <div className="grid gap-8 lg:grid-cols-2 lg:gap-16 items-center">
+            <div>
+              <h2 className="text-3xl font-bold lg:text-4xl bg-gradient-to-br from-white to-white/40 bg-clip-text text-transparent">
+                Track Every Execution Step
+              </h2>
+              <p className="mt-4 text-lg text-gray-400">
+                Watch your workflows execute with a detailed timeline view. See
+                each phase, step duration, and agent activity in real-time.
+                Never wonder what your AI agents are doing—full visibility into
+                every command, annotation, and code change.
+              </p>
+              <ul className="mt-6 space-y-3">
+                <li className="flex items-start gap-3">
+                  <div className="flex-shrink-0 mt-1">
+                    <svg
+                      className="h-5 w-5 text-emerald-500"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <span className="text-gray-300">
+                    Phased execution with collapsible timeline
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="flex-shrink-0 mt-1">
+                    <svg
+                      className="h-5 w-5 text-emerald-500"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <span className="text-gray-300">
+                    Live session view with streaming agent output
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="flex-shrink-0 mt-1">
+                    <svg
+                      className="h-5 w-5 text-emerald-500"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <span className="text-gray-300">
+                    Artifacts, logs, and session history
+                  </span>
+                </li>
+              </ul>
+            </div>
+            <div className="relative">
+              <div className="relative rounded-2xl border border-white/10 overflow-hidden">
+                <img
+                  src="/screenshots/workflow-run.png"
+                  alt="Workflow Execution Timeline"
+                  className="w-full"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Feature 4: Git Integration */}
       <section className="mx-auto max-w-[80rem] px-6 md:px-8">
         <div className="py-20">
           <div className="grid gap-8 lg:grid-cols-2 lg:gap-16 items-center">
@@ -257,7 +341,7 @@ export default function FeaturesSection() {
         </div>
       </section>
 
-      {/* Feature 4: Mobile-Friendly */}
+      {/* Feature 5: Mobile-Friendly */}
       <section className="mx-auto max-w-[80rem] px-6 md:px-8">
         <div className="py-20">
           <div className="text-center mb-12">

@@ -104,7 +104,7 @@ export function useWebhookMutations(projectId: string) {
     },
   });
 
-  // Delete webhook
+  // Delete webhook - simple version (cache invalidation + toast only)
   const deleteMutation = useMutation({
     mutationFn: async ({ webhookId }: { webhookId: string }): Promise<void> => {
       await api.delete(`/api/webhooks/${webhookId}`);

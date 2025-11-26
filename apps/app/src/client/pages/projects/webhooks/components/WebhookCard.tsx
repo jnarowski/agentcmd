@@ -8,6 +8,7 @@ import { WebhookDropdownMenu } from "./WebhookDropdownMenu";
 export interface WebhookCardProps {
   webhook: WebhookType;
   projectId: string;
+  onDelete: () => void;
 }
 
 function getSourceIcon(source: string) {
@@ -37,7 +38,7 @@ function getSourceLabel(source: string) {
   }
 }
 
-export function WebhookCard({ webhook, projectId }: WebhookCardProps) {
+export function WebhookCard({ webhook, projectId, onDelete }: WebhookCardProps) {
   const navigate = useNavigate();
   const SourceIcon = getSourceIcon(webhook.source);
 
@@ -81,7 +82,7 @@ export function WebhookCard({ webhook, projectId }: WebhookCardProps) {
 
         <div className="flex items-center gap-2">
           <WebhookStatusBadge status={webhook.status} size="sm" />
-          <WebhookDropdownMenu webhook={webhook} projectId={projectId} />
+          <WebhookDropdownMenu webhook={webhook} projectId={projectId} onDelete={onDelete} />
         </div>
       </div>
 

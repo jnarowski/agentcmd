@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { AgentIcon } from "@/client/components/AgentIcon";
 import { SessionDropdownMenu } from "@/client/pages/projects/sessions/components/SessionDropdownMenu";
 import { SessionStateBadge } from "@/client/pages/projects/sessions/components/SessionStateBadge";
+import { SessionDialog } from "@/client/pages/projects/sessions/components/SessionDialog";
+import { SessionFileViewer } from "@/client/pages/projects/sessions/components/SessionFileViewer";
 import type { SessionResponse } from "@/shared/types";
 import { getSessionDisplayName } from "@/client/utils/getSessionDisplayName";
 import { useSessionStore } from "@/client/pages/projects/sessions/stores/sessionStore";
@@ -28,6 +30,8 @@ export function SessionHeader({ session }: SessionHeaderProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
   const [isHovered, setIsHovered] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [fileViewerOpen, setFileViewerOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const updateSession = useSessionStore((s) => s.updateSession);
 
@@ -138,8 +142,29 @@ export function SessionHeader({ session }: SessionHeaderProps) {
             </TooltipContent>
           </Tooltip>
         )}
-        <SessionDropdownMenu session={session} />
+        <SessionDropdownMenu
+          session={session}
+          onEdit={() => setEditDialogOpen(true)}
+          onViewFile={() => setFileViewerOpen(true)}
+        />
       </div>
+
+      {/* Dialogs */}
+      <SessionDialog
+        session={session}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onUpdateSession={async (sessionId, name) => {
+          await updateSession(sessionId, { name });
+        }}
+      />
+      {session.session_path && (
+        <SessionFileViewer
+          sessionId={session.id}
+          open={fileViewerOpen}
+          onOpenChange={setFileViewerOpen}
+        />
+      )}
     </div>
   );
 }

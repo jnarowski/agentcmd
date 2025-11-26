@@ -31,23 +31,27 @@ export default function ProjectSessionPage() {
   const currentSession = useSessionStore((s) => s.currentSession);
 
   // Get session for header - convert metadata to SessionResponse-like object
-  const sessionForHeader = currentSession?.metadata && sessionId && projectId ? {
-    id: sessionId,
-    projectId: projectId,
-    userId: '', // Not needed for SessionHeader
-    name: currentSession.name || currentSession.metadata.firstMessagePreview,
-    agent: currentSession.agent || 'claude',
-    type: 'chat' as const,
-    state: 'idle' as const,
-    permission_mode: currentSession.permission_mode || 'default',
-    error_message: currentSession.error || undefined,
-    session_path: undefined,
-    is_archived: false,
-    archived_at: null,
-    metadata: currentSession.metadata,
-    created_at: new Date(),
-    updated_at: new Date(),
-  } : null;
+  const sessionForHeader =
+    currentSession?.metadata && sessionId && projectId
+      ? {
+          id: sessionId,
+          projectId: projectId,
+          userId: "", // Not needed for SessionHeader
+          name:
+            currentSession.name || currentSession.metadata.firstMessagePreview,
+          agent: currentSession.agent || "claude",
+          type: "chat" as const,
+          state: "idle" as const,
+          permission_mode: currentSession.permission_mode || "default",
+          error_message: currentSession.error || undefined,
+          session_path: undefined,
+          is_archived: false,
+          archived_at: null,
+          metadata: currentSession.metadata,
+          created_at: new Date(),
+          updated_at: new Date(),
+        }
+      : null;
 
   useDocumentTitle(
     project?.name && currentSession?.name
@@ -70,12 +74,15 @@ export default function ProjectSessionPage() {
   const addMessage = useSessionStore((s) => s.addMessage);
   const setStreaming = useSessionStore((s) => s.setStreaming);
   const totalTokens = useSessionStore(selectTotalTokens);
-  const clearHandledPermissions = useSessionStore((s) => s.clearHandledPermissions);
+  const clearHandledPermissions = useSessionStore(
+    (s) => s.clearHandledPermissions
+  );
   const clearToolResultError = useSessionStore((s) => s.clearToolResultError);
   const markPermissionHandled = useSessionStore((s) => s.markPermissionHandled);
 
   // App-wide WebSocket hook (subscription handled by AgentSessionViewer)
-  const { isConnected: globalIsConnected, sendMessage: sendWsMessage } = useWebSocket();
+  const { isConnected: globalIsConnected, sendMessage: sendWsMessage } =
+    useWebSocket();
 
   // Send message to session (without subscribing - AgentSessionViewer handles that)
   const wsSendMessage = useCallback(
@@ -128,83 +135,97 @@ export default function ProjectSessionPage() {
     clearHandledPermissions();
   }, [sessionId, clearHandledPermissions]);
 
-  const handleImageUpload = useCallback(async (files: FileUIPart[]): Promise<string[]> => {
-    // FileUIPart.url is already a blob URL or data URL
-    // If it's a blob URL, we need to fetch it and convert to data URL
-    return Promise.all(
-      files.map(async (fileUIPart) => {
-        const url = fileUIPart.url;
-        // If already a data URL, return as-is
-        if (url.startsWith("data:")) {
+  const handleImageUpload = useCallback(
+    async (files: FileUIPart[]): Promise<string[]> => {
+      // FileUIPart.url is already a blob URL or data URL
+      // If it's a blob URL, we need to fetch it and convert to data URL
+      return Promise.all(
+        files.map(async (fileUIPart) => {
+          const url = fileUIPart.url;
+          // If already a data URL, return as-is
+          if (url.startsWith("data:")) {
+            return url;
+          }
+          // If blob URL, convert to data URL
+          if (url.startsWith("blob:")) {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            return new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.onerror = reject;
+              reader.readAsDataURL(blob);
+            });
+          }
+          // Otherwise return the URL as-is
           return url;
-        }
-        // If blob URL, convert to data URL
-        if (url.startsWith("blob:")) {
-          const response = await fetch(url);
-          const blob = await response.blob();
-          return new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-          });
-        }
-        // Otherwise return the URL as-is
-        return url;
-      })
-    );
-  }, []);
+        })
+      );
+    },
+    []
+  );
 
-  const handleSubmit = useCallback(async (
-    { text, files }: PromptInputMessage,
-    permissionModeOverride?: PermissionMode
-  ) => {
-    if (!projectId || !sessionId) {
-      console.error("[ProjectSession] No projectId or sessionId available");
-      return;
-    }
+  const handleSubmit = useCallback(
+    async (
+      { text, files }: PromptInputMessage,
+      permissionModeOverride?: PermissionMode
+    ) => {
+      if (!projectId || !sessionId) {
+        console.error("[ProjectSession] No projectId or sessionId available");
+        return;
+      }
 
-    const message = text || "";
+      const message = text || "";
 
-    // Convert images to base64 before sending via WebSocket
-    const imagePaths = files ? await handleImageUpload(files) : undefined;
+      // Convert images to base64 before sending via WebSocket
+      const imagePaths = files ? await handleImageUpload(files) : undefined;
 
-    // Add user message to store immediately
-    addMessage(sessionId, {
-      id: generateUUID(),
-      role: "user",
-      content: [{ type: "text", text: message }],
-      images: imagePaths,
-      timestamp: Date.now(),
-      _original: undefined,
-      _optimistic: true,
-    });
+      // Add user message to store immediately
+      addMessage(sessionId, {
+        id: generateUUID(),
+        role: "user",
+        content: [{ type: "text", text: message }],
+        images: imagePaths,
+        timestamp: Date.now(),
+        _original: undefined,
+        _optimistic: true,
+      });
 
-    // Set streaming state immediately to show loading indicator
-    setStreaming(sessionId, true);
+      // Set streaming state immediately to show loading indicator
+      setStreaming(sessionId, true);
 
-    // Count assistant messages to determine if we should resume
-    const assistantMessageCount =
-      session?.messages.filter((m) => m.role === "assistant").length || 0;
-    const resume = assistantMessageCount > 0;
+      // Count assistant messages to determine if we should resume
+      const assistantMessageCount =
+        session?.messages.filter((m) => m.role === "assistant").length || 0;
+      const resume = assistantMessageCount > 0;
 
-    // Get permission mode - use override if provided, otherwise use form value
-    const getPermissionMode = useSessionStore.getState().getPermissionMode;
-    const permissionMode = permissionModeOverride || getPermissionMode();
+      // Get permission mode - use override if provided, otherwise use form value
+      const getPermissionMode = useSessionStore.getState().getPermissionMode;
+      const permissionMode = permissionModeOverride || getPermissionMode();
 
-    // Get model selection from form
-    const getModel = useSessionStore.getState().getModel;
-    const model = getModel();
+      // Get model selection from form
+      const getModel = useSessionStore.getState().getModel;
+      const model = getModel();
 
-    const config = {
-      resume,
+      const config = {
+        resume,
+        sessionId,
+        permissionMode,
+        model: model || undefined, // Only include if set
+      };
+
+      wsSendMessage(message, imagePaths, config);
+    },
+    [
+      projectId,
       sessionId,
-      permissionMode,
-      model: model || undefined, // Only include if set
-    };
-
-    wsSendMessage(message, imagePaths, config);
-  }, [projectId, sessionId, addMessage, setStreaming, session, wsSendMessage, handleImageUpload]);
+      addMessage,
+      setStreaming,
+      session,
+      wsSendMessage,
+      handleImageUpload,
+    ]
+  );
 
   // Determine if input should be blocked
   // Count assistant messages
@@ -233,19 +254,22 @@ export default function ProjectSessionPage() {
   }, [session?.isStreaming, killSession]);
 
   // Permission approval handler
-  const handlePermissionApproval = useCallback((toolUseId: string) => {
-    if (!sessionId) return;
-    console.log("[ProjectSession] Permission approved:", toolUseId);
+  const handlePermissionApproval = useCallback(
+    (toolUseId: string) => {
+      if (!sessionId) return;
+      console.log("[ProjectSession] Permission approved:", toolUseId);
 
-    // Clear the error flag to hide the permission UI immediately
-    clearToolResultError(sessionId, toolUseId);
+      // Clear the error flag to hide the permission UI immediately
+      clearToolResultError(sessionId, toolUseId);
 
-    // Mark as handled to prevent duplicate approvals
-    markPermissionHandled(toolUseId);
+      // Mark as handled to prevent duplicate approvals
+      markPermissionHandled(toolUseId);
 
-    // Send follow-up message with acceptEdits permission mode to retry the operation
-    handleSubmit({ text: "yes, proceed" }, "acceptEdits");
-  }, [sessionId, clearToolResultError, markPermissionHandled, handleSubmit]);
+      // Send follow-up message with acceptEdits permission mode to retry the operation
+      handleSubmit({ text: "yes, proceed" }, "acceptEdits");
+    },
+    [sessionId, clearToolResultError, markPermissionHandled, handleSubmit]
+  );
 
   return (
     <div

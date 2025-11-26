@@ -19,15 +19,18 @@ Full-stack application development guide for agentcmd.
 pnpm dev
 
 # Auto-runs: prisma migrate deploy on start
+# Auto-opens: http://localhost:4101 in browser
 # Starts:
-# - Frontend: http://localhost:4101
-# - Backend: http://localhost:4100
+# - Frontend: http://localhost:4101 (always use this in dev)
+# - Backend: http://localhost:4100 (redirects to 4101 in dev)
 # - Inngest: http://localhost:8288
 
 # Or run separately:
 pnpm dev:client     # Frontend only
 pnpm dev:server     # Backend only
 ```
+
+> **Dev mode:** Always use http://localhost:4101. The backend (4100) redirects to Vite for HMR support.
 
 ### Database Commands
 

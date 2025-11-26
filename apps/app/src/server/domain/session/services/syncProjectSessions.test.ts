@@ -227,8 +227,12 @@ describe("syncProjectSessions", () => {
     expect(result.updated).toBe(0);
   });
 
-  it("deletes orphaned Claude sessions", async () => {
-    // Create session that will be orphaned (no JSONL file)
+  it("does NOT delete orphaned Claude sessions (intentionally disabled)", async () => {
+    // NOTE: Orphan deletion was removed due to cascade delete issues with workflow steps
+    // Workflow sessions don't have JSONL files by design (they're created programmatically),
+    // so they were incorrectly identified as orphaned.
+
+    // Create session that would previously be considered orphaned (no JSONL file)
     const orphanedSession = await createTestSession(prisma, {
       projectId,
       userId,
@@ -236,7 +240,7 @@ describe("syncProjectSessions", () => {
       agent: "claude",
     });
 
-    // Set created_at to more than 5 seconds ago to pass the protection check
+    // Set created_at to more than 5 seconds ago to pass the old protection check
     await prisma.agentSession.update({
       where: { id: orphanedSession.id },
       data: { created_at: new Date(Date.now() - 10000) },
@@ -252,11 +256,12 @@ describe("syncProjectSessions", () => {
 
     expect(result.synced).toBe(0);
 
-    // Verify orphaned session deleted
+    // Verify orphaned session is NOT deleted (orphan deletion was intentionally removed)
     const sessions = await prisma.agentSession.findMany({
       where: { project_id: projectId },
     });
-    expect(sessions).toHaveLength(0);
+    expect(sessions).toHaveLength(1);
+    expect(sessions[0].id).toBe(orphanedSession.id);
   });
 
   it("does not delete working sessions", async () => {

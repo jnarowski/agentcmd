@@ -15,15 +15,15 @@ export function DeleteWorkflowRunDialog({
   run,
   onSuccess,
 }: DeleteWorkflowRunDialogProps) {
-  const deleteMutation = useDeleteWorkflowRun();
+  const deleteMutation = useDeleteWorkflowRun({
+    onSuccess: () => {
+      onSuccess?.(); // Navigate first (passed from parent)
+      onOpenChange(false); // Then close dialog
+    },
+  });
 
   const handleDelete = () => {
-    deleteMutation.mutate(run.id, {
-      onSuccess: () => {
-        onSuccess?.();
-        onOpenChange(false);
-      },
-    });
+    deleteMutation.mutate(run.id);
   };
 
   return (

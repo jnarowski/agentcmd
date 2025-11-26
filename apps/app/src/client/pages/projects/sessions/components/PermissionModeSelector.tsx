@@ -8,7 +8,6 @@ import {
 import { Kbd } from "@/client/components/ui/kbd";
 import { PERMISSION_MODES } from "@/client/utils/permissionModes";
 import type { PermissionMode } from "agent-cli-sdk";
-import { useDropdownMenuHotkeys, type HotkeyAction } from "@/client/hooks/useDropdownMenuHotkeys";
 import { cn } from "@/client/utils/cn";
 
 export interface PermissionModeSelectorProps {
@@ -52,16 +51,24 @@ export function PermissionModeSelector({
     setIsMenuOpen(false);
   };
 
-  // Define hotkey actions
-  const hotkeyActions: HotkeyAction[] = [
-    { key: "d", handler: () => handleModeChange("default") },
-    { key: "p", handler: () => handleModeChange("plan") },
-    { key: "a", handler: () => handleModeChange("acceptEdits") },
-    { key: "b", handler: () => handleModeChange("bypassPermissions") },
-  ];
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
 
-  // Enable hotkeys when menu is open
-  useDropdownMenuHotkeys(isMenuOpen, hotkeyActions);
+    const key = e.key.toLowerCase();
+    const modes: Record<string, PermissionMode> = {
+      d: "default",
+      p: "plan",
+      a: "acceptEdits",
+      b: "bypassPermissions",
+    };
+
+    const mode = modes[key];
+    if (mode) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleModeChange(mode);
+    }
+  };
 
   return (
     <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
@@ -87,7 +94,7 @@ export function PermissionModeSelector({
           </div>
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start">
+      <DropdownMenuContent align="start" onKeyDown={handleKeyDown}>
         {PERMISSION_MODES.map((mode) => (
           <DropdownMenuItem
             key={mode.id}

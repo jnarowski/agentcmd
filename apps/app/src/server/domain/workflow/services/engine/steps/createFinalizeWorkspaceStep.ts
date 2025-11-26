@@ -6,7 +6,7 @@ import { commitChanges } from "@/server/domain/git/services/commitChanges";
 import { switchBranch } from "@/server/domain/git/services/switchBranch";
 import { removeWorktree } from "@/server/domain/git/services/removeWorktree";
 import { createWorkflowEventCommand } from "@/server/domain/workflow/services/engine/steps/utils/createWorkflowEventCommand";
-import { generateInngestStepId } from "@/server/domain/workflow/services/engine/steps/utils/generateInngestStepId";
+import { executeStep } from "@/server/domain/workflow/services/engine/steps/utils/executeStep";
 import { slugify as toId } from "@/server/utils/slugify";
 
 /**
@@ -45,15 +45,10 @@ export function createFinalizeWorkspaceStep(
   inngestStep: GetStepTools<any>
 ) {
   return async function finalizeWorkspace(
-    idOrName: string,
+    _idOrName: string,
     config: FinalizeWorkspaceConfig
   ): Promise<void> {
-    const id = toId(idOrName);
-    const inngestStepId = generateInngestStepId(context, id);
-
-    await inngestStep.run(inngestStepId, async () => {
-      await executeFinalizeWorkspace(config, context);
-    });
+    await executeFinalizeWorkspace(config, context, inngestStep);
   };
 }
 
@@ -63,7 +58,9 @@ export function createFinalizeWorkspaceStep(
 
 async function executeFinalizeWorkspace(
   config: FinalizeWorkspaceConfig,
-  context: RuntimeContext
+  context: RuntimeContext,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  inngestStep: GetStepTools<any>
 ): Promise<void> {
   const {
     mode,
@@ -101,7 +98,7 @@ async function executeFinalizeWorkspace(
 
     case "branch":
       if (!preserve && baseBranch) {
-        await restoreBranch(workingDir, baseBranch, context);
+        await restoreBranch(workingDir, baseBranch, context, inngestStep);
         context.logger.info({ baseBranch }, "Restored original branch");
       } else {
         context.logger.info("Staying on feature branch for review");
@@ -161,17 +158,32 @@ async function autoCommitIfNeeded(
 async function restoreBranch(
   projectPath: string,
   branchName: string,
-  context: RuntimeContext
+  context: RuntimeContext,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  inngestStep: GetStepTools<any>
 ): Promise<void> {
-  const startTime = Date.now();
-  await switchBranch({ projectPath, branchName });
-  const duration = Date.now() - startTime;
-
-  await createWorkflowEventCommand(
+  await executeStep({
     context,
-    "git",
-    ["checkout", branchName],
-    duration
-  );
+    stepId: toId(`restore-branch-${branchName}`),
+    stepName: "restore-branch",
+    stepType: "git",
+    inngestStep,
+    input: {
+      operation: "checkout",
+      projectPath,
+      branch: branchName,
+    },
+    fn: async () => {
+      const startTime = Date.now();
+      await switchBranch({ projectPath, branchName });
+      const duration = Date.now() - startTime;
+
+      return {
+        data: { branch: branchName },
+        success: true,
+        trace: [{ command: `git checkout ${branchName}`, duration }],
+      };
+    },
+  });
 }
 
