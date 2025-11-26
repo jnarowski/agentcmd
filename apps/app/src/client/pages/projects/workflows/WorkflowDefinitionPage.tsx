@@ -91,10 +91,10 @@ function WorkflowDefinitionPage() {
           <>
             <button
               onClick={() => navigate(`/projects/${projectId}/workflows`)}
-              className="hidden sm:flex rounded-md p-2 hover:bg-muted"
+              className="hidden sm:flex items-center justify-center rounded-md p-2 hover:bg-muted"
               aria-label="Back to workflows"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-5 w-5 stroke-[1.5]" />
             </button>
             <Button
               onClick={() =>

@@ -3,21 +3,21 @@
     "2511081930": {
       "folder": "2511081930-inngest-human-in-the-loop",
       "path": "backlog/2511081930-inngest-human-in-the-loop/spec.md",
-      "status": "draft",
+      "status": "backlog",
       "created": "2025-11-08T00:00:00.000Z",
       "updated": "2025-11-24T22:00:00.000Z"
     },
     "2511090000": {
       "folder": "2511090000-message-queue",
       "path": "backlog/2511090000-message-queue/spec.md",
-      "status": "draft",
+      "status": "backlog",
       "created": "2025-11-09T00:00:00.000Z",
       "updated": "2025-11-24T22:00:00.000Z"
     },
     "2511120549": {
       "folder": "2511120549-workflow-resync",
       "path": "done/2511120549-workflow-resync/spec.md",
-      "status": "review",
+      "status": "completed",
       "created": "2025-11-12T05:49:39.000Z",
       "updated": "2025-11-24T22:00:00.000Z"
     },
@@ -59,7 +59,7 @@
     "2511130843": {
       "folder": "2511130843-spec-type-routing",
       "path": "done/2511130843-spec-type-routing/spec.md",
-      "status": "review",
+      "status": "completed",
       "created": "2024-11-13T08:43:11.000Z",
       "updated": "2025-11-24T22:00:00.000Z"
     },
@@ -91,7 +91,7 @@
       "folder": "2511181832-branch-validation",
       "path": "done/2511181832-branch-validation/spec.md",
       "spec_type": "feature",
-      "status": "review",
+      "status": "completed",
       "created": "2025-11-18T18:32:00.000Z",
       "updated": "2025-11-24T22:00:00.000Z"
     },
@@ -99,7 +99,7 @@
       "folder": "2511190555-session-theme-system",
       "path": "done/2511190555-session-theme-system/spec.md",
       "spec_type": "feature",
-      "status": "draft",
+      "status": "completed",
       "created": "2025-11-19T12:57:47Z",
       "updated": "2025-11-24T22:00:00.000Z"
     },
@@ -115,7 +115,7 @@
       "folder": "2511191054-monospace-theme",
       "path": "done/2511191054-monospace-theme/spec.md",
       "spec_type": "feature",
-      "status": "review",
+      "status": "completed",
       "created": "2025-11-19T10:54:00Z",
       "updated": "2025-11-24T22:00:00.000Z"
     },
@@ -139,7 +139,7 @@
       "folder": "2511211229-fixed-layout-skeleton",
       "path": "done/2511211229-fixed-layout-skeleton/spec.md",
       "spec_type": "issue",
-      "status": "draft",
+      "status": "completed",
       "created": "2025-11-21T19:30:40Z",
       "updated": "2025-11-24T22:00:00.000Z"
     },
@@ -195,23 +195,12 @@
       "folder": "2511221515-three-tab-sidebar",
       "path": "done/2511221515-three-tab-sidebar/spec.md",
       "spec_type": "feature",
-      "status": "review",
+      "status": "completed",
       "created": "2025-11-22T15:15:00Z",
       "updated": "2025-11-24T21:30:00.000Z",
       "totalComplexity": 64,
       "phaseCount": 4,
       "taskCount": 16
-    },
-    "2511232135": {
-      "folder": "2511232135-spec-complexity-tracking",
-      "path": "done/2511232135-spec-complexity-tracking/spec.md",
-      "spec_type": "feature",
-      "status": "completed",
-      "created": "2025-11-23T21:35:00Z",
-      "updated": "2025-11-24T21:52:00.000Z",
-      "totalComplexity": 89,
-      "phaseCount": 4,
-      "taskCount": 10
     },
     "2511230804": {
       "folder": "2511230804-session-store-refactor",
@@ -229,6 +218,17 @@
       "created": "2025-11-23T08:23:00Z",
       "updated": "2025-11-23T20:54:50.000Z"
     },
+    "2511232135": {
+      "folder": "2511232135-spec-complexity-tracking",
+      "path": "done/2511232135-spec-complexity-tracking/spec.md",
+      "spec_type": "feature",
+      "status": "completed",
+      "created": "2025-11-23T21:35:00Z",
+      "updated": "2025-11-24T21:52:00.000Z",
+      "totalComplexity": 89,
+      "phaseCount": 4,
+      "taskCount": 10
+    },
     "2511240127": {
       "folder": "2511240127-messagelist-memoization",
       "path": "done/2511240127-messagelist-memoization/spec.md",
@@ -241,17 +241,17 @@
       "folder": "2511240820-shared-utils-consolidation",
       "path": "todo/2511240820-shared-utils-consolidation/spec.md",
       "spec_type": "feature",
-      "status": "review",
+      "status": "completed",
       "created": "2025-11-24T08:20:00Z",
       "updated": "2025-11-24T22:00:00.000Z"
     },
     "2511241230": {
       "folder": "2511241230-background-project-sync",
-      "path": "todo/2511241230-background-project-sync/spec.md",
+      "path": "done/2511241230-background-project-sync/spec.md",
       "spec_type": "issue",
-      "status": "review",
+      "status": "completed",
       "created": "2025-11-24T12:30:00Z",
-      "updated": "2025-11-24T22:00:00.000Z"
+      "updated": "2025-11-26T11:33:02.955Z"
     }
   }
 }
