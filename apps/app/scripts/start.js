@@ -2,7 +2,7 @@ import { spawn } from 'child_process';
 import http from 'http';
 
 const PORT = process.env.PORT || '4100';
-const HOST = process.env.HOST || '0.0.0.0';
+const HOST = process.env.HOST || '127.0.0.1';
 const INNGEST_PORT = process.env.INNGEST_PORT || '8288';
 const INNGEST_HOST = process.env.INNGEST_HOST || '127.0.0.1';
 
@@ -13,7 +13,7 @@ if (!process.env.INNGEST_DEV) {
   process.env.INNGEST_DEV = '1';
 }
 
-// Use localhost for Inngest connection (not HOST which is 0.0.0.0)
+// Use localhost for Inngest connection (loopback for internal service-to-service)
 const inngestUrl = `http://localhost:${PORT}/api/workflows/inngest`;
 
 console.log('Starting agentcmd server...');
