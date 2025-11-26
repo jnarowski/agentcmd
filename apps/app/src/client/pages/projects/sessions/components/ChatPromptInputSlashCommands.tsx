@@ -135,38 +135,37 @@ export const ChatPromptInputSlashCommands = ({
                   <PromptInputCommandItem
                     key={command.fullCommand}
                     onSelect={() => onCommandSelect({ command: command.fullCommand, immediateSubmit: false })}
+                    className="py-2.5"
                   >
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       <div className="flex flex-col min-w-0 flex-1">
-                        <div className="flex items-baseline gap-1">
-                          <span className="font-medium text-sm">
-                            {command.fullCommand}
-                          </span>
-                            {command.argumentHints &&
-                              command.argumentHints.length > 0 && (
-                                <span className="text-muted-foreground text-sm ml-1">
-                                  {command.argumentHints
-                                    .map((arg) => `[${arg}]`)
-                                    .join(" ")}
-                                </span>
-                              )}
-                          </div>
-                          <span className="text-muted-foreground text-xs">
-                            {command.description}
-                          </span>
-                        </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onCommandSelect({ command: command.fullCommand, immediateSubmit: true });
-                          }}
-                          className="flex-shrink-0 p-1.5 rounded hover:bg-accent transition-colors"
-                          title="Add command and submit"
-                        >
-                          <CornerDownLeft size={14} className="text-muted-foreground" />
-                        </button>
+                        <span className="font-medium text-sm">
+                          {command.fullCommand}
+                        </span>
+                        {command.argumentHints &&
+                          command.argumentHints.length > 0 && (
+                            <span className="text-muted-foreground text-2xs mb-0.5">
+                              {command.argumentHints
+                                .map((arg) => `[${arg}]`)
+                                .join(" ")}
+                            </span>
+                          )}
+                        <span className="text-muted-foreground text-xs">
+                          {command.description}
+                        </span>
                       </div>
-                    </PromptInputCommandItem>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onCommandSelect({ command: command.fullCommand, immediateSubmit: true });
+                        }}
+                        className="flex-shrink-0 p-1.5 rounded hover:bg-accent transition-colors"
+                        title="Add command and submit"
+                      >
+                        <CornerDownLeft size={14} className="text-muted-foreground" />
+                      </button>
+                    </div>
+                  </PromptInputCommandItem>
                 ))}
               </PromptInputCommandGroup>
             )}
@@ -183,22 +182,21 @@ export const ChatPromptInputSlashCommands = ({
                   <PromptInputCommandItem
                     key={command.fullCommand}
                     onSelect={() => onCommandSelect({ command: command.fullCommand, immediateSubmit: false })}
+                    className="py-2.5"
                   >
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       <div className="flex flex-col min-w-0 flex-1">
-                        <div className="flex items-baseline gap-2">
-                          <span className="font-medium text-sm">
-                            {command.fullCommand}
-                          </span>
-                          {command.argumentHints &&
-                            command.argumentHints.length > 0 && (
-                              <span className="text-muted-foreground text-sm ml-1">
-                                {command.argumentHints
-                                  .map((arg) => `[${arg}]`)
-                                  .join(" ")}
-                              </span>
-                            )}
-                        </div>
+                        <span className="font-medium text-sm">
+                          {command.fullCommand}
+                        </span>
+                        {command.argumentHints &&
+                          command.argumentHints.length > 0 && (
+                            <span className="text-muted-foreground text-2xs mb-0.5">
+                              {command.argumentHints
+                                .map((arg) => `[${arg}]`)
+                                .join(" ")}
+                            </span>
+                          )}
                         <span className="text-muted-foreground text-xs">
                           {command.description}
                         </span>
