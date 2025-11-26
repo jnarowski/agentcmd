@@ -356,11 +356,16 @@ export async function workflowRoutes(fastify: FastifyInstance) {
           .send({ error: { message: "Access denied", statusCode: 403 } });
       }
 
+      if (!fastify.workflowClient) {
+        throw new Error("Workflow client not available");
+      }
+
       const updated = await cancelWorkflow({
         runId: id,
         userId,
         reason: undefined,
         logger: fastify.log,
+        workflowClient: fastify.workflowClient,
       });
 
       return reply.send({ data: updated });

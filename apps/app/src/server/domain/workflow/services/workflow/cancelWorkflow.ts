@@ -9,7 +9,7 @@ import { WorkflowWebSocketEventTypes } from "@/shared/types/websocket.types";
  * Cancels a workflow execution
  * Updates status to 'cancelled' and sets cancelled_at timestamp
  */
-export async function cancelWorkflow({ runId, userId, reason, logger }: CancelWorkflowOptions
+export async function cancelWorkflow({ runId, userId, reason, logger, workflowClient }: CancelWorkflowOptions
 ): Promise<WorkflowRun> {
   const cancelledAt = new Date();
   const execution = await prisma.workflowRun.update({
@@ -19,6 +19,23 @@ export async function cancelWorkflow({ runId, userId, reason, logger }: CancelWo
       cancelled_at: cancelledAt,
     },
   });
+
+  // Send Inngest cancel event to terminate running workflow
+  try {
+    await workflowClient.send({
+      name: "workflow/cancel",
+      data: {
+        runId,
+        reason,
+        userId,
+        cancelledAt: cancelledAt.toISOString(),
+      },
+    });
+    logger?.info({ runId }, "Sent Inngest cancel event");
+  } catch (error) {
+    logger?.error({ error, runId }, "Failed to send Inngest cancel event");
+    // Don't throw - DB update already succeeded, graceful degradation
+  }
 
   // Create workflow_cancelled event
   await createWorkflowEvent({

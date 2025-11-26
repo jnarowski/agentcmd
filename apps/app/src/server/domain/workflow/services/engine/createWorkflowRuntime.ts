@@ -142,6 +142,12 @@ export function createWorkflowRuntime(
               finish: `${Math.floor(config.timeout / 1000)}s` as `${number}s`,
             },
           }),
+          cancelOn: [
+            {
+              event: "workflow/cancel",
+              match: "data.runId",
+            },
+          ],
         },
         { event: eventName },
         async ({ event, step: inngestStep, runId: inngestRunId }) => {

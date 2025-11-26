@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { XCircle, ExternalLink, Trash2 } from "lucide-react";
+import { XCircle, ExternalLink, Trash2, MoreVertical, Ban } from "lucide-react";
 import { WorkflowStatusBadge } from "./components/WorkflowStatusBadge";
 import { PhaseTimeline } from "./components/timeline/PhaseTimeline";
 import { WorkflowDetailPanel } from "./components/detail-panel/WorkflowDetailPanel";
@@ -9,9 +9,23 @@ import { useWorkflowRun } from "./hooks/useWorkflowRun";
 import { useWorkflowDefinition } from "./hooks/useWorkflowDefinition";
 import { useWorkflowWebSocket } from "./hooks/useWorkflowWebSocket";
 import { useWorkflowDetailPanel } from "./hooks/useWorkflowDetailPanel";
+import { useCancelWorkflow } from "./hooks/useWorkflowMutations";
 import { useProjectId } from "@/client/hooks/useProjectId";
 import { PageHeader } from "@/client/components/PageHeader";
 import { Button } from "@/client/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/client/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/client/components/ui/tooltip";
 
 function WorkflowRunDetailPage() {
   const projectId = useProjectId();
@@ -45,13 +59,28 @@ function WorkflowRunDetailPage() {
     isError: definitionError,
   } = useWorkflowDefinition(definitionId);
 
+  // Mutations
+  const cancelMutation = useCancelWorkflow();
+
   // Handlers
+  const handleCancel = () => {
+    if (runId) {
+      cancelMutation.mutate(runId);
+    }
+  };
+
   const handleDelete = () => {
     setDeleteDialogOpen(true);
   };
 
   const handleDeleteSuccess = () => {
     navigate(`/projects/${projectId}/workflows`);
+  };
+
+  const handleViewOnInngest = () => {
+    if (run?.inngest_run_id) {
+      window.open(`http://localhost:8288/stream/${run.inngest_run_id}`, '_blank');
+    }
   };
 
   // Clear selected session when runId changes
@@ -152,14 +181,59 @@ function WorkflowRunDetailPage() {
                 </a>
               </Button>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDelete}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </Button>
+            {run.status === "running" && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleCancel}
+                disabled={cancelMutation.isPending}
+              >
+                <Ban className="h-4 w-4 mr-2" />
+                Cancel
+              </Button>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {run.inngest_run_id && (
+                  <>
+                    <DropdownMenuItem onClick={handleViewOnInngest}>
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      View on Inngest
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div>
+                        <DropdownMenuItem
+                          onClick={handleDelete}
+                          disabled={run.status === "running"}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </div>
+                    </TooltipTrigger>
+                    {run.status === "running" && (
+                      <TooltipContent>
+                        Cancel workflow first
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         }
         alerts={

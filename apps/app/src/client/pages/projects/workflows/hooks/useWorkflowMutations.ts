@@ -116,13 +116,44 @@ export function useCancelWorkflow() {
 
   return useMutation({
     mutationFn: cancelWorkflow,
+    onMutate: async (runId) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: workflowKeys.run(runId) });
+
+      // Snapshot previous value
+      const previousRun = queryClient.getQueryData<{ data: WorkflowRun }>(
+        workflowKeys.run(runId)
+      );
+
+      // Optimistically update to cancelled status
+      queryClient.setQueryData<{ data: WorkflowRun }>(
+        workflowKeys.run(runId),
+        (old) =>
+          old
+            ? {
+                ...old,
+                data: {
+                  ...old.data,
+                  status: 'cancelled',
+                  cancelled_at: new Date().toISOString(),
+                },
+              }
+            : old
+      );
+
+      return { previousRun };
+    },
     onSuccess: (_data, runId) => {
       queryClient.invalidateQueries({
         queryKey: workflowKeys.run(runId),
       });
       toast.success('Workflow cancelled');
     },
-    onError: (error: Error) => {
+    onError: (error: Error, runId, context) => {
+      // Rollback on error
+      if (context?.previousRun) {
+        queryClient.setQueryData(workflowKeys.run(runId), context.previousRun);
+      }
       toast.error(error.message || 'Failed to cancel workflow');
     },
   });
