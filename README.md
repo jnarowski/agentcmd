@@ -2,6 +2,18 @@
 
 > AI agent workflow management platform with chat, file editing, and terminal capabilities
 
+## Why agentcmd?
+
+I was sick of babysitting my agents. Love Claude Code. Hate babysitting. Like a good AI Engineer I called "/plan", then "/implement", then "/review" until my fingers were blue. Then I got to work on agentcmd.
+
+**agentcmd lets you:**
+
+- Chain slash commands into recursive workflows that run until done
+- Define workflwos in code. Bring your tools, your process, your slash commands
+- Add any steps you want: security checks, code reviews, multiple agents reviewing each other
+- Run in isolated Worktress so nothing conflicts
+- Fully responsive, so you can code from anywhere (after you setup Tailscale)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![pnpm](https://img.shields.io/badge/pnpm-8.0+-orange.svg)](https://pnpm.io/)
@@ -18,6 +30,35 @@ Full-stack web application for orchestrating AI agent workflows. Interact with C
 - **Project Workspaces** - Manage multiple projects with isolated environments
 - **Workflow Engine** - Orchestrate multi-step AI workflows with Inngest
 - **Slash Commands** - Extend agent capabilities with custom commands
+
+## Example Workflow
+
+```typescript
+import { defineWorkflow, step } from "agentcmd-workflows";
+
+export default defineWorkflow({
+  name: "code-review",
+  description: "Automated code review with Claude",
+  steps: [
+    step.agent({
+      name: "analyze",
+      prompt: "Review this code for bugs and improvements",
+      agent: "claude-code",
+    }),
+    step.conditional({
+      name: "check-severity",
+      condition: (ctx) => ctx.results.analyze.issues.length > 0,
+      onTrue: step.agent({
+        name: "fix",
+        prompt: "Fix the identified issues",
+        agent: "claude-code",
+      }),
+    }),
+  ],
+});
+```
+
+See the [First Workflow Guide](https://agentcmd.dev/docs/getting-started/first-workflow) for a complete tutorial.
 
 ## Getting Started
 
@@ -69,16 +110,6 @@ Run optimized builds locally with process management:
 # Build and start
 pnpm build
 pm2 start ecosystem.config.js
-
-# Update and restart
-git pull origin main
-pnpm build
-pm2 restart agentcmd
-
-# Common pm2 commands
-pm2 logs agentcmd      # View logs
-pm2 status             # Check status
-pm2 stop agentcmd      # Stop server
 ```
 
 Config stored in `~/.agentcmd/config.json` with auto-generated JWT secret and database.
@@ -107,10 +138,10 @@ Or manually edit `~/.agentcmd/config.json`.
 
 ### Ports
 
-| Service         | Default | Configure Via                                         |
-| --------------- | ------- | ----------------------------------------------------- |
-| Fastify Server  | 4100    | `PORT` env var or `--port` flag                       |
-| Vite Dev Server | 4101    | `VITE_PORT` env var (dev only)                        |
+| Service         | Default | Configure Via                                                                  |
+| --------------- | ------- | ------------------------------------------------------------------------------ |
+| Fastify Server  | 4100    | `PORT` env var or `--port` flag                                                |
+| Vite Dev Server | 4101    | `VITE_PORT` env var (dev only)                                                 |
 | Inngest Dev UI  | 8288    | `inngestPort` in config.json, `INNGEST_PORT` env var, or `--inngest-port` flag |
 
 **Priority:** CLI flags > config.json > .env > defaults
@@ -147,11 +178,7 @@ This is a Turborepo monorepo containing:
 
 ## Documentation
 
-- **[CLAUDE.md](./CLAUDE.md)** - Monorepo conventions and development guide
-- **[apps/app/CLAUDE.md](./apps/app/CLAUDE.md)** - Web app architecture and patterns
-- **[packages/agent-cli-sdk/](./packages/agent-cli-sdk/)** - SDK documentation
-- **[packages/agentcmd-workflows/](./packages/agentcmd-workflows/)** - Workflow library docs
-- **[.agent/docs/](./.agent/docs/)** - Architecture deep dives
+Full documentation available at **[agentcmd.dev/docs](https://agentcmd.dev/docs)**
 
 ## Common Issues
 
