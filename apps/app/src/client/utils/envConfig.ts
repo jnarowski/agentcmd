@@ -11,9 +11,9 @@
  * @example
  * ```typescript
  * const url = getWebsiteUrl();
- * // Returns: "http://localhost:3000" (dev) or "https://docs.agentcmd.com" (prod)
+ * // Returns: "http://localhost:3000" (dev) or "https://agentcmd.dev" (prod)
  * ```
  */
 export function getWebsiteUrl(): string {
-  return import.meta.env.VITE_WEBSITE_URL || "http://localhost:3000";
+  return import.meta.env.DEV ? "http://localhost:3000" : "https://agentcmd.dev";
 }
