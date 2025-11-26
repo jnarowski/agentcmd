@@ -39,7 +39,7 @@ export default function ProjectSessionPage() {
     agent: currentSession.agent || 'claude',
     type: 'chat' as const,
     state: 'idle' as const,
-    permission_mode: 'default' as const,
+    permission_mode: currentSession.permission_mode || 'default',
     error_message: currentSession.error || undefined,
     session_path: undefined,
     is_archived: false,
