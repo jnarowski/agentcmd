@@ -10,6 +10,14 @@
     "dist/"
   ],
   "preferGlobal": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jnarowski/agentcmd"
+  },
+  "homepage": "https://github.com/jnarowski/agentcmd#readme",
+  "bugs": {
+    "url": "https://github.com/jnarowski/agentcmd/issues"
+  },
   "scripts": {
     "build": "pnpm prisma:generate && vite build && pnpm build:server && pnpm build:cli",
     "build:server": "node scripts/build-server.js",

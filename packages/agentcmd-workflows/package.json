@@ -52,6 +52,14 @@
   ],
   "author": "Sourceborn",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jnarowski/agentcmd"
+  },
+  "homepage": "https://github.com/jnarowski/agentcmd#readme",
+  "bugs": {
+    "url": "https://github.com/jnarowski/agentcmd/issues"
+  },
   "engines": {
     "node": ">=22.0.0"
   },
