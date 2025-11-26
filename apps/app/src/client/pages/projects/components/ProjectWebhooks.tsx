@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/client/components/ui/button";
 import {
   Card,
@@ -9,6 +10,8 @@ import { useNavigate } from "react-router-dom";
 import { Webhook, Plus } from "lucide-react";
 import { useWebhooks } from "@/client/pages/projects/webhooks/hooks/useWebhooks";
 import { WebhookCard } from "@/client/pages/projects/webhooks/components/WebhookCard";
+import { DeleteWebhookDialog } from "@/client/pages/projects/webhooks/components/DeleteWebhookDialog";
+import type { Webhook as WebhookType } from "@/client/pages/projects/webhooks/types/webhook.types";
 
 interface ProjectWebhooksProps {
   projectId: string;
@@ -20,6 +23,7 @@ interface ProjectWebhooksProps {
  */
 export function ProjectWebhooks({ projectId }: ProjectWebhooksProps) {
   const navigate = useNavigate();
+  const [deleteTarget, setDeleteTarget] = useState<WebhookType | null>(null);
   const { data: webhooks, isLoading, error } = useWebhooks(projectId);
 
   const handleCreateWebhook = () => {
@@ -72,6 +76,7 @@ export function ProjectWebhooks({ projectId }: ProjectWebhooksProps) {
                   key={webhook.id}
                   webhook={webhook}
                   projectId={projectId}
+                  onDelete={() => setDeleteTarget(webhook)}
                 />
               ))}
             </div>
@@ -99,6 +104,15 @@ export function ProjectWebhooks({ projectId }: ProjectWebhooksProps) {
             </div>
           )}
         </div>
+
+        {/* Delete dialog at component level */}
+        {deleteTarget && (
+          <DeleteWebhookDialog
+            open={!!deleteTarget}
+            onOpenChange={(open) => !open && setDeleteTarget(null)}
+            webhook={deleteTarget}
+          />
+        )}
       </CardContent>
     </Card>
   );

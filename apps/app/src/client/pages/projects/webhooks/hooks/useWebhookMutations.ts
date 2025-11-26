@@ -10,14 +10,10 @@ interface UpdateWebhookInput {
   data: Partial<WebhookFormData>;
 }
 
-interface UseWebhookMutationsOptions {
-  onDeleteSuccess?: () => void;
-}
-
 /**
  * All webhook mutations with proper invalidation and navigation
  */
-export function useWebhookMutations(projectId: string, options?: UseWebhookMutationsOptions) {
+export function useWebhookMutations(projectId: string) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -108,13 +104,12 @@ export function useWebhookMutations(projectId: string, options?: UseWebhookMutat
     },
   });
 
-  // Delete webhook
+  // Delete webhook - simple version (cache invalidation + toast only)
   const deleteMutation = useMutation({
     mutationFn: async ({ webhookId }: { webhookId: string }): Promise<void> => {
       await api.delete(`/api/webhooks/${webhookId}`);
     },
     onSuccess: () => {
-      options?.onDeleteSuccess?.(); // Navigate FIRST (before cache invalidation)
       queryClient.invalidateQueries({ queryKey: webhookKeys.list(projectId) });
       toast.success("Webhook deleted");
     },

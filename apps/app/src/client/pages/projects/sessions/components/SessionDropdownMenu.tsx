@@ -14,8 +14,6 @@ import {
   DropdownMenuTrigger,
 } from "@/client/components/ui/dropdown-menu";
 import { Kbd } from "@/client/components/ui/kbd";
-import { SessionDialog } from "./SessionDialog";
-import { SessionFileViewer } from "./SessionFileViewer";
 import {
   useSessionStore,
   type SessionSummary,
@@ -30,25 +28,24 @@ import type { UnifiedMessage } from "agent-cli-sdk";
 
 interface SessionDropdownMenuProps {
   session: SessionSummary;
-  onEditSuccess?: () => void;
+  onEdit?: () => void;
+  onViewFile?: () => void;
   onMenuOpenChange?: (open: boolean) => void;
   triggerClassName?: string;
 }
 
 /**
- * Reusable dropdown menu for session actions (rename, etc.)
- * Manages its own state for dialog and menu open/close
+ * Reusable dropdown menu for session actions.
+ * Dialogs should be rendered by parent component to survive dropdown unmount.
  */
 export function SessionDropdownMenu({
   session,
-  onEditSuccess,
+  onEdit,
+  onViewFile,
   onMenuOpenChange,
   triggerClassName,
 }: SessionDropdownMenuProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [fileViewerOpen, setFileViewerOpen] = useState(false);
-  const updateSession = useSessionStore((s) => s.updateSession);
   const archiveSession = useSessionStore((s) => s.archiveSession);
   const unarchiveSession = useSessionStore((s) => s.unarchiveSession);
   const currentSession = useSessionStore(selectActiveSession);
@@ -63,14 +60,14 @@ export function SessionDropdownMenu({
     e?.preventDefault();
     e?.stopPropagation();
     handleMenuOpenChange(false);
-    setEditDialogOpen(true);
+    onEdit?.();
   };
 
   const handleViewFile = (e?: React.MouseEvent) => {
     e?.preventDefault();
     e?.stopPropagation();
     handleMenuOpenChange(false);
-    setFileViewerOpen(true);
+    onViewFile?.();
   };
 
   const handleArchive = async () => {
@@ -92,17 +89,6 @@ export function SessionDropdownMenu({
     } catch (error) {
       toast.error("Failed to unarchive session");
       console.error("[SessionDropdownMenu] Unarchive error:", error);
-    }
-  };
-
-  const handleUpdateSession = async (sessionId: string, name: string) => {
-    try {
-      await updateSession(sessionId, { name });
-      toast.success("Session updated");
-      onEditSuccess?.();
-    } catch (error) {
-      toast.error("Failed to update session");
-      console.error("[SessionDropdownMenu] Update error:", error);
     }
   };
 
@@ -165,8 +151,8 @@ export function SessionDropdownMenu({
 
     const key = e.key.toLowerCase();
     const actions: Record<string, (() => void) | undefined> = {
-      e: handleEdit,
-      v: session.session_path ? handleViewFile : undefined,
+      e: onEdit ? handleEdit : undefined,
+      v: onViewFile && session.session_path ? handleViewFile : undefined,
       c: handleCopySession,
       a: session.is_archived ? handleUnarchive : handleArchive,
     };
@@ -180,73 +166,58 @@ export function SessionDropdownMenu({
   };
 
   return (
-    <>
-      <DropdownMenu modal={false} open={isMenuOpen} onOpenChange={handleMenuOpenChange}>
-        <DropdownMenuTrigger
-          className={cn(
-            "h-6 w-6 flex items-center justify-center rounded-md transition-colors",
-            "bg-background/95 backdrop-blur-sm hover:bg-accent",
-            "border border-border/50",
-            "focus:outline-none focus:ring-2 focus:ring-primary",
-            triggerClassName
-          )}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-        >
-          <MoreHorizontal className="h-4 w-4" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          className="z-50"
-          onKeyDown={handleKeyDown}
-        >
-          <DropdownMenuItem onClick={handleEdit}>
-            <Pencil className="h-4 w-4" />
-            <span>Edit</span>
-            <Kbd className="ml-auto">E</Kbd>
+    <DropdownMenu modal={false} open={isMenuOpen} onOpenChange={handleMenuOpenChange}>
+      <DropdownMenuTrigger
+        className={cn(
+          "h-6 w-6 flex items-center justify-center rounded-md transition-colors",
+          "bg-background/95 backdrop-blur-sm hover:bg-accent",
+          "border border-border/50",
+          "focus:outline-none focus:ring-2 focus:ring-primary",
+          triggerClassName
+        )}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+      >
+        <MoreHorizontal className="h-4 w-4" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        className="z-50"
+        onKeyDown={handleKeyDown}
+      >
+        <DropdownMenuItem onClick={handleEdit}>
+          <Pencil className="h-4 w-4" />
+          <span>Edit</span>
+          <Kbd className="ml-auto">E</Kbd>
+        </DropdownMenuItem>
+        {session.session_path && (
+          <DropdownMenuItem onClick={handleViewFile}>
+            <FileJson className="h-4 w-4" />
+            <span>View Session File</span>
+            <Kbd className="ml-auto">V</Kbd>
           </DropdownMenuItem>
-          {session.session_path && (
-            <DropdownMenuItem onClick={handleViewFile}>
-              <FileJson className="h-4 w-4" />
-              <span>View Session File</span>
-              <Kbd className="ml-auto">V</Kbd>
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem onClick={handleCopySession}>
-            <Copy className="h-4 w-4" />
-            <span>Copy Session JSON</span>
-            <Kbd className="ml-auto">C</Kbd>
+        )}
+        <DropdownMenuItem onClick={handleCopySession}>
+          <Copy className="h-4 w-4" />
+          <span>Copy Session JSON</span>
+          <Kbd className="ml-auto">C</Kbd>
+        </DropdownMenuItem>
+        {session.is_archived ? (
+          <DropdownMenuItem onClick={handleUnarchive}>
+            <ArchiveRestore className="h-4 w-4" />
+            <span>Unarchive</span>
+            <Kbd className="ml-auto">A</Kbd>
           </DropdownMenuItem>
-          {session.is_archived ? (
-            <DropdownMenuItem onClick={handleUnarchive}>
-              <ArchiveRestore className="h-4 w-4" />
-              <span>Unarchive</span>
-              <Kbd className="ml-auto">A</Kbd>
-            </DropdownMenuItem>
-          ) : (
-            <DropdownMenuItem onClick={handleArchive}>
-              <Archive className="h-4 w-4" />
-              <span>Archive</span>
-              <Kbd className="ml-auto">A</Kbd>
-            </DropdownMenuItem>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <SessionDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        session={session}
-        onUpdateSession={handleUpdateSession}
-      />
-
-      <SessionFileViewer
-        open={fileViewerOpen}
-        onOpenChange={setFileViewerOpen}
-        sessionId={session.id}
-      />
-    </>
+        ) : (
+          <DropdownMenuItem onClick={handleArchive}>
+            <Archive className="h-4 w-4" />
+            <span>Archive</span>
+            <Kbd className="ml-auto">A</Kbd>
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

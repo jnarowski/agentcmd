@@ -1,5 +1,8 @@
 import { useState, useMemo } from "react";
 import { SessionListItem } from "@/client/pages/projects/sessions/components/SessionListItem";
+import { SessionDialog } from "@/client/pages/projects/sessions/components/SessionDialog";
+import { SessionFileViewer } from "@/client/pages/projects/sessions/components/SessionFileViewer";
+import { useSessionStore } from "@/client/pages/projects/sessions/stores/sessionStore";
 import { Input } from "@/client/components/ui/input";
 import { Badge } from "@/client/components/ui/badge";
 import {
@@ -40,6 +43,11 @@ export function ProjectHomeSessions({
   const [selectedAgent, setSelectedAgent] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [archivedFilter, setArchivedFilter] = useState<string>("active");
+
+  // Dialog state - lifted from SessionListItem to survive dropdown unmount
+  const [editSession, setEditSession] = useState<SessionResponse | null>(null);
+  const [viewFileSession, setViewFileSession] = useState<SessionResponse | null>(null);
+  const updateSession = useSessionStore((s) => s.updateSession);
 
   const stateOptions: { value: string; label: string }[] = [
     { value: "all", label: "All States" },
@@ -322,7 +330,13 @@ export function ProjectHomeSessions({
       ) : (
         <div className="space-y-0 -mx-2">
           {filteredSessions.map((session) => (
-            <SessionListItem key={session.id} session={session} projectId={projectId} />
+            <SessionListItem
+              key={session.id}
+              session={session}
+              projectId={projectId}
+              onEdit={setEditSession}
+              onViewFile={setViewFileSession}
+            />
           ))}
         </div>
       )}
@@ -335,6 +349,23 @@ export function ProjectHomeSessions({
           </div>
         </div>
       </CardContent>
+
+      {/* Dialogs rendered at parent level to survive dropdown unmount */}
+      <SessionDialog
+        session={editSession}
+        open={!!editSession}
+        onOpenChange={(open) => !open && setEditSession(null)}
+        onUpdateSession={async (sessionId, name) => {
+          await updateSession(sessionId, { name });
+        }}
+      />
+      {viewFileSession && (
+        <SessionFileViewer
+          sessionId={viewFileSession.id}
+          open={!!viewFileSession}
+          onOpenChange={(open) => !open && setViewFileSession(null)}
+        />
+      )}
     </Card>
   );
 }

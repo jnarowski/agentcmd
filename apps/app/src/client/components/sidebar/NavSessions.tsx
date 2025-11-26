@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { RefreshCw, Plus } from "lucide-react";
@@ -15,8 +15,13 @@ import {
 } from "@/client/pages/projects/hooks/useProjects";
 import { useSessionList } from "@/client/hooks/useSessionList";
 import { SessionItem } from "@/client/components/sidebar/SessionItem";
+import { SessionDialog } from "@/client/pages/projects/sessions/components/SessionDialog";
+import { SessionFileViewer } from "@/client/pages/projects/sessions/components/SessionFileViewer";
+import {
+  useSessionStore,
+  type SessionSummary,
+} from "@/client/pages/projects/sessions/stores/sessionStore";
 import type { AgentType } from "@/shared/types/agent.types";
-import type { SessionSummary } from "@/client/pages/projects/sessions/stores/sessionStore";
 
 interface SessionActivity {
   id: string;
@@ -36,6 +41,11 @@ export function NavSessions() {
   const queryClient = useQueryClient();
   const syncProjectsMutation = useSyncProjectsMutation();
   const { isMobile, setOpenMobile } = useSidebar();
+
+  // Dialog state - lifted from SessionItem to survive dropdown unmount
+  const [editSession, setEditSession] = useState<SessionSummary | null>(null);
+  const [viewFileSession, setViewFileSession] = useState<SessionSummary | null>(null);
+  const updateSession = useSessionStore((s) => s.updateSession);
 
   // Fetch only chat sessions
   const { sessions } = useSessionList(activeProjectId || null, {
@@ -135,11 +145,30 @@ export function NavSessions() {
                 agent={activity.agent}
                 session={activity.session}
                 isActive={activity.id === activeSessionId}
+                onEdit={setEditSession}
+                onViewFile={setViewFileSession}
               />
             ))}
           </SidebarMenu>
         )}
       </div>
+
+      {/* Dialogs rendered at parent level to survive dropdown unmount */}
+      <SessionDialog
+        session={editSession}
+        open={!!editSession}
+        onOpenChange={(open) => !open && setEditSession(null)}
+        onUpdateSession={async (sessionId, name) => {
+          await updateSession(sessionId, { name });
+        }}
+      />
+      {viewFileSession && (
+        <SessionFileViewer
+          sessionId={viewFileSession.id}
+          open={!!viewFileSession}
+          onOpenChange={(open) => !open && setViewFileSession(null)}
+        />
+      )}
     </div>
   );
 }

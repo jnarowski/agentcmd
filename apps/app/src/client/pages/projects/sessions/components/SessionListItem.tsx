@@ -15,6 +15,8 @@ interface SessionListItemProps {
   session: SessionResponse;
   projectId: string;
   isActive?: boolean;
+  onEdit?: (session: SessionResponse) => void;
+  onViewFile?: (session: SessionResponse) => void;
 }
 
 
@@ -22,6 +24,8 @@ export function SessionListItem({
   session,
   projectId,
   isActive = false,
+  onEdit,
+  onViewFile,
 }: SessionListItemProps) {
   const { id, metadata, created_at, type, permission_mode, state } = session;
   const messageCount = metadata?.messageCount ?? 0;
@@ -101,6 +105,8 @@ export function SessionListItem({
         <div className="absolute right-2 top-2 z-50">
           <SessionDropdownMenu
             session={session}
+            onEdit={onEdit ? () => onEdit(session) : undefined}
+            onViewFile={onViewFile ? () => onViewFile(session) : undefined}
             onMenuOpenChange={setIsMenuOpen}
           />
         </div>

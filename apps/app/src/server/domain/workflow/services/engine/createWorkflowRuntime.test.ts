@@ -867,7 +867,7 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
       vi.mocked(existsSync).mockReturnValue(false);
 
       // Configure mock to throw error for missing file
-      mockSetupSpec.mockRejectedValueOnce(
+      vi.mocked(setupSpec).mockRejectedValueOnce(
         new Error(`Spec file not found: ${nonExistentSpecPath}`)
       );
 
@@ -936,7 +936,7 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
       const errorMessage = "Spec command not found: /cmd:generate-invalid-spec\n" +
         "Expected file: /tmp/test-project/.claude/commands/cmd/generate-invalid-spec.md\n" +
         "Available spec types can be found in .claude/commands/cmd/";
-      mockSetupSpec.mockRejectedValue(new Error(errorMessage));
+      vi.mocked(setupSpec).mockRejectedValue(new Error(errorMessage));
 
       const run = await createTestWorkflowRun(prisma, {
         project_id: project.id,
@@ -1010,7 +1010,7 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
       expect(updatedRun?.status).toBe("failed");
 
       // Reset mock to default behavior after this test
-      mockSetupSpec.mockResolvedValue(
+      vi.mocked(setupSpec).mockResolvedValue(
         ".agent/specs/todo/251024120101-test-feature/spec.md"
       );
     });

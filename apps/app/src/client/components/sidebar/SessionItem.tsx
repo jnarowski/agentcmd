@@ -23,6 +23,8 @@ interface SessionItemProps {
   agent?: AgentType;
   session: SessionSummary;
   isActive?: boolean;
+  onEdit?: (session: SessionSummary) => void;
+  onViewFile?: (session: SessionSummary) => void;
 }
 
 export function SessionItem({
@@ -32,6 +34,8 @@ export function SessionItem({
   agent,
   session,
   isActive = false,
+  onEdit,
+  onViewFile,
 }: SessionItemProps) {
   const { isMobile, setOpenMobile } = useSidebar();
   const activeProjectId = useNavigationStore((s) => s.activeProjectId);
@@ -100,6 +104,8 @@ export function SessionItem({
         <div className="absolute right-2 top-2 z-50">
           <SessionDropdownMenu
             session={session}
+            onEdit={onEdit ? () => onEdit(session) : undefined}
+            onViewFile={onViewFile ? () => onViewFile(session) : undefined}
             onMenuOpenChange={(open) => setMenuOpenActivityId(open ? id : null)}
             triggerClassName="data-[state=open]:bg-accent"
           />

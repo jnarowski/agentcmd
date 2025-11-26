@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/client/components/ui/button";
 import {
   Card,
@@ -21,6 +22,8 @@ import { WorkflowRunEmptyState } from "@/client/pages/projects/workflows/compone
 import { WorkflowDefinitionEmptyState } from "@/client/pages/projects/workflows/components/WorkflowDefinitionEmptyState";
 import { WebhookCard } from "@/client/pages/projects/webhooks/components/WebhookCard";
 import { WebhookEmptyState } from "@/client/pages/projects/webhooks/components/WebhookEmptyState";
+import { DeleteWebhookDialog } from "@/client/pages/projects/webhooks/components/DeleteWebhookDialog";
+import type { Webhook } from "@/client/pages/projects/webhooks/types/webhook.types";
 
 interface ProjectWorkflowsProps {
   projectId: string;
@@ -32,6 +35,7 @@ interface ProjectWorkflowsProps {
  */
 export function ProjectHomeWorkflows({ projectId }: ProjectWorkflowsProps) {
   const navigate = useNavigate();
+  const [deleteTarget, setDeleteTarget] = useState<Webhook | null>(null);
   const { data: runs, isLoading: isLoadingRuns } = useWorkflowRuns(projectId);
   const { data: definitions, isLoading: isLoadingDefs } =
     useWorkflowDefinitions(projectId, "active");
@@ -224,6 +228,7 @@ export function ProjectHomeWorkflows({ projectId }: ProjectWorkflowsProps) {
                     key={webhook.id}
                     webhook={webhook}
                     projectId={projectId}
+                    onDelete={() => setDeleteTarget(webhook)}
                   />
                 ))}
               </div>
@@ -234,6 +239,15 @@ export function ProjectHomeWorkflows({ projectId }: ProjectWorkflowsProps) {
             )}
           </TabsContent>
         </Tabs>
+
+        {/* Delete dialog at component level */}
+        {deleteTarget && (
+          <DeleteWebhookDialog
+            open={!!deleteTarget}
+            onOpenChange={(open) => !open && setDeleteTarget(null)}
+            webhook={deleteTarget}
+          />
+        )}
       </CardContent>
     </Card>
   );

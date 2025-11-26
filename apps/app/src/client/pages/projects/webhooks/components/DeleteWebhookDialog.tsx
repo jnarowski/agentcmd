@@ -6,7 +6,7 @@ interface DeleteWebhookDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   webhook: Webhook;
-  onSuccess?: () => void;
+  onSuccess?: () => void | Promise<void>;
 }
 
 export function DeleteWebhookDialog({
@@ -15,15 +15,19 @@ export function DeleteWebhookDialog({
   webhook,
   onSuccess,
 }: DeleteWebhookDialogProps) {
-  const { deleteMutation } = useWebhookMutations(webhook.project_id, {
-    onDeleteSuccess: () => {
-      onSuccess?.(); // Navigate first (passed from parent)
-      onOpenChange(false); // Then close dialog
-    },
-  });
+  const { deleteMutation } = useWebhookMutations(webhook.project_id);
 
   const handleDelete = () => {
-    deleteMutation.mutate({ webhookId: webhook.id });
+    deleteMutation.mutate(
+      { webhookId: webhook.id },
+      {
+        onSuccess: () => {
+          onOpenChange(false);
+          onSuccess?.();
+          // Cache invalidation + toast handled by hook
+        },
+      }
+    );
   };
 
   return (
