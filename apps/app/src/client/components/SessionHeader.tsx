@@ -1,4 +1,4 @@
-import { Copy, Pencil, Workflow } from "lucide-react";
+import { Pencil, Workflow } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -7,8 +7,7 @@ import { SessionDropdownMenu } from "@/client/pages/projects/sessions/components
 import { SessionStateBadge } from "@/client/pages/projects/sessions/components/SessionStateBadge";
 import type { SessionResponse } from "@/shared/types";
 import { getSessionDisplayName } from "@/client/utils/getSessionDisplayName";
-import { useSessionStore, selectActiveSession } from "@/client/pages/projects/sessions/stores/sessionStore";
-import { copySessionToClipboard } from "@/client/pages/projects/sessions/utils/copySessionToClipboard";
+import { useSessionStore } from "@/client/pages/projects/sessions/stores/sessionStore";
 import { Button } from "@/client/components/ui/button";
 import { Input } from "@/client/components/ui/input";
 import {
@@ -31,8 +30,6 @@ export function SessionHeader({ session }: SessionHeaderProps) {
   const [isHovered, setIsHovered] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const updateSession = useSessionStore((s) => s.updateSession);
-  const currentSession = useSessionStore(selectActiveSession);
-  const sessionData = currentSession?.id === session.id ? currentSession : null;
 
   // Get display name with consistent fallback logic, then truncate to 50 characters
   const displayName = getSessionDisplayName(session);
@@ -80,26 +77,6 @@ export function SessionHeader({ session }: SessionHeaderProps) {
     } else if (e.key === "Escape") {
       e.preventDefault();
       handleCancel();
-    }
-  };
-
-  const handleCopySession = async () => {
-    try {
-      // Use the sessionData from store (includes messages, metadata, etc.)
-      const sessionState = {
-        session: sessionData || null,
-        sessionId: session.id,
-      };
-
-      await copySessionToClipboard(sessionState);
-      toast.success("Session JSON copied to clipboard", {
-        description: "Full session data including messages and metadata",
-      });
-    } catch (error) {
-      console.error("[SessionHeader] Failed to copy session:", error);
-      toast.error("Failed to copy session", {
-        description: error instanceof Error ? error.message : "Unknown error",
-      });
     }
   };
 
@@ -160,17 +137,6 @@ export function SessionHeader({ session }: SessionHeaderProps) {
               Create workflow from this planning session
             </TooltipContent>
           </Tooltip>
-        )}
-        {import.meta.env.DEV && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={handleCopySession}
-            title="Copy session JSON to clipboard"
-          >
-            <Copy className="h-3.5 w-3.5" />
-          </Button>
         )}
         <SessionDropdownMenu session={session} />
       </div>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MoreHorizontal, Pencil, FileJson, Archive, ArchiveRestore } from "lucide-react";
+import { MoreHorizontal, Pencil, FileJson, Archive, ArchiveRestore, Copy } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,9 +8,10 @@ import {
 } from "@/client/components/ui/dropdown-menu";
 import { SessionDialog } from "./SessionDialog";
 import { SessionFileViewer } from "./SessionFileViewer";
-import { useSessionStore, type SessionSummary } from "@/client/pages/projects/sessions/stores/sessionStore";
+import { useSessionStore, type SessionSummary, selectActiveSession } from "@/client/pages/projects/sessions/stores/sessionStore";
 import { cn } from "@/client/utils/cn";
 import { toast } from "sonner";
+import { copySessionToClipboard } from "@/client/pages/projects/sessions/utils/copySessionToClipboard";
 
 interface SessionDropdownMenuProps {
   session: SessionSummary;
@@ -35,6 +36,8 @@ export function SessionDropdownMenu({
   const updateSession = useSessionStore((s) => s.updateSession);
   const archiveSession = useSessionStore((s) => s.archiveSession);
   const unarchiveSession = useSessionStore((s) => s.unarchiveSession);
+  const currentSession = useSessionStore(selectActiveSession);
+  const sessionData = currentSession?.id === session.id ? currentSession : null;
 
   const handleMenuOpenChange = (open: boolean) => {
     setIsMenuOpen(open);
@@ -92,6 +95,27 @@ export function SessionDropdownMenu({
     }
   };
 
+  const handleCopySession = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleMenuOpenChange(false);
+    try {
+      const sessionState = {
+        session: sessionData || null,
+        sessionId: session.id,
+      };
+      await copySessionToClipboard(sessionState);
+      toast.success("Session JSON copied to clipboard", {
+        description: "Full session data including messages and metadata",
+      });
+    } catch (error) {
+      console.error("[SessionDropdownMenu] Failed to copy session:", error);
+      toast.error("Failed to copy session", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  };
+
   return (
     <>
       <DropdownMenu open={isMenuOpen} onOpenChange={handleMenuOpenChange}>
@@ -119,6 +143,12 @@ export function SessionDropdownMenu({
             <DropdownMenuItem onClick={handleViewFile}>
               <FileJson className="h-4 w-4" />
               <span>View Session File</span>
+            </DropdownMenuItem>
+          )}
+          {import.meta.env.DEV && (
+            <DropdownMenuItem onClick={handleCopySession}>
+              <Copy className="h-4 w-4" />
+              <span>Copy Session JSON</span>
             </DropdownMenuItem>
           )}
           {session.is_archived ? (
