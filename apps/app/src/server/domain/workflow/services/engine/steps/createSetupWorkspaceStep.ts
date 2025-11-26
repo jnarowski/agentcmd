@@ -5,6 +5,7 @@ import type {
   WorkspaceResult,
 } from "agentcmd-workflows";
 import path from "node:path";
+import simpleGit from "simple-git";
 import { getCurrentBranch } from "@/server/domain/git/services/getCurrentBranch";
 import { createAndSwitchBranch } from "@/server/domain/git/services/createAndSwitchBranch";
 import { createWorktree } from "@/server/domain/git/services/createWorktree";
@@ -101,13 +102,33 @@ async function executeSetupWorkspace(
         worktreeName,
       },
       fn: async () => {
-        const startTime = Date.now();
+        const trace: { command: string; duration: number }[] = [];
+        const git = simpleGit(projectPath);
+
+        // Auto-commit uncommitted changes before creating worktree
+        // (worktrees check out from git history, so uncommitted changes won't be available)
+        const commitStartTime = Date.now();
+        const status = await git.status();
+        if (status.files.length > 0) {
+          const message = `Auto-commit before creating worktree "${worktreeName}"`;
+          await git.add(".");
+          await git.commit(message);
+          trace.push({
+            command: `git add . && git commit -m "${message}"`,
+            duration: Date.now() - commitStartTime,
+          });
+        }
+
+        const worktreeStartTime = Date.now();
         const absoluteWorktreePath = await createWorktree({
           projectPath,
           branch: targetBranch,
           worktreePath: customWorktreePath,
         });
-        const duration = Date.now() - startTime;
+        trace.push({
+          command: `git worktree add ${absoluteWorktreePath} ${targetBranch}`,
+          duration: Date.now() - worktreeStartTime,
+        });
 
         return {
           data: {
@@ -116,12 +137,7 @@ async function executeSetupWorkspace(
             worktreeName,
           },
           success: true,
-          trace: [
-            {
-              command: `git worktree add ${absoluteWorktreePath} ${targetBranch}`,
-              duration,
-            },
-          ],
+          trace,
         };
       },
     });

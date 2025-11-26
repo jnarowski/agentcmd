@@ -215,12 +215,17 @@ async function deleteWorkflowRun(runId: string): Promise<void> {
   await api.delete(`/api/workflow-runs/${runId}`);
 }
 
-export function useDeleteWorkflowRun() {
+interface UseDeleteWorkflowRunOptions {
+  onSuccess?: () => void;
+}
+
+export function useDeleteWorkflowRun(options?: UseDeleteWorkflowRunOptions) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: deleteWorkflowRun,
     onSuccess: () => {
+      options?.onSuccess?.(); // Navigate FIRST (before cache invalidation)
       queryClient.invalidateQueries({
         queryKey: workflowKeys.runs(),
       });

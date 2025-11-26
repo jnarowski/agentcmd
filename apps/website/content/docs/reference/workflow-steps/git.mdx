@@ -1,6 +1,6 @@
 ---
 title: Git Step
-description: Git operations (commit, branch, PR)
+description: Git operations (commit, branch, PR, worktrees)
 ---
 
 import { Card, Cards } from 'fumadocs-ui/components/card';
@@ -9,27 +9,35 @@ Perform git operations as part of your workflow.
 
 ## Overview
 
-Type-safe git operations: commit, branch, create PR.
+Type-safe git operations: commit, branch, create PR, and worktree management.
 
-**Use for**: Committing AI-generated code, creating feature branches, opening pull requests
+**Use for**: Committing AI-generated code, creating feature branches, opening pull requests, isolated parallel development with worktrees
 
 ## Configuration
 
 {/* AUTO-GENERATED:git-step-config START */}
 {/* Source: packages/agentcmd-workflows/src/types/steps.ts
-{/* Last updated: 2025-11-16 */}
+{/* Last updated: 2025-11-26 */}
 
 ```typescript
 interface GitStepConfig {
   name?: string;
-  operation: "commit" | "branch" | "pr" | "commit-and-branch";
+  operation: "commit" | "branch" | "pr" | "commit-and-branch" | "worktree-add" | "worktree-remove";
+  // For commit
   message?: string;
-  commitMessage?: string;
+  autoCommit?: boolean;
+  // For branch, commit-and-branch
   branch?: string;
   baseBranch?: string;
+  commitMessage?: string;
+  // For pr
   title?: string;
   body?: string;
-  autoCommit?: boolean;
+  // For worktree operations
+  projectPath?: string;
+  worktreePath?: string;
+  worktreeName?: string;
+  force?: boolean;
 }
 ```
 
@@ -43,6 +51,8 @@ interface GitStepConfig {
 **`branch`** - Create/switch branch
 **`pr`** - Create pull request (requires `gh` CLI)
 **`commit-and-branch`** - Commit + create branch in one step
+**`worktree-add`** - Create git worktree for parallel development
+**`worktree-remove`** - Remove a git worktree
 
 ## Basic Usage
 
@@ -83,6 +93,33 @@ await step.git("commit-and-branch", {
   operation: "commit-and-branch",
   commitMessage: "feat: Add feature X",
   branch: "feat/x",
+});
+```
+
+### Create Worktree
+
+Create an isolated worktree for parallel development without switching branches:
+
+```typescript
+await step.git("setup-worktree", {
+  operation: "worktree-add",
+  projectPath: "/path/to/repo",
+  branch: "feat/my-feature",
+  worktreeName: "run-abc123-feature",
+  // worktreePath is optional, defaults to .worktrees/{worktreeName}
+});
+```
+
+### Remove Worktree
+
+Clean up a worktree after work is complete:
+
+```typescript
+await step.git("cleanup-worktree", {
+  operation: "worktree-remove",
+  projectPath: "/path/to/repo",
+  worktreePath: "/path/to/repo/.worktrees/run-abc123-feature",
+  force: false, // Set true to remove even if dirty
 });
 ```
 
@@ -141,6 +178,56 @@ await step.git("pr", {
   baseBranch: "main",
 });
 ```
+
+### Isolated Worktree Workflow
+
+Use worktrees for parallel development without affecting the main repo state:
+
+```typescript
+const { projectPath } = event.data;
+const ctx: { worktreePath?: string } = {};
+
+// Create isolated worktree
+const worktree = await step.git("create-worktree", {
+  operation: "worktree-add",
+  projectPath,
+  branch: "feat/isolated-work",
+  worktreeName: `run-${event.data.runId}`,
+});
+ctx.worktreePath = worktree.data.worktreePath;
+
+// Agent works in worktree (main repo unchanged)
+await step.agent("implement", {
+  agent: "claude",
+  prompt: "Implement feature X",
+  workingDir: ctx.worktreePath,
+});
+
+// Commit changes in worktree
+await step.git("commit", {
+  operation: "commit",
+  message: "feat: Add feature X",
+});
+
+// Create PR from worktree branch
+await step.git("pr", {
+  operation: "pr",
+  title: "feat: Feature X",
+  baseBranch: "main",
+});
+
+// Cleanup worktree
+await step.git("cleanup", {
+  operation: "worktree-remove",
+  projectPath,
+  worktreePath: ctx.worktreePath,
+});
+```
+
+**When to use worktrees:**
+- Running multiple workflow instances in parallel
+- Keeping main repo clean during long-running workflows
+- Isolating experimental changes
 
 ## Best Practices
 

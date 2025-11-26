@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { MoreHorizontal, Pencil, FileJson, Archive, ArchiveRestore, Copy } from "lucide-react";
+import {
+  MoreHorizontal,
+  Pencil,
+  FileJson,
+  Archive,
+  ArchiveRestore,
+  Copy,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,11 +16,17 @@ import {
 import { Kbd } from "@/client/components/ui/kbd";
 import { SessionDialog } from "./SessionDialog";
 import { SessionFileViewer } from "./SessionFileViewer";
-import { useSessionStore, type SessionSummary, selectActiveSession } from "@/client/pages/projects/sessions/stores/sessionStore";
+import {
+  useSessionStore,
+  type SessionSummary,
+  selectActiveSession,
+  enrichMessagesWithToolResults,
+} from "@/client/pages/projects/sessions/stores/sessionStore";
 import { cn } from "@/client/utils/cn";
 import { toast } from "sonner";
 import { copySessionToClipboard } from "@/client/pages/projects/sessions/utils/copySessionToClipboard";
-import { useDropdownMenuHotkeys, type HotkeyAction } from "@/client/hooks/useDropdownMenuHotkeys";
+import { api } from "@/client/utils/api";
+import type { UnifiedMessage } from "agent-cli-sdk";
 
 interface SessionDropdownMenuProps {
   session: SessionSummary;
@@ -60,9 +73,7 @@ export function SessionDropdownMenu({
     setFileViewerOpen(true);
   };
 
-  const handleArchive = async (e?: React.MouseEvent) => {
-    e?.preventDefault();
-    e?.stopPropagation();
+  const handleArchive = async () => {
     handleMenuOpenChange(false);
     try {
       await archiveSession(session.id);
@@ -73,9 +84,7 @@ export function SessionDropdownMenu({
     }
   };
 
-  const handleUnarchive = async (e?: React.MouseEvent) => {
-    e?.preventDefault();
-    e?.stopPropagation();
+  const handleUnarchive = async () => {
     handleMenuOpenChange(false);
     try {
       await unarchiveSession(session.id);
@@ -97,13 +106,46 @@ export function SessionDropdownMenu({
     }
   };
 
-  const handleCopySession = async (e?: React.MouseEvent) => {
-    e?.preventDefault();
-    e?.stopPropagation();
+  const handleCopySession = async () => {
     handleMenuOpenChange(false);
     try {
+      // Use active session data if available, otherwise fetch on demand
+      let sessionToCopy = sessionData;
+      if (!sessionToCopy) {
+        // Fetch session messages on demand
+        const messagesData = await api.get<{ data: UnifiedMessage[] }>(
+          `/api/projects/${session.projectId}/sessions/${session.id}/messages`
+        );
+        const rawMessages = messagesData.data || [];
+        const messages = enrichMessagesWithToolResults(rawMessages);
+
+        // Build minimal session data for copy
+        sessionToCopy = {
+          id: session.id,
+          projectId: session.projectId,
+          userId: session.userId,
+          name: session.name,
+          agent: session.agent,
+          type: session.type,
+          permission_mode: session.permission_mode,
+          state: session.state,
+          error_message: session.error_message,
+          is_archived: session.is_archived,
+          archived_at: session.archived_at,
+          created_at: session.created_at,
+          updated_at: session.updated_at,
+          messages,
+          isStreaming: false,
+          metadata: session.metadata,
+          loadingState: "loaded" as const,
+          error: null,
+          messageIds: new Set(messages.map((m) => m.id)),
+          streamingMessageId: null,
+        };
+      }
+
       const sessionState = {
-        session: sessionData || null,
+        session: sessionToCopy,
         sessionId: session.id,
       };
       await copySessionToClipboard(sessionState);
@@ -118,16 +160,22 @@ export function SessionDropdownMenu({
     }
   };
 
-  // Define hotkey actions
-  const hotkeyActions: HotkeyAction[] = [
-    { key: "e", handler: handleEdit },
-    { key: "v", handler: handleViewFile, enabled: !!session.session_path },
-    { key: "c", handler: handleCopySession },
-    { key: "a", handler: session.is_archived ? handleUnarchive : handleArchive },
-  ];
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
 
-  // Enable hotkeys when menu is open
-  useDropdownMenuHotkeys(isMenuOpen, hotkeyActions);
+    const key = e.key.toLowerCase();
+    const actions: Record<string, (() => void) | undefined> = {
+      c: handleCopySession,
+      a: session.is_archived ? handleUnarchive : handleArchive,
+    };
+
+    const action = actions[key];
+    if (action) {
+      e.preventDefault();
+      e.stopPropagation();
+      action();
+    }
+  };
 
   return (
     <>
@@ -147,17 +195,19 @@ export function SessionDropdownMenu({
         >
           <MoreHorizontal className="h-4 w-4" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="z-50">
+        <DropdownMenuContent
+          align="end"
+          className="z-50"
+          onKeyDown={handleKeyDown}
+        >
           <DropdownMenuItem onClick={handleEdit}>
             <Pencil className="h-4 w-4" />
             <span>Edit</span>
-            <Kbd className="ml-auto">E</Kbd>
           </DropdownMenuItem>
           {session.session_path && (
             <DropdownMenuItem onClick={handleViewFile}>
               <FileJson className="h-4 w-4" />
               <span>View Session File</span>
-              <Kbd className="ml-auto">V</Kbd>
             </DropdownMenuItem>
           )}
           <DropdownMenuItem onClick={handleCopySession}>

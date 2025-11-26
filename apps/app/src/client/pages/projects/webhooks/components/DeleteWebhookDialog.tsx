@@ -15,18 +15,15 @@ export function DeleteWebhookDialog({
   webhook,
   onSuccess,
 }: DeleteWebhookDialogProps) {
-  const { deleteMutation } = useWebhookMutations(webhook.project_id);
+  const { deleteMutation } = useWebhookMutations(webhook.project_id, {
+    onDeleteSuccess: () => {
+      onSuccess?.(); // Navigate first (passed from parent)
+      onOpenChange(false); // Then close dialog
+    },
+  });
 
   const handleDelete = () => {
-    deleteMutation.mutate(
-      { webhookId: webhook.id },
-      {
-        onSuccess: () => {
-          onSuccess?.();
-          onOpenChange(false);
-        },
-      }
-    );
+    deleteMutation.mutate({ webhookId: webhook.id });
   };
 
   return (
