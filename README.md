@@ -1,10 +1,10 @@
 # agentcmd
 
-> AI agent workflow management platform with chat, file editing, and terminal capabilities
+> AI Code Workflow Orchestration Platform
 
 ## Why agentcmd?
 
-I was sick of babysitting my agents. Love Claude Code. Hate babysitting. Like a good AI Engineer I called "/plan", then "/implement", then "/review" until my fingers were blue. Then I got to work on agentcmd.
+I was sick of babysitting my agents. Love Claude Code. Hate babysitting. Like a good AI Engineer I called `/plan`, then `/implement`, then `/review` again and again and again until my fingers partially eroded. Then I got to work on agentcmd. [Vibe Engineering](https://simonwillison.net/2025/Oct/7/vibe-engineering/) needed a platform.
 
 **agentcmd lets you:**
 
