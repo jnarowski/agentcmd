@@ -135,7 +135,7 @@ export const ChatPromptInputSlashCommands = ({
                   <PromptInputCommandItem
                     key={command.fullCommand}
                     onSelect={() => onCommandSelect({ command: command.fullCommand, immediateSubmit: false })}
-                    className="py-2.5"
+                    className="py-1.5"
                   >
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       <div className="flex flex-col min-w-0 flex-1">
@@ -144,7 +144,7 @@ export const ChatPromptInputSlashCommands = ({
                         </span>
                         {command.argumentHints &&
                           command.argumentHints.length > 0 && (
-                            <span className="text-muted-foreground text-2xs mb-0.5">
+                            <span className="text-muted-foreground text-2xs mb-1">
                               {command.argumentHints
                                 .map((arg) => `[${arg}]`)
                                 .join(" ")}
@@ -182,7 +182,7 @@ export const ChatPromptInputSlashCommands = ({
                   <PromptInputCommandItem
                     key={command.fullCommand}
                     onSelect={() => onCommandSelect({ command: command.fullCommand, immediateSubmit: false })}
-                    className="py-2.5"
+                    className="py-1.5"
                   >
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       <div className="flex flex-col min-w-0 flex-1">
@@ -191,7 +191,7 @@ export const ChatPromptInputSlashCommands = ({
                         </span>
                         {command.argumentHints &&
                           command.argumentHints.length > 0 && (
-                            <span className="text-muted-foreground text-2xs mb-0.5">
+                            <span className="text-muted-foreground text-2xs mb-1">
                               {command.argumentHints
                                 .map((arg) => `[${arg}]`)
                                 .join(" ")}
