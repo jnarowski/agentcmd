@@ -169,11 +169,11 @@ export async function syncFromClaudeProjects({
     withFileTypes: true,
   });
 
-  // Filter for directories only, excluding worktree directories (pattern: run-{cuid}-{branch})
+  // Filter for directories only, excluding worktree directories
   const projectDirs = entries
     .filter((entry) => entry.isDirectory())
-    // Exclude worktree directories (pattern: run-{cuid}-{branch})
-    .filter((entry) => !entry.name.match(/^run-c[a-z0-9]{20,}-/));
+    // Exclude worktree directories (encoded .worktrees/ becomes --worktrees-)
+    .filter((entry) => !entry.name.includes("--worktrees-"));
 
   // Process each project directory
   for (const projectDir of projectDirs) {
@@ -187,6 +187,11 @@ export async function syncFromClaudeProjects({
 
     // Extract actual project path
     const actualPath = await extractProjectDirectory(projectName);
+
+    // Skip worktree paths (created by workflow system, not user projects)
+    if (actualPath.includes("/.worktrees/")) {
+      continue;
+    }
 
     // Generate display name from last path segment
     const displayName = path.basename(actualPath);
