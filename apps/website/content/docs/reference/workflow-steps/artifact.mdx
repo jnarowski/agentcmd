@@ -1,0 +1,154 @@
+---
+title: Artifact Step
+description: Upload files, images, and directories
+---
+
+import { Card, Cards } from 'fumadocs-ui/components/card';
+
+Upload files, images, or directories for review and download.
+
+## Overview
+
+Save workflow outputs (build artifacts, reports, generated files) for later review.
+
+## Configuration
+
+{/* AUTO-GENERATED:artifact-step-config START */}
+{/* Source: packages/agentcmd-workflows/src/types/steps.ts
+{/* Last updated: 2025-11-16 */}
+
+```typescript
+interface ArtifactStepConfig {
+  name: string;
+  type: "text" | "file" | "image" | "directory";
+  content?: string;
+  file?: string;
+  directory?: string;
+  pattern?: string;
+  description?: string;
+  eventId?: string;
+}
+```
+
+**Timeout**: 5 minutes (300,000ms)
+
+{/* AUTO-GENERATED:artifact-step-config END */}
+
+### Types
+
+**`text`** - Plain text content (in `content` field)
+**`file`** - Single file (path in `file` field)
+**`image`** - Image file (path in `file` field)
+**`directory`** - Entire directory (path in `directory`, optional `pattern` glob)
+
+## Basic Usage
+
+### Text Artifact
+
+```typescript
+await step.artifact("summary", {
+  name: "workflow-summary.txt",
+  type: "text",
+  content: `Workflow completed successfully
+Files changed: 12
+Tests passed: 45/45
+Build time: 2m 34s`,
+});
+```
+
+### File Artifact
+
+```typescript
+await step.artifact("coverage-report", {
+  name: "coverage.html",
+  type: "file",
+  file: "./coverage/index.html",
+  description: "Test coverage report",
+});
+```
+
+### Image Artifact
+
+```typescript
+await step.artifact("diagram", {
+  name: "architecture.png",
+  type: "image",
+  file: "./docs/architecture.png",
+});
+```
+
+### Directory Artifact
+
+```typescript
+// Upload entire directory
+await step.artifact("build-output", {
+  name: "dist",
+  type: "directory",
+  directory: "./dist",
+});
+
+// Upload with glob pattern
+await step.artifact("test-results", {
+  name: "test-reports",
+  type: "directory",
+  directory: "./test-results",
+  pattern: "**/*.xml",  // Only XML files
+});
+```
+
+## Common Patterns
+
+### Build Outputs
+
+```typescript
+await step.cli("build", { command: "pnpm build" });
+
+await step.artifact("build-files", {
+  name: "build-output.zip",
+  type: "directory",
+  directory: "./dist",
+});
+```
+
+### Test Reports
+
+```typescript
+await step.cli("test", { command: "pnpm test --coverage" });
+
+await step.artifact("coverage", {
+  name: "coverage-report.html",
+  type: "file",
+  file: "./coverage/index.html",
+});
+```
+
+### Generated Code
+
+```typescript
+await step.agent("generate", {
+  agent: "claude",
+  prompt: "Generate API client code",
+});
+
+await step.artifact("generated-code", {
+  name: "api-client",
+  type: "directory",
+  directory: "./generated",
+  pattern: "**/*.ts",
+});
+```
+
+## Download Artifacts
+
+Artifacts are downloadable via UI or API:
+
+**UI**: Workflow Run → Artifacts tab → Click download
+**API**: `GET /api/workflows/artifacts/:id/download`
+
+## Next Steps
+
+<Cards>
+  <Card title="Annotation Step" href="/docs/reference/workflow-steps/annotation">
+    For timeline progress notes
+  </Card>
+</Cards>

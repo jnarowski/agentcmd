@@ -29,11 +29,11 @@ pnpm --filter @repo/workflow-sdk gen-slash-types
 **From workflow definitions:**
 
 ```typescript
-import { buildSlashCommand } from '../generated/slash-commands';
+import { buildSlashCommand } from "../generated/slash-commands";
 ```
 
 **From external packages:**
 
 ```typescript
-import { buildSlashCommand } from '@repo/workflow-sdk';
+import { buildSlashCommand } from "agentcmd-workflows";
 ```

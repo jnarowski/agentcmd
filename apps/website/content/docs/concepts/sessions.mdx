@@ -1,0 +1,101 @@
+---
+title: Sessions
+description: AI agent conversation history
+---
+
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { AgentCmd } from '@/components/AgentCmd';
+
+Sessions store AI agent conversations. Each agent interaction creates a session that can be resumed in later workflow steps.
+
+## What is a Session?
+
+Sessions are created automatically by `step.agent()` during workflows, or manually in the UI for interactive development. Each session contains:
+- Your prompts
+- AI responses
+- Tool calls (file edits, searches, commands)
+- Results
+
+Sessions are stored by the CLI tool (Claude Code, Codex, Gemini) on disk.
+
+## Session Storage
+
+<AgentCmd /> doesn't store sessions itself - it uses the CLI tool's native storage:
+
+| CLI Tool | Session Path |
+|----------|--------------|
+| Claude Code | `~/.claude/projects/{encoded-path}/{sessionId}.jsonl` |
+| Codex | `~/.codex/sessions/{YYYY}/{MM}/{DD}/rollout-{timestamp}-{uuid}.jsonl` |
+| Gemini | `~/.gemini/sessions/session-{timestamp}-{uuid}.json` |
+
+**JSONL Format** (Claude, Codex):
+```jsonl
+{"role": "user", "content": "Design auth system"}
+{"role": "assistant", "content": "I'll design a JWT-based..."}
+{"role": "tool", "name": "read_file", "content": "..."}
+```
+
+**JSON Format** (Gemini):
+```json
+{
+  "messages": [
+    {"role": "user", "parts": ["Design auth system"]},
+    {"role": "model", "parts": ["I'll design..."]}
+  ]
+}
+```
+
+## Session Types
+
+### Chat Sessions
+
+Manual sessions you create in the UI when you want to interact directly with an agent.
+
+**When to create manually:**
+- Testing prompts before automating them in workflows
+- Exploring a codebase interactively
+- Debugging issues that need back-and-forth conversation
+- Prototyping solutions before formalizing in workflow steps
+
+```typescript
+// Created when user clicks "New Session" in UI
+// User controls permission mode and approves each action
+// Full conversation history available for inspection
+```
+
+**Characteristics:**
+- Interactive - you approve each tool use
+- Flexible permission modes (auto, confirm, reject)
+- Saved to CLI tool's session storage
+- Can be resumed later from session ID
+
+### Workflow Sessions
+
+Automated sessions created by `step.agent()` during workflow execution.
+
+```typescript
+const result = await step.agent("implement-feature", {
+  agent: "claude",
+  prompt: "Add user authentication",
+  workingDir: "/path/to/project",
+});
+
+// Session ID available for resumption
+console.log(result.data.sessionId);
+```
+
+**Use for:**
+- Automated workflows
+- Multi-step agent tasks
+- Session resumption across steps
+
+## Next Steps
+
+<Cards>
+  <Card title="Agent Steps" href="/docs/reference/workflow-steps/agent">
+    Complete agent step API
+  </Card>
+  <Card title="Recursive Workflows" href="/docs/examples/recursive-implement-review">
+    Advanced multi-agent patterns
+  </Card>
+</Cards>

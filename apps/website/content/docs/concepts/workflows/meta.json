@@ -1,0 +1,10 @@
+{
+  "title": "Workflows",
+  "pages": [
+    "workflow-definitions",
+    "workflow-phases",
+    "workflow-runs",
+    "workflow-steps",
+    "workflow-triggers"
+  ]
+}

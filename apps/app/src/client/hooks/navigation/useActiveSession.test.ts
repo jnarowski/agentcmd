@@ -1,0 +1,155 @@
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { renderHook } from "@testing-library/react";
+import React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useActiveSession } from "./useActiveSession";
+import { useNavigationStore } from "@/client/stores/index";
+import { useSession } from "@/client/hooks/useSession";
+
+// Mock the stores and hooks
+vi.mock("@/client/stores/index", () => ({
+  useNavigationStore: vi.fn(),
+}));
+
+vi.mock("@/client/hooks/useSession", () => ({
+  useSession: vi.fn(),
+}));
+
+describe("useActiveSession", () => {
+  let queryClient: QueryClient;
+
+  const mockSession1 = { id: "session-1", name: "Session 1", projectId: "project-1" };
+
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    React.createElement(QueryClientProvider, { client: queryClient }, children)
+  );
+
+  beforeEach(() => {
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
+    vi.clearAllMocks();
+  });
+
+  it("should return null when no active session", () => {
+    vi.mocked(useNavigationStore).mockImplementation((selector: (state: Record<string, unknown>) => unknown) =>
+      selector({ activeProjectId: "project-1", activeSessionId: null })
+    );
+    vi.mocked(useSession).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+    } as never);
+
+    const { result } = renderHook(() => useActiveSession(), { wrapper });
+
+    expect(result.current.session).toBeNull();
+    expect(result.current.sessionId).toBeNull();
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  it("should return session when ID matches", () => {
+    vi.mocked(useNavigationStore).mockImplementation((selector: (state: Record<string, unknown>) => unknown) =>
+      selector({ activeProjectId: "project-1", activeSessionId: "session-1" })
+    );
+    vi.mocked(useSession).mockReturnValue({
+      messages: [],
+      metadata: mockSession1,
+      isLoading: false,
+      isStreaming: false,
+      error: null,
+      loadingState: 'loaded' as const,
+    } as never);
+
+    const { result } = renderHook(() => useActiveSession(), { wrapper });
+
+    expect(result.current.session).toEqual(mockSession1);
+    expect(result.current.sessionId).toBe("session-1");
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  it("should return null when session ID not found", () => {
+    vi.mocked(useNavigationStore).mockImplementation((selector: (state: Record<string, unknown>) => unknown) =>
+      selector({
+        activeProjectId: "project-1",
+        activeSessionId: "nonexistent-id",
+      })
+    );
+    vi.mocked(useSession).mockReturnValue({
+      messages: [],
+      metadata: null,
+      isLoading: false,
+      isStreaming: false,
+      error: null,
+      loadingState: 'loaded' as const,
+    } as never);
+
+    const { result } = renderHook(() => useActiveSession(), { wrapper });
+
+    expect(result.current.session).toBeNull();
+    expect(result.current.sessionId).toBe("nonexistent-id");
+  });
+
+  it("should handle loading state", () => {
+    vi.mocked(useNavigationStore).mockImplementation((selector: (state: Record<string, unknown>) => unknown) =>
+      selector({ activeProjectId: "project-1", activeSessionId: "session-1" })
+    );
+    vi.mocked(useSession).mockReturnValue({
+      messages: [],
+      metadata: null,
+      isLoading: true,
+      isStreaming: false,
+      error: null,
+      loadingState: 'loading' as const,
+    } as never);
+
+    const { result } = renderHook(() => useActiveSession(), { wrapper });
+
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.session).toBeNull();
+  });
+
+  it("should handle error state", () => {
+    const mockError = "Failed to fetch sessions";
+    vi.mocked(useNavigationStore).mockImplementation((selector: (state: Record<string, unknown>) => unknown) =>
+      selector({ activeProjectId: "project-1", activeSessionId: "session-1" })
+    );
+    vi.mocked(useSession).mockReturnValue({
+      messages: [],
+      metadata: null,
+      isLoading: false,
+      isStreaming: false,
+      error: mockError,
+      loadingState: 'error' as const,
+    } as never);
+
+    const { result } = renderHook(() => useActiveSession(), { wrapper });
+
+    expect(result.current.error).toBe(mockError);
+    expect(result.current.session).toBeNull();
+  });
+
+  it("should return null when no project is active", () => {
+    vi.mocked(useNavigationStore).mockImplementation((selector: (state: Record<string, unknown>) => unknown) =>
+      selector({ activeProjectId: null, activeSessionId: "session-1" })
+    );
+    vi.mocked(useSession).mockReturnValue({
+      messages: [],
+      metadata: null,
+      isLoading: false,
+      isStreaming: false,
+      error: null,
+      loadingState: 'loaded' as const,
+    } as never);
+
+    const { result } = renderHook(() => useActiveSession(), { wrapper });
+
+    // When no project is active, session should be null
+    expect(result.current.session).toBeNull();
+    expect(result.current.sessionId).toBe("session-1");
+  });
+});

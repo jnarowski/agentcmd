@@ -1,0 +1,12 @@
+{
+  "title": "Examples",
+  "pages": [
+    "implement-and-review",
+    "recursive-implement-review",
+    "advanced-recursive-implement-review",
+    "context-sharing",
+    "mcp-integration",
+    "type-safe-slash-commands",
+    "type-safe-arguments"
+  ]
+}

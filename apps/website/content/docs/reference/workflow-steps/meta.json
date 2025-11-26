@@ -1,0 +1,13 @@
+{
+  "title": "Workflow Steps",
+  "pages": [
+    "agent",
+    "ai",
+    "cli-step",
+    "git",
+    "artifact",
+    "annotation",
+    "phase",
+    "log"
+  ]
+}

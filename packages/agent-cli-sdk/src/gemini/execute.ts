@@ -36,7 +36,7 @@ export interface ExecuteOptions {
   prompt: string;
   /** Working directory for command execution (defaults to current directory) */
   workingDir?: string;
-  /** Timeout in milliseconds (defaults to 5 minutes) */
+  /** Timeout in milliseconds (optional, no default) */
   timeout?: number;
   /** Enable verbose output logging */
   verbose?: boolean;
@@ -58,6 +58,8 @@ export interface ExecuteOptions {
   permissionMode?: PermissionMode;
   /** Automatically extract and parse JSON from the response */
   json?: boolean;
+  /** Callback invoked immediately when process starts (before any output) */
+  onStart?: (process: import('node:child_process').ChildProcess) => void;
   /** Callback invoked with raw stdout data */
   onStdout?: (chunk: string) => void;
   /** Callback invoked when stderr data is received */
@@ -123,8 +125,9 @@ export async function execute<T = string>(options: ExecuteOptions): Promise<Exec
     const result = await spawnProcess(cliPath, {
       args,
       cwd: options.workingDir,
-      timeout: options.timeout || 300000, // 5 minutes default
+      timeout: options.timeout,
       verbose: options.verbose,
+      onStart: options.onStart,
       onStdout: (chunk) => {
         rawOutput += chunk;
 

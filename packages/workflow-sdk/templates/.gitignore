@@ -1,3 +1,0 @@
-# Agent workflow artifacts
-.agent/logs/**
-.agent/workflows/executions/**

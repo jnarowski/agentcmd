@@ -1,0 +1,67 @@
+---
+title: Quick Start
+description: Launch <AgentCMD /> and run your first workflow in 5 minutes
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { AgentCmd } from '@/components/AgentCmd';
+
+Get from zero to your first AI workflow in 5 minutes.
+
+## Start the Server
+
+Launch the <AgentCmd /> server:
+
+```bash
+npx agentcmd start
+```
+
+This starts two services:
+
+| Service | Port | Purpose |
+|---------|------|---------|
+| **AgentCmd Server** | 4100 | Web UI, API server, and WebSocket |
+| **Inngest Dev UI** | 8288 | Workflow execution dashboard |
+
+**Output**:
+```text title="Server Output"
+✓ Server running on http://localhost:4100
+✓ Inngest Dev UI on http://localhost:8288
+
+agentcmd is ready! Open http://localhost:4100
+```
+
+<Callout type="tip">
+**Keep this terminal open** - It shows live logs from workflow executions. Open a new tab for other commands.
+
+For production use, run with pm2: `pm2 start "npx agentcmd start" --name agentcmd`. See [Deployment](/docs/deployment) for full setup.
+</Callout>
+
+## Importing Projects
+
+<AgentCmd /> automatically imports projects from your Claude Code sessions.
+
+When you start the server, it scans your Claude Code session history and creates projects for each codebase you've worked on. This means you can immediately start running workflows on your existing projects without manual setup.
+
+## Next Steps
+
+<Cards>
+  <Card title="Build Your First Workflow" href="/docs/getting-started/first-workflow">
+    Write a simple 10-line workflow from scratch
+  </Card>
+  <Card title="Running Workflows" href="/docs/getting-started/running-workflows">
+    Learn the 3 ways to create and run workflows from the UI
+  </Card>
+  <Card title="Understand Agents" href="/docs/concepts/agents">
+    How AI agents are orchestrated with slash commands
+  </Card>
+  <Card title="Explore Examples" href="/docs/examples">
+    Real-world workflow templates
+  </Card>
+</Cards>
+
+---
+
+**UI tour complete!** Continue to [Build Your First Workflow](/docs/getting-started/first-workflow) to write a workflow from scratch.

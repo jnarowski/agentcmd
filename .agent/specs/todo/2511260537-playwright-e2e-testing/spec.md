@@ -1,0 +1,574 @@
+# Playwright E2E Testing Infrastructure
+
+**Status**: draft
+**Created**: 2025-11-26
+**Package**: apps/app
+**Total Complexity**: 132 points
+**Phases**: 5
+**Tasks**: 24
+**Overall Avg Complexity**: 5.5/10
+
+## Complexity Breakdown
+
+| Phase                          | Tasks | Total Points | Avg Complexity | Max Task |
+| ------------------------------ | ----- | ------------ | -------------- | -------- |
+| Phase 1: Foundation + Gold Std | 8     | 32           | 4.0/10         | 7/10     |
+| Phase 2: Extract Utilities     | 5     | 28           | 5.6/10         | 7/10     |
+| Phase 3: Priority 1 Tests      | 5     | 25           | 5.0/10         | 6/10     |
+| Phase 4: Priority 2 Tests      | 4     | 30           | 7.5/10         | 9/10     |
+| Phase 5: CI/CD & Polish        | 2     | 17           | 8.5/10         | 9/10     |
+| **Total**                      | **24** | **132**      | **5.5/10**     | **9/10** |
+
+## Overview
+
+Add comprehensive Playwright E2E testing infrastructure to complement existing Vitest unit/integration tests. Implements gold-standard test first approach with reusable fixtures for authentication, database seeding, and WebSocket testing. Covers 18 critical user flows across auth, projects, sessions, workflows, and files with full Inngest workflow support.
+
+## User Story
+
+As a developer
+I want comprehensive E2E tests that validate critical user journeys
+So that I can deploy with confidence knowing the full stack works correctly and regressions are caught before production
+
+## Technical Approach
+
+**Phased Implementation:**
+1. Build infrastructure and ONE exemplary gold standard test demonstrating all patterns
+2. Extract reusable fixtures/utilities from gold standard
+3. Implement Priority 1 tests (auth + projects) using extracted patterns
+4. Implement Priority 2 tests (sessions + workflows + files)
+5. Add CI/CD integration and polish
+
+**Key Design:**
+- Dedicated E2E server (ports 5100/5101) with isolated `e2e.db`
+- Shared Inngest instance (port 8288) for both dev and E2E servers
+- Fixture-based patterns (not Page Objects) for maximum flexibility
+- Sequential execution (1 worker) for SQLite consistency
+- `.e2e.spec.ts` naming convention for explicit identification
+
+## Key Design Decisions
+
+1. **Shared Inngest Instance**: Both dev server (4100) and E2E server (5100) connect to same Inngest on 8288, with database isolation ensuring workflow runs don't interfere
+2. **Gold Standard First**: Build one comprehensive test with all patterns inline, then extract reusable utilities - avoids premature abstraction
+3. **Fixture Pattern Over Page Objects**: Playwright's fixture pattern is more composable and less rigid than Page Objects, allowing easy mixing of auth + db + websocket concerns
+4. **Assumes Servers Running**: E2E tests assume `pnpm dev` and `pnpm e2e:server` are already running - faster iteration, simpler debugging, matches existing Vitest workflow
+5. **`.e2e.spec.ts` Convention**: Explicit naming makes E2E tests immediately identifiable and separates them from unit tests
+
+## Architecture
+
+### File Structure
+
+```
+apps/app/
+├── e2e/
+│   ├── tests/
+│   │   ├── auth/
+│   │   │   ├── login.e2e.spec.ts
+│   │   │   ├── login-failure.e2e.spec.ts
+│   │   │   └── logout.e2e.spec.ts
+│   │   ├── projects/
+│   │   │   ├── create-project.e2e.spec.ts
+│   │   │   ├── list-projects.e2e.spec.ts
+│   │   │   ├── project-details.e2e.spec.ts
+│   │   │   ├── update-project.e2e.spec.ts
+│   │   │   └── delete-project.e2e.spec.ts
+│   │   ├── sessions/
+│   │   │   ├── session-lifecycle.e2e.spec.ts    # GOLD STANDARD
+│   │   │   ├── create-session.e2e.spec.ts
+│   │   │   ├── session-streaming.e2e.spec.ts
+│   │   │   └── stop-session.e2e.spec.ts
+│   │   ├── workflows/
+│   │   │   ├── list-workflow-definitions.e2e.spec.ts
+│   │   │   ├── run-workflow.e2e.spec.ts
+│   │   │   └── monitor-workflow-execution.e2e.spec.ts
+│   │   └── files/
+│   │       ├── file-browser.e2e.spec.ts
+│   │       ├── open-file.e2e.spec.ts
+│   │       └── edit-file.e2e.spec.ts
+│   ├── fixtures/
+│   │   ├── authenticated-page.ts
+│   │   ├── database.ts
+│   │   ├── websocket.ts
+│   │   └── index.ts
+│   ├── utils/
+│   │   ├── seed-database.ts
+│   │   ├── wait-for-websocket.ts
+│   │   ├── api-helpers.ts
+│   │   └── test-data.ts
+│   ├── playwright.config.ts
+│   ├── global-setup.ts
+│   ├── global-teardown.ts
+│   ├── tsconfig.json
+│   └── README.md
+├── playwright-report/         # gitignored
+├── test-results/              # gitignored
+└── e2e.db                     # gitignored
+```
+
+### Integration Points
+
+**Playwright Configuration**:
+- `apps/app/e2e/playwright.config.ts` - Test runner config, browser matrix, timeouts
+- `apps/app/e2e/global-setup.ts` - Database migration and health checks
+- `apps/app/e2e/global-teardown.ts` - Cleanup
+
+**Package Scripts**:
+- `apps/app/package.json` - E2E server and test execution scripts
+
+**Database**:
+- `apps/app/prisma/schema.prisma` - Migrations applied to `e2e.db`
+- `apps/app/e2e.db` - Dedicated E2E database (isolated from `dev.db`)
+
+**Backend Integration**:
+- `apps/app/src/server/routes/auth.ts` - Auth endpoints for login/register
+- `apps/app/src/server/routes/projects.ts` - Project CRUD endpoints
+- `apps/app/src/server/routes/sessions.ts` - Session management endpoints
+- `apps/app/src/server/routes/workflows.ts` - Workflow execution endpoints
+
+**Frontend Integration**:
+- React app on port 5101 (E2E) and 4101 (dev)
+- WebSocket connection for real-time updates
+
+## Implementation Details
+
+### 1. E2E Infrastructure
+
+Core Playwright configuration with TypeScript support, sequential execution, and separate E2E database.
+
+**Key Points**:
+- Playwright config with sequential workers (SQLite limitation)
+- Global setup creates `e2e.db` and verifies server health
+- TypeScript config extends main tsconfig with Playwright types
+- Test match pattern `**/*.e2e.spec.ts` for explicit E2E tests
+
+### 2. Gold Standard Test
+
+One comprehensive test demonstrating all E2E patterns: auth, database seeding, UI navigation, WebSocket events, and verification.
+
+**Key Points**:
+- Session lifecycle test shows complete user journey
+- All patterns inline with detailed comments (not extracted yet)
+- Auth via API + localStorage pattern
+- Database seeding with Prisma pattern
+- WebSocket event forwarding and waiting pattern
+- ~150-200 lines with full documentation
+
+### 3. Reusable Fixtures
+
+Extract patterns from gold standard into composable Playwright fixtures.
+
+**Key Points**:
+- `authenticated-page` fixture provides auto-login
+- `database` fixture provides seeding function with auto-cleanup
+- `websocket` fixture (optional) for WebSocket event helpers
+- Fixtures merge into single test import
+
+### 4. Utility Functions
+
+Database seeding, WebSocket event waiting, and API request helpers.
+
+**Key Points**:
+- `seed-database.ts` - Prisma-based seeding with user/project/session support
+- `wait-for-websocket.ts` - Wait for specific WebSocket events with timeout
+- `api-helpers.ts` - Authenticated API request helper
+
+### 5. Test Suites
+
+18 tests across auth, projects, sessions, workflows, and files.
+
+**Key Points**:
+- Priority 1 (8 tests): Auth (3) + Projects (5)
+- Priority 2 (10 tests): Sessions (4) + Workflows (3) + Files (3)
+- All tests use extracted fixtures for consistency
+- Sequential execution ~12-15 minutes total runtime
+
+## Files to Create/Modify
+
+### New Files (20)
+
+1. `apps/app/e2e/playwright.config.ts` - Playwright test configuration
+2. `apps/app/e2e/global-setup.ts` - Database setup and health checks
+3. `apps/app/e2e/global-teardown.ts` - Cleanup
+4. `apps/app/e2e/tsconfig.json` - TypeScript config for E2E tests
+5. `apps/app/e2e/README.md` - E2E testing documentation
+6. `apps/app/e2e/fixtures/authenticated-page.ts` - Auth fixture
+7. `apps/app/e2e/fixtures/database.ts` - Database fixture
+8. `apps/app/e2e/fixtures/websocket.ts` - WebSocket fixture
+9. `apps/app/e2e/fixtures/index.ts` - Merged fixtures export
+10. `apps/app/e2e/utils/seed-database.ts` - Database seeding utilities
+11. `apps/app/e2e/utils/wait-for-websocket.ts` - WebSocket event helpers
+12. `apps/app/e2e/utils/api-helpers.ts` - API request helpers
+13. `apps/app/e2e/utils/test-data.ts` - Test data factories
+14. `apps/app/e2e/tests/sessions/session-lifecycle.e2e.spec.ts` - Gold standard test
+15. `apps/app/e2e/tests/auth/login.e2e.spec.ts` - Login test
+16. `apps/app/e2e/tests/auth/login-failure.e2e.spec.ts` - Login failure test
+17. `apps/app/e2e/tests/auth/logout.e2e.spec.ts` - Logout test
+18. `apps/app/e2e/tests/projects/create-project.e2e.spec.ts` - Create project test
+19. `apps/app/e2e/tests/projects/list-projects.e2e.spec.ts` - List projects test
+20. Additional test files for remaining Priority 1 and 2 tests
+
+### Modified Files (3)
+
+1. `apps/app/package.json` - Add E2E scripts (e2e:server, e2e, e2e:ui, etc.)
+2. `.gitignore` - Add E2E artifacts (e2e.db, playwright-report/, test-results/)
+3. `turbo.json` - Add E2E task configuration
+
+## Step by Step Tasks
+
+### Phase 1: Foundation + Gold Standard Test
+
+**Phase Complexity**: 32 points (avg 4.0/10)
+
+- [ ] 1.1 [2/10] Install cross-env dependency
+  - Required for cross-platform environment variables
+  - Command: `pnpm add -D cross-env`
+
+- [ ] 1.2 [3/10] Create E2E directory structure
+  - Create folders: `apps/app/e2e/tests/`, `apps/app/e2e/fixtures/`, `apps/app/e2e/utils/`
+  - Commands:
+    ```bash
+    mkdir -p apps/app/e2e/{tests/{auth,projects,sessions,workflows,files},fixtures,utils}
+    ```
+
+- [ ] 1.3 [4/10] Add playwright.config.ts
+  - Configure test directory, sequential execution, browsers, timeouts
+  - File: `apps/app/e2e/playwright.config.ts`
+  - Key settings: `testMatch: '**/*.e2e.spec.ts'`, `workers: 1`, `baseURL: 'http://localhost:5101'`
+
+- [ ] 1.4 [4/10] Add global-setup.ts
+  - Create/migrate E2E database, health check E2E server on port 5101
+  - File: `apps/app/e2e/global-setup.ts`
+  - Runs: `pnpm prisma migrate deploy` with `DATABASE_URL=file:./e2e.db`
+
+- [ ] 1.5 [2/10] Add global-teardown.ts
+  - Remove `e2e.db` after tests complete
+  - File: `apps/app/e2e/global-teardown.ts`
+
+- [ ] 1.6 [2/10] Add tsconfig.json for E2E tests
+  - Extends main tsconfig, adds Playwright types, includes E2E files
+  - File: `apps/app/e2e/tsconfig.json`
+
+- [ ] 1.7 [3/10] Add E2E scripts to package.json
+  - Add `e2e:server`, `e2e`, `e2e:ui`, `e2e:debug`, `e2e:headed`, `e2e:codegen`, `e2e:report`, `e2e:install` scripts
+  - File: `apps/app/package.json`
+  - E2E server script: `cross-env DATABASE_URL=file:./e2e.db PORT=5100 VITE_PORT=5101 NODE_ENV=test concurrently "pnpm dev:server" "pnpm dev:client --port 5101"`
+
+- [ ] 1.8 [7/10] Write gold standard test (session-lifecycle.e2e.spec.ts)
+  - Complete end-to-end session lifecycle: auth → create project → create session → send message → receive WebSocket response → stop session → verify DB
+  - All patterns inline with detailed comments (not extracted yet)
+  - ~150-200 lines demonstrating auth, database seeding, WebSocket, UI assertions, API verification
+  - File: `apps/app/e2e/tests/sessions/session-lifecycle.e2e.spec.ts`
+
+- [ ] 1.9 [2/10] Update .gitignore
+  - Add `apps/app/e2e.db`, `apps/app/e2e.db-*`, `apps/app/playwright-report/`, `apps/app/test-results/`
+  - File: `.gitignore`
+
+- [ ] 1.10 [3/10] Verify E2E infrastructure works
+  - Start dev server: `cd apps/app && pnpm dev`
+  - Start E2E server: `cd apps/app && pnpm e2e:server` (separate terminal)
+  - Run gold standard test: `cd apps/app && pnpm e2e`
+  - Expected: Test passes, all patterns demonstrated
+
+#### Completion Notes
+
+- What was implemented:
+- Deviations from plan (if any):
+- Important context or decisions:
+- Known issues or follow-ups (if any):
+
+### Phase 2: Extract Reusable Utilities
+
+**Phase Complexity**: 28 points (avg 5.6/10)
+
+- [ ] 2.1 [7/10] Extract authenticated-page fixture
+  - Extract auth pattern from gold standard: register/login via API, store token in localStorage
+  - Provides `authenticatedPage` fixture and `testUser` fixture
+  - File: `apps/app/e2e/fixtures/authenticated-page.ts`
+
+- [ ] 2.2 [7/10] Extract database fixture and seeding utilities
+  - Extract database seeding and cleanup patterns from gold standard
+  - Provides `db` fixture (seeding function) and `prisma` fixture
+  - File: `apps/app/e2e/fixtures/database.ts`
+  - File: `apps/app/e2e/utils/seed-database.ts`
+  - Supports seeding users, projects, sessions
+
+- [ ] 2.3 [5/10] Extract WebSocket utilities
+  - Extract WebSocket event forwarding and waiting patterns
+  - Provides `setupWebSocketForwarding()` and `waitForWebSocketEvent()`
+  - File: `apps/app/e2e/utils/wait-for-websocket.ts`
+
+- [ ] 2.4 [4/10] Create merged fixtures index
+  - Merge all fixtures using `mergeTests()` from Playwright
+  - Export unified `test` and `expect` for all tests to import
+  - File: `apps/app/e2e/fixtures/index.ts`
+
+- [ ] 2.5 [5/10] Refactor gold standard test to use extracted utilities
+  - Replace inline patterns with fixtures: `authenticatedPage`, `db`, WebSocket helpers
+  - Verify test still passes
+  - File: `apps/app/e2e/tests/sessions/session-lifecycle.e2e.spec.ts`
+
+#### Completion Notes
+
+- What was implemented:
+- Deviations from plan (if any):
+- Important context or decisions:
+- Known issues or follow-ups (if any):
+
+### Phase 3: Priority 1 Tests (Auth + Projects)
+
+**Phase Complexity**: 25 points (avg 5.0/10)
+
+- [ ] 3.1 [4/10] Write auth tests (3 tests)
+  - `login.e2e.spec.ts` - Valid login via UI, verify redirect
+  - `login-failure.e2e.spec.ts` - Invalid credentials, verify error message
+  - `logout.e2e.spec.ts` - Logout clears token, redirects to login
+  - Files: `apps/app/e2e/tests/auth/*.e2e.spec.ts`
+
+- [ ] 3.2 [6/10] Write create-project.e2e.spec.ts
+  - Create project via UI form, verify in projects list and database
+  - File: `apps/app/e2e/tests/projects/create-project.e2e.spec.ts`
+
+- [ ] 3.3 [5/10] Write list-projects.e2e.spec.ts
+  - Seed multiple projects, verify all displayed in list
+  - File: `apps/app/e2e/tests/projects/list-projects.e2e.spec.ts`
+
+- [ ] 3.4 [5/10] Write project-details.e2e.spec.ts
+  - Navigate to project details page, verify project info displayed
+  - File: `apps/app/e2e/tests/projects/project-details.e2e.spec.ts`
+
+- [ ] 3.5 [5/10] Write update-project and delete-project tests
+  - `update-project.e2e.spec.ts` - Edit project name, verify updated
+  - `delete-project.e2e.spec.ts` - Delete project, verify removed from list and DB
+  - Files: `apps/app/e2e/tests/projects/*.e2e.spec.ts`
+
+#### Completion Notes
+
+- What was implemented:
+- Deviations from plan (if any):
+- Important context or decisions:
+- Known issues or follow-ups (if any):
+
+### Phase 4: Priority 2 Tests (Sessions + Workflows + Files)
+
+**Phase Complexity**: 30 points (avg 7.5/10)
+
+- [ ] 4.1 [7/10] Write session tests (3 additional tests)
+  - `create-session.e2e.spec.ts` - Create session, verify in list
+  - `session-streaming.e2e.spec.ts` - Send message, receive WebSocket streaming
+  - `stop-session.e2e.spec.ts` - Stop session, verify state updated
+  - Files: `apps/app/e2e/tests/sessions/*.e2e.spec.ts`
+  - Note: session-lifecycle.e2e.spec.ts already exists as gold standard
+
+- [ ] 4.2 [9/10] Write workflow tests (3 tests)
+  - `list-workflow-definitions.e2e.spec.ts` - Browse available workflows
+  - `run-workflow.e2e.spec.ts` - Execute workflow, verify run created
+  - `monitor-workflow-execution.e2e.spec.ts` - Monitor real-time workflow progress via WebSocket
+  - Files: `apps/app/e2e/tests/workflows/*.e2e.spec.ts`
+  - Requires: Inngest running on port 8288 (started by `pnpm dev`)
+
+- [ ] 4.3 [7/10] Write file operation tests (3 tests)
+  - `file-browser.e2e.spec.ts` - Navigate file tree, verify files displayed
+  - `open-file.e2e.spec.ts` - Open file in editor, verify content loaded
+  - `edit-file.e2e.spec.ts` - Edit and save file, verify changes persisted
+  - Files: `apps/app/e2e/tests/files/*.e2e.spec.ts`
+
+- [ ] 4.4 [7/10] Write E2E testing README
+  - Document how to run E2E tests, fixture patterns, WebSocket testing
+  - Include troubleshooting section
+  - File: `apps/app/e2e/README.md`
+
+#### Completion Notes
+
+- What was implemented:
+- Deviations from plan (if any):
+- Important context or decisions:
+- Known issues or follow-ups (if any):
+
+### Phase 5: CI/CD Integration & Polish
+
+**Phase Complexity**: 17 points (avg 8.5/10)
+
+- [ ] 5.1 [8/10] Add GitHub Actions workflow for E2E tests
+  - Create `.github/workflows/e2e.yml` with job to run E2E tests
+  - Starts servers using `webServer` config in CI (not locally)
+  - Uploads playwright-report as artifact on failure
+  - File: `.github/workflows/e2e.yml`
+
+- [ ] 5.2 [9/10] Add E2E task to turbo.json and optimize CI
+  - Configure E2E task with no caching, proper dependencies
+  - Consider parallelization if runtime > 20 minutes
+  - Update root README with E2E testing section
+  - Files: `turbo.json`, `README.md`
+
+#### Completion Notes
+
+- What was implemented:
+- Deviations from plan (if any):
+- Important context or decisions:
+- Known issues or follow-ups (if any):
+
+## Testing Strategy
+
+### Gold Standard Test
+
+**`apps/app/e2e/tests/sessions/session-lifecycle.e2e.spec.ts`** - Complete session lifecycle:
+
+```typescript
+test('should complete full session lifecycle', async ({ page }) => {
+  // 1. Auth via API + localStorage
+  // 2. Database seeding (user, project)
+  // 3. WebSocket event forwarding setup
+  // 4. UI navigation: goto projects, click project
+  // 5. Create session via form
+  // 6. Wait for WebSocket session.created event
+  // 7. Send message via input
+  // 8. Wait for WebSocket session.stream_output event
+  // 9. Verify UI displays streamed response
+  // 10. Stop session via button
+  // 11. Wait for WebSocket session.state_changed event
+  // 12. Verify database: session state = 'completed'
+});
+```
+
+### Fixture-Based Tests
+
+All subsequent tests use extracted fixtures:
+
+```typescript
+import { test, expect } from '../../fixtures';
+
+test('feature test', async ({ authenticatedPage, db }) => {
+  await db({ users: [...], projects: [...] });
+  await authenticatedPage.goto('/projects');
+  // ... test implementation
+});
+```
+
+### WebSocket Testing
+
+Custom helpers for waiting on WebSocket events:
+
+```typescript
+await setupWebSocketForwarding(page);
+const event = await waitForWebSocketEvent(page, 'session.started', 10_000);
+expect(event.sessionId).toBeDefined();
+```
+
+## Success Criteria
+
+- [ ] Gold standard test passes demonstrating all patterns
+- [ ] Fixtures extracted and reusable across tests
+- [ ] 8 Priority 1 tests (auth + projects) passing
+- [ ] 10 Priority 2 tests (sessions + workflows + files) passing
+- [ ] Total runtime < 15 minutes
+- [ ] No test flakiness (all tests pass consistently)
+- [ ] E2E database isolated from dev database
+- [ ] Both dev and E2E servers can run simultaneously
+- [ ] Inngest shared successfully between servers
+- [ ] CI pipeline runs E2E tests automatically
+- [ ] Documentation complete (e2e/README.md)
+
+## Validation
+
+Execute these commands to verify the feature works correctly:
+
+**Automated Verification:**
+
+```bash
+# Install Playwright browsers
+cd apps/app && pnpm e2e:install
+# Expected: Chromium and Firefox installed
+
+# Build verification (from root)
+pnpm build
+# Expected: No build errors
+
+# Type checking
+cd apps/app && pnpm check-types
+# Expected: No type errors
+
+# Start dev server (terminal 1)
+cd apps/app && pnpm dev
+# Expected: Backend on 4100, Frontend on 4101, Inngest on 8288
+
+# Start E2E server (terminal 2)
+cd apps/app && pnpm e2e:server
+# Expected: Backend on 5100, Frontend on 5101
+
+# Run all E2E tests (terminal 3)
+cd apps/app && pnpm e2e
+# Expected: All 18 tests pass in ~12-15 minutes
+
+# Run specific test suite
+cd apps/app && pnpm e2e --grep "auth"
+# Expected: 3 auth tests pass
+
+# Run with UI mode for debugging
+cd apps/app && pnpm e2e:ui
+# Expected: Playwright UI opens with test list
+```
+
+**Manual Verification:**
+
+1. Verify server isolation:
+   - Check `apps/app/dev.db` (dev data) and `apps/app/e2e.db` (test data) are separate
+   - Run E2E tests, verify dev.db unchanged
+
+2. Verify Inngest connection:
+   - Open http://localhost:8288 while both servers running
+   - Verify both apps registered in Inngest dashboard
+
+3. Review test output:
+   - Check `apps/app/playwright-report/index.html` for detailed results
+   - Verify screenshots/videos captured on failure
+
+**Feature-Specific Checks:**
+
+- Gold standard test demonstrates all patterns inline
+- Fixtures reduce test duplication (auth + db patterns reused)
+- WebSocket events properly waited (no flaky timeouts)
+- All 18 tests cover critical user journeys
+- E2E tests can run during development (don't block dev workflow)
+
+## Implementation Notes
+
+### 1. Shared Inngest Instance
+
+Both dev server (4100) and E2E server (5100) connect to single Inngest dev server (8288). Workflow runs are isolated by database (dev.db vs e2e.db), not by Inngest instance. This works because Inngest SDK's `serve()` automatically registers each backend when it starts.
+
+### 2. Sequential Execution
+
+SQLite limitations require sequential test execution (`workers: 1`). Parallel execution with separate databases is possible future optimization but adds complexity.
+
+### 3. Gold Standard Approach
+
+Building one comprehensive test with all patterns inline before extracting fixtures prevents premature abstraction and ensures patterns work before generalizing.
+
+### 4. Test File Naming
+
+`.e2e.spec.ts` convention makes E2E tests immediately identifiable and prevents confusion with unit tests (`.test.ts`) or integration tests (`.test.ts` in test-utils).
+
+### 5. Assume Servers Running
+
+E2E tests assume dev server (`pnpm dev`) and E2E server (`pnpm e2e:server`) are already running. This matches existing Vitest workflow, enables faster iteration, and simplifies debugging. CI uses Playwright's `webServer` config to auto-start servers.
+
+## Dependencies
+
+- `cross-env` - Cross-platform environment variables (already planning to add)
+- `@playwright/test@1.56.1` - Already installed
+- No new dependencies required
+
+## References
+
+- Playwright documentation: https://playwright.dev/
+- Existing Vitest tests: `apps/app/src/server/test-utils/`
+- Inngest configuration: `apps/app/src/shared/utils/inngestEnv.ts`
+- Implementation plan: `.claude/plans/lovely-sauteeing-quasar.md`
+
+## Next Steps
+
+1. Review and approve this spec
+2. Start Phase 1: Build foundation and gold standard test
+3. Verify gold standard test passes with all patterns working
+4. Extract fixtures in Phase 2 only after gold standard validated
+5. Implement Priority 1 and 2 tests using established patterns
+6. Add CI/CD integration in Phase 5

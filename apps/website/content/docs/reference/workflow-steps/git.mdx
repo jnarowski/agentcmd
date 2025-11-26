@@ -1,0 +1,266 @@
+---
+title: Git Step
+description: Git operations (commit, branch, PR, worktrees)
+---
+
+import { Card, Cards } from 'fumadocs-ui/components/card';
+
+Perform git operations as part of your workflow.
+
+## Overview
+
+Type-safe git operations: commit, branch, create PR, and worktree management.
+
+**Use for**: Committing AI-generated code, creating feature branches, opening pull requests, isolated parallel development with worktrees
+
+## Configuration
+
+{/* AUTO-GENERATED:git-step-config START */}
+{/* Source: packages/agentcmd-workflows/src/types/steps.ts
+{/* Last updated: 2025-11-26 */}
+
+```typescript
+interface GitStepConfig {
+  name?: string;
+  operation: "commit" | "branch" | "pr" | "commit-and-branch" | "worktree-add" | "worktree-remove";
+  // For commit
+  message?: string;
+  autoCommit?: boolean;
+  // For branch, commit-and-branch
+  branch?: string;
+  baseBranch?: string;
+  commitMessage?: string;
+  // For pr
+  title?: string;
+  body?: string;
+  // For worktree operations
+  projectPath?: string;
+  worktreePath?: string;
+  worktreeName?: string;
+  force?: boolean;
+}
+```
+
+**Timeout**: 2 minutes (120,000ms)
+
+{/* AUTO-GENERATED:git-step-config END */}
+
+### Operations
+
+**`commit`** - Create git commit
+**`branch`** - Create/switch branch
+**`pr`** - Create pull request (requires `gh` CLI)
+**`commit-and-branch`** - Commit + create branch in one step
+**`worktree-add`** - Create git worktree for parallel development
+**`worktree-remove`** - Remove a git worktree
+
+## Basic Usage
+
+### Commit Changes
+
+```typescript
+await step.git("save-changes", {
+  operation: "commit",
+  message: "feat: Add user authentication",
+});
+```
+
+### Create Branch
+
+```typescript
+await step.git("feature-branch", {
+  operation: "branch",
+  branch: "feat/authentication",
+  baseBranch: "main",
+});
+```
+
+### Create Pull Request
+
+```typescript
+await step.git("open-pr", {
+  operation: "pr",
+  title: "feat: Add authentication system",
+  body: "Implements JWT-based authentication with refresh tokens",
+  baseBranch: "main",
+});
+```
+
+### Commit and Branch (Atomic)
+
+```typescript
+await step.git("commit-and-branch", {
+  operation: "commit-and-branch",
+  commitMessage: "feat: Add feature X",
+  branch: "feat/x",
+});
+```
+
+### Create Worktree
+
+Create an isolated worktree for parallel development without switching branches:
+
+```typescript
+await step.git("setup-worktree", {
+  operation: "worktree-add",
+  projectPath: "/path/to/repo",
+  branch: "feat/my-feature",
+  worktreeName: "run-abc123-feature",
+  // worktreePath is optional, defaults to .worktrees/{worktreeName}
+});
+```
+
+### Remove Worktree
+
+Clean up a worktree after work is complete:
+
+```typescript
+await step.git("cleanup-worktree", {
+  operation: "worktree-remove",
+  projectPath: "/path/to/repo",
+  worktreePath: "/path/to/repo/.worktrees/run-abc123-feature",
+  force: false, // Set true to remove even if dirty
+});
+```
+
+## Common Patterns
+
+### Agent → Git Flow
+
+```typescript
+// AI generates code
+await step.agent("implement", {
+  agent: "claude",
+  prompt: "Implement authentication",
+});
+
+// Commit changes
+await step.git("save", {
+  operation: "commit-and-branch",
+  commitMessage: "feat: Add authentication 🤖",
+  branch: "feat/auth",
+});
+
+// Open PR
+await step.git("pr", {
+  operation: "pr",
+  title: "feat: Authentication system",
+  body: "AI-generated implementation",
+});
+```
+
+### Workflow with Review
+
+```typescript
+const ctx: { branch?: string } = {};
+
+// Implement
+await step.agent("code", { ... });
+
+// Commit to branch
+await step.git("commit", {
+  operation: "commit-and-branch",
+  commitMessage: "feat: Implement X",
+  branch: "feat/x",
+});
+ctx.branch = "feat/x";
+
+// Review
+await step.agent("review", {
+  prompt: `Review code on branch ${ctx.branch}`,
+  permissionMode: "plan",
+});
+
+// If approved, create PR
+await step.git("pr", {
+  operation: "pr",
+  title: "feat: X",
+  baseBranch: "main",
+});
+```
+
+### Isolated Worktree Workflow
+
+Use worktrees for parallel development without affecting the main repo state:
+
+```typescript
+const { projectPath } = event.data;
+const ctx: { worktreePath?: string } = {};
+
+// Create isolated worktree
+const worktree = await step.git("create-worktree", {
+  operation: "worktree-add",
+  projectPath,
+  branch: "feat/isolated-work",
+  worktreeName: `run-${event.data.runId}`,
+});
+ctx.worktreePath = worktree.data.worktreePath;
+
+// Agent works in worktree (main repo unchanged)
+await step.agent("implement", {
+  agent: "claude",
+  prompt: "Implement feature X",
+  workingDir: ctx.worktreePath,
+});
+
+// Commit changes in worktree
+await step.git("commit", {
+  operation: "commit",
+  message: "feat: Add feature X",
+});
+
+// Create PR from worktree branch
+await step.git("pr", {
+  operation: "pr",
+  title: "feat: Feature X",
+  baseBranch: "main",
+});
+
+// Cleanup worktree
+await step.git("cleanup", {
+  operation: "worktree-remove",
+  projectPath,
+  worktreePath: ctx.worktreePath,
+});
+```
+
+**When to use worktrees:**
+- Running multiple workflow instances in parallel
+- Keeping main repo clean during long-running workflows
+- Isolating experimental changes
+
+## Best Practices
+
+**Use conventional commits**:
+```typescript
+message: "feat: Add authentication"
+message: "fix: Resolve login bug"
+message: "docs: Update API reference"
+```
+
+**Include emoji** (optional but fun):
+```typescript
+message: "feat: Add auth 🔐"
+message: "fix: Resolve bug 🐛"
+```
+
+**Auto-commit option**:
+```typescript
+autoCommit: true  // Commits all changes automatically
+```
+
+## Requirements
+
+**For PR creation**: Install [GitHub CLI](https://cli.github.com/):
+```bash
+brew install gh  # macOS
+# or visit https://cli.github.com/
+```
+
+## Next Steps
+
+<Cards>
+  <Card title="CLI Step" href="/docs/reference/workflow-steps/cli-step">
+    For general shell commands
+  </Card>
+</Cards>

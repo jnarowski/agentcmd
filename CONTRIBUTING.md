@@ -29,24 +29,27 @@ This project adheres to a Code of Conduct that all contributors are expected to 
 
 1. Fork the repository on GitHub
 2. Clone your fork locally:
+
    ```bash
-   git clone https://github.com/YOUR_USERNAME/agent-workflows-monorepo.git
-   cd agent-workflows-monorepo
+   git clone https://github.com/YOUR_USERNAME/agentcmd.git
+   cd agentcmd
    ```
 
 3. Install dependencies:
+
    ```bash
    pnpm install
    ```
 
 4. Build all packages:
+
    ```bash
    pnpm build
    ```
 
 5. Set up the web app (optional, if working on the UI):
    ```bash
-   cd apps/web
+   cd apps/app
    pnpm dev:setup
    ```
 
@@ -63,11 +66,13 @@ This project adheres to a Code of Conduct that all contributors are expected to 
 ### Making Changes
 
 1. Create a new branch from `main`:
+
    ```bash
    git checkout -b feat/your-feature-name
    ```
 
 2. Make your changes and commit them:
+
    ```bash
    git add .
    git commit -m "feat: add new feature"
@@ -82,6 +87,7 @@ This project adheres to a Code of Conduct that all contributors are expected to 
    - `chore:` - Maintenance tasks
 
 3. Run tests and linting:
+
    ```bash
    pnpm check  # Runs lint, type-check, and tests
    ```
@@ -111,7 +117,7 @@ pnpm test:e2e
 ### Running the Web App
 
 ```bash
-cd apps/web
+cd apps/app
 pnpm dev  # Runs both client and server
 ```
 
@@ -122,6 +128,7 @@ pnpm dev  # Runs both client and server
 2. **Write Tests**: Add or update tests to cover your changes.
 
 3. **Run All Checks**: Before submitting, run:
+
    ```bash
    pnpm check  # From monorepo root
    ```
@@ -160,11 +167,11 @@ pnpm dev  # Runs both client and server
 
 ```typescript
 // Always use path aliases
-import { Component } from '@/client/components/Component';
-import { service } from '@/server/domain/project/services/service';
+import { Component } from "@/client/components/Component";
+import { service } from "@/server/domain/project/services/service";
 
 // Never use relative imports
-import { Component } from '../../../components/Component'; // ❌ Bad
+import { Component } from "../../../components/Component"; // ❌ Bad
 ```
 
 ### React Patterns
@@ -190,12 +197,12 @@ import { Component } from '../../../components/Component'; // ❌ Bad
 - Use descriptive test names
 
 ```typescript
-describe('functionName', () => {
-  it('should handle expected input correctly', () => {
+describe("functionName", () => {
+  it("should handle expected input correctly", () => {
     // Test implementation
   });
 
-  it('should return null when item not found', () => {
+  it("should return null when item not found", () => {
     // Test implementation
   });
 });
@@ -218,6 +225,7 @@ describe('functionName', () => {
 ### README Updates
 
 When adding features:
+
 - Update relevant README.md files
 - Update CLAUDE.md files for AI assistant context
 - Add examples and usage instructions
@@ -232,6 +240,7 @@ When adding features:
 ### Reporting Bugs
 
 When reporting bugs, please include:
+
 - Clear description of the issue
 - Steps to reproduce
 - Expected vs actual behavior
@@ -241,6 +250,7 @@ When reporting bugs, please include:
 ### Suggesting Features
 
 For feature requests:
+
 - Check existing issues first
 - Describe the use case
 - Explain why this feature would be valuable
@@ -253,6 +263,7 @@ By contributing, you agree that your contributions will be licensed under the MI
 ## Questions?
 
 If you have questions about contributing, feel free to:
+
 - Open a GitHub Discussion
 - Open an issue with the "question" label
 

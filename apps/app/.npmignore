@@ -1,0 +1,47 @@
+# Database files - prevent accidental inclusion in package
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+
+# Test databases
+test-worker-*.db
+dev.db
+
+# Prisma artifacts
+dist/prisma/*.db
+dist/prisma/*.db-*
+package/dist/prisma/*.db
+package/dist/prisma/*.db-*
+
+# Source files - only ship dist/
+src/
+scripts/
+prisma/seed*.ts
+prisma/dev.db
+
+# Development files
+.env
+.env.*
+!.env.example
+*.log
+logs/
+
+# Test files
+*.test.ts
+*.spec.ts
+**/__tests__/
+**/__mocks__/
+
+# Config files
+tsconfig*.json
+vite.config.ts
+vitest.config.ts
+.eslintrc*
+.prettierrc*
+
+# Documentation (already in README)
+CLAUDE.md
+.agent/
+.claude/

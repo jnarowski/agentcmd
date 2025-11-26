@@ -67,7 +67,7 @@ export interface ExecuteOptions {
   prompt: string;
   /** Working directory for command execution (defaults to current directory) */
   workingDir?: string;
-  /** Timeout in milliseconds (defaults to 5 minutes) */
+  /** Timeout in milliseconds (optional, no default) */
   timeout?: number;
   /** Enable verbose output logging */
   verbose?: boolean;
@@ -94,6 +94,12 @@ export interface ExecuteOptions {
   };
   /** Images to include with the prompt */
   images?: Array<{ path: string }>;
+  /** Append text to the system prompt */
+  appendSystemPrompt?: string;
+  /** System prompt to use for the session */
+  systemPrompt?: string;
+  /** Load MCP servers from JSON files or strings (space-separated) */
+  mcpConfig?: string[];
   /** Automatically extract and parse JSON from the response */
   json?: boolean;
   /** Callback invoked immediately when process starts (before any output) */
@@ -209,7 +215,7 @@ export async function execute<T = string>(options: ExecuteOptions): Promise<Exec
     const result = await spawnProcess(cliPath, {
       args,
       cwd: options.workingDir,
-      timeout: options.timeout || 300000, // 5 minutes default
+      timeout: options.timeout,
       verbose: options.verbose,
       onStart: options.onStart,
       onStdout: (chunk) => {
@@ -320,6 +326,21 @@ function buildArgs(options: ExecuteOptions): string[] {
     args.push('--model', options.model);
   }
 
+  // Append system prompt
+  if (options.appendSystemPrompt) {
+    args.push('--append-system-prompt', options.appendSystemPrompt);
+  }
+
+  // System prompt
+  if (options.systemPrompt) {
+    args.push('--system-prompt', options.systemPrompt);
+  }
+
+  // MCP config
+  if (options.mcpConfig && options.mcpConfig.length > 0) {
+    args.push('--mcp-config', ...options.mcpConfig);
+  }
+
   // Session management (sessionId, continue, and resume are mutually exclusive)
   if (options.sessionId && options.resume) {
     // Resume an existing session with specific ID
@@ -356,15 +377,14 @@ function buildArgs(options: ExecuteOptions): string[] {
     args.push('--disallowed-tools', options.toolSettings.disallowedTools.join(','));
   }
 
-  // Images
-  if (options.images && options.images.length > 0) {
-    for (const image of options.images) {
-      args.push('-i', image.path);
-    }
-  }
-
   // Prompt (must be last)
-  args.push(options.prompt);
+  // If images present, append their paths to the prompt
+  let finalPrompt = options.prompt;
+  if (options.images && options.images.length > 0) {
+    const imagePaths = options.images.map((img) => img.path).join(' ');
+    finalPrompt = `${options.prompt} ${imagePaths}`;
+  }
+  args.push(finalPrompt);
 
   return args;
 }

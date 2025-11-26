@@ -1,0 +1,302 @@
+---
+title: Define a Workflow
+description: Build a simple workflow definition from scratch in 10 lines
+---
+
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { AgentCmd } from '@/components/AgentCmd';
+
+Build a complete workflow in 10 lines that runs a CLI command and creates a git commit.
+
+## What You'll Build
+
+A workflow that:
+1. Checks project structure with `ls`
+2. Commits changes to git
+3. Creates a summary artifact
+
+**Time**: 5 minutes
+**Prerequisites**: [Quick Start](/docs/getting-started/quick-start) completed
+
+## Initialize Workflow Structure
+
+<AgentCmd /> workflows live in `.agent/workflows/definitions/`. Initialize the structure:
+
+```bash
+# Navigate to your project
+cd /path/to/your/project
+
+# Initialize workflow structure
+npx agentcmd-workflows init
+```
+
+This creates:
+```
+.agent/
+├── workflows/
+│   └── definitions/     # Your workflows go here
+├── specs/               # Feature specifications
+└── logs/                # Workflow execution logs
+```
+
+## Create Your Workflow File
+
+Create `.agent/workflows/definitions/my-first-workflow.ts`:
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+
+export default defineWorkflow(
+  {
+    id: "my-first-workflow",
+    name: "My First Workflow",
+    description: "Simple workflow to learn the basics",
+  },
+  async ({ event, step }) => {
+    const projectPath = event.data.projectPath || process.cwd();
+
+    // Step 1: Check project structure
+    await step.cli("check-project", {
+      command: "ls -la",
+      cwd: projectPath,
+    });
+
+    // Step 2: Create a git commit
+    await step.git("save-changes", {
+      operation: "commit",
+      message: "chore: my first AgentCmd workflow",
+    });
+
+    // Step 3: Create summary artifact
+    await step.artifact("summary", {
+      name: "workflow-summary.txt",
+      type: "text",
+      content: `Workflow completed at ${new Date().toISOString()}`,
+    });
+
+    return { success: true };
+  }
+);
+```
+
+**That's it!** 10 lines of actual workflow logic.
+
+## Understanding the Code
+
+### Workflow Config
+
+```typescript
+{
+  id: "my-first-workflow",          // Unique identifier
+  name: "My First Workflow",        // Display name in UI
+  description: "Simple workflow...", // Shown in workflow library
+}
+```
+
+### Event Data
+
+```typescript
+async ({ event, step }) => {
+  const projectPath = event.data.projectPath || process.cwd();
+```
+
+<AgentCmd /> passes the project path when triggering the workflow. Falls back to current directory.
+
+### Step Types
+
+**CLI Step** - Run shell commands:
+```typescript
+await step.cli("check-project", {
+  command: "ls -la",
+  cwd: projectPath,
+});
+```
+
+**Git Step** - Git operations (commit, branch, PR):
+```typescript
+await step.git("save-changes", {
+  operation: "commit",
+  message: "chore: my first AgentCmd workflow",
+});
+```
+
+**Artifact Step** - Upload files for review:
+```typescript
+await step.artifact("summary", {
+  name: "workflow-summary.txt",
+  type: "text",
+  content: `Workflow completed at ${new Date().toISOString()}`,
+});
+```
+
+## Run Your Workflow
+
+<Steps>
+  <Step>
+    ### Restart <AgentCmd />
+
+    Workflows are loaded on startup:
+    ```bash
+    # Stop: Ctrl+C
+    # Start again:
+    npx agentcmd start
+    ```
+  </Step>
+
+  <Step>
+    ### Open UI
+
+    Navigate to your project at http://localhost:4100
+  </Step>
+
+  <Step>
+    ### Find Your Workflow
+
+    Go to **Workflows** tab. You should see:
+    ```
+    My First Workflow
+    Simple workflow to learn the basics
+    ```
+  </Step>
+
+  <Step>
+    ### Click "Run"
+
+    Watch the execution:
+    - ✓ check-project (CLI output shows files)
+    - ✓ save-changes (git commit created)
+    - ✓ summary (artifact uploaded)
+  </Step>
+
+  <Step>
+    ### View Artifact
+
+    Click the **Artifacts** tab to download `workflow-summary.txt`
+  </Step>
+</Steps>
+
+## Add Some Polish
+
+Let's improve the workflow with annotations and error handling:
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+
+export default defineWorkflow(
+  {
+    id: "my-first-workflow",
+    name: "My First Workflow",
+    description: "Simple workflow with annotations",
+  },
+  async ({ event, step }) => {
+    const projectPath = event.data.projectPath || process.cwd();
+
+    // Announce start
+    await step.annotation("start", {
+      message: "Starting first workflow! 🚀",
+    });
+
+    // Check project with error handling
+    try {
+      await step.cli("check-project", {
+        command: "ls -la",
+        cwd: projectPath,
+      });
+
+      await step.annotation("project-verified", {
+        message: "Project structure looks good ✓",
+      });
+    } catch (error) {
+      await step.annotation("project-error", {
+        message: `Failed to check project: ${error}`,
+      });
+      throw error; // Fail the workflow
+    }
+
+    // Commit changes
+    await step.git("save-changes", {
+      operation: "commit",
+      message: "chore: my first AgentCmd workflow ✨",
+    });
+
+    // Create detailed summary
+    await step.artifact("summary", {
+      name: "workflow-summary.txt",
+      type: "text",
+      content: `
+Workflow Summary
+================
+Project: ${projectPath}
+Status: SUCCESS
+Timestamp: ${new Date().toISOString()}
+
+Steps Completed:
+1. ✓ Checked project structure
+2. ✓ Created git commit
+3. ✓ Generated this summary
+
+Next Steps:
+- Try adding phases to organize work
+- Use step.agent() to run AI CLIs
+- Chain multiple workflows together
+      `.trim(),
+    });
+
+    await step.annotation("complete", {
+      message: "All done! Check the Artifacts tab 🎉",
+    });
+
+    return { success: true };
+  }
+);
+```
+
+## Next Steps
+
+You've built your first workflow! 🎉
+
+### Level Up
+
+<Cards>
+  <Card title="Add Phases" href="/docs/concepts/workflows/workflow-phases">
+    Organize steps into logical stages (setup → build → deploy)
+  </Card>
+  <Card title="Use AI Agents" href="/docs/reference/workflow-steps/agent">
+    Run Claude/Codex/Gemini with step.agent()
+  </Card>
+  <Card title="Context Sharing" href="/docs/examples/context-sharing">
+    Share data between workflow steps with artifacts
+  </Card>
+  <Card title="Real Examples" href="/docs/examples">
+    Clone production-ready workflow templates
+  </Card>
+</Cards>
+
+### Learn More Step Types
+
+You used 3 of 8 step types. Explore the rest:
+
+- `step.agent()` - Run AI CLI tools (Claude, Codex, Gemini)
+- `step.ai()` - Non-interactive AI text/structured generation
+- `step.phase()` - Group steps into phases
+- `step.log()` - Log messages with `.warn()` and `.error()`
+- `step.annotation()` - Progress notes for timeline ✓
+- `step.cli()` - Shell commands ✓
+- `step.git()` - Git operations ✓
+- `step.artifact()` - Upload files ✓
+
+[View Complete Step Reference](/docs/reference/workflow-steps)
+
+### Common Patterns
+
+- **Error handling**: Wrap steps in try/catch
+- **Context sharing**: Use closures to pass data between steps
+- **Resumable agents**: Use `resume` parameter to continue conversations
+- **Parallel execution**: Use `Promise.all()` for concurrent steps
+
+[See Workflow Definitions](/docs/concepts/workflows/workflow-definitions)
+
+---
+
+**Congratulations!** You've created, run, and improved your first workflow. Ready for more? Check out [Core Concepts](/docs/concepts/workflows) to understand how everything works.

@@ -1,0 +1,167 @@
+---
+title: Installation
+description: Install <AgentCMD /> and verify your setup
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { AgentCmd } from '@/components/AgentCmd';
+
+Get <AgentCmd /> running on your machine in under 2 minutes.
+
+<Callout type="info">
+**Note:** This guide covers installing agentcmd as a **standalone application** for workflow automation. If you're contributing to the agentcmd monorepo, see the [development setup in README.md](https://github.com/sourceborn/agentcmd).
+</Callout>
+
+## Prerequisites
+
+Before installing, ensure you have:
+
+- **Node.js 22+** - [Download here](https://nodejs.org/)
+- **AI CLI tool** - At least one of:
+  - [Claude Code](https://code.claude.com/) (recommended)
+  - [OpenAI Codex](https://openai.com/codex)
+  - [Google Gemini](https://ai.google.dev/)
+
+<Callout type="info">
+**New to AI CLIs?** Claude Code is the most mature option. Install it first, then add others later.
+</Callout>
+
+## Install <AgentCmd />
+
+Run the installer which sets up the database, config, and CLI:
+
+```bash
+npx agentcmd install
+```
+
+This will:
+1. Create `~/.agentcmd/` directory
+2. Initialize SQLite database
+3. Generate JWT secret for authentication
+4. Create default config file
+
+**Output**:
+
+```text title="Installation Output"
+✓ Created ~/.agentcmd directory
+✓ Initialized database at ~/.agentcmd/agentcmd.db
+✓ Generated JWT secret
+✓ Created config at ~/.agentcmd/config.json
+
+<AgentCMD /> installed successfully!
+
+Next steps:
+  1. Start the server: npx agentcmd start
+  2. Open UI: http://localhost:4100
+```
+
+## Verify Installation
+
+Check that <AgentCmd /> is installed correctly:
+
+```bash
+npx agentcmd config --show
+```
+
+You should see your configuration:
+
+```json title="~/.agentcmd/config.json"
+{
+  "server": {
+    "port": 4100,
+    "host": "0.0.0.0"
+  },
+  "inngest": {
+    "port": 8288,
+    "devMode": true
+  },
+  "database": {
+    "path": "~/.agentcmd/agentcmd.db"
+  }
+}
+```
+
+---
+
+## Installing Supporting CLI Tools
+
+<AgentCmd /> requires at least one AI CLI tool. Here's how to install the most common options:
+
+### Claude Code (Recommended)
+
+Claude Code is the most mature AI CLI with excellent workflow support.
+
+**macOS/Linux:**
+```bash
+curl -fsSL https://code.claude.com/install.sh | sh
+```
+
+**Manual Installation:**
+1. Visit [code.claude.com](https://code.claude.com/)
+2. Download installer for your OS
+3. Follow setup instructions
+4. Run `claude --version` to verify
+
+### OpenAI Codex
+
+**npm:**
+```bash
+npm install -g openai-codex
+```
+
+**Verify:**
+```bash
+codex --version
+```
+
+### GitHub CLI (gh)
+
+Many workflows use `gh` for PR creation and issue management.
+
+**macOS:**
+```bash
+brew install gh
+```
+
+**Linux:**
+```bash
+# Debian/Ubuntu
+curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+sudo apt update
+sudo apt install gh
+
+# Fedora/RHEL
+sudo dnf install gh
+```
+
+**Windows:**
+```bash
+winget install --id GitHub.cli
+```
+
+**Authenticate:**
+```bash
+gh auth login
+```
+
+---
+
+## Next Steps
+
+<Cards>
+  <Card title="Quick Start" href="/docs/getting-started/quick-start">
+    Launch the UI and create your first project
+  </Card>
+  <Card title="First Workflow" href="/docs/getting-started/first-workflow">
+    Build a simple 10-line workflow
+  </Card>
+  <Card title="Configuration" href="/docs/reference/configuration">
+    Customize ports, logging, and more
+  </Card>
+</Cards>
+
+---
+
+**Installation complete!** Continue to [Quick Start](/docs/getting-started/quick-start) to launch the UI and create your first project.

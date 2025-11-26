@@ -1,0 +1,141 @@
+---
+title: Workflow Phases
+description: Organize workflow steps into logical stages
+---
+
+import { Card, Cards } from 'fumadocs-ui/components/card';
+
+Phases group related steps into logical stages, making workflows easier to understand and monitor.
+
+## What are Phases?
+
+Phases are named sections that organize your workflow:
+
+```typescript
+defineWorkflow({
+  id: "build-and-deploy",
+  phases: ["setup", "build", "test", "deploy"]
+}, async ({ step }) => {
+  await step.phase("setup", async () => {
+    // All setup steps here
+  });
+
+  await step.phase("build", async () => {
+    // All build steps here
+  });
+
+  // ... more phases
+});
+```
+
+## Defining Phases
+
+### Simple String Array
+
+```typescript
+defineWorkflow({
+  id: "simple",
+  phases: ["plan", "code", "test", "ship"]
+}, ...)
+```
+
+### Objects with Labels
+
+```typescript
+defineWorkflow({
+  id: "detailed",
+  phases: [
+    { id: "plan", label: "Planning & Design" },
+    { id: "code", label: "Implementation" },
+    { id: "test", label: "Quality Assurance" },
+    { id: "ship", label: "Deployment" }
+  ]
+}, ...)
+```
+
+**When to use objects**:
+- Longer, more descriptive labels
+- Special characters in labels
+- UI customization
+
+## Using Phases
+
+### Basic Usage
+
+Wrap related steps in `step.phase()`:
+
+```typescript
+await step.phase("build", async () => {
+  await step.cli("install", {
+    command: "pnpm install",
+  });
+
+  await step.cli("type-check", {
+    command: "pnpm check-types",
+  });
+
+  await step.cli("build", {
+    command: "pnpm build",
+  });
+});
+```
+
+### Type Safety
+
+If you define phases in config, TypeScript enforces valid IDs:
+
+```typescript
+defineWorkflow({
+  phases: ["plan", "code", "test"]
+}, async ({ step }) => {
+  await step.phase("plan", ...);    // ✅ Valid
+  await step.phase("deploy", ...);  // ❌ Type error!
+});
+```
+
+### Optional Description
+
+Add context for complex phases:
+
+```typescript
+await step.phase("integration-test", {
+  description: "Run full E2E test suite against staging"
+}, async () => {
+  // Steps...
+});
+```
+
+## Phase Patterns
+
+### Sequential Phases
+
+Most common - each phase completes before next starts:
+
+```typescript
+await step.phase("phase-1", async () => { ... });
+await step.phase("phase-2", async () => { ... });
+await step.phase("phase-3", async () => { ... });
+```
+
+### Conditional Phases
+
+Skip phases based on conditions:
+
+```typescript
+if (needsSetup) {
+  await step.phase("setup", async () => {
+    // Setup steps
+  });
+}
+
+await step.phase("main-work", async () => {
+  // Always runs
+});
+
+if (shouldDeploy) {
+  await step.phase("deploy", async () => {
+    // Deployment steps
+  });
+}
+```
+

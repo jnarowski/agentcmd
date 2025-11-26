@@ -1,0 +1,158 @@
+---
+title: How It Works
+description: Understanding how specs, workflows, and AI agents work together
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Learn how agentcmd automates development with AI agents, specs, and workflows.
+
+## The System
+
+Agentcmd orchestrates AI agents to build features by combining three core pieces:
+
+1. **Specs** - Structured documents describing what to build
+2. **Workflows** - TypeScript functions defining how to build it
+3. **AI Agents** - Claude, Codex, or Gemini executing the work
+
+Here's how they work together to automate your development.
+
+## Specs: What to Build
+
+When you want to implement a feature, you start with a **spec** - a structured document that describes what needs to be built.
+
+### What's in a Spec
+
+Every spec contains:
+- Feature/bug description
+- Requirements and acceptance criteria
+- Task breakdown with complexity estimates
+- File structure and implementation approach
+- Test strategy
+
+### Where Specs Live
+
+Specs are organized in your project's `.agent/specs/` directory:
+
+```
+your-project/
+└── .agent/specs/
+    ├── index.json          # Registry of all specs
+    ├── todo/               # Not started
+    │   └── 2511131522-dark-mode/
+    │       └── spec.md
+    ├── in-progress/        # Currently being implemented
+    └── done/               # Completed
+```
+
+The `index.json` file tracks all specs with their status and type.
+
+### How Specs Are Generated
+
+You can create specs in several ways:
+
+1. **Slash Commands** - AI generates specs from prompts:
+   - `/cmd:generate-feature-spec` - Features with architecture and phases
+   - `/cmd:generate-bug-spec` - Bug fixes with reproduction steps
+   - `/cmd:generate-issue-spec` - Refactors and improvements
+
+2. **Write Custom** - Provide markdown, AI expands it into a full spec
+
+3. **Manual Creation** - Write `spec.md` files directly
+
+See [Specs](/docs/concepts/spec-driven-development) for details.
+
+## Workflows: How to Build It
+
+Once you have a spec, a **workflow** executes the implementation. Workflows are TypeScript functions that orchestrate the steps.
+
+### Where Workflows Live
+
+Each project has its own workflows in `.agent/workflows/definitions/`:
+
+```
+your-project/
+└── .agent/workflows/
+    └── definitions/
+        ├── implement-feature.ts
+        ├── fix-bug.ts
+        └── resolve-issue.ts
+```
+
+Workflows are project-specific so they can encode your unique build tools, testing patterns, and conventions.
+
+### Workflow Structure
+
+Each workflow exports a `defineWorkflow()` function:
+
+```typescript
+export default defineWorkflow(
+  {
+    id: "implement-feature",
+    trigger: "workflow/implement-feature",
+    phases: ["plan", "implement", "review"],
+  },
+  async ({ event, step }) => {
+    const { specId } = event.data;
+
+    await step.agent("implement", {
+      agent: "claude",
+      prompt: `/cmd:implement-spec ${specId}`,
+    });
+  }
+);
+```
+
+The workflow receives the spec and orchestrates AI agents, CLI commands, and git operations to implement it.
+
+## How a Workflow Run Executes
+
+When you create a workflow run, here's what happens:
+
+### 1. Setup
+
+- Creates git workspace (branch or worktree)
+- Loads the spec (or generates it if needed)
+- Determines which workflow to run based on spec type
+- Triggers the workflow via Inngest
+
+### 2. Execution
+
+- Workflow runs through phases (plan → implement → review)
+- AI agents read the spec to understand requirements
+- Each step executes sequentially, streaming output via WebSocket
+- Progress appears live in the UI
+
+### 3. Completion
+
+- Commits changes to git
+- Creates pull request (if configured)
+- Updates spec status in `index.json`
+- Returns to original workspace
+
+**The key insight:** The spec tells the AI **what** to build. The workflow defines **how** to build it.
+
+## Why This Architecture
+
+This separation of concerns provides powerful benefits:
+
+**Reusable workflows:**
+- Same workflow can implement different specs
+- Encode project conventions once, reuse everywhere
+
+**Durable execution:**
+- Inngest provides automatic retries and checkpointing
+- Long-running AI operations can fail and resume
+- No lost work if something goes wrong
+
+**Project-specific:**
+- Each project has unique build tools and patterns
+- Workflows are versioned with your code
+- Customize exactly how implementation happens
+
+## Next Steps
+
+- [Running Workflows](/docs/getting-started/running-workflows) - Learn how to create workflow runs
+- [Define a Workflow](/docs/getting-started/first-workflow) - Write your first workflow
+- [Spec-Driven Development](/docs/concepts/spec-driven-development) - Deep dive into spec structure
+- [Workflows](/docs/concepts/workflows) - Advanced workflow patterns

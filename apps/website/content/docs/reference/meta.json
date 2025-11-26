@@ -1,0 +1,11 @@
+{
+  "title": "Reference",
+  "pages": [
+    "agentcmd-workflows",
+    "cli",
+    "configuration",
+    "slash-commands",
+    "webhooks",
+    "workflow-steps"
+  ]
+}

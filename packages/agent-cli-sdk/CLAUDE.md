@@ -16,7 +16,10 @@ pnpm dev                # Watch mode for development
 ```bash
 pnpm test               # Run unit tests (Vitest)
 pnpm test:watch         # Run tests in watch mode
-pnpm test:e2e           # Run E2E tests (180s timeout, sequential)
+pnpm test:e2e           # Run all E2E tests (180s timeout, sequential)
+pnpm test:e2e:claude    # Run Claude E2E tests only
+pnpm test:e2e:codex     # Run Codex E2E tests only
+pnpm test:e2e:gemini    # Run Gemini E2E tests only
 ```
 
 **Important**: To run a single test file:
@@ -29,20 +32,27 @@ pnpm vitest run tests/e2e/claude/basic.test.ts     # Single E2E test
 ### Quality Checks
 
 ```bash
-pnpm check           # Runs lint, check-types and test
-pnpm format          # Format with Prettier
+pnpm check                      # Runs lint, check-types and test
+pnpm format                     # Format with Prettier
+```
+
+### Fixture Generation
+
+```bash
+pnpm extract-claude-fixtures    # Extract Claude JSONL fixtures from sessions
+pnpm extract-gemini-fixtures    # Extract Gemini JSON fixtures from sessions
 ```
 
 ## Architecture Overview
 
-This is a TypeScript SDK for orchestrating AI-powered CLI tools (Claude Code and OpenAI Codex, with planned support for Gemini/Cursor). The SDK provides a unified API for executing AI CLI commands programmatically and loading/parsing session histories.
+This is a TypeScript SDK for orchestrating AI-powered CLI tools (Claude Code, OpenAI Codex, and Google Gemini, with planned support for Cursor). The SDK provides a unified API for executing AI CLI commands programmatically and loading/parsing session histories.
 
 ### Core Components
 
 **Main Entry Point** (`src/index.ts`)
 
 - Exports unified `loadMessages()` and `execute()` functions
-- Routes to tool-specific implementations (Claude, Codex)
+- Routes to tool-specific implementations (Claude, Codex, Gemini)
 - Uses exhaustive type checking pattern for tool selection
 
 **Claude Implementation** (`src/claude/`)
@@ -61,6 +71,14 @@ This is a TypeScript SDK for orchestrating AI-powered CLI tools (Claude Code and
 - `detectCli.ts`: Detects Codex CLI installation path
 - `types.ts`: Codex-specific types and events
 
+**Gemini Implementation** (`src/gemini/`)
+
+- `execute.ts`: Spawns Gemini CLI process, monitors output streams, handles callbacks
+- `loadSession.ts`: Reads session files from `~/.gemini/sessions/session-{timestamp}-{uuid}.json` (JSON format, not JSONL)
+- `parse.ts`: Converts Gemini messages to UnifiedMessage format
+- `detectCli.ts`: Detects Gemini CLI installation path
+- `types.ts`: Gemini-specific types (GeminiMessage, GeminiSession, GeminiToolCall, GeminiThought)
+
 **Unified Types** (`src/types/unified.ts`)
 
 - `UnifiedMessage`: Standardized message format across AI tools
@@ -72,12 +90,18 @@ This is a TypeScript SDK for orchestrating AI-powered CLI tools (Claude Code and
 
 - `spawn.ts`: Process spawning abstraction with callbacks and timeout handling
 - `extractJson.ts`: Extract and validate JSON from text (supports Zod schemas)
+- `lineBuffer.ts`: Line buffering for streaming JSONL output
+- `cliDetection.ts`: Generic CLI detection pattern for finding installed CLIs
+- `argBuilding.ts`: Convert options to CLI flags (permission modes, working directory)
+- `kill.ts`: Process termination utilities
+- `getCapabilities.ts`: Query agent capabilities (tools, models, features)
 
 ### Integration with Web App
 
-The web app (`apps/web`) consumes the unified types defined in this SDK to render tool interactions in the chat UI. The web app implements a **standardized tool result matching pattern** that automatically connects `tool_result` blocks to their parent `tool_use` blocks.
+The web app (`apps/app`) consumes the unified types defined in this SDK to render tool interactions in the chat UI. The web app implements a **standardized tool result matching pattern** that automatically connects `tool_result` blocks to their parent `tool_use` blocks.
 
 **Key integration points:**
+
 - All `tool_use` blocks are rendered using specialized tool block components
 - Tool results are matched via `tool_use_id` during message enrichment (O(1) Map-based lookup)
 - Components receive `{input, result}` props - no manual `tool_use_id` matching required
@@ -88,6 +112,7 @@ The web app (`apps/web`) consumes the unified types defined in this SDK to rende
 `.agent/docs/claude-tool-result-patterns.md`
 
 This document explains:
+
 - How `tool_use_id` matching works under the hood
 - Complete data flow from JSONL → enrichment → rendering
 - Step-by-step guide for implementing new tools in the web app
@@ -95,6 +120,7 @@ This document explains:
 - Real-world examples from the codebase (Read, AskUserQuestion, Bash)
 
 **When adding a new tool to this SDK:**
+
 1. Define the tool input type in `src/types/unified.ts`
 2. The web app will automatically handle the result matching
 3. Create a tool block component in the web app following the documented pattern
@@ -111,11 +137,12 @@ This document explains:
    - Returns ExecuteResult with messages, session ID, extracted data
 
 2. **Load Session Flow**:
-   - User calls `loadMessages()` → routes to `loadClaudeSession()` or `loadCodexSession()`
+   - User calls `loadMessages()` → routes to `loadClaudeSession()`, `loadCodexSession()`, or `loadGeminiSession()`
    - Reads from tool-specific session paths:
-     - Claude: `~/.claude/projects/{encoded-path}/{sessionId}.jsonl`
-     - Codex: `~/.codex/sessions/YYYY/MM/DD/rollout-{timestamp}-{uuid}.jsonl`
-   - Parses each line with tool-specific `parse()`, filters nulls, sorts by timestamp
+     - Claude: `~/.claude/projects/{encoded-path}/{sessionId}.jsonl` (JSONL format)
+     - Codex: `~/.codex/sessions/YYYY/MM/DD/rollout-{timestamp}-{uuid}.jsonl` (JSONL format)
+     - Gemini: `~/.gemini/sessions/session-{timestamp}-{uuid}.json` (JSON format)
+   - Parses each line (JSONL) or whole file (JSON) with tool-specific `parse()`, filters nulls, sorts by timestamp
    - Returns UnifiedMessage array
 
 ### Key Patterns
@@ -123,6 +150,7 @@ This document explains:
 **JSONL Streaming Parser**: The execute function uses line buffering to handle streaming JSONL output from CLI tools without blocking.
 
 **Unified Message Format**: All AI CLI outputs are normalized to UnifiedMessage with typed content blocks, enabling tool-agnostic processing. Codex-specific formats are automatically transformed:
+
 - `function_call` → `tool_use`
 - `function_call_output` → `tool_result`
 - `input_text`/`output_text` → `text`
@@ -138,8 +166,10 @@ This document explains:
 Internal flags differ per tool but are abstracted by the SDK.
 
 **Session Storage**:
-- **Claude**: Encodes project paths by replacing `/` with `-` (e.g., `/Users/john/project` → `-Users-john-project`)
-- **Codex**: Uses date-based directory structure with UUID-based session IDs from `session_meta` events
+
+- **Claude**: Encodes project paths by replacing `/` with `-` (e.g., `/Users/john/project` → `-Users-john-project`); uses JSONL format
+- **Codex**: Uses date-based directory structure with UUID-based session IDs from `session_meta` events; uses JSONL format
+- **Gemini**: Uses simple timestamp-UUID naming scheme; uses JSON format (not JSONL)
 
 ## Testing Strategy
 
@@ -153,12 +183,15 @@ Internal flags differ per tool but are abstracted by the SDK.
 - **Claude** (`tests/e2e/claude/`):
   - `basic.test.ts`: Basic command execution
   - `json.test.ts`: JSON extraction
-  - `resume.test.ts`: Session resumption
 
 - **Codex** (`tests/e2e/codex/`):
   - `basic.test.ts`: Basic command execution
   - `json.test.ts`: JSON extraction
-  - `load-session.test.ts`: Session loading
+  - `resume.test.ts`: Session resumption
+
+- **Gemini** (`tests/e2e/gemini/`):
+  - `basic.test.ts`: Basic command execution
+  - `json.test.ts`: JSON extraction
 
 - All E2E tests run sequentially (singleFork: true) to avoid conflicts
 - Long timeout (180s) for real CLI interactions
@@ -174,6 +207,11 @@ Internal flags differ per tool but are abstracted by the SDK.
   - Sample JSONL files demonstrating Codex event format
   - Contains `function_call`, `reasoning`, `session_meta` events
   - Used to test Codex-to-unified transformations
+
+- **Gemini** (`tests/fixtures/gemini/`):
+  - Individual tool JSON examples (read_file, write_file, run_shell_command, google_web_search, etc.)
+  - Full session examples with thoughts and tool results
+  - Generated via `extract-gemini-fixtures` script
 
 ## TypeScript Configuration
 

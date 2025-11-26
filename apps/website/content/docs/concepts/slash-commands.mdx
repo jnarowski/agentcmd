@@ -1,0 +1,325 @@
+---
+title: Slash Commands
+description: Custom commands with full TypeScript type safety in workflows
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { Code, Layers, Shield, Zap } from "lucide-react";
+import Link from "next/link";
+
+Slash commands are custom markdown-based commands that can be invoked in workflows with full TypeScript type safety. Examples assume you're in your project root.
+
+## Overview
+
+Slash commands live in `.claude/commands/` and can be used in workflows via the CLI step with automatic type generation and validation.
+
+**Key benefits**:
+
+- **Full type safety** - Argument and response types automatically generated
+- **Autocomplete** - IDE suggests available commands and arguments
+- **Type checking** - Catch errors at compile time
+- **Self-documenting** - Commands defined in markdown with schema annotations
+
+## Why Slash Commands?
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
+  <Link
+    href="/docs/examples/type-safe-slash-commands"
+    className="flex gap-3 no-underline hover:opacity-80 transition-opacity"
+  >
+    <Code className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
+    <div>
+      <div className="font-semibold mb-1">Templates your engineering</div>
+      <div className="text-muted-foreground text-sm">
+        Best practices become reusable building blocks
+      </div>
+    </div>
+  </Link>
+  <Link
+    href="/docs/concepts/workflows/workflow-definitions"
+    className="flex gap-3 no-underline hover:opacity-80 transition-opacity"
+  >
+    <Layers className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
+    <div>
+      <div className="font-semibold mb-1">Compounds in value</div>
+      <div className="text-muted-foreground text-sm">
+        Commands compose into sophisticated workflows
+      </div>
+    </div>
+  </Link>
+  <Link
+    href="#generated-types"
+    className="flex gap-3 no-underline hover:opacity-80 transition-opacity"
+  >
+    <Shield className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
+    <div>
+      <div className="font-semibold mb-1">Guardrails for AI</div>
+      <div className="text-muted-foreground text-sm">
+        Type safety catches errors before execution
+      </div>
+    </div>
+  </Link>
+  <Link
+    href="#best-practices"
+    className="flex gap-3 no-underline hover:opacity-80 transition-opacity"
+  >
+    <Zap className="w-5 h-5 mt-0.5 text-emerald-500 shrink-0" />
+    <div>
+      <div className="font-semibold mb-1">Reduces cognitive load</div>
+      <div className="text-muted-foreground text-sm">
+        Complex processes become single invocations
+      </div>
+    </div>
+  </Link>
+</div>
+
+## How It Works
+
+### 1. Define Command
+
+Create a markdown file in `.claude/commands/`:
+
+```markdown
+<!-- .claude/commands/analyze-code.md -->
+---
+description: Analyze code quality and identify issues
+argument-hint: [filePath, (depth)]
+---
+
+Analyze the code at the specified file path and provide a quality score with actionable suggestions.
+
+Variables:
+
+- $filePath: $1 - Path to file to analyze
+- $depth: $2 (optional) - Analysis depth: "quick" or "thorough"
+
+<json_output>
+{
+  "score": 85,
+  "issues": ["Missing error handling in routes.ts:42"],
+  "suggestions": ["Add input validation", "Implement error boundaries"]
+}
+</json_output>
+```
+
+### 2. Generate Types
+
+Run the type generator:
+
+```bash
+npx agentcmd-workflows generate-slash-types
+```
+
+This creates `.agent/generated/slash-commands.ts` with TypeScript interfaces for arguments and responses.
+
+### 3. Use in Workflow
+
+Import generated types and use with `buildSlashCommand`:
+
+```typescript
+// .agent/workflows/code-review.ts
+import { defineWorkflow, buildSlashCommand } from "agentcmd-workflows";
+import type { AnalyzeCodeResponse } from "../generated/slash-commands";
+
+export default defineWorkflow(
+  {
+    id: "code-review",
+    phases: ["analyze"],
+  },
+  async ({ step }) => {
+    await step.phase("analyze", async () => {
+      const cmd = buildSlashCommand("/analyze-code", {
+        filePath: "src/server/api/routes.ts",
+        depth: "thorough",
+      });
+
+      const result = await step.cli<AnalyzeCodeResponse>("analyze", {
+        command: cmd,
+        parseJson: true,
+      });
+
+      console.log(`Code quality score: ${result.output.score}`);
+      console.log(`Issues found: ${result.output.issues.length}`);
+    });
+  }
+);
+```
+
+## Command Frontmatter Format
+
+### Required Fields
+
+```yaml
+---
+description: Brief description of command (shown in help)
+argument-hint: [arg1, arg2, (optionalArg)]
+---
+```
+
+**`description`**: One-line summary of what the command does
+
+**`argument-hint`**: Array defining positional arguments
+
+- Required: `[argName]`
+- Optional: `[(argName)]` or `[argName?]`
+
+### Response Schema (Optional)
+
+Define expected JSON output in `<json_output>` tags:
+
+```markdown
+<json_output>
+{
+"field1": "example value",
+"field2": 123,
+"nested": {
+"key": "value"
+}
+}
+</json_output>
+```
+
+The type generator:
+
+1. Parses this JSON structure
+2. Infers TypeScript types from values
+3. Generates response interface
+
+**Type inference rules**:
+
+- `"string"` → `string`
+- `123` → `number`
+- `true` → `boolean`
+- `[]` → `unknown[]`
+- `{}` → `Record<string, unknown>`
+
+## Generated Types
+
+### Command Arguments
+
+For each command, the generator creates an args interface:
+
+```typescript
+// From: .claude/commands/analyze-code.md
+// argument-hint: [filePath, (depth)]
+
+export interface AnalyzeCodeArgs {
+  filePath: string;
+  depth?: string;
+}
+```
+
+### Command Responses
+
+If `<json_output>` is defined, a response interface is generated:
+
+```typescript
+// From <json_output> in command file
+
+export interface AnalyzeCodeResponse {
+  score: number;
+  issues: string[];
+  suggestions: string[];
+}
+```
+
+## Type Generation CLI
+
+### Basic Usage
+
+```bash
+# Generate from default location (.claude/commands/)
+npx agentcmd-workflows generate-slash-types
+
+# Specify custom input/output
+npx agentcmd-workflows generate-slash-types \
+  --input .claude/commands \
+  --output .agent/generated/slash-commands.ts
+```
+
+## Best Practices
+
+### 1. Always Define Response Schemas
+
+```markdown
+# ✅ Good - structured, typesafe
+
+<json_output>
+{
+"success": true,
+"files_created": [
+  "src/client/components/Dashboard.tsx",
+  "src/server/api/dashboard.ts"
+],
+"next_step": "Run type check and tests"
+}
+</json_output>
+
+# ❌ Avoid - no schema, no types
+
+Return success message and list of files.
+```
+
+### 2. Use Descriptive Command Names
+
+```bash
+# ✅ Good - clear purpose
+/review-pr
+/scaffold-component
+/validate-build
+
+# ❌ Avoid - ambiguous
+/check
+/do-thing
+/process
+```
+
+### 3. Regenerate Types After Changes
+
+```bash
+# Always run after updating command frontmatter
+npx agentcmd-workflows generate-slash-types
+
+# Or add to package.json scripts
+{
+  "scripts": {
+    "gen:types": "agentcmd-workflows generate-slash-types"
+  }
+}
+```
+
+### 4. Use buildSlashCommand Helper
+
+```typescript
+// ✅ Good - typesafe, autocomplete
+const cmd = buildSlashCommand("/analyze-code", {
+  filePath: "src/server/api/routes.ts",
+  depth: "thorough",
+});
+
+// ❌ Avoid - error-prone, no autocomplete
+const cmd = "/analyze-code src/server/api/routes.ts thorough";
+```
+
+### 5. Handle Optional Arguments
+
+```typescript
+// ✅ Good - conditional command building
+const args: AnalyzeCodeArgs = {
+  filePath: "src/client/components/Dashboard.tsx",
+};
+
+if (needsThoroughAnalysis) {
+  args.depth = "thorough";
+}
+
+const cmd = buildSlashCommand("/analyze-code", args);
+
+// buildSlashCommand automatically omits undefined values
+```
+
+## Related
+
+- [Type-Safe Slash Command Examples](/docs/examples/type-safe-slash-commands) - Simple examples
+- [CLI Step Reference](/docs/reference/workflow-steps/cli-step) - Using CLI steps in workflows
+- [Workflow Definitions](/docs/concepts/workflows/workflow-definitions) - Define workflows

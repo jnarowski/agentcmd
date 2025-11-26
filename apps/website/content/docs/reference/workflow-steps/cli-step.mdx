@@ -1,0 +1,138 @@
+---
+title: CLI Step
+description: Execute shell commands
+---
+
+import { Card, Cards } from 'fumadocs-ui/components/card';
+
+Execute shell commands as part of your workflow.
+
+## Overview
+
+Run any shell command - build scripts, tests, deployments, custom tools.
+
+**Use for**: npm/pnpm scripts, git commands (non-standard), system commands, custom shell scripts
+
+## Configuration
+
+{/* AUTO-GENERATED:cli-step-config START */}
+{/* Source: packages/agentcmd-workflows/src/types/steps.ts
+{/* Last updated: 2025-11-16 */}
+
+```typescript
+interface CliStepConfig {
+  name?: string;
+  command: string;
+  cwd?: string;
+  env?: Record<string, string>;
+  shell?: string;
+}
+```
+
+**Timeout**: 5 minutes (300,000ms)
+
+{/* AUTO-GENERATED:cli-step-config END */}
+
+### Parameters
+
+**`command`** (required) - Shell command to execute
+**`cwd`** (optional) - Working directory (default: project path)
+**`env`** (optional) - Environment variables
+**`shell`** (optional) - Shell to use (default: `/bin/sh`)
+
+## Basic Usage
+
+```typescript
+// Simple command
+await step.cli("build", {
+  command: "pnpm build",
+  cwd: projectPath,
+});
+
+// With environment variables
+await step.cli("test", {
+  command: "pnpm test",
+  env: {
+    NODE_ENV: "test",
+    CI: "true",
+  },
+});
+
+// Custom shell
+await step.cli("deploy", {
+  command: "deploy.sh --prod",
+  shell: "/bin/bash",
+});
+```
+
+## Return Value
+
+```typescript
+interface CliStepResult {
+  stdout: string;
+  stderr: string;
+  exitCode: number;
+}
+```
+
+## Common Patterns
+
+### Build Pipeline
+
+```typescript
+await step.cli("install", { command: "pnpm install" });
+await step.cli("lint", { command: "pnpm lint" });
+await step.cli("typecheck", { command: "pnpm check-types" });
+await step.cli("build", { command: "pnpm build" });
+```
+
+### Conditional Execution
+
+```typescript
+const test = await step.cli("test", {
+  command: "pnpm test",
+});
+
+if (test.exitCode !== 0) {
+  throw new Error("Tests failed");
+}
+```
+
+### Parallel Commands
+
+```typescript
+const [lint, test, typecheck] = await Promise.all([
+  step.cli("lint", { command: "pnpm lint" }),
+  step.cli("test", { command: "pnpm test" }),
+  step.cli("typecheck", { command: "pnpm check-types" }),
+]);
+```
+
+## Best Practices
+
+**Quote paths with spaces**:
+```typescript
+command: 'cd "/path/with spaces" && ls'
+```
+
+**Use absolute paths**:
+```typescript
+cwd: "/Users/you/project"  // ✅ Good
+cwd: "~/project"           // ❌ Bad (tilde not expanded)
+```
+
+**Check exit codes**:
+```typescript
+const result = await step.cli("deploy", { command: "deploy.sh" });
+if (result.exitCode !== 0) {
+  throw new Error(`Deploy failed: ${result.stderr}`);
+}
+```
+
+## Next Steps
+
+<Cards>
+  <Card title="Git Step" href="/docs/reference/workflow-steps/git">
+    For git-specific operations
+  </Card>
+</Cards>

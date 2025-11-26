@@ -1,0 +1,207 @@
+---
+description: Move a spec folder between workflow folders (backlog/todo/done)
+argument-hint: [specIdOrNameOrPath, targetFolder]
+---
+
+# Move Spec
+
+Move a spec folder between workflow folders (backlog/todo/done), update index.json, and optionally update status field.
+
+## Variables
+
+- $specIdOrNameOrPath: $1 (required) - Either a timestamp ID (e.g., `2510241201`), feature name (e.g., `workflow-safety`), or full path (e.g., `.agent/specs/todo/2510241201-workflow-safety/`)
+- $targetFolder: $2 (required) - Target workflow folder: "backlog", "todo", or "done"
+
+## Instructions
+
+- Search for the spec folder in all locations (backlog/, todo/, done/)
+- Move the entire folder to the target folder
+- Update index.json with new location
+- Update the Status field in spec.md front matter based on target folder
+- Support both old single-file specs and new folder-based specs
+- Report the old and new paths
+
+## Workflow
+
+1. **Find the Spec Folder or File**
+   - **Parse and resolve $specIdOrNameOrPath:**
+     - If it's a full path (contains `/`):
+       - Use the path as-is
+     - Otherwise, look up in `.agent/specs/index.json`:
+       - For timestamp ID: Match by `id` field
+       - For feature name: Fuzzy match path (e.g., `message-queue` matches `todo/2510241201-message-queue-implementation/spec.md`)
+       - Use path from index: `.agent/specs/{path}` (extract folder from file path: `dirname({path})`)
+     - **If not found in index.json, fallback to directory search:**
+       - Search in order: `.agent/specs/backlog/`, `.agent/specs/todo/`, `.agent/specs/done/`
+       - For ID: Pattern `{id}-*/`
+       - For feature name: Pattern `*{feature-name}*/` (fuzzy match)
+   - If still not found, report error and exit
+
+2. **Validate Target Folder**
+   - Ensure $targetFolder is one of: "backlog", "todo", or "done"
+   - If invalid, report error and exit
+
+3. **Check for Conflicts**
+   - Check if a folder/file with the same name already exists in target folder
+   - If conflict exists, report error and exit
+
+4. **Move the Folder**
+   - Move entire folder from current location to `.agent/specs/${targetFolder}/[foldername]`
+   - Preserve the original folder name
+
+5. **Update Index**
+   - Read index.json
+   - Update the spec's `path` field to match new location (e.g., `todo/folder/spec.md` → `done/folder/spec.md`)
+   - Preserve the filename, only update the folder portion of the path
+   - Update the spec's `updated` field to current timestamp
+   - Update the spec's `status` field based on target folder (see step 6)
+   - Write updated index back to `.agent/specs/index.json`
+
+6. **Update Status Field**
+   - Read spec.md file content
+   - Update Status field in spec.md based on target folder:
+     - Moving to "backlog": Set to "backlog"
+     - Moving to "todo": Keep current status (typically "draft" or "in-progress")
+     - Moving to "done": Set to "completed"
+   - Also update status in index.json (step 5)
+
+   **Status Lifecycle**: `draft` → `in-progress` → `review` → `completed`
+
+7. **Report Results**
+   - Display old path
+   - Display new path
+   - Display status field update (if any)
+   - Display index update (path and updated timestamp)
+
+## Examples
+
+**Example 1: Move by timestamp spec ID**
+
+```bash
+/cmd:move-spec 2510241201 done
+```
+
+Finds `2510241201-*/` folder and moves it to `done/`, updates index
+
+**Example 2: Move back to todo**
+
+```bash
+/cmd:move-spec 2511131522 todo
+```
+
+Finds `2511131522-*/` folder and moves it to `todo/`
+
+**Example 3: Move by feature name**
+
+```bash
+/cmd:move-spec workflow-safety done
+```
+
+Finds `*-workflow-safety/` folder and moves it to `done/`
+
+## Report
+
+**IMPORTANT**: Output ONLY raw JSON (see `.agent/docs/slash-command-json-output-format.md`).
+
+<json_output>
+{
+"success": true,
+"spec_id": "2510241201",
+"spec_folder": "2510241201-workflow-safety",
+"old_path": "todo/2510241201-workflow-safety/spec.md",
+"new_path": "done/2510241201-workflow-safety/spec.md",
+"old_folder": "todo",
+"new_folder": "done",
+"old_status": "draft",
+"new_status": "completed",
+"message": "Spec moved successfully and status updated"
+}
+</json_output>
+
+**JSON Field Descriptions:**
+
+- `success`: Boolean - true if move completed successfully
+- `spec_id`: String - Timestamp-based spec ID (e.g., "2510241201")
+- `spec_folder`: String - Folder name (e.g., "2510241201-workflow-safety")
+- `old_path`: String - Previous relative path from `.agent/specs/`
+- `new_path`: String - New relative path from `.agent/specs/`
+- `old_folder`: String - Previous folder (backlog/todo/done)
+- `new_folder`: String - New folder (backlog/todo/done)
+- `old_status`: String - Previous status value
+- `new_status`: String - New status value
+- `message`: String - Success message
+
+**Output Examples:**
+
+✅ **Successful Move:**
+
+```json
+{
+  "success": true,
+  "spec_id": "2510241201",
+  "spec_folder": "2510241201-workflow-safety",
+  "old_path": "todo/2510241201-workflow-safety/spec.md",
+  "new_path": "done/2510241201-workflow-safety/spec.md",
+  "old_folder": "todo",
+  "new_folder": "done",
+  "old_status": "draft",
+  "new_status": "completed",
+  "message": "Spec moved successfully and status updated"
+}
+```
+
+✅ **Already in Target (No-Op):**
+
+```json
+{
+  "success": true,
+  "spec_id": "2510241201",
+  "spec_folder": "2510241201-workflow-safety",
+  "old_path": "done/2510241201-workflow-safety/spec.md",
+  "new_path": "done/2510241201-workflow-safety/spec.md",
+  "old_folder": "done",
+  "new_folder": "done",
+  "old_status": "completed",
+  "new_status": "completed",
+  "message": "Spec already in target folder (no move needed)"
+}
+```
+
+❌ **Error - Spec Not Found:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "message": "Spec not found",
+    "spec_id_or_name": "workflow-safety",
+    "searched_in": ["backlog/", "todo/", "done/"]
+  }
+}
+```
+
+❌ **Error - Target Conflict:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "message": "Folder already exists at target location",
+    "target_path": "done/2510241201-workflow-safety/",
+    "suggestion": "Resolve conflict manually or use different target folder"
+  }
+}
+```
+
+❌ **Error - Invalid Target:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "message": "Invalid target folder",
+    "provided": "invalid",
+    "valid_options": ["backlog", "todo", "done"]
+  }
+}
+```

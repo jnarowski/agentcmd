@@ -1,0 +1,55 @@
+import type { GetStepTools } from "inngest";
+import type { RuntimeContext } from "@/server/domain/workflow/types/engine.types";
+import type { StepType } from "@prisma/client";
+import { findOrCreateStep } from "./findOrCreateStep";
+import { updateStepStatus } from "./updateStepStatus";
+import { handleStepFailure } from "./handleStepFailure";
+import { generateInngestStepId } from "./generateInngestStepId";
+
+/**
+ * Execute a step function with automatic status tracking and Inngest memoization
+ */
+export async function executeStep<T>(params: {
+  context: RuntimeContext;
+  stepId: string;
+  stepName: string;
+  stepType: StepType;
+  fn: () => Promise<T>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  inngestStep: GetStepTools<any>;
+  input?: unknown;
+}): Promise<{ runStepId: string; result: T }> {
+  const { context, stepId, stepName, stepType, fn, inngestStep, input: args } = params;
+
+  // Generate phase-prefixed Inngest step ID
+  const inngestStepId = generateInngestStepId(context, stepId);
+
+  // Wrap entire step in inngestStep.run for idempotency
+  return (await inngestStep.run(inngestStepId, async () => {
+    // Find or create step in database
+    const step = await findOrCreateStep({ context, inngestStepId, stepName, stepType });
+
+    // Update to running with args
+    await updateStepStatus(context, step.id, "running", args);
+
+    try {
+      // Execute step function
+      const result = await fn();
+
+      // Update to completed with output
+      await updateStepStatus(
+        context,
+        step.id,
+        "completed",
+        undefined, // no input update
+        result
+      );
+
+      return { runStepId: step.id, result };
+    } catch (error) {
+      // Handle failure
+      await handleStepFailure(context, step.id, error as Error);
+      throw error;
+    }
+  })) as unknown as Promise<{ runStepId: string; result: T }>;
+}

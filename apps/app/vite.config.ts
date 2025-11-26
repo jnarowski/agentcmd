@@ -1,0 +1,49 @@
+import path from "path";
+import { defineConfig, loadEnv } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+
+// https://vite.dev/config/
+export default defineConfig(({ mode }) => {
+  // Load env from apps/app directory (where .env file is located)
+  const envDir = path.resolve(__dirname, "./");
+  const env = loadEnv(mode, envDir, "");
+  const serverPort = parseInt(env.PORT) || 4100;
+  const vitePort = parseInt(env.VITE_PORT) || 4101;
+
+  return {
+    envDir: envDir, // Tell Vite where to find .env files
+    root: "src/client",
+    publicDir: path.resolve(__dirname, "./public"),
+    plugins: [react(), tailwindcss()],
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+      },
+    },
+    build: {
+      outDir: "../../dist/client",
+      emptyOutDir: true,
+    },
+    server: {
+      port: vitePort,
+      allowedHosts: env.VITE_ALLOWED_HOSTS
+        ? env.VITE_ALLOWED_HOSTS.split(",").map((host) => host.trim())
+        : undefined,
+      proxy: {
+        "/api": {
+          target: `http://localhost:${serverPort}`,
+          changeOrigin: true,
+        },
+        "/ws": {
+          target: `ws://localhost:${serverPort}`,
+          ws: true,
+        },
+        "/shell": {
+          target: `ws://localhost:${serverPort}`,
+          ws: true,
+        },
+      },
+    },
+  };
+});

@@ -1,0 +1,298 @@
+---
+title: Workflow Steps
+description: 8 step types for building workflows
+---
+
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { AgentCmd } from '@/components/AgentCmd';
+
+Steps are the building blocks of workflows. <AgentCmd /> provides 8 step types to handle different automation tasks.
+
+## Step Types Overview
+
+| Step Type | Purpose | Timeout | Reference |
+|-----------|---------|---------|-----------|
+| **agent** | Run AI CLI tools (Claude, Codex, Gemini) | 30 min | [Learn more →](/docs/reference/workflow-steps/agent) |
+| **ai** | Non-interactive AI text/structured generation | 5 min | [Learn more →](/docs/reference/workflow-steps/ai) |
+| **cli** | Execute shell commands | 5 min | [Learn more →](/docs/reference/workflow-steps/cli-step) |
+| **git** | Git operations (commit, branch, PR) | 2 min | [Learn more →](/docs/reference/workflow-steps/git) |
+| **artifact** | Upload files/images/directories | 5 min | [Learn more →](/docs/reference/workflow-steps/artifact) |
+| **annotation** | Progress notes for timeline | Instant | [Learn more →](/docs/reference/workflow-steps/annotation) |
+| **phase** | Group related steps | N/A | [Learn more →](/docs/reference/workflow-steps/phase) |
+| **log** | Console logging and debug messages | Instant | [Learn more →](/docs/reference/workflow-steps/log) |
+
+**Note:** The quick examples below show common uses. Click "Learn more" for complete API documentation.
+
+## Quick Examples
+
+### Agent Step
+
+Run AI CLI tools with full file access:
+
+```typescript
+await step.agent("implement-feature", {
+  agent: "claude",
+  prompt: "Implement user authentication system",
+  workingDir: "/path/to/project",
+  permissionMode: "acceptEdits", // Auto-approve file edits
+});
+```
+
+**When to use**: Complex tasks requiring file editing, multiple iterations, tool use
+
+### AI Step
+
+Fast AI text or structured generation:
+
+```typescript
+const analysis = await step.ai("analyze-code", {
+  prompt: "Analyze this codebase for security issues",
+  provider: "anthropic",
+  schema: z.object({
+    issues: z.array(z.object({
+      severity: z.enum(["high", "medium", "low"]),
+      description: z.string(),
+    })),
+  }),
+});
+```
+
+**When to use**: Quick AI responses, structured data extraction, no file editing needed
+
+### CLI Step
+
+Execute shell commands:
+
+```typescript
+await step.cli("run-tests", {
+  command: "pnpm test --coverage",
+  cwd: projectPath,
+  env: { NODE_ENV: "test" },
+});
+```
+
+**When to use**: Build, test, deploy, any shell command
+
+### Git Step
+
+Git operations:
+
+```typescript
+await step.git("create-feature-branch", {
+  operation: "commit-and-branch",
+  commitMessage: "feat: Add user authentication",
+  branch: "feat/auth-system",
+});
+```
+
+**When to use**: Commit changes, create branches, open PRs
+
+### Artifact Step
+
+Upload outputs for review:
+
+```typescript
+await step.artifact("test-results", {
+  name: "coverage-report.html",
+  type: "file",
+  file: "./coverage/index.html",
+  description: "Test coverage report",
+});
+```
+
+**When to use**: Save build outputs, reports, images, generated files
+
+### Annotation Step
+
+Mark progress in timeline:
+
+```typescript
+await step.annotation("planning-complete", {
+  message: "Feature design complete ✓ Starting implementation...",
+});
+```
+
+**When to use**: Explain what's happening, mark phase transitions, celebrate wins
+
+### Phase Step
+
+Organize related steps:
+
+```typescript
+await step.phase("test", async () => {
+  await step.cli("unit", { command: "pnpm test:unit" });
+  await step.cli("e2e", { command: "pnpm test:e2e" });
+});
+```
+
+**When to use**: Group steps into logical stages (plan, build, test, deploy)
+
+### Log Step
+
+Debug and tracking:
+
+```typescript
+step.log("Starting deployment...");
+step.log.warn("API rate limit approaching");
+step.log.error("Deployment failed", error);
+```
+
+**When to use**: Development, debugging, monitoring
+
+## Step Execution Model
+
+### Sequential by Default
+
+Steps run one after another:
+
+```typescript
+await step.cli("step-1", { ... });  // Runs first
+await step.cli("step-2", { ... });  // Then this
+await step.cli("step-3", { ... });  // Finally this
+```
+
+### Parallel with Promise.all()
+
+Run steps concurrently:
+
+```typescript
+await Promise.all([
+  step.cli("lint", { command: "pnpm lint" }),
+  step.cli("test", { command: "pnpm test" }),
+  step.cli("typecheck", { command: "pnpm check-types" }),
+]);
+```
+
+**All three run simultaneously**
+
+### Conditional Execution
+
+Skip steps based on logic:
+
+```typescript
+if (needsSetup) {
+  await step.cli("setup", { command: "pnpm install" });
+}
+
+await step.cli("build", { command: "pnpm build" });
+
+if (shouldDeploy) {
+  await step.git("deploy", { operation: "commit" });
+}
+```
+
+## Step Return Values
+
+Most steps return results:
+
+### Agent Step Returns
+
+```typescript
+const result = await step.agent("code", {
+  agent: "claude",
+  json: true, // Extract JSON from response
+  prompt: "Generate API spec",
+});
+
+// result.data contains extracted JSON
+console.log(result.data.endpoints);
+```
+
+### AI Step Returns
+
+```typescript
+const analysis = await step.ai("analyze", {
+  prompt: "Analyze code quality",
+  schema: mySchema,
+});
+
+// Typed result based on schema
+analysis.data.score; // Type-safe!
+```
+
+### CLI Step Returns
+
+```typescript
+const output = await step.cli("version", {
+  command: "node --version",
+});
+
+console.log(output.stdout); // "v18.17.0"
+console.log(output.exitCode); // 0
+```
+
+## Error Handling
+
+### Try/Catch
+
+Handle step failures:
+
+```typescript
+try {
+  await step.cli("deploy", {
+    command: "deploy-to-prod",
+  });
+} catch (error) {
+  await step.annotation("deploy-failed", {
+    message: `Deployment failed: ${error}. Rolling back...`,
+  });
+
+  await step.cli("rollback", {
+    command: "rollback-deployment",
+  });
+}
+```
+
+### Timeout Configuration
+
+Override default timeouts:
+
+```typescript
+await step.cli("long-build", {
+  command: "pnpm build",
+}, {
+  timeout: 600000, // 10 minutes
+});
+```
+
+## Step Naming
+
+**Each step must have a unique name.** Use descriptive, action-oriented names:
+
+✅ **Good**:
+```typescript
+await step.cli("install-dependencies", { ... });
+await step.agent("implement-authentication", { ... });
+await step.git("create-feature-branch", { ... });
+```
+
+❌ **Bad** - Generic/duplicate names:
+```typescript
+await step.cli("step1", { ... });
+await step.agent("do-stuff", { ... });
+await step.cli("run-command", { ... }); // Too generic
+await step.cli("run-command", { ... }); // Duplicate!
+```
+
+**Why unique names matter**:
+- Steps are tracked by name in Inngest
+- Duplicate names cause workflow errors
+- Names appear in Timeline UI, logs, error messages
+- Make them clear and searchable
+
+## Next Steps
+
+<Cards>
+  <Card title="Agent Step Reference" href="/docs/reference/workflow-steps/agent">
+    Complete API for agent steps
+  </Card>
+  <Card title="All Step Types" href="/docs/reference/workflow-steps">
+    Detailed docs for all 8 step types
+  </Card>
+  <Card title="Workflow Examples" href="/docs/examples">
+    Real workflows using steps
+  </Card>
+  <Card title="Context Sharing" href="/docs/examples/context-sharing">
+    Share data between workflow steps
+  </Card>
+</Cards>

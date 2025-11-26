@@ -1,0 +1,84 @@
+{
+  "name": "agentcmd-workflows",
+  "version": "1.1.23",
+  "description": "Type-safe workflow SDK for agentcmd workflow engine",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./cli": {
+      "types": "./dist/cli.d.ts",
+      "import": "./dist/cli.js",
+      "default": "./dist/cli.js"
+    }
+  },
+  "bin": {
+    "agentcmd-workflows": "bin/workflow-sdk.js"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "templates/**",
+    "templates/.*"
+  ],
+  "scripts": {
+    "build": "bunchee",
+    "dev": "bunchee --watch",
+    "clean": "rm -rf dist",
+    "check-types": "tsc --noEmit",
+    "generate-slash-types": "node dist/cli.js generate-slash-types",
+    "generate-slash-types:monorepo": "node dist/cli.js generate-slash-types --input ../../.claude/commands --output ../../.agent/generated/slash-commands.ts",
+    "generate-slash-types:all": "pnpm sync:commands && pnpm generate:command:types && node dist/cli.js generate-slash-types --input ../../.claude/commands --output ../../.agent/generated/slash-commands.ts && node dist/cli.js generate-slash-types --input ../../.claude/commands --output .agent/generated/slash-commands.ts",
+    "generate:command:types": "tsx src/cli/generateTemplateCommandTypes.ts",
+    "sync:commands": "cp -r ../../.claude/commands/cmd templates/.claude/commands/",
+    "sync:workflows": "node scripts/sync-workflows.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "pnpm sync:commands && pnpm generate:command:types && pnpm build && pnpm test",
+    "ship": "pnpm build && pnpm test && npm version patch && (git commit -am \"bump version\" || true) && npm publish"
+  },
+  "keywords": [
+    "workflow",
+    "orchestration",
+    "inngest",
+    "typescript",
+    "sourceborn"
+  ],
+  "author": "Sourceborn",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jnarowski/agentcmd"
+  },
+  "homepage": "https://agentcmd.dev",
+  "bugs": {
+    "url": "https://github.com/jnarowski/agentcmd/issues"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "peerDependencies": {
+    "inngest": "^3.0.0"
+  },
+  "dependencies": {
+    "commander": "^14.0.2",
+    "gray-matter": "^4.0.3"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/commander": "^2.12.5",
+    "@types/json-schema": "^7.0.15",
+    "@types/node": "^22.0.0",
+    "bunchee": "^6.6.2",
+    "inngest": "^3.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^4.0.0"
+  }
+}

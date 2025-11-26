@@ -1,0 +1,430 @@
+---
+title: agentcmd-workflows SDK
+description: Type-safe workflow SDK for orchestrating AI agent workflows with Inngest
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+
+The `agentcmd-workflows` package is installed into each of your project repositories to provide type-safe workflow definitions and slash commands. It extends Inngest with specialized step methods for agent execution, git operations, CLI commands, and more.
+
+<Callout type="info">
+Install this package in every repository where you want to use AgentCmd workflows. Each project gets its own `.agent/` folder structure and slash commands.
+</Callout>
+
+## Installation
+
+```bash
+npm install agentcmd-workflows inngest
+```
+
+**Requirements:**
+- Node.js >= 22.0.0
+- Inngest ^3.0.0 (peer dependency)
+- ESM-only package
+
+## Quick Start
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+
+export default defineWorkflow(
+  {
+    id: "my-workflow",
+    name: "My First Workflow",
+    phases: ["plan", "execute"] as const,
+  },
+  async ({ event, step }) => {
+    await step.phase("plan", async () => {
+      await step.agent("analyze", {
+        agent: "claude",
+        prompt: "Analyze the codebase structure",
+      });
+    });
+
+    await step.phase("execute", async () => {
+      await step.cli("build", { command: "npm run build" });
+    });
+  }
+);
+```
+
+## CLI Commands
+
+### Initialize Project
+
+```bash
+npx agentcmd-workflows init [path]
+```
+
+Sets up the complete workflow infrastructure:
+
+**What it creates:**
+
+| Directory | Purpose |
+|-----------|---------|
+| `.agent/workflows/definitions/` | Workflow definition files |
+| `.agent/specs/` | Spec folders (backlog/, todo/, done/) |
+| `.agent/generated/` | Auto-generated TypeScript types |
+| `.agent/logs/` | Workflow execution logs |
+| `.claude/commands/cmd/` | 12 built-in slash commands |
+
+**Also:**
+- Generates TypeScript types from slash commands
+- Updates `.gitignore` with appropriate patterns
+
+<Callout type="info">
+Init is idempotent - safe to run multiple times. Existing files are preserved.
+</Callout>
+
+### Generate Slash Command Types
+
+```bash
+npx agentcmd-workflows generate-slash-types \
+  --input .claude/commands \
+  --output .agent/generated/slash-commands.ts
+```
+
+Regenerates TypeScript types from your `.claude/commands/**/*.md` files. Run this after adding or modifying slash commands.
+
+## Project Structure
+
+After running `init`, your project will have:
+
+```
+your-project/
+├── .agent/
+│   ├── workflows/
+│   │   └── definitions/          # Your workflow files
+│   │       └── implement-review-workflow.ts
+│   ├── specs/
+│   │   ├── backlog/              # Future work
+│   │   ├── todo/                 # Current sprint
+│   │   ├── done/                 # Completed specs
+│   │   └── index.json            # Spec registry
+│   ├── generated/
+│   │   └── slash-commands.ts     # Auto-generated types
+│   └── logs/                     # Execution logs
+│
+├── .claude/
+│   └── commands/
+│       └── cmd/                  # Slash command definitions
+│           ├── generate-spec.md
+│           ├── implement-spec.md
+│           └── ... (12 total)
+```
+
+## Core API
+
+### defineWorkflow
+
+Creates a type-safe workflow definition.
+
+```typescript
+import { defineWorkflow } from "agentcmd-workflows";
+
+export default defineWorkflow(config, handler);
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `config` | `WorkflowConfig` | Workflow configuration |
+| `handler` | `(ctx: WorkflowContext) => Promise<void>` | Workflow execution function |
+
+### defineSchema
+
+Creates a type-safe JSON Schema with automatic TypeScript inference.
+
+```typescript
+import { defineSchema, type InferSchemaType } from "agentcmd-workflows";
+
+const argsSchema = defineSchema({
+  type: "object",
+  properties: {
+    featureName: { type: "string" },
+    priority: { enum: ["high", "medium", "low"] },
+  },
+  required: ["featureName"],
+});
+
+type Args = InferSchemaType<typeof argsSchema>;
+// Result: { featureName: string; priority?: "high" | "medium" | "low" }
+```
+
+<Callout type="tip">
+`defineSchema` is a zero-cost abstraction - it's an identity function that only provides type inference at compile time.
+</Callout>
+
+## Workflow Configuration
+
+```typescript
+interface WorkflowConfig {
+  id: string;                           // Unique identifier (required)
+  name?: string;                        // Human-readable name
+  description?: string;                 // Workflow description
+  phases?: readonly PhaseDefinition[];  // Phase organization
+  timeout?: number;                     // Global timeout in ms
+  argsSchema?: JSONSchema;              // Input validation + type inference
+}
+```
+
+### Phases
+
+Organize workflow steps into logical phases:
+
+<Tabs items={['Simple', 'With Labels']}>
+<Tab value="Simple">
+```typescript
+defineWorkflow({
+  id: "my-workflow",
+  phases: ["plan", "implement", "review"] as const,
+}, handler);
+```
+</Tab>
+<Tab value="With Labels">
+```typescript
+defineWorkflow({
+  id: "my-workflow",
+  phases: [
+    { id: "plan", label: "Planning Phase" },
+    { id: "implement", label: "Implementation" },
+    { id: "review", label: "Code Review" },
+  ] as const,
+}, handler);
+```
+</Tab>
+</Tabs>
+
+### Typed Arguments
+
+Validate and type workflow inputs:
+
+```typescript
+const argsSchema = defineSchema({
+  type: "object",
+  properties: {
+    specFile: { type: "string" },
+    dryRun: { type: "boolean" },
+  },
+  required: ["specFile"],
+});
+
+export default defineWorkflow(
+  { id: "impl", argsSchema },
+  async ({ event }) => {
+    // event.data.args is fully typed
+    const { specFile, dryRun } = event.data.args;
+  }
+);
+```
+
+## Step Methods
+
+All step methods are available on the `step` object passed to your workflow handler:
+
+| Step | Purpose | Reference |
+|------|---------|-----------|
+| `step.phase()` | Organize related steps | [Phase](/docs/reference/workflow-steps/phase) |
+| `step.agent()` | Execute AI agents (Claude/Codex/Gemini) | [Agent](/docs/reference/workflow-steps/agent) |
+| `step.git()` | Git operations (commit, branch, PR) | [Git](/docs/reference/workflow-steps/git) |
+| `step.cli()` | Shell command execution | [CLI](/docs/reference/workflow-steps/cli-step) |
+| `step.ai()` | Text/structured generation | [AI](/docs/reference/workflow-steps/ai) |
+| `step.artifact()` | File and text artifacts | [Artifact](/docs/reference/workflow-steps/artifact) |
+| `step.annotation()` | Progress notes | [Annotation](/docs/reference/workflow-steps/annotation) |
+| `step.log()` | Logging | [Log](/docs/reference/workflow-steps/log) |
+
+## Built-in Slash Commands
+
+The SDK includes 12 pre-configured slash commands for common workflows:
+
+### Spec Generation
+
+| Command | Purpose |
+|---------|---------|
+| `/cmd:generate-spec` | Generate feature spec with complexity scores |
+| `/cmd:generate-feature-spec` | Feature-specific spec template |
+| `/cmd:generate-bug-spec` | Bug fix spec template |
+| `/cmd:generate-issue-spec` | Issue-based spec template |
+| `/cmd:generate-prd` | Product requirements document |
+
+### Implementation
+
+| Command | Purpose |
+|---------|---------|
+| `/cmd:implement-spec` | Execute spec implementation |
+| `/cmd:review-spec-implementation` | Review implementation against spec |
+| `/cmd:audit` | Comprehensive codebase audit |
+
+### Spec Management
+
+| Command | Purpose |
+|---------|---------|
+| `/cmd:add-spec` | Add new spec to project |
+| `/cmd:list-specs` | List specs with filtering |
+| `/cmd:move-spec` | Move spec between folders |
+
+### Git/PR
+
+| Command | Purpose |
+|---------|---------|
+| `/cmd:create-pr` | Create pull request with commit |
+
+## Type-Safe Slash Commands
+
+### Command File Format
+
+Slash commands are defined in Markdown with frontmatter:
+
+```markdown title=".claude/commands/cmd/my-command.md"
+---
+description: "My custom command description"
+argument-hint: [requiredArg, (optionalArg)]
+---
+
+# My Command
+
+Command instructions for Claude...
+
+## JSON Output
+
+<json_output>
+{
+  "success": true,
+  "message": "Result message"
+}
+</json_output>
+```
+
+### Generated Types
+
+Running `generate-slash-types` creates:
+
+```typescript title=".agent/generated/slash-commands.ts"
+// Union of all command names
+export type SlashCommandName = "/cmd:generate-spec" | "/cmd:implement-spec" | ...;
+
+// Args interface per command
+export interface CmdImplementSpecArgs {
+  specIdOrNameOrPath: string;
+}
+
+// Response interface per command
+export interface CmdImplementSpecResponse {
+  success: boolean;
+  message: string;
+}
+
+// Type-safe command builder
+export function buildSlashCommand<T extends SlashCommandName>(
+  name: T,
+  args?: SlashCommandArgs[T]
+): string;
+```
+
+### Using in Workflows
+
+```typescript
+import {
+  buildSlashCommand,
+  type CmdImplementSpecResponse,
+} from "../generated/slash-commands";
+
+await step.agent<CmdImplementSpecResponse>("implement", {
+  agent: "claude",
+  json: true,
+  prompt: buildSlashCommand("/cmd:implement-spec", {
+    specIdOrNameOrPath: "feature-auth",
+  }),
+});
+```
+
+## Default Timeouts
+
+| Step Type | Default Timeout |
+|-----------|-----------------|
+| Agent | 30 minutes |
+| Git | 2 minutes |
+| CLI | 5 minutes |
+| AI | 5 minutes |
+| Artifact | 5 minutes |
+
+Override per-step:
+
+```typescript
+await step.agent("long-task", { ... }, { timeout: 3600000 }); // 1 hour
+```
+
+## Common Patterns
+
+### Context Sharing via Closures
+
+Share state between phases using JavaScript closures:
+
+```typescript
+export default defineWorkflow(config, async ({ event, step }) => {
+  interface Context {
+    specFile?: string;
+    prUrl?: string;
+  }
+  const ctx: Context = {};
+
+  await step.phase("generate", async () => {
+    const result = await step.agent("gen-spec", { ... });
+    ctx.specFile = result.data.spec_file;
+  });
+
+  await step.phase("implement", async () => {
+    // Access ctx.specFile from previous phase
+    await step.agent("impl", {
+      prompt: `Implement ${ctx.specFile}`,
+    });
+  });
+});
+```
+
+### Retry Loops
+
+Retry operations with incrementing step IDs:
+
+```typescript
+const MAX_ATTEMPTS = 10;
+
+await step.phase("implement", async () => {
+  for (let i = 1; i <= MAX_ATTEMPTS; i++) {
+    const result = await step.agent<CmdImplementSpecResponse>(
+      `implement-${i}`,  // Unique step ID per attempt
+      {
+        agent: "claude",
+        json: true,
+        prompt: buildSlashCommand("/cmd:implement-spec", { ... }),
+      }
+    );
+
+    if (result.data.success) return;
+  }
+  throw new Error("Max attempts exceeded");
+});
+```
+
+### Conditional Execution
+
+```typescript
+await step.phase("deploy", async () => {
+  const testResult = await step.cli("test", { command: "npm test" });
+
+  if (testResult.data.exitCode === 0) {
+    await step.cli("deploy", { command: "npm run deploy" });
+    await step.annotation("deployed", { message: "Deployment successful" });
+  } else {
+    await step.annotation("skipped", { message: "Tests failed, skipping deploy" });
+  }
+});
+```
+
+## Related
+
+- [Workflow Steps Reference](/docs/reference/workflow-steps) - Detailed step documentation
+- [Workflow Definitions](/docs/concepts/workflows/workflow-definitions) - Conceptual guide
+- [Examples](/docs/examples) - Complete workflow examples

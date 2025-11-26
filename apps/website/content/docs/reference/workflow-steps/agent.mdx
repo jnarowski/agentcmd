@@ -1,0 +1,471 @@
+---
+title: Agent Step
+description: Run AI CLI tools (Claude, Codex, Gemini)
+---
+
+import { Card, Cards } from 'fumadocs-ui/components/card';
+
+Execute AI CLI tools with full interactive capabilities including file editing, tool use, and multi-turn conversations.
+
+## Overview
+
+The agent step runs Claude Code, OpenAI Codex, or Google Gemini CLI tools. Unlike the [AI step](/docs/reference/steps/ai), agent steps are interactive and can use tools (file editing, searches, commands).
+
+**Use when**:
+- Need file editing capabilities
+- Want multi-turn interactive conversation
+- Task requires tool use
+- Implementation takes >5 minutes
+
+**Don't use when**:
+- Just need quick AI response → Use [ai step](/docs/reference/steps/ai)
+- Need structured data only → Use [ai step](/docs/reference/steps/ai) with schema
+- Want faster execution → Agent steps timeout at 30min vs 5min for AI
+
+## Configuration
+
+{/* AUTO-GENERATED:agent-step-config START */}
+{/* Source: packages/agentcmd-workflows/src/types/steps.ts
+{/* Last updated: 2025-11-19 */}
+
+```typescript
+interface AgentStepConfig {
+  agent: "claude" | "codex" | "gemini";
+  prompt: string;
+  workingDir?: string;
+  context?: Record<string, unknown>;
+  permissionMode?: "default" | "plan" | "acceptEdits" | "bypassPermissions";
+  mcpConfig?: string[];
+  json?: boolean;
+  resume?: string;
+}
+```
+
+**Timeout**: 30 minutes (1,800,000ms)
+
+{/* AUTO-GENERATED:agent-step-config END */}
+
+### Parameters
+
+**`agent`** (required)
+- `"claude"` - Claude Code CLI (most capable, recommended)
+- `"codex"` - OpenAI Codex CLI (good for code generation)
+- `"gemini"` - Google Gemini CLI (experimental, ~70% stable)
+
+**`prompt`** (required)
+- Instruction for the AI agent
+- Can be multi-line, detailed
+- Include context, requirements, constraints
+
+**`workingDir`** (optional)
+- Directory where agent executes
+- Defaults to `event.data.projectPath`
+- Agent can read/write files in this directory
+
+**`context`** (optional)
+- Additional context object passed to agent
+- Useful for structured data (IDs, configs, etc.)
+
+**`permissionMode`** (optional, default: `"default"`)
+- `"default"` - Interactive, prompt for file edits
+- `"plan"` - Read-only, no file modifications
+- `"acceptEdits"` - Auto-approve all file edits
+- `"bypassPermissions"` - Skip all permission checks (dangerous!)
+
+**`json`** (optional, default: `false`)
+- Extract JSON from agent response
+- Agent must return valid JSON in response
+- Useful for structured output
+
+**`resume`** (optional)
+- Session ID from previous agent step
+- Continues the conversation
+- Context carries forward (files read, decisions made)
+
+**`mcpConfig`** (optional, **Claude only**)
+- Array of MCP server configuration file paths
+- Enables Model Context Protocol servers for enhanced capabilities
+- Paths relative to `workingDir` (e.g., `[".mcp.json.github", ".mcp.json.playwright"]`)
+- Only supported by Claude agent (ignored for Codex and Gemini)
+- See [MCP example](#with-mcp-servers) below
+
+## Basic Usage
+
+### Simple Agent Call
+
+```typescript
+await step.agent("implement-feature", {
+  agent: "claude",
+  prompt: "Implement user authentication with JWT tokens",
+  workingDir: projectPath,
+});
+```
+
+### With Permission Mode
+
+```typescript
+// Read-only analysis
+await step.agent("analyze-code", {
+  agent: "claude",
+  prompt: "Analyze this codebase for security vulnerabilities",
+  permissionMode: "plan", // No file edits
+});
+```
+
+### With Auto-Approve Edits
+
+```typescript
+// Auto-approve all edits (use carefully!)
+await step.agent("refactor", {
+  agent: "claude",
+  prompt: "Refactor auth module to use async/await",
+  permissionMode: "acceptEdits",
+});
+```
+
+## Advanced Usage
+
+### Extract JSON Response
+
+```typescript
+interface AnalysisResult {
+  complexity: number;
+  issues: Array<{ severity: string; description: string }>;
+  recommendations: string[];
+}
+
+const result = await step.agent<AnalysisResult>("analyze", {
+  agent: "claude",
+  prompt: `Analyze this codebase and return JSON with this structure:
+{
+  "complexity": <1-10 score>,
+  "issues": [{ "severity": "high|medium|low", "description": "..." }],
+  "recommendations": ["...", "..."]
+}`,
+  json: true,
+  permissionMode: "plan",
+});
+
+// result.data is typed as AnalysisResult
+console.log(`Complexity: ${result.data.complexity}`);
+console.log(`Found ${result.data.issues.length} issues`);
+```
+
+### Resume Previous Session
+
+```typescript
+const ctx: { planSession?: string } = {};
+
+// Phase 1: Plan
+await step.phase("plan", async () => {
+  const result = await step.agent("architect", {
+    agent: "claude",
+    prompt: "Design the authentication system",
+    permissionMode: "plan",
+  });
+  ctx.planSession = result.data.sessionId;
+});
+
+// Phase 2: Implement (continues planning conversation)
+await step.phase("implement", async () => {
+  await step.agent("code", {
+    agent: "codex",
+    prompt: "Implement the auth design from the planning phase",
+    resume: ctx.planSession,
+  });
+});
+```
+
+### With Slash Commands
+
+```typescript
+import { buildSlashCommand } from "agentcmd-workflows";
+
+await step.agent("generate-spec", {
+  agent: "claude",
+  json: true,
+  prompt: buildSlashCommand("/cmd:generate-feature-spec", {
+    context: "User authentication with OAuth2"
+  }),
+});
+```
+
+### With Additional Context
+
+```typescript
+await step.agent("implement-endpoint", {
+  agent: "claude",
+  prompt: "Implement the GET /users/:id endpoint",
+  context: {
+    userId: "user-123",
+    apiVersion: "v2",
+    authRequired: true,
+  },
+});
+```
+
+### With MCP Servers
+
+Enable [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) servers to extend agent capabilities with custom tools and resources:
+
+```typescript
+// MCP server configuration example
+// .mcp.json.github
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "ghp_..."
+      }
+    }
+  }
+}
+
+// Use MCP servers in workflow
+await step.agent("analyze-prs", {
+  agent: "claude",
+  prompt: "Analyze recent pull requests and create a summary report",
+  mcpConfig: [
+    ".mcp.json.github",
+    ".mcp.json.playwright"
+  ],
+  workingDir: projectPath,
+});
+```
+
+**What MCP provides:**
+- **Custom tools** - GitHub API access, database queries, browser automation
+- **Resources** - File system access, API endpoints, data sources
+- **Enhanced prompts** - Domain-specific prompt templates
+
+**Common MCP servers:**
+- `@modelcontextprotocol/server-github` - GitHub API integration
+- `@modelcontextprotocol/server-filesystem` - Enhanced file operations
+- `@modelcontextprotocol/server-postgres` - PostgreSQL database access
+- `@playwright/mcp` - Browser automation and testing
+
+## Return Value
+
+Agent steps return `AgentStepResult`:
+
+```typescript
+interface AgentStepResult<T = unknown> {
+  data: T;                    // Extracted data (JSON mode) or response text
+  sessionId: string;          // Session ID for resumption
+  exitCode: number;           // 0 = success, non-zero = error
+  tool: "claude" | "codex" | "gemini";
+}
+```
+
+**Example**:
+
+```typescript
+const result = await step.agent("code", {
+  agent: "claude",
+  prompt: "Implement feature X",
+});
+
+console.log(result.sessionId); // "abc123..."
+console.log(result.exitCode);  // 0
+console.log(result.tool);      // "claude"
+```
+
+## Error Handling
+
+### Try/Catch
+
+```typescript
+try {
+  await step.agent("risky-operation", {
+    agent: "claude",
+    prompt: "Refactor critical system",
+  });
+} catch (error) {
+  await step.annotation("error", {
+    message: `Agent failed: ${error}. Rolling back...`,
+  });
+  // Rollback logic
+}
+```
+
+### Timeout Override
+
+```typescript
+await step.agent("long-task", {
+  agent: "claude",
+  prompt: "Implement entire feature from spec",
+}, {
+  timeout: 3600000, // 60 minutes (default is 30min)
+});
+```
+
+### Check Exit Code
+
+```typescript
+const result = await step.agent("build-feature", {
+  agent: "claude",
+  prompt: "Implement feature X",
+});
+
+if (result.exitCode !== 0) {
+  throw new Error("Agent execution failed");
+}
+```
+
+## Agent Comparison
+
+| Feature | Claude | Codex | Gemini |
+|---------|--------|-------|--------|
+| **Stability** | ✓✓✓ | ✓✓✓ | ✓✓ (70%) |
+| **Planning** | ✓✓✓ Excellent | ✓✓ Good | ✓✓ Good |
+| **Coding** | ✓✓✓ Excellent | ✓✓✓ Excellent | ✓✓ Good |
+| **Reasoning** | ✓✓✓ Best | ✓✓ Good | ✓✓ Good |
+| **Speed** | ✓✓ Moderate | ✓✓✓ Fast | ✓✓ Moderate |
+| **Cost** | $$ | $$ | $ |
+
+**Recommendation**: Start with Claude for planning and complex tasks, use Codex for pure code generation.
+
+## Common Patterns
+
+### Claude Plans, Codex Implements
+
+```typescript
+const ctx: { planSession?: string } = {};
+
+// Claude analyzes and plans
+const plan = await step.agent("plan", {
+  agent: "claude",
+  prompt: "Design the feature architecture",
+  permissionMode: "plan",
+});
+ctx.planSession = plan.data.sessionId;
+
+// Codex implements
+await step.agent("implement", {
+  agent: "codex",
+  prompt: "Implement the design from planning",
+  resume: ctx.planSession,
+});
+```
+
+### Iterative Refinement
+
+```typescript
+let session: string | undefined;
+
+for (let i = 1; i <= 3; i++) {
+  const result = await step.agent(`attempt-${i}`, {
+    agent: "claude",
+    prompt: session
+      ? "Fix issues from previous attempt"
+      : "Implement feature X",
+    resume: session,
+  });
+  session = result.data.sessionId;
+
+  // Check if tests pass
+  const test = await step.cli("test", { command: "pnpm test" });
+  if (test.exitCode === 0) break;
+}
+```
+
+### Multi-Agent Review
+
+```typescript
+// Codex implements
+const impl = await step.agent("implement", {
+  agent: "codex",
+  prompt: "Implement user authentication",
+});
+
+// Claude reviews
+const review = await step.agent("review", {
+  agent: "claude",
+  prompt: "Review the implementation for security issues",
+  resume: impl.data.sessionId,
+  permissionMode: "plan",
+});
+
+// Codex fixes issues
+await step.agent("fix", {
+  agent: "codex",
+  prompt: "Fix the issues found in review",
+  resume: review.data.sessionId,
+});
+```
+
+## Best Practices
+
+### Write Clear Prompts
+
+✅ **Good** - Specific, actionable:
+```typescript
+prompt: `Implement JWT authentication for the /api/auth endpoints.
+Requirements:
+- Use jsonwebtoken library
+- Tokens expire in 24 hours
+- Store secret in environment variable
+- Add tests for token generation and validation`
+```
+
+❌ **Bad** - Vague:
+```typescript
+prompt: "Add authentication"
+```
+
+### Use Appropriate Permission Modes
+
+```typescript
+// Analysis/planning - read-only
+permissionMode: "plan"
+
+// Interactive development - get approval
+permissionMode: "default"
+
+// Automated workflows - auto-approve (carefully!)
+permissionMode: "acceptEdits"
+
+// Never use in production:
+permissionMode: "bypassPermissions" // Dangerous!
+```
+
+### Save Session IDs for Resumption
+
+```typescript
+interface Context {
+  sessions: {
+    plan?: string;
+    implement?: string;
+  };
+}
+
+const ctx: Context = { sessions: {} };
+
+const result = await step.agent("plan", { ... });
+ctx.sessions.plan = result.data.sessionId; // Save it!
+```
+
+### Match Tools to Tasks
+
+- **Claude**: Planning, architecture, complex reasoning
+- **Codex**: Pure code generation, implementation
+- **Gemini**: Experimental, cost-sensitive projects
+
+## Next Steps
+
+<Cards>
+  <Card title="Recursive Workflows" href="/docs/examples/recursive-implement-review">
+    Advanced workflows with multiple agents
+  </Card>
+  <Card title="Context Sharing" href="/docs/examples/context-sharing">
+    Share data between workflow steps
+  </Card>
+  <Card title="Type-Safe Slash Commands" href="/docs/examples/type-safe-slash-commands">
+    Build reusable prompts with type-safe args
+  </Card>
+  <Card title="AI Step" href="/docs/reference/workflow-steps/ai">
+    Simpler AI step for non-interactive prompts
+  </Card>
+</Cards>

@@ -11,3 +11,6 @@ onlyBuiltDependencies:
   - esbuild
   - node-pty
   - prisma
+  - protobufjs
+  - sharp
+  - unrs-resolver

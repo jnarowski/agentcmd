@@ -1,0 +1,130 @@
+---
+title: Agents
+description: AI teammates you orchestrate with slash commands
+---
+
+Agents are AI CLI tools (Claude Code, OpenAI Codex, Google Gemini) that agentcmd orchestrates to automate development tasks.
+
+## What is an Agent?
+
+Think of agents as AI teammates that can:
+
+- Read and write files in your codebase
+- Execute shell commands
+- Analyze code and make decisions
+- Have multi-turn conversations
+- Complete complex tasks end-to-end
+
+Unlike chatbots, agents take **action** - they don't just suggest, they implement.
+
+## How You Control Agents
+
+You orchestrate agents with **slash commands** - pre-built instructions that tell agents what to do.
+
+### Example: `/cmd:generate-feature-spec`
+
+When you run:
+
+```bash
+/cmd:generate-feature-spec "Add dark mode support"
+```
+
+agentcmd orchestrates Claude to:
+
+1. Analyze your codebase for existing patterns
+2. Research similar implementations
+3. Generate comprehensive feature spec
+4. Create spec folder in `.agent/specs/todo/`
+5. Update spec index
+6. Return spec ID for implementation
+
+**You issued one command. The agent did the work.**
+
+### Custom Orchestration
+
+Create `.claude/commands/analyze-pr.md`:
+
+```markdown
+Analyze pull request for security issues.
+
+Arguments:
+
+- pr_number: PR to analyze
+
+Steps:
+
+1. Fetch PR via gh CLI
+2. Analyze code changes
+3. Report findings
+```
+
+Now `/analyze-pr 123` orchestrates the agent with your custom instructions.
+
+## Agent Types
+
+agentcmd supports 3 agents:
+
+| Agent            | Best For               | Strengths                         |
+| ---------------- | ---------------------- | --------------------------------- |
+| **Claude Code**  | Planning, architecture | Reasoning, safety, large context  |
+| **OpenAI Codex** | Code generation        | Fast, excellent at implementation |
+| **Google Gemini** | Multimodal tasks       | Images, cost-effective            |
+
+Choose based on task requirements:
+
+- Complex analysis → Claude
+- Pure coding → Codex
+- Image analysis → Gemini
+
+## Programmatic Orchestration
+
+Workflows use `step.agent()` to orchestrate agents programmatically:
+
+```typescript
+await step.agent("implement-feature", {
+  agent: "claude",
+  prompt: buildSlashCommand("/cmd:implement-spec", {
+    specId: "2511131522",
+  }),
+});
+```
+
+This is the same as running `/cmd:implement-spec 2511131522` in CLI, but from code.
+
+## Multi-Agent Collaboration
+
+Combine agents for optimal results:
+
+```typescript
+// Claude plans (best at reasoning)
+const plan = await step.agent("plan", {
+  agent: "claude",
+  prompt: "Design authentication system",
+  permissionMode: "plan", // Read-only
+});
+
+// Codex implements (best at coding)
+await step.agent("code", {
+  agent: "codex",
+  prompt: "Implement the auth design",
+  resume: plan.sessionId, // Continue conversation
+});
+```
+
+Agents share **sessions** - conversation history stored on disk. Resuming lets the second agent see everything the first agent learned.
+
+## Agent Sessions
+
+When agents work, they create sessions (conversation history):
+
+- Stored on disk (`~/.claude/projects/...`)
+- Resume across steps
+- Share context between agents
+- Can be used to generate specs later
+
+## Next Steps
+
+- [Workflows](/docs/concepts/workflows) - Multi-step agent orchestration
+- [Slash Commands](/docs/reference/slash-commands) - Pre-built orchestrations
+- [Agent Step Reference](/docs/reference/workflow-steps/agent) - Complete API
+- [Recursive Workflows](/docs/examples/recursive-implement-review) - Advanced patterns

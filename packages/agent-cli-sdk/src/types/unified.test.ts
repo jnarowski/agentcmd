@@ -85,7 +85,7 @@ describe('Tool Input Types', () => {
     it('should match real JSONL data structure', () => {
       const input: WriteToolInput = {
         file_path:
-          '/Users/jnarowski/Dev/sourceborn/src/agent-workflows-monorepo-v2/apps/web/src/client/components/NavUser.test.tsx',
+          '/Users/jnarowski/Dev/sourceborn/src/agent-workflows-monorepo-v2/apps/app/src/client/components/NavUser.test.tsx',
         content: 'import { describe, it, expect } from "vitest";',
       };
 
@@ -109,7 +109,7 @@ describe('Tool Input Types', () => {
     it('should match real JSONL data structure with multiline strings', () => {
       const input: EditToolInput = {
         file_path:
-          '/Users/jnarowski/Dev/sourceborn/src/agent-workflows-monorepo-v2/apps/web/src/client/components/NavUser.tsx',
+          '/Users/jnarowski/Dev/sourceborn/src/agent-workflows-monorepo-v2/apps/app/src/client/components/NavUser.tsx',
         old_string: 'import { ChevronsUpDown, LogOut } from "lucide-react";\n\nimport {',
         new_string:
           'import { ChevronsUpDown, LogOut } from "lucide-react";\n\nfunction getInitials(name: string) { return "JD"; }\n\nimport {',

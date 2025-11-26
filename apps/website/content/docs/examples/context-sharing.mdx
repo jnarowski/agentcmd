@@ -1,0 +1,66 @@
+---
+title: Context Sharing
+description: Share data between phases using JavaScript closures
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { AgentCmd } from '@/components/AgentCmd';
+
+## Overview
+
+Workflows often need to pass data from one phase to another (e.g., a spec file path from planning to implementation). <AgentCmd /> uses **JavaScript closures** for context sharing—simple, type-safe, and no special APIs needed.
+
+## Basic Pattern
+
+Define a context object before your phases, then mutate it within steps:
+
+```typescript
+export default defineWorkflow(
+  {
+    id: "my-workflow",
+    phases: ["plan", "implement"],
+  },
+  async ({ event, step }) => {
+    // Shared context via closure
+    interface Context {
+      specFile?: string;
+      branch?: string;
+    }
+    const ctx: Context = {};
+
+    await step.phase("plan", async () => {
+      const result = await step.agent("generate-spec", {
+        agent: "claude",
+        prompt: "Create implementation spec",
+      });
+
+      // Store result in context
+      ctx.specFile = result.data;
+    });
+
+    await step.phase("implement", async () => {
+      // Access context from previous phase
+      if (!ctx.specFile) {
+        throw new Error("No spec file generated");
+      }
+
+      await step.agent("implement", {
+        agent: "claude",
+        prompt: `Implement spec: ${ctx.specFile}`,
+      });
+    });
+  }
+);
+```
+
+## Why Closures?
+
+<Callout type="info">
+**JavaScript closures are perfect for workflow context:**
+
+- Type-safe with TypeScript interfaces
+- No serialization overhead (stays in memory)
+- Simple and familiar JavaScript pattern
+- Zero learning curve
+</Callout>
+

@@ -1,0 +1,82 @@
+---
+title: Type-Safe Arguments
+description: Define and validate workflow inputs with JSON Schema
+---
+
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+
+## Overview
+
+These arguments let you customize workflow behavior at runtime—control execution paths, toggle features (e.g., PR creation, E2E tests), adjust processing priorities, or configure any aspect of your workflow logic within `defineWorkflow()` to match your software development process.
+
+Workflows can accept typed arguments using `argsSchema` and `defineSchema()`. This provides:
+
+- Flexible workflow customization based on runtime inputs
+- Runtime validation via JSON Schema
+- Automatic TypeScript type inference
+- IDE autocomplete for event.data.args
+- Clear documentation of required inputs
+
+## Usage
+
+```typescript
+import { defineWorkflow, defineSchema } from "agentcmd-workflows";
+
+const argsSchema = defineSchema({
+  type: "object",
+  properties: {
+    priority: { enum: ["critical", "high", "medium", "low"] },
+    createPr: { type: "boolean" },
+    runE2e: { type: "boolean" },
+  },
+  required: ["priority"],
+});
+
+export default defineWorkflow(
+  {
+    id: "my-workflow",
+    argsSchema,
+  },
+  async ({ event, step }) => {
+    // Fully typed!
+    const { priority, createPr, runE2e } = event.data.args;
+    //      ^"critical" | "high" | "medium" | "low"
+    //                  ^boolean | undefined
+    //                            ^boolean | undefined
+  }
+);
+```
+
+## Arguments in the UI
+
+When you run a workflow with arguments, they appear in the web interface as form fields based on their schema types:
+
+<img src="/images/type-safe-arguments-ui.png" alt="Type-safe arguments UI" width="200" />
+
+The UI automatically generates appropriate input controls:
+
+- **Enums** → Dropdown select (e.g., priority: "critical", "high", "medium", "low")
+- **Booleans** → Checkboxes (e.g., createPr, runE2e)
+- **Strings** → Text inputs
+- **Numbers** → Number inputs
+- **Objects** → Nested field groups
+- **Arrays** → Dynamic list inputs
+
+Required fields are marked with an asterisk (\*) and validated before the workflow starts. The form submission triggers `inngest.send()` with the typed arguments.
+
+## Supported JSON Schema Types
+
+| Type    | JSON Schema                             | TypeScript Type |
+| ------- | --------------------------------------- | --------------- |
+| String  | `{ type: "string" }`                    | `string`        |
+| Number  | `{ type: "number" }`                    | `number`        |
+| Boolean | `{ type: "boolean" }`                   | `boolean`       |
+| Enum    | `{ enum: ["a", "b"] }`                  | `"a" \| "b"`    |
+| Object  | `{ type: "object", properties: {...} }` | `{ ... }`       |
+| Array   | `{ type: "array", items: {...} }`       | `T[]`           |
+
+## Next Steps
+
+- [Context Sharing](/docs/examples/context-sharing) - Share data between phases
+- [Type-Safe Slash Commands](/docs/examples/type-safe-slash-commands) - Build reusable workflow commands
+- [Workflow Definition](/docs/concepts/workflows/workflow-definitions) - Back to basics

@@ -1,7 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 logs/**
 apps/inngest-poc
-apps/web/logs/**
+apps/app/logs/**
 
 # Dependencies
 node_modules
@@ -18,13 +18,14 @@ node_modules
 .env.test.local
 .env.production.local
 *.env
+.npmrc
 
 # Database files
 *.db
 *.db-journal
 *.db-shm
 *.db-wal
-apps/web/prisma/dev.db
+apps/app/prisma/dev.db
 
 # Testing
 coverage
@@ -55,5 +56,9 @@ yarn-error.log*
 .agent/agents/logs/**
 .agent/logs/**
 .agent/workflows/runs/**
-packages/agent-workflows
+
+# Git worktrees
+.worktrees/
+
+# Playwright
 .playwright-mcp/**

@@ -1,0 +1,179 @@
+---
+title: Spec-Driven Development
+description: A methodology for defining requirements before implementation
+---
+
+import { Card, Cards } from "fumadocs-ui/components/card";
+import { Callout } from "fumadocs-ui/components/callout";
+import { AgentCmd } from "@/components/AgentCmd";
+
+Spec-driven development is a methodology where you define **what to build** in structured documents before building it. Specs serve as the requirements layer that guides implementation—whether done by humans, AI agents, or both.
+
+## Why Specs?
+
+Without specs, development happens through ad-hoc conversations with no memory or traceability. Whether working with AI agents or human teams, specs provide:
+
+- **Structured requirements** - Clear, consistent, parseable specifications
+- **Lifecycle tracking** - Status progression from planning → implementation → review → completion
+- **Version control** - Specs live alongside code in your repository, not in external tools
+- **Repeatability** - Same implementation process for every feature using your project's conventions
+- **Audit trail** - Complexity estimates, task tracking, timestamps, and change history
+- **Shared understanding** - Single source of truth for what needs to be built
+
+## The Automation Pipeline
+
+Specs enable a complete development workflow:
+
+1. **Generate** - Create spec from requirements (AI-assisted or manual)
+2. **Plan** - Break down into tasks with complexity estimates
+3. **Implement** - Build according to structured requirements
+4. **Track** - Mark progress inline (e.g., markdown checkboxes)
+5. **Review** - Validate implementation against spec
+6. **Ship** - Mark complete, merge changes
+
+This workflow can be fully automated with AI agents, partially automated with human oversight, or entirely manual—specs provide the structure for all approaches.
+
+## Anatomy of a Spec
+
+While format varies by tool, most specs include:
+
+**Metadata:**
+
+- Status (planning, in-progress, done)
+- Creation date and author
+- Complexity estimate
+- Dependencies
+
+**Content:**
+
+- Overview/purpose
+- Requirements/acceptance criteria
+- Task breakdown
+- Implementation notes
+- Test plan
+
+**Example structure:**
+
+```markdown
+# Feature: User Authentication
+
+**Status**: in-progress
+**Created**: 2025-01-15
+**Complexity**: 35 points
+
+## Overview
+
+JWT-based authentication with refresh tokens...
+
+## Requirements
+
+- Users can sign in with email/password
+- Sessions expire after 24 hours
+- Tokens refresh automatically
+
+## Tasks
+
+- [ ] Create auth service
+- [ ] Add login endpoint
+- [ ] Implement token validation
+```
+
+## Spec-Driven Development with AI
+
+Specs are particularly powerful when combined with AI agents:
+
+- **AI-generated specs** - Agents can create detailed specs from high-level requirements
+- **Automated implementation** - Agents implement features by following spec requirements
+- **Continuous validation** - Agents verify implementation matches spec
+- **Self-correction** - Failed validation triggers fixes until spec is satisfied
+
+This creates a feedback loop where specs guide AI behavior and AI enforces spec compliance.
+
+## Using Specs in <AgentCmd />
+
+<AgentCmd /> implements spec-driven development through its [Spec Task System](/docs/concepts/spec-task-system):
+
+- Markdown-based specs in `.agent/specs/`
+- Lifecycle management (backlog → todo → doing → done)
+- AI-powered generation and implementation
+- Built-in complexity scoring
+- Workflow automation integration
+
+See the [Spec Task System](/docs/concepts/spec-task-system) documentation for implementation details.
+
+## Best Practices
+
+### Write Specs First
+
+Define requirements before coding:
+
+```
+✅ Spec → Implement → Review
+❌ Code → Retrofit spec
+```
+
+### Keep Specs Focused
+
+Break complex features into manageable specs:
+
+```
+❌ Single mega-spec: "Complete user management system"
+✅ Multiple focused specs:
+  - User authentication
+  - User profiles
+  - Role-based permissions
+```
+
+### Update Specs During Implementation
+
+Specs are living documents:
+
+- Mark tasks complete as you go
+- Update requirements if scope changes
+- Document decisions and trade-offs
+
+### Version Control
+
+Treat specs like code:
+
+- Commit specs alongside code
+- Review spec changes in PRs
+- Track evolution over time
+
+## Resources
+
+### Articles & Guides
+
+**Foundational:**
+
+- [GitHub: Spec-driven development with AI](https://github.blog/ai-and-ml/generative-ai/spec-driven-development-with-ai-get-started-with-a-new-open-source-toolkit/) - Open source toolkit intro
+- [Red Hat: How spec-driven development improves AI coding quality](https://developers.redhat.com/articles/2025/10/22/how-spec-driven-development-improves-ai-coding-quality) - Quality improvements with specs
+- [Martin Fowler: Understanding Spec-Driven-Development](https://martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html) - Tools and ecosystem overview
+
+**Best Practices:**
+
+- [Stack Overflow: A practical guide to writing technical specs](https://stackoverflow.blog/2020/04/06/a-practical-guide-to-writing-technical-specs/) - Comprehensive guide to spec writing
+- [Close: Writing a Technical Specification for Feature Development](https://making.close.com/posts/writing-technical-specification-for-feature-development/) - Real-world process at Close
+- [Medium: Spec First, Code Later](https://medium.com/@kittikawin_ball/spec-first-code-later-the-power-of-spec-driven-development-5d6270513cb3) - The power of spec-first approach
+
+**Tools & Ecosystem:**
+
+- [GitHub Spec Kit](https://github.com/github/spec-kit) - Open source toolkit for spec-driven development
+- [Kilo Code + OpenSpec](https://blog.kilocode.ai/p/spec-driven-development-what-it-is) - Getting started guide
+
+## Next Steps
+
+<Cards>
+  <Card title="Spec Task System" href="/docs/concepts/spec-task-system">
+    Learn how agentcmd implements spec-driven development
+  </Card>
+  <Card title="Workflows" href="/docs/concepts/workflows">
+    Automate spec implementation with multi-step workflows
+  </Card>
+  <Card title="Agents" href="/docs/concepts/agents">
+    AI teammates that implement specs
+  </Card>
+  <Card title="Examples" href="/docs/examples">
+    See spec generation and implementation in action
+  </Card>
+</Cards>

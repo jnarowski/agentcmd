@@ -1,0 +1,355 @@
+---
+title: Configuration
+description: Configure AgentCmd behavior, AI providers, and server settings
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
+import { AgentCmd } from '@/components/AgentCmd';
+
+<AgentCmd /> configuration via config file and environment variables.
+
+## Config File
+
+Located at `~/.agentcmd/config.json` (created by `agentcmd install`).
+
+### Managing Config
+
+```bash
+# View current config
+agentcmd config --show
+
+# Edit in $EDITOR
+agentcmd config --edit
+
+# Get specific value
+agentcmd config --get port
+
+# Set specific value
+agentcmd config --set port=4000
+
+# Print config path
+agentcmd config --path
+```
+
+## CLI Configuration Reference
+
+The CLI config file (`~/.agentcmd/config.json`) uses a **flat structure**:
+
+```json title="~/.agentcmd/config.json"
+{
+  "port": 4100,
+  "inngestPort": 8288,
+  "host": "0.0.0.0",
+  "logLevel": "info",
+  "webhookBaseUrl": "",
+  "anthropicApiKey": "",
+  "openaiApiKey": "",
+  "jwtSecret": "",
+  "allowedOrigins": "http://localhost:4100"
+}
+```
+
+### Config Keys
+
+| Key | Type | Description | Default |
+|-----|------|-------------|---------|
+| `port` | number | Backend API port | `4100` |
+| `inngestPort` | number | Inngest dev server port | `8288` |
+| `host` | string | Bind address | `0.0.0.0` |
+| `logLevel` | string | Log verbosity | `info` |
+| `webhookBaseUrl` | string | Public webhook endpoint base URL | Server URL |
+| `anthropicApiKey` | string | Anthropic API key | `""` |
+| `openaiApiKey` | string | OpenAI API key | `""` |
+| `jwtSecret` | string | JWT signing secret | `""` |
+| `allowedOrigins` | string | CORS allowed origins | `http://localhost:4100` |
+
+**Example:**
+```bash
+# Get current port
+agentcmd config --get port
+# 4100
+
+# Change port
+agentcmd config --set port=4000
+
+# View all settings
+agentcmd config --show
+```
+
+<Callout type="tip">
+**Security**: Store API keys in environment variables instead of config file for production.
+</Callout>
+
+## Environment Variables
+
+Environment variables override config file values. The server uses additional env vars not available in the CLI config file.
+
+### Core Settings
+
+```bash
+# Server
+export PORT=4100
+export HOST=0.0.0.0
+export NODE_ENV=development
+export LOG_LEVEL=info
+export LOG_FILE=./logs/app.log
+
+# Database
+export DATABASE_URL=file:./dev.db
+
+# Security (required)
+export JWT_SECRET=$(openssl rand -base64 32)
+
+# CORS
+export ALLOWED_ORIGINS=http://localhost:4101
+
+# Webhooks (optional)
+# Public webhook endpoint base URL (for Tailscale Funnel, ngrok, etc.)
+export WEBHOOK_BASE_URL=https://your-domain.ts.net
+```
+
+### AI Provider Keys
+
+```bash
+# Claude (Anthropic)
+export ANTHROPIC_API_KEY=sk-ant-...
+
+# GPT/Codex (OpenAI)
+export OPENAI_API_KEY=sk-...
+
+# Gemini (Google)
+export GOOGLE_AI_API_KEY=...
+```
+
+### Inngest (Workflow Engine)
+
+```bash
+# Development
+export INNGEST_PORT=8288
+export INNGEST_DEV_MODE=true
+
+# Production
+export INNGEST_APP_ID=agentcmd
+export INNGEST_EVENT_KEY=...
+export INNGEST_SERVE_PATH=/api/workflows/inngest
+export INNGEST_MEMOIZATION_DB_PATH=./prisma/workflows.db
+
+# Optional
+export WORKFLOW_ENGINE_ENABLED=true
+```
+
+## File Locations
+
+Default paths used by <AgentCmd />:
+
+| Resource | Path |
+|----------|------|
+| Config | `~/.agentcmd/config.json` |
+| Database | `~/.agentcmd/database.db` |
+| Logs | `~/.agentcmd/logs/app.log` |
+| Workflows | `.agent/workflows/` |
+| Specs | `.agent/specs/` |
+
+## Configuration Patterns
+
+### Development Setup
+
+<Tabs items={['Local Dev', 'Team Dev', 'CI/CD']}>
+<Tab value="Local Dev">
+```bash
+# .env (local development)
+NODE_ENV=development
+LOG_LEVEL=debug
+PORT=4100
+DATABASE_URL=file:./dev.db
+
+# API keys (keep in shell profile or .env)
+export ANTHROPIC_API_KEY=sk-ant-...
+export JWT_SECRET=$(openssl rand -base64 32)
+```
+</Tab>
+<Tab value="Team Dev">
+```bash
+# .env.example (check into git)
+NODE_ENV=development
+PORT=4100
+HOST=0.0.0.0
+LOG_LEVEL=info
+DATABASE_URL=file:./dev.db
+
+# .env (gitignored, each dev creates)
+ANTHROPIC_API_KEY=<your-key>
+OPENAI_API_KEY=<your-key>
+JWT_SECRET=<generate-with-openssl>
+
+# Optional: Public webhook URL (for Tailscale Funnel, ngrok)
+WEBHOOK_BASE_URL=https://your-machine.ts.net
+```
+</Tab>
+<Tab value="CI/CD">
+```bash
+# CI environment
+NODE_ENV=test
+LOG_LEVEL=warn
+DATABASE_URL=file::memory:
+
+# Set in CI secrets
+ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_KEY }}
+JWT_SECRET=${{ secrets.JWT_SECRET }}
+```
+</Tab>
+</Tabs>
+
+### Production Setup
+
+```bash
+# Production environment
+NODE_ENV=production
+LOG_LEVEL=info
+PORT=4100
+HOST=0.0.0.0
+
+# Database (persistent)
+DATABASE_URL=file:/var/lib/agentcmd/production.db
+
+# Security (required)
+JWT_SECRET=<long-random-string>
+
+# Webhooks (public endpoint)
+WEBHOOK_BASE_URL=https://agentcmd.example.com
+
+# Inngest (production)
+INNGEST_DEV_MODE=false
+INNGEST_EVENT_KEY=...
+
+# AI (from secret manager)
+ANTHROPIC_API_KEY=<from-vault>
+OPENAI_API_KEY=<from-vault>
+```
+
+### Multi-Environment Config
+
+Use different configs per environment:
+
+```bash
+# Development
+export AGENTCMD_CONFIG=~/.agentcmd/config.dev.json
+agentcmd start
+
+# Staging
+export AGENTCMD_CONFIG=~/.agentcmd/config.staging.json
+agentcmd start
+
+# Production
+export AGENTCMD_CONFIG=/etc/agentcmd/config.prod.json
+agentcmd start
+```
+
+## Security Best Practices
+
+### API Key Management
+
+```bash
+# ✅ Good - Environment variables
+export ANTHROPIC_API_KEY=sk-ant-...
+agentcmd start
+
+# ✅ Good - Secret manager (production)
+export ANTHROPIC_API_KEY=$(aws secretsmanager get-secret-value \
+  --secret-id anthropic-key \
+  --query SecretString \
+  --output text)
+
+# ❌ Avoid - Hard-coded in config
+{
+  "anthropicApiKey": "sk-ant-hardcoded"  // DON'T DO THIS
+}
+```
+
+### File Permissions
+
+```bash
+# Secure config file
+chmod 600 ~/.agentcmd/config.json
+
+# Secure database
+chmod 600 ~/.agentcmd/database.db
+```
+
+### JWT Secret
+
+```bash
+# Generate strong secret (32+ bytes)
+openssl rand -base64 32
+
+# Set in environment (never commit to git)
+export JWT_SECRET=<generated-secret>
+```
+
+<Callout type="warning">
+**Required**: `JWT_SECRET` must be set. Server will fail to start without it.
+</Callout>
+
+## Config Precedence
+
+Configuration values are loaded in this order (later overrides earlier):
+
+1. **Default values** (built-in)
+2. **Config file** (`~/.agentcmd/config.json`)
+3. **Environment variables**
+4. **CLI flags** (limited: `--port`, `--host`)
+
+**Example:**
+```bash
+# Config file: port = 4100
+# Environment: PORT=4000
+# CLI flag: --port 5000
+
+agentcmd start --port 5000  # Uses 5000 (CLI wins)
+agentcmd start              # Uses 4000 (env wins)
+```
+
+## Validation
+
+<AgentCmd /> validates configuration on startup:
+
+```bash
+# Valid config
+agentcmd start
+✓ Configuration valid
+✓ Server starting on port 4100
+
+# Invalid config (missing JWT_SECRET)
+agentcmd start
+✗ Configuration error: JWT_SECRET is required
+
+# Invalid config (bad port)
+agentcmd config --set port=99999
+✗ Configuration error: port must be between 1 and 65535
+```
+
+## Log Levels
+
+Available log levels (from most to least verbose):
+
+- `trace` - Everything including internal details
+- `debug` - Debugging information
+- `info` - **Default** - General informational messages
+- `warn` - Warning messages
+- `error` - Error messages only
+- `fatal` - Fatal errors only
+
+```bash
+# Set via config
+agentcmd config --set logLevel=debug
+
+# Or via environment
+export LOG_LEVEL=debug
+agentcmd start
+```
+
+## Related
+
+- [CLI Reference](/docs/reference/cli) - Command-line interface
+- [Installation](/docs/getting-started/installation) - Setup guide

@@ -1,0 +1,24 @@
+---
+title: Log Step
+description: Console logging for workflows
+---
+
+Log messages during workflow execution.
+
+## Usage
+
+```typescript
+step.log("Starting deployment...");
+step.log.warn("API rate limit approaching");
+step.log.error("Deployment failed", error);
+```
+
+## Methods
+
+- `step.log()` - Info level
+- `step.log.warn()` - Warning level
+- `step.log.error()` - Error level
+
+**Timeout**: Instant
+
+Logs appear in server console and Inngest UI.

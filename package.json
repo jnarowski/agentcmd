@@ -1,5 +1,5 @@
 {
-  "name": "agent-workflows-monorepo-v2",
+  "name": "agentcmd",
   "version": "1.0.0",
   "description": "A full-stack web application and TypeScript SDKs for orchestrating AI agent workflows with chat, file editing, and terminal capabilities",
   "private": true,
@@ -16,31 +16,33 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/sourceborn/agent-workflows-monorepo.git"
+    "url": "https://github.com/jnarowski/agentcmd"
   },
-  "homepage": "https://github.com/sourceborn/agent-workflows-monorepo#readme",
+  "homepage": "https://agentcmd.dev",
   "bugs": {
-    "url": "https://github.com/sourceborn/agent-workflows-monorepo/issues"
+    "url": "https://github.com/jnarowski/agentcmd/issues"
   },
   "author": "Sourceborn",
   "license": "MIT",
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "dev:setup": "cd apps/web && pnpm dev:setup",
+    "dev:setup": "pnpm build && cd apps/app && pnpm dev:setup",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "check": "turbo run check"
+    "check": "turbo run check",
+    "start": "pnpm --filter=agentcmd start"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",
+    "concurrently": "^8.2.2",
     "prettier": "^3.6.2",
-    "turbo": "^2.6.0",
+    "turbo": "^2.6.1",
     "typescript": "5.9.2"
   },
-  "packageManager": "pnpm@10.19.0",
+  "packageManager": "pnpm@10.23.0",
   "engines": {
-    "node": ">=18"
+    "node": ">=22.0.0"
   }
 }
