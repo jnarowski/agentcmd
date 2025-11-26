@@ -24,28 +24,62 @@ I was sick of babysitting my agents. Love Claude Code. Hate babysitting. Like a 
 ## Example Workflow
 
 ```typescript
-import { defineWorkflow, step } from "agentcmd-workflows";
+import { defineWorkflow } from "agentcmd-workflows";
+import { buildSlashCommand } from ".agent/generated/slash-commands";
 
-export default defineWorkflow({
-  name: "code-review",
-  description: "Automated code review with Claude",
-  steps: [
-    step.agent({
-      name: "analyze",
-      prompt: "Review this code for bugs and improvements",
-      agent: "claude-code",
-    }),
-    step.conditional({
-      name: "check-severity",
-      condition: (ctx) => ctx.results.analyze.issues.length > 0,
-      onTrue: step.agent({
-        name: "fix",
-        prompt: "Fix the identified issues",
-        agent: "claude-code",
-      }),
-    }),
-  ],
-});
+export default defineWorkflow(
+  {
+    id: "implement-review",
+    name: "Implement & Review",
+    description: "Implement a spec, review it, and create a PR",
+    phases: [
+      { id: "implement", label: "Implement" },
+      { id: "review", label: "Review" },
+      { id: "complete", label: "Complete" },
+    ],
+  },
+  async ({ event, step }) => {
+    const { specFile } = event.data;
+
+    await step.phase("implement", async () => {
+      await step.agent("implement-spec", {
+        agent: "claude",
+        prompt: buildSlashCommand("/cmd:implement-spec", {
+          specIdOrNameOrPath: specFile,
+        }),
+      });
+
+      await step.git("commit-implementation", {
+        operation: "commit",
+        message: `feat: implement ${event.data.name}`,
+      });
+    });
+
+    await step.phase("review", async () => {
+      const review = await step.agent("review-implementation", {
+        agent: "claude",
+        json: true,
+        prompt: buildSlashCommand("/cmd:review-spec-implementation", {
+          specIdOrNameOrPath: specFile,
+          format: "json",
+        }),
+      });
+
+      step.annotation("review-result", {
+        message: `Review ${review.data.success ? "passed" : "needs fixes"}`,
+      });
+    });
+
+    await step.phase("complete", async () => {
+      await step.agent("create-pr", {
+        agent: "claude",
+        prompt: buildSlashCommand("/cmd:create-pr", {
+          title: `feat: ${event.data.name}`,
+        }),
+      });
+    });
+  }
+);
 ```
 
 See the [First Workflow Guide](https://agentcmd.dev/docs/getting-started/first-workflow) for a complete tutorial.
