@@ -9,36 +9,8 @@ import simpleGit from "simple-git";
 import { getCurrentBranch } from "@/server/domain/git/services/getCurrentBranch";
 import { createAndSwitchBranch } from "@/server/domain/git/services/createAndSwitchBranch";
 import { createWorktree } from "@/server/domain/git/services/createWorktree";
-import { createWorkflowEventCommand } from "@/server/domain/workflow/services/engine/steps/utils/createWorkflowEventCommand";
 import { executeStep } from "@/server/domain/workflow/services/engine/steps/utils/executeStep";
 import { slugify as toId } from "@/server/utils/slugify";
-
-/**
- * Parse command string and log to workflow timeline
- * Handles full command strings like "git add ." or "git checkout -b branch"
- */
-async function logCommandsToTimeline(
-  context: RuntimeContext,
-  commandStrings: string[],
-  totalDuration: number
-): Promise<void> {
-  const durationPerCommand = totalDuration / commandStrings.length;
-
-  for (const cmdString of commandStrings) {
-    const parts = cmdString.split(/\s+/);
-    if (parts.length === 0) continue;
-
-    const command = parts[0];
-    const args = parts.slice(1);
-
-    await createWorkflowEventCommand(
-      context,
-      command,
-      args,
-      durationPerCommand
-    );
-  }
-}
 
 /**
  * Create setupWorkspace step factory function
@@ -152,21 +124,36 @@ async function executeSetupWorkspace(
     };
   }
 
-  // Mode 2: Branch switch/create
+  // Mode 2: Branch switch/create - uses executeStep for proper Git Step display
   if (branch && branch !== currentBranch) {
-    // Create and switch to branch (handles uncommitted changes internally)
-    const checkoutStartTime = Date.now();
-    const branchResult = await createAndSwitchBranch({
-      projectPath,
-      branchName: branch,
-      from: baseBranch,
-    });
-    const checkoutDuration = Date.now() - checkoutStartTime;
-    await logCommandsToTimeline(
+    await executeStep({
       context,
-      branchResult.commands,
-      checkoutDuration
-    );
+      stepId: toId(`setup-branch-${branch}`),
+      stepName: "setup-branch",
+      stepType: "git",
+      inngestStep,
+      input: {
+        operation: "branch",
+        projectPath,
+        branch,
+        baseBranch,
+      },
+      fn: async () => {
+        const startTime = Date.now();
+        const branchResult = await createAndSwitchBranch({
+          projectPath,
+          branchName: branch,
+          from: baseBranch,
+        });
+        const duration = Date.now() - startTime;
+
+        return {
+          data: { branch },
+          success: true,
+          trace: branchResult.commands.map((cmd) => ({ command: cmd, duration })),
+        };
+      },
+    });
 
     return {
       workingDir: projectPath,

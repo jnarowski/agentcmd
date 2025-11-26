@@ -5,7 +5,6 @@ import { getGitStatus } from "@/server/domain/git/services/getGitStatus";
 import { commitChanges } from "@/server/domain/git/services/commitChanges";
 import { switchBranch } from "@/server/domain/git/services/switchBranch";
 import { removeWorktree } from "@/server/domain/git/services/removeWorktree";
-import { createWorkflowEventCommand } from "@/server/domain/workflow/services/engine/steps/utils/createWorkflowEventCommand";
 import { executeStep } from "@/server/domain/workflow/services/engine/steps/utils/executeStep";
 import { slugify as toId } from "@/server/utils/slugify";
 
@@ -87,8 +86,8 @@ async function executeFinalizeWorkspace(
     return;
   }
 
-  // Step 1: Auto-commit uncommitted changes
-  await autoCommitIfNeeded(workingDir, workflowName, context);
+  // Step 1: Auto-commit uncommitted changes (memoized for idempotency)
+  await autoCommitIfNeeded(workingDir, workflowName, context, inngestStep);
 
   // Step 2: Mode-specific cleanup
   switch (mode) {
@@ -109,7 +108,12 @@ async function executeFinalizeWorkspace(
       // IMPORTANT: Main project is NEVER touched in worktree mode
       if (worktreePath) {
         if (!preserve) {
-          await removeWorktree({ projectPath, worktreePath });
+          await removeWorktreeStep(
+            projectPath,
+            worktreePath,
+            context,
+            inngestStep
+          );
           context.logger.info({ worktreePath }, "Removed worktree");
         } else {
           context.logger.info({ worktreePath }, "Keeping worktree for review");
@@ -122,8 +126,11 @@ async function executeFinalizeWorkspace(
 async function autoCommitIfNeeded(
   workingDir: string,
   workflowName: string,
-  context: RuntimeContext
+  context: RuntimeContext,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  inngestStep: GetStepTools<any>
 ): Promise<void> {
+  // Check status outside executeStep (read-only, safe to retry)
   const status = await getGitStatus({ projectPath: workingDir });
 
   if (status.files.length === 0) {
@@ -136,23 +143,33 @@ async function autoCommitIfNeeded(
     "Auto-committing changes..."
   );
 
-  const commitStartTime = Date.now();
-  const { commands } = await commitChanges({
-    projectPath: workingDir,
-    message: `chore: Workflow '${workflowName}' auto-commit`,
-  });
-  const commitDuration = Date.now() - commitStartTime;
+  // Wrap commit in executeStep for memoization (prevents duplicate events on retry)
+  await executeStep({
+    context,
+    stepId: toId(`auto-commit-${workflowName}`),
+    stepName: "auto-commit",
+    stepType: "git",
+    inngestStep,
+    input: {
+      operation: "commit",
+      projectPath: workingDir,
+      message: `chore: Workflow '${workflowName}' auto-commit`,
+    },
+    fn: async () => {
+      const startTime = Date.now();
+      const { commands } = await commitChanges({
+        projectPath: workingDir,
+        message: `chore: Workflow '${workflowName}' auto-commit`,
+      });
+      const duration = Date.now() - startTime;
 
-  // Log the combined command returned by commitChanges
-  for (const cmd of commands) {
-    const parts = cmd.split(/\s+/);
-    await createWorkflowEventCommand(
-      context,
-      parts[0],
-      parts.slice(1),
-      commitDuration / commands.length
-    );
-  }
+      return {
+        data: { committed: true },
+        success: true,
+        trace: commands.map((cmd) => ({ command: cmd, duration })),
+      };
+    },
+  });
 }
 
 async function restoreBranch(
@@ -182,6 +199,38 @@ async function restoreBranch(
         data: { branch: branchName },
         success: true,
         trace: [{ command: `git checkout ${branchName}`, duration }],
+      };
+    },
+  });
+}
+
+async function removeWorktreeStep(
+  projectPath: string,
+  worktreePath: string,
+  context: RuntimeContext,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  inngestStep: GetStepTools<any>
+): Promise<void> {
+  await executeStep({
+    context,
+    stepId: toId(`remove-worktree`),
+    stepName: "remove-worktree",
+    stepType: "git",
+    inngestStep,
+    input: {
+      operation: "worktree-remove",
+      projectPath,
+      worktreePath,
+    },
+    fn: async () => {
+      const startTime = Date.now();
+      await removeWorktree({ projectPath, worktreePath });
+      const duration = Date.now() - startTime;
+
+      return {
+        data: { worktreePath },
+        success: true,
+        trace: [{ command: `git worktree remove ${worktreePath}`, duration }],
       };
     },
   });
