@@ -3,6 +3,7 @@ import type { AgentSessionMetadata, SessionResponse, SessionType } from '@/share
 import type { AgentType } from '@/shared/types/agent.types';
 import { getSessionFilePath } from '@/server/utils/path';
 import type { CreateSessionOptions } from '../types/CreateSessionOptions';
+import { toSessionResponse } from '../utils';
 
 /**
  * Create a new session
@@ -62,22 +63,5 @@ export async function createSession({
     },
   });
 
-  return {
-    id: session.id,
-    projectId: session.project_id,
-    userId: session.user_id,
-    name: session.name ?? undefined,
-    agent: session.agent,
-    type: session.type as SessionType,
-    permission_mode: session.permission_mode as 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions',
-    cli_session_id: session.cli_session_id ?? undefined,
-    session_path: session.session_path ?? undefined,
-    metadata: metadata,
-    state: session.state as 'idle' | 'working' | 'error',
-    error_message: session.error_message ?? undefined,
-    is_archived: session.is_archived,
-    archived_at: session.archived_at,
-    created_at: session.created_at,
-    updated_at: session.updated_at,
-  };
+  return toSessionResponse(session);
 }

@@ -19,6 +19,7 @@ import {
   cancelSession,
   type AgentExecuteResult,
 } from "@/server/domain/session/services";
+import { toSessionResponse } from "@/server/domain/session/utils";
 import { broadcast, subscribe, unsubscribe } from "../infrastructure/subscriptions";
 import {
   SessionEventTypes,
@@ -508,7 +509,8 @@ async function generateAndStoreName(
       "[WebSocket] About to update database with session name"
     );
 
-    await prisma.agentSession.update({
+    // Capture full Prisma model from update
+    const updatedSession = await prisma.agentSession.update({
       where: { id: sessionId },
       data: { name: sessionName },
     });
@@ -518,13 +520,17 @@ async function generateAndStoreName(
       "[WebSocket] Database updated successfully with session name"
     );
 
-    // Broadcast session name update
+    // Convert to SessionResponse using util
+    const sessionResponse = toSessionResponse(updatedSession);
+
+    // Broadcast with full session object (consistent with updateSession service)
     broadcast(Channels.session(sessionId), {
       type: SessionEventTypes.SESSION_UPDATED,
       data: {
         sessionId,
+        session: sessionResponse, // Full session enables sidebar update
         name: sessionName,
-        updated_at: new Date().toISOString(),
+        updated_at: updatedSession.updated_at.toISOString(),
       },
     });
   } catch (err: unknown) {

@@ -4,7 +4,7 @@ import { broadcast } from "@/server/websocket/infrastructure/subscriptions";
 import { SessionEventTypes } from "@/shared/types/websocket.types";
 import { Channels } from "@/shared/websocket";
 import type { UpdateSessionOptions } from '../types/UpdateSessionOptions';
-import type { SessionResponse, AgentSessionMetadata, SessionType } from '@/shared/types/agent-session.types';
+import { toSessionResponse } from '../utils';
 
 /**
  * Generic session update service
@@ -33,24 +33,7 @@ export async function updateSession({
   // Optionally broadcast update event with full session
   if (shouldBroadcast) {
     // Convert Prisma model to SessionResponse
-    const sessionResponse: SessionResponse = {
-      id: session.id,
-      projectId: session.project_id,
-      userId: session.user_id,
-      name: session.name ?? undefined,
-      agent: session.agent,
-      type: session.type as SessionType,
-      permission_mode: session.permission_mode as 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions',
-      cli_session_id: session.cli_session_id ?? undefined,
-      session_path: session.session_path ?? undefined,
-      metadata: session.metadata as unknown as AgentSessionMetadata,
-      state: session.state as 'idle' | 'working' | 'error',
-      error_message: session.error_message ?? undefined,
-      is_archived: session.is_archived,
-      archived_at: session.archived_at,
-      created_at: session.created_at,
-      updated_at: session.updated_at,
-    };
+    const sessionResponse = toSessionResponse(session);
 
     broadcast(Channels.session(sessionId), {
       type: SessionEventTypes.SESSION_UPDATED,
