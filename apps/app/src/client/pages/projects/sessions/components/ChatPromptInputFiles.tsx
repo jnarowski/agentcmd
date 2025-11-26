@@ -88,7 +88,7 @@ export const ChatPromptInputFiles = ({
 }: ChatPromptInputFilesProps) => {
   const commandInputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [addedFiles, setAddedFiles] = useState<string[]>([]);
 
   // Fetch project files
@@ -106,7 +106,7 @@ export const ChatPromptInputFiles = ({
         { name: "filename", weight: 0.7 },
         { name: "fullPath", weight: 0.3 },
       ],
-      threshold: 0.4,
+      threshold: 0.5,
       includeScore: true,
     });
   }, [flattenedFiles]);
@@ -119,23 +119,42 @@ export const ChatPromptInputFiles = ({
     }
   }, [open, textareaValue]);
 
-  // Debounce search input (300ms delay)
+  // Debounce search query (150ms)
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery);
-    }, 300);
-
+      setDebouncedQuery(searchQuery);
+    }, 150);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Filter files based on search query
+  // Filter files based on search query (hybrid: substring first, fuzzy fallback)
   const filteredFiles = useMemo(() => {
-    if (!debouncedSearchQuery) {
+    if (!debouncedQuery) {
       return flattenedFiles;
     }
-    const results = fuse.search(debouncedSearchQuery);
+
+    const query = debouncedQuery.toLowerCase();
+
+    // First: case-insensitive substring match on filename
+    const substringMatches = flattenedFiles.filter((file) =>
+      file.filename.toLowerCase().includes(query)
+    );
+
+    if (substringMatches.length > 0) {
+      // Sort: prefix matches first, then by filename length
+      return substringMatches.sort((a, b) => {
+        const aStartsWith = a.filename.toLowerCase().startsWith(query);
+        const bStartsWith = b.filename.toLowerCase().startsWith(query);
+        if (aStartsWith && !bStartsWith) return -1;
+        if (!aStartsWith && bStartsWith) return 1;
+        return a.filename.length - b.filename.length;
+      });
+    }
+
+    // Fallback: fuzzy search
+    const results = fuse.search(debouncedQuery);
     return results.map((result) => result.item);
-  }, [debouncedSearchQuery, fuse, flattenedFiles]);
+  }, [debouncedQuery, fuse, flattenedFiles]);
 
   // Focus command input when menu opens
   useEffect(() => {
@@ -155,12 +174,11 @@ export const ChatPromptInputFiles = ({
   }, [addedFiles, flattenedFiles]);
 
   // Filter out already added files from search results
-  // Only limit results when NOT searching to keep initial load fast
+  // Always cap at 50 for performance (search all, render few)
   const searchResults = useMemo(() => {
     const filtered = filteredFiles.filter((file) => !addedFiles.includes(file.fullPath));
-    // If user is searching, show all results; otherwise limit to 100 for fast initial render
-    return debouncedSearchQuery ? filtered : filtered.slice(0, 100);
-  }, [filteredFiles, addedFiles, debouncedSearchQuery]);
+    return filtered.slice(0, 50);
+  }, [filteredFiles, addedFiles]);
 
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
@@ -170,7 +188,7 @@ export const ChatPromptInputFiles = ({
         </PromptInputButton>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-[calc(100vw-2rem)] md:w-[400px] p-0">
-        <PromptInputCommand>
+        <PromptInputCommand shouldFilter={false}>
           <PromptInputCommandInput
             ref={commandInputRef}
             className="border-none focus-visible:ring-0"
@@ -178,7 +196,7 @@ export const ChatPromptInputFiles = ({
             value={searchQuery}
             onValueChange={setSearchQuery}
           />
-          <PromptInputCommandList>
+          <PromptInputCommandList className="h-[300px]">
             {isLoading && (
               <div className="p-3 text-muted-foreground text-sm">
                 Loading files...
