@@ -144,11 +144,11 @@ export const ChatPromptInputSlashCommands = ({
                         </span>
                         {command.argumentHints &&
                           command.argumentHints.length > 0 && (
-                            <span className="text-muted-foreground text-2xs mb-1">
+                            <div className="text-muted-foreground text-2xs mb-0.5">
                               {command.argumentHints
                                 .map((arg) => `[${arg}]`)
                                 .join(" ")}
-                            </span>
+                            </div>
                           )}
                         <span className="text-muted-foreground text-xs">
                           {command.description}
@@ -191,11 +191,11 @@ export const ChatPromptInputSlashCommands = ({
                         </span>
                         {command.argumentHints &&
                           command.argumentHints.length > 0 && (
-                            <span className="text-muted-foreground text-2xs mb-1">
+                            <div className="text-muted-foreground text-2xs mb-0.5">
                               {command.argumentHints
                                 .map((arg) => `[${arg}]`)
                                 .join(" ")}
-                            </span>
+                            </div>
                           )}
                         <span className="text-muted-foreground text-xs">
                           {command.description}
