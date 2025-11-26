@@ -145,12 +145,10 @@ export function SessionDropdownMenu({
               <span>View Session File</span>
             </DropdownMenuItem>
           )}
-          {import.meta.env.DEV && (
-            <DropdownMenuItem onClick={handleCopySession}>
-              <Copy className="h-4 w-4" />
-              <span>Copy Session JSON</span>
-            </DropdownMenuItem>
-          )}
+          <DropdownMenuItem onClick={handleCopySession}>
+            <Copy className="h-4 w-4" />
+            <span>Copy Session JSON</span>
+          </DropdownMenuItem>
           {session.is_archived ? (
             <DropdownMenuItem onClick={handleUnarchive}>
               <ArchiveRestore className="h-4 w-4" />
