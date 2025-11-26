@@ -327,6 +327,7 @@ export type ShellEvent =
  */
 export const WorkflowWebSocketEventTypes = {
   RUN_UPDATED: "workflow.run.updated",
+  STEP_CREATED: "workflow.run.step.created",
   STEP_UPDATED: "workflow.run.step.updated",
   STEP_LOG_CHUNK: "workflow.run.step.log_chunk",
   EVENT_CREATED: "workflow.run.event.created",
@@ -386,6 +387,24 @@ export interface WorkflowStepLogChunkData {
 }
 
 /**
+ * Step created event - full step object when a new step is created
+ */
+export interface WorkflowStepCreatedData {
+  run_id: string;
+  step: {
+    id: string;
+    workflow_run_id: string;
+    inngest_step_id: string;
+    name: string;
+    step_type: string;
+    status: StepStatus;
+    phase: string;
+    created_at: Date | string;
+    started_at: Date | string | null;
+  };
+}
+
+/**
  * Event created - full WorkflowEvent object
  * Sent when annotation or other event is created
  */
@@ -432,6 +451,10 @@ export type WorkflowWebSocketEvent =
   | {
       type: typeof WorkflowWebSocketEventTypes.RUN_UPDATED;
       data: WorkflowRunUpdatedData;
+    }
+  | {
+      type: typeof WorkflowWebSocketEventTypes.STEP_CREATED;
+      data: WorkflowStepCreatedData;
     }
   | {
       type: typeof WorkflowWebSocketEventTypes.STEP_UPDATED;

@@ -11,8 +11,9 @@ export async function findOrCreateStep(params: {
   inngestStepId: string;
   stepName: string;
   stepType: StepType;
+  args?: unknown;
 }): Promise<WorkflowRunStep> {
-  const { context, inngestStepId, stepName, stepType } = params;
+  const { context, inngestStepId, stepName, stepType, args } = params;
   const { runId, currentPhase, logger } = context;
 
   // Use domain service for find-or-create logic
@@ -22,7 +23,8 @@ export async function findOrCreateStep(params: {
     stepName,
     stepType,
     currentPhase ?? undefined,
-    logger
+    logger,
+    args
   );
 
   return step;

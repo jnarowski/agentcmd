@@ -13,7 +13,8 @@ export async function findOrCreateWorkflowStep(
   stepName: string,
   stepType: StepType,
   phase?: string,
-  logger?: FastifyBaseLogger
+  logger?: FastifyBaseLogger,
+  args?: unknown
 ): Promise<WorkflowRunStep> {
   // Try to find existing step
   let step = await findWorkflowStepByName(runId, stepName, phase, logger);
@@ -24,7 +25,7 @@ export async function findOrCreateWorkflowStep(
       { runId, inngestStepId, stepName, phase },
       'Step not found, creating new step'
     );
-    step = await createWorkflowStep(runId, inngestStepId, stepName, stepType, phase, logger);
+    step = await createWorkflowStep(runId, inngestStepId, stepName, stepType, phase, logger, args);
   }
 
   return step;

@@ -26,11 +26,8 @@ export async function executeStep<T>(params: {
 
   // Wrap entire step in inngestStep.run for idempotency
   return (await inngestStep.run(inngestStepId, async () => {
-    // Find or create step in database
-    const step = await findOrCreateStep({ context, inngestStepId, stepName, stepType });
-
-    // Update to running with args
-    await updateStepStatus(context, step.id, "running", args);
+    // Find or create step in database (created as running with args)
+    const step = await findOrCreateStep({ context, inngestStepId, stepName, stepType, args });
 
     try {
       // Execute step function

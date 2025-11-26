@@ -27,16 +27,13 @@ export function createRunStep(
     const inngestStepId = generateInngestStepId(context, id);
 
     const { result } = (await inngestStep.run(inngestStepId, async () => {
-      // Find or create step in database
+      // Find or create step in database (created as running)
       const step = await findOrCreateStep({
         context,
         inngestStepId,
         stepName: name,
         stepType: "command",
       });
-
-      // Update to running
-      await updateStepStatus(context, step.id, "running");
 
       try {
         // Execute step function

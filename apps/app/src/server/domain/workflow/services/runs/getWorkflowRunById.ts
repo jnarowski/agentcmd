@@ -60,18 +60,8 @@ export async function getWorkflowRunById({ id }: GetWorkflowRunByIdOptions): Pro
         : run.workflow_definition.phases)
     : [];
 
-  // Conditionally inject system phases if they have steps/events
-  const hasSystemSetup = run.steps.some(step => step.phase === SYSTEM_PHASES.setup.id) ||
-                         allEvents.some(event => event.phase === SYSTEM_PHASES.setup.id);
-  const hasSystemFinalize = run.steps.some(step => step.phase === SYSTEM_PHASES.finalize.id) ||
-                            allEvents.some(event => event.phase === SYSTEM_PHASES.finalize.id);
-
-  if (hasSystemSetup) {
-    phases = [SYSTEM_PHASES.setup, ...phases];
-  }
-  if (hasSystemFinalize) {
-    phases = [...phases, SYSTEM_PHASES.finalize];
-  }
+  // Always inject system phases (Setup at start, Finalize at end)
+  phases = [SYSTEM_PHASES.setup, ...phases, SYSTEM_PHASES.finalize];
 
   const parsedRun = {
     ...run,

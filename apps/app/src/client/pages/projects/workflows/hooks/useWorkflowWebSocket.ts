@@ -6,6 +6,7 @@ import {
   WorkflowWebSocketEventTypes,
   type WorkflowWebSocketEvent,
   type WorkflowRunUpdatedData,
+  type WorkflowStepCreatedData,
   type WorkflowStepUpdatedData,
   type WorkflowStepLogChunkData,
   type WorkflowEventCreatedData,
@@ -14,6 +15,7 @@ import {
 import { toast } from "sonner";
 import type {
   WorkflowRunDetail,
+  WorkflowRunStep,
   WorkflowEvent,
   WorkflowArtifact,
 } from "@/client/pages/projects/workflows/types";
@@ -71,6 +73,50 @@ export function useWorkflowWebSocket(projectId: string) {
           queryKey: projectKeys.detail(data.project_id),
         });
       }
+    },
+    [queryClient]
+  );
+
+  // Handler: workflow:run:step:created
+  const handleStepCreated = useCallback(
+    (data: WorkflowStepCreatedData) => {
+      const { run_id, step } = data;
+
+      // Add new step to cache
+      queryClient.setQueryData<WorkflowRunDetail>(
+        workflowKeys.run(run_id),
+        (old) => {
+          if (!old) return old;
+
+          // Avoid duplicates
+          const exists = old.steps?.some((s) => s.id === step.id);
+          if (exists) return old;
+
+          // Cast step_type to the union type and create minimal step
+          const newStep: WorkflowRunStep = {
+            id: step.id,
+            workflow_run_id: step.workflow_run_id,
+            inngest_step_id: step.inngest_step_id,
+            name: step.name,
+            step_type: step.step_type as WorkflowRunStep["step_type"],
+            status: step.status,
+            phase: step.phase,
+            created_at: new Date(step.created_at),
+            started_at: step.started_at ? new Date(step.started_at) : null,
+            completed_at: null,
+            updated_at: new Date(step.created_at),
+            error_message: null,
+            agent_session_id: null,
+            args: null,
+            output: null,
+          } as WorkflowRunStep;
+
+          return {
+            ...old,
+            steps: [...(old.steps || []), newStep],
+          };
+        }
+      );
     },
     [queryClient]
   );
@@ -216,6 +262,9 @@ export function useWorkflowWebSocket(projectId: string) {
         case WorkflowWebSocketEventTypes.RUN_UPDATED:
           handleRunUpdated(event.data);
           break;
+        case WorkflowWebSocketEventTypes.STEP_CREATED:
+          handleStepCreated(event.data);
+          break;
         case WorkflowWebSocketEventTypes.STEP_UPDATED:
           handleStepUpdated(event.data);
           break;
@@ -235,7 +284,7 @@ export function useWorkflowWebSocket(projectId: string) {
         }
       }
     },
-    [handleRunUpdated, handleStepUpdated, handleLogChunk, handleEventCreated, handleArtifactCreated]
+    [handleRunUpdated, handleStepCreated, handleStepUpdated, handleLogChunk, handleEventCreated, handleArtifactCreated]
   );
 
   useEffect(() => {
@@ -249,9 +298,15 @@ export function useWorkflowWebSocket(projectId: string) {
     // Register event handler
     eventBus.on(channel, handleWorkflowEvent);
 
+    // Refetch workflow runs after subscription to catch any events
+    // fired during the race window between initial fetch and subscription
+    queryClient.invalidateQueries({
+      queryKey: workflowKeys.runs(),
+    });
+
     // Cleanup
     return () => {
       eventBus.off(channel, handleWorkflowEvent);
     };
-  }, [projectId, isConnected, eventBus, sendMessage, handleWorkflowEvent]);
+  }, [projectId, isConnected, eventBus, sendMessage, handleWorkflowEvent, queryClient]);
 }

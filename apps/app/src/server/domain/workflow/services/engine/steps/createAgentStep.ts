@@ -46,16 +46,14 @@ export function createAgentStep(
     return (await inngestStep.run(inngestStepId, async () => {
       const { projectId, userId, logger } = context;
 
-      // Find or create step in database
+      // Find or create step in database (created as running with args)
       const step = await findOrCreateStep({
         context,
         inngestStepId,
         stepName: name,
         stepType: "agent",
+        args: config,
       });
-
-      // Update to running with input
-      await updateStepStatus(context, step.id, "running", config);
 
       try {
         // Create agent session using domain service
