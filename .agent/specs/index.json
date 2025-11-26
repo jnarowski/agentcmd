@@ -252,6 +252,17 @@
       "status": "completed",
       "created": "2025-11-24T12:30:00Z",
       "updated": "2025-11-26T11:33:02.955Z"
+    },
+    "2511260537": {
+      "folder": "2511260537-playwright-e2e-testing",
+      "path": "todo/2511260537-playwright-e2e-testing/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-26T05:37:00Z",
+      "updated": "2025-11-26T05:37:00Z",
+      "totalComplexity": 132,
+      "phaseCount": 5,
+      "taskCount": 24
     }
   }
 }
