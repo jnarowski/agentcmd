@@ -8,28 +8,18 @@ I was sick of babysitting my agents. Love Claude Code. Hate babysitting. Like a 
 
 **agentcmd lets you:**
 
-- Chain slash commands into recursive workflows that run until done
-- Define workflwos in code. Bring your tools, your process, your slash commands
-- Add any steps you want: security checks, code reviews, multiple agents reviewing each other
-- Run in isolated Worktress so nothing conflicts
-- Fully responsive, so you can code from anywhere (after you setup Tailscale)
+- **Chain Slash Commands** - Slash commands into recursive workflows that run until done
+- **Define in Code** - Bring your tools, process, and custom steps (security checks, code reviews, multi-agent review)
+- **Multi-Agent** - Leverage Claude Code, OpenAI Codex, and other AI agents
+- **Fully Responsive** - Code from anywhere (after you setup Tailscale)
+- **Session Management** - Save, resume, organize code sessions
+- **Isolated Worktrees** - Nothing conflicts across projects
+- **Integrated Terminal** - Full terminal with WebSocket streaming
+- **Git Integration** - Commit, branch, PR from interface
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![pnpm](https://img.shields.io/badge/pnpm-8.0+-orange.svg)](https://pnpm.io/)
-
-Full-stack web application for orchestrating AI agent workflows. Interact with Claude Code and OpenAI Codex through a modern interface with real-time chat, file editing, and integrated terminal.
-
-## Features
-
-- **Multi-Agent Chat** - Interact with Claude Code, OpenAI Codex, and other AI agents
-- **Real-Time File Editor** - Syntax highlighting, auto-save, collaborative editing
-- **Integrated Terminal** - Full terminal access with WebSocket streaming
-- **Session Management** - Save, resume, and organize agent conversations
-- **Git Integration** - Commit, branch, and PR creation from the interface
-- **Project Workspaces** - Manage multiple projects with isolated environments
-- **Workflow Engine** - Orchestrate multi-step AI workflows with Inngest
-- **Slash Commands** - Extend agent capabilities with custom commands
 
 ## Example Workflow
 
