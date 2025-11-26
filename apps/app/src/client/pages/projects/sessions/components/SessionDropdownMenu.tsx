@@ -165,6 +165,8 @@ export function SessionDropdownMenu({
 
     const key = e.key.toLowerCase();
     const actions: Record<string, (() => void) | undefined> = {
+      e: handleEdit,
+      v: session.session_path ? handleViewFile : undefined,
       c: handleCopySession,
       a: session.is_archived ? handleUnarchive : handleArchive,
     };
@@ -179,7 +181,7 @@ export function SessionDropdownMenu({
 
   return (
     <>
-      <DropdownMenu open={isMenuOpen} onOpenChange={handleMenuOpenChange}>
+      <DropdownMenu modal={false} open={isMenuOpen} onOpenChange={handleMenuOpenChange}>
         <DropdownMenuTrigger
           className={cn(
             "h-6 w-6 flex items-center justify-center rounded-md transition-colors",
@@ -203,11 +205,13 @@ export function SessionDropdownMenu({
           <DropdownMenuItem onClick={handleEdit}>
             <Pencil className="h-4 w-4" />
             <span>Edit</span>
+            <Kbd className="ml-auto">E</Kbd>
           </DropdownMenuItem>
           {session.session_path && (
             <DropdownMenuItem onClick={handleViewFile}>
               <FileJson className="h-4 w-4" />
               <span>View Session File</span>
+              <Kbd className="ml-auto">V</Kbd>
             </DropdownMenuItem>
           )}
           <DropdownMenuItem onClick={handleCopySession}>

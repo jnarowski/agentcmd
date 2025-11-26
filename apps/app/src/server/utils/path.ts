@@ -20,7 +20,7 @@ import os from 'node:os';
  * encodeProjectPath('/Users/john/app/.worktrees/run-1') // => '-Users-john-app--worktrees-run-1'
  */
 export function encodeProjectPath(projectPath: string): string {
-  return projectPath.replace(/[\/\.]/g, '-');
+  return projectPath.replace(/[/.]/g, '-');
 }
 
 /**

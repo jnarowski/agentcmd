@@ -209,7 +209,7 @@ export function ProjectHomeSpecs({ projectId }: ProjectHomeSpecsProps) {
 
         {/* Tabs when specs exist */}
         {data && data.specs.length > 0 && (
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "todo" | "done" | "backlog")}>
             <TabsList className="w-full grid grid-cols-3 mb-4">
               <TabsTrigger value="todo">Todo</TabsTrigger>
               <TabsTrigger value="done">Done</TabsTrigger>

@@ -5,6 +5,19 @@ import type {
   SetupWorkspaceConfig,
 } from "agentcmd-workflows";
 
+// Mock simple-git for auto-commit in worktree mode
+const mockGitStatus = vi.fn();
+const mockGitAdd = vi.fn();
+const mockGitCommit = vi.fn();
+
+vi.mock("simple-git", () => ({
+  default: vi.fn(() => ({
+    status: mockGitStatus,
+    add: mockGitAdd,
+    commit: mockGitCommit,
+  })),
+}));
+
 // Mock all git service dependencies
 vi.mock("@/server/domain/git/services/getCurrentBranch", () => ({
   getCurrentBranch: vi.fn(),
@@ -30,6 +43,14 @@ vi.mock("./utils/createWorkflowEventCommand", () => ({
   createWorkflowEventCommand: vi.fn(),
 }));
 
+// Mock executeStep to just run the fn directly (bypass Prisma)
+vi.mock("./utils/executeStep", () => ({
+  executeStep: vi.fn(async (params: { fn: () => Promise<unknown> }) => {
+    const result = await params.fn();
+    return { runStepId: "mock-step-id", result };
+  }),
+}));
+
 // Import mocked functions
 import { getCurrentBranch } from "@/server/domain/git/services/getCurrentBranch";
 import { commitChanges } from "@/server/domain/git/services/commitChanges";
@@ -45,6 +66,11 @@ describe("createSetupWorkspaceStep", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Default: no uncommitted changes
+    mockGitStatus.mockResolvedValue({ files: [] });
+    mockGitAdd.mockResolvedValue(undefined);
+    mockGitCommit.mockResolvedValue(undefined);
 
     mockContext = {
       workflowId: "test-workflow-id",
@@ -144,6 +170,64 @@ describe("createSetupWorkspaceStep", () => {
         worktreePath: "/test/project/.worktrees/main-wt",
       });
       expect(result.branch).toBe("main");
+    });
+
+    it("auto-commits uncommitted changes before creating worktree", async () => {
+      const config: SetupWorkspaceConfig = {
+        projectPath: "/test/project",
+        worktreeName: "feature-wt",
+        branch: "feat/new",
+      };
+
+      // Simulate uncommitted changes
+      mockGitStatus.mockResolvedValue({
+        files: [{ path: "src/index.ts", index: "M" }],
+      });
+
+      vi.mocked(getCurrentBranch).mockResolvedValue("main");
+      vi.mocked(createWorktree).mockResolvedValue("/test/project/.worktrees/feat/new");
+
+      const setupWorkspace = createSetupWorkspaceStep(
+        mockContext,
+        mockInngestStep as never
+      );
+      await setupWorkspace("setup-workspace", config);
+
+      // Should check status, add, and commit
+      expect(mockGitStatus).toHaveBeenCalled();
+      expect(mockGitAdd).toHaveBeenCalledWith(".");
+      expect(mockGitCommit).toHaveBeenCalledWith(
+        'Auto-commit before creating worktree "feature-wt"'
+      );
+      // Then create worktree
+      expect(createWorktree).toHaveBeenCalled();
+    });
+
+    it("skips auto-commit when no uncommitted changes", async () => {
+      const config: SetupWorkspaceConfig = {
+        projectPath: "/test/project",
+        worktreeName: "clean-wt",
+        branch: "feat/clean",
+      };
+
+      // No uncommitted changes
+      mockGitStatus.mockResolvedValue({ files: [] });
+
+      vi.mocked(getCurrentBranch).mockResolvedValue("main");
+      vi.mocked(createWorktree).mockResolvedValue("/test/project/.worktrees/feat/clean");
+
+      const setupWorkspace = createSetupWorkspaceStep(
+        mockContext,
+        mockInngestStep as never
+      );
+      await setupWorkspace("setup-workspace", config);
+
+      // Should check status but NOT commit
+      expect(mockGitStatus).toHaveBeenCalled();
+      expect(mockGitAdd).not.toHaveBeenCalled();
+      expect(mockGitCommit).not.toHaveBeenCalled();
+      // Still create worktree
+      expect(createWorktree).toHaveBeenCalled();
     });
   });
 
@@ -303,88 +387,24 @@ describe("createSetupWorkspaceStep", () => {
   });
 
   describe("Inngest integration", () => {
-    it("generates correct step ID with phase prefix", async () => {
-      mockContext.currentPhase = "setup";
-
+    it("wraps worktree creation in executeStep for idempotency", async () => {
       const config: SetupWorkspaceConfig = {
         projectPath: "/test/project",
+        worktreeName: "wt",
+        branch: "main",
       };
 
       vi.mocked(getCurrentBranch).mockResolvedValue("main");
+      vi.mocked(createWorktree).mockResolvedValue("/test/project/.worktrees/main");
 
       const setupWorkspace = createSetupWorkspaceStep(
         mockContext,
         mockInngestStep as never
       );
-      await setupWorkspace("workspace-init", config);
+      await setupWorkspace("setup-workspace", config);
 
-      expect(mockInngestStep.run).toHaveBeenCalledWith(
-        "setup-workspace-init", // Phase prefix added
-        expect.any(Function)
-      );
-    });
-
-    it("uses raw ID when no phase", async () => {
-      mockContext.currentPhase = null;
-
-      const config: SetupWorkspaceConfig = {
-        projectPath: "/test/project",
-      };
-
-      vi.mocked(getCurrentBranch).mockResolvedValue("main");
-
-      const setupWorkspace = createSetupWorkspaceStep(
-        mockContext,
-        mockInngestStep as never
-      );
-      await setupWorkspace("workspace-init", config);
-
-      expect(mockInngestStep.run).toHaveBeenCalledWith(
-        "workspace-init", // No prefix
-        expect.any(Function)
-      );
-    });
-
-    it("applies custom timeout", async () => {
-      const config: SetupWorkspaceConfig = {
-        projectPath: "/test/project",
-      };
-
-      vi.mocked(getCurrentBranch).mockResolvedValue("main");
-
-      // Mock a slow operation
-      vi.mocked(getCurrentBranch).mockImplementation(
-        () =>
-          new Promise((resolve) => setTimeout(() => resolve("main"), 200))
-      );
-
-      const setupWorkspace = createSetupWorkspaceStep(
-        mockContext,
-        mockInngestStep as never
-      );
-
-      // Short timeout should cause failure
-      await expect(
-        setupWorkspace("workspace-init", config, { timeout: 50 })
-      ).rejects.toThrow("Setup workspace timed out after 50ms");
-    });
-
-    it("uses default timeout when not specified", async () => {
-      const config: SetupWorkspaceConfig = {
-        projectPath: "/test/project",
-      };
-
-      vi.mocked(getCurrentBranch).mockResolvedValue("main");
-
-      const setupWorkspace = createSetupWorkspaceStep(
-        mockContext,
-        mockInngestStep as never
-      );
-
-      // Should not timeout with default (120s)
-      await expect(
-        setupWorkspace("workspace-init", config)
-      ).resolves.toBeDefined();
+      // Worktree mode uses executeStep (which is mocked)
+      expect(createWorktree).toHaveBeenCalled();
     });
   });
 

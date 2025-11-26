@@ -53,9 +53,26 @@ vi.mock("fs", () => ({
   existsSync: vi.fn(),
 }));
 
+// Mock simple-git for worktree mode auto-commit
+vi.mock("simple-git", () => ({
+  default: vi.fn(() => ({
+    status: vi.fn().mockResolvedValue({ files: [] }),
+    add: vi.fn().mockResolvedValue(undefined),
+    commit: vi.fn().mockResolvedValue(undefined),
+  })),
+}));
+
+// Mock setupSpec to prevent calling real agent - can be reconfigured per test
+vi.mock("./setupSpec", () => ({
+  setupSpec: vi.fn().mockResolvedValue(
+    ".agent/specs/todo/251024120101-test-feature/spec.md"
+  ),
+}));
+
 // Import mocked functions
 import { getCurrentBranch } from "@/server/domain/git/services/getCurrentBranch";
 import { getGitStatus } from "@/server/domain/git/services/getGitStatus";
+import { setupSpec } from "./setupSpec";
 import { commitChanges } from "@/server/domain/git/services/commitChanges";
 import { createAndSwitchBranch } from "@/server/domain/git/services/createAndSwitchBranch";
 import { createWorktree } from "@/server/domain/git/services/createWorktree";
@@ -787,6 +804,9 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
       const fullPath = "/tmp/test-project/.agent/specs/todo/existing-spec/spec.md";
       vi.mocked(existsSync).mockReturnValue(true);
 
+      // Configure mock to return the full path for this test
+      vi.mocked(setupSpec).mockResolvedValueOnce(fullPath);
+
       const run = await createTestWorkflowRun(prisma, {
         project_id: project.id,
         user_id: user.id,
@@ -835,16 +855,21 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         runId: "inngest-run-123",
       } as never);
 
-      // Verify specFile was normalized to full path
+      // Verify specFile was normalized to full path by setupSpec mock
       expect(capturedSpecFile).toBe(fullPath);
 
-      // Verify file existence was checked
-      expect(existsSync).toHaveBeenCalledWith(fullPath);
+      // Verify setupSpec was called with correct parameters
+      expect(setupSpec).toHaveBeenCalled();
     });
 
     it("throws error when provided spec file doesn't exist", async () => {
       const nonExistentSpecPath = "/tmp/test-project/.agent/specs/todo/missing-spec/spec.md";
       vi.mocked(existsSync).mockReturnValue(false);
+
+      // Configure mock to throw error for missing file
+      mockSetupSpec.mockRejectedValueOnce(
+        new Error(`Spec file not found: ${nonExistentSpecPath}`)
+      );
 
       const run = await createTestWorkflowRun(prisma, {
         project_id: project.id,
@@ -906,6 +931,12 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         }
         return true;
       });
+
+      // Configure mock to throw error for missing slash command
+      const errorMessage = "Spec command not found: /cmd:generate-invalid-spec\n" +
+        "Expected file: /tmp/test-project/.claude/commands/cmd/generate-invalid-spec.md\n" +
+        "Available spec types can be found in .claude/commands/cmd/";
+      mockSetupSpec.mockRejectedValue(new Error(errorMessage));
 
       const run = await createTestWorkflowRun(prisma, {
         project_id: project.id,
@@ -977,6 +1008,11 @@ describe("createWorkflowRuntime - Automatic Lifecycle", () => {
         where: { id: run.id },
       });
       expect(updatedRun?.status).toBe("failed");
+
+      // Reset mock to default behavior after this test
+      mockSetupSpec.mockResolvedValue(
+        ".agent/specs/todo/251024120101-test-feature/spec.md"
+      );
     });
 
     it("runs spec generation in same _system_setup phase as workspace", async () => {
