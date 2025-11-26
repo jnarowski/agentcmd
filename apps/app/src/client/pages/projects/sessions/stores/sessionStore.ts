@@ -832,7 +832,12 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
       };
 
       return {
-        currentSession: sessionData
+        currentSession: sessionData,
+        // Sync session permission_mode to form state so ChatInput displays correct value
+        form: {
+          ...state.form,
+          permissionMode: session.permission_mode,
+        }
       };
     });
   },
