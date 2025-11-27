@@ -7,7 +7,7 @@ import { fileURLToPath } from "url";
 import pc from "picocolors";
 import { loadConfig, mergeWithFlags } from "../utils/config";
 import { ensurePortAvailable } from "../utils/portCheck";
-import { getDbPath, getConfigPath, getLogFilePath } from "../utils/paths";
+import { getDbPath, getConfigPath, getLogFilePath, getInngestDataDir, ensureDirectoryExists } from "../utils/paths";
 import { checkPendingMigrations, createBackup, cleanupOldBackups } from "../utils/backup";
 import { setInngestEnvironment } from "@/shared/utils/inngestEnv";
 import { waitForServerReady } from "../utils/serverHealth";
@@ -216,6 +216,8 @@ export async function startCommand(options: StartOptions): Promise<void> {
 
     // 8. Start Inngest (dev or production mode)
     let inngestStderr = "";
+    const inngestCliVersion = "inngest-cli@1.14.0";
+
     if (isProduction) {
       // Production mode: use inngest start with persistent storage
       if (!verbose) console.log(pc.dim("Starting workflow engine (persistent mode)..."));
@@ -233,10 +235,14 @@ export async function startCommand(options: StartOptions): Promise<void> {
         }
       }
 
+      // Ensure Inngest data directory exists for SQLite persistence
+      const inngestDataDir = getInngestDataDir();
+      ensureDirectoryExists(inngestDataDir);
+
       inngestProcess = spawn(
         "npx",
         [
-          "inngest-cli@latest",
+          inngestCliVersion,
           "start",
           "--event-key",
           eventKey,
@@ -244,6 +250,8 @@ export async function startCommand(options: StartOptions): Promise<void> {
           signingKey,
           "--port",
           inngestPort.toString(),
+          "--sqlite-dir",
+          inngestDataDir,
         ],
         {
           stdio: stdioAsync,
@@ -259,7 +267,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
       inngestProcess = spawn(
         "npx",
         [
-          "inngest-cli@latest",
+          inngestCliVersion,
           "dev",
           "-u",
           inngestUrl,
