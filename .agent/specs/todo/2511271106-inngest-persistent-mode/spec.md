@@ -40,8 +40,9 @@ The implementation adds conditional spawning logic in start scripts and CLI comm
 ## Key Design Decisions
 
 1. **Mode Detection via NODE_ENV**: Use `NODE_ENV === 'production'` to determine which Inngest command to spawn - simpler than additional configuration flags
-2. **Default Keys for Local Dev**: Provide default event/signing keys ("local-prod-key") for production mode without external Inngest - removes setup friction
-3. **No Code Changes to Inngest Client**: Inngest SDK automatically reads `INNGEST_BASE_URL` from environment - no modifications needed to `createWorkflowClient.ts`
+2. **Secure Default Keys**: Generate valid hexadecimal signing keys for local production using `openssl rand -hex 32` - signing key must be valid hex with even character count
+3. **Key Validation**: Add Zod validation to ensure signing keys are valid hexadecimal strings
+4. **No Code Changes to Inngest Client**: Inngest SDK automatically reads `INNGEST_BASE_URL` from environment - no modifications needed to `createWorkflowClient.ts`
 
 ## Architecture
 
@@ -93,7 +94,8 @@ apps/app/
 - Check `NODE_ENV === 'production'`
 - Use `inngest start --event-key --signing-key --port` for production
 - Use `inngest dev -u <url>` for development
-- Provide default keys for local production
+- Generate secure default signing key using `openssl rand -hex 32` (64 character hex string)
+- Event key can be any string, signing key must be valid hexadecimal
 
 ### 2. CLI Start Command Production Flag
 
@@ -153,7 +155,8 @@ None - all changes are modifications to existing files.
   - Add conditional spawning: `inngest start` vs `inngest dev`
   - For production: Use `--event-key`, `--signing-key`, `--port` flags
   - For development: Use `-u <url>` flag
-  - Provide default keys: 'local-prod-key', 'local-prod-signing'
+  - Generate signing key if not in env: `execSync('openssl rand -hex 32').toString().trim()`
+  - Default event key: 'local-prod-key'
   - File: `apps/app/scripts/start-inngest.js`
 
 - [ ] 1.2 [3/10] Ensure `scripts/start.js` sets NODE_ENV=production
@@ -174,7 +177,8 @@ None - all changes are modifications to existing files.
 
 - [ ] 2.1 [5/10] Add event and signing keys to `WorkflowConfigSchema`
   - Add `eventKey: z.string().optional()` field
-  - Add `signingKey: z.string().optional()` field
+  - Add `signingKey: z.string().regex(/^[0-9a-fA-F]*$/).refine(s => s.length % 2 === 0).optional()` for hex validation
+  - Signing key must be valid hexadecimal with even character count
   - Update `devMode` default based on NODE_ENV
   - File: `apps/app/src/server/config/schemas.ts`
 
@@ -191,8 +195,9 @@ None - all changes are modifications to existing files.
 
 - [ ] 2.4 [2/10] Document environment variables
   - Add INNGEST_EVENT_KEY with comment about production use
-  - Add INNGEST_SIGNING_KEY with comment about optional
-  - Add note about defaults for local production
+  - Add INNGEST_SIGNING_KEY with hex validation requirements
+  - Add command to generate valid signing key: `openssl rand -hex 32`
+  - Note: Signing key must be valid hexadecimal with even character count
   - File: `apps/app/.env.example`
 
 #### Completion Notes
@@ -219,7 +224,10 @@ None - all changes are modifications to existing files.
 - [ ] 3.3 [6/10] Implement conditional Inngest spawning
   - Add `if (isProduction)` block for `inngest start` command
   - Use flags: `--event-key`, `--signing-key`, `--port`
-  - Default keys: `process.env.INNGEST_EVENT_KEY || "local-prod-key"`
+  - Default event key: `process.env.INNGEST_EVENT_KEY || "local-prod-key"`
+  - Generate signing key if not in env: `execSync('openssl rand -hex 32', {encoding: 'utf8'}).trim()`
+  - Import `execSync` from `child_process`
+  - Validate signing key is valid hex before spawning (Zod validates on config level)
   - Add `else` block for `inngest dev` command (existing logic)
   - Update console messages to indicate mode
   - File: `apps/app/src/cli/commands/start.ts` (lines 211-231)
@@ -420,9 +428,34 @@ pnpm lint
 
 ## Implementation Notes
 
-### 1. Default Keys for Local Production
+### 1. Signing Key Generation Strategy
 
-The implementation provides default event and signing keys ("local-prod-key", "local-prod-signing") for local production use. These are sufficient for self-hosted Inngest without external service. For production deployments with Inngest Cloud, users should set INNGEST_EVENT_KEY and INNGEST_SIGNING_KEY environment variables.
+The Inngest signing key must be a valid hexadecimal string with an even number of characters.
+
+**Key Generation Timing:**
+- **Runtime generation**: Generate key on first production startup if not provided
+- **Method**: Use `execSync('openssl rand -hex 32')` to generate 64-character hex string
+- **Fallback**: If `openssl` not available, could use Node's `crypto.randomBytes(32).toString('hex')`
+
+**Key Generation:**
+```bash
+# Generate secure signing key
+openssl rand -hex 32
+# Output: 64-character hexadecimal string (e.g., a1b2c3d4...)
+```
+
+**When Keys are Generated:**
+1. **First check**: `INNGEST_SIGNING_KEY` environment variable
+2. **If not set**: Generate random key using `openssl rand -hex 32`
+3. **Local production**: Generated key is ephemeral (regenerated each start)
+4. **Persistent production**: Users should set `INNGEST_SIGNING_KEY` in environment
+
+**Validation:**
+- Must be valid hexadecimal (0-9, a-f, A-F)
+- Must have even character count
+- Zod schema validates: `z.string().regex(/^[0-9a-fA-F]*$/).refine(s => s.length % 2 === 0)`
+
+**Note**: For production deployments with Inngest Cloud or persistent self-hosted, users should set INNGEST_EVENT_KEY and INNGEST_SIGNING_KEY environment variables to maintain consistent keys across restarts.
 
 ### 2. Mode Detection Priority
 
