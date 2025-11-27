@@ -51,7 +51,11 @@ export function AssistantMessage({ message, onApprove }: AssistantMessageProps) 
 
     // Render plain text content
     return (
-      <div className="w-full overflow-hidden session-message session-message-assistant">
+      <div
+        className="w-full overflow-hidden session-message session-message-assistant"
+        data-message-id={message.id}
+        data-message-role={message.role}
+      >
         <div className="whitespace-pre-wrap break-words session-message-text">{content}</div>
       </div>
     );

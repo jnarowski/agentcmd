@@ -173,7 +173,7 @@ async function implementUntilComplete({
   const MAX_ITERATIONS = 10; // Adjustable based on complexity
 
   for (let i = 1; i <= MAX_ITERATIONS; i++) {
-    const stepName = `implement-spec-${i}`;
+    const stepName = `implement-spec--${i}`;
     const result = await step.agent<CmdImplementSpecResponse>(stepName, {
       agent: "claude",
       json: true,

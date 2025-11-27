@@ -53,6 +53,7 @@ export function LoginForm({
             value={email}
             onChange={(e) => onEmailChange(e.target.value)}
             required
+            data-testid="login-email"
           />
         </Field>
         <Field>
@@ -64,6 +65,7 @@ export function LoginForm({
             value={password}
             onChange={(e) => onPasswordChange(e.target.value)}
             required
+            data-testid="login-password"
           />
         </Field>
         <Field>
@@ -72,6 +74,7 @@ export function LoginForm({
             isLoading={isLoading}
             loadingText="Signing in..."
             className="w-full"
+            data-testid="login-submit"
           >
             Login
           </LoadingButton>

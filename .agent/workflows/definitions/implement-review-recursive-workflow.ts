@@ -79,7 +79,7 @@ export default defineWorkflow(
         });
 
         // Commit implementation changes
-        await step.git(`commit-implementation-cycle-${cycle}`, {
+        await step.git(`commit-implementation--cycle-${cycle}`, {
           operation: "commit",
           message: `feat: implement ${event.data.name} (cycle ${cycle})`,
         });
@@ -93,7 +93,7 @@ export default defineWorkflow(
         });
 
         // Commit review changes
-        await step.git(`commit-review-cycle-${cycle}`, {
+        await step.git(`commit-review--cycle-${cycle}`, {
           operation: "commit",
           message: `chore: address review feedback (cycle ${cycle})`,
         });
@@ -180,7 +180,7 @@ async function implementUntilComplete({
   let lastResponse: CmdImplementSpecResponse | undefined;
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const stepName = `implement-cycle-${cycle}-attempt-${attempt}`;
+    const stepName = `implement-cycle-${cycle}--attempt-${attempt}`;
     const result = await step.agent<CmdImplementSpecResponse>(stepName, {
       agent: "claude",
       json: true,
