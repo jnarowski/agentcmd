@@ -21,8 +21,6 @@ test.describe("Projects - Details", () => {
       {
         name: projectName,
         path: projectPath,
-        description: projectDescription,
-        userId: testUser.id,
       },
     ]);
 
@@ -60,7 +58,6 @@ test.describe("Projects - Details", () => {
       {
         name: projectName,
         path: "/tmp/edit-project",
-        userId: testUser.id,
       },
     ]);
 
@@ -90,7 +87,6 @@ test.describe("Projects - Details", () => {
       {
         name: projectName,
         path: "/tmp/delete-project",
-        userId: testUser.id,
       },
     ]);
 
@@ -120,7 +116,6 @@ test.describe("Projects - Details", () => {
       {
         name: projectName,
         path: "/tmp/sessions-project",
-        userId: testUser.id,
       },
     ]);
 
@@ -128,10 +123,10 @@ test.describe("Projects - Details", () => {
     const sessionTitle = `Test Session ${Date.now()}`;
     await db.seedSessions([
       {
-        title: sessionTitle,
+        name: sessionTitle,
         projectId: project.id,
         userId: testUser.id,
-        status: "active",
+        state: "idle",
       },
     ]);
 
@@ -177,8 +172,7 @@ test.describe("Projects - Details", () => {
     const otherUser = await prisma.user.create({
       data: {
         email: `other-user-${Date.now()}@example.com`,
-        password: "hashedpassword",
-        name: "Other User",
+        password_hash: "hashedpassword",
       },
     });
 
@@ -186,7 +180,6 @@ test.describe("Projects - Details", () => {
       data: {
         name: `Other User Project ${Date.now()}`,
         path: "/tmp/other-user-project",
-        userId: otherUser.id,
       },
     });
 

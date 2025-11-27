@@ -20,7 +20,6 @@ test.describe("Files - Open", () => {
       {
         name: `Open File Project ${Date.now()}`,
         path: "/tmp/open-file",
-        userId: testUser.id,
       },
     ]);
 
@@ -54,7 +53,6 @@ test.describe("Files - Open", () => {
       {
         name: `Content Display Project ${Date.now()}`,
         path: "/tmp/content-display",
-        userId: testUser.id,
       },
     ]);
 
@@ -85,7 +83,6 @@ test.describe("Files - Open", () => {
       {
         name: `Highlight Project ${Date.now()}`,
         path: "/tmp/highlight",
-        userId: testUser.id,
       },
     ]);
 

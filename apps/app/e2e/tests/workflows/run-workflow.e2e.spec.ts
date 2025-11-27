@@ -23,7 +23,6 @@ test.describe("Workflows - Run", () => {
       {
         name: `Workflow Test Project ${Date.now()}`,
         path: "/tmp/workflow-test",
-        userId: testUser.id,
       },
     ]);
 
@@ -54,8 +53,8 @@ test.describe("Workflows - Run", () => {
 
         // Check for workflow run in database
         const workflowRuns = await prisma.workflowRun.findMany({
-          where: { userId: testUser.id },
-          orderBy: { createdAt: "desc" },
+          where: { user_id: testUser.id },
+          orderBy: { created_at: "desc" },
           take: 1,
         });
 

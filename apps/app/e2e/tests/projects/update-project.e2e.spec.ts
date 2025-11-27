@@ -22,7 +22,6 @@ test.describe("Projects - Update", () => {
       {
         name: originalName,
         path: "/tmp/update-test",
-        userId: testUser.id,
       },
     ]);
 
@@ -66,65 +65,6 @@ test.describe("Projects - Update", () => {
     expect(updatedProject?.name).toBe(updatedName);
   });
 
-  test("should update project description", async ({
-    authenticatedPage,
-    db,
-    testUser,
-    prisma,
-  }) => {
-    const projectName = `Project for Description Update ${Date.now()}`;
-    const originalDescription = "Original description";
-    const updatedDescription = "Updated description with new content";
-
-    // Seed project
-    const [project] = await db.seedProjects([
-      {
-        name: projectName,
-        path: "/tmp/desc-update",
-        description: originalDescription,
-        userId: testUser.id,
-      },
-    ]);
-
-    // Navigate to project details
-    await authenticatedPage.goto(`http://localhost:5101/projects/${project.id}`);
-
-    // Wait for page load
-    await authenticatedPage.waitForSelector(`text="${projectName}"`, { timeout: 10000 });
-
-    // Click edit button
-    const editButton = authenticatedPage.locator(
-      'button:has-text("Edit"), a:has-text("Edit"), button[aria-label*="edit" i]'
-    );
-    await editButton.first().click();
-
-    // Wait for edit form
-    await authenticatedPage.waitForSelector(
-      'textarea[name="description"], input[name="description"]',
-      { timeout: 5000 }
-    );
-
-    // Update description
-    const descInput = authenticatedPage.locator(
-      'textarea[name="description"], input[name="description"]'
-    );
-    await descInput.first().clear();
-    await descInput.first().fill(updatedDescription);
-
-    // Submit
-    await authenticatedPage.click('button[type="submit"], button:has-text("Save"), button:has-text("Update")');
-
-    // Wait for update
-    await authenticatedPage.waitForTimeout(2000);
-
-    // Verify in database
-    const updatedProject = await prisma.project.findUnique({
-      where: { id: project.id },
-    });
-
-    expect(updatedProject?.description).toBe(updatedDescription);
-  });
-
   test("should update project path", async ({ authenticatedPage, db, testUser, prisma }) => {
     const projectName = `Path Update Project ${Date.now()}`;
     const originalPath = "/tmp/original-path";
@@ -135,7 +75,6 @@ test.describe("Projects - Update", () => {
       {
         name: projectName,
         path: originalPath,
-        userId: testUser.id,
       },
     ]);
 
@@ -185,7 +124,6 @@ test.describe("Projects - Update", () => {
       {
         name: projectName,
         path: "/tmp/validation",
-        userId: testUser.id,
       },
     ]);
 
@@ -237,7 +175,6 @@ test.describe("Projects - Update", () => {
       {
         name: originalName,
         path: "/tmp/cancel-edit",
-        userId: testUser.id,
       },
     ]);
 

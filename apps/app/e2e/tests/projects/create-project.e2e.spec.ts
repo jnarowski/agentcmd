@@ -97,11 +97,6 @@ test.describe("Projects - Create", () => {
 
     expect(project).toBeTruthy();
     expect(project?.name).toBe(projectName);
-
-    // If description field was present, verify it was saved
-    if (await descriptionField.count() > 0) {
-      expect(project?.description).toBe(projectDescription);
-    }
   });
 
   test("should validate required fields", async ({ authenticatedPage }) => {

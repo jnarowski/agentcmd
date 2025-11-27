@@ -22,16 +22,15 @@ test.describe("Sessions - Stop", () => {
       {
         name: `Stop Test Project ${Date.now()}`,
         path: "/tmp/stop-test",
-        userId: testUser.id,
       },
     ]);
 
     const [session] = await db.seedSessions([
       {
-        title: sessionTitle,
+        name: sessionTitle,
         projectId: project.id,
         userId: testUser.id,
-        status: "active",
+        state: "idle",
       },
     ]);
 
@@ -40,10 +39,10 @@ test.describe("Sessions - Stop", () => {
     await authenticatedPage.waitForLoadState("networkidle");
 
     // Verify session is active
-    let dbSession = await prisma.session.findUnique({
+    let dbSession = await prisma.agentSession.findUnique({
       where: { id: session.id },
     });
-    expect(dbSession?.status).toBe("active");
+    expect(dbSession?.state).toBe("active");
 
     // Look for stop button
     const stopButton = authenticatedPage.locator(
@@ -52,7 +51,7 @@ test.describe("Sessions - Stop", () => {
 
     if ((await stopButton.count()) > 0) {
       // Set up WebSocket monitoring
-      await setupWebSocketForwarding(authenticatedPage);
+      const wsEvents = await setupWebSocketForwarding(authenticatedPage);
 
       // Click stop button
       await stopButton.first().click();
@@ -61,6 +60,7 @@ test.describe("Sessions - Stop", () => {
       try {
         const stateEvent = await waitForWebSocketEvent(
           authenticatedPage,
+          wsEvents,
           "session.state_changed",
           10000
         );
@@ -73,12 +73,12 @@ test.describe("Sessions - Stop", () => {
       await authenticatedPage.waitForTimeout(2000);
 
       // Verify session status changed in database
-      dbSession = await prisma.session.findUnique({
+      dbSession = await prisma.agentSession.findUnique({
         where: { id: session.id },
       });
 
       // Should be stopped, completed, or inactive
-      expect(["stopped", "completed", "inactive"]).toContain(dbSession?.status);
+      expect(["stopped", "completed", "inactive"]).toContain(dbSession?.state);
     }
   });
 
@@ -94,16 +94,15 @@ test.describe("Sessions - Stop", () => {
       {
         name: `UI Stop Project ${Date.now()}`,
         path: "/tmp/ui-stop-test",
-        userId: testUser.id,
       },
     ]);
 
     const [session] = await db.seedSessions([
       {
-        title: sessionTitle,
+        name: sessionTitle,
         projectId: project.id,
         userId: testUser.id,
-        status: "active",
+        state: "idle",
       },
     ]);
 
@@ -124,7 +123,7 @@ test.describe("Sessions - Stop", () => {
 
       // Verify UI shows stopped state
       const stoppedIndicator = authenticatedPage.locator(
-        'text=/stopped/i, text=/ended/i, text=/inactive/i, [data-status="stopped"], .status-stopped'
+        'text=/stopped/i, text=/ended/i, text=/inactive/i, [data-status="stopped"], .state-stopped'
       );
 
       const hasIndicator = await stoppedIndicator.count();
@@ -151,16 +150,15 @@ test.describe("Sessions - Stop", () => {
       {
         name: `Input Disable Project ${Date.now()}`,
         path: "/tmp/input-disable",
-        userId: testUser.id,
       },
     ]);
 
     const [session] = await db.seedSessions([
       {
-        title: sessionTitle,
+        name: sessionTitle,
         projectId: project.id,
         userId: testUser.id,
-        status: "active",
+        state: "idle",
       },
     ]);
 
@@ -191,9 +189,9 @@ test.describe("Sessions - Stop", () => {
         expect(isDisabled).toBe(true);
       } else {
         // Manually update session status to test UI
-        await prisma.session.update({
+        await prisma.agentSession.update({
           where: { id: session.id },
-          data: { status: "stopped" },
+          data: { state: "idle" },
         });
 
         // Reload page
@@ -220,16 +218,15 @@ test.describe("Sessions - Stop", () => {
       {
         name: `Stream Stop Project ${Date.now()}`,
         path: "/tmp/stream-stop",
-        userId: testUser.id,
       },
     ]);
 
     const [session] = await db.seedSessions([
       {
-        title: sessionTitle,
+        name: sessionTitle,
         projectId: project.id,
         userId: testUser.id,
-        status: "active",
+        state: "idle",
       },
     ]);
 
@@ -268,11 +265,11 @@ test.describe("Sessions - Stop", () => {
         await authenticatedPage.waitForTimeout(2000);
 
         // Verify session stopped
-        const dbSession = await prisma.session.findUnique({
+        const dbSession = await prisma.agentSession.findUnique({
           where: { id: session.id },
         });
 
-        expect(["stopped", "completed", "inactive"]).toContain(dbSession?.status);
+        expect(["stopped", "completed", "inactive"]).toContain(dbSession?.state);
 
         // Verify streaming stopped (no more WebSocket events)
         const streamingIndicator = authenticatedPage.locator(
@@ -299,16 +296,15 @@ test.describe("Sessions - Stop", () => {
       {
         name: `Restart Project ${Date.now()}`,
         path: "/tmp/restart-test",
-        userId: testUser.id,
       },
     ]);
 
     const [session] = await db.seedSessions([
       {
-        title: sessionTitle,
+        name: sessionTitle,
         projectId: project.id,
         userId: testUser.id,
-        status: "stopped",
+        state: "idle",
       },
     ]);
 
@@ -328,11 +324,11 @@ test.describe("Sessions - Stop", () => {
       await authenticatedPage.waitForTimeout(2000);
 
       // Verify session is active again
-      const dbSession = await prisma.session.findUnique({
+      const dbSession = await prisma.agentSession.findUnique({
         where: { id: session.id },
       });
 
-      expect(dbSession?.status).toBe("active");
+      expect(dbSession?.state).toBe("active");
 
       // Verify message input is enabled
       const messageInput = authenticatedPage.locator(

@@ -17,7 +17,6 @@ test.describe("Files - Browser", () => {
       {
         name: `File Browser Project ${Date.now()}`,
         path: "/tmp/file-browser",
-        userId: testUser.id,
       },
     ]);
 
@@ -40,7 +39,6 @@ test.describe("Files - Browser", () => {
       {
         name: `Tree Test Project ${Date.now()}`,
         path: "/tmp/tree-test",
-        userId: testUser.id,
       },
     ]);
 
@@ -63,7 +61,6 @@ test.describe("Files - Browser", () => {
       {
         name: `Expand Test Project ${Date.now()}`,
         path: "/tmp/expand-test",
-        userId: testUser.id,
       },
     ]);
 

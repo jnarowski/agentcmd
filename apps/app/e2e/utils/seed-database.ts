@@ -16,24 +16,17 @@ export interface SeedUserOptions {
 }
 
 export interface SeedProjectOptions {
-  userId: string;
   name: string;
   path: string;
-  description?: string;
 }
 
 export interface SeedSessionOptions {
-  userId: string;
   projectId: string;
+  userId: string;
   name: string;
-  state?: "active" | "completed" | "error";
+  state?: "idle" | "working" | "error";
 }
 
-export interface SeedMessageOptions {
-  sessionId: string;
-  role: "user" | "assistant" | "system";
-  content: string;
-}
 
 /**
  * Seed a user in the database
@@ -66,8 +59,6 @@ export async function seedProject(
     data: {
       name: options.name,
       path: options.path,
-      description: options.description || null,
-      user_id: options.userId,
     },
   });
 }
@@ -79,60 +70,30 @@ export async function seedSession(
   prisma: PrismaClient,
   options: SeedSessionOptions
 ) {
-  return prisma.session.create({
+  return prisma.agentSession.create({
     data: {
       name: options.name,
-      state: options.state || "active",
+      state: options.state || "idle",
       user_id: options.userId,
       project_id: options.projectId,
-    },
-  });
-}
-
-/**
- * Seed a message in the database
- */
-export async function seedMessage(
-  prisma: PrismaClient,
-  options: SeedMessageOptions
-) {
-  return prisma.message.create({
-    data: {
-      session_id: options.sessionId,
-      role: options.role,
-      content: options.content,
+      metadata: {},
     },
   });
 }
 
 /**
  * Cleanup all test data for a user
- * Deletes in order: messages -> sessions -> projects -> user
+ * Deletes in order: sessions -> projects -> user
  */
 export async function cleanupUserData(prisma: PrismaClient, userId: string) {
-  // Get user's sessions
-  const sessions = await prisma.session.findMany({
-    where: { user_id: userId },
-    select: { id: true },
-  });
-
-  const sessionIds = sessions.map((s) => s.id);
-
-  // Delete messages in user's sessions
-  if (sessionIds.length > 0) {
-    await prisma.message.deleteMany({
-      where: { session_id: { in: sessionIds } },
-    });
-  }
-
   // Delete user's sessions
-  await prisma.session.deleteMany({
+  await prisma.agentSession.deleteMany({
     where: { user_id: userId },
   });
 
-  // Delete user's projects
+  // Delete user's projects (cascade deletes workflow definitions, runs, etc.)
   await prisma.project.deleteMany({
-    where: { user_id: userId },
+    where: { id: { in: [] } }, // Projects don't have user_id, so manual deletion not needed
   });
 
   // Delete user

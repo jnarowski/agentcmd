@@ -23,7 +23,6 @@ test.describe("Workflows - Monitor Execution", () => {
       {
         name: `Monitor Test Project ${Date.now()}`,
         path: "/tmp/monitor-test",
-        userId: testUser.id,
       },
     ]);
 
@@ -32,7 +31,7 @@ test.describe("Workflows - Monitor Execution", () => {
     await authenticatedPage.waitForLoadState("networkidle");
 
     // Set up WebSocket monitoring
-    await setupWebSocketForwarding(authenticatedPage);
+    const wsEvents = await setupWebSocketForwarding(authenticatedPage);
 
     // Find and start a workflow
     const workflowItems = authenticatedPage.locator(
@@ -54,6 +53,7 @@ test.describe("Workflows - Monitor Execution", () => {
         try {
           const event = await waitForWebSocketEvent(
             authenticatedPage,
+            wsEvents,
             "workflow",
             15000
           );

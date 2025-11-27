@@ -20,7 +20,6 @@ test.describe("Projects - Delete", () => {
       {
         name: projectName,
         path: "/tmp/delete-test",
-        userId: testUser.id,
       },
     ]);
 
@@ -77,7 +76,6 @@ test.describe("Projects - Delete", () => {
       {
         name: projectName,
         path: "/tmp/confirm-delete",
-        userId: testUser.id,
       },
     ]);
 
@@ -126,7 +124,6 @@ test.describe("Projects - Delete", () => {
       {
         name: projectName,
         path: "/tmp/cancel-delete",
-        userId: testUser.id,
       },
     ]);
 
@@ -184,17 +181,16 @@ test.describe("Projects - Delete", () => {
       {
         name: projectName,
         path: "/tmp/project-with-sessions",
-        userId: testUser.id,
       },
     ]);
 
     // Seed sessions for the project
     const [session] = await db.seedSessions([
       {
-        title: `Session for ${projectName}`,
+        name: `Session for ${projectName}`,
         projectId: project.id,
         userId: testUser.id,
-        status: "active",
+        state: "idle",
       },
     ]);
 
@@ -231,7 +227,7 @@ test.describe("Projects - Delete", () => {
     expect(deletedProject).toBeNull();
 
     // Verify associated sessions also deleted (cascade)
-    const deletedSession = await prisma.session.findUnique({
+    const deletedSession = await prisma.agentSession.findUnique({
       where: { id: session.id },
     });
     expect(deletedSession).toBeNull();
@@ -245,8 +241,7 @@ test.describe("Projects - Delete", () => {
     const otherUser = await prisma.user.create({
       data: {
         email: `other-${Date.now()}@example.com`,
-        password: "hashedpassword",
-        name: "Other User",
+        password_hash: "hashedpassword",
       },
     });
 
@@ -255,7 +250,6 @@ test.describe("Projects - Delete", () => {
       data: {
         name: `Other User Project ${Date.now()}`,
         path: "/tmp/other-user-project",
-        userId: otherUser.id,
       },
     });
 

@@ -3,10 +3,8 @@ import { PrismaClient } from "@prisma/client";
 import {
   seedProject,
   seedSession,
-  seedMessage,
   type SeedProjectOptions,
   type SeedSessionOptions,
-  type SeedMessageOptions,
 } from "../utils/seed-database";
 
 /**
@@ -29,9 +27,10 @@ import {
 export interface DatabaseFixtures {
   prisma: PrismaClient;
   db: {
-    seedProject: (options: Omit<SeedProjectOptions, "userId">) => Promise<ReturnType<typeof seedProject>>;
-    seedSession: (options: Omit<SeedSessionOptions, "userId">) => Promise<ReturnType<typeof seedSession>>;
-    seedMessage: (options: SeedMessageOptions) => Promise<ReturnType<typeof seedMessage>>;
+    seedProject: (options: SeedProjectOptions) => ReturnType<typeof seedProject>;
+    seedProjects: (options: SeedProjectOptions[]) => Promise<Awaited<ReturnType<typeof seedProject>>[]>;
+    seedSession: (options: SeedSessionOptions) => ReturnType<typeof seedSession>;
+    seedSessions: (options: SeedSessionOptions[]) => Promise<Awaited<ReturnType<typeof seedSession>>[]>;
   };
 }
 
@@ -51,31 +50,20 @@ export const test = base.extend<DatabaseFixtures>({
     await prisma.$disconnect();
   },
 
-  // db fixture: seeding helpers bound to testUser
-  db: async ({ prisma }, use, testInfo) => {
-    // Extract testUser from test context if available
-    // @ts-ignore - testUser may not be available in all tests
-    const testUser = testInfo.project.use?.testUser;
-
+  // db fixture: seeding helpers
+  db: async ({ prisma }, use) => {
     const db = {
-      seedProject: (options: Omit<SeedProjectOptions, "userId">) => {
-        if (!testUser?.id) {
-          throw new Error(
-            "testUser not available. Use authenticatedPage fixture to get testUser."
-          );
-        }
-        return seedProject(prisma, { ...options, userId: testUser.id });
+      seedProject: (options: SeedProjectOptions) => {
+        return seedProject(prisma, options);
       },
-      seedSession: (options: Omit<SeedSessionOptions, "userId">) => {
-        if (!testUser?.id) {
-          throw new Error(
-            "testUser not available. Use authenticatedPage fixture to get testUser."
-          );
-        }
-        return seedSession(prisma, { ...options, userId: testUser.id });
+      seedProjects: async (options: SeedProjectOptions[]) => {
+        return Promise.all(options.map((opt) => seedProject(prisma, opt)));
       },
-      seedMessage: (options: SeedMessageOptions) => {
-        return seedMessage(prisma, options);
+      seedSession: (options: SeedSessionOptions) => {
+        return seedSession(prisma, options);
+      },
+      seedSessions: async (options: SeedSessionOptions[]) => {
+        return Promise.all(options.map((opt) => seedSession(prisma, opt)));
       },
     };
 

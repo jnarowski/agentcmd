@@ -16,7 +16,6 @@ test.describe("Files - Edit", () => {
       {
         name: `Edit File Project ${Date.now()}`,
         path: "/tmp/edit-file",
-        userId: testUser.id,
       },
     ]);
 
@@ -52,7 +51,6 @@ test.describe("Files - Edit", () => {
       {
         name: `Save File Project ${Date.now()}`,
         path: "/tmp/save-file",
-        userId: testUser.id,
       },
     ]);
 
@@ -103,7 +101,6 @@ test.describe("Files - Edit", () => {
       {
         name: `Unsaved Changes Project ${Date.now()}`,
         path: "/tmp/unsaved",
-        userId: testUser.id,
       },
     ]);
 

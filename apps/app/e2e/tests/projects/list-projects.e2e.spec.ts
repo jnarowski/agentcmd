@@ -17,17 +17,14 @@ test.describe("Projects - List", () => {
       {
         name: `Project Alpha ${Date.now()}`,
         path: "/tmp/alpha",
-        userId: testUser.id,
       },
       {
         name: `Project Beta ${Date.now()}`,
         path: "/tmp/beta",
-        userId: testUser.id,
       },
       {
         name: `Project Gamma ${Date.now()}`,
         path: "/tmp/gamma",
-        userId: testUser.id,
       },
     ];
 
@@ -78,8 +75,6 @@ test.describe("Projects - List", () => {
       {
         name: projectName,
         path: projectPath,
-        description: projectDescription,
-        userId: testUser.id,
       },
     ]);
 
@@ -120,7 +115,6 @@ test.describe("Projects - List", () => {
       {
         name: projectName,
         path: "/tmp/clickable",
-        userId: testUser.id,
       },
     ]);
 
@@ -148,8 +142,7 @@ test.describe("Projects - List", () => {
     const otherUser = await prisma.user.create({
       data: {
         email: `other-${Date.now()}@example.com`,
-        password: "hashedpassword",
-        name: "Other User",
+        password_hash: "hashedpassword",
       },
     });
 
@@ -158,7 +151,6 @@ test.describe("Projects - List", () => {
       {
         name: myProjectName,
         path: "/tmp/my-project",
-        userId: testUser.id,
       },
     ]);
 
@@ -166,7 +158,6 @@ test.describe("Projects - List", () => {
       data: {
         name: otherProjectName,
         path: "/tmp/other-project",
-        userId: otherUser.id,
       },
     });
 
