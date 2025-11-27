@@ -12,6 +12,7 @@ import {
 import { SyntaxHighlighter } from "@/client/utils/syntaxHighlighter";
 import { Copy, Check } from "lucide-react";
 import { formatDate } from "@/shared/utils/formatDate";
+import { TruncatedError } from "@/client/components/TruncatedError";
 
 interface LogsTabProps {
   run: WorkflowRun;
@@ -233,11 +234,14 @@ function LogEntry({ log, selectedStepId }: LogEntryProps) {
 
       {/* Failed message (only show error, not "Failed:" prefix) */}
       {log.content && log.content.startsWith("Failed") && (
-        <pre
-          className={`whitespace-pre-wrap break-words ${levelColor} pl-4 border-l-2 border-muted`}
-        >
-          {log.content.replace(/^Failed: /, "")}
-        </pre>
+        <div className={`${levelColor} pl-4 border-l-2 border-muted`}>
+          <TruncatedError
+            error={log.content.replace(/^Failed: /, "")}
+            maxLength={200}
+            side="top"
+            className="text-xs font-mono"
+          />
+        </div>
       )}
 
       {/* Step args (only shown when step starts) */}
