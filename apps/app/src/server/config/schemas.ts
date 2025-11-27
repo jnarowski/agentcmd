@@ -60,6 +60,11 @@ const WorkflowConfigSchema = z.object({
   enabled: z.coerce.boolean().default(true),
   appId: z.string().default("agentcmd"),
   eventKey: z.string().optional(),
+  signingKey: z
+    .string()
+    .regex(/^[0-9a-fA-F]*$/, "Signing key must be valid hexadecimal")
+    .refine((s) => s.length % 2 === 0, "Signing key must have even character count")
+    .optional(),
   devMode: z.coerce.boolean().default(true),
   memoizationDbPath: z.string().default("./prisma/workflows.db"),
   servePath: z.string().default("/api/workflows/inngest"),

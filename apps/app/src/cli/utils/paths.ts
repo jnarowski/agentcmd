@@ -43,6 +43,13 @@ export function getLogsDir(): string {
 }
 
 /**
+ * Returns the Inngest data directory path (for SQLite persistence)
+ */
+export function getInngestDataDir(): string {
+  return join(getHomeDir(), "inngest");
+}
+
+/**
  * Returns the main log file path
  */
 export function getLogFilePath(): string {

@@ -4,6 +4,9 @@ import http from 'http';
 import { join, dirname } from 'path';
 import pc from 'picocolors';
 
+// Ensure production mode
+process.env.NODE_ENV = 'production';
+
 // Parse flags
 const verbose = process.argv.includes('--verbose') || process.argv.includes('-v');
 
@@ -21,9 +24,7 @@ const brandCyan = (text) => `\x1b[38;2;6;182;212m${text}\x1b[0m`;
 // Configure Inngest environment
 process.env.INNGEST_PORT = INNGEST_PORT;
 process.env.INNGEST_BASE_URL = `http://${INNGEST_HOST}:${INNGEST_PORT}`;
-if (!process.env.INNGEST_DEV) {
-  process.env.INNGEST_DEV = '1';
-}
+// Don't set INNGEST_DEV in production mode
 
 // Use localhost for Inngest connection (loopback for internal service-to-service)
 const inngestUrl = `http://localhost:${PORT}/api/workflows/inngest`;

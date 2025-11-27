@@ -275,6 +275,17 @@
       "phaseCount": 1,
       "taskCount": 9
     },
+    "2511271106": {
+      "folder": "2511271106-inngest-persistent-mode",
+      "path": "done/2511271106-inngest-persistent-mode/spec.md",
+      "spec_type": "feature",
+      "status": "completed",
+      "created": "2025-11-27T11:06:00Z",
+      "updated": "2025-11-27T20:48:00.000Z",
+      "totalComplexity": 67,
+      "phaseCount": 5,
+      "taskCount": 17
+    },
     "2511271430": {
       "folder": "2511271430-preview-containers",
       "path": "todo/2511271430-preview-containers/spec.md",
@@ -307,16 +318,6 @@
       "totalComplexity": 42,
       "phaseCount": 3,
       "taskCount": 9
-    "2511271106": {
-      "folder": "2511271106-inngest-persistent-mode",
-      "path": "todo/2511271106-inngest-persistent-mode/spec.md",
-      "spec_type": "feature",
-      "status": "draft",
-      "created": "2025-11-27T11:06:00Z",
-      "updated": "2025-11-27T11:06:00Z",
-      "totalComplexity": 67,
-      "phaseCount": 5,
-      "taskCount": 17
     }
   }
 }

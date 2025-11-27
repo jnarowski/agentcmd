@@ -40,8 +40,12 @@ export function setInngestEnvironment(options?: InngestEnvOptions): void {
   process.env.INNGEST_PORT = port.toString();
   process.env.INNGEST_BASE_URL = `http://${host}:${port}`;
 
-  // Enable dev mode if not explicitly set
-  if (!process.env.INNGEST_DEV) {
+  // Enable dev mode if not in production and not explicitly set
+  const isProduction = process.env.NODE_ENV === "production";
+  if (isProduction) {
+    // Remove INNGEST_DEV in production mode
+    delete process.env.INNGEST_DEV;
+  } else if (!process.env.INNGEST_DEV) {
     process.env.INNGEST_DEV = "1";
   }
 }
