@@ -10,10 +10,14 @@ import { spawnSync } from "node:child_process";
 export function checkPendingMigrations(schemaPath: string): string[] {
   const result = spawnSync(
     "npx",
-    ["prisma@6.19.0", "migrate", "status", "--schema", schemaPath],
+    ["prisma@7.0", "migrate", "status", "--schema", schemaPath],
     {
       encoding: "utf-8",
       cwd: dirname(schemaPath),
+      env: {
+        ...process.env,
+        PRISMA_SKIP_DOTENV_LOAD: "1", // Prisma 7: prevent auto .env loading
+      },
     }
   );
 

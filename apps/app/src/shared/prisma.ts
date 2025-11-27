@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { stripAnsiCodes } from "./utils/stripAnsiCodes";
 
 const globalForPrisma = globalThis as unknown as {
@@ -7,9 +8,16 @@ const globalForPrisma = globalThis as unknown as {
 
 const isDevelopment = process.env.NODE_ENV === "development";
 
+// Prisma 7: Create adapter with database URL
+// Required for SQLite connections in Prisma 7
+const adapter = new PrismaBetterSqlite3({
+  url: process.env.DATABASE_URL || "file:./prisma/dev.db",
+});
+
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
+    adapter,
     log: isDevelopment
       ? [
           { emit: "event", level: "query" },
