@@ -285,6 +285,17 @@
       "totalComplexity": 98,
       "phaseCount": 5,
       "taskCount": 18
+    },
+    "2511271548": {
+      "folder": "2511271548-prisma-7-upgrade",
+      "path": "todo/2511271548-prisma-7-upgrade/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-27T15:50:04Z",
+      "updated": "2025-11-27T15:50:04Z",
+      "totalComplexity": 47,
+      "phaseCount": 5,
+      "taskCount": 15
     }
   }
 }
