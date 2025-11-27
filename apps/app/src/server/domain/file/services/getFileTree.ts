@@ -79,8 +79,10 @@ async function scanDirectory(
         continue;
       }
 
-      // Skip hidden files and directories (starting with .)
-      if (entry.name.startsWith('.')) {
+      // Skip hidden files/dirs, except .agent and .claude (workflow directories)
+      const isHidden = entry.name.startsWith('.');
+      const isWorkflowDir = entry.name === '.agent' || entry.name === '.claude';
+      if (isHidden && !isWorkflowDir) {
         continue;
       }
 

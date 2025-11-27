@@ -178,11 +178,13 @@ describe("getFileTree", () => {
     expect(tree[0].name).toBe("src");
   });
 
-  it("excludes hidden files and directories", async () => {
+  it("excludes hidden files and directories except .agent and .claude", async () => {
     const mockEntries = [
       { name: ".env", isDirectory: () => false, isFile: () => true },
       { name: ".gitignore", isDirectory: () => false, isFile: () => true },
       { name: ".vscode", isDirectory: () => true, isFile: () => false },
+      { name: ".agent", isDirectory: () => true, isFile: () => false },
+      { name: ".claude", isDirectory: () => true, isFile: () => false },
       { name: "src", isDirectory: () => true, isFile: () => false },
     ];
 
@@ -194,8 +196,14 @@ describe("getFileTree", () => {
 
     const tree = await getFileTree({ projectId });
 
-    expect(tree).toHaveLength(1);
-    expect(tree[0].name).toBe("src");
+    expect(tree).toHaveLength(3);
+    const names = tree.map(item => item.name);
+    expect(names).toContain(".agent");
+    expect(names).toContain(".claude");
+    expect(names).toContain("src");
+    expect(names).not.toContain(".env");
+    expect(names).not.toContain(".gitignore");
+    expect(names).not.toContain(".vscode");
   });
 
   it("includes file permissions", async () => {
