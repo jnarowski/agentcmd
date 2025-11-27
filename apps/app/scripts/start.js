@@ -1,6 +1,9 @@
 import { spawn } from 'child_process';
 import http from 'http';
 
+// Ensure production mode
+process.env.NODE_ENV = 'production';
+
 const PORT = process.env.PORT || '4100';
 const HOST = process.env.HOST || '127.0.0.1';
 const INNGEST_PORT = process.env.INNGEST_PORT || '8288';
@@ -9,9 +12,7 @@ const INNGEST_HOST = process.env.INNGEST_HOST || '127.0.0.1';
 // Configure Inngest environment
 process.env.INNGEST_PORT = INNGEST_PORT;
 process.env.INNGEST_BASE_URL = `http://${INNGEST_HOST}:${INNGEST_PORT}`;
-if (!process.env.INNGEST_DEV) {
-  process.env.INNGEST_DEV = '1';
-}
+// Don't set INNGEST_DEV in production mode
 
 // Use localhost for Inngest connection (loopback for internal service-to-service)
 const inngestUrl = `http://localhost:${PORT}/api/workflows/inngest`;

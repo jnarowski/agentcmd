@@ -135,6 +135,62 @@ export const executeWorkflow = inngest.createFunction(
 - Dev server UI at http://localhost:8288
 - Observable step-by-step execution
 
+### Inngest Persistence
+
+The workflow system uses different Inngest modes for development and production:
+
+**Development Mode (pnpm dev)**:
+- Uses `inngest dev` command
+- Ephemeral execution history (lost on restart)
+- Fast startup (~2-3 seconds)
+- Ideal for rapid iteration
+- WebSocket connection to app server for function discovery
+
+**Production Mode (pnpm start)**:
+- Uses `inngest start` command
+- Persistent execution history via SQLite
+- History survives server restarts
+- Slightly slower startup (~5-10 seconds)
+- Event key and signing key authentication
+
+**Mode Detection:**
+- Automatically selected based on `NODE_ENV`
+- `NODE_ENV=production` → persistent mode
+- `NODE_ENV=development` → ephemeral mode
+- Can override with CLI flag: `agentcmd start --production`
+
+**Data Persistence:**
+
+Development mode stores execution state in-memory:
+- Workflow run history
+- Step execution traces
+- Event logs
+- All cleared on server restart
+
+Production mode persists to SQLite database:
+- Default location: `~/.inngest/` (Inngest's default)
+- Workflow run history preserved
+- Execution traces retained
+- Event logs maintained across restarts
+
+**Configuration:**
+
+Development (no config needed):
+```bash
+pnpm dev  # Uses inngest dev automatically
+```
+
+Production (optional keys):
+```bash
+# Optional: Set custom keys in .env
+INNGEST_EVENT_KEY=your-event-key
+INNGEST_SIGNING_KEY=your-signing-key  # Generate: openssl rand -hex 32
+
+pnpm start  # Uses inngest start with persistence
+```
+
+If keys aren't provided, secure defaults are generated at runtime.
+
 ### Workflow Runtime
 
 The runtime engine executes workflow steps with context management.

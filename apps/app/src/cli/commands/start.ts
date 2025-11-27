@@ -1,4 +1,4 @@
-import { spawn, type ChildProcess } from "child_process";
+import { spawn, type ChildProcess, execSync } from "child_process";
 import { spawnSync } from "child_process";
 import { existsSync, createWriteStream } from "node:fs";
 import { join, dirname } from "path";
@@ -22,6 +22,7 @@ interface StartOptions {
   host?: string;
   externalHost?: string;
   verbose?: boolean;
+  production?: boolean;
 }
 
 let serverProcess: ChildProcess | null = null;
@@ -44,6 +45,9 @@ export async function startCommand(options: StartOptions): Promise<void> {
     const configPath = getConfigPath();
     const logPath = getLogFilePath();
 
+    // Detect production mode from flag or NODE_ENV
+    const isProduction = options.production ?? process.env.NODE_ENV === "production";
+
     // 2. Check both ports are available
     const verbose = options.verbose ?? false;
     const stdioSync: StdioOptions = verbose ? "inherit" : "pipe";
@@ -56,7 +60,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
     process.env.PORT = port.toString();
     process.env.HOST = host;
     process.env.EXTERNAL_HOST = externalHost;
-    process.env.NODE_ENV = "production"; // Use production logger (no pino-pretty)
+    process.env.NODE_ENV = isProduction ? "production" : process.env.NODE_ENV || "development";
     process.env.DATABASE_URL = `file:${dbPath}`;
     process.env.JWT_SECRET = mergedConfig.jwtSecret;
     process.env.LOG_LEVEL = mergedConfig.logLevel;
@@ -208,27 +212,64 @@ export async function startCommand(options: StartOptions): Promise<void> {
     if (verbose) console.log("✓ Server is ready");
     serverStartTime = new Date();
 
-    // 8. Start Inngest dev UI
-    if (!verbose) console.log(pc.dim("Starting workflow engine..."));
-    if (verbose) console.log("Starting Inngest dev UI...");
-    const inngestUrl = `http://localhost:${port}/api/workflows/inngest`;
-
+    // 8. Start Inngest (dev or production mode)
     let inngestStderr = "";
-    inngestProcess = spawn(
-      "npx",
-      [
-        "inngest-cli@latest",
-        "dev",
-        "-u",
-        inngestUrl,
-        "-p",
-        inngestPort.toString(),
-      ],
-      {
-        stdio: stdioAsync,
-        env: process.env,
+    if (isProduction) {
+      // Production mode: use inngest start with persistent storage
+      if (!verbose) console.log(pc.dim("Starting workflow engine (persistent mode)..."));
+      if (verbose) console.log("Starting Inngest Server (persistent mode)...");
+
+      const eventKey = process.env.INNGEST_EVENT_KEY || "local-prod-key";
+      let signingKey = process.env.INNGEST_SIGNING_KEY;
+
+      if (!signingKey) {
+        try {
+          signingKey = execSync("openssl rand -hex 32", { encoding: "utf8" }).trim();
+        } catch (error) {
+          console.error("Warning: Failed to generate signing key, using fallback");
+          signingKey = "a".repeat(64); // Fallback: valid 64-char hex
+        }
       }
-    );
+
+      inngestProcess = spawn(
+        "npx",
+        [
+          "inngest-cli@latest",
+          "start",
+          "--event-key",
+          eventKey,
+          "--signing-key",
+          signingKey,
+          "--port",
+          inngestPort.toString(),
+        ],
+        {
+          stdio: stdioAsync,
+          env: process.env,
+        }
+      );
+    } else {
+      // Development mode: use inngest dev
+      if (!verbose) console.log(pc.dim("Starting workflow engine..."));
+      if (verbose) console.log("Starting Inngest Dev Server...");
+      const inngestUrl = `http://localhost:${port}/api/workflows/inngest`;
+
+      inngestProcess = spawn(
+        "npx",
+        [
+          "inngest-cli@latest",
+          "dev",
+          "-u",
+          inngestUrl,
+          "-p",
+          inngestPort.toString(),
+        ],
+        {
+          stdio: stdioAsync,
+          env: process.env,
+        }
+      );
+    }
 
     // Pipe output to log file when not verbose
     if (!verbose && inngestProcess.stdout) {
@@ -258,7 +299,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
     });
 
     // 9. Print startup banner
-    printStartupBanner({ port, inngestPort, dbPath, configPath, logPath, verbose });
+    printStartupBanner({ port, inngestPort, dbPath, configPath, logPath, verbose, isProduction });
 
     // 9. Setup graceful shutdown
     setupGracefulShutdown();
@@ -322,19 +363,22 @@ interface BannerOptions {
   configPath: string;
   logPath: string;
   verbose: boolean;
+  isProduction: boolean;
 }
 
 // Brand color #06B6D4 as ANSI true color
 const brandCyan = (text: string) => `\x1b[38;2;6;182;212m${text}\x1b[0m`;
 
 function printStartupBanner(opts: BannerOptions): void {
-  const { port, inngestPort, dbPath, logPath, verbose } = opts;
+  const { port, inngestPort, dbPath, logPath, verbose, isProduction } = opts;
+
+  const inngestLabel = isProduction ? "Inngest (persistent)" : "Inngest";
 
   // For verbose mode, use simple output
   if (verbose) {
     console.log("");
     console.log("✓ Server running at http://localhost:" + port);
-    console.log("✓ Inngest Dev UI at http://localhost:" + inngestPort);
+    console.log(`✓ ${inngestLabel} at http://localhost:${inngestPort}`);
     console.log("✓ Database: " + dbPath);
     console.log("✓ Logs: " + logPath);
     console.log("");
@@ -347,7 +391,7 @@ function printStartupBanner(opts: BannerOptions): void {
   console.log(pc.bold(brandCyan("agentcmd")) + pc.dim(" ready"));
   console.log("");
   console.log(pc.green("✓") + " Server     " + brandCyan(`http://localhost:${port}`));
-  console.log(pc.green("✓") + " Inngest    " + brandCyan(`http://localhost:${inngestPort}`));
+  console.log(pc.green("✓") + ` ${inngestLabel.padEnd(10)}` + brandCyan(`http://localhost:${inngestPort}`));
   console.log(pc.green("✓") + " Database   " + pc.dim(dbPath));
   console.log(pc.green("✓") + " Logs       " + pc.dim(logPath));
   console.log("");
