@@ -30,7 +30,7 @@
     "dev:client": "vite --host --open",
     "dev:kill": "bash ./scripts/kill-ports.sh",
     "dev:setup": "tsx scripts/setup-env.ts && pnpm prisma:generate && prisma migrate deploy",
-    "dev:server": "tsx watch src/server/index.ts",
+    "dev:server": "tsx watch --env-file=.env src/server/index.ts",
     "e2e": "playwright test",
     "e2e:server": "DATABASE_URL=file:./prisma/e2e.db PORT=5100 JWT_SECRET=e2e-test-secret-key-12345 NODE_ENV=test concurrently \"tsx src/server/index.ts\" \"PORT=5100 vite --port 5101\"",
     "e2e:ui": "playwright test --ui",

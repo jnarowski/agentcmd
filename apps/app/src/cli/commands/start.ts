@@ -112,7 +112,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
     if (verbose) console.log("Generating Prisma client...");
     const generateResult = spawnSync(
       "npx",
-      ["prisma@6.19.0", "generate", "--no-hints", `--schema=${schemaPath}`],
+      ["prisma@7", "generate", "--no-hints", `--schema=${schemaPath}`],
       {
         stdio: stdioSync,
         env: {
@@ -132,7 +132,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
     if (verbose) console.log("Applying database migrations...");
     const migrateResult = spawnSync(
       "npx",
-      ["prisma@6.19.0", "migrate", "deploy", `--schema=${schemaPath}`],
+      ["prisma@7", "migrate", "deploy", `--schema=${schemaPath}`],
       {
         stdio: stdioSync,
         env: {

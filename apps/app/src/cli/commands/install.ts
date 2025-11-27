@@ -65,7 +65,7 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     // Generate Prisma client first
     const generateResult = spawnSync(
       "npx",
-      ["prisma@7.0.1", "generate", "--no-hints", `--schema=${schemaPath}`],
+      ["prisma@7", "generate", "--no-hints", `--schema=${schemaPath}`],
       {
         stdio: "pipe",
         env: {
@@ -89,7 +89,7 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     // Apply migrations for initial setup
     const result = spawnSync(
       "npx",
-      ["prisma@7.0.1", "migrate", "deploy", `--schema=${schemaPath}`],
+      ["prisma@7", "migrate", "deploy", `--schema=${schemaPath}`],
       {
         stdio: "pipe",
         env: {
