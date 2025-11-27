@@ -15,7 +15,6 @@ const __dirname = dirname(__filename);
 
 // Absolute path to e2e.db - ensures test and server use same database
 const E2E_DATABASE_PATH = join(__dirname, "..", "..", "prisma", "e2e.db");
-const E2E_DATABASE_URL = `file:${E2E_DATABASE_PATH}`;
 
 /**
  * Database Fixture
@@ -49,7 +48,7 @@ export const test = base.extend<DatabaseFixtures>({
   // Prisma 7: SQLite requires the better-sqlite3 adapter
   prisma: async ({}, use) => {
     const adapter = new PrismaBetterSqlite3({
-      url: E2E_DATABASE_URL,
+      url: `file:${E2E_DATABASE_PATH}`,
     });
     const prisma = new PrismaClient({ adapter });
 

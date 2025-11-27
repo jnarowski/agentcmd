@@ -1,4 +1,5 @@
-import { writeFileSync } from "node:fs";
+import { execSync } from "node:child_process";
+import { existsSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -17,15 +18,32 @@ const API_BASE = "http://localhost:5100";
  * Global Setup for E2E Tests
  *
  * Responsibilities:
- * 1. Verify E2E server health
- * 2. Login or register test user
- * 3. Save auth state for tests
- *
- * Note: Database is managed by the e2e:server command (uses e2e.db)
+ * 1. Create e2e.db if it doesn't exist
+ * 2. Verify E2E server health
+ * 3. Login or register test user
+ * 4. Save auth state for tests
  */
 
 export default async function globalSetup() {
   console.log("\n[E2E Setup]");
+
+  // 1. Create e2e.db if it doesn't exist
+  const e2eDbPath = join(__dirname, "..", "prisma", "e2e.db");
+  if (!existsSync(e2eDbPath)) {
+    console.log("Creating e2e.db...");
+    const env = { ...process.env };
+    env.DATABASE_URL = `file:${e2eDbPath}`;
+    env.DOTENV_CONFIG_PATH = "/dev/null";
+
+    execSync("pnpm prisma db push --skip-generate --accept-data-loss", {
+      stdio: "inherit",
+      cwd: join(__dirname, ".."),
+      env,
+    });
+    console.log("✓ e2e.db created");
+  } else {
+    console.log("✓ e2e.db exists");
+  }
 
   const authStatePath = join(__dirname, ".auth-state.json");
 
