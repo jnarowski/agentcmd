@@ -62,3 +62,7 @@ yarn-error.log*
 
 # Playwright
 .playwright-mcp/**
+apps/app/e2e.db
+apps/app/e2e.db-*
+apps/app/playwright-report/
+apps/app/test-results/
