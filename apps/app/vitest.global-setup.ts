@@ -110,9 +110,9 @@ async function createDatabasesIndividually(workerCount: number, cwd: string) {
     const env = { ...process.env };
     delete env.DATABASE_URL; // Remove any existing DATABASE_URL
     env.DATABASE_URL = workerDbPath; // Set our test database URL
-    env.DOTENV_CONFIG_PATH = "/dev/null"; // Prevent Prisma from loading .env file
+    env.PRISMA_SKIP_DOTENV_LOAD = "1"; // Prisma 7: prevent auto .env loading
 
-    execSync("pnpm prisma db push --skip-generate --accept-data-loss", {
+    execSync("pnpm prisma db push --accept-data-loss", {
       stdio: "pipe",
       cwd,
       env,
@@ -133,9 +133,9 @@ async function createDatabasesFromTemplate(workerCount: number, cwd: string) {
   const env = { ...process.env };
   delete env.DATABASE_URL; // Remove any existing DATABASE_URL
   env.DATABASE_URL = templateDbPath; // Set our test database URL
-  env.DOTENV_CONFIG_PATH = "/dev/null"; // Prevent Prisma from loading .env file
+  env.PRISMA_SKIP_DOTENV_LOAD = "1"; // Prisma 7: prevent auto .env loading
 
-  execSync("pnpm prisma db push --skip-generate --accept-data-loss", {
+  execSync("pnpm prisma db push --accept-data-loss", {
     stdio: "pipe",
     cwd,
     env,

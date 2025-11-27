@@ -290,12 +290,23 @@
       "folder": "2511271548-prisma-7-upgrade",
       "path": "todo/2511271548-prisma-7-upgrade/spec.md",
       "spec_type": "feature",
-      "status": "draft",
+      "status": "completed",
       "created": "2025-11-27T15:50:04Z",
-      "updated": "2025-11-27T15:50:04Z",
+      "updated": "2025-11-27T22:00:00Z",
       "totalComplexity": 47,
       "phaseCount": 5,
       "taskCount": 15
+    },
+    "2511270928": {
+      "folder": "2511270928-workflow-resume",
+      "path": "todo/2511270928-workflow-resume/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-27T09:28:00Z",
+      "updated": "2025-11-27T09:28:00Z",
+      "totalComplexity": 42,
+      "phaseCount": 3,
+      "taskCount": 9
     }
   }
 }
