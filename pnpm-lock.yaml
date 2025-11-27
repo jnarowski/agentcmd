@@ -203,12 +203,6 @@ importers:
       '@xyflow/react':
         specifier: ^12.9.0
         version: 12.9.3(@types/react@19.2.5)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      agent-cli-sdk:
-        specifier: workspace:*
-        version: link:../../packages/agent-cli-sdk
-      agentcmd-workflows:
-        specifier: workspace:*
-        version: link:../../packages/agentcmd-workflows
       ai:
         specifier: ^5.0.81
         version: 5.0.93(zod@4.1.12)
@@ -402,6 +396,12 @@ importers:
       '@vitest/ui':
         specifier: ^4.0.3
         version: 4.0.9(vitest@4.0.9)
+      agent-cli-sdk:
+        specifier: workspace:*
+        version: link:../../packages/agent-cli-sdk
+      agentcmd-workflows:
+        specifier: workspace:*
+        version: link:../../packages/agentcmd-workflows
       concurrently:
         specifier: ^8.2.2
         version: 8.2.2
