@@ -65,12 +65,13 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     // Generate Prisma client first
     const generateResult = spawnSync(
       "npx",
-      ["prisma@6.19.0", "generate", "--no-hints", `--schema=${schemaPath}`],
+      ["prisma@7.0", "generate", "--no-hints", `--schema=${schemaPath}`],
       {
         stdio: "pipe",
         env: {
           ...process.env,
           PRISMA_HIDE_UPDATE_MESSAGE: "true",
+          PRISMA_SKIP_DOTENV_LOAD: "1", // Prisma 7: prevent auto .env loading
         },
       }
     );
@@ -89,11 +90,12 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     // Apply migrations for initial setup
     const result = spawnSync(
       "npx",
-      ["prisma@6.19.0", "migrate", "deploy", `--schema=${schemaPath}`],
+      ["prisma@7.0", "migrate", "deploy", `--schema=${schemaPath}`],
       {
         stdio: "pipe",
         env: {
           ...process.env,
+          PRISMA_SKIP_DOTENV_LOAD: "1", // Prisma 7: prevent auto .env loading
         },
       }
     );

@@ -112,12 +112,13 @@ export async function startCommand(options: StartOptions): Promise<void> {
     if (verbose) console.log("Generating Prisma client...");
     const generateResult = spawnSync(
       "npx",
-      ["prisma@6.19.0", "generate", "--no-hints", `--schema=${schemaPath}`],
+      ["prisma@7.0", "generate", "--no-hints", `--schema=${schemaPath}`],
       {
         stdio: stdioSync,
         env: {
           ...process.env,
           PRISMA_HIDE_UPDATE_MESSAGE: "true",
+          PRISMA_SKIP_DOTENV_LOAD: "1", // Prisma 7: prevent auto .env loading
         },
       }
     );
@@ -132,11 +133,12 @@ export async function startCommand(options: StartOptions): Promise<void> {
     if (verbose) console.log("Applying database migrations...");
     const migrateResult = spawnSync(
       "npx",
-      ["prisma@6.19.0", "migrate", "deploy", `--schema=${schemaPath}`],
+      ["prisma@7.0", "migrate", "deploy", `--schema=${schemaPath}`],
       {
         stdio: stdioSync,
         env: {
           ...process.env,
+          PRISMA_SKIP_DOTENV_LOAD: "1", // Prisma 7: prevent auto .env loading
         },
       }
     );

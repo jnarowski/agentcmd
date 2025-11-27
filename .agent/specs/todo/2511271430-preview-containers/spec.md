@@ -3,25 +3,25 @@
 **Status**: draft
 **Created**: 2025-11-27
 **Package**: apps/app
-**Total Complexity**: 98 points
+**Total Complexity**: 106 points
 **Phases**: 5
-**Tasks**: 18
-**Overall Avg Complexity**: 5.4/10
+**Tasks**: 20
+**Overall Avg Complexity**: 5.3/10
 
 ## Complexity Breakdown
 
 | Phase | Tasks | Total Points | Avg Complexity | Max Task |
 |-------|-------|--------------|----------------|----------|
-| Phase 1: Database & Types | 3 | 14 | 4.7/10 | 6/10 |
-| Phase 2: Core Services | 5 | 32 | 6.4/10 | 8/10 |
+| Phase 1: Database & Types | 4 | 18 | 4.5/10 | 6/10 |
+| Phase 2: Core Services | 5 | 34 | 6.8/10 | 8/10 |
 | Phase 3: Workflow SDK Integration | 3 | 18 | 6.0/10 | 7/10 |
-| Phase 4: API Routes | 3 | 14 | 4.7/10 | 5/10 |
+| Phase 4: API Routes | 4 | 16 | 4.0/10 | 5/10 |
 | Phase 5: Frontend UI | 4 | 20 | 5.0/10 | 6/10 |
-| **Total** | **18** | **98** | **5.4/10** | **8/10** |
+| **Total** | **20** | **106** | **5.3/10** | **8/10** |
 
 ## Overview
 
-Docker-based preview environments triggered by `step.preview()` in workflows. Allows users to spin up containerized instances of their application after workflow completion for testing and review. Supports both Dockerfile and Docker Compose configurations with dynamic port allocation.
+Docker-based preview environments triggered by `step.preview()` in workflows. Users provide Dockerfile/docker-compose.yml, AgentCmd orchestrates container lifecycle. Supports multiple concurrent previews with dynamic port allocation.
 
 ## User Story
 
@@ -40,14 +40,67 @@ So that I can test and review changes in an isolated, production-like environmen
 
 ## Key Design Decisions
 
-1. **Docker as interface contract**: Users provide Dockerfile/docker-compose.yml - AgentCmd only orchestrates, doesn't need framework-specific knowledge
-2. **Config-based port allocation**: Named ports (`PREVIEW_PORT_SERVER`, `PREVIEW_PORT_CLIENT`) passed as env vars, user maps in compose file
-3. **Project-level defaults**: Preview config (ports, env, resources) stored at project level, step can override
-4. **Manual cleanup only**: No TTL or auto-cleanup - user controls lifecycle via UI
-5. **Container model (generic)**: Named "Container" not "Preview" to allow future uses (dev environments, etc.)
-6. **step.preview() API**: User-friendly SDK method name, maps to Container model internally
+| Decision | Choice |
+|----------|--------|
+| Container runtime | Docker + Docker Compose |
+| Build strategy | Pre-built (workflow builds, preview just runs) |
+| Database handling | User's responsibility in Dockerfile/Compose |
+| Networking | Local only (`localhost:{port}`) |
+| Port allocation | Config-based named ports (`PREVIEW_PORT_{NAME}`) |
+| Default port | `["app"]` if no config specified |
+| Config location | Project-level in DB (`preview_config` JSON field) |
+| Config UI | Add to existing Project Edit modal |
+| Resource limits | Project-level config (optional) |
+| Multiple previews | Allowed - each gets unique ports |
+| Cleanup | Manual only via UI |
+| Triggering | Explicit `step.preview()` in workflow |
+| Model name | `Container` (generic for future uses) |
+| Step name | `step.preview()` (user-friendly) |
+| Working directory | Uses workflow's `workingDir` (worktree or project path) |
+| Health checks | User handles in Docker HEALTHCHECK directive |
+| WebSocket updates | Yes - broadcast on container status changes |
+| UI location | ProjectHome + WorkflowRun details (no separate tab) |
+| Docker unavailable | Skip with warning, workflow continues |
+| Volume mounts | User handles in their compose (no auto-mount) |
+| Restart stopped | No - run new workflow for new preview |
+| Cascade on delete | Auto-stop containers when workflow/project deleted |
+| Concurrent creation | Port manager uses DB transaction for atomicity |
 
 ## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     Project Config (DB)                         │
+├─────────────────────────────────────────────────────────────────┤
+│  preview_config: {                                              │
+│    ports: ["server", "client"],      // Named ports             │
+│    env: { API_KEY: "..." },          // Environment vars        │
+│    maxMemory: "1g",                  // Resource limits         │
+│    maxCpus: "1.0"                                               │
+│  }                                                              │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     Workflow Step                               │
+├─────────────────────────────────────────────────────────────────┤
+│  await step.preview("deploy");         // Uses project config   │
+│  await step.preview("deploy", {...});  // Override if needed    │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   Preview Service                               │
+├─────────────────────────────────────────────────────────────────┤
+│  1. Check Docker available (skip with warning if not)           │
+│  2. Detect: docker-compose.yml or Dockerfile                    │
+│  3. Allocate ports from 5000-5999 (check existing containers)   │
+│  4. Build & run: PREVIEW_PORT_{NAME}=X docker compose up        │
+│  5. Create Container record in DB                               │
+│  6. Broadcast via WebSocket                                     │
+│  7. Return URLs to workflow                                     │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ### File Structure
 
@@ -63,7 +116,7 @@ apps/app/src/server/domain/container/
 ├── utils/
 │   ├── portManager.ts
 │   ├── dockerClient.ts
-│   └── healthChecker.ts
+│   └── detectDockerConfig.ts
 └── index.ts
 
 apps/app/src/server/domain/workflow/services/engine/steps/
@@ -74,15 +127,12 @@ apps/app/src/server/routes/
 
 apps/app/src/client/pages/projects/containers/
 ├── components/
-│   ├── ContainerCard.tsx
-│   ├── ContainerList.tsx
-│   └── ContainerLogs.tsx
-├── hooks/
-│   └── useContainers.ts
-└── ProjectContainers.tsx
+│   └── ContainerCard.tsx
+└── hooks/
+    └── useContainers.ts
 
 packages/agentcmd-workflows/src/types/
-└── steps.ts (modify - add PreviewStepConfig)
+└── steps.ts (add PreviewStepConfig)
 ```
 
 ### Integration Points
@@ -98,62 +148,118 @@ packages/agentcmd-workflows/src/types/
 - `routes.ts` - Register container routes
 
 **Frontend**:
-- `ProjectLayout.tsx` - Add Previews tab/section
+- `ProjectHome.tsx` - Add containers section
+- `WorkflowRunDetails.tsx` - Add container card
+- `ProjectEditModal.tsx` - Add preview config
 
 ## Implementation Details
 
-### 1. Container Model
+### 1. Database Schema
 
-Tracks preview container instances with status, ports, and Docker metadata.
+**Container Model (new)**:
+```prisma
+model Container {
+  id                String   @id @default(cuid())
+  workflow_run_id   String?  @unique
+  project_id        String
 
-**Key Points**:
-- `workflow_run_id` optional to allow standalone containers later
-- `ports` stored as JSON map (`{ server: 5000, client: 5001 }`)
-- `container_ids` is array (compose can have multiple containers)
-- `compose_project` stores the `-p` project name for compose commands
+  status            String   // pending | starting | running | stopped | failed
+  ports             Json     // { server: 5000, client: 5001 }
 
-### 2. Project Preview Config
+  container_ids     Json?    // Array of Docker container IDs
+  compose_project   String?  // docker compose -p {this}
+  working_dir       String   // Path where docker build ran
 
-Stored as JSON in Project model, defines defaults for all previews.
+  error_message     String?
+  created_at        DateTime @default(now())
+  started_at        DateTime?
+  stopped_at        DateTime?
 
-**Key Points**:
-- `ports` - Array of port names (e.g., `["server", "client"]`)
-- `env` - Environment variables to pass to containers
-- `maxMemory` / `maxCpus` - Resource limits
-- Step config merges with/overrides project config
+  workflow_run      WorkflowRun? @relation(fields: [workflow_run_id], references: [id], onDelete: Cascade)
+  project           Project      @relation(fields: [project_id], references: [id], onDelete: Cascade)
 
-### 3. Port Manager
+  @@index([project_id])
+  @@index([status])
+}
+```
 
-Allocates ports from 5000-5999 range, tracks usage in database.
+**Project Model (modified)**:
+```prisma
+model Project {
+  // ... existing fields
+  preview_config    Json?    // ProjectPreviewConfig
+  containers        Container[]
+}
+```
 
-**Key Points**:
-- Query existing containers to find used ports
+### 2. ProjectPreviewConfig Shape
+
+```typescript
+interface ProjectPreviewConfig {
+  ports?: string[];              // Default: ["app"]
+  env?: Record<string, string>;  // Environment variables
+  maxMemory?: string;            // e.g., "1g"
+  maxCpus?: string;              // e.g., "1.0"
+}
+```
+
+### 3. Port Allocation Strategy
+
+- Reserved range: 5000-5999 (1000 slots)
+- Query `Container` table for `status = "running"` to find used ports
 - Allocate sequential ports for multi-port requests
-- Release ports when container stops
+- Use DB transaction for atomicity (prevent race conditions)
+- Environment variables: `PREVIEW_PORT_{NAME}` (uppercase)
 
-### 4. Docker Client
+### 4. Docker Execution
 
-Wrapper around Docker CLI for build/run/stop operations.
+**Detection Priority**:
+1. `docker-compose.yml` / `docker-compose.yaml` / `compose.yml` → use Compose
+2. `Dockerfile` → use Docker
+3. Neither → error
 
-**Key Points**:
-- Detect docker-compose.yml vs Dockerfile
-- Build with appropriate command
-- Pass PREVIEW_PORT_{NAME} env vars
-- Health check polling after start
+**Commands**:
+```bash
+# Docker Compose
+PREVIEW_PORT_APP=5000 docker compose -p container-{id} up -d --build
 
-### 5. Preview Step
+# Dockerfile only
+docker build -t container-{id} .
+docker run -d -e PREVIEW_PORT_APP=5000 -p 5000:3000 --name container-{id} container-{id}
 
-SDK step that triggers container deployment from workflow.
+# Stop
+docker compose -p container-{id} down  # or
+docker stop container-{id} && docker rm container-{id}
+```
 
-**Key Points**:
-- Merge project config with step overrides
-- Call container services
-- Return URLs in result
-- Update workflow run with preview info
+### 5. WebSocket Events
+
+Broadcast to `project:{projectId}` channel:
+
+```typescript
+// Container created
+{ type: "container.created", data: { containerId, status, ports } }
+
+// Container status changed
+{ type: "container.status_changed", data: { containerId, status } }
+
+// Container stopped
+{ type: "container.stopped", data: { containerId } }
+```
+
+### 6. Cascade Deletion
+
+**Workflow Run deleted**:
+- Stop associated container (if running) via `onDelete: Cascade`
+- Container record deleted automatically
+
+**Project deleted**:
+- Stop all project containers (if running) via `onDelete: Cascade`
+- All Container records deleted automatically
 
 ## Files to Create/Modify
 
-### New Files (14)
+### New Files (13)
 
 1. `apps/app/src/server/domain/container/services/createContainer.ts` - Create and start container
 2. `apps/app/src/server/domain/container/services/stopContainer.ts` - Stop and remove container
@@ -163,42 +269,45 @@ SDK step that triggers container deployment from workflow.
 6. `apps/app/src/server/domain/container/services/types.ts` - Shared types
 7. `apps/app/src/server/domain/container/utils/portManager.ts` - Port allocation
 8. `apps/app/src/server/domain/container/utils/dockerClient.ts` - Docker CLI wrapper
-9. `apps/app/src/server/domain/container/utils/healthChecker.ts` - Health check polling
-10. `apps/app/src/server/domain/container/index.ts` - Domain exports
-11. `apps/app/src/server/domain/workflow/services/engine/steps/createPreviewStep.ts` - Preview step
-12. `apps/app/src/server/routes/containers.ts` - REST API routes
-13. `apps/app/src/client/pages/projects/containers/ProjectContainers.tsx` - Container list page
-14. `apps/app/src/client/pages/projects/containers/components/ContainerCard.tsx` - Container card UI
+9. `apps/app/src/server/domain/container/index.ts` - Domain exports
+10. `apps/app/src/server/domain/workflow/services/engine/steps/createPreviewStep.ts` - Preview step
+11. `apps/app/src/server/routes/containers.ts` - REST API routes
+12. `apps/app/src/client/pages/projects/containers/components/ContainerCard.tsx` - Container card UI
+13. `apps/app/src/client/pages/projects/containers/hooks/useContainers.ts` - Container hooks
 
-### Modified Files (6)
+### Modified Files (7)
 
 1. `apps/app/prisma/schema.prisma` - Add Container model, preview_config to Project
 2. `packages/agentcmd-workflows/src/types/steps.ts` - Add PreviewStepConfig types
 3. `apps/app/src/server/domain/workflow/services/engine/steps/index.ts` - Export createPreviewStep
 4. `apps/app/src/server/domain/workflow/services/engine/createWorkflowRuntime.ts` - Add preview to extended steps
 5. `apps/app/src/server/routes.ts` - Register container routes
-6. `apps/app/src/client/routes.tsx` - Add container routes
+6. `apps/app/src/client/pages/projects/ProjectHome.tsx` - Add containers section
+7. `apps/app/src/client/pages/projects/components/ProjectEditModal.tsx` - Add preview config
 
 ## Step by Step Tasks
 
 ### Phase 1: Database & Types
 
-**Phase Complexity**: 14 points (avg 4.7/10)
+**Phase Complexity**: 18 points (avg 4.5/10)
 
 - [ ] 1.1 [5/10] Add Container model to Prisma schema
-  - Add model with id, workflow_run_id, project_id, status, ports, container_ids, compose_project, working_dir, error_message, timestamps
-  - Add relation to WorkflowRun (optional) and Project
+  - Add model with all fields (id, workflow_run_id, project_id, status, ports, container_ids, compose_project, working_dir, error_message, timestamps)
+  - Add relations to WorkflowRun (optional, cascade) and Project (cascade)
+  - Add indexes on project_id and status
   - File: `apps/app/prisma/schema.prisma`
-  - Run: `pnpm prisma:migrate` (name: "add-container-model")
 
 - [ ] 1.2 [3/10] Add preview_config to Project model
   - Add `preview_config Json?` field to Project model
-  - Document expected shape in comments
+  - Add `containers Container[]` relation
   - File: `apps/app/prisma/schema.prisma`
-  - Migration included in 1.1
 
-- [ ] 1.3 [6/10] Add PreviewStepConfig types to workflow SDK
-  - Add PreviewStepConfig interface with ports, env, resources overrides
+- [ ] 1.3 [4/10] Run migration
+  - Run: `cd apps/app && pnpm prisma:migrate` (name: "add-container-model")
+  - Verify migration created successfully
+
+- [ ] 1.4 [6/10] Add PreviewStepConfig types to workflow SDK
+  - Add PreviewStepConfig interface with ports, env overrides
   - Add PreviewStepResult interface with urls map, containerId, status
   - Add preview method signature to WorkflowStep interface
   - File: `packages/agentcmd-workflows/src/types/steps.ts`
@@ -213,46 +322,53 @@ SDK step that triggers container deployment from workflow.
 
 ### Phase 2: Core Services
 
-**Phase Complexity**: 32 points (avg 6.4/10)
+**Phase Complexity**: 34 points (avg 6.8/10)
 
-- [ ] 2.1 [5/10] Create port manager utility
+- [ ] 2.1 [6/10] Create port manager utility
   - Implement allocatePorts(names: string[]): Promise<Record<string, number>>
-  - Implement releasePorts(ports: number[]): Promise<void>
-  - Query Container table for used ports in 5000-5999 range
+  - Query Container table for running containers to find used ports
+  - Use DB transaction for atomicity
+  - Allocate from 5000-5999 range
+  - Implement releasePorts (update container status, ports auto-freed)
   - File: `apps/app/src/server/domain/container/utils/portManager.ts`
 
 - [ ] 2.2 [8/10] Create Docker client utility
-  - Detect docker-compose.yml vs Dockerfile in working directory
-  - Implement buildAndRun(config): Promise<ContainerResult>
+  - Implement checkDockerAvailable(): Promise<boolean>
+  - Implement detectConfig(workingDir): "compose" | "dockerfile" | null
+  - Implement buildAndRun(config): Promise<{ containerIds, composeProject }>
   - Handle PREVIEW_PORT_{NAME} env var injection
   - Support resource limits (--memory, --cpus)
-  - Implement stop(containerIds, composeProject): Promise<void>
-  - Implement getLogs(containerId): Promise<string>
+  - Implement stop(containerIds?, composeProject?): Promise<void>
+  - Implement getLogs(containerIds): Promise<string>
   - File: `apps/app/src/server/domain/container/utils/dockerClient.ts`
 
-- [ ] 2.3 [4/10] Create health checker utility
-  - Implement waitForHealth(url, timeout): Promise<boolean>
-  - Poll health endpoint with exponential backoff
-  - Return false on timeout, true on 200 response
-  - File: `apps/app/src/server/domain/container/utils/healthChecker.ts`
-
-- [ ] 2.4 [7/10] Create createContainer service
-  - Accept workflowRunId, projectId, config overrides
-  - Merge project preview_config with step config
+- [ ] 2.3 [8/10] Create createContainer service
+  - Accept workflowRunId (optional), projectId, workingDir, config overrides
+  - Merge project preview_config with overrides
+  - Check Docker available (skip with warning if not)
   - Allocate ports via portManager
   - Call dockerClient.buildAndRun
-  - Wait for health check
-  - Create Container record in DB
+  - Create Container record in DB with status "starting"
+  - Update status to "running" on success, "failed" on error
+  - Broadcast WebSocket event
   - Return container with URLs
   - File: `apps/app/src/server/domain/container/services/createContainer.ts`
 
-- [ ] 2.5 [8/10] Create stopContainer service
+- [ ] 2.4 [6/10] Create stopContainer service
   - Accept containerId
   - Call dockerClient.stop with container_ids and compose_project
-  - Release ports via portManager
   - Update Container status to "stopped"
   - Set stopped_at timestamp
+  - Broadcast WebSocket event
   - File: `apps/app/src/server/domain/container/services/stopContainer.ts`
+
+- [ ] 2.5 [6/10] Create query services
+  - Implement getContainerById
+  - Implement getContainersByProject with status filter
+  - Implement getContainerLogs (calls dockerClient.getLogs)
+  - File: `apps/app/src/server/domain/container/services/getContainerById.ts`
+  - File: `apps/app/src/server/domain/container/services/getContainersByProject.ts`
+  - File: `apps/app/src/server/domain/container/services/getContainerLogs.ts`
 
 #### Completion Notes
 
@@ -267,10 +383,12 @@ SDK step that triggers container deployment from workflow.
 
 - [ ] 3.1 [7/10] Create preview step implementation
   - Implement createPreviewStep(context, inngestStep) factory
+  - Get project preview_config from DB
+  - Merge with step config overrides
   - Call createContainer service
   - Emit step events (started, completed, failed)
+  - Handle Docker unavailable (skip with warning, return success with empty URLs)
   - Return PreviewStepResult with URLs
-  - Handle errors and cleanup on failure
   - File: `apps/app/src/server/domain/workflow/services/engine/steps/createPreviewStep.ts`
 
 - [ ] 3.2 [5/10] Register preview step in workflow runtime
@@ -283,8 +401,8 @@ SDK step that triggers container deployment from workflow.
 - [ ] 3.3 [6/10] Add preview step tests
   - Test successful container creation
   - Test config merging (project + step)
+  - Test Docker unavailable handling (skip with warning)
   - Test error handling
-  - Test port allocation
   - File: `apps/app/src/server/domain/workflow/services/engine/steps/createPreviewStep.test.ts`
 
 #### Completion Notes
@@ -296,7 +414,7 @@ SDK step that triggers container deployment from workflow.
 
 ### Phase 4: API Routes
 
-**Phase Complexity**: 14 points (avg 4.7/10)
+**Phase Complexity**: 16 points (avg 4.0/10)
 
 - [ ] 4.1 [5/10] Create container routes
   - GET /api/projects/:projectId/containers - List project containers
@@ -306,19 +424,22 @@ SDK step that triggers container deployment from workflow.
   - Add Zod schemas for request/response validation
   - File: `apps/app/src/server/routes/containers.ts`
 
-- [ ] 4.2 [4/10] Create container query services
-  - Implement getContainerById
-  - Implement getContainersByProject with pagination
-  - Implement getContainerLogs (calls dockerClient)
-  - File: `apps/app/src/server/domain/container/services/getContainerById.ts`
-  - File: `apps/app/src/server/domain/container/services/getContainersByProject.ts`
-  - File: `apps/app/src/server/domain/container/services/getContainerLogs.ts`
-
-- [ ] 4.3 [5/10] Register routes and add tests
+- [ ] 4.2 [3/10] Register routes
   - Register container routes in routes.ts
-  - Add route tests for CRUD operations
   - File: `apps/app/src/server/routes.ts`
+
+- [ ] 4.3 [4/10] Add route tests
+  - Test list containers returns correct data
+  - Test get container by ID
+  - Test stop container updates status
+  - Test get logs returns output
   - File: `apps/app/src/server/routes/containers.test.ts`
+
+- [ ] 4.4 [4/10] Add container domain exports
+  - Create index.ts with all service exports
+  - Create types.ts with shared types (ContainerStatus, etc.)
+  - File: `apps/app/src/server/domain/container/index.ts`
+  - File: `apps/app/src/server/domain/container/services/types.ts`
 
 #### Completion Notes
 
@@ -336,29 +457,30 @@ SDK step that triggers container deployment from workflow.
   - Create useContainers hook (list by project)
   - Create useContainer hook (single container)
   - Create useStopContainer mutation
+  - Wire up WebSocket for real-time updates
   - File: `apps/app/src/client/pages/projects/containers/hooks/useContainers.ts`
-  - File: `apps/app/src/client/pages/projects/containers/types.ts`
 
 - [ ] 5.2 [6/10] Create ContainerCard component
-  - Display status badge (running/stopped/failed)
-  - Show port URLs as clickable links
+  - Display status badge (running/stopped/failed with colors)
+  - Show port URLs as clickable links (open in new tab)
   - Stop button with confirmation
-  - View logs button
+  - View logs button (opens modal or drawer)
   - Timestamps (created, started, stopped)
   - File: `apps/app/src/client/pages/projects/containers/components/ContainerCard.tsx`
 
-- [ ] 5.3 [5/10] Create ProjectContainers page
-  - List all containers for project
+- [ ] 5.3 [5/10] Add containers section to ProjectHome
+  - Add "Active Previews" section
+  - List running containers using ContainerCard
   - Empty state when no containers
-  - Filter by status (optional)
-  - Integrate with project layout
-  - File: `apps/app/src/client/pages/projects/containers/ProjectContainers.tsx`
+  - Subscribe to WebSocket for real-time updates
+  - File: `apps/app/src/client/pages/projects/ProjectHome.tsx`
 
-- [ ] 5.4 [4/10] Add container section to WorkflowRunDetails
-  - Show preview card if workflow has associated container
-  - Link to container details
-  - Quick actions (stop, view logs, open URL)
-  - File: `apps/app/src/client/pages/projects/workflows/components/WorkflowRunDetails.tsx`
+- [ ] 5.4 [4/10] Add preview config to Project Edit modal
+  - Add "Preview Settings" section to modal
+  - Port names input (comma-separated or tag input)
+  - Environment variables (key-value pairs)
+  - Resource limits (memory, CPU dropdowns)
+  - File: `apps/app/src/client/pages/projects/components/ProjectEditModal.tsx`
 
 #### Completion Notes
 
@@ -371,21 +493,23 @@ SDK step that triggers container deployment from workflow.
 
 ### Unit Tests
 
-**`createPreviewStep.test.ts`** - Preview step logic:
-- Creates container with correct config
-- Merges project and step config correctly
-- Handles Docker errors gracefully
-- Emits correct step events
-
 **`portManager.test.ts`** - Port allocation:
 - Allocates sequential ports
-- Avoids used ports
-- Releases ports correctly
+- Avoids used ports (from running containers)
+- Uses transaction for atomicity
+- Handles exhausted port range
 
 **`dockerClient.test.ts`** - Docker operations:
 - Detects Dockerfile vs docker-compose.yml
 - Builds correct command strings
 - Passes env vars correctly
+- Handles Docker unavailable
+
+**`createPreviewStep.test.ts`** - Preview step logic:
+- Creates container with correct config
+- Merges project and step config correctly
+- Skips gracefully when Docker unavailable
+- Emits correct step events
 
 ### Integration Tests
 
@@ -395,25 +519,20 @@ SDK step that triggers container deployment from workflow.
 - Stop container updates status
 - Get logs returns output
 
-### E2E Tests
-
-**`container-preview.e2e.spec.ts`** - Full flow:
-- Run workflow with step.preview()
-- Verify container starts
-- Check URLs are accessible
-- Stop container via UI
-- Verify cleanup
-
 ## Success Criteria
 
 - [ ] Container model created with all required fields
 - [ ] Project preview_config field added
-- [ ] Port manager allocates/releases correctly
+- [ ] Port manager allocates/releases correctly with atomicity
 - [ ] Docker client handles both Dockerfile and docker-compose.yml
 - [ ] step.preview() works in workflows
+- [ ] Docker unavailable handled gracefully (skip with warning)
 - [ ] Containers can be stopped via API
-- [ ] UI displays container status and URLs
-- [ ] Container logs are viewable
+- [ ] UI displays container status and URLs on ProjectHome
+- [ ] Container card shown on WorkflowRun details
+- [ ] Preview config editable in Project Edit modal
+- [ ] WebSocket broadcasts container status changes
+- [ ] Cascade deletion works (workflow/project delete stops containers)
 - [ ] All tests pass
 - [ ] No TypeScript errors
 - [ ] No lint errors
@@ -450,39 +569,101 @@ pnpm --filter agentcmd-workflows build
 
 1. Start application: `pnpm dev`
 2. Create a project with a Dockerfile or docker-compose.yml
-3. Configure project preview_config via API/DB
+3. Edit project → add preview config (ports: ["app"])
 4. Run a workflow with `step.preview("deploy")`
 5. Verify container starts and URLs are returned
-6. Check container appears in UI
-7. Open preview URL in browser
-8. Stop container via UI
-9. Verify container status updates to "stopped"
+6. Check ProjectHome shows container card
+7. Check WorkflowRun details shows container
+8. Open preview URL in browser
+9. Stop container via UI
+10. Verify container status updates to "stopped"
+11. Delete workflow run → verify container is stopped/deleted
 
 **Feature-Specific Checks:**
 
-- Verify port allocation doesn't conflict
+- Verify port allocation doesn't conflict between multiple previews
 - Test with both Dockerfile and docker-compose.yml projects
 - Verify env vars (PREVIEW_PORT_*) are passed correctly
 - Check logs endpoint returns container output
-- Verify stopped containers release their ports
+- Test WebSocket updates when container status changes
+- Test cascade deletion (delete project with running container)
+
+## User Documentation Examples
+
+### Basic docker-compose.yml (single port)
+```yaml
+services:
+  app:
+    build: .
+    ports:
+      - "${PREVIEW_PORT_APP:-3000}:3000"
+    environment:
+      - PORT=3000
+```
+
+### Multi-service docker-compose.yml (hot-reload)
+```yaml
+services:
+  server:
+    build: .
+    ports:
+      - "${PREVIEW_PORT_SERVER:-4100}:4100"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: pnpm dev:server
+
+  client:
+    build: .
+    ports:
+      - "${PREVIEW_PORT_CLIENT:-4101}:4101"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: pnpm dev:client
+
+  db:
+    image: postgres:15
+    ports:
+      - "${PREVIEW_PORT_DB:-5432}:5432"
+    environment:
+      POSTGRES_PASSWORD: preview
+```
+
+### Basic Dockerfile
+```dockerfile
+FROM node:22-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+ENV PORT=3000
+EXPOSE 3000
+CMD ["node", "dist/index.js"]
+```
 
 ## Implementation Notes
 
 ### 1. Docker Availability
 
-The feature requires Docker to be installed on the host machine. If Docker is not available, the preview step should fail gracefully with a clear error message.
+The feature requires Docker to be installed on the host machine. If Docker is not available, the preview step skips gracefully with a warning - workflow continues without preview.
 
 ### 2. Port Range
 
-Ports 5000-5999 are reserved for previews. This provides 1000 slots. If exhausted, the allocation should fail with a clear error.
+Ports 5000-5999 are reserved for previews. This provides 1000 slots. If exhausted, allocation fails with clear error.
 
 ### 3. Compose Project Naming
 
-Use `preview-{containerId}` as the compose project name to ensure isolation between previews and easy cleanup.
+Use `container-{containerId}` as the compose project name to ensure isolation between previews and easy cleanup.
 
-### 4. Health Check Timeout
+### 4. Health Checks
 
-Default health check timeout is 120 seconds. For slow-starting applications, users should configure appropriate health check settings in their Dockerfile/compose.
+User handles health checks in their Docker HEALTHCHECK directive. AgentCmd doesn't wait for health - just starts containers and returns.
+
+### 5. Volume Mounts
+
+User handles volume mounts in their compose file. AgentCmd doesn't auto-mount - preserves user control and follows "Dockerfile is the contract" philosophy.
 
 ## Dependencies
 
@@ -494,16 +675,13 @@ Default health check timeout is 120 seconds. For slow-starting applications, use
 
 - [Docker Compose CLI Reference](https://docs.docker.com/compose/reference/)
 - [Docker Run Reference](https://docs.docker.com/engine/reference/run/)
+- Plan file: `/Users/jnarowski/.claude/plans/pure-prancing-tower.md`
 - Existing workflow step implementations: `apps/app/src/server/domain/workflow/services/engine/steps/`
 
 ## Next Steps
 
-1. Run migration to add Container model
-2. Implement port manager utility
-3. Implement Docker client utility
-4. Create container services
-5. Add preview step to workflow SDK
-6. Create API routes
-7. Build frontend UI
-8. Write tests
-9. Manual testing with sample project
+1. Implement Phase 1 (Database & Types)
+2. Implement Phase 2 (Core Services)
+3. Implement Phase 3 (Workflow SDK Integration)
+4. Implement Phase 4 (API Routes)
+5. Implement Phase 5 (Frontend UI)

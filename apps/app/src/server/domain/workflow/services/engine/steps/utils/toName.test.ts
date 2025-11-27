@@ -74,7 +74,8 @@ describe("toName", () => {
     });
 
     it("handles multiple consecutive hyphens", () => {
-      expect(toName("foo---bar")).toBe("Foo   Bar");
+      expect(toName("foo--bar")).toBe("Foo - Bar");
+      expect(toName("a--b--c")).toBe("A - B - C");
     });
   });
 
@@ -89,6 +90,31 @@ describe("toName", () => {
 
     it("handles numbers in middle", () => {
       expect(toName("step-2-processing")).toBe("Step 2 Processing");
+    });
+  });
+
+  describe("double-dash semantic separator", () => {
+    it("preserves dash between iteration counters", () => {
+      expect(toName("implement-cycle-1--attempt-1")).toBe("Implement Cycle 1 - Attempt 1");
+    });
+
+    it("handles multiple semantic groups", () => {
+      expect(toName("phase-1--stage-2--step-3")).toBe("Phase 1 - Stage 2 - Step 3");
+    });
+
+    it("preserves dash in review workflow steps", () => {
+      expect(toName("review--cycle-1")).toBe("Review - Cycle 1");
+      expect(toName("commit-review--cycle-2")).toBe("Commit Review - Cycle 2");
+    });
+
+    it("handles edge cases with leading/trailing double-dash", () => {
+      expect(toName("--leading")).toBe(" - Leading");
+      expect(toName("trailing--")).toBe("Trailing - ");
+    });
+
+    it("single dash still creates spaces", () => {
+      expect(toName("analyze-requirements")).toBe("Analyze Requirements");
+      expect(toName("process-data-2024")).toBe("Process Data 2024");
     });
   });
 });
