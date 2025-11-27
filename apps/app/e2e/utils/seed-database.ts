@@ -50,15 +50,20 @@ export async function seedUser(
 
 /**
  * Seed a project in the database
+ * Appends unique suffix to path to avoid unique constraint violations
  */
 export async function seedProject(
   prisma: PrismaClient,
   options: SeedProjectOptions
 ) {
+  // Append unique suffix to path to avoid conflicts between test runs
+  const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+  const uniquePath = `${options.path}-${uniqueSuffix}`;
+
   return prisma.project.create({
     data: {
       name: options.name,
-      path: options.path,
+      path: uniquePath,
     },
   });
 }

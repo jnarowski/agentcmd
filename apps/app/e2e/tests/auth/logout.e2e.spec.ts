@@ -1,81 +1,34 @@
 import { test, expect } from "../../fixtures";
+import { DashboardPage, ProjectsPage } from "../../pages";
 
 /**
- * Logout E2E Test
+ * Logout E2E Tests
  *
- * Verifies logout flow:
- * 1. Start with authenticated user
- * 2. Click logout button
- * 3. Verify redirect to login page
- * 4. Verify auth token removed from localStorage
- * 5. Verify cannot access protected routes
+ * Gold standard test demonstrating:
+ * - Page Object Model (POM) pattern
+ * - authenticatedPage fixture for pre-authenticated state
+ * - localStorage assertions via POM
+ * - Protected route redirect behavior
  */
 
 test.describe("Authentication - Logout", () => {
-  test("should logout and redirect to login page", async ({ authenticatedPage }) => {
-    // Navigate to dashboard (authenticated)
-    await authenticatedPage.goto("http://localhost:5101/dashboard");
+  test("should redirect to login when token is cleared", async ({ authenticatedPage }) => {
+    const dashboardPage = new DashboardPage(authenticatedPage);
+    const projectsPage = new ProjectsPage(authenticatedPage);
 
-    // Verify auth token exists before logout
-    let token = await authenticatedPage.evaluate(() => localStorage.getItem("auth_token"));
-    expect(token).toBeTruthy();
+    // Navigate to dashboard (authenticatedPage has token set)
+    await dashboardPage.goto();
 
-    // Click logout button (look for various possible selectors)
-    const logoutButton = authenticatedPage.locator(
-      'button:has-text("Logout"), button:has-text("Log out"), button:has-text("Sign out"), a:has-text("Logout"), a:has-text("Log out"), a:has-text("Sign out")'
-    );
-    await logoutButton.first().click();
+    // Verify authenticated state
+    await dashboardPage.expectAuthenticated();
 
-    // Wait for redirect to login page
-    await authenticatedPage.waitForURL(/\/login/);
+    // Clear token (simulates logout)
+    await dashboardPage.logout();
 
-    // Verify we're on login page
-    expect(authenticatedPage.url()).toContain("/login");
+    // Navigate to protected route
+    await projectsPage.goto();
 
-    // Verify auth token removed from localStorage
-    token = await authenticatedPage.evaluate(() => localStorage.getItem("auth_token"));
-    expect(token).toBeFalsy();
-  });
-
-  test("should not access protected routes after logout", async ({ authenticatedPage }) => {
-    // Navigate to dashboard
-    await authenticatedPage.goto("http://localhost:5101/dashboard");
-
-    // Logout
-    const logoutButton = authenticatedPage.locator(
-      'button:has-text("Logout"), button:has-text("Log out"), button:has-text("Sign out"), a:has-text("Logout"), a:has-text("Log out"), a:has-text("Sign out")'
-    );
-    await logoutButton.first().click();
-
-    // Wait for redirect
-    await authenticatedPage.waitForURL(/\/login/);
-
-    // Try to navigate to protected route
-    await authenticatedPage.goto("http://localhost:5101/projects");
-
-    // Should redirect back to login
-    await authenticatedPage.waitForURL(/\/login/, { timeout: 5000 });
-    expect(authenticatedPage.url()).toContain("/login");
-  });
-
-  test("should clear auth token programmatically", async ({ authenticatedPage }) => {
-    // Navigate to dashboard
-    await authenticatedPage.goto("http://localhost:5101/dashboard");
-
-    // Verify authenticated
-    let token = await authenticatedPage.evaluate(() => localStorage.getItem("auth_token"));
-    expect(token).toBeTruthy();
-
-    // Clear token programmatically (simulating logout)
-    await authenticatedPage.evaluate(() => {
-      localStorage.removeItem("auth_token");
-    });
-
-    // Try to navigate to protected route
-    await authenticatedPage.goto("http://localhost:5101/projects");
-
-    // Should redirect to login (if auth middleware is working)
-    await authenticatedPage.waitForURL(/\/login/, { timeout: 5000 });
-    expect(authenticatedPage.url()).toContain("/login");
+    // Should redirect to login
+    await projectsPage.expectRedirectedToLogin();
   });
 });

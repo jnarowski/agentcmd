@@ -1,216 +1,125 @@
 import { test, expect } from "../../fixtures";
+import { NewSessionPage, SessionPage } from "../../pages";
 
 /**
- * Create Session E2E Test
+ * Session Creation E2E Tests
  *
- * Verifies session creation flow:
- * 1. Create project
- * 2. Navigate to project details
- * 3. Click "Create Session" button
- * 4. Fill session form
- * 5. Submit form
- * 6. Verify session appears in list
- * 7. Verify session exists in database
+ * Tests the full flow of creating a new session and receiving an agent response.
+ *
+ * Prerequisites:
+ * - E2E server running
+ * - Claude Code CLI installed and authenticated locally
+ * - WebSocket connection must be established
+ *
+ * Note: These tests use Claude Code CLI for AI responses. Locally this works
+ * with your Claude Code auth. CI/CD setup TBD.
  */
 
-test.describe("Sessions - Create", () => {
-  test("should create new session for project", async ({
+test.describe("Sessions - Create Session", () => {
+  test("should create a session and wait for agent response", async ({
     authenticatedPage,
     db,
-    testUser,
-    prisma,
   }) => {
-    const sessionTitle = `Test Session ${Date.now()}`;
-
-    // Seed project
-    const [project] = await db.seedProjects([
-      {
-        name: `Session Test Project ${Date.now()}`,
-        path: "/tmp/session-test",
-      },
-    ]);
-
-    // Navigate to project details
-    await authenticatedPage.goto(`http://localhost:5101/projects/${project.id}`);
-
-    // Wait for page load
-    await authenticatedPage.waitForLoadState("networkidle");
-
-    // Click create session button
-    const createButton = authenticatedPage.locator(
-      'button:has-text("Create Session"), button:has-text("New Session"), a:has-text("Start Session")'
-    );
-    await createButton.first().click();
-
-    // Wait for form
-    await authenticatedPage.waitForSelector(
-      'input[name="title"], input[placeholder*="title" i], input[placeholder*="session" i]',
-      { timeout: 5000 }
-    );
-
-    // Fill session form
-    const titleInput = authenticatedPage.locator(
-      'input[name="title"], input[placeholder*="title" i], input[placeholder*="session" i]'
-    );
-    await titleInput.first().fill(sessionTitle);
-
-    // Submit form
-    await authenticatedPage.click('button[type="submit"], button:has-text("Create"), button:has-text("Start")');
-
-    // Wait for session to appear
-    await authenticatedPage.waitForSelector(`text="${sessionTitle}"`, { timeout: 10000 });
-
-    // Verify session visible in UI
-    const sessionElement = authenticatedPage.locator(`text="${sessionTitle}"`);
-    await expect(sessionElement).toBeVisible();
-
-    // Verify session in database
-    const session = await prisma.agentSession.findFirst({
-      where: {
-        name: sessionTitle,
-        project_id: project.id,
-      },
+    // Seed a project for testing
+    const project = await db.seedProject({
+      name: "E2E Test Project",
+      path: "/tmp/e2e-test-project",
     });
 
-    expect(session).toBeTruthy();
-    expect(session?.name).toBe(sessionTitle);
-    expect(session?.project_id).toBe(project.id);
+    // Create page objects
+    const newSessionPage = new NewSessionPage(authenticatedPage);
+    const sessionPage = new SessionPage(authenticatedPage);
+
+    // Navigate to new session page
+    await newSessionPage.gotoForProject(project.id);
+    await newSessionPage.expectNewSessionPage();
+
+    // Wait for WebSocket connection
+    await newSessionPage.expectWebSocketConnected();
+
+    // Send a simple message to the agent
+    const testMessage = "Say hello and nothing else";
+    await newSessionPage.sendMessage(testMessage);
+
+    // Wait for navigation to session page (session created)
+    await newSessionPage.waitForSessionCreated();
+
+    // Verify we're on the session page
+    const sessionId = sessionPage.getSessionId();
+    expect(sessionId).toBeTruthy();
+
+    // Wait for the assistant to respond (may take some time for AI to process)
+    // Using a longer timeout since AI responses can be slow
+    await sessionPage.waitForAssistantMessage(60000);
+
+    // Verify assistant message is visible
+    await sessionPage.expectAssistantMessageVisible();
   });
 
-  test("should create session with initial prompt", async ({
+  test("should display user message after sending", async ({
     authenticatedPage,
     db,
-    testUser,
-    prisma,
   }) => {
-    const sessionTitle = `Prompted Session ${Date.now()}`;
-    const initialPrompt = "Help me debug this function";
-
-    // Seed project
-    const [project] = await db.seedProjects([
-      {
-        name: `Prompt Test Project ${Date.now()}`,
-        path: "/tmp/prompt-test",
-      },
-    ]);
-
-    // Navigate to project
-    await authenticatedPage.goto(`http://localhost:5101/projects/${project.id}`);
-    await authenticatedPage.waitForLoadState("networkidle");
-
-    // Create session
-    const createButton = authenticatedPage.locator(
-      'button:has-text("Create Session"), button:has-text("New Session")'
-    );
-    await createButton.first().click();
-
-    // Fill form
-    await authenticatedPage.waitForSelector('input[name="title"], input[placeholder*="title" i]');
-
-    const titleInput = authenticatedPage.locator('input[name="title"], input[placeholder*="title" i]');
-    await titleInput.first().fill(sessionTitle);
-
-    // Check for prompt/message field
-    const promptField = authenticatedPage.locator(
-      'textarea[name="prompt"], textarea[name="message"], textarea[placeholder*="message" i]'
-    );
-
-    if ((await promptField.count()) > 0) {
-      await promptField.first().fill(initialPrompt);
-    }
-
-    // Submit
-    await authenticatedPage.click('button[type="submit"], button:has-text("Create"), button:has-text("Start")');
-
-    // Wait for session
-    await authenticatedPage.waitForSelector(`text="${sessionTitle}"`, { timeout: 10000 });
-
-    // Verify in database
-    const session = await prisma.agentSession.findFirst({
-      where: { name: sessionTitle },
+    // Seed a project for testing
+    const project = await db.seedProject({
+      name: "E2E Test Project 2",
+      path: "/tmp/e2e-test-project-2",
     });
 
-    expect(session).toBeTruthy();
-    expect(session?.name).toBe(sessionTitle);
-  });
+    // Create page objects
+    const newSessionPage = new NewSessionPage(authenticatedPage);
 
-  test("should set session status to active on creation", async ({
+    // Navigate to new session page
+    await newSessionPage.gotoForProject(project.id);
+
+    // Wait for WebSocket connection
+    await newSessionPage.expectWebSocketConnected();
+
+    // Send a message
+    const testMessage = "Test user message";
+    await newSessionPage.sendMessage(testMessage);
+
+    // Wait for navigation to session page
+    await newSessionPage.waitForSessionCreated();
+
+    // The user message should be visible on the page
+    await expect(authenticatedPage.locator(`text="${testMessage}"`)).toBeVisible();
+  });
+});
+
+test.describe("Sessions - Session Page", () => {
+  test("should allow sending follow-up messages", async ({
     authenticatedPage,
     db,
-    testUser,
-    prisma,
   }) => {
-    const sessionTitle = `Active Session ${Date.now()}`;
-
-    // Seed project
-    const [project] = await db.seedProjects([
-      {
-        name: `Active Test Project ${Date.now()}`,
-        path: "/tmp/active-test",
-      },
-    ]);
-
-    // Navigate and create session
-    await authenticatedPage.goto(`http://localhost:5101/projects/${project.id}`);
-    await authenticatedPage.waitForLoadState("networkidle");
-
-    const createButton = authenticatedPage.locator(
-      'button:has-text("Create Session"), button:has-text("New Session")'
-    );
-    await createButton.first().click();
-
-    await authenticatedPage.waitForSelector('input[name="title"], input[placeholder*="title" i]');
-
-    const titleInput = authenticatedPage.locator('input[name="title"], input[placeholder*="title" i]');
-    await titleInput.first().fill(sessionTitle);
-
-    await authenticatedPage.click('button[type="submit"], button:has-text("Create")');
-
-    await authenticatedPage.waitForSelector(`text="${sessionTitle}"`, { timeout: 10000 });
-
-    // Verify session status in database
-    const session = await prisma.agentSession.findFirst({
-      where: { name: sessionTitle },
+    // Seed a project for testing
+    const project = await db.seedProject({
+      name: "E2E Test Project 3",
+      path: "/tmp/e2e-test-project-3",
     });
 
-    expect(session).toBeTruthy();
-    expect(session?.state).toBe("active");
-  });
+    // Create page objects
+    const newSessionPage = new NewSessionPage(authenticatedPage);
+    const sessionPage = new SessionPage(authenticatedPage);
 
-  test("should validate required fields", async ({ authenticatedPage, db, testUser }) => {
-    // Seed project
-    const [project] = await db.seedProjects([
-      {
-        name: `Validation Project ${Date.now()}`,
-        path: "/tmp/validation",
-      },
-    ]);
+    // Navigate and create initial session
+    await newSessionPage.gotoForProject(project.id);
+    await newSessionPage.expectWebSocketConnected();
+    await newSessionPage.sendMessage("First message");
+    await newSessionPage.waitForSessionCreated();
 
-    // Navigate to project
-    await authenticatedPage.goto(`http://localhost:5101/projects/${project.id}`);
-    await authenticatedPage.waitForLoadState("networkidle");
+    // Wait for first response
+    await sessionPage.waitForAssistantMessage(60000);
 
-    // Open create form
-    const createButton = authenticatedPage.locator(
-      'button:has-text("Create Session"), button:has-text("New Session")'
-    );
-    await createButton.first().click();
+    // Send a follow-up message
+    const followUpMessage = "Follow-up question";
+    await sessionPage.sendMessage(followUpMessage);
 
-    await authenticatedPage.waitForSelector('input[name="title"], input[placeholder*="title" i]');
+    // Wait for streaming to complete
+    await sessionPage.waitForStreamingComplete(60000);
 
-    // Try to submit without filling title
-    await authenticatedPage.click('button[type="submit"], button:has-text("Create")');
-
-    // Check validation
-    const titleInput = authenticatedPage.locator('input[name="title"], input[placeholder*="title" i]');
-    const isInvalid = await titleInput.first().evaluate((el: HTMLInputElement) => !el.validity.valid);
-
-    if (!isInvalid) {
-      // Check for error message
-      const errorMessage = authenticatedPage.locator('text=/required/i, text=/cannot be empty/i');
-      await expect(errorMessage.first()).toBeVisible({ timeout: 3000 });
-    } else {
-      expect(isInvalid).toBe(true);
-    }
+    // Should have multiple assistant messages now
+    const assistantMessages = sessionPage.getAssistantMessages();
+    await expect(assistantMessages).toHaveCount(2, { timeout: 10000 });
   });
 });

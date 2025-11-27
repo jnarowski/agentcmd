@@ -40,3 +40,10 @@ test-worker-*.db
 test-worker-*.db-wal
 test-worker-*.db-shm
 .npmrc
+
+# E2E testing
+e2e.db
+e2e.db-*
+e2e/.auth-state.json
+test-results/
+playwright-report/

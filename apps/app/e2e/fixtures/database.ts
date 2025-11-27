@@ -1,11 +1,20 @@
 import { test as base } from "@playwright/test";
 import { PrismaClient } from "@prisma/client";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   seedProject,
   seedSession,
   type SeedProjectOptions,
   type SeedSessionOptions,
 } from "../utils/seed-database";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Absolute path to e2e.db - ensures test and server use same database
+const E2E_DATABASE_PATH = join(__dirname, "..", "..", "prisma", "e2e.db");
+const E2E_DATABASE_URL = `file:${E2E_DATABASE_PATH}`;
 
 /**
  * Database Fixture
@@ -40,7 +49,7 @@ export const test = base.extend<DatabaseFixtures>({
     const prisma = new PrismaClient({
       datasources: {
         db: {
-          url: "file:./e2e.db",
+          url: E2E_DATABASE_URL,
         },
       },
     });

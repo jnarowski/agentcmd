@@ -6,12 +6,9 @@ Comprehensive end-to-end tests for the agentcmd application using Playwright.
 
 E2E tests validate critical user journeys across the full stack (frontend + backend + database + WebSocket + Inngest workflows). Tests use isolated E2E database (`e2e.db`) and dedicated E2E server (ports 5100/5101) to avoid interfering with development.
 
-**Coverage:**
-- Authentication (login, logout, error handling)
-- Projects (CRUD operations, authorization)
-- Sessions (create, streaming, stop/resume)
-- Workflows (list, execute, monitor)
-- Files (browse, open, edit)
+**Current Coverage:**
+- Authentication (login failure, logout)
+- Sessions (create session, agent response, follow-up messages)
 
 ## Quick Start
 
@@ -20,17 +17,15 @@ E2E tests validate critical user journeys across the full stack (frontend + back
 cd apps/app
 pnpm e2e:install
 
-# Terminal 1: Start dev server (for Inngest)
-pnpm dev
-
-# Terminal 2: Start E2E server
-pnpm e2e:server
-
-# Terminal 3: Run all E2E tests
+# Run tests (auto-starts servers via webServer config)
 pnpm e2e
 
 # Or run with UI mode for debugging
 pnpm e2e:ui
+
+# Manual server start (optional - webServer handles this)
+# Terminal 1: pnpm e2e:server
+# Terminal 2: pnpm e2e
 ```
 
 ## Architecture
@@ -46,28 +41,34 @@ E2E and dev servers can run simultaneously without conflicts. Database isolation
 ### File Structure
 
 ```
-apps/app/e2e/
-├── tests/
-│   ├── auth/              # Authentication tests
-│   ├── projects/          # Project CRUD tests
-│   ├── sessions/          # Session lifecycle tests
-│   ├── workflows/         # Workflow execution tests
-│   └── files/             # File operations tests
-├── fixtures/
-│   ├── authenticated-page.ts  # Auto-auth fixture
-│   ├── database.ts            # Database seeding fixture
-│   ├── websocket.ts           # WebSocket fixture
-│   └── index.ts               # Merged fixtures
-├── utils/
-│   ├── seed-database.ts       # Database seeding helpers
-│   ├── wait-for-websocket.ts  # WebSocket event helpers
-│   ├── api-helpers.ts         # API request helpers
-│   └── test-data.ts           # Test data factories
-├── playwright.config.ts   # Playwright configuration
-├── global-setup.ts        # Database migration
-├── global-teardown.ts     # Cleanup
-├── tsconfig.json          # TypeScript config
-└── README.md              # This file
+apps/app/
+├── playwright.config.ts       # Playwright configuration (at app root)
+└── e2e/
+    ├── tests/
+    │   ├── auth/              # Authentication tests
+    │   │   ├── login-failure.e2e.spec.ts
+    │   │   └── logout.e2e.spec.ts
+    │   └── sessions/          # Session tests (uses Claude Code CLI)
+    │       └── create-session.e2e.spec.ts
+    ├── pages/                 # Page Object Models (POMs)
+    │   ├── index.ts               # Export all POMs
+    │   ├── BasePage.ts            # Common page methods
+    │   ├── LoginPage.ts           # Login page interactions
+    │   ├── DashboardPage.ts       # Dashboard page interactions
+    │   ├── ProjectsPage.ts        # Projects page interactions
+    │   ├── NewSessionPage.ts      # New session creation
+    │   └── SessionPage.ts         # Active session interactions
+    ├── fixtures/
+    │   ├── index.ts               # Merged fixtures (import from here)
+    │   ├── authenticated-page.ts  # Auth token injection
+    │   └── database.ts            # Prisma + seeding helpers
+    ├── utils/
+    │   ├── seed-database.ts       # Database seeding functions
+    │   └── wait-for-websocket.ts  # WebSocket event helpers
+    ├── global-setup.ts            # Auth user creation
+    ├── global-teardown.ts         # Cleanup
+    ├── .auth-state.json           # Auth state (gitignored)
+    └── README.md                  # This file
 ```
 
 ## Writing Tests
@@ -76,22 +77,23 @@ apps/app/e2e/
 
 ```typescript
 import { test, expect } from "../../fixtures";
+import { ProjectsPage } from "../../pages";
 
 test.describe("Feature - Test Suite", () => {
   test("should do something", async ({ authenticatedPage, db, testUser, prisma }) => {
+    const projectsPage = new ProjectsPage(authenticatedPage);
+
     // Seed data
-    const [project] = await db.seedProjects([
-      { name: "Test Project", path: "/tmp/test", userId: testUser.id }
-    ]);
+    const project = await db.seedProject({ name: "Test Project", path: "/tmp/test" });
 
-    // Navigate
-    await authenticatedPage.goto(`http://localhost:5101/projects/${project.id}`);
+    // Navigate using POM
+    await projectsPage.goto();
 
-    // Interact with UI
-    await authenticatedPage.click('button:has-text("Create")');
+    // Interact with UI via POM
+    await projectsPage.clickCreateProject();
 
-    // Assert
-    await expect(authenticatedPage.locator('text="Success"')).toBeVisible();
+    // Assert using POM
+    await projectsPage.expectProjectVisible("Test Project");
 
     // Verify database
     const created = await prisma.project.findFirst({ where: { name: "Test Project" } });
@@ -99,6 +101,43 @@ test.describe("Feature - Test Suite", () => {
   });
 });
 ```
+
+### Using Page Object Models (POMs)
+
+POMs encapsulate page interactions for reusability and maintainability.
+
+```typescript
+import { test, expect } from "../../fixtures";
+import { LoginPage, DashboardPage, ProjectsPage } from "../../pages";
+
+test("should login and view projects", async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  const dashboardPage = new DashboardPage(page);
+  const projectsPage = new ProjectsPage(page);
+
+  // Login
+  await loginPage.goto();
+  await loginPage.login("user@example.com", "password");
+
+  // Navigate to projects
+  await dashboardPage.goToProjects();
+
+  // Assert
+  await projectsPage.expectProjectVisible("My Project");
+});
+```
+
+**Available POMs:**
+- `LoginPage` - Login form, validation, error handling
+- `DashboardPage` - Main authenticated page, navigation, logout
+- `ProjectsPage` - Project list, create, view details
+- `NewSessionPage` - Create new session, send initial message
+- `SessionPage` - Active session, send messages, wait for responses
+
+**Creating New POMs:**
+1. Extend `BasePage` class
+2. Add to `e2e/pages/` directory
+3. Export from `e2e/pages/index.ts`
 
 ### Using Fixtures
 
@@ -208,17 +247,22 @@ pnpm e2e:server
 Key settings:
 - `testMatch: '**/*.e2e.spec.ts'` - Only run files ending in `.e2e.spec.ts`
 - `workers: 1` - Sequential execution (SQLite limitation)
-- `baseURL: 'http://localhost:5101'` - E2E frontend URL
-- `timeout: 30000` - 30s default timeout per test
-- `retries: 0` - No retries (tests should be deterministic)
+- `baseURL: 'http://localhost:5101'` - Tests use relative URLs: `page.goto("/login")`
+- `webServer` - Auto-starts backend and frontend servers
+- `timeout: 30_000` - 30s per test
+- `expect.timeout: 5_000` - 5s for assertions
+- `retries: 0` locally, `2` in CI
 
 ### Environment Variables
 
-E2E server uses:
-- `DATABASE_URL=file:./e2e.db` - Isolated database
+E2E server uses `.env.e2e`:
+- `DATABASE_URL=file:./prisma/e2e.db` - Isolated database
 - `PORT=5100` - Backend port
 - `VITE_PORT=5101` - Frontend port
 - `NODE_ENV=test` - Test mode
+- `JWT_SECRET` - Test JWT secret
+
+**Single-User System:** This app is single-user. Global setup tries to login first, registers if needed, and saves auth state to `.auth-state.json`. All tests share this single test user.
 
 ## Troubleshooting
 
@@ -374,17 +418,18 @@ jobs:
           path: apps/app/playwright-report/
 ```
 
-## Gold Standard Test
+## Gold Standard Tests
 
-`apps/app/e2e/tests/sessions/session-lifecycle.e2e.spec.ts` demonstrates all E2E patterns:
-- Authentication via API
-- Database seeding (users, projects, sessions)
-- WebSocket event forwarding and waiting
-- UI navigation and interaction
-- Database verification
-- Real-time streaming
+`apps/app/e2e/tests/auth/` demonstrates E2E patterns:
+- `login-failure.e2e.spec.ts` - Form validation, error handling, `data-testid` selectors
+- `logout.e2e.spec.ts` - Authenticated page fixture, localStorage assertions
 
-Reference this test when writing new E2E tests.
+**Key Patterns:**
+1. Use `data-testid` for stable selectors: `page.getByTestId("login-email")`
+2. Use `authenticatedPage` fixture for tests requiring login
+3. Use `testUser` fixture for user credentials/token
+4. Wait for UI state, not arbitrary timeouts
+5. Assert URL changes with `expect(page.url()).toContain(...)`
 
 ## Resources
 
