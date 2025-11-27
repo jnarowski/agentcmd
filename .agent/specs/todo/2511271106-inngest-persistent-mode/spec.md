@@ -503,3 +503,82 @@ Production mode is 3-7 seconds slower than dev mode due to SQLite initialization
 5. Implement Phase 4: Environment setup updates
 6. Complete Phase 5: Documentation and thorough testing
 7. Create PR with changes for review
+
+## Review Findings
+
+**Review Date:** 2025-11-27
+**Reviewed By:** Claude Code
+**Review Iteration:** 1 of 3
+**Branch:** feature/inngest-persistent-mode-for-production
+**Commits Reviewed:** 1
+
+### Summary
+
+Implementation is mostly complete with solid mode detection and conditional spawning logic. Found 3 medium priority issues: `scripts/start.js` still uses `inngest dev` instead of mode detection, CLI command missing `-p` flag for dev mode, and validation command references missing. All spec requirements are implemented.
+
+### Phase 1: Script Updates
+
+**Status:** ⚠️ Incomplete - start.js needs mode detection
+
+#### MEDIUM Priority
+
+- [ ] **scripts/start.js still spawns `inngest dev` in production**
+  - **File:** `apps/app/scripts/start.js:78`
+  - **Spec Reference:** "Add `isProduction = process.env.NODE_ENV === 'production'` check" and "Add conditional spawning: `inngest start` vs `inngest dev`"
+  - **Expected:** Mode detection and conditional spawning like `start-inngest.js`
+  - **Actual:** Hardcoded to spawn `inngest dev` command on line 78
+  - **Fix:** Add same mode detection logic as `start-inngest.js` - check `isProduction` and conditionally spawn `inngest start` with event/signing keys or `inngest dev` with webhook URL
+
+### Phase 2: Configuration Schema Updates
+
+**Status:** ✅ Complete - all config changes implemented correctly
+
+No issues found.
+
+### Phase 3: CLI Start Command Updates
+
+**Status:** ⚠️ Incomplete - missing port flag for dev mode
+
+#### MEDIUM Priority
+
+- [ ] **Missing `-p` port flag in dev mode Inngest spawn**
+  - **File:** `apps/app/src/cli/commands/start.ts:264`
+  - **Spec Reference:** Task 3.3 specifies using flags for both modes; existing pattern in `start-inngest.js:42` shows `-u` flag needs port
+  - **Expected:** Include `-p` flag with port for consistency: `['inngest-cli@latest', 'dev', '-u', inngestUrl, '-p', inngestPort.toString()]`
+  - **Actual:** Missing `-p` flag in dev mode spawn args (only present in production mode on line 243)
+  - **Fix:** Add `-p`, `inngestPort.toString()` to args array in dev mode block (after line 263)
+
+### Phase 4: Environment Setup Updates
+
+**Status:** ✅ Complete - production mode correctly removes INNGEST_DEV
+
+No issues found.
+
+### Phase 5: Documentation and Testing
+
+**Status:** ⚠️ Incomplete - validation commands need update
+
+#### MEDIUM Priority
+
+- [ ] **Validation section references `pnpm lint` but command doesn't exist**
+  - **File:** Spec validation section (line 386)
+  - **Spec Reference:** "Linting: `pnpm lint` Expected: No lint errors"
+  - **Expected:** Use actual validation commands from CLAUDE.md (`pnpm check`)
+  - **Actual:** References non-existent `pnpm lint` command
+  - **Fix:** Update validation command from `pnpm lint` to `pnpm check` (which runs lint + type-check per CLAUDE.md)
+
+### Positive Findings
+
+- Excellent mode detection implementation in `start-inngest.js` with proper fallback for signing key generation
+- Clean conditional logic in CLI start command with proper production flag handling
+- Strong validation in `WorkflowConfigSchema` with hex validation and even-length check for signing keys
+- Well-structured documentation in `workflow-system.md` explaining persistence differences
+- Good environment variable flow through config system with proper defaults
+- Proper cleanup of `INNGEST_DEV` flag in production mode in `inngestEnv.ts`
+- Correct implementation of banner updates to show "Inngest (persistent)" label
+
+### Review Completion Checklist
+
+- [x] All spec requirements reviewed
+- [x] Code quality checked
+- [ ] All findings addressed and tested
