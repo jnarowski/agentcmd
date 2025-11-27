@@ -4,6 +4,7 @@ import {
   Loader2,
   XCircle,
   MinusCircle,
+  Ban,
 } from "lucide-react";
 import {
   Tooltip,
@@ -43,6 +44,7 @@ export function StepGitRow({ step, onSelectStep, onSetActiveTab }: StepGitRowPro
     completed: CheckCircle2,
     failed: XCircle,
     skipped: MinusCircle,
+    cancelled: Ban,
   }[step.status];
 
   // Status color
@@ -52,6 +54,7 @@ export function StepGitRow({ step, onSelectStep, onSetActiveTab }: StepGitRowPro
     completed: "text-green-500",
     failed: "text-red-500",
     skipped: "text-gray-400",
+    cancelled: "text-gray-400",
   }[step.status];
 
   // Calculate duration

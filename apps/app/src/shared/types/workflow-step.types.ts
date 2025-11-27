@@ -17,7 +17,7 @@ export interface WorkflowRunStepBase {
   name: string;
   step_type: "git" | "cli" | "ai" | "agent" | "artifact" | "annotation" | "conditional" | "loop";
   phase: string;
-  status: "pending" | "running" | "completed" | "failed" | "skipped";
+  status: "pending" | "running" | "completed" | "failed" | "skipped" | "cancelled";
   agent_session_id: string | null;
   error_message: string | null;
   started_at: Date | null;

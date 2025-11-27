@@ -171,12 +171,13 @@ function LogEntry({ log, selectedStepId }: LogEntryProps) {
   const levelColor = log.level ? levelColors[log.level] : levelColors.info;
 
   // Status badge colors
-  const statusColors = {
+  const statusColors: Record<string, string> = {
     pending: "bg-gray-500/20 text-gray-600 dark:text-gray-400",
     running: "bg-blue-500/20 text-blue-600 dark:text-blue-400",
     completed: "bg-green-500/20 text-green-600 dark:text-green-400",
     failed: "bg-red-500/20 text-red-600 dark:text-red-400",
     skipped: "bg-gray-500/20 text-gray-600 dark:text-gray-400",
+    cancelled: "bg-gray-500/20 text-gray-600 dark:text-gray-400",
   };
 
   const isSelected = log.stepId && log.stepId === selectedStepId;

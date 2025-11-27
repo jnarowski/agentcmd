@@ -5,6 +5,7 @@ import {
   Loader2,
   XCircle,
   MinusCircle,
+  Ban,
 } from "lucide-react";
 import { AgentSessionModal } from "@/client/pages/projects/workflows/components/AgentSessionModal";
 import {
@@ -52,6 +53,7 @@ export function StepAgentRow({
     completed: CheckCircle2,
     failed: XCircle,
     skipped: MinusCircle,
+    cancelled: Ban,
   }[step.status];
 
   // Status color
@@ -61,6 +63,7 @@ export function StepAgentRow({
     completed: "text-green-500",
     failed: "text-red-500",
     skipped: "text-gray-400",
+    cancelled: "text-gray-400",
   }[step.status];
 
   // Calculate duration

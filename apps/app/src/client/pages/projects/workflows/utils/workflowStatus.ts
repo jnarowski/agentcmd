@@ -100,6 +100,13 @@ const STEP_STATUS_CONFIG: Record<StepStatus, StatusConfig> = {
     icon: Circle,
     label: "Skipped",
   },
+  cancelled: {
+    color: "gray",
+    bgColor: "bg-gray-100",
+    textColor: "text-gray-500",
+    icon: Ban,
+    label: "Cancelled",
+  },
 };
 
 export function getWorkflowStatusConfig(status: WorkflowStatus): StatusConfig {
@@ -122,5 +129,5 @@ export function isActiveStatus(status: WorkflowStatus): boolean {
 
 // Utility to check if a step is in a terminal state
 export function isStepTerminal(status: StepStatus): boolean {
-  return ["completed", "failed", "skipped"].includes(status);
+  return ["completed", "failed", "skipped", "cancelled"].includes(status);
 }

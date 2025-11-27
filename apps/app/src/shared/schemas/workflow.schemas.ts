@@ -44,6 +44,7 @@ export const stepStatusSchema = z.enum([
   'completed',
   'failed',
   'skipped',
+  'cancelled',
 ]);
 
 /**
@@ -56,6 +57,7 @@ export const StepStatusValues = {
   COMPLETED: 'completed',
   FAILED: 'failed',
   SKIPPED: 'skipped',
+  CANCELLED: 'cancelled',
 } as const;
 
 /**

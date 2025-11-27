@@ -5,6 +5,7 @@ import {
 } from "../../../packages/agentcmd-workflows/dist";
 
 // Type definitions from monorepo-wide generated types
+// See: https://agentcmd.dev/docs/reference/agentcmd-workflows
 import type {
   CmdCreatePrResponse,
   CmdImplementSpecResponse,
@@ -40,6 +41,10 @@ interface WorkflowContext {
  * 2. If review fails → Implement again → Review again
  * 3. Repeat until review passes or 3 review cycles complete
  * 4. Move spec to done folder and create PR
+ *
+ * See examples:
+ * https://agentcmd.dev/docs/examples/implement-and-review
+ *
  */
 
 export default defineWorkflow(

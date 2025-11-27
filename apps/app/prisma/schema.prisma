@@ -292,6 +292,7 @@ enum StepStatus {
   completed
   failed
   skipped
+  cancelled
 }
 
 enum StepType {

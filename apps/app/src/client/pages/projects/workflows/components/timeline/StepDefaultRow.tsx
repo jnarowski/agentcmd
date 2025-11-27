@@ -4,6 +4,7 @@ import {
   Loader2,
   XCircle,
   MinusCircle,
+  Ban,
 } from "lucide-react";
 import type { WorkflowRunStep } from "@/shared/types/workflow-step.types";
 import type { WorkflowTab } from "@/client/pages/projects/workflows/hooks/useWorkflowDetailPanel";
@@ -29,6 +30,7 @@ export function StepDefaultRow({
     completed: CheckCircle2,
     failed: XCircle,
     skipped: MinusCircle,
+    cancelled: Ban,
   }[step.status];
 
   // Status color
@@ -38,6 +40,7 @@ export function StepDefaultRow({
     completed: "text-green-500",
     failed: "text-red-500",
     skipped: "text-gray-400",
+    cancelled: "text-gray-400",
   }[step.status];
 
   // Calculate duration

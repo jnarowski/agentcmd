@@ -8,17 +8,32 @@ import { WorkflowWebSocketEventTypes } from "@/shared/types/websocket.types";
 /**
  * Cancels a workflow execution
  * Updates status to 'cancelled' and sets cancelled_at timestamp
+ * Also cancels any pending/running steps
  */
 export async function cancelWorkflow({ runId, userId, reason, logger, workflowClient }: CancelWorkflowOptions
 ): Promise<WorkflowRun> {
   const cancelledAt = new Date();
-  const execution = await prisma.workflowRun.update({
-    where: { id: runId },
-    data: {
-      status: "cancelled",
-      cancelled_at: cancelledAt,
-    },
-  });
+
+  // Update run and cancel all pending/running steps in a transaction
+  const [execution] = await prisma.$transaction([
+    prisma.workflowRun.update({
+      where: { id: runId },
+      data: {
+        status: "cancelled",
+        cancelled_at: cancelledAt,
+      },
+    }),
+    prisma.workflowRunStep.updateMany({
+      where: {
+        workflow_run_id: runId,
+        status: { in: ["pending", "running"] },
+      },
+      data: {
+        status: "cancelled",
+        completed_at: cancelledAt,
+      },
+    }),
+  ]);
 
   // Send Inngest cancel event to terminate running workflow
   try {

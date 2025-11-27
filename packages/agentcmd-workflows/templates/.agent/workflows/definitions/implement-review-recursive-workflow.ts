@@ -2,6 +2,7 @@ import { defineWorkflow, type WorkflowStep } from "agentcmd-workflows";
 
 // Type-safe wrappers for slash commands defined in .claude/commands/
 // After editing commands, regenerate: npx agentcmd-workflows generate-slash-types
+// See: https://agentcmd.dev/docs/reference/agentcmd-workflows
 import {
   buildSlashCommand,
   type CmdCreatePrResponse,
@@ -38,6 +39,9 @@ interface WorkflowContext {
  * 2. If review fails → Implement again → Review again
  * 3. Repeat until review passes or 3 review cycles complete
  * 4. Move spec to done folder and create PR
+ *
+ * See examples:
+ * https://agentcmd.dev/docs/examples/implement-and-review
  */
 
 export default defineWorkflow(
