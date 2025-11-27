@@ -1,6 +1,6 @@
 # Inngest Persistent Mode for Production
 
-**Status**: review
+**Status**: completed
 **Created**: 2025-11-27
 **Package**: apps/app
 **Total Complexity**: 67 points

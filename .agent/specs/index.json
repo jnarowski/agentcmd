@@ -277,11 +277,11 @@
     },
     "2511271106": {
       "folder": "2511271106-inngest-persistent-mode",
-      "path": "todo/2511271106-inngest-persistent-mode/spec.md",
+      "path": "done/2511271106-inngest-persistent-mode/spec.md",
       "spec_type": "feature",
-      "status": "review",
+      "status": "completed",
       "created": "2025-11-27T11:06:00Z",
-      "updated": "2025-11-27T18:35:31.000Z",
+      "updated": "2025-11-27T20:48:00.000Z",
       "totalComplexity": 67,
       "phaseCount": 5,
       "taskCount": 17
