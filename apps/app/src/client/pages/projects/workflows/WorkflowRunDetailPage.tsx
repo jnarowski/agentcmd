@@ -12,6 +12,7 @@ import { useWorkflowDetailPanel } from "./hooks/useWorkflowDetailPanel";
 import { useCancelWorkflow } from "./hooks/useWorkflowMutations";
 import { useProjectId } from "@/client/hooks/useProjectId";
 import { useInngestUrl } from "@/client/hooks/useSettings";
+import { TruncatedError } from "@/client/components/TruncatedError";
 import { PageHeader } from "@/client/components/PageHeader";
 import { Button } from "@/client/components/ui/button";
 import {
@@ -248,7 +249,11 @@ function WorkflowRunDetailPage() {
                     Workflow Failed
                   </h3>
                   <p className="mt-1 text-sm text-red-500/90">
-                    {run.error_message}
+                    <TruncatedError
+                      error={run.error_message}
+                      maxLength={200}
+                      side="bottom"
+                    />
                   </p>
                 </div>
               </div>
