@@ -5,6 +5,7 @@ import {
   TooltipContent,
 } from "@/client/components/ui/tooltip";
 import { formatDuration } from "@/client/utils/formatDuration";
+import { TruncatedError } from "@/client/components/TruncatedError";
 
 interface TimelineItemHeaderProps {
   title: string | React.ReactNode;
@@ -86,7 +87,9 @@ export function TimelineItemHeader({
 
       {/* Error Message */}
       {errorMessage && (
-        <div className="text-xs text-red-500 mt-1">{errorMessage}</div>
+        <div className="text-xs text-red-500 mt-1">
+          <TruncatedError error={errorMessage} maxLength={150} side="top" />
+        </div>
       )}
     </div>
   );
