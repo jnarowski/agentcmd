@@ -14,6 +14,7 @@ import {
   ensureDirectoryExists,
 } from "../utils/paths";
 import { getDefaultConfig, saveConfig } from "../utils/config";
+import { PRISMA_VERSION } from "../utils/constants";
 import { showWelcomeBanner, showBoxedOutput } from "../utils/branding";
 import { promptForAnthropicKey, promptForOpenAIKey } from "../utils/prompts";
 
@@ -65,7 +66,7 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     // Generate Prisma client first
     const generateResult = spawnSync(
       "npx",
-      ["prisma@7.0", "generate", "--no-hints", `--schema=${schemaPath}`],
+      [PRISMA_VERSION, "generate", "--no-hints", `--schema=${schemaPath}`],
       {
         stdio: "pipe",
         env: {
@@ -90,7 +91,7 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     // Apply migrations for initial setup
     const result = spawnSync(
       "npx",
-      ["prisma@7.0", "migrate", "deploy", `--schema=${schemaPath}`],
+      [PRISMA_VERSION, "migrate", "deploy", `--schema=${schemaPath}`],
       {
         stdio: "pipe",
         env: {

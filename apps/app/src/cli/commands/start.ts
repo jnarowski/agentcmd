@@ -9,6 +9,7 @@ import { loadConfig, mergeWithFlags } from "../utils/config";
 import { ensurePortAvailable } from "../utils/portCheck";
 import { getDbPath, getConfigPath, getLogFilePath, getInngestDataDir, ensureDirectoryExists } from "../utils/paths";
 import { checkPendingMigrations, createBackup, cleanupOldBackups } from "../utils/backup";
+import { PRISMA_VERSION, INNGEST_CLI_VERSION } from "../utils/constants";
 import { setInngestEnvironment } from "@/shared/utils/inngestEnv";
 import { waitForServerReady } from "../utils/serverHealth";
 
@@ -116,7 +117,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
     if (verbose) console.log("Generating Prisma client...");
     const generateResult = spawnSync(
       "npx",
-      ["prisma@7.0", "generate", "--no-hints", `--schema=${schemaPath}`],
+      [PRISMA_VERSION, "generate", "--no-hints", `--schema=${schemaPath}`],
       {
         stdio: stdioSync,
         env: {
@@ -137,7 +138,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
     if (verbose) console.log("Applying database migrations...");
     const migrateResult = spawnSync(
       "npx",
-      ["prisma@7.0", "migrate", "deploy", `--schema=${schemaPath}`],
+      [PRISMA_VERSION, "migrate", "deploy", `--schema=${schemaPath}`],
       {
         stdio: stdioSync,
         env: {
@@ -216,7 +217,6 @@ export async function startCommand(options: StartOptions): Promise<void> {
 
     // 8. Start Inngest (dev or production mode)
     let inngestStderr = "";
-    const inngestCliVersion = "inngest-cli@1.14.0";
 
     if (isProduction) {
       // Production mode: use inngest start with persistent storage
@@ -242,7 +242,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
       inngestProcess = spawn(
         "npx",
         [
-          inngestCliVersion,
+          INNGEST_CLI_VERSION,
           "start",
           "--event-key",
           eventKey,
@@ -267,7 +267,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
       inngestProcess = spawn(
         "npx",
         [
-          inngestCliVersion,
+          INNGEST_CLI_VERSION,
           "dev",
           "-u",
           inngestUrl,

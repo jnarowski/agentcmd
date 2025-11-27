@@ -1,6 +1,7 @@
 import { copyFileSync, existsSync, readdirSync, statSync, unlinkSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { spawnSync } from "node:child_process";
+import { PRISMA_VERSION } from "./constants";
 
 /**
  * Check if there are pending Prisma migrations
@@ -10,7 +11,7 @@ import { spawnSync } from "node:child_process";
 export function checkPendingMigrations(schemaPath: string): string[] {
   const result = spawnSync(
     "npx",
-    ["prisma@7.0", "migrate", "status", "--schema", schemaPath],
+    [PRISMA_VERSION, "migrate", "status", "--schema", schemaPath],
     {
       encoding: "utf-8",
       cwd: dirname(schemaPath),

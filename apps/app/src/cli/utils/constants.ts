@@ -5,6 +5,10 @@
 
 export const CLI_NAME = "agentcmd";
 
+// Pinned dependency versions for CLI
+export const PRISMA_VERSION = "prisma@7.0";
+export const INNGEST_CLI_VERSION = "inngest-cli@1.14.0";
+
 // Default port configuration
 export const DEFAULT_PORT = 4100;
 export const DEFAULT_INNGEST_PORT = 8288;
