@@ -118,6 +118,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
         env: {
           ...process.env,
           PRISMA_HIDE_UPDATE_MESSAGE: "true",
+          PRISMA_SKIP_DOTENV_LOAD: "1", // Prisma 7: prevent auto .env loading
         },
       }
     );
@@ -137,6 +138,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
         stdio: stdioSync,
         env: {
           ...process.env,
+          PRISMA_SKIP_DOTENV_LOAD: "1", // Prisma 7: prevent auto .env loading
         },
       }
     );

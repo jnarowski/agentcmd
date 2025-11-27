@@ -1,5 +1,6 @@
 import { test as base } from "@playwright/test";
 import { PrismaClient } from "@prisma/client";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -45,14 +46,12 @@ export interface DatabaseFixtures {
 
 export const test = base.extend<DatabaseFixtures>({
   // prisma fixture: shared PrismaClient instance
+  // Prisma 7: SQLite requires the better-sqlite3 adapter
   prisma: async ({}, use) => {
-    const prisma = new PrismaClient({
-      datasources: {
-        db: {
-          url: E2E_DATABASE_URL,
-        },
-      },
+    const adapter = new PrismaBetterSqlite3({
+      url: E2E_DATABASE_URL,
     });
+    const prisma = new PrismaClient({ adapter });
 
     await use(prisma);
 

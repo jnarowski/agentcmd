@@ -71,6 +71,7 @@ export async function installCommand(options: InstallOptions): Promise<void> {
         env: {
           ...process.env,
           PRISMA_HIDE_UPDATE_MESSAGE: "true",
+          PRISMA_SKIP_DOTENV_LOAD: "1", // Prisma 7: prevent auto .env loading
         },
       }
     );
@@ -94,6 +95,7 @@ export async function installCommand(options: InstallOptions): Promise<void> {
         stdio: "pipe",
         env: {
           ...process.env,
+          PRISMA_SKIP_DOTENV_LOAD: "1", // Prisma 7: prevent auto .env loading
         },
       }
     );

@@ -60,10 +60,10 @@ async function waitForServerReady(url, options = {}) {
   try {
     // 1. Start Fastify server
     console.log('Starting Fastify server...');
-    server = spawn('node', ['dist/server/index.js'], {
+    server = spawn('node', ['--env-file=.env', 'dist/server/index.js'], {
       stdio: 'inherit',
       shell: true,
-      env: { ...process.env },
+      env: { ...process.env, NODE_ENV: 'production' },
     });
 
     // 2. Wait for server to be ready
