@@ -62,16 +62,29 @@ Access your local <AgentCmd /> server from anywhere with [Tailscale's](https://t
   </Step>
 
   <Step>
-    ### Configure WebSocket host
+    ### Expose with Tailscale Serve
 
-    Set the WebSocket host environment variable before starting <AgentCmd />:
+    Start <AgentCmd /> and expose it via Tailscale Serve:
 
     ```bash
-    export VITE_WS_HOST=your-machine-name.tail-scale-name.ts.net:4100
+    # Start agentcmd
     npx agentcmd start
+
+    # Expose via Tailscale (runs in background, persists across reboots)
+    tailscale serve --https=443 --bg localhost:4100
     ```
 
-    This ensures WebSocket connections work when accessing remotely.
+    This creates an HTTPS proxy with automatic TLS certificates.
+
+    **Check status:**
+    ```bash
+    tailscale serve status
+    ```
+
+    **Stop serving:**
+    ```bash
+    tailscale serve --https=443 off
+    ```
   </Step>
 
   <Step>
@@ -80,10 +93,10 @@ Access your local <AgentCmd /> server from anywhere with [Tailscale's](https://t
     On your phone/tablet (with Tailscale app connected):
 
     ```
-    http://your-machine-name.tail-scale-name.ts.net:4100
+    https://your-machine-name.ts.net
     ```
 
-    Your machine name appears in the Tailscale admin console.
+    Find your machine name with `tailscale status` or in the Tailscale admin console.
   </Step>
 </Steps>
 
