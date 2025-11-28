@@ -351,6 +351,17 @@
       "totalComplexity": 47,
       "phaseCount": 1,
       "taskCount": 9
+    },
+    "2511281459": {
+      "folder": "2511281459-inngest-config-consolidation",
+      "path": "todo/2511281459-inngest-config-consolidation/spec.md",
+      "spec_type": "feature",
+      "status": "review",
+      "created": "2025-11-28T14:59:00Z",
+      "updated": "2025-11-28T23:08:00Z",
+      "totalComplexity": 42,
+      "phaseCount": 3,
+      "taskCount": 8
     }
   }
 }

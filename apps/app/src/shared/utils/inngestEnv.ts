@@ -1,3 +1,14 @@
+import { randomBytes } from "crypto";
+
+/**
+ * Default Inngest configuration constants
+ * Single source of truth for all Inngest port/host defaults
+ */
+export const INNGEST_DEFAULTS = {
+  PORT: 8288,
+  HOST: "127.0.0.1",
+} as const;
+
 /**
  * Inngest environment configuration options
  */
@@ -29,12 +40,12 @@ export interface InngestEnvOptions {
 export function setInngestEnvironment(options?: InngestEnvOptions): void {
   // Priority: explicit > INNGEST_HOST env > default (always localhost for connections)
   // Note: Don't use HOST env var - that's for server binding (can be 0.0.0.0)
-  const host = options?.host ?? process.env.INNGEST_HOST ?? "127.0.0.1";
+  const host = options?.host ?? process.env.INNGEST_HOST ?? INNGEST_DEFAULTS.HOST;
 
   const port =
     options?.port ??
     (process.env.INNGEST_PORT ? parseInt(process.env.INNGEST_PORT) : null) ??
-    8288;
+    INNGEST_DEFAULTS.PORT;
 
   // Set Inngest environment variables for self-hosted `inngest start`
   // INNGEST_DEV=0 disables dev mode to use self-hosted server with authentication
@@ -42,4 +53,19 @@ export function setInngestEnvironment(options?: InngestEnvOptions): void {
   process.env.INNGEST_PORT = port.toString();
   process.env.INNGEST_BASE_URL = `http://${host}:${port}`;
   process.env.INNGEST_DEV = "0";
+}
+
+/**
+ * Generate random Inngest authentication keys
+ *
+ * @returns Object with eventKey (32 hex chars) and signingKey (64 hex chars)
+ *
+ * @example
+ * const { eventKey, signingKey } = generateInngestKeys();
+ */
+export function generateInngestKeys(): { eventKey: string; signingKey: string } {
+  return {
+    eventKey: randomBytes(16).toString("hex"),
+    signingKey: randomBytes(32).toString("hex"),
+  };
 }

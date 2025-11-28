@@ -242,7 +242,7 @@ export async function startServer(config: StartServerConfig): Promise<void> {
 
     // 7. Wait for server to be ready
     if (verbose) console.log("Waiting for server to be ready...");
-    await waitForServerReady(`http://localhost:${port}/api/health`, {
+    await waitForServerReady(`http://${externalHost}:${port}/api/health`, {
       timeout: 30000,
     });
     if (verbose) console.log("Server is ready");
@@ -258,6 +258,7 @@ export async function startServer(config: StartServerConfig): Promise<void> {
 
     inngestProcess = spawnInngest({
       port: inngestPort,
+      sdkUrl: `http://${host}:${port}/api/workflows/inngest`,
       dataDir: inngestDataDir,
       eventKey: inngestEventKey,
       signingKey: inngestSigningKey,
@@ -289,6 +290,9 @@ export async function startServer(config: StartServerConfig): Promise<void> {
         process.exit(code);
       }
     });
+
+    // Wait for Inngest to sync with SDK (it retries automatically, but give it time for initial sync)
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // 9. Print startup banner
     printStartupBanner({

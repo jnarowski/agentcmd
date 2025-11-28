@@ -5,6 +5,7 @@
  */
 
 import { z } from "zod";
+import { INNGEST_DEFAULTS } from "@/shared/utils/inngestEnv";
 
 /**
  * Server configuration schema
@@ -80,7 +81,7 @@ const WorkflowConfigSchema = z.object({
   devMode: z.literal(false).default(false),
   memoizationDbPath: z.string().default("./prisma/workflows.db"),
   servePath: z.string().default("/api/workflows/inngest"),
-  inngestDevPort: z.coerce.number().int().positive().default(8288),
+  inngestDevPort: z.coerce.number().int().positive().default(INNGEST_DEFAULTS.PORT),
 });
 
 /**

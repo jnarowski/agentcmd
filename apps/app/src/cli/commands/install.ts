@@ -3,7 +3,7 @@ import {
   unlinkSync,
 } from "fs";
 import { spawnSync } from "child_process";
-import { randomBytes } from "crypto";
+import { randomBytes } from "crypto"; // Used for JWT secret generation
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import pc from "picocolors";
@@ -17,6 +17,7 @@ import { getDefaultConfig, saveConfig } from "../utils/config";
 import { PRISMA_VERSION } from "../utils/constants";
 import { showWelcomeBanner, showBoxedOutput } from "../utils/branding";
 import { promptForAnthropicKey, promptForOpenAIKey } from "../utils/prompts";
+import { generateInngestKeys } from "@/shared/utils/inngestEnv";
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -121,8 +122,7 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     const openaiApiKey = await promptForOpenAIKey("Skipped OpenAI - add later by editing ~/.agentcmd/config.json");
 
     // 6. Generate Inngest keys
-    const inngestEventKey = randomBytes(16).toString("hex");
-    const inngestSigningKey = randomBytes(32).toString("hex");
+    const { eventKey: inngestEventKey, signingKey: inngestSigningKey } = generateInngestKeys();
 
     // 7. Create config file with generated secrets and API keys
     const defaultConfig = getDefaultConfig();

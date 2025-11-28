@@ -7,8 +7,8 @@ import { INNGEST_CLI_VERSION } from "./constants";
 export interface SpawnInngestOptions {
   /** Inngest port */
   port: number;
-  /** App server port for SDK URL (default: 4100) */
-  sdkPort?: number;
+  /** Full SDK URL for auto-registration (e.g., "http://127.0.0.1:4100/api/workflows/inngest") */
+  sdkUrl: string;
   /** Inngest data directory for persistence */
   dataDir?: string;
   /** Event key */
@@ -26,7 +26,7 @@ export interface SpawnInngestOptions {
  * Always uses the same mode for consistency across dev/start/cli
  */
 export function spawnInngest(options: SpawnInngestOptions): ChildProcess {
-  const { port, dataDir, eventKey, signingKey, stdio = "pipe", env } = options;
+  const { port, sdkUrl, dataDir, eventKey, signingKey, stdio = "pipe", env } = options;
 
   const args = [
     INNGEST_CLI_VERSION,
@@ -37,6 +37,8 @@ export function spawnInngest(options: SpawnInngestOptions): ChildProcess {
     signingKey,
     "--port",
     port.toString(),
+    "--sdk-url",
+    sdkUrl,
   ];
 
   if (dataDir) {

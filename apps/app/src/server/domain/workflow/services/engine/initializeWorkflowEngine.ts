@@ -142,6 +142,8 @@ function registerInngestRoute(
   fastify: FastifyInstance,
   logger: FastifyInstance["log"]
 ): void {
+  console.log("config.workflow.servePath", config.workflow.servePath);
+
   fastify.route({
     method: ["GET", "POST", "PUT"],
     url: config.workflow.servePath,
