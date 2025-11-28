@@ -12,9 +12,8 @@ import { DashboardPage, ProjectsPage } from "../../pages";
  */
 
 test.describe("Authentication - Logout", () => {
-  test("should redirect to login when token is cleared", async ({ authenticatedPage }) => {
+  test("should redirect to login when clicking logout button", async ({ authenticatedPage }) => {
     const dashboardPage = new DashboardPage(authenticatedPage);
-    const projectsPage = new ProjectsPage(authenticatedPage);
 
     // Navigate to dashboard (authenticatedPage has token set)
     await dashboardPage.goto();
@@ -22,13 +21,14 @@ test.describe("Authentication - Logout", () => {
     // Verify authenticated state
     await dashboardPage.expectAuthenticated();
 
-    // Clear token (simulates logout)
-    await dashboardPage.logout();
+    // Click the user menu button (contains user email)
+    await authenticatedPage.getByRole('button', { name: /@/ }).click();
 
-    // Navigate to protected route
-    await projectsPage.goto();
+    // Click the logout menu item
+    await authenticatedPage.getByRole('menuitem', { name: /log out/i }).click();
 
-    // Should redirect to login
-    await projectsPage.expectRedirectedToLogin();
+    // Should redirect to login after logout
+    await authenticatedPage.waitForURL(/\/login/, { timeout: 5000 });
+    expect(authenticatedPage.url()).toContain("/login");
   });
 });

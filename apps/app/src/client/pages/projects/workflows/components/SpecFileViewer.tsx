@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { X, Save, Maximize2, Minimize2 } from "lucide-react";
+import { X, Save, Maximize2, Minimize2, Eye, Code2 } from "lucide-react";
 import { Button } from "@/client/components/ui/button";
 import { CodeEditor } from "@/client/components/CodeEditor";
+import { SegmentedControl } from "@/client/components/ui/segmented-control";
+import { MarkdownPreview } from "./MarkdownPreview";
 import { api } from "@/client/utils/api";
 
 interface SpecFileViewerProps {
@@ -9,6 +11,7 @@ interface SpecFileViewerProps {
   specPath: string;
   specName: string;
   onClose: () => void;
+  initialViewMode?: "edit" | "preview";
 }
 
 export function SpecFileViewer({
@@ -16,6 +19,7 @@ export function SpecFileViewer({
   specPath,
   specName,
   onClose,
+  initialViewMode = "edit",
 }: SpecFileViewerProps) {
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(true);
@@ -23,6 +27,8 @@ export function SpecFileViewer({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [wordWrap, setWordWrap] = useState(true); // Default to true for markdown
+  type ViewMode = "edit" | "preview";
+  const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
 
   // Load spec content
   useEffect(() => {
@@ -128,6 +134,15 @@ export function SpecFileViewer({
                 MD
               </span>
             </div>
+            <SegmentedControl
+              value={viewMode}
+              onChange={(value) => setViewMode(value as ViewMode)}
+              options={[
+                { value: "edit", label: "Edit", icon: Code2 },
+                { value: "preview", label: "Preview", icon: Eye },
+              ]}
+              className="flex-shrink-0"
+            />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 min-w-0">
                 <h3 className="font-medium truncate">{specName}</h3>
@@ -139,51 +154,55 @@ export function SpecFileViewer({
           </div>
 
           <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setWordWrap(!wordWrap)}
-              className={wordWrap ? "bg-secondary" : ""}
-              title={wordWrap ? "Disable word wrap" : "Enable word wrap"}
-            >
-              <span className="text-sm md:text-xs font-mono font-bold">↵</span>
-            </Button>
+            {viewMode === "edit" && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setWordWrap(!wordWrap)}
+                  className={wordWrap ? "bg-secondary" : ""}
+                  title={wordWrap ? "Disable word wrap" : "Enable word wrap"}
+                >
+                  <span className="text-sm md:text-xs font-mono font-bold">↵</span>
+                </Button>
 
-            <Button
-              variant="default"
-              size="sm"
-              onClick={handleSave}
-              disabled={saving}
-              className={
-                saveSuccess ? "bg-green-600 hover:bg-green-700" : ""
-              }
-            >
-              {saveSuccess ? (
-                <>
-                  <svg
-                    className="w-4 h-4 mr-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                  <span className="hidden sm:inline">Saved!</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4 mr-1" />
-                  <span className="hidden sm:inline">
-                    {saving ? "Saving..." : "Save"}
-                  </span>
-                </>
-              )}
-            </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={saving}
+                  className={
+                    saveSuccess ? "bg-green-600 hover:bg-green-700" : ""
+                  }
+                >
+                  {saveSuccess ? (
+                    <>
+                      <svg
+                        className="w-4 h-4 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <span className="hidden sm:inline">Saved!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-1" />
+                      <span className="hidden sm:inline">
+                        {saving ? "Saving..." : "Save"}
+                      </span>
+                    </>
+                  )}
+                </Button>
+              </>
+            )}
 
             <Button
               variant="ghost"
@@ -212,14 +231,18 @@ export function SpecFileViewer({
 
         {/* Editor */}
         <div className="flex-1 overflow-auto">
-          <CodeEditor
-            value={content}
-            onChange={setContent}
-            language="markdown"
-            height="100%"
-            showLineNumbers={true}
-            wordWrap={wordWrap}
-          />
+          {viewMode === "edit" ? (
+            <CodeEditor
+              value={content}
+              onChange={setContent}
+              language="markdown"
+              height="100%"
+              showLineNumbers={true}
+              wordWrap={wordWrap}
+            />
+          ) : (
+            <MarkdownPreview content={content} />
+          )}
         </div>
 
         {/* Footer */}
