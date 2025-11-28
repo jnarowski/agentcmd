@@ -13,6 +13,7 @@ export interface SegmentedControlProps {
   onChange: (value: string) => void;
   options: SegmentedControlOption[];
   className?: string;
+  size?: 'default' | 'sm';
 }
 
 export function SegmentedControl({
@@ -20,6 +21,7 @@ export function SegmentedControl({
   onChange,
   options,
   className = '',
+  size = 'default',
 }: SegmentedControlProps) {
   const [sliderStyle, setSliderStyle] = useState<{
     width: number;
@@ -78,16 +80,22 @@ export function SegmentedControl({
     }
   };
 
+  const containerPadding = size === 'sm' ? 'p-0.5' : 'p-1';
+  const buttonPadding = size === 'sm' ? 'px-2 py-0.5' : 'px-3 py-1.5';
+  const buttonGap = size === 'sm' ? 'gap-1.5' : 'gap-2';
+  const iconSize = size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4';
+  const fontSize = size === 'sm' ? 'text-xs' : 'text-sm';
+
   return (
     <div
       ref={containerRef}
-      className={`relative inline-flex items-center gap-1 rounded-lg bg-muted p-1 ${className}`}
+      className={`relative inline-flex items-center gap-1 rounded-lg bg-muted ${containerPadding} ${className}`}
       role="radiogroup"
       aria-label="View mode selector"
     >
       {/* Sliding background */}
       <div
-        className="absolute h-[calc(100%-8px)] rounded-md bg-background shadow-sm transition-all duration-200 ease-out"
+        className={`absolute ${size === 'sm' ? 'h-[calc(100%-4px)]' : 'h-[calc(100%-8px)]'} rounded-md bg-background shadow-sm transition-all duration-200 ease-out`}
         style={{
           width: sliderStyle.width,
           transform: `translateX(${sliderStyle.left}px)`,
@@ -114,7 +122,7 @@ export function SegmentedControl({
             aria-checked={isActive}
             aria-label={option.label}
             tabIndex={isActive ? 0 : -1}
-            className={`relative z-10 flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            className={`relative z-10 flex items-center ${buttonGap} rounded-md ${buttonPadding} ${fontSize} font-medium transition-colors ${
               isActive
                 ? 'text-foreground'
                 : 'text-muted-foreground hover:text-foreground'
@@ -122,7 +130,7 @@ export function SegmentedControl({
             onClick={() => onChange(option.value)}
             onKeyDown={(e) => handleKeyDown(e, index)}
           >
-            {Icon && <Icon className="h-4 w-4" />}
+            {Icon && <Icon className={iconSize} />}
             <span>{option.label}</span>
             {option.badge !== undefined && option.badge > 0 && (
               <span

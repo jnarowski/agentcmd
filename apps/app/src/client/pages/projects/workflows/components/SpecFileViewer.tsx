@@ -202,6 +202,7 @@ export function SpecFileViewer({
                 { value: "edit", label: "Edit", icon: Code2 },
                 { value: "preview", label: "Preview", icon: Eye },
               ]}
+              size="sm"
               className="flex-shrink-0"
             />
 
