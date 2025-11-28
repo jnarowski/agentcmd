@@ -523,6 +523,42 @@ export interface AiStepResult<T = { text: string }> {
 }
 
 /**
+ * Configuration for preview container step
+ */
+export interface PreviewStepConfig {
+  /** Port configuration: key = env var name (e.g., "PORT", "VITE_PORT"), value = internal container port */
+  ports?: Record<string, number>;
+  /** Environment variables to pass to container */
+  env?: Record<string, string>;
+  /** Custom Docker file path (overrides project config and auto-detection) */
+  dockerFilePath?: string;
+  /** Resource limits */
+  maxMemory?: string;
+  maxCpus?: string;
+}
+
+/**
+ * Result from preview container step
+ */
+export interface PreviewStepResult {
+  /** Result data */
+  data: {
+    /** Container ID */
+    containerId: string;
+    /** Container status */
+    status: string;
+    /** Port URLs (e.g., { app: "http://localhost:5000", server: "http://localhost:5001" }) */
+    urls: Record<string, string>;
+  };
+  /** Success status */
+  success: boolean;
+  /** Error message if failed */
+  error?: string;
+  /** Execution trace */
+  trace: TraceEntry[];
+}
+
+/**
  * Base Inngest step tools interface (simplified)
  * The runtime will inject the actual Inngest step implementation
  */
@@ -703,4 +739,16 @@ export interface WorkflowStep<TPhaseId extends string = string> extends InngestS
    * @param data - Fields to update on the workflow run
    */
   updateRun: (data: { pr_url?: string }) => Promise<void>;
+
+  /**
+   * Create and start a preview container
+   * @param id - Step ID
+   * @param config - Preview configuration (ports, env, dockerFilePath, resource limits)
+   * @param options - Step options (timeout)
+   */
+  preview(
+    id: string,
+    config?: PreviewStepConfig,
+    options?: StepOptions
+  ): Promise<PreviewStepResult>;
 }

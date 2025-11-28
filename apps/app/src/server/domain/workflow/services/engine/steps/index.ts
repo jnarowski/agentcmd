@@ -14,6 +14,7 @@ export { createSetupWorkspaceStep } from "./createSetupWorkspaceStep";
 export { createStepLog } from "./createStepLog";
 export { createUpdateRunStep } from "./createUpdateRunStep";
 export { createFinalizeWorkspaceStep } from "./createFinalizeWorkspaceStep";
+export { createPreviewStep } from "./createPreviewStep";
 export { executeStep } from "@/server/domain/workflow/services/engine/steps/utils/executeStep";
 export { findOrCreateStep } from "@/server/domain/workflow/services/engine/steps/utils/findOrCreateStep";
 export { updateStepStatus } from "@/server/domain/workflow/services/engine/steps/utils/updateStepStatus";

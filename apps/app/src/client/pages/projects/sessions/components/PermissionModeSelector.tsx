@@ -13,7 +13,7 @@ import { cn } from "@/client/utils/cn";
 export interface PermissionModeSelectorProps {
   permissionMode: PermissionMode;
   onPermissionModeChange: (mode: PermissionMode) => void;
-  textareaRef?: React.RefObject<HTMLTextAreaElement>;
+  textareaRef?: React.RefObject<HTMLTextAreaElement | null>;
 }
 
 /**

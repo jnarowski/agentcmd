@@ -54,7 +54,7 @@ export async function setupWebSocketForwarding(
             const message = JSON.parse(event.data);
             // @ts-ignore - captureWsEvent is exposed from test
             window.captureWsEvent(message.type, message);
-          } catch (error) {
+          } catch {
             // Not JSON, skip
           }
         });

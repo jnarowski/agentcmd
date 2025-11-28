@@ -26,6 +26,7 @@ import {
   createAiStep,
   createStepLog,
   createUpdateRunStep,
+  createPreviewStep,
 } from "./steps";
 import { setupWorkspace } from "./setupWorkspace";
 import { setupSpec } from "./setupSpec";
@@ -354,6 +355,7 @@ function extendInngestSteps<TPhases extends PhasesConstraint>(
     git: createGitStep(context, inngestStep),
     phase: createPhaseStep(context),
     updateRun: createUpdateRunStep(context),
+    preview: createPreviewStep(context, inngestStep),
     log,
   } as WorkflowStep;
 }

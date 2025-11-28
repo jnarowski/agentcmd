@@ -14,6 +14,7 @@ import { workflowArtifactRoutes } from "@/server/routes/workflow-artifacts";
 import { workflowEventRoutes } from "@/server/routes/workflow-events";
 import { registerWorkflowDefinitionRoutes } from "@/server/routes/workflow-definitions";
 import { webhookRoutes } from "@/server/routes/webhooks";
+import { containerRoutes } from "@/server/routes/containers";
 
 export async function registerRoutes(fastify: FastifyInstance) {
   // Register auth routes
@@ -46,6 +47,9 @@ export async function registerRoutes(fastify: FastifyInstance) {
 
   // Register webhook routes
   await fastify.register(webhookRoutes);
+
+  // Register container routes
+  await fastify.register(containerRoutes);
 
   // Register websocket metrics routes
   await fastify.register(registerWebSocketRoutes);

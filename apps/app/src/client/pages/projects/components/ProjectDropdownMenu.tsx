@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { MoreVertical, Edit, Star, Archive, ArchiveRestore } from "lucide-react";
 import {
   DropdownMenu,
@@ -8,14 +9,12 @@ import {
   DropdownMenuTrigger,
 } from "@/client/components/ui/dropdown-menu";
 import { Button } from "@/client/components/ui/button";
-import { ProjectDialog } from "./ProjectDialog";
 import { useToggleProjectStarred, useToggleProjectHidden } from "../hooks/useProjects";
 import { cn } from "@/client/utils/cn";
 import type { Project } from "@/shared/types/project.types";
 
 interface ProjectDropdownMenuProps {
   project: Project;
-  onEditSuccess?: () => void;
   onMenuOpenChange?: (open: boolean) => void;
   triggerClassName?: string;
 }
@@ -26,12 +25,11 @@ interface ProjectDropdownMenuProps {
  */
 export function ProjectDropdownMenu({
   project,
-  onEditSuccess,
   onMenuOpenChange,
   triggerClassName,
 }: ProjectDropdownMenuProps) {
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const toggleStarred = useToggleProjectStarred();
   const toggleHidden = useToggleProjectHidden();
 
@@ -44,7 +42,7 @@ export function ProjectDropdownMenu({
     e.preventDefault();
     e.stopPropagation();
     handleMenuOpenChange(false);
-    setEditDialogOpen(true);
+    navigate(`/projects/${project.id}/settings`);
   };
 
   const handleToggleFavorite = (e: React.MouseEvent) => {
@@ -61,16 +59,8 @@ export function ProjectDropdownMenu({
     toggleHidden.mutate({ id: project.id, is_hidden: !project.is_hidden });
   };
 
-  const handleDialogClose = (open: boolean) => {
-    setEditDialogOpen(open);
-    if (!open) {
-      onEditSuccess?.();
-    }
-  };
-
   return (
-    <>
-      <DropdownMenu open={isMenuOpen} onOpenChange={handleMenuOpenChange}>
+    <DropdownMenu open={isMenuOpen} onOpenChange={handleMenuOpenChange}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
@@ -106,13 +96,6 @@ export function ProjectDropdownMenu({
             )}
           </DropdownMenuItem>
         </DropdownMenuContent>
-      </DropdownMenu>
-
-      <ProjectDialog
-        open={editDialogOpen}
-        onOpenChange={handleDialogClose}
-        project={project}
-      />
-    </>
+    </DropdownMenu>
   );
 }

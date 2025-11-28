@@ -3,6 +3,7 @@ import { prisma } from "@/shared/prisma";
 import type {
   Project,
   ProjectCapabilities,
+  ProjectPreviewConfig,
 } from "@/shared/types/project.types";
 import { isGitRepository } from "@/server/domain/git/services/isGitRepository";
 import { checkWorkflowPackage } from "@/server/domain/project/services/checkWorkflowPackage";
@@ -43,6 +44,24 @@ async function buildCapabilities(projectPath: string): Promise<ProjectCapabiliti
 }
 
 /**
+ * Migrate old ports format (string[]) to new format (Record<string, number>)
+ */
+function migratePreviewConfig(config: any): ProjectPreviewConfig | null {
+  if (!config) return null;
+  const migrated: ProjectPreviewConfig = { ...config };
+  if (Array.isArray(config.ports)) {
+    const newPorts: Record<string, number> = {};
+    let defaultPort = 3000;
+    for (const portName of config.ports) {
+      const envVar = `PREVIEW_PORT_${String(portName).toUpperCase().replace(/-/g, "_")}`;
+      newPorts[envVar] = defaultPort++;
+    }
+    migrated.ports = Object.keys(newPorts).length > 0 ? newPorts : undefined;
+  }
+  return migrated;
+}
+
+/**
  * Transform Prisma project to API project format
  * @param prismaProject - Raw project from Prisma
  * @param capabilities - Project capabilities (git, workflow SDK)
@@ -60,6 +79,7 @@ function transformProject(
     created_at: prismaProject.created_at,
     updated_at: prismaProject.updated_at,
     capabilities,
+    preview_config: migratePreviewConfig(prismaProject.preview_config),
   };
 }
 

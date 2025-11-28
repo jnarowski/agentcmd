@@ -110,6 +110,11 @@ export interface ArtifactStepOptions extends BaseStepOptions {
   continueOnError?: boolean;
 }
 
+// Preview-specific options
+export interface PreviewStepOptions extends BaseStepOptions {
+  continueOnError?: boolean;
+}
+
 // Phase-specific options
 export interface PhaseOptions {
   description?: string;

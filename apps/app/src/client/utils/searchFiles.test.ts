@@ -139,8 +139,8 @@ describe("searchFiles", () => {
         },
         {
           filename: "spec.md",
-          directory: "todo/subfolder",
-          fullPath: "todo/subfolder/spec.md",
+          directory: "todo/spec.md-backup",
+          fullPath: "todo/spec.md-backup/spec.md", // True prefix match
           extension: "md",
         },
         {
@@ -154,7 +154,7 @@ describe("searchFiles", () => {
       // Exact match should be first
       expect(results[0].fullPath).toBe("todo/spec.md");
       // Prefix match should be second
-      expect(results[1].fullPath).toBe("todo/subfolder/spec.md");
+      expect(results[1].fullPath).toBe("todo/spec.md-backup/spec.md");
       // Contains match should be third
       expect(results[2].fullPath).toBe(".agent/specs/todo/spec.md");
     });
@@ -206,7 +206,12 @@ describe("searchFiles", () => {
 
     it("should find partial filename", () => {
       const results = searchFiles("spec", testFiles);
-      expect(results.every((r) => r.filename.includes("spec"))).toBe(true);
+      // Search for "spec" matches both filenames and directories containing "spec"
+      expect(
+        results.every(
+          (r) => r.filename.includes("spec") || r.fullPath.includes("spec")
+        )
+      ).toBe(true);
     });
 
     it("should prioritize filename prefix", () => {

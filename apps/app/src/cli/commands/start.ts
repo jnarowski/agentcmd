@@ -229,7 +229,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
       if (!signingKey) {
         try {
           signingKey = execSync("openssl rand -hex 32", { encoding: "utf8" }).trim();
-        } catch (error) {
+        } catch {
           console.error("Warning: Failed to generate signing key, using fallback");
           signingKey = "a".repeat(64); // Fallback: valid 64-char hex
         }

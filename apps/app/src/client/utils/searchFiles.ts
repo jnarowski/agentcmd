@@ -122,23 +122,24 @@ export function scorePathMatch(query: string, fullPath: string): number {
  * Returns 0 if no match, 300-699 for matches
  */
 export function scoreSegmentMatch(query: string, segment: string): number {
+  const normalizedQuery = query.toLowerCase();
   const normalizedSegment = segment.toLowerCase();
 
   // Exact segment match
-  if (normalizedSegment === query) {
-    const coverage = query.length / segment.length;
+  if (normalizedSegment === normalizedQuery) {
+    const coverage = normalizedQuery.length / segment.length;
     return SCORE_EXACT_SEGMENT + Math.floor(coverage * 99);
   }
 
   // Prefix segment match
-  if (normalizedSegment.startsWith(query)) {
-    const coverage = query.length / segment.length;
+  if (normalizedSegment.startsWith(normalizedQuery)) {
+    const coverage = normalizedQuery.length / segment.length;
     return SCORE_PREFIX_SEGMENT + Math.floor(coverage * 99);
   }
 
   // Contains in segment
-  if (normalizedSegment.includes(query)) {
-    const position = normalizedSegment.indexOf(query);
+  if (normalizedSegment.includes(normalizedQuery)) {
+    const position = normalizedSegment.indexOf(normalizedQuery);
     const positionBonus = Math.max(0, 50 - position);
     return SCORE_CONTAINS_SEGMENT + positionBonus;
   }
@@ -181,22 +182,23 @@ export function scoreDirectorySegments(
  * Returns 0 if no match, 200-299 for matches
  */
 export function scoreFilenameMatch(query: string, filename: string): number {
+  const normalizedQuery = query.toLowerCase();
   const normalizedFilename = filename.toLowerCase();
 
   // Exact filename match
-  if (normalizedFilename === query) {
+  if (normalizedFilename === normalizedQuery) {
     return SCORE_EXACT_FILENAME;
   }
 
   // Prefix filename match
-  if (normalizedFilename.startsWith(query)) {
+  if (normalizedFilename.startsWith(normalizedQuery)) {
     const lengthPenalty = Math.min(filename.length / 10, 40);
     return SCORE_PREFIX_FILENAME + (49 - lengthPenalty);
   }
 
   // Contains in filename
-  if (normalizedFilename.includes(query)) {
-    const position = normalizedFilename.indexOf(query);
+  if (normalizedFilename.includes(normalizedQuery)) {
+    const position = normalizedFilename.indexOf(normalizedQuery);
     const positionBonus = Math.max(0, 40 - position);
     return SCORE_CONTAINS_FILENAME + positionBonus;
   }

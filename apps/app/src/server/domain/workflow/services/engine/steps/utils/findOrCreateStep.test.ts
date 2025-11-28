@@ -43,7 +43,7 @@ describe("findOrCreateStep", () => {
     expect(step.name).toBe("Compile");
     expect(step.inngest_step_id).toBe("build-compile");
     expect(step.phase).toBe("build");
-    expect(step.status).toBe("pending");
+    expect(step.status).toBe("running"); // Steps are created as "running" since they execute immediately
 
     const dbStep = await prisma.workflowRunStep.findUnique({
       where: { id: step.id },

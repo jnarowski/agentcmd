@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/shared/prisma";
-import type { Project, ProjectCapabilities } from "@/shared/types/project.types";
+import type { Project, ProjectCapabilities, ProjectPreviewConfig } from "@/shared/types/project.types";
 import { isGitRepository } from "@/server/domain/git/services/isGitRepository";
 import { checkWorkflowPackage } from "@/server/domain/project/services/checkWorkflowPackage";
 import type { UpdateProjectOptions } from "@/server/domain/project/types";
@@ -42,6 +42,24 @@ async function buildCapabilities(projectPath: string): Promise<ProjectCapabiliti
 }
 
 /**
+ * Migrate old ports format (string[]) to new format (Record<string, number>)
+ */
+function migratePreviewConfig(config: any): ProjectPreviewConfig | null {
+  if (!config) return null;
+  const migrated: ProjectPreviewConfig = { ...config };
+  if (Array.isArray(config.ports)) {
+    const newPorts: Record<string, number> = {};
+    let defaultPort = 3000;
+    for (const portName of config.ports) {
+      const envVar = `PREVIEW_PORT_${String(portName).toUpperCase().replace(/-/g, "_")}`;
+      newPorts[envVar] = defaultPort++;
+    }
+    migrated.ports = Object.keys(newPorts).length > 0 ? newPorts : undefined;
+  }
+  return migrated;
+}
+
+/**
  * Transform Prisma project to API project format
  * @param prismaProject - Raw project from Prisma
  * @param capabilities - Project capabilities (git, workflow SDK)
@@ -59,6 +77,7 @@ function transformProject(
     created_at: prismaProject.created_at,
     updated_at: prismaProject.updated_at,
     capabilities,
+    preview_config: migratePreviewConfig(prismaProject.preview_config),
   };
 }
 
@@ -72,13 +91,26 @@ export async function updateProject({
   data
 }: UpdateProjectOptions): Promise<Project | null> {
   try {
+    // Destructure to exclude preview_config from spread (needs special handling)
+    const { preview_config, ...restData } = data;
+
+    // Build update data without preview_config
+    const updateData: Prisma.ProjectUpdateInput = {
+      ...restData,
+      ...(data.name && { name: data.name.trim() }),
+      ...(data.path && { path: data.path.trim() }), // Trim path to prevent trailing/leading whitespace bugs
+    };
+
+    // Prisma requires DbNull for setting JSON fields to null
+    if (preview_config === null) {
+      updateData.preview_config = Prisma.DbNull;
+    } else if (preview_config !== undefined) {
+      updateData.preview_config = preview_config as Prisma.InputJsonValue;
+    }
+
     const project = await prisma.project.update({
       where: { id },
-      data: {
-        ...data,
-        ...(data.name && { name: data.name.trim() }),
-        ...(data.path && { path: data.path.trim() }), // Trim path to prevent trailing/leading whitespace bugs
-      },
+      data: updateData,
     });
     const capabilities = await buildCapabilities(project.path);
     return transformProject(project, capabilities);

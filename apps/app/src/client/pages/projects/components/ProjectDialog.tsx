@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useCreateProject, useUpdateProject } from "@/client/pages/projects/hooks/useProjects";
+import { useCreateProject } from "@/client/pages/projects/hooks/useProjects";
 import { BaseDialog } from "@/client/components/BaseDialog";
 import {
   DialogDescription,
@@ -15,9 +15,8 @@ import { LoadingButton } from "@/client/components/ui/loading-button";
 import { ErrorAlert } from "@/client/components/ui/error-alert";
 import { Input } from "@/client/components/ui/input";
 import { Label } from "@/client/components/ui/label";
-import type { Project } from "@/shared/types/project.types";
 
-// Form validation schema
+// Form validation schema - only basic fields for creation
 const projectFormSchema = z.object({
   name: z.string().min(1, "Project name is required").max(255),
   path: z.string().min(1, "Project path is required"),
@@ -28,19 +27,19 @@ type ProjectFormData = z.infer<typeof projectFormSchema>;
 interface ProjectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  project?: Project;
   onProjectCreated?: (projectId: string) => void;
 }
 
+/**
+ * Dialog for creating new projects.
+ * For editing projects, use ProjectEditPage instead.
+ */
 export function ProjectDialog({
   open,
   onOpenChange,
-  project,
   onProjectCreated,
 }: ProjectDialogProps) {
-  const isEditMode = !!project;
   const createMutation = useCreateProject();
-  const updateMutation = useUpdateProject();
 
   const {
     register,
@@ -52,69 +51,43 @@ export function ProjectDialog({
   } = useForm<ProjectFormData>({
     // @ts-ignore - Zod version mismatch with @hookform/resolvers
     resolver: zodResolver(projectFormSchema),
-    defaultValues: project
-      ? {
-          name: project.name,
-          path: project.path,
-        }
-      : {
-          name: "",
-          path: "",
-        },
+    defaultValues: {
+      name: "",
+      path: "",
+    },
   });
 
-  // Reset form when dialog opens/closes or project changes
+  // Reset form when dialog opens/closes
   useEffect(() => {
     if (open) {
-      reset(
-        project
-          ? {
-              name: project.name,
-              path: project.path,
-            }
-          : {
-              name: "",
-              path: "",
-            }
-      );
+      reset({ name: "", path: "" });
     }
-  }, [open, project, reset]);
+  }, [open, reset]);
 
   // Extract folder name from path
   const extractFolderName = (path: string): string => {
     if (!path) return "";
-    // Remove trailing slashes
     const cleanPath = path.replace(/\/+$/, "");
-    // Get last segment
     const segments = cleanPath.split("/");
     return segments[segments.length - 1] || "";
   };
 
-  // Watch path changes and auto-populate name (only when creating new project)
+  // Watch path changes and auto-populate name
   const currentPath = watch("path");
 
   useEffect(() => {
-    // Only auto-populate name when creating (not editing) and name hasn't been manually changed
-    if (!isEditMode && currentPath && !project) {
+    if (currentPath) {
       const extractedName = extractFolderName(currentPath);
       if (extractedName) {
         setValue("name", extractedName);
       }
     }
-  }, [currentPath, isEditMode, project, setValue]);
+  }, [currentPath, setValue]);
 
   const onSubmit = (data: ProjectFormData) => {
-    if (isEditMode) {
-      updateMutation.mutate(
-        { id: project.id, data },
-        {
-          onSuccess: () => {
-            onOpenChange(false);
-          },
-        }
-      );
-    } else {
-      createMutation.mutate(data, {
+    createMutation.mutate(
+      { name: data.name, path: data.path },
+      {
         onSuccess: (newProject) => {
           if (onProjectCreated) {
             onProjectCreated(newProject.id);
@@ -122,12 +95,12 @@ export function ProjectDialog({
             onOpenChange(false);
           }
         },
-      });
-    }
+      }
+    );
   };
 
-  const isLoading = createMutation.isPending || updateMutation.isPending;
-  const mutationError = createMutation.error || updateMutation.error;
+  const isLoading = createMutation.isPending;
+  const mutationError = createMutation.error;
 
   return (
     <BaseDialog
@@ -136,13 +109,9 @@ export function ProjectDialog({
       contentProps={{ className: "sm:max-w-md" }}
     >
       <DialogHeader>
-        <DialogTitle>
-          {isEditMode ? "Edit Project" : "Create Project"}
-        </DialogTitle>
+        <DialogTitle>Create Project</DialogTitle>
         <DialogDescription>
-          {isEditMode
-            ? "Update your project information."
-            : "Enter the full path to your project folder to create a new project."}
+          Enter the full path to your project folder to create a new project.
         </DialogDescription>
       </DialogHeader>
 
@@ -194,9 +163,9 @@ export function ProjectDialog({
             <LoadingButton
               type="submit"
               isLoading={isLoading}
-              loadingText={isEditMode ? "Updating..." : "Creating..."}
+              loadingText="Creating..."
             >
-              {isEditMode ? "Update" : "Create"}
+              Create
             </LoadingButton>
           </DialogFooter>
         </form>

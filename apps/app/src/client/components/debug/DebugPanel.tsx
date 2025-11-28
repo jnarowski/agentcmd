@@ -60,7 +60,7 @@ export function DebugPanel() {
     return (
       <button
         onClick={() => setIsMinimized(false)}
-        className="fixed bottom-4 right-4 z-50 px-3 py-2 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 transition-colors border border-blue-500 flex items-center gap-2"
+        className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-3 py-2 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 transition-colors border border-blue-500 flex items-center gap-2"
       >
         <Bug className="w-4 h-4" />
         <span className="text-base">Debug</span>
@@ -69,7 +69,7 @@ export function DebugPanel() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 w-[700px] h-[600px] bg-gray-900 text-white rounded-lg shadow-2xl flex flex-col border border-gray-700 overflow-hidden">
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[700px] h-[600px] bg-gray-900 text-white rounded-lg shadow-2xl flex flex-col border border-gray-700 overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700 bg-gray-800">
         <h2 className="text-lg font-semibold">Debug Panel</h2>

@@ -83,10 +83,12 @@ export default defineConfig({
       reuseExistingServer: false, // Always start fresh E2E server
       timeout: 30_000,
       env: {
+        ...process.env,
         PORT: "5100",
         NODE_ENV: "test",
         DATABASE_URL: E2E_DATABASE_URL,
         JWT_SECRET: "e2e-test-secret-key-12345",
+        CLAUDE_CLI_PATH: `${process.env.HOME}/.claude/local/claude`,
       },
     },
     {
@@ -95,6 +97,7 @@ export default defineConfig({
       reuseExistingServer: false, // Always start fresh E2E client
       timeout: 30_000,
       env: {
+        ...process.env,
         // PORT tells Vite proxy where to forward /api requests
         PORT: "5100",
         VITE_PORT: "5101",

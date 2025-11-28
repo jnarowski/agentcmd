@@ -16,6 +16,7 @@ import type { AgentType } from "@/shared/types/agent.types";
 import type { SessionSummary } from "@/client/pages/projects/sessions/stores/sessionStore";
 import type { WorkflowStatus } from "@/shared/schemas/workflow.schemas";
 import { formatDate } from "@/shared/utils/formatDate";
+import { ProjectHomeContainers } from "@/client/pages/projects/components/ProjectHomeContainers";
 
 type ActivityFilter = "all" | "sessions" | "workflows";
 
@@ -132,8 +133,13 @@ export function ProjectHomeActivities({
   filteredActivities = filteredActivities.slice(0, 50);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
+    <div className="space-y-6">
+      {/* Active Previews Section */}
+      <ProjectHomeContainers projectId={projectId} />
+
+      {/* Activities Section */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
         <ToggleGroup
           type="single"
           value={filter}
@@ -306,6 +312,7 @@ export function ProjectHomeActivities({
           </table>
         </div>
       )}
+      </div>
     </div>
   );
 }

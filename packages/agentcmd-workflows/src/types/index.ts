@@ -26,6 +26,8 @@ export type {
   AiGenerationMetadata,
   SetupWorkspaceConfig,
   WorkspaceResult,
+  PreviewStepConfig,
+  PreviewStepResult,
 } from "./steps";
 
 export type {
