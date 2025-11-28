@@ -734,11 +734,11 @@ export interface WorkflowStep<TPhaseId extends string = string> extends InngestS
   };
 
   /**
-   * Update workflow run metadata (e.g., pr_url, preview_url)
+   * Update workflow run metadata (e.g., pr_url)
    * Automatically broadcasts changes via WebSocket
    * @param data - Fields to update on the workflow run
    */
-  updateRun: (data: { pr_url?: string; preview_url?: string }) => Promise<void>;
+  updateRun: (data: { pr_url?: string }) => Promise<void>;
 
   /**
    * Create and start a preview container

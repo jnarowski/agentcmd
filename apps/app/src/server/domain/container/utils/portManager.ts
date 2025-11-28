@@ -1,8 +1,12 @@
+import { exec } from "child_process";
+import { promisify } from "util";
 import { prisma } from "@/shared/prisma";
 import type {
   PortAllocationOptions,
   PortAllocationResult,
 } from "../services/types";
+
+const execAsync = promisify(exec);
 
 // Module constants
 const PORT_RANGE_START = 5000;
@@ -55,14 +59,25 @@ export async function allocatePorts(
 
     for (const [envVarName, preferredPort] of Object.entries(portsConfig)) {
       // Try the preferred (container) port first if it's available
-      if (!usedPorts.has(preferredPort)) {
+      // Check both DB (other containers) and system (other processes)
+      const preferredInUseByContainer = usedPorts.has(preferredPort);
+      const preferredInUseOnSystem = await isPortInUseOnSystem(preferredPort);
+
+      if (!preferredInUseByContainer && !preferredInUseOnSystem) {
         allocatedPorts[envVarName] = preferredPort;
         usedPorts.add(preferredPort);
         continue;
       }
 
       // Fall back to finding an available port in the reserved range
-      while (usedPorts.has(fallbackPort) && fallbackPort <= PORT_RANGE_END) {
+      // Check both DB and system for each candidate
+      while (fallbackPort <= PORT_RANGE_END) {
+        const inUseByContainer = usedPorts.has(fallbackPort);
+        const inUseOnSystem = await isPortInUseOnSystem(fallbackPort);
+
+        if (!inUseByContainer && !inUseOnSystem) {
+          break;
+        }
         fallbackPort++;
       }
 
@@ -79,4 +94,20 @@ export async function allocatePorts(
 
     return { ports: allocatedPorts };
   });
+}
+
+// PRIVATE HELPERS
+
+/**
+ * Check if a port is in use on the local system
+ * Uses lsof to check for any process listening on the port
+ */
+async function isPortInUseOnSystem(port: number): Promise<boolean> {
+  try {
+    // lsof returns exit code 0 if port is in use, 1 if not
+    await execAsync(`lsof -i :${port} -P -n -sTCP:LISTEN`);
+    return true; // Command succeeded = port in use
+  } catch {
+    return false; // Command failed = port available
+  }
 }

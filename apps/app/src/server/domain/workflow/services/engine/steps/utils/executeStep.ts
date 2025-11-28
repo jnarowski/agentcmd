@@ -33,6 +33,16 @@ export async function executeStep<T>(params: {
       // Execute step function
       const result = await fn();
 
+      // Check if result indicates failure (success: false pattern)
+      const hasSuccessField = result !== null && typeof result === "object" && "success" in result;
+      const isFailure = hasSuccessField && (result as { success: boolean }).success === false;
+
+      if (isFailure) {
+        // Mark as failed but return result (allows workflow to continue)
+        await updateStepStatus(context, step.id, "failed", undefined, result);
+        return { runStepId: step.id, result };
+      }
+
       // Update to completed with output
       await updateStepStatus(
         context,

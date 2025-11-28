@@ -6,7 +6,6 @@ import { createContainer } from "@/server/domain/container/services/createContai
 import { executeStep } from "@/server/domain/workflow/services/engine/steps/utils/executeStep";
 import { withTimeout } from "@/server/domain/workflow/services/engine/steps/utils/withTimeout";
 import { slugify as toId } from "@/server/utils/slugify";
-import { updateWorkflowRun } from "@/server/domain/workflow/services/runs/updateWorkflowRun";
 import { config as appConfig } from "@/server/config";
 
 const DEFAULT_PREVIEW_TIMEOUT = 300000; // 5 minutes
@@ -109,15 +108,6 @@ async function executePreviewOperation(
     const ports = container.ports as Record<string, number>;
     for (const [name, port] of Object.entries(ports)) {
       urls[name] = `http://${host}:${port}`;
-    }
-
-    // Set preview_url on workflow run (use first URL)
-    const firstUrl = Object.values(urls)[0];
-    if (firstUrl) {
-      await updateWorkflowRun({
-        runId: workflowRunId,
-        data: { preview_url: firstUrl },
-      });
     }
 
     return {

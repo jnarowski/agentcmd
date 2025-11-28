@@ -1,7 +1,10 @@
+import { basename } from "path";
 import { prisma } from "@/shared/prisma";
 import { broadcast } from "@/server/websocket/infrastructure/subscriptions";
 import { Channels } from "@/shared/websocket";
 import { getProjectById } from "@/server/domain/project/services/getProjectById";
+import { broadcastWorkflowEvent } from "@/server/domain/workflow/services/events/broadcastWorkflowEvent";
+import { WorkflowWebSocketEventTypes } from "@/shared/types/websocket.types";
 import type { ProjectPreviewConfig } from "@/shared/types/project.types";
 import * as dockerClient from "../utils/dockerClient";
 import * as portManager from "../utils/portManager";
@@ -75,16 +78,38 @@ export async function createContainer(
     portsConfig: mergedConfig.ports,
   });
 
-  // Create Container record with status "starting"
-  const container = await prisma.container.create({
-    data: {
-      project_id: projectId,
-      workflow_run_id: workflowRunId,
-      status: "starting",
-      ports,
-      working_dir: workingDir,
-    },
-  });
+  // Create or update Container record with status "starting" (idempotent for retries)
+  let container;
+  if (workflowRunId) {
+    container = await prisma.container.upsert({
+      where: { workflow_run_id: workflowRunId },
+      create: {
+        project_id: projectId,
+        workflow_run_id: workflowRunId,
+        status: "starting",
+        ports,
+        working_dir: workingDir,
+      },
+      update: {
+        status: "starting",
+        ports,
+        working_dir: workingDir,
+        error_message: null,
+        container_ids: [],
+        compose_project: null,
+        started_at: null,
+      },
+    });
+  } else {
+    container = await prisma.container.create({
+      data: {
+        project_id: projectId,
+        status: "starting",
+        ports,
+        working_dir: workingDir,
+      },
+    });
+  }
 
   // Broadcast container.created event
   broadcast(Channels.project(projectId), {
@@ -96,12 +121,25 @@ export async function createContainer(
     },
   });
 
+  // Broadcast workflow.run.updated to trigger client refetch (container now linked)
+  if (workflowRunId) {
+    broadcastWorkflowEvent(projectId, {
+      type: WorkflowWebSocketEventTypes.RUN_UPDATED,
+      data: {
+        run_id: workflowRunId,
+        project_id: projectId,
+        changes: { updated_at: new Date().toISOString() },
+      },
+    });
+  }
+
   try {
     // Build and run Docker container
     const dockerResult = await dockerClient.buildAndRun({
       type: dockerConfig.type,
       workingDir,
       containerId: container.id,
+      projectName: basename(project.path),
       ports,
       env: mergedConfig.env,
       maxMemory: mergedConfig.maxMemory,
@@ -120,6 +158,15 @@ export async function createContainer(
       },
     });
 
+    // Build URLs map for return value
+    const urls = Object.entries(ports).reduce(
+      (acc, [name, port]) => {
+        acc[name] = `http://localhost:${port}`;
+        return acc;
+      },
+      {} as Record<string, string>
+    );
+
     // Broadcast container.updated event
     broadcast(Channels.project(projectId), {
       type: "container.updated",
@@ -128,15 +175,6 @@ export async function createContainer(
         changes: { status: "running" },
       },
     });
-
-    // Build URLs map
-    const urls = Object.entries(ports).reduce(
-      (acc, [name, port]) => {
-        acc[name] = `http://localhost:${port}`;
-        return acc;
-      },
-      {} as Record<string, string>
-    );
 
     return {
       id: updatedContainer.id,

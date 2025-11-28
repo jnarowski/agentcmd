@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { ExternalLink, StopCircle, FileText, Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ExternalLink, StopCircle, FileText, Workflow } from "lucide-react";
+import { toast } from "sonner";
 import type { Container } from "../types/container.types";
 import { useStopContainer } from "../hooks/useStopContainer";
 import { formatRelativeTime } from "@/client/pages/projects/workflows/utils/workflowFormatting";
+import { DeleteDialog } from "@/client/components/DeleteDialog";
 
 export interface ContainerCardProps {
   container: Container;
@@ -45,22 +48,19 @@ function getStatusConfig(status: Container["status"]) {
 
 export function ContainerCard({ container }: ContainerCardProps) {
   const [showLogs, setShowLogs] = useState(false);
+  const [stopDialogOpen, setStopDialogOpen] = useState(false);
   const stopContainer = useStopContainer();
   const statusConfig = getStatusConfig(container.status);
 
   const handleStop = async () => {
-    if (
-      !window.confirm(
-        "Are you sure you want to stop this container? This action cannot be undone.",
-      )
-    ) {
-      return;
-    }
-
     try {
       await stopContainer.mutateAsync(container.id);
+      toast.success("Container stopped successfully");
+      setStopDialogOpen(false);
     } catch (error) {
       console.error("Failed to stop container:", error);
+      toast.error("Failed to stop container");
+      setStopDialogOpen(false);
     }
   };
 
@@ -68,17 +68,19 @@ export function ContainerCard({ container }: ContainerCardProps) {
     ? formatRelativeTime(container.started_at)
     : formatRelativeTime(container.created_at);
 
+  const containerName = container.compose_project || `Container ${container.id.slice(0, 8)}`;
+
   return (
     <div className="relative rounded-lg border bg-card p-4 shadow-sm">
       {/* Header */}
       <div className="mb-3 flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <h3 className="font-medium text-sm text-foreground truncate">
-            Container {container.id.slice(0, 8)}
+            {containerName}
           </h3>
           {container.compose_project && (
             <p className="text-xs text-muted-foreground truncate">
-              {container.compose_project}
+              {container.id.slice(0, 8)}
             </p>
           )}
         </div>
@@ -89,6 +91,19 @@ export function ContainerCard({ container }: ContainerCardProps) {
         </span>
       </div>
 
+      {/* Workflow Run Link */}
+      {container.workflow_run_id && (
+        <div className="mb-3">
+          <Link
+            to={`/projects/${container.project_id}/workflow-runs/${container.workflow_run_id}`}
+            className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+          >
+            <Workflow className="h-3 w-3" />
+            View Workflow Run
+          </Link>
+        </div>
+      )}
+
       {/* Error message */}
       {container.error_message && (
         <div className="mb-3 rounded-md bg-red-50 dark:bg-red-900/20 p-2 text-xs text-red-600 dark:text-red-400">
@@ -97,20 +112,21 @@ export function ContainerCard({ container }: ContainerCardProps) {
       )}
 
       {/* Port URLs */}
-      {Object.keys(container.ports).length > 0 && (
+      {container.urls && Object.keys(container.urls).length > 0 && (
         <div className="mb-3 space-y-1">
-          {Object.entries(container.ports).map(([name, port]) => (
-            <a
-              key={name}
-              href={`http://localhost:${port}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-xs text-primary hover:underline"
-            >
-              <ExternalLink className="h-3 w-3" />
-              <span className="font-medium">{name}:</span>
-              <span>localhost:{port}</span>
-            </a>
+          {Object.entries(container.urls).map(([name, url]) => (
+            <div key={name} className="flex items-center gap-1 text-xs">
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-primary hover:underline"
+              >
+                <ExternalLink className="h-3 w-3" />
+                {url}
+              </a>
+              <span className="text-muted-foreground">- {name}</span>
+            </div>
           ))}
         </div>
       )}
@@ -120,15 +136,10 @@ export function ContainerCard({ container }: ContainerCardProps) {
         <div className="flex gap-2">
           {container.status === "running" && (
             <button
-              onClick={handleStop}
-              disabled={stopContainer.isPending}
-              className="inline-flex items-center gap-1 rounded-md bg-red-100 dark:bg-red-900/30 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => setStopDialogOpen(true)}
+              className="inline-flex items-center gap-1 rounded-md bg-red-100 dark:bg-red-900/30 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50"
             >
-              {stopContainer.isPending ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <StopCircle className="h-3 w-3" />
-              )}
+              <StopCircle className="h-3 w-3" />
               Stop
             </button>
           )}
@@ -153,6 +164,18 @@ export function ContainerCard({ container }: ContainerCardProps) {
           </pre>
         </div>
       )}
+
+      {/* Stop Container Dialog */}
+      <DeleteDialog
+        open={stopDialogOpen}
+        onOpenChange={setStopDialogOpen}
+        title="Stop container?"
+        description={`This will stop "${containerName}". You can restart it later if needed.`}
+        onConfirm={handleStop}
+        isPending={stopContainer.isPending}
+        confirmText="Stop"
+        loadingText="Stopping..."
+      />
     </div>
   );
 }

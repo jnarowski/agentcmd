@@ -41,6 +41,8 @@ export interface BuildAndRunOptions {
   workingDir: string;
   /** Container ID for naming */
   containerId: string;
+  /** Project name for human-readable container naming */
+  projectName?: string;
   /** Named ports to expose */
   ports: Record<string, number>;
   /** Environment variables to pass to container */

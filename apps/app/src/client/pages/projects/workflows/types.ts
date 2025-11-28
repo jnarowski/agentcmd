@@ -74,6 +74,7 @@ export interface WorkflowRun {
   steps?: WorkflowRunStep[];
   events?: WorkflowEvent[];
   artifacts?: WorkflowArtifact[];
+  container?: Container | null;
   _count?: {
     steps: number;
     events: number;
@@ -157,6 +158,22 @@ export interface WorkflowArtifact {
   created_at: Date;
 }
 
+export interface Container {
+  id: string;
+  workflow_run_id: string | null;
+  project_id: string;
+  status: string; // pending | starting | running | stopped | failed
+  ports: Record<string, number>;
+  urls: Record<string, string> | null;
+  container_ids: string[] | null;
+  compose_project: string | null;
+  working_dir: string;
+  error_message: string | null;
+  created_at: Date;
+  started_at: Date | null;
+  stopped_at: Date | null;
+}
+
 // Filter types
 export interface WorkflowFilter {
   status?: WorkflowStatus;
@@ -232,6 +249,7 @@ export interface WorkflowRunDetail {
   steps?: WorkflowRunStep[];
   events?: WorkflowEvent[];
   artifacts?: WorkflowArtifact[];
+  container?: Container | null;
   _count?: {
     steps: number;
     events: number;

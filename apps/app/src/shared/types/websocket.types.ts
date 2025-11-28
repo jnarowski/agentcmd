@@ -510,6 +510,48 @@ export type WebhookWebSocketEvent = {
 };
 
 // ============================================================================
+// Container Events
+// ============================================================================
+
+/**
+ * Container WebSocket event type constants
+ *
+ * Events use dot notation for hierarchical naming
+ * - container.created - Container record created, starting Docker build
+ * - container.updated - Container status changed (running, failed, stopped)
+ *
+ * All events broadcast to project:${projectId} channel
+ */
+export const ContainerWebSocketEventTypes = {
+  CREATED: "container.created",
+  UPDATED: "container.updated",
+} as const;
+
+/**
+ * Data interfaces for container WebSocket events
+ */
+
+export interface ContainerCreatedData {
+  containerId: string;
+  status: string;
+  ports: Record<string, number>;
+}
+
+export interface ContainerUpdatedData {
+  containerId: string;
+  changes: {
+    status?: string;
+  };
+}
+
+/**
+ * Discriminated union for all container WebSocket events
+ */
+export type ContainerWebSocketEvent =
+  | { type: typeof ContainerWebSocketEventTypes.CREATED; data: ContainerCreatedData }
+  | { type: typeof ContainerWebSocketEventTypes.UPDATED; data: ContainerUpdatedData };
+
+// ============================================================================
 // Combined Types
 // ============================================================================
 
@@ -522,7 +564,8 @@ export type AnyChannelEvent =
   | GlobalEvent
   | ShellEvent
   | WorkflowWebSocketEvent
-  | WebhookWebSocketEvent;
+  | WebhookWebSocketEvent
+  | ContainerWebSocketEvent;
 
 /**
  * WebSocket message format sent over the wire

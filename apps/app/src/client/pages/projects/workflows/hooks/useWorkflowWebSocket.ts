@@ -258,6 +258,9 @@ export function useWorkflowWebSocket(projectId: string) {
   // Main event handler
   const handleWorkflowEvent = useCallback(
     (event: WorkflowWebSocketEvent) => {
+      // Ignore non-workflow events (container events share project channel)
+      if (!event.type.startsWith("workflow.")) return;
+
       switch (event.type) {
         case WorkflowWebSocketEventTypes.RUN_UPDATED:
           handleRunUpdated(event.data);

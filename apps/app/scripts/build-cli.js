@@ -115,6 +115,35 @@ async function buildCLI() {
     );
 
     console.log("✓ Copied workflowLoader.mjs\n");
+
+    // 5. Build production start scripts
+    console.log("Building start scripts...");
+    const scriptsDistDir = join(rootDir, "dist/scripts");
+    mkdirSync(scriptsDistDir, { recursive: true });
+
+    // Build start.ts - production start script
+    await build({
+      entryPoints: [join(rootDir, "src/scripts/start.ts")],
+      bundle: true,
+      platform: "node",
+      target: "node22",
+      format: "esm",
+      outfile: join(scriptsDistDir, "start.js"),
+      external: [
+        "@prisma/client",
+        "prisma",
+        ".prisma/client",
+        "node-pty",
+      ],
+      banner: {
+        js: `import { createRequire } from 'module';const require = createRequire(import.meta.url);`,
+      },
+      sourcemap: true,
+      minify: false,
+      logLevel: "info",
+    });
+
+    console.log("✓ Built dist/scripts/start.js\n");
     console.log("CLI build complete!");
   } catch (error) {
     console.error("CLI build failed:", error);

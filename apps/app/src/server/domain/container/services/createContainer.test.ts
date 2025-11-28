@@ -11,8 +11,13 @@ vi.mock("../utils/portManager");
 vi.mock("@/server/websocket/infrastructure/subscriptions");
 
 describe("createContainer", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    // Clean up test data before each test
+    await prisma.container.deleteMany({});
+    await prisma.project.deleteMany({
+      where: { path: { startsWith: "/tmp/test-create-" } },
+    });
   });
 
   describe("config merging", () => {
@@ -20,9 +25,9 @@ describe("createContainer", () => {
       const project = await prisma.project.create({
         data: {
           name: "Test Project",
-          path: "/tmp/test",
+          path: "/tmp/test-create-1",
           preview_config: {
-            ports: ["app"],
+            ports: { APP_PORT: 3000 },
             env: { DEFAULT_KEY: "default_value" },
             maxMemory: "512m",
           },
@@ -35,7 +40,7 @@ describe("createContainer", () => {
         filePath: "docker-compose.yml",
       });
       vi.mocked(portManager.allocatePorts).mockResolvedValue({
-        ports: { app: 5000, server: 5001 },
+        ports: { APP_PORT: 5000, SERVER_PORT: 5001 },
       });
       vi.mocked(dockerClient.buildAndRun).mockResolvedValue({
         containerIds: ["abc123"],
@@ -44,9 +49,9 @@ describe("createContainer", () => {
 
       await createContainer({
         projectId: project.id,
-        workingDir: "/tmp/test",
+        workingDir: "/tmp/test-create-1",
         configOverrides: {
-          ports: ["app", "server"], // Override ports
+          ports: { APP_PORT: 3000, SERVER_PORT: 4000 }, // Override ports
           env: { OVERRIDE_KEY: "override_value" }, // Add new env
           maxMemory: "1g", // Override memory
         },
@@ -54,7 +59,7 @@ describe("createContainer", () => {
 
       expect(dockerClient.buildAndRun).toHaveBeenCalledWith(
         expect.objectContaining({
-          ports: { app: 5000, server: 5001 },
+          ports: { APP_PORT: 5000, SERVER_PORT: 5001 },
           env: {
             DEFAULT_KEY: "default_value",
             OVERRIDE_KEY: "override_value",
@@ -62,18 +67,16 @@ describe("createContainer", () => {
           maxMemory: "1g",
         })
       );
-
-      await prisma.project.delete({ where: { id: project.id } });
     });
 
     it("uses custom dockerFilePath when provided in project config", async () => {
       const project = await prisma.project.create({
         data: {
           name: "Test Project",
-          path: "/tmp/test",
+          path: "/tmp/test-create-2",
           preview_config: {
             dockerFilePath: "docker/compose-preview.yml",
-            ports: ["app"],
+            ports: { PORT: 3000 },
           },
         },
       });
@@ -84,7 +87,7 @@ describe("createContainer", () => {
         filePath: "docker/compose-preview.yml",
       });
       vi.mocked(portManager.allocatePorts).mockResolvedValue({
-        ports: { app: 5000 },
+        ports: { PORT: 5000 },
       });
       vi.mocked(dockerClient.buildAndRun).mockResolvedValue({
         containerIds: ["abc123"],
@@ -93,24 +96,22 @@ describe("createContainer", () => {
 
       await createContainer({
         projectId: project.id,
-        workingDir: "/tmp/test",
+        workingDir: "/tmp/test-create-2",
       });
 
       expect(dockerClient.detectConfig).toHaveBeenCalledWith(
-        "/tmp/test",
+        "/tmp/test-create-2",
         "docker/compose-preview.yml"
       );
-
-      await prisma.project.delete({ where: { id: project.id } });
     });
 
     it("uses custom dockerFilePath when provided in step override", async () => {
       const project = await prisma.project.create({
         data: {
           name: "Test Project",
-          path: "/tmp/test",
+          path: "/tmp/test-create-3",
           preview_config: {
-            ports: ["app"],
+            ports: { PORT: 3000 },
           },
         },
       });
@@ -121,7 +122,7 @@ describe("createContainer", () => {
         filePath: "custom.dockerfile",
       });
       vi.mocked(portManager.allocatePorts).mockResolvedValue({
-        ports: { app: 5000 },
+        ports: { PORT: 5000 },
       });
       vi.mocked(dockerClient.buildAndRun).mockResolvedValue({
         containerIds: ["abc123"],
@@ -129,29 +130,27 @@ describe("createContainer", () => {
 
       await createContainer({
         projectId: project.id,
-        workingDir: "/tmp/test",
+        workingDir: "/tmp/test-create-3",
         configOverrides: {
           dockerFilePath: "custom.dockerfile",
         },
       });
 
       expect(dockerClient.detectConfig).toHaveBeenCalledWith(
-        "/tmp/test",
+        "/tmp/test-create-3",
         "custom.dockerfile"
       );
-
-      await prisma.project.delete({ where: { id: project.id } });
     });
   });
 
   describe("port allocation", () => {
-    it("calls portManager.allocatePorts with correct port names", async () => {
+    it("calls portManager.allocatePorts with correct portsConfig", async () => {
       const project = await prisma.project.create({
         data: {
           name: "Test Project",
-          path: "/tmp/test",
+          path: "/tmp/test-create-4",
           preview_config: {
-            ports: ["server", "client"],
+            ports: { SERVER_PORT: 3000, CLIENT_PORT: 4000 },
           },
         },
       });
@@ -162,7 +161,7 @@ describe("createContainer", () => {
         filePath: "docker-compose.yml",
       });
       vi.mocked(portManager.allocatePorts).mockResolvedValue({
-        ports: { server: 5000, client: 5001 },
+        ports: { SERVER_PORT: 5000, CLIENT_PORT: 5001 },
       });
       vi.mocked(dockerClient.buildAndRun).mockResolvedValue({
         containerIds: ["abc123"],
@@ -171,14 +170,12 @@ describe("createContainer", () => {
 
       await createContainer({
         projectId: project.id,
-        workingDir: "/tmp/test",
+        workingDir: "/tmp/test-create-4",
       });
 
       expect(portManager.allocatePorts).toHaveBeenCalledWith({
-        portNames: ["server", "client"],
+        portsConfig: { SERVER_PORT: 3000, CLIENT_PORT: 4000 },
       });
-
-      await prisma.project.delete({ where: { id: project.id } });
     });
   });
 
@@ -187,9 +184,9 @@ describe("createContainer", () => {
       const project = await prisma.project.create({
         data: {
           name: "Test Project",
-          path: "/tmp/test",
+          path: "/tmp/test-create-5",
           preview_config: {
-            ports: ["app"],
+            ports: { PORT: 3000 },
           },
         },
       });
@@ -198,14 +195,12 @@ describe("createContainer", () => {
 
       const result = await createContainer({
         projectId: project.id,
-        workingDir: "/tmp/test",
+        workingDir: "/tmp/test-create-5",
       });
 
       expect(result).toBeNull();
       expect(dockerClient.buildAndRun).not.toHaveBeenCalled();
       expect(portManager.allocatePorts).not.toHaveBeenCalled();
-
-      await prisma.project.delete({ where: { id: project.id } });
     });
   });
 
@@ -214,9 +209,9 @@ describe("createContainer", () => {
       const project = await prisma.project.create({
         data: {
           name: "Test Project",
-          path: "/tmp/test",
+          path: "/tmp/test-create-6",
           preview_config: {
-            ports: ["app"],
+            ports: { PORT: 3000 },
           },
         },
       });
@@ -227,7 +222,7 @@ describe("createContainer", () => {
         filePath: "docker-compose.yml",
       });
       vi.mocked(portManager.allocatePorts).mockResolvedValue({
-        ports: { app: 5000 },
+        ports: { PORT: 5000 },
       });
 
       // Simulate slow Docker start
@@ -244,7 +239,7 @@ describe("createContainer", () => {
 
       const promise = createContainer({
         projectId: project.id,
-        workingDir: "/tmp/test",
+        workingDir: "/tmp/test-create-6",
       });
 
       // Check status is "starting" immediately
@@ -255,17 +250,15 @@ describe("createContainer", () => {
       expect(startingContainer?.status).toBe("starting");
 
       await promise;
-
-      await prisma.project.delete({ where: { id: project.id } });
     });
 
     it("updates status to 'running' on successful Docker start", async () => {
       const project = await prisma.project.create({
         data: {
           name: "Test Project",
-          path: "/tmp/test",
+          path: "/tmp/test-create-7",
           preview_config: {
-            ports: ["app"],
+            ports: { PORT: 3000 },
           },
         },
       });
@@ -276,7 +269,7 @@ describe("createContainer", () => {
         filePath: "docker-compose.yml",
       });
       vi.mocked(portManager.allocatePorts).mockResolvedValue({
-        ports: { app: 5000 },
+        ports: { PORT: 5000 },
       });
       vi.mocked(dockerClient.buildAndRun).mockResolvedValue({
         containerIds: ["abc123"],
@@ -285,7 +278,7 @@ describe("createContainer", () => {
 
       const result = await createContainer({
         projectId: project.id,
-        workingDir: "/tmp/test",
+        workingDir: "/tmp/test-create-7",
       });
 
       expect(result?.status).toBe("running");
@@ -295,17 +288,15 @@ describe("createContainer", () => {
       });
       expect(container?.status).toBe("running");
       expect(container?.started_at).toBeDefined();
-
-      await prisma.project.delete({ where: { id: project.id } });
     });
 
     it("updates status to 'failed' on Docker error", async () => {
       const project = await prisma.project.create({
         data: {
           name: "Test Project",
-          path: "/tmp/test",
+          path: "/tmp/test-create-8",
           preview_config: {
-            ports: ["app"],
+            ports: { PORT: 3000 },
           },
         },
       });
@@ -316,7 +307,7 @@ describe("createContainer", () => {
         filePath: "docker-compose.yml",
       });
       vi.mocked(portManager.allocatePorts).mockResolvedValue({
-        ports: { app: 5000 },
+        ports: { PORT: 5000 },
       });
       vi.mocked(dockerClient.buildAndRun).mockRejectedValue(
         new Error("Docker build failed")
@@ -325,7 +316,7 @@ describe("createContainer", () => {
       await expect(
         createContainer({
           projectId: project.id,
-          workingDir: "/tmp/test",
+          workingDir: "/tmp/test-create-8",
         })
       ).rejects.toThrow("Docker build failed");
 
@@ -334,8 +325,6 @@ describe("createContainer", () => {
       });
       expect(container?.status).toBe("failed");
       expect(container?.error_message).toBe("Docker build failed");
-
-      await prisma.project.delete({ where: { id: project.id } });
     });
   });
 
@@ -344,9 +333,9 @@ describe("createContainer", () => {
       const project = await prisma.project.create({
         data: {
           name: "Test Project",
-          path: "/tmp/test",
+          path: "/tmp/test-create-9",
           preview_config: {
-            ports: ["app"],
+            ports: { PORT: 3000 },
           },
         },
       });
@@ -357,7 +346,7 @@ describe("createContainer", () => {
         filePath: "docker-compose.yml",
       });
       vi.mocked(portManager.allocatePorts).mockResolvedValue({
-        ports: { app: 5000 },
+        ports: { PORT: 5000 },
       });
       vi.mocked(dockerClient.buildAndRun).mockResolvedValue({
         containerIds: ["abc123"],
@@ -366,7 +355,7 @@ describe("createContainer", () => {
 
       const result = await createContainer({
         projectId: project.id,
-        workingDir: "/tmp/test",
+        workingDir: "/tmp/test-create-9",
       });
 
       expect(subscriptions.broadcast).toHaveBeenCalledWith(
@@ -379,17 +368,15 @@ describe("createContainer", () => {
           }),
         })
       );
-
-      await prisma.project.delete({ where: { id: project.id } });
     });
 
     it("broadcasts container.updated event on status change to running", async () => {
       const project = await prisma.project.create({
         data: {
           name: "Test Project",
-          path: "/tmp/test",
+          path: "/tmp/test-create-10",
           preview_config: {
-            ports: ["app"],
+            ports: { PORT: 3000 },
           },
         },
       });
@@ -400,7 +387,7 @@ describe("createContainer", () => {
         filePath: "docker-compose.yml",
       });
       vi.mocked(portManager.allocatePorts).mockResolvedValue({
-        ports: { app: 5000 },
+        ports: { PORT: 5000 },
       });
       vi.mocked(dockerClient.buildAndRun).mockResolvedValue({
         containerIds: ["abc123"],
@@ -409,7 +396,7 @@ describe("createContainer", () => {
 
       await createContainer({
         projectId: project.id,
-        workingDir: "/tmp/test",
+        workingDir: "/tmp/test-create-10",
       });
 
       expect(subscriptions.broadcast).toHaveBeenCalledWith(
@@ -421,8 +408,6 @@ describe("createContainer", () => {
           }),
         })
       );
-
-      await prisma.project.delete({ where: { id: project.id } });
     });
   });
 
@@ -431,9 +416,9 @@ describe("createContainer", () => {
       const project = await prisma.project.create({
         data: {
           name: "Test Project",
-          path: "/tmp/test",
+          path: "/tmp/test-create-11",
           preview_config: {
-            ports: ["app", "server"],
+            ports: { APP_PORT: 3000, SERVER_PORT: 4000 },
           },
         },
       });
@@ -444,7 +429,7 @@ describe("createContainer", () => {
         filePath: "docker-compose.yml",
       });
       vi.mocked(portManager.allocatePorts).mockResolvedValue({
-        ports: { app: 5000, server: 5001 },
+        ports: { APP_PORT: 5000, SERVER_PORT: 5001 },
       });
       vi.mocked(dockerClient.buildAndRun).mockResolvedValue({
         containerIds: ["abc123"],
@@ -453,23 +438,21 @@ describe("createContainer", () => {
 
       const result = await createContainer({
         projectId: project.id,
-        workingDir: "/tmp/test",
+        workingDir: "/tmp/test-create-11",
       });
 
       expect(result).toEqual({
         id: expect.any(String),
         status: "running",
         urls: {
-          app: "http://localhost:5000",
-          server: "http://localhost:5001",
+          APP_PORT: "http://localhost:5000",
+          SERVER_PORT: "http://localhost:5001",
         },
         ports: {
-          app: 5000,
-          server: 5001,
+          APP_PORT: 5000,
+          SERVER_PORT: 5001,
         },
       });
-
-      await prisma.project.delete({ where: { id: project.id } });
     });
   });
 });

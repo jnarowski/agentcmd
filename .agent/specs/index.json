@@ -340,6 +340,17 @@
       "totalComplexity": 38,
       "phaseCount": 3,
       "taskCount": 9
+    },
+    "2511282130": {
+      "folder": "2511282130-server-start-consolidation",
+      "path": "todo/2511282130-server-start-consolidation/spec.md",
+      "spec_type": "issue",
+      "status": "completed",
+      "created": "2025-11-28T21:30:00Z",
+      "updated": "2025-11-28T22:10:00Z",
+      "totalComplexity": 47,
+      "phaseCount": 1,
+      "taskCount": 9
     }
   }
 }

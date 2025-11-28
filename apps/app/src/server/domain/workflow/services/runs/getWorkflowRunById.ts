@@ -2,6 +2,21 @@ import { prisma } from '@/shared/prisma';
 import type { WorkflowRun } from '@prisma/client';
 import type { GetWorkflowRunByIdOptions } from '@/server/domain/workflow/types/GetWorkflowRunByIdOptions';
 import { SYSTEM_PHASES } from '@/shared/constants/workflow';
+import { config } from '@/server/config';
+
+/**
+ * Build URLs from container ports using externalHost config
+ */
+function buildContainerUrls(ports: Record<string, number>): Record<string, string> {
+  const { externalHost } = config.server;
+  return Object.entries(ports).reduce(
+    (acc, [name, port]) => {
+      acc[name] = `http://${externalHost}:${port}`;
+      return acc;
+    },
+    {} as Record<string, string>
+  );
+}
 
 /**
  * Gets a single workflow run by ID with all relations
@@ -13,6 +28,7 @@ export async function getWorkflowRunById({ id }: GetWorkflowRunByIdOptions): Pro
     where: { id },
     include: {
       workflow_definition: true,
+      container: true,
       steps: {
         include: {
           session: true, // Agent session relation
@@ -63,11 +79,27 @@ export async function getWorkflowRunById({ id }: GetWorkflowRunByIdOptions): Pro
   // Always inject system phases (Setup at start, Finalize at end)
   phases = [SYSTEM_PHASES.setup, ...phases, SYSTEM_PHASES.finalize];
 
+  // Transform container to include computed urls
+  const containerWithUrls = run.container ? {
+    ...run.container,
+    ports: run.container.ports && typeof run.container.ports === 'string'
+      ? JSON.parse(run.container.ports)
+      : run.container.ports,
+    urls: run.container.ports
+      ? buildContainerUrls(
+          typeof run.container.ports === 'string'
+            ? JSON.parse(run.container.ports)
+            : run.container.ports as Record<string, number>
+        )
+      : null,
+  } : null;
+
   const parsedRun = {
     ...run,
     args: run.args && typeof run.args === 'string'
       ? JSON.parse(run.args)
       : run.args,
+    container: containerWithUrls,
     workflow_definition: run.workflow_definition ? {
       ...run.workflow_definition,
       phases,

@@ -154,7 +154,8 @@ describe("dockerClient", () => {
         type: "compose",
         workingDir: "/tmp/test",
         containerId: "abc123",
-        ports: { app: 5000, server: 5001 },
+        projectName: "Test Project",
+        ports: { PORT: 5000, VITE_PORT: 5001 },
         env: { NODE_ENV: "preview" },
       });
 
@@ -163,10 +164,10 @@ describe("dockerClient", () => {
       const cmd = call[0] as string;
 
       expect(cmd).toContain("docker compose");
-      expect(cmd).toContain("-p container-abc123");
+      expect(cmd).toContain("-p agentcmd-test-project-container-abc123");
       expect(cmd).toContain("up -d");
-      expect(cmd).toContain("PREVIEW_PORT_APP=5000");
-      expect(cmd).toContain("PREVIEW_PORT_SERVER=5001");
+      expect(cmd).toContain("PORT=5000");
+      expect(cmd).toContain("VITE_PORT=5001");
       expect(cmd).toContain("NODE_ENV=preview");
     });
 
@@ -177,6 +178,7 @@ describe("dockerClient", () => {
         type: "dockerfile",
         workingDir: "/tmp/test",
         containerId: "abc123",
+        projectName: "Test App",
         ports: { app: 5000 },
         maxMemory: "1g",
         maxCpus: "1.0",
@@ -188,21 +190,22 @@ describe("dockerClient", () => {
       expect(runCall).toContain("--cpus 1.0");
     });
 
-    it("injects PREVIEW_PORT_{NAME} env vars with uppercase port names", async () => {
+    it("uses port env var names directly without transformation", async () => {
       mockExec.mockResolvedValue({ stdout: "container-id-123", stderr: "" });
 
       await buildAndRun({
         type: "compose",
         workingDir: "/tmp/test",
         containerId: "abc123",
-        ports: { app: 5000, "my-service": 5001 },
+        projectName: "My App",
+        ports: { PORT: 5000, VITE_PORT: 5001 },
       });
 
       const call = mockExec.mock.calls[0];
       const cmd = call[0] as string;
 
-      expect(cmd).toContain("PREVIEW_PORT_APP=5000");
-      expect(cmd).toContain("PREVIEW_PORT_MY_SERVICE=5001");
+      expect(cmd).toContain("PORT=5000");
+      expect(cmd).toContain("VITE_PORT=5001");
     });
 
     it("builds dockerfile command correctly", async () => {
@@ -212,6 +215,7 @@ describe("dockerClient", () => {
         type: "dockerfile",
         workingDir: "/tmp/test",
         containerId: "abc123",
+        projectName: "My App",
         ports: { app: 5000 },
       });
 
@@ -220,26 +224,30 @@ describe("dockerClient", () => {
       const runCall = mockExec.mock.calls[1][0] as string;
 
       expect(buildCall).toContain("docker build");
-      expect(buildCall).toContain("-t container-abc123");
+      expect(buildCall).toContain("-t agentcmd-my-app-container-abc123");
 
       expect(runCall).toContain("docker run");
       expect(runCall).toContain("-d");
       expect(runCall).toContain("-p 5000:");
-      expect(runCall).toContain("--name container-abc123");
+      expect(runCall).toContain("--name agentcmd-my-app-container-abc123");
     });
 
     it("returns container IDs and compose project", async () => {
-      mockExec.mockResolvedValue({ stdout: "container-id-123\ncontainer-id-456", stderr: "" });
+      mockExec
+        .mockResolvedValueOnce({ stdout: "", stderr: "" }) // docker compose up -d
+        .mockResolvedValueOnce({ stdout: "container-id-123\ncontainer-id-456", stderr: "" }); // docker compose ps -q
 
       const result = await buildAndRun({
         type: "compose",
         workingDir: "/tmp/test",
         containerId: "abc123",
+        projectName: "My App",
         ports: { app: 5000 },
       });
 
+      expect(mockExec).toHaveBeenCalledTimes(2);
       expect(result.containerIds).toEqual(["container-id-123", "container-id-456"]);
-      expect(result.composeProject).toBe("container-abc123");
+      expect(result.composeProject).toBe("agentcmd-my-app-container-abc123");
     });
 
     it("throws error on Docker failure", async () => {
@@ -250,9 +258,24 @@ describe("dockerClient", () => {
           type: "dockerfile",
           workingDir: "/tmp/test",
           containerId: "abc123",
+          projectName: "Test",
           ports: { app: 5000 },
         })
       ).rejects.toThrow("Docker build failed");
+    });
+
+    it("uses 'unknown' when projectName is not provided", async () => {
+      mockExec.mockResolvedValue({ stdout: "container-id-123", stderr: "" });
+
+      await buildAndRun({
+        type: "dockerfile",
+        workingDir: "/tmp/test",
+        containerId: "abc123",
+        ports: { app: 5000 },
+      });
+
+      const buildCall = mockExec.mock.calls[0][0] as string;
+      expect(buildCall).toContain("-t agentcmd-unknown-container-abc123");
     });
   });
 

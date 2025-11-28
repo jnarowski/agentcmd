@@ -9,8 +9,13 @@ vi.mock("../utils/dockerClient");
 vi.mock("@/server/websocket/infrastructure/subscriptions");
 
 describe("stopContainer", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    // Clean up test data before each test
+    await prisma.container.deleteMany({});
+    await prisma.project.deleteMany({
+      where: { path: { startsWith: "/tmp/test-stop-" } },
+    });
   });
 
   it("fetches container from DB and validates it exists", async () => {
@@ -18,7 +23,7 @@ describe("stopContainer", () => {
     const project = await prisma.project.create({
       data: {
         name: "Test Project",
-        path: "/tmp/test",
+        path: "/tmp/test-stop-1",
       },
     });
 
@@ -27,7 +32,7 @@ describe("stopContainer", () => {
         project_id: project.id,
         status: "running",
         ports: { app: 5000 },
-        working_dir: "/tmp/test",
+        working_dir: "/tmp/test-stop-1",
         container_ids: ["abc123"],
         compose_project: "container-test",
       },
@@ -41,8 +46,6 @@ describe("stopContainer", () => {
       where: { id: container.id },
     });
     expect(updated?.status).toBe("stopped");
-
-    await prisma.project.delete({ where: { id: project.id } });
   });
 
   it("throws NotFoundError when container doesn't exist", async () => {
@@ -55,7 +58,7 @@ describe("stopContainer", () => {
     const project = await prisma.project.create({
       data: {
         name: "Test Project",
-        path: "/tmp/test",
+        path: "/tmp/test-stop-2",
       },
     });
 
@@ -64,7 +67,7 @@ describe("stopContainer", () => {
         project_id: project.id,
         status: "running",
         ports: { app: 5000 },
-        working_dir: "/tmp/test",
+        working_dir: "/tmp/test-stop-2",
         container_ids: ["abc123", "def456"],
         compose_project: "container-test",
       },
@@ -77,17 +80,15 @@ describe("stopContainer", () => {
     expect(dockerClient.stop).toHaveBeenCalledWith({
       containerIds: ["abc123", "def456"],
       composeProject: "container-test",
-      workingDir: "/tmp/test",
+      workingDir: "/tmp/test-stop-2",
     });
-
-    await prisma.project.delete({ where: { id: project.id } });
   });
 
   it("updates Container status to stopped in DB", async () => {
     const project = await prisma.project.create({
       data: {
         name: "Test Project",
-        path: "/tmp/test",
+        path: "/tmp/test-stop-3",
       },
     });
 
@@ -96,7 +97,7 @@ describe("stopContainer", () => {
         project_id: project.id,
         status: "running",
         ports: { app: 5000 },
-        working_dir: "/tmp/test",
+        working_dir: "/tmp/test-stop-3",
         container_ids: ["abc123"],
       },
     });
@@ -111,15 +112,13 @@ describe("stopContainer", () => {
       where: { id: container.id },
     });
     expect(updated?.status).toBe("stopped");
-
-    await prisma.project.delete({ where: { id: project.id } });
   });
 
   it("sets stopped_at timestamp", async () => {
     const project = await prisma.project.create({
       data: {
         name: "Test Project",
-        path: "/tmp/test",
+        path: "/tmp/test-stop-4",
       },
     });
 
@@ -128,7 +127,7 @@ describe("stopContainer", () => {
         project_id: project.id,
         status: "running",
         ports: { app: 5000 },
-        working_dir: "/tmp/test",
+        working_dir: "/tmp/test-stop-4",
         container_ids: ["abc123"],
       },
     });
@@ -142,15 +141,13 @@ describe("stopContainer", () => {
     });
     expect(updated?.stopped_at).toBeDefined();
     expect(updated?.stopped_at).toBeInstanceOf(Date);
-
-    await prisma.project.delete({ where: { id: project.id } });
   });
 
   it("broadcasts container.updated WebSocket event with changes object", async () => {
     const project = await prisma.project.create({
       data: {
         name: "Test Project",
-        path: "/tmp/test",
+        path: "/tmp/test-stop-5",
       },
     });
 
@@ -159,7 +156,7 @@ describe("stopContainer", () => {
         project_id: project.id,
         status: "running",
         ports: { app: 5000 },
-        working_dir: "/tmp/test",
+        working_dir: "/tmp/test-stop-5",
         container_ids: ["abc123"],
       },
     });
@@ -178,15 +175,13 @@ describe("stopContainer", () => {
         }),
       })
     );
-
-    await prisma.project.delete({ where: { id: project.id } });
   });
 
   it("gracefully handles Docker errors", async () => {
     const project = await prisma.project.create({
       data: {
         name: "Test Project",
-        path: "/tmp/test",
+        path: "/tmp/test-stop-6",
       },
     });
 
@@ -195,7 +190,7 @@ describe("stopContainer", () => {
         project_id: project.id,
         status: "running",
         ports: { app: 5000 },
-        working_dir: "/tmp/test",
+        working_dir: "/tmp/test-stop-6",
         container_ids: ["abc123"],
       },
     });
@@ -213,15 +208,13 @@ describe("stopContainer", () => {
     });
     expect(updated?.status).toBe("failed");
     expect(updated?.error_message).toBe("Docker stop failed");
-
-    await prisma.project.delete({ where: { id: project.id } });
   });
 
   it("returns updated container object", async () => {
     const project = await prisma.project.create({
       data: {
         name: "Test Project",
-        path: "/tmp/test",
+        path: "/tmp/test-stop-7",
       },
     });
 
@@ -230,7 +223,7 @@ describe("stopContainer", () => {
         project_id: project.id,
         status: "running",
         ports: { app: 5000 },
-        working_dir: "/tmp/test",
+        working_dir: "/tmp/test-stop-7",
         container_ids: ["abc123"],
       },
     });
@@ -246,7 +239,5 @@ describe("stopContainer", () => {
         project_id: project.id,
       })
     );
-
-    await prisma.project.delete({ where: { id: project.id } });
   });
 });

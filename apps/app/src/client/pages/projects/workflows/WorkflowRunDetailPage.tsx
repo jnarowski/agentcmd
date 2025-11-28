@@ -168,6 +168,31 @@ function WorkflowRunDetailPage() {
         }
         actions={
           <div className="hidden md:flex gap-2">
+            {run.container?.urls && Object.keys(run.container.urls).length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    View Preview
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {Object.entries(run.container.urls).map(([name, url]) => (
+                    <DropdownMenuItem key={name} asChild>
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono text-xs"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        {url} - {name}
+                      </a>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             {run.pr_url && (
               <Button
                 variant="outline"

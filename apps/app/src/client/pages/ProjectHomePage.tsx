@@ -8,6 +8,7 @@ import { ProjectOnboardingSuggestions } from "@/client/pages/projects/components
 import { ProjectHomeSpecs } from "@/client/pages/projects/components/ProjectHomeSpecs";
 import { ProjectReadme } from "@/client/pages/projects/components/ProjectReadme";
 import { ProjectHomeWorkflows } from "@/client/pages/projects/components/ProjectHomeWorkflows";
+import { ProjectHomeContainers } from "@/client/pages/projects/components/ProjectHomeContainers";
 import { Skeleton } from "@/client/components/ui/skeleton";
 import { Button } from "@/client/components/ui/button";
 import { ButtonGroup } from "@/client/components/ui/button-group";
@@ -127,6 +128,9 @@ export default function ProjectHomePage() {
       {!project.capabilities.workflow_sdk.installed && (
         <ProjectOnboardingSuggestions project={project} />
       )}
+
+      {/* Active Previews */}
+      <ProjectHomeContainers projectId={id!} />
 
       {/* Specs */}
       <ProjectHomeSpecs projectId={id!} />

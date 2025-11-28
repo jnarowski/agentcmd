@@ -4,6 +4,7 @@ export interface Container {
   project_id: string;
   status: "pending" | "starting" | "running" | "stopped" | "failed";
   ports: Record<string, number>;
+  urls: Record<string, string> | null;
   container_ids: string[] | null;
   compose_project: string | null;
   working_dir: string;

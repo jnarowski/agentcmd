@@ -9,8 +9,15 @@ import * as dockerClient from "../utils/dockerClient";
 vi.mock("../utils/dockerClient");
 
 describe("Container Query Services", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    // Mock isContainerRunning to return true for running containers
+    vi.mocked(dockerClient.isContainerRunning).mockResolvedValue(true);
+    // Clean up test data before each test
+    await prisma.container.deleteMany({});
+    await prisma.project.deleteMany({
+      where: { path: { startsWith: "/tmp/test-query-" } },
+    });
   });
 
   describe("getContainerById", () => {
@@ -18,7 +25,7 @@ describe("Container Query Services", () => {
       const project = await prisma.project.create({
         data: {
           name: "Test Project",
-          path: "/tmp/test",
+          path: "/tmp/test-query-1",
         },
       });
 
@@ -27,7 +34,7 @@ describe("Container Query Services", () => {
           project_id: project.id,
           status: "running",
           ports: { app: 5000 },
-          working_dir: "/tmp/test",
+          working_dir: "/tmp/test-query-1",
         },
       });
 
@@ -40,8 +47,6 @@ describe("Container Query Services", () => {
           project_id: project.id,
         })
       );
-
-      await prisma.project.delete({ where: { id: project.id } });
     });
 
     it("throws NotFoundError when ID doesn't exist", async () => {
@@ -54,7 +59,7 @@ describe("Container Query Services", () => {
       const project = await prisma.project.create({
         data: {
           name: "Test Project",
-          path: "/tmp/test",
+          path: "/tmp/test-query-2",
         },
       });
 
@@ -63,7 +68,7 @@ describe("Container Query Services", () => {
           project_id: project.id,
           status: "running",
           ports: { app: 5000, server: 5001 },
-          working_dir: "/tmp/test",
+          working_dir: "/tmp/test-query-2",
           container_ids: ["abc123"],
           compose_project: "test-project",
         },
@@ -80,8 +85,6 @@ describe("Container Query Services", () => {
           compose_project: "test-project",
         })
       );
-
-      await prisma.project.delete({ where: { id: project.id } });
     });
   });
 
@@ -90,7 +93,7 @@ describe("Container Query Services", () => {
       const project = await prisma.project.create({
         data: {
           name: "Test Project",
-          path: "/tmp/test",
+          path: "/tmp/test-query-3",
         },
       });
 
@@ -99,7 +102,7 @@ describe("Container Query Services", () => {
           project_id: project.id,
           status: "running",
           ports: { app: 5000 },
-          working_dir: "/tmp/test",
+          working_dir: "/tmp/test-query-3",
         },
       });
 
@@ -108,7 +111,7 @@ describe("Container Query Services", () => {
           project_id: project.id,
           status: "stopped",
           ports: { app: 5001 },
-          working_dir: "/tmp/test",
+          working_dir: "/tmp/test-query-3",
         },
       });
 
@@ -117,15 +120,13 @@ describe("Container Query Services", () => {
       expect(result).toHaveLength(2);
       expect(result[0].project_id).toBe(project.id);
       expect(result[1].project_id).toBe(project.id);
-
-      await prisma.project.delete({ where: { id: project.id } });
     });
 
     it("filters by status when provided", async () => {
       const project = await prisma.project.create({
         data: {
           name: "Test Project",
-          path: "/tmp/test",
+          path: "/tmp/test-query-4",
         },
       });
 
@@ -134,7 +135,7 @@ describe("Container Query Services", () => {
           project_id: project.id,
           status: "running",
           ports: { app: 5000 },
-          working_dir: "/tmp/test",
+          working_dir: "/tmp/test-query-4",
         },
       });
 
@@ -143,7 +144,7 @@ describe("Container Query Services", () => {
           project_id: project.id,
           status: "stopped",
           ports: { app: 5001 },
-          working_dir: "/tmp/test",
+          working_dir: "/tmp/test-query-4",
         },
       });
 
@@ -154,30 +155,26 @@ describe("Container Query Services", () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].status).toBe("running");
-
-      await prisma.project.delete({ where: { id: project.id } });
     });
 
     it("returns empty array when project has no containers", async () => {
       const project = await prisma.project.create({
         data: {
           name: "Test Project",
-          path: "/tmp/test",
+          path: "/tmp/test-query-5",
         },
       });
 
       const result = await getContainersByProject({ projectId: project.id });
 
       expect(result).toEqual([]);
-
-      await prisma.project.delete({ where: { id: project.id } });
     });
 
     it("orders by created_at DESC (most recent first)", async () => {
       const project = await prisma.project.create({
         data: {
           name: "Test Project",
-          path: "/tmp/test",
+          path: "/tmp/test-query-6",
         },
       });
 
@@ -186,7 +183,7 @@ describe("Container Query Services", () => {
           project_id: project.id,
           status: "running",
           ports: { app: 5000 },
-          working_dir: "/tmp/test",
+          working_dir: "/tmp/test-query-6",
           created_at: new Date("2024-01-01"),
         },
       });
@@ -196,7 +193,7 @@ describe("Container Query Services", () => {
           project_id: project.id,
           status: "running",
           ports: { app: 5001 },
-          working_dir: "/tmp/test",
+          working_dir: "/tmp/test-query-6",
           created_at: new Date("2024-01-02"),
         },
       });
@@ -205,8 +202,6 @@ describe("Container Query Services", () => {
 
       expect(result[0].id).toBe(container2.id); // Most recent first
       expect(result[1].id).toBe(container1.id);
-
-      await prisma.project.delete({ where: { id: project.id } });
     });
   });
 
@@ -215,7 +210,7 @@ describe("Container Query Services", () => {
       const project = await prisma.project.create({
         data: {
           name: "Test Project",
-          path: "/tmp/test",
+          path: "/tmp/test-query-7",
         },
       });
 
@@ -224,7 +219,7 @@ describe("Container Query Services", () => {
           project_id: project.id,
           status: "running",
           ports: { app: 5000 },
-          working_dir: "/tmp/test",
+          working_dir: "/tmp/test-query-7",
           container_ids: ["abc123", "def456"],
         },
       });
@@ -235,17 +230,15 @@ describe("Container Query Services", () => {
 
       expect(dockerClient.getLogs).toHaveBeenCalledWith({
         containerIds: ["abc123", "def456"],
-        workingDir: "/tmp/test",
+        workingDir: "/tmp/test-query-7",
       });
-
-      await prisma.project.delete({ where: { id: project.id } });
     });
 
     it("returns logs string from Docker", async () => {
       const project = await prisma.project.create({
         data: {
           name: "Test Project",
-          path: "/tmp/test",
+          path: "/tmp/test-query-8",
         },
       });
 
@@ -254,7 +247,7 @@ describe("Container Query Services", () => {
           project_id: project.id,
           status: "running",
           ports: { app: 5000 },
-          working_dir: "/tmp/test",
+          working_dir: "/tmp/test-query-8",
           container_ids: ["abc123"],
         },
       });
@@ -266,15 +259,13 @@ describe("Container Query Services", () => {
       const result = await getContainerLogs({ containerId: container.id });
 
       expect(result).toBe("Log line 1\nLog line 2");
-
-      await prisma.project.delete({ where: { id: project.id } });
     });
 
     it("handles Docker errors gracefully (returns error message as logs)", async () => {
       const project = await prisma.project.create({
         data: {
           name: "Test Project",
-          path: "/tmp/test",
+          path: "/tmp/test-query-9",
         },
       });
 
@@ -283,7 +274,7 @@ describe("Container Query Services", () => {
           project_id: project.id,
           status: "running",
           ports: { app: 5000 },
-          working_dir: "/tmp/test",
+          working_dir: "/tmp/test-query-9",
           container_ids: ["abc123"],
         },
       });
@@ -296,8 +287,6 @@ describe("Container Query Services", () => {
 
       expect(result).toContain("Error fetching logs");
       expect(result).toContain("Container not running");
-
-      await prisma.project.delete({ where: { id: project.id } });
     });
 
     it("throws NotFoundError when container doesn't exist", async () => {

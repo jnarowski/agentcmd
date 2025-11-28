@@ -1,11 +1,31 @@
 import { prisma } from "@/shared/prisma";
+import { config } from "@/server/config";
+import * as dockerClient from "../utils/dockerClient";
 import type { GetContainersByProjectOptions } from "./types";
 import type { Container } from "@prisma/client";
+
+// PRIVATE HELPERS
+
+function buildContainerUrls(ports: Record<string, number>): Record<string, string> {
+  const { externalHost } = config.server;
+  return Object.entries(ports).reduce(
+    (acc, [name, port]) => {
+      acc[name] = `http://${externalHost}:${port}`;
+      return acc;
+    },
+    {} as Record<string, string>
+  );
+}
+
+type ContainerWithUrls = Container & { urls: Record<string, string> | null };
 
 // PUBLIC API
 
 /**
  * Get all containers for a project
+ *
+ * Verifies that containers marked as "running" are actually running in Docker.
+ * Updates stale statuses automatically.
  *
  * @example
  * ```typescript
@@ -17,7 +37,7 @@ import type { Container } from "@prisma/client";
  */
 export async function getContainersByProject(
   options: GetContainersByProjectOptions
-): Promise<Container[]> {
+): Promise<ContainerWithUrls[]> {
   const { projectId, status } = options;
 
   const containers = await prisma.container.findMany({
@@ -30,5 +50,45 @@ export async function getContainersByProject(
     },
   });
 
-  return containers;
+  // Verify containers marked as "running" or "starting" are actually running
+  const verifiedContainers: Container[] = [];
+
+  for (const container of containers) {
+    if (container.status === "running" || container.status === "starting") {
+      const isRunning = await dockerClient.isContainerRunning({
+        containerIds: container.container_ids as string[] | undefined,
+        composeProject: container.compose_project || undefined,
+        workingDir: container.working_dir,
+      });
+
+      if (!isRunning) {
+        // Update stale status to "stopped"
+        const updated = await prisma.container.update({
+          where: { id: container.id },
+          data: {
+            status: "stopped",
+            stopped_at: new Date(),
+          },
+        });
+
+        // Only include if we're not filtering by running status
+        if (status !== "running" && status !== "starting") {
+          verifiedContainers.push(updated);
+        }
+      } else {
+        verifiedContainers.push(container);
+      }
+    } else {
+      verifiedContainers.push(container);
+    }
+  }
+
+  // Add computed URLs to each container
+  return verifiedContainers.map((container) => {
+    const ports = container.ports as Record<string, number> | null;
+    return {
+      ...container,
+      urls: ports ? buildContainerUrls(ports) : null,
+    };
+  });
 }

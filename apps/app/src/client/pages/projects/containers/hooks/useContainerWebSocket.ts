@@ -2,24 +2,12 @@ import { useEffect, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useWebSocket } from "@/client/hooks/useWebSocket";
 import { Channels } from "@/shared/websocket";
+import {
+  ContainerWebSocketEventTypes,
+  type ContainerWebSocketEvent,
+  type ContainerUpdatedData,
+} from "@/shared/types/websocket.types";
 import { containerQueryKeys } from "./queryKeys";
-
-interface ContainerCreatedData {
-  containerId: string;
-  status: string;
-  ports: Record<string, number>;
-}
-
-interface ContainerUpdatedData {
-  containerId: string;
-  changes: {
-    status?: string;
-  };
-}
-
-type ContainerWebSocketEvent =
-  | { type: "container.created"; data: ContainerCreatedData }
-  | { type: "container.updated"; data: ContainerUpdatedData };
 
 /**
  * Subscribe to container WebSocket events on project channel
@@ -62,9 +50,9 @@ export function useContainerWebSocket(projectId: string) {
         "data" in event
       ) {
         const containerEvent = event as ContainerWebSocketEvent;
-        if (containerEvent.type === "container.created") {
+        if (containerEvent.type === ContainerWebSocketEventTypes.CREATED) {
           handleContainerCreated();
-        } else if (containerEvent.type === "container.updated") {
+        } else if (containerEvent.type === ContainerWebSocketEventTypes.UPDATED) {
           handleContainerUpdated(containerEvent.data);
         }
       }

@@ -25,9 +25,10 @@ export function useStopContainer() {
         queryKey: containerQueryKeys.detail(container.id),
       });
 
-      // Invalidate containers list for this project
+      // Invalidate ALL containers lists for this project (regardless of status filter)
+      // Use prefix matching to catch all status variants
       queryClient.invalidateQueries({
-        queryKey: containerQueryKeys.list(container.project_id),
+        queryKey: [...containerQueryKeys.all, "list", container.project_id],
       });
     },
   });

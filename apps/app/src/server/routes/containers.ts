@@ -5,6 +5,7 @@ import { z } from "zod";
 import {
   getContainerById,
   getContainersByProject,
+  getContainerByWorkflowRunId,
   stopContainer,
   getContainerLogs,
 } from "@/server/domain/container";
@@ -33,13 +34,14 @@ const containerResponseSchema = z.object({
   project_id: z.string(),
   status: z.string(),
   ports: z.record(z.string(), z.number()),
+  urls: z.record(z.string(), z.string()).nullable(),
   container_ids: z.array(z.string()).nullable(),
   compose_project: z.string().nullable(),
   working_dir: z.string(),
   error_message: z.string().nullable(),
-  created_at: z.string(),
-  started_at: z.string().nullable(),
-  stopped_at: z.string().nullable(),
+  created_at: z.date(),
+  started_at: z.date().nullable(),
+  stopped_at: z.date().nullable(),
 });
 
 export async function containerRoutes(fastify: FastifyInstance) {
@@ -190,6 +192,38 @@ export async function containerRoutes(fastify: FastifyInstance) {
             error: { message: error.message, code: "NOT_FOUND" },
           });
         }
+        const message = error instanceof Error ? error.message : "Internal server error";
+        const errorRes = buildErrorResponse(500, message);
+        return reply.status(500).send(errorRes);
+      }
+    }
+  );
+
+  /**
+   * GET /api/workflow-runs/:runId/container
+   * Get container for a workflow run
+   */
+  fastify.get<{
+    Params: { runId: string };
+  }>(
+    "/api/workflow-runs/:runId/container",
+    {
+      preHandler: fastify.authenticate,
+      schema: {
+        params: z.object({ runId: z.string() }),
+        response: {
+          200: z.object({ data: containerResponseSchema.nullable() }),
+          401: errorResponse,
+          500: errorResponse,
+        },
+      },
+    },
+    async (request, reply) => {
+      try {
+        const { runId } = request.params;
+        const container = await getContainerByWorkflowRunId({ workflowRunId: runId });
+        return reply.send({ data: container });
+      } catch (error) {
         const message = error instanceof Error ? error.message : "Internal server error";
         const errorRes = buildErrorResponse(500, message);
         return reply.status(500).send(errorRes);

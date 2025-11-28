@@ -110,4 +110,53 @@ describe("executeStep", () => {
     expect(step?.status).toBe("failed");
     expect(step?.error_message).toBe("Build failed");
   });
+
+  it("marks step as failed when result has success: false (no throw)", async () => {
+    // Arrange
+    const { run: execution } = await createTestWorkflowContext(prisma, {
+      run: { name: "Test Execution", status: "running", args: {} }
+    });
+
+    const context: RuntimeContext = {
+      runId: execution.id,
+      projectId: "project-123",
+      projectPath: "/tmp/test",
+      userId: "user-123",
+      currentPhase: "build",
+      logger: console as unknown as RuntimeContext["logger"],
+    };
+
+    const mockInngestStep = {
+      run: vi.fn((id, fn) => fn()),
+    };
+
+    // Return success: false instead of throwing
+    const stepFn = vi.fn().mockResolvedValue({
+      success: false,
+      error: "Docker not available",
+      data: { status: "failed" }
+    });
+
+    // Act - should NOT throw, but return the result
+    const result = await executeStep({
+      context,
+      stepId: "preview",
+      stepName: "Preview Container",
+      stepType: "preview",
+      fn: stepFn,
+      inngestStep: mockInngestStep as RuntimeContext["inngestStep"],
+    });
+
+    // Assert - result returned, step marked as failed
+    expect(result.result.success).toBe(false);
+    expect(result.result.error).toBe("Docker not available");
+
+    const step = await prisma.workflowRunStep.findFirst({
+      where: {
+        workflow_run_id: execution.id,
+        name: "Preview Container",
+      },
+    });
+    expect(step?.status).toBe("failed");
+  });
 });

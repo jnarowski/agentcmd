@@ -10,6 +10,7 @@ import type {
   StopContainerOptions,
   DockerGetLogsOptions,
 } from "../services/types";
+import { sanitizeContainerName } from "./sanitizeContainerName";
 
 const execAsync = promisify(exec);
 
@@ -125,6 +126,7 @@ export async function buildAndRun(
     type,
     workingDir,
     containerId,
+    projectName,
     ports,
     env = {},
     maxMemory,
@@ -142,10 +144,11 @@ export async function buildAndRun(
     .join(" ");
 
   if (type === "compose") {
-    return await buildAndRunCompose(containerId, workingDir, envString);
+    return await buildAndRunCompose(containerId, projectName, workingDir, envString);
   } else {
     return await buildAndRunDockerfile(
       containerId,
+      projectName,
       workingDir,
       envString,
       ports,
@@ -195,6 +198,59 @@ export async function stop(options: StopContainerOptions): Promise<void> {
 }
 
 /**
+ * Checks if Docker containers or a compose project are running.
+ *
+ * @param options - Check options with container IDs or compose project
+ * @returns True if all containers are running
+ *
+ * @example
+ * ```ts
+ * const isRunning = await isContainerRunning({
+ *   composeProject: "container-abc123",
+ *   workingDir: "/tmp/project"
+ * });
+ * ```
+ */
+export async function isContainerRunning(options: {
+  containerIds?: string[];
+  composeProject?: string;
+  workingDir?: string;
+}): Promise<boolean> {
+  const { containerIds, composeProject, workingDir } = options;
+
+  try {
+    if (composeProject && workingDir) {
+      // Check compose project status
+      const { stdout } = await execAsync(
+        `docker compose -p ${composeProject} ps --status running -q`,
+        { cwd: workingDir }
+      );
+      // If any containers are running, consider it running
+      return stdout.trim().length > 0;
+    } else if (containerIds && containerIds.length > 0) {
+      // Check individual containers
+      for (const id of containerIds) {
+        try {
+          const { stdout } = await execAsync(
+            `docker inspect -f '{{.State.Running}}' ${id}`
+          );
+          if (stdout.trim() !== "true") {
+            return false;
+          }
+        } catch {
+          // Container doesn't exist or error
+          return false;
+        }
+      }
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Fetches logs from Docker containers.
  *
  * @param options - Log options with container IDs
@@ -232,35 +288,43 @@ export async function getLogs(
 
 async function buildAndRunCompose(
   containerId: string,
+  projectName: string | undefined,
   workingDir: string,
   envString: string
 ): Promise<BuildAndRunResult> {
-  const projectName = `container-${containerId}`;
-  const cmd = `${envString} docker compose -p ${projectName} up -d`;
+  const sanitized = sanitizeContainerName(projectName || "unknown");
+  const composeProjectName = `agentcmd-${sanitized}-container-${containerId}`;
+  const upCmd = `${envString} docker compose -p ${composeProjectName} up -d`;
 
-  const { stdout } = await execAsync(cmd, { cwd: workingDir });
+  // Start containers
+  await execAsync(upCmd, { cwd: workingDir });
 
-  // Extract container IDs from output (rough parsing)
+  // Get actual container IDs using docker compose ps
+  const psCmd = `docker compose -p ${composeProjectName} ps -q`;
+  const { stdout } = await execAsync(psCmd, { cwd: workingDir });
+
   const containerIds = stdout
     .split("\n")
-    .filter((line) => line.trim().length > 0 && !line.includes("Creating"))
-    .map((line) => line.trim());
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
 
   return {
-    containerIds: containerIds.length > 0 ? containerIds : [projectName],
-    composeProject: projectName,
+    containerIds: containerIds.length > 0 ? containerIds : [composeProjectName],
+    composeProject: composeProjectName,
   };
 }
 
 async function buildAndRunDockerfile(
   containerId: string,
+  projectName: string | undefined,
   workingDir: string,
   envString: string,
   ports: Record<string, number>,
   maxMemory?: string,
   maxCpus?: string
 ): Promise<BuildAndRunResult> {
-  const imageName = `container-${containerId}`;
+  const sanitized = sanitizeContainerName(projectName || "unknown");
+  const imageName = `agentcmd-${sanitized}-container-${containerId}`;
 
   // Build image
   const buildCmd = `docker build -t ${imageName} .`;

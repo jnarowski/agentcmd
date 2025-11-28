@@ -165,6 +165,62 @@ export function DetailsTab({ run }: DetailsTabProps) {
         </div>
       )}
 
+      {/* Container / Preview Section */}
+      {run.container && (
+        <div>
+          <h3 className="text-sm font-medium mb-2">Preview Container</h3>
+          <dl className="divide-y text-sm">
+            <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
+              <dt className="text-muted-foreground">Status</dt>
+              <dd className="capitalize">{run.container.status}</dd>
+            </div>
+
+            {run.container.urls && Object.keys(run.container.urls).length > 0 && (
+              <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
+                <dt className="text-muted-foreground">URL</dt>
+                <dd className="space-y-1">
+                  {Object.entries(run.container.urls).map(([name, url]) => (
+                    <div key={name} className="flex items-center gap-1 font-mono text-xs">
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-primary hover:underline"
+                      >
+                        {url}
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                      <span className="text-muted-foreground">- {name}</span>
+                    </div>
+                  ))}
+                </dd>
+              </div>
+            )}
+
+            {run.container.started_at && (
+              <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
+                <dt className="text-muted-foreground">Started</dt>
+                <dd>{formatDate(run.container.started_at)}</dd>
+              </div>
+            )}
+
+            {run.container.stopped_at && (
+              <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
+                <dt className="text-muted-foreground">Stopped</dt>
+                <dd>{formatDate(run.container.stopped_at)}</dd>
+              </div>
+            )}
+
+            {run.container.error_message && (
+              <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
+                <dt className="text-muted-foreground">Error</dt>
+                <dd className="text-destructive text-xs">{run.container.error_message}</dd>
+              </div>
+            )}
+          </dl>
+        </div>
+      )}
+
       {run.inngest_run_id && (
         <div>
           <h3 className="text-sm font-medium mb-2">Inngest Run</h3>
