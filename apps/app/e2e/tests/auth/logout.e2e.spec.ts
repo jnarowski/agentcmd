@@ -1,5 +1,5 @@
 import { test, expect } from "../../fixtures";
-import { DashboardPage, ProjectsPage } from "../../pages";
+import { DashboardPage } from "../../pages";
 
 /**
  * Logout E2E Tests

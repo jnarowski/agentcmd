@@ -82,13 +82,22 @@ test.describe("Sessions - Create Session", () => {
 
 test.describe("Sessions - With Agent Responses", () => {
   // These tests require Claude Code CLI to be installed and authenticated
+  // Longer timeout for AI response
+  test.setTimeout(120_000);
+
+  // TODO: WebSocket streaming issue - Claude starts but response not displayed
   test.skip("should wait for agent response", async ({
     authenticatedPage,
     db,
   }) => {
+    // Ensure project directory exists
+    const { mkdirSync } = await import("node:fs");
+    const projectPath = "/tmp/e2e-test-project-3";
+    mkdirSync(projectPath, { recursive: true });
+
     const project = await db.seedProject({
       name: "E2E Test Project 3",
-      path: "/tmp/e2e-test-project-3",
+      path: projectPath,
     });
 
     const newSessionPage = new NewSessionPage(authenticatedPage);

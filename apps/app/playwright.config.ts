@@ -88,6 +88,7 @@ export default defineConfig({
         NODE_ENV: "test",
         DATABASE_URL: E2E_DATABASE_URL,
         JWT_SECRET: "e2e-test-secret-key-12345",
+        CLAUDE_CLI_PATH: `${process.env.HOME}/.claude/local/claude`,
       },
     },
     {

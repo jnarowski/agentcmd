@@ -306,6 +306,7 @@ enum StepType {
   annotation
   system
   command
+  preview
 }
 
 enum WebhookSource {

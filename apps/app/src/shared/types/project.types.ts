@@ -2,6 +2,14 @@
 
 import type { SessionResponse } from './agent-session.types';
 
+export interface ProjectPreviewConfig {
+  dockerFilePath?: string;
+  ports?: string[];
+  env?: Record<string, string>;
+  maxMemory?: string;
+  maxCpus?: string;
+}
+
 export interface GitCapabilities {
   initialized: boolean;
   error: string | null;
@@ -28,6 +36,7 @@ export interface Project {
   created_at: Date;
   updated_at: Date;
   capabilities: ProjectCapabilities;
+  preview_config?: ProjectPreviewConfig | null;
 }
 
 export interface ProjectWithSessions extends Project {
@@ -45,6 +54,7 @@ export interface UpdateProjectRequest {
   path?: string;
   is_hidden?: boolean;
   is_starred?: boolean;
+  preview_config?: ProjectPreviewConfig | null;
 }
 
 export interface ProjectResponse {

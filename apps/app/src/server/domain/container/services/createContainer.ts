@@ -1,6 +1,8 @@
 import { prisma } from "@/shared/prisma";
 import { broadcast } from "@/server/websocket/infrastructure/subscriptions";
 import { Channels } from "@/shared/websocket";
+import { getProjectById } from "@/server/domain/project/services/getProjectById";
+import type { ProjectPreviewConfig } from "@/shared/types/project.types";
 import * as dockerClient from "../utils/dockerClient";
 import * as portManager from "../utils/portManager";
 import type {
@@ -32,10 +34,8 @@ export async function createContainer(
   const { projectId, workingDir, workflowRunId, configOverrides = {} } =
     options;
 
-  // Fetch project with preview_config
-  const project = await prisma.project.findUnique({
-    where: { id: projectId },
-  });
+  // Fetch project using domain service
+  const project = await getProjectById({ id: projectId });
 
   if (!project) {
     throw new Error(`Project not found: ${projectId}`);
@@ -52,7 +52,7 @@ export async function createContainer(
   }
 
   // Merge config: step override > project config > defaults
-  const previewConfig = (project.preview_config as ProjectPreviewConfig) || {};
+  const previewConfig: ProjectPreviewConfig = project.preview_config || {};
   const mergedConfig = {
     dockerFilePath: configOverrides.dockerFilePath || previewConfig.dockerFilePath,
     ports: configOverrides.ports || previewConfig.ports || ["app"],
@@ -165,14 +165,4 @@ export async function createContainer(
 
     throw error;
   }
-}
-
-// PRIVATE HELPERS
-
-interface ProjectPreviewConfig {
-  dockerFilePath?: string;
-  ports?: string[];
-  env?: Record<string, string>;
-  maxMemory?: string;
-  maxCpus?: string;
 }

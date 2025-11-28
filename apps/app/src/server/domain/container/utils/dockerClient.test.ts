@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import type { ExecException, ExecOptions } from "child_process";
 
 // Hoist mocks
 const { mockExec, mockExistsSync } = vi.hoisted(() => ({
@@ -12,7 +11,8 @@ vi.mock("util", async (importOriginal) => {
   const actual = (await importOriginal()) as typeof import("util");
   return {
     ...actual,
-    promisify: (fn: any) => mockExec,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+    promisify: (_fn: any) => mockExec,
   };
 });
 
@@ -208,7 +208,7 @@ describe("dockerClient", () => {
     it("builds dockerfile command correctly", async () => {
       mockExec.mockResolvedValue({ stdout: "container-id-123", stderr: "" });
 
-      const result = await buildAndRun({
+      await buildAndRun({
         type: "dockerfile",
         workingDir: "/tmp/test",
         containerId: "abc123",

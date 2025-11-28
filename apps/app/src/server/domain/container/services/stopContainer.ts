@@ -62,7 +62,7 @@ export async function stopContainer(
     return updatedContainer;
   } catch (error) {
     // Update status to "failed"
-    const failedContainer = await prisma.container.update({
+    await prisma.container.update({
       where: { id: containerId },
       data: {
         status: "failed",

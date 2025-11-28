@@ -29,7 +29,7 @@ export function useContainerWebSocket(projectId: string) {
   const queryClient = useQueryClient();
 
   const handleContainerCreated = useCallback(
-    (_data: ContainerCreatedData) => {
+    () => {
       // Invalidate containers list to show new container
       queryClient.invalidateQueries({
         queryKey: containerQueryKeys.list(projectId),
@@ -63,7 +63,7 @@ export function useContainerWebSocket(projectId: string) {
       ) {
         const containerEvent = event as ContainerWebSocketEvent;
         if (containerEvent.type === "container.created") {
-          handleContainerCreated(containerEvent.data);
+          handleContainerCreated();
         } else if (containerEvent.type === "container.updated") {
           handleContainerUpdated(containerEvent.data);
         }

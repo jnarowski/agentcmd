@@ -32,7 +32,7 @@ const containerResponseSchema = z.object({
   workflow_run_id: z.string().nullable(),
   project_id: z.string(),
   status: z.string(),
-  ports: z.record(z.number()),
+  ports: z.record(z.string(), z.number()),
   container_ids: z.array(z.string()).nullable(),
   compose_project: z.string().nullable(),
   working_dir: z.string(),
@@ -76,8 +76,9 @@ export async function containerRoutes(fastify: FastifyInstance) {
 
         return reply.send({ data: containers });
       } catch (error) {
-        const errorRes = buildErrorResponse(error);
-        return reply.status(errorRes.statusCode).send(errorRes);
+        const message = error instanceof Error ? error.message : "Internal server error";
+        const errorRes = buildErrorResponse(500, message);
+        return reply.status(500).send(errorRes);
       }
     }
   );
@@ -113,8 +114,9 @@ export async function containerRoutes(fastify: FastifyInstance) {
             error: { message: error.message, code: "NOT_FOUND" },
           });
         }
-        const errorRes = buildErrorResponse(error);
-        return reply.status(errorRes.statusCode).send(errorRes);
+        const message = error instanceof Error ? error.message : "Internal server error";
+        const errorRes = buildErrorResponse(500, message);
+        return reply.status(500).send(errorRes);
       }
     }
   );
@@ -150,8 +152,9 @@ export async function containerRoutes(fastify: FastifyInstance) {
             error: { message: error.message, code: "NOT_FOUND" },
           });
         }
-        const errorRes = buildErrorResponse(error);
-        return reply.status(errorRes.statusCode).send(errorRes);
+        const message = error instanceof Error ? error.message : "Internal server error";
+        const errorRes = buildErrorResponse(500, message);
+        return reply.status(500).send(errorRes);
       }
     }
   );
@@ -187,8 +190,9 @@ export async function containerRoutes(fastify: FastifyInstance) {
             error: { message: error.message, code: "NOT_FOUND" },
           });
         }
-        const errorRes = buildErrorResponse(error);
-        return reply.status(errorRes.statusCode).send(errorRes);
+        const message = error instanceof Error ? error.message : "Internal server error";
+        const errorRes = buildErrorResponse(500, message);
+        return reply.status(500).send(errorRes);
       }
     }
   );

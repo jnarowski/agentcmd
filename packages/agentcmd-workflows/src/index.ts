@@ -46,6 +46,8 @@ export type {
   AiGenerationMetadata,
   SetupWorkspaceConfig,
   WorkspaceResult,
+  PreviewStepConfig,
+  PreviewStepResult,
   WorkflowConfig,
   WorkflowContext,
   WorkflowEvent,

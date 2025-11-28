@@ -8,7 +8,7 @@ import type {
   BuildAndRunOptions,
   BuildAndRunResult,
   StopContainerOptions,
-  GetContainerLogsOptions,
+  DockerGetLogsOptions,
 } from "../services/types";
 
 const execAsync = promisify(exec);
@@ -207,12 +207,12 @@ export async function stop(options: StopContainerOptions): Promise<void> {
  * ```
  */
 export async function getLogs(
-  options: GetContainerLogsOptions
+  options: DockerGetLogsOptions
 ): Promise<string> {
   const { containerIds } = options;
 
   try {
-    const logsPromises = containerIds.map(async (id) => {
+    const logsPromises = containerIds.map(async (id: string) => {
       try {
         const { stdout } = await execAsync(`docker logs ${id}`);
         return `\n=== Container ${id} ===\n${stdout}`;

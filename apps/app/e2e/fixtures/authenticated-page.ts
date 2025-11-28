@@ -57,6 +57,7 @@ export interface AuthenticatedPageFixtures {
 
 export const test = base.extend<AuthenticatedPageFixtures>({
   // testUser fixture: reads auth state created by global-setup
+  // eslint-disable-next-line no-empty-pattern
   testUser: async ({}, use) => {
     const authState = getAuthState();
 
@@ -67,6 +68,7 @@ export const test = base.extend<AuthenticatedPageFixtures>({
       credentials: authState.credentials,
     };
 
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     await use(testUser);
   },
 
@@ -93,6 +95,7 @@ export const test = base.extend<AuthenticatedPageFixtures>({
     // Wait for redirect to dashboard (confirms auth is working)
     await page.waitForURL(/\/(dashboard|projects)/, { timeout: 10000 });
 
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     await use(page);
   },
 });

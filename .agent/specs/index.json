@@ -318,6 +318,17 @@
       "totalComplexity": 42,
       "phaseCount": 3,
       "taskCount": 9
+    },
+    "2511281500": {
+      "folder": "2511281500-preview-config-ui",
+      "path": "todo/2511281500-preview-config-ui/spec.md",
+      "spec_type": "feature",
+      "status": "completed",
+      "created": "2025-11-28T15:00:00Z",
+      "updated": "2025-11-28T17:30:00Z",
+      "totalComplexity": 38,
+      "phaseCount": 3,
+      "taskCount": 9
     }
   }
 }

@@ -2,6 +2,21 @@ import { z } from "zod";
 import { sessionResponseSchema } from "@/server/domain/session/schemas";
 
 // ============================================================================
+// Preview Config Schema
+// ============================================================================
+
+/**
+ * Preview container configuration schema
+ */
+export const previewConfigSchema = z.object({
+  dockerFilePath: z.string().optional(),
+  ports: z.array(z.string()).optional(),
+  env: z.record(z.string(), z.string()).optional(),
+  maxMemory: z.string().optional(),
+  maxCpus: z.string().optional(),
+}).nullable();
+
+// ============================================================================
 // Request Schemas
 // ============================================================================
 
@@ -23,11 +38,12 @@ export const updateProjectSchema = z.object({
   path: z.string().min(1).optional(),
   is_hidden: z.boolean().optional(),
   is_starred: z.boolean().optional(),
+  preview_config: previewConfigSchema.optional(),
 });
 
 // Schema for project ID parameter
 export const projectIdSchema = z.object({
-  id: z.cuid("Invalid project ID format"),
+  id: z.string().cuid(),
 });
 
 // Schema for file content query parameters

@@ -46,12 +46,14 @@ export interface DatabaseFixtures {
 export const test = base.extend<DatabaseFixtures>({
   // prisma fixture: shared PrismaClient instance
   // Prisma 7: SQLite requires the better-sqlite3 adapter
+  // eslint-disable-next-line no-empty-pattern
   prisma: async ({}, use) => {
     const adapter = new PrismaBetterSqlite3({
       url: `file:${E2E_DATABASE_PATH}`,
     });
     const prisma = new PrismaClient({ adapter });
 
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     await use(prisma);
 
     await prisma.$disconnect();
@@ -74,6 +76,7 @@ export const test = base.extend<DatabaseFixtures>({
       },
     };
 
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     await use(db);
   },
 });

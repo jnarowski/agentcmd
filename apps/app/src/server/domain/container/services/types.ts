@@ -141,9 +141,19 @@ export interface GetContainersByProjectOptions {
 }
 
 /**
- * Options for getting container logs
+ * Options for getting container logs (service layer)
  */
 export interface GetContainerLogsOptions {
   /** Container ID */
   containerId: string;
+}
+
+/**
+ * Options for getting container logs (Docker client layer)
+ */
+export interface DockerGetLogsOptions {
+  /** Docker container IDs to fetch logs from */
+  containerIds: string[];
+  /** Working directory (optional) */
+  workingDir?: string;
 }

@@ -72,13 +72,26 @@ export async function updateProject({
   data
 }: UpdateProjectOptions): Promise<Project | null> {
   try {
+    // Destructure to exclude preview_config from spread (needs special handling)
+    const { preview_config, ...restData } = data;
+
+    // Build update data without preview_config
+    const updateData: Prisma.ProjectUpdateInput = {
+      ...restData,
+      ...(data.name && { name: data.name.trim() }),
+      ...(data.path && { path: data.path.trim() }), // Trim path to prevent trailing/leading whitespace bugs
+    };
+
+    // Prisma requires DbNull for setting JSON fields to null
+    if (preview_config === null) {
+      updateData.preview_config = Prisma.DbNull;
+    } else if (preview_config !== undefined) {
+      updateData.preview_config = preview_config as Prisma.InputJsonValue;
+    }
+
     const project = await prisma.project.update({
       where: { id },
-      data: {
-        ...data,
-        ...(data.name && { name: data.name.trim() }),
-        ...(data.path && { path: data.path.trim() }), // Trim path to prevent trailing/leading whitespace bugs
-      },
+      data: updateData,
     });
     const capabilities = await buildCapabilities(project.path);
     return transformProject(project, capabilities);
