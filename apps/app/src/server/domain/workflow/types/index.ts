@@ -34,6 +34,8 @@ export interface WorkflowEngineConfig {
   isDev: boolean;
   /** Path to SQLite memoization database */
   memoizationDbPath: string;
+  /** Inngest base URL (for local inngest start) */
+  baseURL?: string;
 }
 
 /**

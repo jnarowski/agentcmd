@@ -93,20 +93,24 @@ export const ConfigSchema = z
     webhook: WebhookConfigSchema,
   })
   .transform((config) => {
-    // Auto-generate Inngest keys if not provided
+    // Auto-generate Inngest keys from JWT_SECRET if not provided
+    // Keys are stable across restarts and unique per installation
+
     if (!config.workflow.eventKey) {
-      config.workflow.eventKey = config.workflow.devMode
-        ? "dev-event-key"
-        : "prod-event-key";
+      // Derive event key from JWT_SECRET
+      const eventKeyHash = createHash("sha256")
+        .update(`inngest-event-${config.jwt.secret}`)
+        .digest("hex")
+        .substring(0, 32); // Use first 32 chars for readability
+      config.workflow.eventKey = eventKeyHash;
     }
 
     if (!config.workflow.signingKey) {
-      // Derive stable signing key from JWT_SECRET
-      // This ensures same key across restarts without persisting to disk
-      const hash = createHash("sha256")
+      // Derive signing key from JWT_SECRET
+      const signingKeyHash = createHash("sha256")
         .update(`inngest-signing-${config.jwt.secret}`)
         .digest("hex");
-      config.workflow.signingKey = hash;
+      config.workflow.signingKey = signingKeyHash;
     }
 
     return config;

@@ -26,6 +26,7 @@ export function createWorkflowClient(config: WorkflowEngineConfig): Inngest {
     id: config.appId,
     eventKey: config.eventKey,
     isDev: config.isDev,
+    baseURL: config.baseURL, // For local inngest start
     // SQLite-based memoization for persistent step caching
     experimental: {
       memo: {

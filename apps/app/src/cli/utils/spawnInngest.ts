@@ -1,5 +1,6 @@
 import { spawn, execSync, type ChildProcess } from "child_process";
 import type { StdioOptions } from "child_process";
+import { createHash } from "node:crypto";
 import { INNGEST_CLI_VERSION } from "./constants";
 
 // PUBLIC API
@@ -38,11 +39,28 @@ export function spawnInngest(options: SpawnInngestOptions): ChildProcess {
 // PRIVATE HELPERS
 
 function spawnInngestProduction(options: SpawnInngestOptions): ChildProcess {
-  const { port, dataDir, eventKey = "local-prod-key", stdio = "pipe", env } = options;
-  let { signingKey } = options;
+  const { port, dataDir, stdio = "pipe", env } = options;
+  let { eventKey, signingKey } = options;
 
-  if (!signingKey) {
-    signingKey = generateSigningKey();
+  // Auto-generate keys from JWT_SECRET if not provided
+  // Matches server config behavior for consistency
+  const jwtSecret = env?.JWT_SECRET || process.env.JWT_SECRET;
+
+  if (!eventKey && jwtSecret) {
+    eventKey = createHash("sha256")
+      .update(`inngest-event-${jwtSecret}`)
+      .digest("hex")
+      .substring(0, 32);
+  } else if (!eventKey) {
+    eventKey = "local-prod-key"; // Fallback if no JWT_SECRET
+  }
+
+  if (!signingKey && jwtSecret) {
+    signingKey = createHash("sha256")
+      .update(`inngest-signing-${jwtSecret}`)
+      .digest("hex");
+  } else if (!signingKey) {
+    signingKey = generateSigningKey(); // Fallback random generation
   }
 
   const args = [

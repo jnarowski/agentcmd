@@ -34,12 +34,23 @@ export async function initializeWorkflowEngine(
 
   logger.info("=== WORKFLOW ENGINE INITIALIZATION ===");
 
+  // Log Inngest configuration for self-hosted setup
+  if (config.workflow.eventKey && config.workflow.signingKey) {
+    logger.info(
+      "\nInngest keys (for self-hosted `inngest start`):\n" +
+        `  --event-key ${config.workflow.eventKey}\n` +
+        `  --signing-key ${config.workflow.signingKey}\n`
+    );
+  }
+
   // Step 1: Create Inngest client and attach to Fastify
   const inngestClient = createWorkflowClient({
     appId: config.workflow.appId,
     eventKey: config.workflow.eventKey,
     isDev: config.workflow.devMode,
     memoizationDbPath: config.workflow.memoizationDbPath,
+    // Always set baseURL for local Inngest (both dev and prod modes)
+    baseURL: `http://localhost:${config.workflow.inngestDevPort}`,
   });
 
   fastify.decorate("workflowClient", inngestClient);
