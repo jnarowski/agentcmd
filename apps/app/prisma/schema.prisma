@@ -79,6 +79,7 @@ model WorkflowRun {
   steps               WorkflowRunStep[]
   events              WorkflowEvent[]
   artifacts           WorkflowArtifact[]
+  container           Container?
 
   @@index([project_id, status])
   @@index([user_id, status])
@@ -212,12 +213,14 @@ model Project {
   path                 String               @unique
   is_hidden            Boolean              @default(false)
   is_starred           Boolean              @default(false)
+  preview_config       Json? // Preview container configuration
   created_at           DateTime             @default(now())
   updated_at           DateTime             @updatedAt
   sessions             AgentSession[]
   workflow_definitions WorkflowDefinition[]
   workflow_runs        WorkflowRun[]
   webhooks             Webhook[]
+  containers           Container[]
 
   @@map("projects")
 }
@@ -326,6 +329,28 @@ enum WebhookEventStatus {
   invalid_signature
   failed
   error
+}
+
+model Container {
+  id              String    @id @default(cuid())
+  workflow_run_id String?   @unique
+  project_id      String
+  status          String // pending | starting | running | stopped | failed
+  ports           Json // { server: 5000, client: 5001 }
+  container_ids   Json? // Array of Docker container IDs
+  compose_project String? // docker compose -p {this}
+  working_dir     String // Path where docker build ran
+  error_message   String?
+  created_at      DateTime  @default(now())
+  started_at      DateTime?
+  stopped_at      DateTime?
+
+  workflow_run WorkflowRun? @relation(fields: [workflow_run_id], references: [id], onDelete: Cascade)
+  project      Project      @relation(fields: [project_id], references: [id], onDelete: Cascade)
+
+  @@index([project_id])
+  @@index([status])
+  @@map("containers")
 }
 
 model AgentSession {
