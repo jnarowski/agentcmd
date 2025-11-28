@@ -1605,3 +1605,65 @@ User handles volume mounts in their compose file. AgentCmd doesn't auto-mount - 
 3. Implement Phase 3 (Workflow SDK Integration)
 4. Implement Phase 4 (API Routes)
 5. Implement Phase 5 (Frontend UI)
+
+## Review Findings
+
+**Review Date:** 2025-11-28
+**Reviewed By:** Claude Code
+**Review Iteration:** 1 of 3
+**Branch:** feature/preview-containers
+**Commits Reviewed:** 1
+
+### Summary
+
+Implementation is mostly complete through Phase 4. Backend functionality (database, services, workflow SDK integration, API routes) is fully implemented with comprehensive test coverage. However, Phase 5 (Frontend UI) is completely missing, and there's a HIGH priority issue where workflowRunId is not being passed through to container creation.
+
+### Phase 3: Workflow SDK Integration
+
+**Status:** ⚠️ Incomplete - Missing workflowRunId propagation
+
+#### HIGH Priority
+
+- [ ] **workflowRunId not passed to createContainer**
+  - **File:** `apps/app/src/server/domain/workflow/services/engine/steps/createPreviewStep.ts:76`
+  - **Spec Reference:** "Container Model: workflow_run_id String? @unique" and "Container should be linked to WorkflowRun when created from step.preview()"
+  - **Expected:** createContainer should receive workflowRunId from RuntimeContext to establish Container.workflow_run_id relation
+  - **Actual:** createContainer called without workflowRunId parameter: `await createContainer({ projectId, workingDir, configOverrides: config ?? {} })`
+  - **Fix:** Pass workflowRunId from context.runId to createContainer. Change to: `await createContainer({ projectId, workingDir, workflowRunId: context.runId, configOverrides: config ?? {} })`
+
+### Phase 4: API Routes
+
+**Status:** ⚠️ Incomplete - Missing tests
+
+#### MEDIUM Priority
+
+- [ ] **Route tests not implemented**
+  - **File:** `apps/app/src/server/routes/containers.test.ts` (missing)
+  - **Spec Reference:** Phase 4, Task 4.3 - "Add route tests"
+  - **Expected:** Comprehensive route tests covering all endpoints (list, get, stop, logs) with auth, validation, error cases
+  - **Actual:** No test file exists
+  - **Fix:** Create containers.test.ts with tests for all 4 endpoints using app.inject() pattern
+
+### Phase 5: Frontend UI
+
+**Status:** ❌ Not implemented - Entire phase missing
+
+#### HIGH Priority
+
+- [ ] **Frontend UI completely missing**
+  - **File:** Multiple files missing (see Phase 5 tasks 5.1-5.4)
+  - **Spec Reference:** "Phase 5: Frontend UI - Create container hooks, ContainerCard component, ProjectHome integration, ProjectEditModal preview config"
+  - **Expected:**
+    - Container hooks (useContainers, useContainer, useStopContainer)
+    - ContainerCard component with status display, URLs, stop/logs buttons
+    - ProjectHome active previews section
+    - ProjectEditModal with full preview config UI
+    - ProjectFilePicker and DockerFilePicker components
+  - **Actual:** No frontend files found for container functionality
+  - **Fix:** Implement all Phase 5 tasks (5.1-5.4) as specified in spec
+
+### Review Completion Checklist
+
+- [x] All spec requirements reviewed
+- [x] Code quality checked
+- [ ] All findings addressed and tested
