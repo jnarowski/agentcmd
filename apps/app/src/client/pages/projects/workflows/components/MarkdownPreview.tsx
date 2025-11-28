@@ -20,7 +20,7 @@ export function MarkdownPreview({
 
   return (
     <div className={`h-full overflow-auto bg-background ${className}`}>
-      <div className="max-w-4xl mx-auto px-8 py-6">
+      <div className="max-w-4xl mx-auto px-4 py-6">
         <div className="prose prose-base dark:prose-invert max-w-none prose-hr:my-4 prose-p:my-3 prose-ul:my-3 prose-ol:my-3 prose-li:my-1 prose-headings:mb-3 prose-headings:mt-4 prose-*:first:mt-0 prose-pre:my-4 prose-pre:bg-transparent prose-pre:p-0 break-words">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}

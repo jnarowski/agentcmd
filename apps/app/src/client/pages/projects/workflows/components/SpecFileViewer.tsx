@@ -134,15 +134,6 @@ export function SpecFileViewer({
                 MD
               </span>
             </div>
-            <SegmentedControl
-              value={viewMode}
-              onChange={(value) => setViewMode(value as ViewMode)}
-              options={[
-                { value: "edit", label: "Edit", icon: Code2 },
-                { value: "preview", label: "Preview", icon: Eye },
-              ]}
-              className="flex-shrink-0"
-            />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 min-w-0">
                 <h3 className="font-medium truncate">{specName}</h3>
@@ -203,6 +194,16 @@ export function SpecFileViewer({
                 </Button>
               </>
             )}
+
+            <SegmentedControl
+              value={viewMode}
+              onChange={(value) => setViewMode(value as ViewMode)}
+              options={[
+                { value: "edit", label: "Edit", icon: Code2 },
+                { value: "preview", label: "Preview", icon: Eye },
+              ]}
+              className="flex-shrink-0"
+            />
 
             <Button
               variant="ghost"
