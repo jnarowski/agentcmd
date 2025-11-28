@@ -239,7 +239,7 @@
     },
     "2511240820": {
       "folder": "2511240820-shared-utils-consolidation",
-      "path": "todo/2511240820-shared-utils-consolidation/spec.md",
+      "path": "done/2511240820-shared-utils-consolidation/spec.md",
       "spec_type": "feature",
       "status": "completed",
       "created": "2025-11-24T08:20:00Z",
@@ -275,6 +275,17 @@
       "phaseCount": 1,
       "taskCount": 9
     },
+    "2511270928": {
+      "folder": "2511270928-workflow-resume",
+      "path": "todo/2511270928-workflow-resume/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-27T09:28:00Z",
+      "updated": "2025-11-27T09:28:00Z",
+      "totalComplexity": 42,
+      "phaseCount": 3,
+      "taskCount": 9
+    },
     "2511271106": {
       "folder": "2511271106-inngest-persistent-mode",
       "path": "done/2511271106-inngest-persistent-mode/spec.md",
@@ -299,7 +310,7 @@
     },
     "2511271548": {
       "folder": "2511271548-prisma-7-upgrade",
-      "path": "todo/2511271548-prisma-7-upgrade/spec.md",
+      "path": "done/2511271548-prisma-7-upgrade/spec.md",
       "spec_type": "feature",
       "status": "completed",
       "created": "2025-11-27T15:50:04Z",
@@ -307,17 +318,6 @@
       "totalComplexity": 47,
       "phaseCount": 5,
       "taskCount": 15
-    },
-    "2511270928": {
-      "folder": "2511270928-workflow-resume",
-      "path": "todo/2511270928-workflow-resume/spec.md",
-      "spec_type": "feature",
-      "status": "draft",
-      "created": "2025-11-27T09:28:00Z",
-      "updated": "2025-11-27T09:28:00Z",
-      "totalComplexity": 42,
-      "phaseCount": 3,
-      "taskCount": 9
     }
   }
 }
