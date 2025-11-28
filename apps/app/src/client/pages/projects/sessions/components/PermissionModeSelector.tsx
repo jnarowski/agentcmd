@@ -13,6 +13,7 @@ import { cn } from "@/client/utils/cn";
 export interface PermissionModeSelectorProps {
   permissionMode: PermissionMode;
   onPermissionModeChange: (mode: PermissionMode) => void;
+  textareaRef?: React.RefObject<HTMLTextAreaElement>;
 }
 
 /**
@@ -39,6 +40,7 @@ export interface PermissionModeSelectorProps {
 export function PermissionModeSelector({
   permissionMode,
   onPermissionModeChange,
+  textareaRef,
 }: PermissionModeSelectorProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -49,6 +51,11 @@ export function PermissionModeSelector({
   const handleModeChange = (mode: PermissionMode) => {
     onPermissionModeChange(mode);
     setIsMenuOpen(false);
+
+    // Return focus to textarea
+    if (textareaRef?.current) {
+      textareaRef.current.focus();
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

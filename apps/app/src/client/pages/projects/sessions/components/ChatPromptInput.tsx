@@ -237,6 +237,7 @@ const ChatPromptInputInner = forwardRef<
               <PermissionModeSelector
                 permissionMode={permissionMode}
                 onPermissionModeChange={handlePermissionModeChange}
+                textareaRef={textareaRef}
               />
             </PromptInputTools>
             <div className="flex items-center gap-2">
