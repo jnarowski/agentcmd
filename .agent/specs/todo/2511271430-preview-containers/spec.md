@@ -23,6 +23,40 @@
 
 Docker-based preview environments triggered by `step.preview()` in workflows. Users provide Dockerfile/docker-compose.yml, AgentCmd orchestrates container lifecycle. Supports multiple concurrent previews with dynamic port allocation.
 
+## Resuming Implementation
+
+**Before starting any phase, run these checks:**
+
+1. **Check current phase completion:**
+   ```bash
+   # Read completion notes in spec for last completed phase
+   # Check database schema matches phase progress
+   cd apps/app && pnpm prisma studio
+   # Expected: See Container table and preview_config field if Phase 1 done
+   ```
+
+2. **Verify environment:**
+   ```bash
+   pnpm install
+   pnpm build
+   pnpm check-types
+   # Expected: All pass without errors
+   ```
+
+3. **Check test coverage:**
+   ```bash
+   pnpm test --reporter=verbose
+   # See which test files exist vs. spec expectations
+   # Expected: Tests for completed phases exist and pass
+   ```
+
+4. **Identify next task:**
+   - Find first unchecked [ ] checkbox in current phase
+   - Read "Completion Notes" from previous phase for context
+   - Check for any "Known issues or follow-ups"
+
+**If unclear what's done:** Run Quick Verification commands for each phase starting from Phase 1.
+
 ## User Story
 
 As a developer
@@ -73,6 +107,7 @@ So that I can test and review changes in an isolated, production-like environmen
 │                     Project Config (DB)                         │
 ├─────────────────────────────────────────────────────────────────┤
 │  preview_config: {                                              │
+│    dockerFilePath: "docker/compose-preview.yml",  // Optional   │
 │    ports: ["server", "client"],      // Named ports             │
 │    env: { API_KEY: "..." },          // Environment vars        │
 │    maxMemory: "1g",                  // Resource limits         │
@@ -93,7 +128,7 @@ So that I can test and review changes in an isolated, production-like environmen
 │                   Preview Service                               │
 ├─────────────────────────────────────────────────────────────────┤
 │  1. Check Docker available (skip with warning if not)           │
-│  2. Detect: docker-compose.yml or Dockerfile                    │
+│  2. Detect: custom path OR docker-compose.yml OR Dockerfile     │
 │  3. Allocate ports from 5000-5999 (check existing containers)   │
 │  4. Build & run: PREVIEW_PORT_{NAME}=X docker compose up        │
 │  5. Create Container record in DB                               │
@@ -130,6 +165,10 @@ apps/app/src/client/pages/projects/containers/
 │   └── ContainerCard.tsx
 └── hooks/
     └── useContainers.ts
+
+apps/app/src/client/components/
+├── ProjectFilePicker.tsx           # Reusable file picker
+└── DockerFilePicker.tsx            # Docker-specific wrapper
 
 packages/agentcmd-workflows/src/types/
 └── steps.ts (add PreviewStepConfig)
@@ -196,6 +235,7 @@ model Project {
 
 ```typescript
 interface ProjectPreviewConfig {
+  dockerFilePath?: string;       // Relative path to Docker file
   ports?: string[];              // Default: ["app"]
   env?: Record<string, string>;  // Environment variables
   maxMemory?: string;            // e.g., "1g"
@@ -214,6 +254,7 @@ interface ProjectPreviewConfig {
 ### 4. Docker Execution
 
 **Detection Priority**:
+0. Custom path (`preview_config.dockerFilePath`) → validate and use
 1. `docker-compose.yml` / `docker-compose.yaml` / `compose.yml` → use Compose
 2. `Dockerfile` → use Docker
 3. Neither → error
@@ -240,11 +281,8 @@ Broadcast to `project:{projectId}` channel:
 // Container created
 { type: "container.created", data: { containerId, status, ports } }
 
-// Container status changed
-{ type: "container.status_changed", data: { containerId, status } }
-
-// Container stopped
-{ type: "container.stopped", data: { containerId } }
+// Container updated (status changed)
+{ type: "container.updated", data: { containerId, changes: { status } } }
 ```
 
 ### 6. Cascade Deletion
@@ -259,7 +297,7 @@ Broadcast to `project:{projectId}` channel:
 
 ## Files to Create/Modify
 
-### New Files (13)
+### New Files (15)
 
 1. `apps/app/src/server/domain/container/services/createContainer.ts` - Create and start container
 2. `apps/app/src/server/domain/container/services/stopContainer.ts` - Stop and remove container
@@ -274,8 +312,10 @@ Broadcast to `project:{projectId}` channel:
 11. `apps/app/src/server/routes/containers.ts` - REST API routes
 12. `apps/app/src/client/pages/projects/containers/components/ContainerCard.tsx` - Container card UI
 13. `apps/app/src/client/pages/projects/containers/hooks/useContainers.ts` - Container hooks
+14. `apps/app/src/client/components/ProjectFilePicker.tsx` - Reusable file picker component
+15. `apps/app/src/client/components/DockerFilePicker.tsx` - Docker-specific file picker wrapper
 
-### Modified Files (7)
+### Modified Files (8)
 
 1. `apps/app/prisma/schema.prisma` - Add Container model, preview_config to Project
 2. `packages/agentcmd-workflows/src/types/steps.ts` - Add PreviewStepConfig types
@@ -283,7 +323,8 @@ Broadcast to `project:{projectId}` channel:
 4. `apps/app/src/server/domain/workflow/services/engine/createWorkflowRuntime.ts` - Add preview to extended steps
 5. `apps/app/src/server/routes.ts` - Register container routes
 6. `apps/app/src/client/pages/projects/ProjectHome.tsx` - Add containers section
-7. `apps/app/src/client/pages/projects/components/ProjectEditModal.tsx` - Add preview config
+7. `apps/app/src/client/pages/projects/components/ProjectEditModal.tsx` - Add full preview config UI
+8. `apps/app/src/client/pages/projects/sessions/components/ChatPromptInputFiles.tsx` - Refactor to use ProjectFilePicker
 
 ## Step by Step Tasks
 
@@ -313,6 +354,30 @@ Broadcast to `project:{projectId}` channel:
   - File: `packages/agentcmd-workflows/src/types/steps.ts`
   - Run: `pnpm --filter agentcmd-workflows build`
 
+#### Quick Verification
+
+**Run after completing Phase 1 (takes <30 seconds):**
+
+```bash
+# 1. Type check passes
+pnpm check-types
+# Expected: No errors
+
+# 2. Migration applied successfully
+cd apps/app && pnpm prisma studio
+# Expected: Container table visible with all fields, preview_config field on Project
+
+# 3. SDK builds successfully
+pnpm --filter agentcmd-workflows build
+# Expected: No errors, dist/ folder created
+
+# 4. Types are exportable
+node -e "const { PreviewStepConfig } = require('./packages/agentcmd-workflows/dist/types/steps'); console.log('✓ Types exported')"
+# Expected: ✓ Types exported
+```
+
+**Don't proceed to Phase 2 until all verifications pass.**
+
 #### Completion Notes
 
 - What was implemented:
@@ -325,50 +390,303 @@ Broadcast to `project:{projectId}` channel:
 **Phase Complexity**: 34 points (avg 6.8/10)
 
 - [ ] 2.1 [6/10] Create port manager utility
-  - Implement allocatePorts(names: string[]): Promise<Record<string, number>>
-  - Query Container table for running containers to find used ports
-  - Use DB transaction for atomicity
-  - Allocate from 5000-5999 range
-  - Implement releasePorts (update container status, ports auto-freed)
-  - File: `apps/app/src/server/domain/container/utils/portManager.ts`
+
+  **Pre-implementation (TDD):**
+  - [ ] Create `portManager.test.ts` with failing tests first
+  - [ ] Define `PortAllocationOptions` and `PortAllocationResult` types in `types.ts`
+  - [ ] Review existing transaction patterns in codebase
+
+  **Tests to write FIRST:**
+  - [ ] `allocatePorts` with empty DB returns sequential ports starting at 5000
+  - [ ] `allocatePorts` avoids ports from running containers
+  - [ ] `allocatePorts` uses Prisma transaction (test with concurrent calls)
+  - [ ] `allocatePorts` throws clear error when port range (5000-5999) exhausted
+  - [ ] Multiple port allocation (e.g., ["app", "server"]) returns consecutive ports
+
+  **Implementation:**
+  - [ ] Query `Container` table for `status = "running"` to get used ports
+  - [ ] Find gaps in 5000-5999 range
+  - [ ] Use `prisma.$transaction()` for atomic allocation
+  - [ ] Return `Record<string, number>` mapping port names to numbers
+  - [ ] Add JSDoc comments explaining transaction strategy
+
+  **Verification:**
+  ```bash
+  pnpm test portManager.test.ts
+  pnpm check-types
+  ```
+
+  **Files:**
+  - Implementation: `apps/app/src/server/domain/container/utils/portManager.ts`
+  - Tests: `apps/app/src/server/domain/container/utils/portManager.test.ts`
+  - Types: `apps/app/src/server/domain/container/services/types.ts`
 
 - [ ] 2.2 [8/10] Create Docker client utility
-  - Implement checkDockerAvailable(): Promise<boolean>
-  - Implement detectConfig(workingDir): "compose" | "dockerfile" | null
-  - Implement buildAndRun(config): Promise<{ containerIds, composeProject }>
-  - Handle PREVIEW_PORT_{NAME} env var injection
-  - Support resource limits (--memory, --cpus)
-  - Implement stop(containerIds?, composeProject?): Promise<void>
-  - Implement getLogs(containerIds): Promise<string>
-  - File: `apps/app/src/server/domain/container/utils/dockerClient.ts`
+
+  **Pre-implementation (TDD):**
+  - [ ] Read `apps/app/src/server/domain/git/services/createPullRequest.test.ts` for `child_process` mocking pattern
+  - [ ] Create `dockerClient.test.ts` with failing tests first
+  - [ ] Define types: `DockerConfig`, `ComposeConfig`, `BuildAndRunOptions`, `BuildAndRunResult`
+
+  **Tests to write FIRST (mock `child_process.exec` and `fs.existsSync`):**
+  - [ ] `checkDockerAvailable()` returns true when `docker --version` succeeds
+  - [ ] `checkDockerAvailable()` returns false when `docker --version` fails
+  - [ ] `detectConfig()` returns "compose" when docker-compose.yml exists (priority order)
+  - [ ] `detectConfig()` returns "dockerfile" when only Dockerfile exists
+  - [ ] `detectConfig()` with custom path validates file exists and determines type
+  - [ ] `buildAndRun()` builds correct `docker compose` command with env vars
+  - [ ] `buildAndRun()` injects `PREVIEW_PORT_{NAME}` env vars correctly
+  - [ ] `buildAndRun()` includes resource limits (--memory, --cpus) when provided
+  - [ ] `stop()` builds correct stop/down command based on config type
+  - [ ] `getLogs()` executes logs command correctly
+
+  **Implementation:**
+  - [ ] `checkDockerAvailable()` - Execute `docker --version`, handle errors gracefully
+  - [ ] `detectConfig()` - Check files with priority: custom path → compose variants → Dockerfile
+  - [ ] `buildAndRun()` - Build command strings, don't execute yet (execution mocked in tests)
+  - [ ] Handle PREVIEW_PORT_{NAME} env var injection (uppercase port names)
+  - [ ] Support resource limits via Docker flags
+  - [ ] `stop()` - Build cleanup commands
+  - [ ] `getLogs()` - Build logs command
+  - [ ] Add JSDoc comments for all public functions
+
+  **Verification:**
+  ```bash
+  pnpm test dockerClient.test.ts
+  pnpm check-types
+  ```
+
+  **Files:**
+  - Implementation: `apps/app/src/server/domain/container/utils/dockerClient.ts`
+  - Tests: `apps/app/src/server/domain/container/utils/dockerClient.test.ts`
+  - Types: `apps/app/src/server/domain/container/services/types.ts`
+
+  **Reference**: `apps/app/src/server/domain/git/services/createPullRequest.test.ts` for mocking patterns
 
 - [ ] 2.3 [8/10] Create createContainer service
-  - Accept workflowRunId (optional), projectId, workingDir, config overrides
-  - Merge project preview_config with overrides
-  - Check Docker available (skip with warning if not)
-  - Allocate ports via portManager
-  - Call dockerClient.buildAndRun
-  - Create Container record in DB with status "starting"
-  - Update status to "running" on success, "failed" on error
-  - Broadcast WebSocket event
-  - Return container with URLs
-  - File: `apps/app/src/server/domain/container/services/createContainer.ts`
+
+  **Pre-implementation (TDD):**
+  - [ ] Create `createContainer.test.ts` with failing tests first
+  - [ ] Mock `dockerClient` module entirely (`vi.mock("@/server/domain/container/utils/dockerClient")`)
+  - [ ] Define `CreateContainerOptions` and `CreateContainerResult` types
+
+  **Tests to write FIRST:**
+  - [ ] Merges project `preview_config` with step overrides correctly
+  - [ ] Uses custom `dockerFilePath` when provided (project config or override)
+  - [ ] Calls `portManager.allocatePorts()` with correct port names
+  - [ ] Gracefully skips when Docker unavailable (returns null, logs warning)
+  - [ ] Creates Container record in DB with status "starting"
+  - [ ] Updates status to "running" on successful Docker start
+  - [ ] Updates status to "failed" on Docker error
+  - [ ] Broadcasts `container.created` WebSocket event
+  - [ ] Broadcasts `container.updated` WebSocket event on status change
+  - [ ] Returns container with URLs (localhost:{port} format)
+
+  **Implementation:**
+  - [ ] Fetch project from DB with `preview_config`
+  - [ ] Merge config: step override > project config > defaults
+  - [ ] Check Docker availability via `dockerClient.checkDockerAvailable()`
+  - [ ] If unavailable: log warning, return null (workflow continues)
+  - [ ] Allocate ports via `portManager.allocatePorts()`
+  - [ ] Call `dockerClient.buildAndRun()` with merged config
+  - [ ] Create Container record with status "starting"
+  - [ ] On success: update status to "running", set `started_at`
+  - [ ] On error: update status to "failed", set `error_message`
+  - [ ] Broadcast WebSocket events via EventBus
+  - [ ] Build URLs map: `{ [portName]: `http://localhost:${port}` }`
+  - [ ] Add JSDoc with example usage
+
+  **Verification:**
+  ```bash
+  pnpm test createContainer.test.ts
+  pnpm check-types
+  ```
+
+  **Files:**
+  - Implementation: `apps/app/src/server/domain/container/services/createContainer.ts`
+  - Tests: `apps/app/src/server/domain/container/services/createContainer.test.ts`
+  - Types: `apps/app/src/server/domain/container/services/types.ts`
 
 - [ ] 2.4 [6/10] Create stopContainer service
-  - Accept containerId
-  - Call dockerClient.stop with container_ids and compose_project
-  - Update Container status to "stopped"
-  - Set stopped_at timestamp
-  - Broadcast WebSocket event
-  - File: `apps/app/src/server/domain/container/services/stopContainer.ts`
+
+  **Pre-implementation (TDD):**
+  - [ ] Create `stopContainer.test.ts` with failing tests first
+  - [ ] Mock `dockerClient` module
+  - [ ] Define `StopContainerOptions` and `StopContainerResult` types
+
+  **Tests to write FIRST:**
+  - [ ] Fetches container from DB and validates it exists (throws if not found)
+  - [ ] Calls `dockerClient.stop()` with correct container_ids and compose_project
+  - [ ] Updates Container status to "stopped" in DB
+  - [ ] Sets `stopped_at` timestamp
+  - [ ] Broadcasts `container.updated` WebSocket event with changes object
+  - [ ] Gracefully handles Docker errors (sets status to "failed", broadcasts event)
+  - [ ] Returns updated container object
+
+  **Implementation:**
+  - [ ] Fetch container by ID from DB (throw NotFoundError if missing)
+  - [ ] Extract `container_ids` and `compose_project` from container record
+  - [ ] Call `dockerClient.stop()` with extracted data
+  - [ ] Update container: status = "stopped", stopped_at = now()
+  - [ ] Broadcast WebSocket event: `{ type: "container.updated", data: { containerId, changes: { status: "stopped" } } }`
+  - [ ] On error: update status to "failed", set error_message, broadcast event
+  - [ ] Add JSDoc with example usage
+
+  **Verification:**
+  ```bash
+  pnpm test stopContainer.test.ts
+  pnpm check-types
+  ```
+
+  **Files:**
+  - Implementation: `apps/app/src/server/domain/container/services/stopContainer.ts`
+  - Tests: `apps/app/src/server/domain/container/services/stopContainer.test.ts`
+  - Types: `apps/app/src/server/domain/container/services/types.ts`
 
 - [ ] 2.5 [6/10] Create query services
-  - Implement getContainerById
-  - Implement getContainersByProject with status filter
-  - Implement getContainerLogs (calls dockerClient.getLogs)
-  - File: `apps/app/src/server/domain/container/services/getContainerById.ts`
-  - File: `apps/app/src/server/domain/container/services/getContainersByProject.ts`
-  - File: `apps/app/src/server/domain/container/services/getContainerLogs.ts`
+
+  **Pre-implementation (TDD):**
+  - [ ] Create test files for each service (3 files)
+  - [ ] Mock `dockerClient` for getContainerLogs only (others query DB directly)
+  - [ ] Define options/result types for each service
+
+  **Tests to write FIRST:**
+
+  **getContainerById.test.ts:**
+  - [ ] Returns container when ID exists
+  - [ ] Throws NotFoundError when ID doesn't exist
+  - [ ] Includes all container fields (id, status, urls, timestamps)
+
+  **getContainersByProject.test.ts:**
+  - [ ] Returns all containers for project when no filter
+  - [ ] Filters by status when provided (e.g., status: "running")
+  - [ ] Returns empty array when project has no containers
+  - [ ] Orders by created_at DESC (most recent first)
+
+  **getContainerLogs.test.ts:**
+  - [ ] Calls `dockerClient.getLogs()` with container_ids
+  - [ ] Returns logs string from Docker
+  - [ ] Handles Docker errors gracefully (returns error message as logs)
+  - [ ] Throws NotFoundError when container doesn't exist
+
+  **Implementation:**
+
+  **getContainerById:**
+  - [ ] Query Container by ID with `prisma.container.findUnique()`
+  - [ ] Throw NotFoundError if not found
+  - [ ] Return container object
+
+  **getContainersByProject:**
+  - [ ] Accept projectId and optional status filter
+  - [ ] Query with `prisma.container.findMany()` filtering by projectId
+  - [ ] Apply status filter if provided
+  - [ ] Order by `created_at DESC`
+  - [ ] Return container array
+
+  **getContainerLogs:**
+  - [ ] Fetch container by ID (validate exists)
+  - [ ] Extract `container_ids` from record
+  - [ ] Call `dockerClient.getLogs(container_ids)`
+  - [ ] Return logs string
+  - [ ] On error: return error message as logs (don't throw)
+
+  **Verification:**
+  ```bash
+  pnpm test getContainerById.test.ts getContainersByProject.test.ts getContainerLogs.test.ts
+  pnpm check-types
+  ```
+
+  **Files:**
+  - Implementation: `apps/app/src/server/domain/container/services/getContainerById.ts`
+  - Implementation: `apps/app/src/server/domain/container/services/getContainersByProject.ts`
+  - Implementation: `apps/app/src/server/domain/container/services/getContainerLogs.ts`
+  - Tests: `apps/app/src/server/domain/container/services/getContainerById.test.ts`
+  - Tests: `apps/app/src/server/domain/container/services/getContainersByProject.test.ts`
+  - Tests: `apps/app/src/server/domain/container/services/getContainerLogs.test.ts`
+  - Types: `apps/app/src/server/domain/container/services/types.ts`
+
+#### Quick Verification
+
+**Run after completing Phase 2 (takes <1 minute):**
+
+```bash
+# 1. All tests pass
+pnpm test portManager.test.ts dockerClient.test.ts createContainer.test.ts stopContainer.test.ts
+# Expected: All tests pass with >80% coverage
+
+# 2. Type check passes
+pnpm check-types
+# Expected: No errors
+
+# 3. Can import services
+node -e "const { createContainer } = require('./apps/app/dist/server/domain/container'); console.log('✓ Services exported')"
+# Expected: ✓ Services exported
+```
+
+**Don't proceed to Phase 3 until all verifications pass.**
+
+#### Smoke Test
+
+**Run this to verify Phase 2 works end-to-end (without workflow/UI):**
+
+```typescript
+// smoke-tests/phase2-container-creation.ts
+import { createContainer } from "@/server/domain/container/services/createContainer";
+import { stopContainer } from "@/server/domain/container/services/stopContainer";
+import { getContainersByProject } from "@/server/domain/container/services/getContainersByProject";
+import { prisma } from "@/shared/prisma";
+
+async function smokeTest() {
+  console.log("🧪 Phase 2 Smoke Test: Container Services");
+
+  // Create test project
+  const project = await prisma.project.create({
+    data: {
+      name: "Smoke Test Project",
+      path: "/tmp/smoke-test-project",
+      preview_config: { ports: ["app"], env: { TEST: "true" } }
+    }
+  });
+
+  try {
+    // Test container creation
+    console.log("Testing createContainer...");
+    const container = await createContainer({
+      projectId: project.id,
+      workingDir: "/tmp/smoke-test-project",
+      configOverrides: {}
+    });
+
+    if (container) {
+      console.log("✅ Container created:", container.id);
+
+      // Test listing containers
+      const containers = await getContainersByProject({ projectId: project.id });
+      console.log(`✅ Found ${containers.length} container(s)`);
+
+      // Test stopping container
+      await stopContainer({ containerId: container.id });
+      console.log("✅ Container stopped");
+    } else {
+      console.log("⚠️  Docker not available (expected in CI)");
+      console.log("✅ Graceful failure works");
+    }
+  } catch (err) {
+    console.error("❌ Smoke test failed:", err.message);
+    throw err;
+  } finally {
+    // Cleanup
+    await prisma.project.delete({ where: { id: project.id } });
+    console.log("✅ Cleanup complete");
+  }
+}
+
+smokeTest();
+```
+
+**Run with:** `npx tsx apps/app/smoke-tests/phase2-container-creation.ts`
+
+**Expected**: Either container created/stopped successfully (with Docker), or graceful failure message (without Docker).
 
 #### Completion Notes
 
@@ -382,28 +700,191 @@ Broadcast to `project:{projectId}` channel:
 **Phase Complexity**: 18 points (avg 6.0/10)
 
 - [ ] 3.1 [7/10] Create preview step implementation
-  - Implement createPreviewStep(context, inngestStep) factory
-  - Get project preview_config from DB
-  - Merge with step config overrides
-  - Call createContainer service
-  - Emit step events (started, completed, failed)
-  - Handle Docker unavailable (skip with warning, return success with empty URLs)
-  - Return PreviewStepResult with URLs
-  - File: `apps/app/src/server/domain/workflow/services/engine/steps/createPreviewStep.ts`
+
+  **Pre-implementation (TDD):**
+  - [ ] Create `createPreviewStep.test.ts` with failing tests first
+  - [ ] Mock `createContainer` service
+  - [ ] Review existing step implementations (e.g., `createGitStep.ts`) for patterns
+  - [ ] Define `PreviewStepConfig` type in `agentcmd-workflows` package
+
+  **Tests to write FIRST:**
+  - [ ] Successful container creation returns URLs in PreviewStepResult
+  - [ ] Merges project `preview_config` with step config overrides correctly
+  - [ ] Emits step.started event with correct payload
+  - [ ] Emits step.completed event with URLs on success
+  - [ ] Emits step.failed event on error
+  - [ ] Docker unavailable: returns success with empty URLs and warning message
+  - [ ] Docker error: returns failure with error message
+  - [ ] Step config override takes precedence over project config
+  - [ ] Stores container ID in step result metadata
+
+  **Implementation:**
+  - [ ] Accept `context` (workflow context with projectId) and `inngestStep`
+  - [ ] Return async function that accepts `PreviewStepConfig`
+  - [ ] Fetch project from DB to get `preview_config`
+  - [ ] Merge configs: step override > project config > defaults
+  - [ ] Emit `step.started` event via Inngest
+  - [ ] Call `createContainer({ projectId, workingDir, configOverrides })`
+  - [ ] If container null (Docker unavailable): return success with empty URLs + warning
+  - [ ] If container created: return success with URLs map
+  - [ ] On error: emit `step.failed`, return failure result
+  - [ ] Emit `step.completed` on success
+  - [ ] Add JSDoc with example workflow usage
+
+  **Verification:**
+  ```bash
+  pnpm test createPreviewStep.test.ts
+  pnpm check-types
+  ```
+
+  **Files:**
+  - Implementation: `apps/app/src/server/domain/workflow/services/engine/steps/createPreviewStep.ts`
+  - Tests: `apps/app/src/server/domain/workflow/services/engine/steps/createPreviewStep.test.ts`
+  - Types: `packages/agentcmd-workflows/src/types/steps.ts` (add PreviewStepConfig)
 
 - [ ] 3.2 [5/10] Register preview step in workflow runtime
-  - Export createPreviewStep from steps/index.ts
-  - Add preview method to extendInngestSteps in createWorkflowRuntime.ts
-  - Wire up to createPreviewStep factory
-  - File: `apps/app/src/server/domain/workflow/services/engine/steps/index.ts`
-  - File: `apps/app/src/server/domain/workflow/services/engine/createWorkflowRuntime.ts`
 
-- [ ] 3.3 [6/10] Add preview step tests
-  - Test successful container creation
-  - Test config merging (project + step)
-  - Test Docker unavailable handling (skip with warning)
-  - Test error handling
-  - File: `apps/app/src/server/domain/workflow/services/engine/steps/createPreviewStep.test.ts`
+  **Pre-implementation:**
+  - [ ] Review how other steps are registered (git, shell, etc.)
+  - [ ] Understand extendInngestSteps pattern in createWorkflowRuntime.ts
+  - [ ] Verify PreviewStepConfig is exported from agentcmd-workflows
+
+  **Implementation:**
+  - [ ] Export `createPreviewStep` from `steps/index.ts`
+  - [ ] Add `.preview()` method to extended Inngest steps interface
+  - [ ] Wire up preview method to call `createPreviewStep` factory in createWorkflowRuntime.ts
+  - [ ] Ensure TypeScript types flow correctly (PreviewStepConfig → PreviewStepResult)
+  - [ ] Update workflow types in agentcmd-workflows if needed
+
+  **Verification:**
+  ```bash
+  pnpm build
+  pnpm check-types
+  # Verify preview method available in workflow context
+  ```
+
+  **Files:**
+  - `apps/app/src/server/domain/workflow/services/engine/steps/index.ts`
+  - `apps/app/src/server/domain/workflow/services/engine/createWorkflowRuntime.ts`
+  - `packages/agentcmd-workflows/src/types/steps.ts`
+
+- [ ] 3.3 [6/10] Add comprehensive preview step tests
+
+  **Note**: This task consolidates testing for 3.1-3.2. Tests written in 3.1 should cover core logic. Add integration tests here.
+
+  **Additional tests to add:**
+  - [ ] Integration test: Full workflow with preview step (mock dockerClient)
+  - [ ] Verify step is callable from workflow context: `step.preview({ ports: ["app"] })`
+  - [ ] Verify step result is typed correctly (PreviewStepResult)
+  - [ ] Verify step events are emitted in correct order
+  - [ ] Test multiple preview steps in same workflow (port allocation doesn't conflict)
+
+  **Verification:**
+  ```bash
+  pnpm test createPreviewStep.test.ts --coverage
+  # Expected: >80% coverage
+  pnpm check-types
+  ```
+
+  **Files:**
+  - `apps/app/src/server/domain/workflow/services/engine/steps/createPreviewStep.test.ts` (expand existing)
+  - Optional: `apps/app/src/server/domain/workflow/services/engine/createWorkflowRuntime.test.ts` (integration)
+
+#### Quick Verification
+
+**Run after completing Phase 3 (takes <1 minute):**
+
+```bash
+# 1. Preview step tests pass
+pnpm test createPreviewStep.test.ts
+# Expected: All tests pass
+
+# 2. SDK builds with preview step types
+pnpm --filter agentcmd-workflows build
+# Expected: No errors
+
+# 3. Preview step is registered
+node -e "const runtime = require('./apps/app/dist/server/domain/workflow/services/engine/createWorkflowRuntime'); console.log('✓ Runtime exports')"
+# Expected: ✓ Runtime exports
+
+# 4. Type check passes
+pnpm check-types
+# Expected: No errors
+```
+
+**Don't proceed to Phase 4 until all verifications pass.**
+
+#### Smoke Test
+
+**Run this to verify Phase 3 works with workflow step:**
+
+```typescript
+// smoke-tests/phase3-preview-step.ts
+import { createWorkflowRuntime } from "@/server/domain/workflow/services/engine/createWorkflowRuntime";
+import { prisma } from "@/shared/prisma";
+
+async function smokeTest() {
+  console.log("🧪 Phase 3 Smoke Test: Preview Step Integration");
+
+  // Create test project
+  const project = await prisma.project.create({
+    data: {
+      name: "Preview Step Test",
+      path: "/tmp/preview-step-test",
+      preview_config: { ports: ["app"] }
+    }
+  });
+
+  // Create test workflow run
+  const workflowRun = await prisma.workflowRun.create({
+    data: {
+      project_id: project.id,
+      status: "running",
+      phase: "execution"
+    }
+  });
+
+  try {
+    console.log("Testing step.preview()...");
+
+    // Create workflow runtime (this registers preview step)
+    const runtime = await createWorkflowRuntime({
+      workflowRunId: workflowRun.id,
+      projectId: project.id,
+      workingDir: "/tmp/preview-step-test"
+    });
+
+    // Verify preview method exists
+    if (typeof runtime.step.preview === "function") {
+      console.log("✅ step.preview() is registered");
+
+      // Try calling it (will gracefully fail without Docker)
+      try {
+        const result = await runtime.step.preview("test");
+        console.log("✅ Preview step executed:", result ? "success" : "Docker unavailable");
+      } catch (err) {
+        console.log("✅ Preview step handled error gracefully:", err.message);
+      }
+    } else {
+      throw new Error("step.preview() not registered!");
+    }
+  } catch (err) {
+    console.error("❌ Smoke test failed:", err.message);
+    throw err;
+  } finally {
+    // Cleanup
+    await prisma.workflowRun.delete({ where: { id: workflowRun.id } });
+    await prisma.project.delete({ where: { id: project.id } });
+    console.log("✅ Cleanup complete");
+  }
+}
+
+smokeTest();
+```
+
+**Run with:** `npx tsx apps/app/smoke-tests/phase3-preview-step.ts`
+
+**Expected**: `step.preview()` registered and callable, graceful handling when Docker unavailable.
 
 #### Completion Notes
 
@@ -417,29 +898,134 @@ Broadcast to `project:{projectId}` channel:
 **Phase Complexity**: 16 points (avg 4.0/10)
 
 - [ ] 4.1 [5/10] Create container routes
-  - GET /api/projects/:projectId/containers - List project containers
-  - GET /api/containers/:id - Get container details
-  - DELETE /api/containers/:id - Stop container
-  - GET /api/containers/:id/logs - Get container logs
-  - Add Zod schemas for request/response validation
-  - File: `apps/app/src/server/routes/containers.ts`
+
+  **Pre-implementation:**
+  - [ ] Review existing route patterns (e.g., `apps/app/src/server/routes/projects.ts`)
+  - [ ] Ensure container services are exported from domain/container
+  - [ ] Define Zod schemas for request/response validation
+
+  **Implementation:**
+  - [ ] `GET /api/projects/:projectId/containers` - List containers for project
+    - [ ] Validate projectId with Zod
+    - [ ] Optional query param: status filter
+    - [ ] Call `getContainersByProject({ projectId, status })`
+    - [ ] Return array of containers
+  - [ ] `GET /api/containers/:id` - Get single container
+    - [ ] Validate id with Zod
+    - [ ] Call `getContainerById({ containerId: id })`
+    - [ ] Return 404 if not found
+  - [ ] `DELETE /api/containers/:id` - Stop container
+    - [ ] Validate id with Zod
+    - [ ] Call `stopContainer({ containerId: id })`
+    - [ ] Return updated container
+  - [ ] `GET /api/containers/:id/logs` - Get container logs
+    - [ ] Validate id with Zod
+    - [ ] Call `getContainerLogs({ containerId: id })`
+    - [ ] Return logs as text/plain
+  - [ ] Add auth middleware to all routes
+  - [ ] Add error handling (404, 401, 500)
+
+  **Tests (write alongside - not strict TDD):**
+  - [ ] Create `containers.test.ts` after implementing routes
+  - [ ] Use `app.inject()` pattern (no HTTP server)
+  - [ ] Mock container services
+
+  **Verification:**
+  ```bash
+  pnpm test containers.test.ts
+  pnpm check-types
+  ```
+
+  **Files:**
+  - Implementation: `apps/app/src/server/routes/containers.ts`
+  - Tests: `apps/app/src/server/routes/containers.test.ts` (created in 4.3)
 
 - [ ] 4.2 [3/10] Register routes
-  - Register container routes in routes.ts
-  - File: `apps/app/src/server/routes.ts`
+
+  **Implementation:**
+  - [ ] Import container routes in `routes.ts`
+  - [ ] Register with Fastify: `fastify.register(containerRoutes, { prefix: '/api' })`
+  - [ ] Verify routes mount correctly (check Fastify route list)
+
+  **Verification:**
+  ```bash
+  pnpm build
+  pnpm dev:server
+  # Check logs for route registration
+  curl http://localhost:4100/api/health
+  ```
+
+  **Files:**
+  - `apps/app/src/server/routes.ts`
 
 - [ ] 4.3 [4/10] Add route tests
-  - Test list containers returns correct data
-  - Test get container by ID
-  - Test stop container updates status
-  - Test get logs returns output
-  - File: `apps/app/src/server/routes/containers.test.ts`
+
+  **Testing Pattern**: Use `app.inject()` with mocked services (no HTTP server)
+
+  **Tests to write:**
+  - [ ] `GET /api/projects/:projectId/containers` - Returns containers array
+  - [ ] `GET /api/projects/:projectId/containers?status=running` - Filters by status
+  - [ ] `GET /api/containers/:id` - Returns single container
+  - [ ] `GET /api/containers/:id` - Returns 404 when not found
+  - [ ] `DELETE /api/containers/:id` - Stops container, returns updated status
+  - [ ] `GET /api/containers/:id/logs` - Returns logs string
+  - [ ] All routes return 401 when no auth token
+
+  **Implementation:**
+  - [ ] Create `containers.test.ts`
+  - [ ] Mock all container services
+  - [ ] Use `app.inject({ method, url, headers })` for requests
+  - [ ] Assert status codes, response bodies, Zod validation
+
+  **Verification:**
+  ```bash
+  pnpm test containers.test.ts
+  ```
+
+  **Files:**
+  - `apps/app/src/server/routes/containers.test.ts`
 
 - [ ] 4.4 [4/10] Add container domain exports
-  - Create index.ts with all service exports
-  - Create types.ts with shared types (ContainerStatus, etc.)
-  - File: `apps/app/src/server/domain/container/index.ts`
-  - File: `apps/app/src/server/domain/container/services/types.ts`
+
+  **Implementation:**
+  - [ ] Create `apps/app/src/server/domain/container/index.ts`
+  - [ ] Export all services: createContainer, stopContainer, getContainerById, getContainersByProject, getContainerLogs
+  - [ ] Ensure `services/types.ts` exists with shared types
+  - [ ] Export types from `services/types.ts` via domain index
+
+  **Verification:**
+  ```bash
+  node -e "const { createContainer } = require('./apps/app/dist/server/domain/container'); console.log('✓ Exports work')"
+  pnpm check-types
+  ```
+
+  **Files:**
+  - `apps/app/src/server/domain/container/index.ts`
+  - `apps/app/src/server/domain/container/services/types.ts` (already created in Phase 2)
+
+#### Quick Verification
+
+**Run after completing Phase 4 (takes <1 minute):**
+
+```bash
+# 1. Route tests pass
+pnpm test containers.test.ts
+# Expected: All tests pass
+
+# 2. Routes registered
+pnpm build && node -e "console.log('✓ Build successful')"
+# Expected: ✓ Build successful
+
+# 3. API endpoints accessible (manual check with dev server)
+curl http://localhost:4100/api/health
+# Expected: 200 OK (server must be running)
+
+# 4. Type check passes
+pnpm check-types
+# Expected: No errors
+```
+
+**Don't proceed to Phase 5 until all verifications pass.**
 
 #### Completion Notes
 
@@ -453,34 +1039,203 @@ Broadcast to `project:{projectId}` channel:
 **Phase Complexity**: 20 points (avg 5.0/10)
 
 - [ ] 5.1 [5/10] Create container hooks and types
-  - Add Container type to client types
-  - Create useContainers hook (list by project)
-  - Create useContainer hook (single container)
-  - Create useStopContainer mutation
-  - Wire up WebSocket for real-time updates
-  - File: `apps/app/src/client/pages/projects/containers/hooks/useContainers.ts`
+
+  **Pre-implementation:**
+  - [ ] Review existing hook patterns (e.g., `useWorkflows.ts`, `useSessions.ts`)
+  - [ ] Define Container type in client types
+  - [ ] Ensure container routes are implemented (Phase 4)
+
+  **Implementation:**
+  - [ ] Define `Container` interface in `apps/app/src/client/types/container.ts`
+  - [ ] Create `useContainers(projectId, status?)` hook
+    - [ ] Use TanStack Query: `useQuery(['containers', projectId, status])`
+    - [ ] Fetch from `GET /api/projects/:projectId/containers`
+    - [ ] Subscribe to WebSocket `container.created` and `container.updated` events
+    - [ ] Update query cache on WebSocket events
+  - [ ] Create `useContainer(containerId)` hook
+    - [ ] Use TanStack Query: `useQuery(['container', containerId])`
+    - [ ] Fetch from `GET /api/containers/:id`
+  - [ ] Create `useStopContainer()` mutation hook
+    - [ ] Use TanStack Query: `useMutation`
+    - [ ] Call `DELETE /api/containers/:id`
+    - [ ] Invalidate queries on success
+
+  **Tests (write alongside):**
+  - [ ] Create `useContainers.test.ts` after implementation
+  - [ ] Mock TanStack Query and WebSocket
+  - [ ] Test query invalidation on WebSocket events
+
+  **Verification:**
+  ```bash
+  pnpm test useContainers.test.ts
+  pnpm check-types
+  ```
+
+  **Files:**
+  - Types: `apps/app/src/client/types/container.ts`
+  - Hooks: `apps/app/src/client/pages/projects/containers/hooks/useContainers.ts`
+  - Hooks: `apps/app/src/client/pages/projects/containers/hooks/useContainer.ts`
+  - Hooks: `apps/app/src/client/pages/projects/containers/hooks/useStopContainer.ts`
+  - Tests: `apps/app/src/client/pages/projects/containers/hooks/useContainers.test.ts`
 
 - [ ] 5.2 [6/10] Create ContainerCard component
-  - Display status badge (running/stopped/failed with colors)
-  - Show port URLs as clickable links (open in new tab)
-  - Stop button with confirmation
-  - View logs button (opens modal or drawer)
-  - Timestamps (created, started, stopped)
-  - File: `apps/app/src/client/pages/projects/containers/components/ContainerCard.tsx`
+
+  **Pre-implementation:**
+  - [ ] Review existing card components (e.g., `SessionCard.tsx`)
+  - [ ] Review badge component patterns for status display
+  - [ ] Decide on logs display pattern (modal vs drawer)
+
+  **Implementation:**
+  - [ ] Create ContainerCard component accepting container prop
+  - [ ] Display status badge with colors:
+    - [ ] "running" → green
+    - [ ] "stopped" → gray
+    - [ ] "failed" → red
+    - [ ] "starting" → yellow/orange
+  - [ ] Show port URLs as clickable links (target="_blank" rel="noopener")
+  - [ ] Stop button with confirmation dialog (only show if status="running")
+  - [ ] View logs button (opens modal/drawer with `getContainerLogs` data)
+  - [ ] Display timestamps: created_at, started_at, stopped_at
+  - [ ] Add loading/error states
+
+  **Tests (write alongside):**
+  - [ ] Create `ContainerCard.test.tsx` after implementation
+  - [ ] Test renders all container data correctly
+  - [ ] Test stop button calls useStopContainer
+  - [ ] Test logs button opens modal
+
+  **Verification:**
+  ```bash
+  pnpm test ContainerCard.test.tsx
+  pnpm check-types
+  ```
+
+  **Files:**
+  - Component: `apps/app/src/client/pages/projects/containers/components/ContainerCard.tsx`
+  - Tests: `apps/app/src/client/pages/projects/containers/components/ContainerCard.test.tsx`
 
 - [ ] 5.3 [5/10] Add containers section to ProjectHome
-  - Add "Active Previews" section
-  - List running containers using ContainerCard
-  - Empty state when no containers
-  - Subscribe to WebSocket for real-time updates
-  - File: `apps/app/src/client/pages/projects/ProjectHome.tsx`
 
-- [ ] 5.4 [4/10] Add preview config to Project Edit modal
-  - Add "Preview Settings" section to modal
-  - Port names input (comma-separated or tag input)
-  - Environment variables (key-value pairs)
-  - Resource limits (memory, CPU dropdowns)
-  - File: `apps/app/src/client/pages/projects/components/ProjectEditModal.tsx`
+  **Pre-implementation:**
+  - [ ] Review ProjectHome.tsx current structure
+  - [ ] Decide on section placement (above/below existing content)
+
+  **Implementation:**
+  - [ ] Add "Active Previews" section to ProjectHome
+  - [ ] Use `useContainers(projectId, status="running")` to fetch running containers
+  - [ ] Map containers to `<ContainerCard />` components
+  - [ ] Add empty state when no running containers:
+    - [ ] Message: "No active preview containers"
+    - [ ] Link to Preview Settings in Project Edit modal
+  - [ ] Real-time updates via WebSocket (already in useContainers hook)
+
+  **Verification:**
+  ```bash
+  pnpm dev:client
+  # Manually test: Navigate to project, verify section appears
+  pnpm check-types
+  ```
+
+  **Files:**
+  - `apps/app/src/client/pages/projects/ProjectHome.tsx`
+
+- [ ] 5.4 [7/10] Add full preview config to Project Edit modal
+
+  **Pre-implementation:**
+  - [ ] Extract ProjectFilePicker from ChatPromptInputFiles.tsx
+  - [ ] Create DockerFilePicker wrapper for file picker
+  - [ ] Review existing Project Edit modal structure
+
+  **Implementation:**
+
+  **Step 1: Extract ProjectFilePicker component**
+  - [ ] Create reusable `ProjectFilePicker` component
+  - [ ] Props: `projectId`, `value` (selected paths), `onChange`, `mode` ("single" | "multiple"), `filter?` (file extension filter)
+  - [ ] Mobile responsive: Drawer (<768px), Popover (>=768px)
+  - [ ] Copy logic from ChatPromptInputFiles.tsx
+
+  **Step 2: Create DockerFilePicker wrapper**
+  - [ ] Wrapper around ProjectFilePicker with Docker-specific filter
+  - [ ] Filter: show only Docker files (Dockerfile, docker-compose.yml, compose.yml, *.dockerfile, etc.)
+  - [ ] Fallback: if no Docker files found, show all files
+  - [ ] Single-select mode only
+
+  **Step 3: Add Preview Settings section to ProjectEditModal**
+  - [ ] Only show in Edit mode (not Create mode)
+  - [ ] Add "Preview Settings" section heading
+  - [ ] Docker File Path input:
+    - [ ] Text input with "Browse" button (opens DockerFilePicker)
+    - [ ] Placeholder: "Auto-detect (Dockerfile or docker-compose.yml)"
+    - [ ] Help text: "Custom Docker file to use for preview containers"
+  - [ ] Port Names input:
+    - [ ] Comma-separated string input
+    - [ ] Placeholder: "app, server, client"
+    - [ ] Help text: "Named ports to expose from containers"
+  - [ ] Environment Variables textarea:
+    - [ ] Multi-line textarea
+    - [ ] Placeholder: "KEY1=value1\nKEY2=value2"
+    - [ ] Help text: "Environment variables (one per line, KEY=value format)"
+  - [ ] Max Memory input:
+    - [ ] Text input
+    - [ ] Placeholder: "1g"
+    - [ ] Help text: "Docker memory limit (e.g., 1g, 512m)"
+  - [ ] Max CPUs input:
+    - [ ] Number input
+    - [ ] Placeholder: "1.0"
+    - [ ] Help text: "Docker CPU limit (e.g., 1.0, 0.5)"
+  - [ ] Wire up form state to preview_config field
+  - [ ] Parse comma-separated ports into array on save
+  - [ ] Parse KEY=value env vars into object on save
+
+  **Tests (write alongside):**
+  - [ ] Create `ProjectFilePicker.test.tsx` (unit test for reusable component)
+  - [ ] Test single/multi mode
+  - [ ] Test file filtering
+  - [ ] E2E test in Phase 5 completion (full flow)
+
+  **Verification:**
+  ```bash
+  pnpm test ProjectFilePicker.test.tsx
+  pnpm dev:client
+  # Manually test: Edit project, verify all fields, save, verify DB
+  pnpm check-types
+  ```
+
+  **Files:**
+  - Component: `apps/app/src/client/components/ProjectFilePicker.tsx` (NEW)
+  - Component: `apps/app/src/client/components/DockerFilePicker.tsx` (NEW)
+  - Modified: `apps/app/src/client/pages/projects/components/ProjectEditModal.tsx`
+  - Modified: `apps/app/src/client/pages/projects/sessions/components/ChatPromptInputFiles.tsx` (refactor to use ProjectFilePicker)
+  - Tests: `apps/app/src/client/components/ProjectFilePicker.test.tsx`
+
+#### Quick Verification
+
+**Run after completing Phase 5 (takes <2 minutes):**
+
+```bash
+# 1. Component tests pass
+pnpm test ProjectFilePicker.test.tsx DockerFilePicker.test.tsx
+# Expected: All tests pass
+
+# 2. E2E tests pass
+pnpm e2e tests/projects/preview-settings.e2e.spec.ts
+# Expected: All E2E tests pass
+
+# 3. Type check passes
+pnpm check-types
+# Expected: No errors
+
+# 4. Frontend builds
+pnpm --filter app build
+# Expected: Build completes without errors
+
+# 5. Manual UI check
+# Start dev server: pnpm dev
+# Navigate to project edit modal
+# Verify Preview Settings section visible with all fields
+```
+
+**Feature complete when all verifications pass!**
 
 #### Completion Notes
 
@@ -489,49 +1244,204 @@ Broadcast to `project:{projectId}` channel:
 - Important context or decisions:
 - Known issues or follow-ups (if any):
 
-## Testing Strategy
+## Docker Testing Strategy
 
-### Unit Tests
+**Problem:** Docker CLI operations can't run reliably in CI/test environments and are complex to test end-to-end.
 
-**`portManager.test.ts`** - Port allocation:
-- Allocates sequential ports
-- Avoids used ports (from running containers)
-- Uses transaction for atomicity
-- Handles exhausted port range
+**Solution:** Hybrid testing approach with clear boundaries between mockable logic and real Docker integration.
 
-**`dockerClient.test.ts`** - Docker operations:
-- Detects Dockerfile vs docker-compose.yml
-- Builds correct command strings
-- Passes env vars correctly
-- Handles Docker unavailable
+### Testing Approach by Component
 
-**`createPreviewStep.test.ts`** - Preview step logic:
-- Creates container with correct config
-- Merges project and step config correctly
-- Skips gracefully when Docker unavailable
-- Emits correct step events
+**1. Docker Client (`dockerClient.ts`):**
+- **Mock**: `child_process.exec`, `fs.existsSync` for unit tests
+- **Test**: Command building logic, file detection, error handling
+- **Don't test**: Actual Docker execution (deferred to separate testing project)
 
-### Integration Tests
+**Example test pattern:**
+```typescript
+// dockerClient.test.ts
+import { vi } from "vitest";
+import * as cp from "child_process";
+import * as fs from "fs";
 
-**`containers.test.ts`** - API routes:
-- List containers returns correct data
-- Get container by ID works
-- Stop container updates status
-- Get logs returns output
+vi.mock("child_process");
+vi.mock("fs");
+
+describe("dockerClient", () => {
+  it("checkDockerAvailable returns true when docker installed", async () => {
+    vi.spyOn(cp, 'exec').mockImplementation((cmd, cb) =>
+      cb(null, "Docker version 24.0.0", "")
+    );
+    expect(await dockerClient.checkDockerAvailable()).toBe(true);
+  });
+
+  it("detectConfig returns compose when docker-compose.yml exists", () => {
+    vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+    expect(dockerClient.detectConfig("/tmp/test")).toBe("compose");
+  });
+
+  it("buildAndRun builds correct docker compose command", () => {
+    const cmd = dockerClient.buildCommand({
+      type: "compose",
+      workingDir: "/tmp/test",
+      ports: { app: 5000 },
+      env: { NODE_ENV: "preview" }
+    });
+
+    expect(cmd).toContain("docker compose");
+    expect(cmd).toContain("PREVIEW_PORT_APP=5000");
+    expect(cmd).toContain("NODE_ENV=preview");
+  });
+});
+```
+
+**2. Container Services (`createContainer.ts`, etc.):**
+- **Mock**: Entire `dockerClient` module
+- **Test**: Config merging, port allocation, DB operations, WebSocket broadcasting
+- **Don't test**: Docker execution
+
+**Example:**
+```typescript
+// createContainer.test.ts
+vi.mock("@/server/domain/container/utils/dockerClient");
+
+describe("createContainer", () => {
+  it("merges project config with step overrides", async () => {
+    const project = await prisma.project.create({
+      data: {
+        name: "Test",
+        path: "/tmp/test",
+        preview_config: { ports: ["app"], env: { DEFAULT: "value" } }
+      }
+    });
+
+    vi.mocked(dockerClient.buildAndRun).mockResolvedValue({
+      containerIds: ["abc123"],
+      composeProject: "container-xyz"
+    });
+
+    const container = await createContainer({
+      projectId: project.id,
+      workingDir: "/tmp/test",
+      configOverrides: { env: { OVERRIDE: "value" } }
+    });
+
+    expect(dockerClient.buildAndRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        env: { DEFAULT: "value", OVERRIDE: "value" }
+      })
+    );
+  });
+});
+```
+
+**3. Port Manager (`portManager.ts`):**
+- **Don't mock**: Prisma (test with real database)
+- **Test**: Transaction atomicity, port allocation logic, conflict avoidance
+
+**4. Actual Docker Container Creation:**
+- **Deferred**: Requires separate testing project/strategy
+- **Manual testing**: Run with real Docker in dev environment
+- **Acceptance**: Focus on graceful failure when Docker unavailable
+
+### Reference Patterns
+
+- **child_process mocking**: See `apps/app/src/server/domain/git/services/createPullRequest.test.ts`
+- **Service testing**: See `apps/app/src/server/domain/project/services/createProject.test.ts`
+- **Route testing**: See `apps/app/src/server/routes/projects.test.ts`
+
+### Manual Testing Checklist
+
+When Docker is available locally:
+1. Create project with Dockerfile
+2. Run workflow with `step.preview()`
+3. Verify container starts and ports are allocated
+4. Check logs via API
+5. Stop container via UI
+6. Verify graceful failure when Docker unavailable
+
+### Future: End-to-End Docker Testing
+
+**Deferred to separate project**: Testing actual Docker container creation, networking, and lifecycle requires:
+- Real Docker daemon
+- Test infrastructure for container isolation
+- Cleanup strategies for orphaned containers
+- Cross-platform testing (Linux, macOS, Windows)
+- Network configuration testing
+- Volume mount verification
+
+**Acceptance for this spec**: Focus on unit tests with mocked Docker CLI and manual validation with real Docker in dev environment. Full E2E Docker testing will be addressed in a dedicated testing strategy project.
+
+**Why defer**: Docker testing infrastructure is complex enough to warrant its own design, implementation, and maintenance strategy. This spec focuses on business logic testing and graceful Docker unavailability handling.
+
+## Testing Strategy by Phase
+
+### Phase 1: Database & Types
+- **No unit tests needed** - Prisma schema is declarative
+- **Verification:** `pnpm check-types` + Prisma Studio
+- **Coverage:** Type safety validated at build time
+
+### Phase 2: Core Services (Strict TDD)
+- **Unit tests required:** portManager, dockerClient, all services
+- **Test first:** Write tests BEFORE implementation
+- **Mocking:** Mock `child_process`, `fs` (not Prisma in portManager)
+- **Coverage target:** >80% for business logic
+- **Files to create:**
+  - `portManager.test.ts` - Database transactions, port allocation logic, conflict handling
+  - `dockerClient.test.ts` - CLI command building, file detection (mock fs/child_process), graceful errors
+  - `createContainer.test.ts` - Config merging, Docker unavailable handling, WebSocket broadcasting
+  - `stopContainer.test.ts` - Status updates, timestamps, WebSocket events
+  - `getContainerById.test.ts` - Query service, error handling
+  - `getContainersByProject.test.ts` - Filtering by status, project isolation
+  - `getContainerLogs.test.ts` - Log retrieval (mock dockerClient)
+
+### Phase 3: Workflow SDK Integration (Strict TDD)
+- **Unit tests required:** createPreviewStep
+- **Integration test:** Full workflow with mocked dockerClient
+- **Coverage:** Config merging, Inngest step events, error propagation
+- **Files to create:**
+  - `createPreviewStep.test.ts` - Step factory, event emissions, config inheritance
+
+### Phase 4: API Routes (Test-alongside)
+- **Integration tests required:** All container routes
+- **Pattern:** Use `app.inject()` (no HTTP server), mock dockerClient module
+- **Coverage:** Route validation (Zod), error handling (404/401), auth checks
+- **Files to create:**
+  - `containers.test.ts` - All container endpoints (list, get, stop, logs)
+
+### Phase 5: Frontend UI (Test-alongside)
+- **Unit tests:** React components (ProjectFilePicker, DockerFilePicker)
+- **E2E tests:** Preview Settings UI flow
+- **Coverage:** File picker behavior, form submission, data persistence
+- **Files to create:**
+  - `ProjectFilePicker.test.tsx` - Single/multi mode, filtering, mobile responsive
+  - `DockerFilePicker.test.tsx` - Docker file filtering, fallback behavior
+  - `preview-settings.e2e.spec.ts` - Full UI flow (create project, edit settings, save)
+
+### Test Reference Files
+
+- **child_process mocking**: `apps/app/src/server/domain/git/services/createPullRequest.test.ts`
+- **Service patterns**: `apps/app/src/server/domain/project/services/createProject.test.ts`
+- **Route patterns**: `apps/app/src/server/routes/projects.test.ts`
+- **E2E patterns**: `apps/app/e2e/tests/sessions/create-session.e2e.spec.ts`
 
 ## Success Criteria
 
 - [ ] Container model created with all required fields
-- [ ] Project preview_config field added
+- [ ] Project preview_config field added with dockerFilePath support
 - [ ] Port manager allocates/releases correctly with atomicity
 - [ ] Docker client handles both Dockerfile and docker-compose.yml
+- [ ] Docker client supports custom dockerFilePath with validation
 - [ ] step.preview() works in workflows
 - [ ] Docker unavailable handled gracefully (skip with warning)
 - [ ] Containers can be stopped via API
 - [ ] UI displays container status and URLs on ProjectHome
 - [ ] Container card shown on WorkflowRun details
-- [ ] Preview config editable in Project Edit modal
-- [ ] WebSocket broadcasts container status changes
+- [ ] Full preview config editable in Project Edit modal (all fields)
+- [ ] ProjectFilePicker component works for both single and multi-select
+- [ ] DockerFilePicker filters Docker files with fallback to all files
+- [ ] ChatPromptInputFiles refactored without breaking changes
+- [ ] WebSocket broadcasts container.updated events (not container.status_changed)
 - [ ] Cascade deletion works (workflow/project delete stops containers)
 - [ ] All tests pass
 - [ ] No TypeScript errors
@@ -569,15 +1479,25 @@ pnpm --filter agentcmd-workflows build
 
 1. Start application: `pnpm dev`
 2. Create a project with a Dockerfile or docker-compose.yml
-3. Edit project → add preview config (ports: ["app"])
-4. Run a workflow with `step.preview("deploy")`
-5. Verify container starts and URLs are returned
-6. Check ProjectHome shows container card
-7. Check WorkflowRun details shows container
-8. Open preview URL in browser
-9. Stop container via UI
-10. Verify container status updates to "stopped"
-11. Delete workflow run → verify container is stopped/deleted
+3. Edit project → open "Preview Settings" section
+4. Test Docker file picker:
+   - Click "Browse" button
+   - Verify file picker opens with Docker files filtered
+   - Select a docker-compose.yml file
+   - Verify path appears in input field
+5. Add preview config:
+   - Enter ports: "server, client"
+   - Enter env vars: "NODE_ENV=preview"
+   - Enter resource limits: "1g" memory, "1.0" CPU
+   - Save project
+6. Run a workflow with `step.preview("deploy")`
+7. Verify container starts using custom Docker file and URLs are returned
+8. Check ProjectHome shows container card
+9. Check WorkflowRun details shows container
+10. Open preview URL in browser
+11. Stop container via UI
+12. Verify container status updates to "stopped"
+13. Delete workflow run → verify container is stopped/deleted
 
 **Feature-Specific Checks:**
 

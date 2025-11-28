@@ -99,7 +99,7 @@ export default defineWorkflow(
         });
 
         await step.annotation("review-cycle-completed", {
-          message: `Review cycle ${cycle} ${review.success ? "passed" : "failed"}. ${review.summary}`,
+          message: `Review Cycle ${cycle}\n**Status:** ${review.success ? "✓ Passed" : "✗ Failed"}\n\n${review.summary}`,
         });
 
         if (review.success) {
@@ -190,7 +190,7 @@ async function implementUntilComplete({
     });
 
     step.annotation(`${stepName}-summary`, {
-      message: `Implement cycle ${cycle} attempt ${attempt} ${result.data.success ? "passed" : "failed"}. ${result.data.summary}`,
+      message: `Cycle ${cycle} Attempt ${attempt}\n**Status:** ${result.data.success ? "✓ Passed" : "✗ Failed"}\n\n${result.data.summary}`,
     });
 
     lastResponse = result.data;

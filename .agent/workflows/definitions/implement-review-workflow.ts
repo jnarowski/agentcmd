@@ -185,7 +185,7 @@ async function implementUntilComplete({
     ctx.implement = result.data;
 
     step.annotation(`${stepName}-summary`, {
-      message: `Implement attempt ${i} ${result.data.success ? "passed" : "failed"}. ${result.data.summary}`,
+      message: `Attempt ${i}\n**Status:** ${result.data.success ? "✓ Passed" : "✗ Failed"}\n\n${result.data.summary}`,
     });
 
     if (result.data.success) {
@@ -230,6 +230,6 @@ async function reviewImplementation({
   ctx.review = response.data;
 
   await step.annotation("review-completed", {
-    message: `Review ${response.data.success ? "passed" : "failed"}. ${response.data.summary}`,
+    message: `**Review Status:** ${response.data.success ? "✓ Passed" : "✗ Failed"}\n\n${response.data.summary}`,
   });
 }

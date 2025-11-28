@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { existsSync, writeFileSync } from "node:fs";
+import { existsSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -27,22 +27,25 @@ const API_BASE = "http://localhost:5100";
 export default async function globalSetup() {
   console.log("\n[E2E Setup]");
 
-  // 1. Create e2e.db if it doesn't exist
+  // 1. Create e2e.db if it doesn't exist or is empty
   const e2eDbPath = join(__dirname, "..", "prisma", "e2e.db");
-  if (!existsSync(e2eDbPath)) {
-    console.log("Creating e2e.db...");
+  const needsSetup = !existsSync(e2eDbPath) || statSync(e2eDbPath).size === 0;
+
+  if (needsSetup) {
+    console.log("Creating e2e.db schema...");
     const env = { ...process.env };
     env.DATABASE_URL = `file:${e2eDbPath}`;
     env.DOTENV_CONFIG_PATH = "/dev/null";
 
-    execSync("pnpm prisma db push --skip-generate --accept-data-loss", {
+    // Prisma 7 removed --skip-generate flag
+    execSync("pnpm prisma db push --accept-data-loss", {
       stdio: "inherit",
       cwd: join(__dirname, ".."),
       env,
     });
-    console.log("✓ e2e.db created");
+    console.log("✓ e2e.db schema created");
   } else {
-    console.log("✓ e2e.db exists");
+    console.log("✓ e2e.db ready");
   }
 
   const authStatePath = join(__dirname, ".auth-state.json");

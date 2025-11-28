@@ -89,8 +89,8 @@ export function searchFiles(
 }
 
 /**
- * Scores a path match (exact or prefix)
- * Returns 0 if no match, 700-1000 for matches
+ * Scores a path match (exact, prefix, or contains)
+ * Returns 0 if no match, 550-1000 for matches
  */
 export function scorePathMatch(query: string, fullPath: string): number {
   const normalizedPath = fullPath.toLowerCase();
@@ -104,6 +104,14 @@ export function scorePathMatch(query: string, fullPath: string): number {
   if (normalizedPath.startsWith(query)) {
     const remaining = fullPath.length - query.length;
     return SCORE_PATH_PREFIX - Math.min(remaining / 100, 99);
+  }
+
+  // Path contains match (for partial paths like "todo/spec.md" in ".agent/specs/todo/spec.md")
+  if (normalizedPath.includes(query)) {
+    // Higher score if query appears later (more specific)
+    const position = normalizedPath.indexOf(query);
+    const positionBonus = Math.floor(position / 5); // Bonus for appearing later in path
+    return 550 + Math.min(positionBonus, 49);
   }
 
   return 0;

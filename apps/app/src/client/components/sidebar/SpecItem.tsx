@@ -16,7 +16,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/client/components/ui/dropdown-menu";
-import { FileText, MoreHorizontal, FolderInput, Eye } from "lucide-react";
+import { FileText, MoreHorizontal, FolderInput, Eye, Pencil } from "lucide-react";
 import { formatDate } from "@/shared/utils/formatDate";
 import type { Spec } from "@/shared/types/spec.types";
 import { api } from "@/client/utils/api";
@@ -37,6 +37,7 @@ export function SpecItem({ spec, projectName }: SpecItemProps) {
   const [menuOpenSpecId, setMenuOpenSpecId] = useState<string | null>(null);
   const [isMoving, setIsMoving] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
+  const [initialViewMode, setInitialViewMode] = useState<"edit" | "preview">("preview");
 
   // Extract current folder from specPath (e.g., "done/2511..." → "done")
   const currentFolder = spec.specPath.split("/")[0] as
@@ -140,9 +141,19 @@ export function SpecItem({ spec, projectName }: SpecItemProps) {
             <MoreHorizontal className="size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setViewerOpen(true)}>
+            <DropdownMenuItem onClick={() => {
+              setInitialViewMode("preview");
+              setViewerOpen(true);
+            }}>
               <Eye className="size-4 mr-2" />
               View Spec
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => {
+              setInitialViewMode("edit");
+              setViewerOpen(true);
+            }}>
+              <Pencil className="size-4 mr-2" />
+              Edit Spec
             </DropdownMenuItem>
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
@@ -170,6 +181,7 @@ export function SpecItem({ spec, projectName }: SpecItemProps) {
           specPath={spec.specPath}
           specName={spec.name}
           onClose={() => setViewerOpen(false)}
+          initialViewMode={initialViewMode}
         />
       )}
     </SidebarMenuItem>
