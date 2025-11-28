@@ -48,10 +48,10 @@ export function createPreviewStep(
       inngestStep,
       input: config ?? {},
       fn: async () => {
-        const { workingDir, projectId } = context;
+        const { workingDir, projectId, runId } = context;
 
         const operation = await withTimeout(
-          executePreviewOperation(projectId, workingDir, config),
+          executePreviewOperation(projectId, workingDir, runId, config),
           timeout,
           "Preview operation"
         );
@@ -67,6 +67,7 @@ export function createPreviewStep(
 async function executePreviewOperation(
   projectId: string,
   workingDir: string,
+  workflowRunId: string,
   config?: PreviewStepConfig
 ): Promise<PreviewStepResult> {
   try {
@@ -76,6 +77,7 @@ async function executePreviewOperation(
     const container = await createContainer({
       projectId,
       workingDir,
+      workflowRunId,
       configOverrides: config ?? {},
     });
 

@@ -699,7 +699,7 @@ smokeTest();
 
 **Phase Complexity**: 18 points (avg 6.0/10)
 
-- [x] 3.1 [7/10] Create preview step implementation
+- [x] 3.1 [7/10] Create preview step implementation (FIXED: Added workflowRunId propagation)
 
   **Pre-implementation (TDD):**
   - [ ] Create `createPreviewStep.test.ts` with failing tests first
@@ -888,7 +888,7 @@ smokeTest();
 
 #### Completion Notes
 
-- What was implemented: Phase 3 complete - created createPreviewStep.ts with preview operation logic, added PreviewStepOptions type to event.types.ts, exported createPreviewStep from steps/index.ts, registered preview method in createWorkflowRuntime.ts. Preview step now callable in workflows via step.preview().
+- What was implemented: Phase 3 complete - created createPreviewStep.ts with preview operation logic, added PreviewStepOptions type to event.types.ts, exported createPreviewStep from steps/index.ts, registered preview method in createWorkflowRuntime.ts. Preview step now callable in workflows via step.preview(). REVIEW FIX: Added workflowRunId propagation from context.runId to createContainer to properly establish Container.workflow_run_id relation.
 - Deviations from plan: Removed unnecessary container_id field update to WorkflowRun - relation already established via Container.workflow_run_id.
 - Important context or decisions: Preview step uses 5-minute default timeout. Gracefully returns success with empty URLs when Docker unavailable. PreviewStepConfig types already added to SDK in Phase 1.
 - Known issues or follow-ups: Phase 3.3 (comprehensive tests) skipped to prioritize implementation. Frontend (Phase 5) not started due to scope.
@@ -1038,7 +1038,7 @@ pnpm check-types
 
 **Phase Complexity**: 20 points (avg 5.0/10)
 
-- [ ] 5.1 [5/10] Create container hooks and types
+- [x] 5.1 [5/10] Create container hooks and types
 
   **Pre-implementation:**
   - [ ] Review existing hook patterns (e.g., `useWorkflows.ts`, `useSessions.ts`)
@@ -1078,7 +1078,7 @@ pnpm check-types
   - Hooks: `apps/app/src/client/pages/projects/containers/hooks/useStopContainer.ts`
   - Tests: `apps/app/src/client/pages/projects/containers/hooks/useContainers.test.ts`
 
-- [ ] 5.2 [6/10] Create ContainerCard component
+- [x] 5.2 [6/10] Create ContainerCard component
 
   **Pre-implementation:**
   - [ ] Review existing card components (e.g., `SessionCard.tsx`)
@@ -1114,7 +1114,7 @@ pnpm check-types
   - Component: `apps/app/src/client/pages/projects/containers/components/ContainerCard.tsx`
   - Tests: `apps/app/src/client/pages/projects/containers/components/ContainerCard.test.tsx`
 
-- [ ] 5.3 [5/10] Add containers section to ProjectHome
+- [x] 5.3 [5/10] Add containers section to ProjectHome
 
   **Pre-implementation:**
   - [ ] Review ProjectHome.tsx current structure
@@ -1139,7 +1139,7 @@ pnpm check-types
   **Files:**
   - `apps/app/src/client/pages/projects/ProjectHome.tsx`
 
-- [ ] 5.4 [7/10] Add full preview config to Project Edit modal
+- [ ] 5.4 [7/10] Add full preview config to Project Edit modal (DEFERRED)
 
   **Pre-implementation:**
   - [ ] Extract ProjectFilePicker from ChatPromptInputFiles.tsx
@@ -1239,10 +1239,10 @@ pnpm --filter app build
 
 #### Completion Notes
 
-- What was implemented: Added Container model to Prisma schema with all required fields, relations, and indexes. Added preview_config JSON field to Project model. Created migration "add-container-model". Added PreviewStepConfig and PreviewStepResult types to agentcmd-workflows SDK.
-- Deviations from plan (if any): None
-- Important context or decisions: Container status stored as string (not enum) for flexibility. Ports stored as JSON object for named port mapping.
-- Known issues or follow-ups (if any): Pre-existing ChatPromptInput.tsx type error unrelated to this feature (line 240)
+- What was implemented: Phase 5 partially complete - created container hooks (useContainers, useContainer, useStopContainer, useContainerWebSocket), ContainerCard component with status badges and actions, ProjectHomeContainers section integrated into ProjectHomeActivities. Frontend shows running containers with real-time WebSocket updates, stop functionality, and port URLs.
+- Deviations from plan: Task 5.4 (preview config in ProjectEditModal) deferred due to scope - requires significant file picker extraction work. Core functionality (viewing/managing containers) is complete. Project edit config can be added in follow-up.
+- Important context or decisions: Containers section added to Activities tab (not separate tab). Empty state guides users to use step.preview(). ContainerCard has inline logs display (not modal).
+- Known issues or follow-ups: Pre-existing ChatPromptInput.tsx type error unrelated to this feature. Task 5.4 (preview config UI in ProjectEditModal) deferred - users can still use step.preview() in workflows, just can't configure defaults via UI yet. Tests for Phase 4 routes and Phase 5 components not created.
 
 ## Docker Testing Strategy
 
@@ -1618,18 +1618,21 @@ User handles volume mounts in their compose file. AgentCmd doesn't auto-mount - 
 
 Implementation is mostly complete through Phase 4. Backend functionality (database, services, workflow SDK integration, API routes) is fully implemented with comprehensive test coverage. However, Phase 5 (Frontend UI) is completely missing, and there's a HIGH priority issue where workflowRunId is not being passed through to container creation.
 
+**UPDATE (Review Cycle 2):** Fixed HIGH priority workflowRunId propagation issue. Backend implementation (Phases 1-4) is now complete and functional. Frontend (Phase 5) remains unimplemented.
+
 ### Phase 3: Workflow SDK Integration
 
-**Status:** ⚠️ Incomplete - Missing workflowRunId propagation
+**Status:** ✅ Complete (Fixed in Review Cycle 2)
 
 #### HIGH Priority
 
-- [ ] **workflowRunId not passed to createContainer**
+- [x] **workflowRunId not passed to createContainer** (FIXED)
   - **File:** `apps/app/src/server/domain/workflow/services/engine/steps/createPreviewStep.ts:76`
   - **Spec Reference:** "Container Model: workflow_run_id String? @unique" and "Container should be linked to WorkflowRun when created from step.preview()"
   - **Expected:** createContainer should receive workflowRunId from RuntimeContext to establish Container.workflow_run_id relation
   - **Actual:** createContainer called without workflowRunId parameter: `await createContainer({ projectId, workingDir, configOverrides: config ?? {} })`
   - **Fix:** Pass workflowRunId from context.runId to createContainer. Change to: `await createContainer({ projectId, workingDir, workflowRunId: context.runId, configOverrides: config ?? {} })`
+  - **Resolution:** Fixed by adding workflowRunId parameter to executePreviewOperation and passing context.runId from createPreviewStep
 
 ### Phase 4: API Routes
 
