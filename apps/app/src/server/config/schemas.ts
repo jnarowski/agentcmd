@@ -5,6 +5,7 @@
  */
 
 import { z } from "zod";
+import { createHash } from "node:crypto";
 
 /**
  * Server configuration schema
@@ -81,12 +82,32 @@ const WebhookConfigSchema = z.object({
 /**
  * Complete application configuration schema
  */
-export const ConfigSchema = z.object({
-  server: ServerConfigSchema,
-  cors: CorsConfigSchema,
-  jwt: JwtConfigSchema,
-  database: DatabaseConfigSchema,
-  apiKeys: ApiKeysConfigSchema,
-  workflow: WorkflowConfigSchema,
-  webhook: WebhookConfigSchema,
-});
+export const ConfigSchema = z
+  .object({
+    server: ServerConfigSchema,
+    cors: CorsConfigSchema,
+    jwt: JwtConfigSchema,
+    database: DatabaseConfigSchema,
+    apiKeys: ApiKeysConfigSchema,
+    workflow: WorkflowConfigSchema,
+    webhook: WebhookConfigSchema,
+  })
+  .transform((config) => {
+    // Auto-generate Inngest keys if not provided
+    if (!config.workflow.eventKey) {
+      config.workflow.eventKey = config.workflow.devMode
+        ? "dev-event-key"
+        : "prod-event-key";
+    }
+
+    if (!config.workflow.signingKey) {
+      // Derive stable signing key from JWT_SECRET
+      // This ensures same key across restarts without persisting to disk
+      const hash = createHash("sha256")
+        .update(`inngest-signing-${config.jwt.secret}`)
+        .digest("hex");
+      config.workflow.signingKey = hash;
+    }
+
+    return config;
+  });
