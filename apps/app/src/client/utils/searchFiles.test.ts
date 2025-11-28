@@ -122,6 +122,42 @@ describe("searchFiles", () => {
       const results = searchFiles(".agent", testFiles);
       expect(results.some((r) => r.directory.includes(".agent"))).toBe(true);
     });
+
+    it("should find partial path matches", () => {
+      // Query: "todo/spec.md" should match ".agent/specs/todo/spec.md"
+      const results = searchFiles("specs/todo", testFiles);
+      expect(results.some((r) => r.fullPath.includes("specs/todo"))).toBe(true);
+    });
+
+    it("should prioritize exact > prefix > contains for paths", () => {
+      const filesWithVariants: FileItem[] = [
+        {
+          filename: "spec.md",
+          directory: "todo",
+          fullPath: "todo/spec.md",
+          extension: "md",
+        },
+        {
+          filename: "spec.md",
+          directory: "todo/subfolder",
+          fullPath: "todo/subfolder/spec.md",
+          extension: "md",
+        },
+        {
+          filename: "spec.md",
+          directory: ".agent/specs/todo",
+          fullPath: ".agent/specs/todo/spec.md",
+          extension: "md",
+        },
+      ];
+      const results = searchFiles("todo/spec.md", filesWithVariants);
+      // Exact match should be first
+      expect(results[0].fullPath).toBe("todo/spec.md");
+      // Prefix match should be second
+      expect(results[1].fullPath).toBe("todo/subfolder/spec.md");
+      // Contains match should be third
+      expect(results[2].fullPath).toBe(".agent/specs/todo/spec.md");
+    });
   });
 
   describe("folder search", () => {
@@ -378,6 +414,20 @@ describe("scorePathMatch", () => {
   it("should be case insensitive", () => {
     const score = scorePathMatch("todo/spec.md", "TODO/SPEC.MD");
     expect(score).toBeGreaterThan(900);
+  });
+
+  it("should score path contains match", () => {
+    const score = scorePathMatch("todo/spec.md", ".agent/specs/todo/spec.md");
+    expect(score).toBeGreaterThan(550);
+    expect(score).toBeLessThan(700);
+  });
+
+  it("should prioritize exact > prefix > contains", () => {
+    const exactScore = scorePathMatch("todo/spec.md", "todo/spec.md");
+    const prefixScore = scorePathMatch("todo/spec", "todo/spec.md");
+    const containsScore = scorePathMatch("todo/spec.md", ".agent/specs/todo/spec.md");
+    expect(exactScore).toBeGreaterThan(prefixScore);
+    expect(prefixScore).toBeGreaterThan(containsScore);
   });
 });
 
