@@ -83,6 +83,7 @@ export default defineConfig({
       reuseExistingServer: false, // Always start fresh E2E server
       timeout: 30_000,
       env: {
+        ...process.env,
         PORT: "5100",
         NODE_ENV: "test",
         DATABASE_URL: E2E_DATABASE_URL,
@@ -95,6 +96,7 @@ export default defineConfig({
       reuseExistingServer: false, // Always start fresh E2E client
       timeout: 30_000,
       env: {
+        ...process.env,
         // PORT tells Vite proxy where to forward /api requests
         PORT: "5100",
         VITE_PORT: "5101",
