@@ -31,12 +31,20 @@ const inngestDataDir = join(process.cwd(), "inngest-data");
 const schemaPath = join(process.cwd(), "prisma/schema.prisma");
 const serverPath = join(__dirname, "../server/index.js");
 
-// JWT_SECRET from environment
+// Secrets from environment
 const jwtSecret = process.env.JWT_SECRET || "";
+const inngestEventKey = process.env.INNGEST_EVENT_KEY || "";
+const inngestSigningKey = process.env.INNGEST_SIGNING_KEY || "";
 
 if (!jwtSecret) {
   console.error("ERROR: JWT_SECRET environment variable is required");
   console.error("Set it in your .env file or as an environment variable");
+  process.exit(1);
+}
+
+if (!inngestEventKey || !inngestSigningKey) {
+  console.error("ERROR: INNGEST_EVENT_KEY and INNGEST_SIGNING_KEY are required");
+  console.error("Run 'pnpm dev:setup' to generate them in your .env file");
   process.exit(1);
 }
 
@@ -46,6 +54,8 @@ startServer({
   externalHost: process.env.EXTERNAL_HOST || "localhost",
   inngestPort: INNGEST_PORT,
   inngestDataDir,
+  inngestEventKey,
+  inngestSigningKey,
   dbPath,
   schemaPath,
   serverPath,

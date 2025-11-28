@@ -39,7 +39,8 @@ const rawConfig = {
     appId: process.env.INNGEST_APP_ID,
     eventKey: process.env.INNGEST_EVENT_KEY,
     signingKey: process.env.INNGEST_SIGNING_KEY,
-    devMode: process.env.INNGEST_DEV_MODE ?? (process.env.NODE_ENV !== 'production' ? 'true' : 'false'),
+    // devMode is always false for self-hosted inngest start
+    // The SDK uses INNGEST_DEV=0 and INNGEST_BASE_URL environment variables
     memoizationDbPath: process.env.INNGEST_MEMOIZATION_DB_PATH,
     servePath: process.env.INNGEST_SERVE_PATH,
     inngestDevPort: process.env.INNGEST_PORT,

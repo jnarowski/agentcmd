@@ -22,26 +22,47 @@ function generateSecret(): string {
 }
 
 /**
+ * Generate Inngest event key (32 hex chars)
+ */
+function generateInngestEventKey(): string {
+  return randomBytes(16).toString("hex");
+}
+
+/**
+ * Generate Inngest signing key (64 hex chars)
+ */
+function generateInngestSigningKey(): string {
+  return randomBytes(32).toString("hex");
+}
+
+interface EnvTemplateValues {
+  jwtSecret: string;
+  anthropicApiKey: string;
+  inngestEventKey: string;
+  inngestSigningKey: string;
+}
+
+/**
  * Process environment template by replacing placeholders with secure values
  */
-function processEnvTemplate(template: string, jwtSecret: string, anthropicApiKey: string): string {
+function processEnvTemplate(template: string, values: EnvTemplateValues): string {
   let processed = template;
 
   // Replace JWT_SECRET placeholder with generated secure secret
   processed = processed.replace(
     /^JWT_SECRET=.*$/m,
-    `JWT_SECRET=${jwtSecret}`
+    `JWT_SECRET=${values.jwtSecret}`
   );
 
   // Replace ANTHROPIC_API_KEY placeholder
-  if (anthropicApiKey) {
+  if (values.anthropicApiKey) {
     processed = processed.replace(
       /^# ANTHROPIC_API_KEY=.*$/m,
-      `ANTHROPIC_API_KEY=${anthropicApiKey}`
+      `ANTHROPIC_API_KEY=${values.anthropicApiKey}`
     );
     processed = processed.replace(
       /^ANTHROPIC_API_KEY=.*$/m,
-      `ANTHROPIC_API_KEY=${anthropicApiKey}`
+      `ANTHROPIC_API_KEY=${values.anthropicApiKey}`
     );
   } else {
     // Keep as comment with reminder
@@ -50,6 +71,16 @@ function processEnvTemplate(template: string, jwtSecret: string, anthropicApiKey
       "# ANTHROPIC_API_KEY=  # Add your API key from https://console.anthropic.com/"
     );
   }
+
+  // Replace Inngest keys (uncomment and set values)
+  processed = processed.replace(
+    /^# INNGEST_EVENT_KEY=.*$/m,
+    `INNGEST_EVENT_KEY=${values.inngestEventKey}`
+  );
+  processed = processed.replace(
+    /^# INNGEST_SIGNING_KEY=.*$/m,
+    `INNGEST_SIGNING_KEY=${values.inngestSigningKey}`
+  );
 
   return processed;
 }
@@ -75,8 +106,10 @@ async function main(): Promise<void> {
       process.exit(0);
     }
 
-    // Generate JWT secret
+    // Generate secrets
     const jwtSecret = generateSecret();
+    const inngestEventKey = generateInngestEventKey();
+    const inngestSigningKey = generateInngestSigningKey();
 
     // Prompt for Anthropic API key (optional)
     const anthropicApiKey = await promptForAnthropicKey("Skipped Anthropic - add later by editing .env");
@@ -85,7 +118,12 @@ async function main(): Promise<void> {
     console.log("📋 Creating .env from .env.example...");
 
     const template = readFileSync(envExamplePath, "utf-8");
-    const envContent = processEnvTemplate(template, jwtSecret, anthropicApiKey);
+    const envContent = processEnvTemplate(template, {
+      jwtSecret,
+      anthropicApiKey,
+      inngestEventKey,
+      inngestSigningKey,
+    });
 
     writeFileSync(envPath, envContent);
 

@@ -1,3 +1,8 @@
+// IMPORTANT: Set Inngest environment BEFORE any SDK imports
+// This must happen before importing workflow engine which uses Inngest SDK
+import { setInngestEnvironment } from "@/shared/utils/inngestEnv";
+setInngestEnvironment();
+
 import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
 import fastifyWebsocket from "@fastify/websocket";

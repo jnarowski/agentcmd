@@ -23,6 +23,10 @@ export interface StartServerConfig {
   inngestPort: number;
   /** Inngest data directory for persistence */
   inngestDataDir: string;
+  /** Inngest event key */
+  inngestEventKey: string;
+  /** Inngest signing key */
+  inngestSigningKey: string;
   /** Path to database file */
   dbPath: string;
   /** Path to Prisma schema */
@@ -69,6 +73,8 @@ export async function startServer(config: StartServerConfig): Promise<void> {
     externalHost,
     inngestPort,
     inngestDataDir,
+    inngestEventKey,
+    inngestSigningKey,
     dbPath,
     schemaPath,
     serverPath,
@@ -107,6 +113,8 @@ export async function startServer(config: StartServerConfig): Promise<void> {
 
     // Configure Inngest before any SDK imports
     setInngestEnvironment({ port: inngestPort });
+    process.env.INNGEST_EVENT_KEY = inngestEventKey;
+    process.env.INNGEST_SIGNING_KEY = inngestSigningKey;
 
     // 3. Validate JWT_SECRET
     if (!jwtSecret) {
@@ -241,20 +249,18 @@ export async function startServer(config: StartServerConfig): Promise<void> {
 
     // 8. Start Inngest
     let inngestStderr = "";
-    const inngestLabel = isProduction ? "Starting workflow engine (persistent mode)..." : "Starting workflow engine...";
 
-    if (!verbose) console.log(pc.dim(inngestLabel));
-    if (verbose) console.log(isProduction ? "Starting Inngest Server (persistent mode)..." : "Starting Inngest Dev Server...");
+    if (!verbose) console.log(pc.dim("Starting workflow engine..."));
+    if (verbose) console.log("Starting Inngest Server...");
 
-    // Ensure Inngest data directory exists for production
-    if (isProduction) {
-      mkdirSync(inngestDataDir, { recursive: true });
-    }
+    // Ensure Inngest data directory exists
+    mkdirSync(inngestDataDir, { recursive: true });
 
     inngestProcess = spawnInngest({
       port: inngestPort,
-      dataDir: isProduction ? inngestDataDir : undefined,
-      serverUrl: `http://localhost:${port}/api/workflows/inngest`,
+      dataDir: inngestDataDir,
+      eventKey: inngestEventKey,
+      signingKey: inngestSigningKey,
       stdio: stdioAsync,
       env: process.env,
     });

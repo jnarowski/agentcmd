@@ -36,16 +36,10 @@ export function setInngestEnvironment(options?: InngestEnvOptions): void {
     (process.env.INNGEST_PORT ? parseInt(process.env.INNGEST_PORT) : null) ??
     8288;
 
-  // Set Inngest environment variables
+  // Set Inngest environment variables for self-hosted `inngest start`
+  // INNGEST_DEV=0 disables dev mode to use self-hosted server with authentication
+  // INNGEST_BASE_URL points SDK to local Inngest server
   process.env.INNGEST_PORT = port.toString();
   process.env.INNGEST_BASE_URL = `http://${host}:${port}`;
-
-  // Enable dev mode if not in production and not explicitly set
-  const isProduction = process.env.NODE_ENV === "production";
-  if (isProduction) {
-    // Remove INNGEST_DEV in production mode
-    delete process.env.INNGEST_DEV;
-  } else if (!process.env.INNGEST_DEV) {
-    process.env.INNGEST_DEV = "1";
-  }
+  process.env.INNGEST_DEV = 0;
 }

@@ -40,7 +40,7 @@
     "e2e:report": "playwright show-report playwright-report",
     "e2e:install": "playwright install chromium firefox",
     "generate:icon": "tsx scripts/generate-icon.ts",
-    "inngest": "tsx src/scripts/start-inngest.ts",
+    "inngest": "tsx --env-file=.env src/scripts/start-inngest.ts",
     "lint": "eslint .",
     "prepublishOnly": "pnpm build",
     "preview": "vite preview",

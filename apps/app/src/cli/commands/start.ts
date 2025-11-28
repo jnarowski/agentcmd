@@ -40,11 +40,18 @@ export async function startCommand(options: StartOptions): Promise<void> {
   const isProduction = true;
   const verbose = options.verbose ?? false;
 
-  // Validate JWT_SECRET with helpful error
+  // Validate required secrets with helpful error
   if (!mergedConfig.jwtSecret) {
     console.error("ERROR: JWT_SECRET is empty or missing!");
     console.error(`Config loaded from: ${configPath}`);
     console.error("Run 'agentcmd install' to initialize configuration");
+    process.exit(1);
+  }
+
+  if (!mergedConfig.inngestEventKey || !mergedConfig.inngestSigningKey) {
+    console.error("ERROR: Inngest keys are missing!");
+    console.error(`Config loaded from: ${configPath}`);
+    console.error("Run 'agentcmd install --force' to regenerate configuration");
     process.exit(1);
   }
 
@@ -55,6 +62,8 @@ export async function startCommand(options: StartOptions): Promise<void> {
     externalHost: mergedConfig.externalHost,
     inngestPort: mergedConfig.inngestPort,
     inngestDataDir,
+    inngestEventKey: mergedConfig.inngestEventKey,
+    inngestSigningKey: mergedConfig.inngestSigningKey,
     dbPath,
     schemaPath,
     serverPath,

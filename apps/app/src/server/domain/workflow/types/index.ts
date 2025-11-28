@@ -24,14 +24,17 @@ export * from "./DeleteWorkflowDefinitionOptions";
 
 /**
  * Configuration for workflow engine
+ *
+ * Note: baseUrl and isDev are controlled via environment variables:
+ * - INNGEST_BASE_URL=http://localhost:8288
+ * - INNGEST_DEV=0
+ * These are set by setInngestEnvironment() before SDK imports
  */
 export interface WorkflowEngineConfig {
   /** Application ID for Inngest */
   appId: string;
-  /** Event key for webhook authentication (optional in dev) */
+  /** Event key for sending events to Inngest server */
   eventKey?: string;
-  /** Enable development mode */
-  isDev: boolean;
   /** Path to SQLite memoization database */
   memoizationDbPath: string;
 }

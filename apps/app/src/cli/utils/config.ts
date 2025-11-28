@@ -26,6 +26,8 @@ export const configSchema = z.object({
   anthropicApiKey: z.string().optional(),
   openaiApiKey: z.string().optional(),
   jwtSecret: z.string(),
+  inngestEventKey: z.string(),
+  inngestSigningKey: z.string(),
   allowedOrigins: z.string(),
 });
 
@@ -44,6 +46,8 @@ export function getDefaultConfig(): Config {
     anthropicApiKey: "",
     openaiApiKey: "",
     jwtSecret: "", // Generated during install
+    inngestEventKey: "", // Generated during install
+    inngestSigningKey: "", // Generated during install
     allowedOrigins: DEFAULT_ALLOWED_ORIGINS,
   };
 }

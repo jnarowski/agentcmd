@@ -5,7 +5,6 @@
  */
 
 import { z } from "zod";
-import { createHash } from "node:crypto";
 
 /**
  * Server configuration schema
@@ -60,13 +59,25 @@ const ApiKeysConfigSchema = z.object({
 const WorkflowConfigSchema = z.object({
   enabled: z.coerce.boolean().default(true),
   appId: z.string().default("agentcmd"),
-  eventKey: z.string().optional(),
+  eventKey: z
+    .string()
+    .optional()
+    .transform((v) => (v === "" ? undefined : v)),
   signingKey: z
     .string()
-    .regex(/^[0-9a-fA-F]*$/, "Signing key must be valid hexadecimal")
-    .refine((s) => s.length % 2 === 0, "Signing key must have even character count")
-    .optional(),
-  devMode: z.coerce.boolean().default(true),
+    .optional()
+    .transform((v) => (v === "" ? undefined : v))
+    .refine(
+      (v) => v === undefined || /^[0-9a-fA-F]+$/.test(v),
+      "Signing key must be valid hexadecimal"
+    )
+    .refine(
+      (v) => v === undefined || v.length % 2 === 0,
+      "Signing key must have even character count"
+    ),
+  // For self-hosted inngest start, isDev should always be false
+  // isDev: false + INNGEST_BASE_URL enables cloud mode with custom server
+  devMode: z.literal(false).default(false),
   memoizationDbPath: z.string().default("./prisma/workflows.db"),
   servePath: z.string().default("/api/workflows/inngest"),
   inngestDevPort: z.coerce.number().int().positive().default(8288),
@@ -82,32 +93,12 @@ const WebhookConfigSchema = z.object({
 /**
  * Complete application configuration schema
  */
-export const ConfigSchema = z
-  .object({
-    server: ServerConfigSchema,
-    cors: CorsConfigSchema,
-    jwt: JwtConfigSchema,
-    database: DatabaseConfigSchema,
-    apiKeys: ApiKeysConfigSchema,
-    workflow: WorkflowConfigSchema,
-    webhook: WebhookConfigSchema,
-  })
-  .transform((config) => {
-    // Auto-generate Inngest keys if not provided
-    if (!config.workflow.eventKey) {
-      config.workflow.eventKey = config.workflow.devMode
-        ? "dev-event-key"
-        : "prod-event-key";
-    }
-
-    if (!config.workflow.signingKey) {
-      // Derive stable signing key from JWT_SECRET
-      // This ensures same key across restarts without persisting to disk
-      const hash = createHash("sha256")
-        .update(`inngest-signing-${config.jwt.secret}`)
-        .digest("hex");
-      config.workflow.signingKey = hash;
-    }
-
-    return config;
-  });
+export const ConfigSchema = z.object({
+  server: ServerConfigSchema,
+  cors: CorsConfigSchema,
+  jwt: JwtConfigSchema,
+  database: DatabaseConfigSchema,
+  apiKeys: ApiKeysConfigSchema,
+  workflow: WorkflowConfigSchema,
+  webhook: WebhookConfigSchema,
+});

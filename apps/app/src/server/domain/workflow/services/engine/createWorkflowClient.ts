@@ -22,24 +22,12 @@ export function createWorkflowClient(config: WorkflowEngineConfig): Inngest {
   }
 
   // Create Inngest client with memoization
+  // Note: baseUrl and isDev are controlled via environment variables:
+  // - INNGEST_BASE_URL=http://localhost:8288
+  // - INNGEST_DEV=0
   const client = new Inngest({
     id: config.appId,
     eventKey: config.eventKey,
-    isDev: config.isDev,
-    // SQLite-based memoization for persistent step caching
-    experimental: {
-      memo: {
-        // Enable memoization
-        enabled: true,
-        // Use SQLite for durable storage (survives restarts)
-        store: {
-          type: "sqlite",
-          path: config.memoizationDbPath,
-        },
-        // Fail workflow if memoization restore fails (prevent inconsistent state)
-        restoreFailureMode: "throw",
-      },
-    },
   });
 
   return client;

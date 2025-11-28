@@ -120,7 +120,11 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     const anthropicApiKey = await promptForAnthropicKey("Skipped Anthropic - add later by editing ~/.agentcmd/config.json");
     const openaiApiKey = await promptForOpenAIKey("Skipped OpenAI - add later by editing ~/.agentcmd/config.json");
 
-    // 6. Create config file with generated JWT secret and API keys
+    // 6. Generate Inngest keys
+    const inngestEventKey = randomBytes(16).toString("hex");
+    const inngestSigningKey = randomBytes(32).toString("hex");
+
+    // 7. Create config file with generated secrets and API keys
     const defaultConfig = getDefaultConfig();
     const configWithSecret = {
       ...defaultConfig,
@@ -132,6 +136,8 @@ export async function installCommand(options: InstallOptions): Promise<void> {
       anthropicApiKey: anthropicApiKey || "",
       openaiApiKey: openaiApiKey || "",
       jwtSecret,
+      inngestEventKey,
+      inngestSigningKey,
     };
     saveConfig(configWithSecret);
 

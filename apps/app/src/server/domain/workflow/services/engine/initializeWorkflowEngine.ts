@@ -34,11 +34,35 @@ export async function initializeWorkflowEngine(
 
   logger.info("=== WORKFLOW ENGINE INITIALIZATION ===");
 
+  // Debug: Log Inngest keys from config
+  logger.info(
+    {
+      eventKey: config.workflow.eventKey
+        ? `${config.workflow.eventKey.substring(0, 8)}...`
+        : "MISSING",
+      signingKey: config.workflow.signingKey
+        ? `${config.workflow.signingKey.substring(0, 8)}...`
+        : "MISSING",
+      baseUrl: process.env.INNGEST_BASE_URL,
+    },
+    "Inngest config from env"
+  );
+
+  // Log Inngest configuration for self-hosted setup
+  if (config.workflow.eventKey && config.workflow.signingKey) {
+    logger.info(
+      "\nInngest keys (for self-hosted `inngest start`):\n" +
+        `  --event-key ${config.workflow.eventKey}\n` +
+        `  --signing-key ${config.workflow.signingKey}\n`
+    );
+  }
+
   // Step 1: Create Inngest client and attach to Fastify
+  // Note: baseUrl and isDev are controlled via environment variables
+  // set by setInngestEnvironment() in server/index.ts
   const inngestClient = createWorkflowClient({
     appId: config.workflow.appId,
     eventKey: config.workflow.eventKey,
-    isDev: config.workflow.devMode,
     memoizationDbPath: config.workflow.memoizationDbPath,
   });
 
@@ -51,6 +75,7 @@ export async function initializeWorkflowEngine(
   currentHandler = createInngestHandler(
     inngestClient,
     inngestFunctions,
+    config.workflow.signingKey,
     logger
   );
   registerInngestRoute(fastify, logger);
@@ -81,6 +106,7 @@ function createInngestHandler(
   inngestClient: ReturnType<typeof createWorkflowClient>,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   inngestFunctions: any[],
+  signingKey: string | undefined,
   logger: FastifyInstance["log"]
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): (req: any, reply: any) => Promise<unknown> {
@@ -99,6 +125,7 @@ function createInngestHandler(
   return serve({
     client: inngestClient,
     functions: inngestFunctions,
+    signingKey,
     // Pass custom logger to capture Inngest errors with full details
     // Use INNGEST_LOG_LEVEL env var or default to debug
     logLevel:
@@ -111,7 +138,10 @@ function createInngestHandler(
  * Register Fastify route that delegates to Inngest handler
  * Wraps handler with error logging for debugging
  */
-function registerInngestRoute(fastify: FastifyInstance, logger: FastifyInstance["log"]): void {
+function registerInngestRoute(
+  fastify: FastifyInstance,
+  logger: FastifyInstance["log"]
+): void {
   fastify.route({
     method: ["GET", "POST", "PUT"],
     url: config.workflow.servePath,
@@ -148,36 +178,40 @@ function setupReloadDecorator(
   inngestClient: ReturnType<typeof createWorkflowClient>,
   logger: FastifyInstance["log"]
 ): void {
-  fastify.decorate("reloadWorkflowEngine", async (): Promise<{ total: number }> => {
-    try {
-      logger.info("Reloading workflow engine...");
+  fastify.decorate(
+    "reloadWorkflowEngine",
+    async (): Promise<{ total: number }> => {
+      try {
+        logger.info("Reloading workflow engine...");
 
-      // Load workflows (scan → load → register)
-      const { functions, stats } = await loadWorkflows(fastify);
+        // Load workflows (scan → load → register)
+        const { functions, stats } = await loadWorkflows(fastify);
 
-      // Swap handler atomically
-      currentHandler = serve({
-        client: inngestClient,
-        functions,
-      });
+        // Swap handler atomically
+        currentHandler = serve({
+          client: inngestClient,
+          functions,
+          signingKey: config.workflow.signingKey,
+        });
 
-      logger.info(
-        { total: stats.total },
-        "Workflow engine reloaded successfully"
-      );
+        logger.info(
+          { total: stats.total },
+          "Workflow engine reloaded successfully"
+        );
 
-      return { total: stats.total };
-    } catch (error) {
-      logger.warn(
-        {
-          error: error instanceof Error ? error.message : String(error),
-          stack: error instanceof Error ? error.stack : undefined,
-        },
-        "Failed to reload workflow engine"
-      );
-      throw error;
+        return { total: stats.total };
+      } catch (error) {
+        logger.warn(
+          {
+            error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+          },
+          "Failed to reload workflow engine"
+        );
+        throw error;
+      }
     }
-  });
+  );
 }
 
 // Type augmentation for Fastify decorators
