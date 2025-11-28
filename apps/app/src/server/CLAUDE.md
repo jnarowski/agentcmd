@@ -150,13 +150,13 @@ import { config } from "@/server/config";
 
 const port = config.server.port;        // 4100
 const jwtSecret = config.jwt.secret;    // Required
-const dbUrl = config.database.url;      // file:./dev.db
+const dbUrl = config.database.url;      // file:./prisma/dev.db
 const inngestAppId = config.workflow.appId;
 ```
 
 **Environment Variables:**
 - `JWT_SECRET` - **Required** (validation fails without it)
-- `DATABASE_URL` - Default: `file:./dev.db`
+- `DATABASE_URL` - Default: `file:./prisma/dev.db`
 - `PORT` - Default: 4100
 - `HOST` - Default: 127.0.0.1
 - `NODE_ENV` - Default: development

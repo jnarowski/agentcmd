@@ -96,7 +96,7 @@ export LOG_LEVEL=info
 export LOG_FILE=./logs/app.log
 
 # Database
-export DATABASE_URL=file:./dev.db
+export DATABASE_URL=file:./prisma/dev.db
 
 # Security (required)
 export JWT_SECRET=$(openssl rand -base64 32)
@@ -162,7 +162,7 @@ Default paths used by <AgentCmd />:
 NODE_ENV=development
 LOG_LEVEL=debug
 PORT=4100
-DATABASE_URL=file:./dev.db
+DATABASE_URL=file:./prisma/dev.db
 
 # API keys (keep in shell profile or .env)
 export ANTHROPIC_API_KEY=sk-ant-...
@@ -176,7 +176,7 @@ NODE_ENV=development
 PORT=4100
 HOST=0.0.0.0
 LOG_LEVEL=info
-DATABASE_URL=file:./dev.db
+DATABASE_URL=file:./prisma/dev.db
 
 # .env (gitignored, each dev creates)
 ANTHROPIC_API_KEY=<your-key>

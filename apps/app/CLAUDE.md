@@ -195,7 +195,7 @@ agentcmd
 
 ```bash
 JWT_SECRET=<openssl rand -base64 32>
-DATABASE_URL=file:./dev.db
+DATABASE_URL=file:./prisma/dev.db
 ```
 
 ### Optional

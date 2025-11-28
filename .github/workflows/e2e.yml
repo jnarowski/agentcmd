@@ -37,7 +37,7 @@ jobs:
         run: pnpm build
 
       - name: Run E2E database migrations
-        run: cd apps/app && DATABASE_URL=file:./e2e.db pnpm prisma migrate deploy
+        run: cd apps/app && DATABASE_URL=file:./prisma/e2e.db pnpm prisma migrate deploy
 
       - name: Start dev server (for Inngest)
         run: cd apps/app && pnpm dev &
@@ -51,7 +51,7 @@ jobs:
       - name: Start E2E server
         run: cd apps/app && pnpm e2e:server &
         env:
-          DATABASE_URL: file:./e2e.db
+          DATABASE_URL: file:./prisma/e2e.db
           PORT: 5100
           VITE_PORT: 5101
           NODE_ENV: test
