@@ -172,7 +172,7 @@ If a task fails during implementation:
 <json_output>
 {
 "success": true,
-"summary": "Implemented feature-name with core functionality and UI integration. Added new components and backend services to support the feature. Completed all 15 tasks successfully with all validation checks passing.",
+"summary": "- Implemented feature-name with core functionality and UI integration\n- Added new components and backend services to support the feature\n- Completed all 15 tasks successfully with all validation checks passing",
 "spec_id": "2511131522",
 "spec_file": ".agent/specs/todo/2511131522-feature-name/spec.md",
 "feature_name": "feature-name",
@@ -222,7 +222,7 @@ If a task fails during implementation:
 **JSON Field Descriptions:**
 
 - `success`: Boolean - true if all tasks completed successfully, false if any tasks failed or were skipped
-- `summary`: String - 1-2 sentences describing what was implemented and key changes + 1 sentence on task/validation status
+- `summary`: String - 2-4 markdown bullet points describing what was implemented, key changes, and task/validation status (use `\n- ` for bullets)
 - `spec_id`: String - Timestamp-based spec ID (e.g., "2511131522")
 - `spec_file`: String - Full path to the spec file that was implemented
 - `feature_name`: String - Normalized feature name (lowercase, hyphenated)
@@ -270,6 +270,7 @@ If a task fails during implementation:
 ```json
 {
   "success": true,
+  "summary": "- Implemented feature-name with core functionality and UI integration\n- Added new components and backend services to support the feature\n- Completed 15/15 tasks successfully with all validation checks passing",
   "spec_id": "2511131522",
   "spec_file": ".agent/specs/todo/2511131522-feature-name/spec.md",
   "feature_name": "feature-name",
@@ -299,6 +300,7 @@ If a task fails during implementation:
 ```json
 {
   "success": false,
+  "summary": "- Started authentication implementation, created database schema\n- Build errors prevented completion of auth middleware\n- Completed 8/15 tasks before blocking error",
   "spec_id": "2511131522",
   "spec_file": ".agent/specs/todo/2511131522-auth-feature/spec.md",
   "feature_name": "auth-feature",

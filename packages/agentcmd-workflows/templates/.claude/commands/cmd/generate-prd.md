@@ -28,9 +28,9 @@ Generate high-level PRD focusing on "what" and "why" before implementation. Crea
    - If $param1 empty: Infer from conversation history
 
 2. **Generate Spec ID**:
-   - Generate timestamp-based ID in format `YYMMDDHHmm`
-   - Example: November 13, 2025 at 3:22pm → `2511131522`
-   - Read `.agent/specs/index.json` (will be updated in step 7)
+   - Generate timestamp-based ID in format `YYMMDDHHmm` using current local time
+   - Example: November 13, 2025 at 3:22pm local → `2511131522`
+   - Read `.agent/specs/index.json` (will be updated in step 8)
 
 3. **Generate Feature Name**:
    - Generate concise kebab-case name from context (max 4 words)
@@ -69,6 +69,11 @@ Generate high-level PRD focusing on "what" and "why" before implementation. Crea
    - **Note**: PRDs always start in `todo/` folder with Status "draft"
 
 8. **Update Index**:
+   - Convert spec ID timestamp to UTC for storage:
+     - Parse spec ID as local time (e.g., `2511131522` = Nov 13, 2025 at 3:22pm local)
+     - Convert to UTC using system timezone offset
+     - Format as ISO 8601 UTC string (YYYY-MM-DDTHH:mm:ssZ)
+     - Example: 3:22pm MST (UTC-7) → `2025-11-13T22:22:00Z`
    - Add minimal entry to index.json using timestamp ID as key (NO path field):
 
      ```json
@@ -78,13 +83,14 @@ Generate high-level PRD focusing on "what" and "why" before implementation. Crea
            "folder": "2511131522-oauth-support",
            "spec_type": "prd",
            "status": "draft",
-           "created": "2025-11-13T15:22:00Z",
-           "updated": "2025-11-13T15:22:00Z"
+           "created": "2025-11-13T22:22:00Z",
+           "updated": "2025-11-13T22:22:00Z"
          }
        }
      }
      ```
 
+   - **IMPORTANT**: The `created` and `updated` timestamps must be true UTC, not local time with Z suffix
    - **IMPORTANT**: PRD entries have NO `path` field - this indicates no implementation spec exists yet
    - Write updated index back to `.agent/specs/index.json`
 

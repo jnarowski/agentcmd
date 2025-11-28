@@ -44,9 +44,9 @@ Assign based on **context window usage and cognitive load**:
    - If $param1 empty: Infer from conversation history
 
 2. **Generate Spec ID**:
-   - Generate timestamp-based ID in format `YYMMDDHHmm`
-   - Example: November 13, 2025 at 2:22pm → `2511131422`
-   - Read `.agent/specs/index.json` (will be updated in step 7)
+   - Generate timestamp-based ID in format `YYMMDDHHmm` using current local time
+   - Example: November 13, 2025 at 2:22pm local → `2511131422`
+   - Read `.agent/specs/index.json` (will be updated in step 8)
 
 3. **Generate Bug Name**:
    - Generate concise kebab-case name from context (max 4 words)
@@ -83,6 +83,11 @@ Assign based on **context window usage and cognitive load**:
    - Always starts in `todo/` with Status "draft"
 
 8. **Update Index**:
+   - Convert spec ID timestamp to UTC for storage:
+     - Parse spec ID as local time (e.g., `2511131422` = Nov 13, 2025 at 2:22pm local)
+     - Convert to UTC using system timezone offset
+     - Format as ISO 8601 UTC string (YYYY-MM-DDTHH:mm:ssZ)
+     - Example: 2:22pm MST (UTC-7) → `2025-11-13T21:22:00Z`
    - Add entry to `.agent/specs/index.json`:
      ```json
      {
@@ -92,8 +97,8 @@ Assign based on **context window usage and cognitive load**:
            "path": "todo/2511131422-workflow-memory-leak/spec.md",
            "spec_type": "bug",
            "status": "draft",
-           "created": "2025-11-13T14:22:00Z",
-           "updated": "2025-11-13T14:22:00Z",
+           "created": "2025-11-13T21:22:00Z",
+           "updated": "2025-11-13T21:22:00Z",
            "totalComplexity": 42,
            "phaseCount": 3,
            "taskCount": 8
@@ -101,6 +106,7 @@ Assign based on **context window usage and cognitive load**:
        }
      }
      ```
+   - **IMPORTANT**: The `created` and `updated` timestamps must be true UTC, not local time with Z suffix
    - Complexity values match spec.md metadata from step 6
 
 9. **Output Report** - Do NOT implement. Output JSON only.

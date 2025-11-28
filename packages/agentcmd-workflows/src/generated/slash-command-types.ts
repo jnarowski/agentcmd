@@ -309,7 +309,7 @@ export interface CmdGenerateSpecResponse {
 export interface CmdImplementSpecResponse {
   /** Boolean - true if all tasks completed successfully, false if any tasks failed or were skipped */
   success: boolean;
-  /** String - 1-2 sentences describing what was implemented and key changes + 1 sentence on task/validation status */
+  /** String - 2-4 markdown bullet points describing what was implemented, key changes, and task/validation status (use `\n- ` for bullets) */
   summary: string;
   /** String - Timestamp-based spec ID (e.g., "2511131522") */
   spec_id: string;
