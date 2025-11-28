@@ -63,6 +63,7 @@ export function NavUser({
               <SidebarMenuButton
                 size="lg"
                 className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                data-testid="user-menu-trigger"
               >
                 <div className="flex items-center gap-3 flex-1">
                   <div
@@ -140,7 +141,7 @@ export function NavUser({
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onLogout}>
+              <DropdownMenuItem onClick={onLogout} data-testid="logout-button">
                 <LogOut />
                 Log out
               </DropdownMenuItem>

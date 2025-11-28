@@ -1,4 +1,6 @@
 import { MessageSquare, User } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { WorkflowEvent } from "@/client/pages/projects/workflows/types";
 import { TimelineRow } from "./TimelineRow";
 import { TimelineItemHeader } from "./TimelineItemHeader";
@@ -24,7 +26,11 @@ export function WorkflowEventAnnotationItem({
         id={event.id}
       />
 
-      <p className="text-sm whitespace-pre-wrap mt-1">{message}</p>
+      <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:mb-1 prose-headings:mt-2 prose-*:first:mt-0">
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          {message}
+        </ReactMarkdown>
+      </div>
 
       {event.created_by_user && (
         <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">

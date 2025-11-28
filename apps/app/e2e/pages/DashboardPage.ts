@@ -1,19 +1,31 @@
 import type { Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { BasePage } from "./BasePage";
 
 /**
  * Dashboard Page Object
  *
  * Main authenticated landing page.
- * Extend with dashboard-specific interactions as needed.
+ * Provides interactions for:
+ * - User menu (sidebar footer)
+ * - Logout flow
+ * - Navigation to other sections
  */
 export class DashboardPage extends BasePage {
+  // Test IDs for stable selectors
+  private readonly testIds = {
+    userMenuTrigger: "user-menu-trigger",
+    logoutButton: "logout-button",
+  };
+
   constructor(page: Page) {
     super(page);
   }
 
   async goto() {
-    await this.page.goto("/dashboard");
+    await this.page.goto("/projects");
+    // Wait for page to fully load with sidebar
+    await this.page.waitForLoadState("networkidle");
   }
 
   /**
@@ -32,11 +44,51 @@ export class DashboardPage extends BasePage {
   }
 
   /**
-   * Logout by clearing auth storage
-   * Clears Zustand persist store "auth-storage"
+   * Open the user menu dropdown in the sidebar footer
+   */
+  async openUserMenu() {
+    const userMenuTrigger = this.getByTestId(this.testIds.userMenuTrigger);
+    // Wait for sidebar to render
+    await expect(userMenuTrigger).toBeVisible({ timeout: 10000 });
+    await userMenuTrigger.click();
+  }
+
+  /**
+   * Click the logout button in the user menu
+   * Assumes user menu is already open
+   */
+  async clickLogout() {
+    await this.getByTestId(this.testIds.logoutButton).click();
+  }
+
+  /**
+   * Complete logout flow via UI
+   * Opens user menu and clicks logout
    */
   async logout() {
-    await this.removeLocalStorage("auth-storage");
+    await this.openUserMenu();
+    await this.clickLogout();
+  }
+
+  /**
+   * Assert auth token has been cleared (logout successful)
+   */
+  async expectLoggedOut() {
+    const storage = await this.getLocalStorage("auth-storage");
+    if (!storage) {
+      return; // No storage = logged out
+    }
+    const parsed = JSON.parse(storage);
+    expect(parsed?.state?.token).toBeFalsy();
+    expect(parsed?.state?.isAuthenticated).toBeFalsy();
+  }
+
+  /**
+   * Assert redirected to login page
+   */
+  async expectRedirectedToLogin() {
+    await this.page.waitForURL(/\/login/, { timeout: 10000 });
+    expect(this.page.url()).toContain("/login");
   }
 
   /**
