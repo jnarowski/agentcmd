@@ -105,6 +105,103 @@ const preview = await step.preview("deploy", {
 });
 ```
 
+## Project Settings
+
+Configure preview containers globally for your project via **Project → Edit**.
+
+![Project Settings](/screenshots/project-edit-2.png)
+
+### Docker File Path
+
+Specify which Docker configuration file to use:
+
+```
+docker-compose.yml          # Default
+docker/preview.yml          # Custom location
+Dockerfile                  # Single container
+```
+
+The path is relative to your project root. This setting is used when no `dockerFilePath` is specified in the workflow step.
+
+### Port Mappings
+
+Map environment variable names to container ports. AgentCmd allocates available host ports and injects them into your container:
+
+| Name | Default Port | Result |
+|------|--------------|--------|
+| `PORT` | `3000` | `PREVIEW_PORT_PORT=5000` (allocated) |
+| `API_PORT` | `4000` | `PREVIEW_PORT_API_PORT=5001` (allocated) |
+
+Your docker-compose.yml uses these via environment variables:
+
+```yaml
+services:
+  app:
+    ports:
+      - "${PREVIEW_PORT_PORT:-3000}:3000"
+```
+
+### Environment Variables
+
+Set environment variables for the preview container (one per line, `KEY=value` format):
+
+```
+NODE_ENV=preview
+API_KEY=test
+DATABASE_URL=postgres://localhost/preview
+```
+
+These are passed to all services in your Docker Compose setup.
+
+### Seed Data
+
+To populate your preview environment with test data, use a startup script in your Dockerfile or docker-compose.yml:
+
+**Option 1: Dockerfile entrypoint**
+
+```dockerfile
+# Dockerfile
+COPY scripts/seed.sh /docker-entrypoint.d/
+RUN chmod +x /docker-entrypoint.d/seed.sh
+```
+
+**Option 2: Docker Compose command**
+
+```yaml
+services:
+  app:
+    command: sh -c "pnpm db:seed && pnpm start"
+```
+
+**Option 3: Init container pattern**
+
+```yaml
+services:
+  seed:
+    build: .
+    command: pnpm db:seed
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    build: .
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+```
+
+**Option 4: Environment-based seeding**
+
+```typescript
+// In your app startup
+if (process.env.NODE_ENV === 'preview') {
+  await seedDatabase();
+}
+```
+
+Set `NODE_ENV=preview` in Project Settings → Environment Variables.
+
 ## Docker Configuration
 
 ### docker-compose.yml (Recommended)
