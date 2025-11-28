@@ -54,6 +54,7 @@ model WorkflowRun {
   worktree_name          String? // Worktree directory name (e.g., run-abc123-feature-x)
   preserve               Boolean?  @default(false) // Keep work context for review (stay on branch / keep worktree)
   pr_url                 String? // Pull request URL (set by step.git operation: "pr")
+  preview_url            String? // Preview container URL (set by step.preview)
   triggered_by           String         @default("manual") // How run was triggered: "manual" | "webhook" | "api" | "scheduled"
   webhook_event_id       String? // Link to triggering webhook event (if triggered_by="webhook")
   issue_id               String? // External issue ID (e.g., "PROJ-123", "LIN-456")
