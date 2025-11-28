@@ -4,8 +4,8 @@
  * Options for allocating ports for a container
  */
 export interface PortAllocationOptions {
-  /** Named ports to allocate (e.g., ["app", "server", "client"]) */
-  portNames: string[];
+  /** Port config: key = env var name to use, value = internal container port (for reference) */
+  portsConfig: Record<string, number>;
 }
 
 /**
@@ -89,8 +89,8 @@ export interface CreateContainerOptions {
   configOverrides?: {
     /** Custom Docker file path */
     dockerFilePath?: string;
-    /** Named ports to expose */
-    ports?: string[];
+    /** Port config: key = env var name, value = internal container port */
+    ports?: Record<string, number>;
     /** Environment variables */
     env?: Record<string, string>;
     /** Max memory limit */

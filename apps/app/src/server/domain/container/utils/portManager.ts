@@ -11,23 +11,26 @@ const PORT_RANGE_END = 5999;
 // PUBLIC API
 
 /**
- * Allocates ports for a container from the reserved range (5000-5999).
+ * Allocates ports for a container.
+ * Tries to use the configured container port as the host port first (if available),
+ * otherwise falls back to the reserved range (5000-5999).
  * Uses a Prisma transaction to ensure atomicity and prevent race conditions.
  *
  * @param options - Port allocation options
- * @returns Allocated ports mapped to port names
+ * @returns Allocated ports mapped to env var names
  * @throws Error if port range is exhausted
  *
  * @example
  * ```ts
- * const { ports } = await allocatePorts({ portNames: ["app", "server"] });
- * // { app: 5000, server: 5001 }
+ * const { ports } = await allocatePorts({ portsConfig: { PORT: 3000, VITE_PORT: 5173 } });
+ * // If 3000 and 5173 are free: { PORT: 3000, VITE_PORT: 5173 }
+ * // If 3000 is busy: { PORT: 5000, VITE_PORT: 5173 }
  * ```
  */
 export async function allocatePorts(
   options: PortAllocationOptions
 ): Promise<PortAllocationResult> {
-  const { portNames } = options;
+  const { portsConfig } = options;
 
   // Use transaction to ensure atomicity
   return await prisma.$transaction(async (tx) => {
@@ -46,25 +49,32 @@ export async function allocatePorts(
       }
     }
 
-    // Find available ports
+    // Allocate ports - try preferred port first, then fall back to range
     const allocatedPorts: Record<string, number> = {};
-    let currentPort = PORT_RANGE_START;
+    let fallbackPort = PORT_RANGE_START;
 
-    for (const portName of portNames) {
-      // Find next available port
-      while (usedPorts.has(currentPort) && currentPort <= PORT_RANGE_END) {
-        currentPort++;
+    for (const [envVarName, preferredPort] of Object.entries(portsConfig)) {
+      // Try the preferred (container) port first if it's available
+      if (!usedPorts.has(preferredPort)) {
+        allocatedPorts[envVarName] = preferredPort;
+        usedPorts.add(preferredPort);
+        continue;
       }
 
-      if (currentPort > PORT_RANGE_END) {
+      // Fall back to finding an available port in the reserved range
+      while (usedPorts.has(fallbackPort) && fallbackPort <= PORT_RANGE_END) {
+        fallbackPort++;
+      }
+
+      if (fallbackPort > PORT_RANGE_END) {
         throw new Error(
-          `Port range exhausted: unable to allocate ${portNames.length} ports`
+          `Port range exhausted: unable to allocate port for ${envVarName}`
         );
       }
 
-      allocatedPorts[portName] = currentPort;
-      usedPorts.add(currentPort);
-      currentPort++;
+      allocatedPorts[envVarName] = fallbackPort;
+      usedPorts.add(fallbackPort);
+      fallbackPort++;
     }
 
     return { ports: allocatedPorts };

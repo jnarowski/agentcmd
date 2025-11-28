@@ -10,7 +10,8 @@ import { sessionResponseSchema } from "@/server/domain/session/schemas";
  */
 export const previewConfigSchema = z.object({
   dockerFilePath: z.string().optional(),
-  ports: z.array(z.string()).optional(),
+  /** Port configuration: key = env var name (e.g., "PORT", "VITE_PORT"), value = internal container port */
+  ports: z.record(z.string(), z.number()).optional(),
   env: z.record(z.string(), z.string()).optional(),
   maxMemory: z.string().optional(),
   maxCpus: z.string().optional(),

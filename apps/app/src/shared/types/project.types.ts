@@ -4,7 +4,8 @@ import type { SessionResponse } from './agent-session.types';
 
 export interface ProjectPreviewConfig {
   dockerFilePath?: string;
-  ports?: string[];
+  /** Port configuration: key = env var name (e.g., "PORT", "VITE_PORT"), value = internal container port */
+  ports?: Record<string, number>;
   env?: Record<string, string>;
   maxMemory?: string;
   maxCpus?: string;

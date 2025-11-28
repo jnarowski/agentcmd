@@ -526,8 +526,8 @@ export interface AiStepResult<T = { text: string }> {
  * Configuration for preview container step
  */
 export interface PreviewStepConfig {
-  /** Named ports to expose (e.g., ["app", "server", "client"]) */
-  ports?: string[];
+  /** Port configuration: key = env var name (e.g., "PORT", "VITE_PORT"), value = internal container port */
+  ports?: Record<string, number>;
   /** Environment variables to pass to container */
   env?: Record<string, string>;
   /** Custom Docker file path (overrides project config and auto-detection) */

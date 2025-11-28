@@ -99,7 +99,7 @@ export function detectConfig(
 
 /**
  * Builds and runs a Docker container or Compose project.
- * Injects PREVIEW_PORT_{NAME} environment variables for each port.
+ * Sets port environment variables using the exact names provided (no transformation).
  *
  * @param options - Build and run options
  * @returns Container IDs and optional compose project name
@@ -111,9 +111,10 @@ export function detectConfig(
  *   type: "compose",
  *   workingDir: "/tmp/project",
  *   containerId: "abc123",
- *   ports: { app: 5000, server: 5001 },
+ *   ports: { PORT: 5000, VITE_PORT: 5001 },
  *   env: { NODE_ENV: "preview" }
  * });
+ * // Sets PORT=5000, VITE_PORT=5001 in container environment
  * // { containerIds: ["id1", "id2"], composeProject: "container-abc123" }
  * ```
  */
@@ -130,11 +131,10 @@ export async function buildAndRun(
     maxCpus,
   } = options;
 
-  // Build environment variables with PREVIEW_PORT_{NAME}
+  // Build environment variables - use env var names directly (no transformation)
   const envVars = { ...env };
-  for (const [name, port] of Object.entries(ports)) {
-    const envKey = `PREVIEW_PORT_${name.toUpperCase().replace(/-/g, "_")}`;
-    envVars[envKey] = String(port);
+  for (const [envVarName, port] of Object.entries(ports)) {
+    envVars[envVarName] = String(port);
   }
 
   const envString = Object.entries(envVars)

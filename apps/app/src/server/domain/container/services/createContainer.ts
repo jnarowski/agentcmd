@@ -23,9 +23,9 @@ import type {
  * const container = await createContainer({
  *   projectId: "proj_123",
  *   workingDir: "/path/to/project",
- *   configOverrides: { ports: ["app", "server"] }
+ *   configOverrides: { ports: { PORT: 3000, VITE_PORT: 5173 } }
  * });
- * console.log(container.urls); // { app: "http://localhost:5000", ... }
+ * console.log(container.urls); // { PORT: "http://localhost:5000", ... }
  * ```
  */
 export async function createContainer(
@@ -55,7 +55,7 @@ export async function createContainer(
   const previewConfig: ProjectPreviewConfig = project.preview_config || {};
   const mergedConfig = {
     dockerFilePath: configOverrides.dockerFilePath || previewConfig.dockerFilePath,
-    ports: configOverrides.ports || previewConfig.ports || ["app"],
+    ports: configOverrides.ports || previewConfig.ports || { PORT: 3000 },
     env: {
       ...(previewConfig.env || {}),
       ...(configOverrides.env || {}),
@@ -72,7 +72,7 @@ export async function createContainer(
 
   // Allocate ports
   const { ports } = await portManager.allocatePorts({
-    portNames: mergedConfig.ports,
+    portsConfig: mergedConfig.ports,
   });
 
   // Create Container record with status "starting"

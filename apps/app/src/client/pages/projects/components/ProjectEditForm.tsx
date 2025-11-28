@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,6 +9,7 @@ import { ErrorAlert } from "@/client/components/ui/error-alert";
 import { Input } from "@/client/components/ui/input";
 import { Label } from "@/client/components/ui/label";
 import { Textarea } from "@/client/components/ui/textarea";
+import { Plus, X } from "lucide-react";
 import type { Project, ProjectPreviewConfig } from "@/shared/types/project.types";
 
 // Form validation schema
@@ -17,7 +18,7 @@ const projectFormSchema = z.object({
   path: z.string().min(1, "Project path is required"),
   // Preview config fields (all optional strings for form handling)
   dockerFilePath: z.string().optional(),
-  ports: z.string().optional(),
+  // ports managed separately via state (key-value pairs)
   env: z.string().optional(),
   maxMemory: z.string().optional(),
   maxCpus: z.string().optional(),
@@ -25,12 +26,13 @@ const projectFormSchema = z.object({
 
 type ProjectFormData = z.infer<typeof projectFormSchema>;
 
-// Helper functions for parsing/conversion
-
-function parsePortsString(str: string): string[] {
-  if (!str.trim()) return [];
-  return str.split(",").map((s) => s.trim()).filter(Boolean);
+// Port entry for the UI
+interface PortEntry {
+  envVar: string;
+  containerPort: string;
 }
+
+// Helper functions for parsing/conversion
 
 function parseEnvString(str: string): Record<string, string> {
   if (!str.trim()) return {};
@@ -48,11 +50,6 @@ function parseEnvString(str: string): Record<string, string> {
   return result;
 }
 
-function portsToString(arr?: string[]): string {
-  if (!arr || arr.length === 0) return "";
-  return arr.join(", ");
-}
-
 function envToString(obj?: Record<string, string>): string {
   if (!obj || Object.keys(obj).length === 0) return "";
   return Object.entries(obj)
@@ -60,14 +57,39 @@ function envToString(obj?: Record<string, string>): string {
     .join("\n");
 }
 
-function buildPreviewConfig(formData: ProjectFormData): ProjectPreviewConfig | null {
+function portsToEntries(ports?: Record<string, number>): PortEntry[] {
+  if (!ports || Object.keys(ports).length === 0) return [];
+  return Object.entries(ports).map(([envVar, containerPort]) => ({
+    envVar,
+    containerPort: String(containerPort),
+  }));
+}
+
+function entriesToPorts(entries: PortEntry[]): Record<string, number> | undefined {
+  const validEntries = entries.filter((e) => e.envVar.trim() && e.containerPort.trim());
+  if (validEntries.length === 0) return undefined;
+  const result: Record<string, number> = {};
+  for (const entry of validEntries) {
+    const port = parseInt(entry.containerPort, 10);
+    if (!isNaN(port) && port > 0) {
+      result[entry.envVar.trim()] = port;
+    }
+  }
+  return Object.keys(result).length > 0 ? result : undefined;
+}
+
+function buildPreviewConfig(
+  formData: ProjectFormData,
+  portEntries: PortEntry[]
+): ProjectPreviewConfig | null {
   const config: ProjectPreviewConfig = {};
 
   if (formData.dockerFilePath?.trim()) {
     config.dockerFilePath = formData.dockerFilePath.trim();
   }
-  if (formData.ports?.trim()) {
-    config.ports = parsePortsString(formData.ports);
+  const ports = entriesToPorts(portEntries);
+  if (ports) {
+    config.ports = ports;
   }
   if (formData.env?.trim()) {
     config.env = parseEnvString(formData.env);
@@ -99,6 +121,11 @@ export function ProjectEditForm({
 
   const previewConfig = project.preview_config;
 
+  // Port entries managed separately from react-hook-form
+  const [portEntries, setPortEntries] = useState<PortEntry[]>(() =>
+    portsToEntries(previewConfig?.ports)
+  );
+
   const {
     register,
     handleSubmit,
@@ -111,7 +138,6 @@ export function ProjectEditForm({
       name: project.name,
       path: project.path,
       dockerFilePath: previewConfig?.dockerFilePath || "",
-      ports: portsToString(previewConfig?.ports),
       env: envToString(previewConfig?.env),
       maxMemory: previewConfig?.maxMemory || "",
       maxCpus: previewConfig?.maxCpus || "",
@@ -125,15 +151,32 @@ export function ProjectEditForm({
       name: project.name,
       path: project.path,
       dockerFilePath: config?.dockerFilePath || "",
-      ports: portsToString(config?.ports),
       env: envToString(config?.env),
       maxMemory: config?.maxMemory || "",
       maxCpus: config?.maxCpus || "",
     });
+    setPortEntries(portsToEntries(config?.ports));
   }, [project, reset]);
 
+  // Port entry handlers
+  const addPortEntry = () => {
+    setPortEntries([...portEntries, { envVar: "", containerPort: "" }]);
+  };
+
+  const removePortEntry = (index: number) => {
+    setPortEntries(portEntries.filter((_, i) => i !== index));
+  };
+
+  const updatePortEntry = (index: number, field: keyof PortEntry, value: string) => {
+    setPortEntries(
+      portEntries.map((entry, i) =>
+        i === index ? { ...entry, [field]: value } : entry
+      )
+    );
+  };
+
   const onSubmit = (data: ProjectFormData) => {
-    const previewConfig = buildPreviewConfig(data);
+    const previewConfig = buildPreviewConfig(data, portEntries);
 
     updateMutation.mutate(
       {
@@ -223,15 +266,61 @@ export function ProjectEditForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="ports">Port Names</Label>
-              <Input
-                id="ports"
-                {...register("ports")}
-                placeholder="app, server"
-                disabled={isLoading}
-              />
-              <p className="text-xs text-muted-foreground">
-                Comma-separated port names (e.g., app, server). These map to PREVIEW_PORT_APP, PREVIEW_PORT_SERVER env vars.
+              <Label>Port Mappings</Label>
+              <p className="text-xs text-muted-foreground mb-2">
+                Map environment variable names to container ports. The env var will be set to an available host port.
+              </p>
+              <div className="space-y-2">
+                {portEntries.length > 0 && (
+                  <div className="flex gap-2 items-center text-xs text-muted-foreground font-medium">
+                    <div className="flex-1">Name</div>
+                    <div className="flex-1">Default Port</div>
+                    <div className="w-8" />
+                  </div>
+                )}
+                {portEntries.map((entry, index) => (
+                  <div key={index} className="flex gap-2 items-center">
+                    <Input
+                      placeholder="ENV_VAR (e.g., PORT)"
+                      value={entry.envVar}
+                      onChange={(e) => updatePortEntry(index, "envVar", e.target.value)}
+                      className="font-mono text-sm flex-1"
+                      disabled={isLoading}
+                    />
+                    <Input
+                      placeholder="3000"
+                      value={entry.containerPort}
+                      onChange={(e) => updatePortEntry(index, "containerPort", e.target.value)}
+                      className="font-mono text-sm flex-1"
+                      type="number"
+                      disabled={isLoading}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removePortEntry(index)}
+                      disabled={isLoading}
+                      className="shrink-0"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addPortEntry}
+                  disabled={isLoading}
+                  className="mt-2"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Port
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Example: PORT = 3000 means docker-compose should use {`\${PORT:-3000}:3000`}
               </p>
             </div>
 

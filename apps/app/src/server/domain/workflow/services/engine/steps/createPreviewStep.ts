@@ -20,7 +20,7 @@ const DEFAULT_PREVIEW_TIMEOUT = 300000; // 5 minutes
  *
  * // Override with custom config
  * const result = await step.preview("deploy", {
- *   ports: ["app", "server"],
+ *   ports: { PORT: 3000, VITE_PORT: 5173 },
  *   env: { NODE_ENV: "preview" },
  *   dockerFilePath: "docker/compose-preview.yml"
  * });
