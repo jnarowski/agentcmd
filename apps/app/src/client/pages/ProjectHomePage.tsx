@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   useProject,
   useToggleProjectStarred,
@@ -9,7 +8,6 @@ import { ProjectOnboardingSuggestions } from "@/client/pages/projects/components
 import { ProjectHomeSpecs } from "@/client/pages/projects/components/ProjectHomeSpecs";
 import { ProjectReadme } from "@/client/pages/projects/components/ProjectReadme";
 import { ProjectHomeWorkflows } from "@/client/pages/projects/components/ProjectHomeWorkflows";
-import { ProjectDialog } from "@/client/pages/projects/components/ProjectDialog";
 import { Skeleton } from "@/client/components/ui/skeleton";
 import { Button } from "@/client/components/ui/button";
 import { ButtonGroup } from "@/client/components/ui/button-group";
@@ -32,8 +30,8 @@ import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
 
 export default function ProjectHomePage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { data: project, isLoading } = useProject(id!);
-  const [editingProject, setEditingProject] = useState(false);
   const toggleStarred = useToggleProjectStarred();
   const toggleHidden = useToggleProjectHidden();
 
@@ -42,7 +40,7 @@ export default function ProjectHomePage() {
   );
 
   const handleEdit = () => {
-    setEditingProject(true);
+    navigate(`/projects/${id}/settings`);
   };
 
   const handleToggleFavorite = () => {
@@ -139,12 +137,6 @@ export default function ProjectHomePage() {
       {/* README Section */}
       <ProjectReadme project={project} />
       </div>
-
-      <ProjectDialog
-        open={editingProject}
-        onOpenChange={(open) => !open && setEditingProject(false)}
-        project={project}
-      />
     </>
   );
 }

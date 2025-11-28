@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/shared/prisma";
-import type { Project, ProjectCapabilities } from "@/shared/types/project.types";
+import type { Project, ProjectCapabilities, ProjectPreviewConfig } from "@/shared/types/project.types";
 import { isGitRepository } from "@/server/domain/git/services/isGitRepository";
 import { checkWorkflowPackage } from "@/server/domain/project/services/checkWorkflowPackage";
 import type { DeleteProjectOptions } from "@/server/domain/project/types/DeleteProjectOptions";
@@ -59,6 +59,7 @@ function transformProject(
     created_at: prismaProject.created_at,
     updated_at: prismaProject.updated_at,
     capabilities,
+    preview_config: prismaProject.preview_config as ProjectPreviewConfig | null,
   };
 }
 

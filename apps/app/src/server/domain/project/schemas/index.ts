@@ -111,6 +111,7 @@ export const projectSchema = z.object({
   created_at: z.coerce.date(), // Coerce ISO strings to Date objects
   updated_at: z.coerce.date(), // Coerce ISO strings to Date objects
   capabilities: projectCapabilitiesSchema,
+  preview_config: previewConfigSchema.optional(),
 });
 
 /**

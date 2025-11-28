@@ -86,7 +86,7 @@ test.describe("Sessions - With Agent Responses", () => {
   test.setTimeout(120_000);
 
   // TODO: WebSocket streaming issue - Claude starts but response not displayed
-  test.skip("should wait for agent response", async ({
+  test("should wait for agent response", async ({
     authenticatedPage,
     db,
   }) => {
@@ -103,7 +103,8 @@ test.describe("Sessions - With Agent Responses", () => {
     const newSessionPage = new NewSessionPage(authenticatedPage);
     const sessionPage = new SessionPage(authenticatedPage);
 
-    await newSessionPage.gotoForProject(project.id);
+    // Navigate with debug=true for more session info
+    await authenticatedPage.goto(`/projects/${project.id}/sessions/new?debug=true`);
     await newSessionPage.expectWebSocketConnected();
     await newSessionPage.sendMessage("Say hello and nothing else");
     await newSessionPage.waitForSessionCreated();

@@ -18,6 +18,7 @@ import ProjectWorkflowsOnboardingPage from "@/client/pages/projects/workflows/Pr
 import WorkflowDefinitionPage from "@/client/pages/projects/workflows/WorkflowDefinitionPage";
 import WorkflowRunDetailPage from "@/client/pages/projects/workflows/WorkflowRunDetailPage";
 import NewWorkflowRunPage from "@/client/pages/projects/workflows/NewWorkflowRunPage";
+import ProjectEditPage from "@/client/pages/projects/ProjectEditPage";
 import ProjectWebhooksPage from "@/client/pages/projects/webhooks/ProjectWebhooksPage";
 import WebhookFormPage from "@/client/pages/projects/webhooks/WebhookFormPage";
 import WebhookDetailPage from "@/client/pages/projects/webhooks/WebhookDetailPage";
@@ -52,6 +53,7 @@ function AppContent() {
             {/* All project routes (detail + workflows) */}
             <Route path="/projects/:id" element={<ProjectLoader />}>
               <Route index element={<ProjectHomePage />} />
+              <Route path="settings" element={<ProjectEditPage />} />
               <Route
                 path="chat"
                 element={<Navigate to="sessions/new" replace />}
