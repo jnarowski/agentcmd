@@ -4,7 +4,11 @@ import { dirname } from "path";
 import type { StdioOptions } from "child_process";
 import pc from "picocolors";
 import { ensurePortAvailable } from "./portCheck";
-import { checkPendingMigrations, createBackup, cleanupOldBackups } from "./backup";
+import {
+  checkPendingMigrations,
+  createBackup,
+  cleanupOldBackups,
+} from "./backup";
 import { PRISMA_VERSION } from "./constants";
 import { setInngestEnvironment } from "@/shared/utils/inngestEnv";
 import { waitForServerReady } from "./serverHealth";
@@ -93,7 +97,9 @@ export async function startServer(config: StartServerConfig): Promise<void> {
   let inngestProcess: ChildProcess | null = null;
 
   const stdioSync: StdioOptions = verbose ? "inherit" : "pipe";
-  const stdioAsync: StdioOptions = verbose ? "inherit" : ["ignore", "pipe", "pipe"];
+  const stdioAsync: StdioOptions = verbose
+    ? "inherit"
+    : ["ignore", "pipe", "pipe"];
 
   try {
     // 1. Check both ports are available
@@ -105,7 +111,9 @@ export async function startServer(config: StartServerConfig): Promise<void> {
     process.env.PORT = port.toString();
     process.env.HOST = host;
     process.env.EXTERNAL_HOST = externalHost;
-    process.env.NODE_ENV = isProduction ? "production" : process.env.NODE_ENV || "development";
+    process.env.NODE_ENV = isProduction
+      ? "production"
+      : process.env.NODE_ENV || "development";
     process.env.DATABASE_URL = `file:${dbPath}`;
     process.env.JWT_SECRET = jwtSecret;
     process.env.LOG_LEVEL = logLevel;
@@ -135,7 +143,8 @@ export async function startServer(config: StartServerConfig): Promise<void> {
       const pendingMigrations = checkPendingMigrations(schemaPath);
 
       if (pendingMigrations.length > 0) {
-        if (verbose) console.log(`Found ${pendingMigrations.length} pending migration(s)`);
+        if (verbose)
+          console.log(`Found ${pendingMigrations.length} pending migration(s)`);
         if (verbose) console.log("Creating database backup...");
 
         try {
@@ -143,7 +152,10 @@ export async function startServer(config: StartServerConfig): Promise<void> {
           if (verbose) console.log(`Backup created: ${backupPath}`);
           cleanupOldBackups(dbPath, 3);
         } catch (error) {
-          console.error("Warning: Failed to create backup:", error instanceof Error ? error.message : error);
+          console.error(
+            "Warning: Failed to create backup:",
+            error instanceof Error ? error.message : error
+          );
           if (verbose) console.log("Continuing with migrations anyway...");
         }
       } else {
@@ -171,7 +183,9 @@ export async function startServer(config: StartServerConfig): Promise<void> {
       if (!verbose && generateResult.stderr) {
         console.error(generateResult.stderr.toString());
       }
-      throw new Error(`Prisma client generation failed with exit code ${generateResult.status}`);
+      throw new Error(
+        `Prisma client generation failed with exit code ${generateResult.status}`
+      );
     }
 
     if (verbose) console.log("Applying database migrations...");
@@ -188,14 +202,18 @@ export async function startServer(config: StartServerConfig): Promise<void> {
     );
 
     if (migrateResult.error) {
-      throw new Error(`Failed to run Prisma migrations: ${migrateResult.error.message}`);
+      throw new Error(
+        `Failed to run Prisma migrations: ${migrateResult.error.message}`
+      );
     }
 
     if (migrateResult.status !== 0) {
       if (!verbose && migrateResult.stderr) {
         console.error(migrateResult.stderr.toString());
       }
-      throw new Error(`Prisma migrations failed with exit code ${migrateResult.status}`);
+      throw new Error(
+        `Prisma migrations failed with exit code ${migrateResult.status}`
+      );
     }
 
     // 6. Start Fastify server as child process
@@ -247,14 +265,17 @@ export async function startServer(config: StartServerConfig): Promise<void> {
     });
     if (verbose) console.log("Server is ready");
 
+    // Wait for Inngest to sync with SDK (it retries automatically, but give it time for initial sync)
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
     // 8. Start Inngest
     let inngestStderr = "";
 
-    if (!verbose) console.log(pc.dim("Starting workflow engine..."));
-    if (verbose) console.log("Starting Inngest Server...");
-
     // Ensure Inngest data directory exists
     mkdirSync(inngestDataDir, { recursive: true });
+
+    if (!verbose) console.log(pc.dim("Starting workflow engine..."));
+    if (verbose) console.log("Starting Inngest Server...");
 
     inngestProcess = spawnInngest({
       port: inngestPort,
@@ -291,9 +312,6 @@ export async function startServer(config: StartServerConfig): Promise<void> {
       }
     });
 
-    // Wait for Inngest to sync with SDK (it retries automatically, but give it time for initial sync)
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
     // 9. Print startup banner
     printStartupBanner({
       port,
@@ -322,7 +340,10 @@ export async function startServer(config: StartServerConfig): Promise<void> {
     process.on("SIGINT", cleanup);
     process.on("SIGTERM", cleanup);
   } catch (error) {
-    console.error("Failed to start:", error instanceof Error ? error.message : error);
+    console.error(
+      "Failed to start:",
+      error instanceof Error ? error.message : error
+    );
     if (inngestProcess) inngestProcess.kill();
     if (serverProcess) serverProcess.kill();
     process.exit(1);
@@ -358,8 +379,12 @@ function printStartupBanner(opts: BannerOptions): void {
   console.log("");
   console.log(pc.bold(brandCyan("agentcmd")) + pc.dim(" ready"));
   console.log("");
-  console.log(pc.green("") + " Server     " + brandCyan(`http://localhost:${port}`));
-  console.log(pc.green("") + " Inngest    " + brandCyan(`http://localhost:${inngestPort}`));
+  console.log(
+    pc.green("") + " Server     " + brandCyan(`http://localhost:${port}`)
+  );
+  console.log(
+    pc.green("") + " Inngest    " + brandCyan(`http://localhost:${inngestPort}`)
+  );
   console.log(pc.green("") + " Database   " + pc.dim(dbPath));
   console.log(pc.green("") + " Logs       " + pc.dim(logPath));
   console.log("");
