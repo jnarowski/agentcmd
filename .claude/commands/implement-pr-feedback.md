@@ -15,6 +15,7 @@ Atomic operation: fetch PR comments → analyze → implement → commit → rep
 ## Instructions
 
 CRITICAL:
+
 - NEVER skip git hooks (no --no-verify)
 - Use HEREDOC for commit message with Claude footer
 - Check if changes exist before committing
@@ -47,6 +48,7 @@ gh pr view $PR_NUMBER --json reviews,reviewThreads
 ```
 
 This returns JSON with:
+
 - `reviews`: Array of review objects with `state` (APPROVED, CHANGES_REQUESTED, COMMENTED), `body`, `author`
 - `reviewThreads`: Array of thread objects with `isResolved`, `isOutdated`, `comments` (array with `body`, `path`, `line`, `id`, `author`)
 
@@ -55,11 +57,13 @@ This returns JSON with:
 Parse the JSON to extract actionable comments. Filter and classify:
 
 **Filter criteria (actionable comments):**
+
 - `isResolved === false`
 - `isOutdated === false`
 - NOT just approval/LGTM comments
 
 **Priority classification (based on keywords in comment body):**
+
 - **High**: Review state is `CHANGES_REQUESTED`, or body contains "must", "required", "blocking", "needs", "have to"
 - **Medium**: Body contains "should", "consider", "suggest", "recommend", "could you", "please"
 - **Low**: Body contains "?", "why", "how come", "curious"
@@ -96,6 +100,7 @@ For each actionable comment, in priority order (high → medium → low):
 5. Track which comment threads were addressed (save comment IDs and thread IDs)
 
 **Important:**
+
 - If implementation is uncertain or feedback conflicts, STOP and ask the user for guidance
 - If comment is outdated (refers to deleted lines), confirm with user before skipping
 - For code suggestions in markdown (` ```code``` `), extract and apply directly
@@ -163,6 +168,7 @@ mutation {
 ```
 
 **Error handling:**
+
 - If you get a 403 error (permission denied), skip resolving that thread and continue
 - Don't fail the entire operation if some threads can't be resolved
 - Track which threads were resolved vs. skipped
@@ -174,6 +180,7 @@ git push
 ```
 
 If push fails with "no upstream branch", use:
+
 ```bash
 git push -u origin $(git branch --show-current)
 ```
@@ -206,6 +213,7 @@ Successfully pushed changes to remote.
 ```
 
 If there were no actionable comments:
+
 ```
 ## PR Feedback Review Complete
 
