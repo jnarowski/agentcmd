@@ -41,5 +41,5 @@ export function setInngestEnvironment(options?: InngestEnvOptions): void {
   // INNGEST_BASE_URL points SDK to local Inngest server
   process.env.INNGEST_PORT = port.toString();
   process.env.INNGEST_BASE_URL = `http://${host}:${port}`;
-  process.env.INNGEST_DEV = 0;
+  process.env.INNGEST_DEV = "0";
 }
