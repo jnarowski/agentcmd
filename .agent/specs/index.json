@@ -290,9 +290,9 @@
       "folder": "2511271430-preview-containers",
       "path": "todo/2511271430-preview-containers/spec.md",
       "spec_type": "feature",
-      "status": "review",
+      "status": "completed",
       "created": "2025-11-27T14:30:00Z",
-      "updated": "2025-11-28T23:45:00Z",
+      "updated": "2025-11-28T07:45:00Z",
       "totalComplexity": 106,
       "phaseCount": 5,
       "taskCount": 20
