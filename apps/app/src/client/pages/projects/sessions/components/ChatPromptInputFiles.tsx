@@ -18,13 +18,13 @@ import {
 import { AtSignIcon, CheckIcon } from "lucide-react";
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useProjectFiles } from "@/client/pages/projects/files/hooks/useFiles";
-import Fuse from "fuse.js";
 import {
   flattenFileTree,
   extractFileReferences,
   type FileItem as FileItemType,
 } from "@/client/pages/projects/files/utils/fileUtils";
 import { FileItem } from "@/client/components/FileItem";
+import { searchFiles } from "@/client/utils/searchFiles";
 
 interface ChatPromptInputFilesProps {
   open: boolean;
@@ -99,18 +99,6 @@ export const ChatPromptInputFiles = ({
     return flattenFileTree(data || []);
   }, [data]);
 
-  // Setup Fuse.js search
-  const fuse = useMemo(() => {
-    return new Fuse(flattenedFiles, {
-      keys: [
-        { name: "filename", weight: 0.7 },
-        { name: "fullPath", weight: 0.3 },
-      ],
-      threshold: 0.5,
-      includeScore: true,
-    });
-  }, [flattenedFiles]);
-
   // Parse added files when menu opens
   useEffect(() => {
     if (open) {
@@ -127,34 +115,17 @@ export const ChatPromptInputFiles = ({
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Filter files based on search query (hybrid: substring first, fuzzy fallback)
+  // Filter files based on search query
   const filteredFiles = useMemo(() => {
     if (!debouncedQuery) {
       return flattenedFiles;
     }
 
-    const query = debouncedQuery.toLowerCase();
-
-    // First: case-insensitive substring match on filename
-    const substringMatches = flattenedFiles.filter((file) =>
-      file.filename.toLowerCase().includes(query)
-    );
-
-    if (substringMatches.length > 0) {
-      // Sort: prefix matches first, then by filename length
-      return substringMatches.sort((a, b) => {
-        const aStartsWith = a.filename.toLowerCase().startsWith(query);
-        const bStartsWith = b.filename.toLowerCase().startsWith(query);
-        if (aStartsWith && !bStartsWith) return -1;
-        if (!aStartsWith && bStartsWith) return 1;
-        return a.filename.length - b.filename.length;
-      });
-    }
-
-    // Fallback: fuzzy search
-    const results = fuse.search(debouncedQuery);
-    return results.map((result) => result.item);
-  }, [debouncedQuery, fuse, flattenedFiles]);
+    return searchFiles(debouncedQuery, flattenedFiles, {
+      maxResults: 50,
+      useFuzzyFallback: true,
+    });
+  }, [debouncedQuery, flattenedFiles]);
 
   // Focus command input when menu opens
   useEffect(() => {
