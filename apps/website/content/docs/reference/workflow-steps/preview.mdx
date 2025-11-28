@@ -1,0 +1,282 @@
+---
+title: Preview Step
+description: Docker-based preview containers for testing and review
+---
+
+import { Card, Cards } from 'fumadocs-ui/components/card';
+
+Start Docker preview containers to test and review your application.
+
+## Overview
+
+Launch Docker-based preview environments directly from your workflow. Preview containers provide isolated, production-like environments for testing AI-generated code changes.
+
+**Use for**: Testing feature branches, reviewing PR changes, running integration tests in isolated environments
+
+## Configuration
+
+{/* AUTO-GENERATED:preview-step-config START */}
+{/* Source: packages/agentcmd-workflows/src/types/steps.ts */}
+{/* Last updated: 2025-11-28 */}
+
+```typescript
+interface PreviewStepConfig {
+  /** Port mapping: key = env var name, value = container port */
+  ports?: Record<string, number>;
+  /** Environment variables for the container */
+  env?: Record<string, string>;
+  /** Custom Docker file path (overrides auto-detection) */
+  dockerFilePath?: string;
+  /** Memory limit (e.g., "1g", "512m") */
+  maxMemory?: string;
+  /** CPU limit (e.g., "1.0", "0.5") */
+  maxCpus?: string;
+}
+```
+
+**Timeout**: 5 minutes (300,000ms)
+
+{/* AUTO-GENERATED:preview-step-config END */}
+
+### Result
+
+```typescript
+interface PreviewStepResult {
+  data: {
+    containerId: string;
+    status: string;  // "running" | "stopped" | "failed" | "skipped"
+    urls: Record<string, string>;  // { app: "http://localhost:5000" }
+  };
+  success: boolean;
+  error?: string;
+  trace: TraceEntry[];
+}
+```
+
+## Basic Usage
+
+### Simple Preview
+
+```typescript
+// Uses project's docker-compose.yml with default settings
+const preview = await step.preview("deploy");
+
+console.log(preview.data.urls);
+// { app: "http://localhost:5000" }
+```
+
+### Custom Port Configuration
+
+```typescript
+const preview = await step.preview("deploy", {
+  ports: { PORT: 3000, VITE_PORT: 5173 },
+});
+
+// Container receives env vars:
+// PREVIEW_PORT_PORT=5000 (allocated)
+// PREVIEW_PORT_VITE_PORT=5001 (allocated)
+```
+
+### With Environment Variables
+
+```typescript
+const preview = await step.preview("staging", {
+  env: {
+    NODE_ENV: "preview",
+    API_URL: "https://api.staging.example.com",
+  },
+});
+```
+
+### Custom Docker File
+
+```typescript
+const preview = await step.preview("deploy", {
+  dockerFilePath: "docker/compose-preview.yml",
+});
+```
+
+### Resource Limits
+
+```typescript
+const preview = await step.preview("deploy", {
+  maxMemory: "2g",
+  maxCpus: "2.0",
+});
+```
+
+## Docker Configuration
+
+### docker-compose.yml (Recommended)
+
+Use `PREVIEW_PORT_{NAME}` environment variables for dynamic port allocation:
+
+```yaml
+services:
+  app:
+    build: .
+    ports:
+      - "${PREVIEW_PORT_APP:-3000}:3000"
+    environment:
+      - PORT=3000
+```
+
+### Multi-Service Setup
+
+```yaml
+services:
+  server:
+    build: .
+    ports:
+      - "${PREVIEW_PORT_SERVER:-4100}:4100"
+    command: pnpm dev:server
+
+  client:
+    build: .
+    ports:
+      - "${PREVIEW_PORT_CLIENT:-4101}:4101"
+    command: pnpm dev:client
+
+  db:
+    image: postgres:15
+    ports:
+      - "${PREVIEW_PORT_DB:-5432}:5432"
+    environment:
+      POSTGRES_PASSWORD: preview
+```
+
+### Dockerfile Only
+
+If no docker-compose.yml exists, a Dockerfile is used:
+
+```dockerfile
+FROM node:22-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+ENV PORT=3000
+EXPOSE 3000
+CMD ["node", "dist/index.js"]
+```
+
+## Common Patterns
+
+### Agent → Build → Preview
+
+```typescript
+// AI implements feature
+await step.agent("implement", {
+  agent: "claude",
+  prompt: "Implement user authentication",
+});
+
+// Build the application
+await step.cli("build", { command: "pnpm build" });
+
+// Start preview
+const preview = await step.preview("deploy");
+
+// Create annotation with preview URL
+await step.annotation("preview-ready", {
+  message: `Preview available at ${preview.data.urls.app}`,
+});
+```
+
+### Preview with Worktree Isolation
+
+```typescript
+// Create isolated worktree
+const worktree = await step.git("setup", {
+  operation: "worktree-add",
+  projectPath,
+  branch: "feat/my-feature",
+  worktreeName: `run-${runId}`,
+});
+
+// Work in isolated environment
+await step.agent("implement", {
+  agent: "claude",
+  prompt: "Implement feature",
+  workingDir: worktree.data.worktreePath,
+});
+
+// Preview the isolated changes
+const preview = await step.preview("deploy");
+```
+
+### Graceful Docker Unavailability
+
+When Docker is not available, the step succeeds with empty URLs:
+
+```typescript
+const preview = await step.preview("deploy");
+
+if (Object.keys(preview.data.urls).length === 0) {
+  // Docker unavailable - skip preview-dependent steps
+  await step.annotation("no-preview", {
+    message: "Preview skipped - Docker not available",
+  });
+} else {
+  // Preview running
+  await step.annotation("preview-ready", {
+    message: `Preview at ${preview.data.urls.app}`,
+  });
+}
+```
+
+## Port Allocation
+
+- Ports are allocated from range 5000-5999
+- Each container gets unique ports to avoid conflicts
+- Port names become uppercase env vars: `app` → `PREVIEW_PORT_APP`
+- Multiple previews can run simultaneously
+
+## Best Practices
+
+**Use descriptive port names**:
+```typescript
+ports: { SERVER: 4100, CLIENT: 4101 }  // Clear intent
+// vs
+ports: { PORT1: 4100, PORT2: 4101 }    // Unclear
+```
+
+**Set resource limits** for resource-intensive apps:
+```typescript
+{
+  maxMemory: "2g",
+  maxCpus: "1.0",
+}
+```
+
+**Include health checks** in your Dockerfile:
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD curl -f http://localhost:3000/health || exit 1
+```
+
+## Requirements
+
+- **Docker**: Must be installed and running
+- **Docker Compose v2**: Uses `docker compose` (not `docker-compose`)
+
+```bash
+# Install Docker (macOS)
+brew install --cask docker
+
+# Verify installation
+docker --version
+docker compose version
+```
+
+## Next Steps
+
+<Cards>
+  <Card title="Git Step" href="/docs/reference/workflow-steps/git">
+    Commit and push after preview testing
+  </Card>
+  <Card title="CLI Step" href="/docs/reference/workflow-steps/cli-step">
+    Run tests against preview environment
+  </Card>
+</Cards>

@@ -1,6 +1,8 @@
 export interface Container {
   id: string;
   workflow_run_id: string | null;
+  workflow_definition_id: string | null;
+  workflow_run_name: string | null;
   project_id: string;
   status: "pending" | "starting" | "running" | "stopped" | "failed";
   ports: Record<string, number>;

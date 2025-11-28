@@ -539,8 +539,10 @@ export interface ContainerCreatedData {
 
 export interface ContainerUpdatedData {
   containerId: string;
+  workflowRunId: string | null;
   changes: {
     status?: string;
+    urls?: Record<string, string>;
   };
 }
 

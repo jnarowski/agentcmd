@@ -1,9 +1,29 @@
 import { prisma } from "@/shared/prisma";
 import { broadcast } from "@/server/websocket/infrastructure/subscriptions";
 import { Channels } from "@/shared/websocket";
+import { config } from "@/server/config";
 import * as dockerClient from "../utils/dockerClient";
 import type { StopContainerByIdOptions } from "./types";
 import type { Container } from "@prisma/client";
+
+type ContainerWithUrls = Container & {
+  urls: Record<string, string> | null;
+  workflow_definition_id: string | null;
+  workflow_run_name: string | null;
+};
+
+// PRIVATE HELPERS
+
+function buildContainerUrls(ports: Record<string, number>): Record<string, string> {
+  const { externalHost } = config.server;
+  return Object.entries(ports).reduce(
+    (acc, [name, port]) => {
+      acc[name] = `http://${externalHost}:${port}`;
+      return acc;
+    },
+    {} as Record<string, string>
+  );
+}
 
 // PUBLIC API
 
@@ -21,12 +41,20 @@ import type { Container } from "@prisma/client";
  */
 export async function stopContainer(
   options: StopContainerByIdOptions
-): Promise<Container> {
+): Promise<ContainerWithUrls> {
   const { containerId } = options;
 
-  // Fetch container by ID
+  // Fetch container by ID with workflow run relation
   const container = await prisma.container.findUnique({
     where: { id: containerId },
+    include: {
+      workflow_run: {
+        select: {
+          workflow_definition_id: true,
+          name: true,
+        },
+      },
+    },
   });
 
   if (!container) {
@@ -48,6 +76,14 @@ export async function stopContainer(
         status: "stopped",
         stopped_at: new Date(),
       },
+      include: {
+        workflow_run: {
+          select: {
+            workflow_definition_id: true,
+            name: true,
+          },
+        },
+      },
     });
 
     // Broadcast WebSocket event
@@ -55,11 +91,18 @@ export async function stopContainer(
       type: "container.updated",
       data: {
         containerId,
+        workflowRunId: container.workflow_run_id,
         changes: { status: "stopped" },
       },
     });
 
-    return updatedContainer;
+    const ports = updatedContainer.ports as Record<string, number> | null;
+    return {
+      ...updatedContainer,
+      urls: ports ? buildContainerUrls(ports) : null,
+      workflow_definition_id: updatedContainer.workflow_run?.workflow_definition_id ?? null,
+      workflow_run_name: updatedContainer.workflow_run?.name ?? null,
+    };
   } catch (error) {
     // Update status to "failed"
     await prisma.container.update({
@@ -75,6 +118,7 @@ export async function stopContainer(
       type: "container.updated",
       data: {
         containerId,
+        workflowRunId: container.workflow_run_id,
         changes: { status: "failed" },
       },
     });

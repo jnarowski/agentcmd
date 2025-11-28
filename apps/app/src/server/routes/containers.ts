@@ -31,6 +31,8 @@ const containerQuerySchema = z.object({
 const containerResponseSchema = z.object({
   id: z.string(),
   workflow_run_id: z.string().nullable(),
+  workflow_definition_id: z.string().nullable(),
+  workflow_run_name: z.string().nullable(),
   project_id: z.string(),
   status: z.string(),
   ports: z.record(z.string(), z.number()),

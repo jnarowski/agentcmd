@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ExternalLink, StopCircle, FileText, Workflow } from "lucide-react";
+import { ExternalLink, StopCircle, FileText } from "lucide-react";
 import { toast } from "sonner";
 import type { Container } from "../types/container.types";
 import { useStopContainer } from "../hooks/useStopContainer";
@@ -78,11 +78,18 @@ export function ContainerCard({ container }: ContainerCardProps) {
           <h3 className="font-medium text-sm text-foreground truncate">
             {containerName}
           </h3>
-          {container.compose_project && (
+          {container.workflow_run_id && container.workflow_definition_id ? (
+            <Link
+              to={`/projects/${container.project_id}/workflows/${container.workflow_definition_id}/runs/${container.workflow_run_id}`}
+              className="text-xs text-muted-foreground hover:text-primary truncate block"
+            >
+              {container.workflow_run_name || "View Workflow Run"}
+            </Link>
+          ) : container.compose_project ? (
             <p className="text-xs text-muted-foreground truncate">
               {container.id.slice(0, 8)}
             </p>
-          )}
+          ) : null}
         </div>
         <span
           className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusConfig.bgColor} ${statusConfig.textColor}`}
@@ -90,19 +97,6 @@ export function ContainerCard({ container }: ContainerCardProps) {
           {statusConfig.label}
         </span>
       </div>
-
-      {/* Workflow Run Link */}
-      {container.workflow_run_id && (
-        <div className="mb-3">
-          <Link
-            to={`/projects/${container.project_id}/workflow-runs/${container.workflow_run_id}`}
-            className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-          >
-            <Workflow className="h-3 w-3" />
-            View Workflow Run
-          </Link>
-        </div>
-      )}
 
       {/* Error message */}
       {container.error_message && (

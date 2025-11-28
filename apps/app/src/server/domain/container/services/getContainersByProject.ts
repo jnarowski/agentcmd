@@ -17,7 +17,11 @@ function buildContainerUrls(ports: Record<string, number>): Record<string, strin
   );
 }
 
-type ContainerWithUrls = Container & { urls: Record<string, string> | null };
+type ContainerWithUrls = Container & {
+  urls: Record<string, string> | null;
+  workflow_definition_id: string | null;
+  workflow_run_name: string | null;
+};
 
 // PUBLIC API
 
@@ -45,13 +49,24 @@ export async function getContainersByProject(
       project_id: projectId,
       ...(status && { status }),
     },
+    include: {
+      workflow_run: {
+        select: {
+          workflow_definition_id: true,
+          name: true,
+        },
+      },
+    },
     orderBy: {
       created_at: "desc",
     },
   });
 
+  // Type for containers with the included workflow_run relation
+  type ContainerWithRun = (typeof containers)[number];
+
   // Verify containers marked as "running" or "starting" are actually running
-  const verifiedContainers: Container[] = [];
+  const verifiedContainers: ContainerWithRun[] = [];
 
   for (const container of containers) {
     if (container.status === "running" || container.status === "starting") {
@@ -63,7 +78,7 @@ export async function getContainersByProject(
 
       if (!isRunning) {
         // Update stale status to "stopped"
-        const updated = await prisma.container.update({
+        await prisma.container.update({
           where: { id: container.id },
           data: {
             status: "stopped",
@@ -73,7 +88,11 @@ export async function getContainersByProject(
 
         // Only include if we're not filtering by running status
         if (status !== "running" && status !== "starting") {
-          verifiedContainers.push(updated);
+          verifiedContainers.push({
+            ...container,
+            status: "stopped",
+            stopped_at: new Date(),
+          });
         }
       } else {
         verifiedContainers.push(container);
@@ -83,12 +102,14 @@ export async function getContainersByProject(
     }
   }
 
-  // Add computed URLs to each container
+  // Add computed URLs and workflow_definition_id to each container
   return verifiedContainers.map((container) => {
     const ports = container.ports as Record<string, number> | null;
     return {
       ...container,
       urls: ports ? buildContainerUrls(ports) : null,
+      workflow_definition_id: container.workflow_run?.workflow_definition_id ?? null,
+      workflow_run_name: container.workflow_run?.name ?? null,
     };
   });
 }

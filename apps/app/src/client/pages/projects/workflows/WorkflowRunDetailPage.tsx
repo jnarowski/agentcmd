@@ -168,7 +168,7 @@ function WorkflowRunDetailPage() {
         }
         actions={
           <div className="hidden md:flex gap-2">
-            {run.container?.urls && Object.keys(run.container.urls).length > 0 && (
+            {run.container?.status === "running" && run.container?.urls && Object.keys(run.container.urls).length > 0 && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">

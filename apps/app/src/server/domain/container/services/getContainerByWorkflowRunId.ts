@@ -1,6 +1,26 @@
 import { prisma } from "@/shared/prisma";
+import { config } from "@/server/config";
 import * as dockerClient from "../utils/dockerClient";
 import type { Container } from "@prisma/client";
+
+type ContainerWithUrls = Container & {
+  urls: Record<string, string> | null;
+  workflow_definition_id: string | null;
+  workflow_run_name: string | null;
+};
+
+// PRIVATE HELPERS
+
+function buildContainerUrls(ports: Record<string, number>): Record<string, string> {
+  const { externalHost } = config.server;
+  return Object.entries(ports).reduce(
+    (acc, [name, port]) => {
+      acc[name] = `http://${externalHost}:${port}`;
+      return acc;
+    },
+    {} as Record<string, string>
+  );
+}
 
 // PUBLIC API
 
@@ -22,11 +42,19 @@ export interface GetContainerByWorkflowRunIdOptions {
  */
 export async function getContainerByWorkflowRunId(
   options: GetContainerByWorkflowRunIdOptions
-): Promise<Container | null> {
+): Promise<ContainerWithUrls | null> {
   const { workflowRunId } = options;
 
   const container = await prisma.container.findUnique({
     where: { workflow_run_id: workflowRunId },
+    include: {
+      workflow_run: {
+        select: {
+          workflow_definition_id: true,
+          name: true,
+        },
+      },
+    },
   });
 
   if (!container) {
@@ -43,15 +71,31 @@ export async function getContainerByWorkflowRunId(
 
     if (!isRunning) {
       // Update stale status to "stopped"
-      return await prisma.container.update({
+      await prisma.container.update({
         where: { id: container.id },
         data: {
           status: "stopped",
           stopped_at: new Date(),
         },
       });
+
+      const ports = container.ports as Record<string, number> | null;
+      return {
+        ...container,
+        status: "stopped",
+        stopped_at: new Date(),
+        urls: ports ? buildContainerUrls(ports) : null,
+        workflow_definition_id: container.workflow_run?.workflow_definition_id ?? null,
+        workflow_run_name: container.workflow_run?.name ?? null,
+      };
     }
   }
 
-  return container;
+  const ports = container.ports as Record<string, number> | null;
+  return {
+    ...container,
+    urls: ports ? buildContainerUrls(ports) : null,
+    workflow_definition_id: container.workflow_run?.workflow_definition_id ?? null,
+    workflow_run_name: container.workflow_run?.name ?? null,
+  };
 }

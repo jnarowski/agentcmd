@@ -1,6 +1,7 @@
 import { StepDefaultRow } from "@/client/pages/projects/workflows/components/timeline/StepDefaultRow";
 import { StepAgentRow } from "@/client/pages/projects/workflows/components/timeline/StepAgentRow";
 import { StepGitRow } from "@/client/pages/projects/workflows/components/timeline/StepGitRow";
+import { StepPreviewRow } from "@/client/pages/projects/workflows/components/timeline/StepPreviewRow";
 import type { WorkflowRunStep } from "@/shared/types/workflow-step.types";
 import type { WorkflowTab } from "@/client/pages/projects/workflows/hooks/useWorkflowDetailPanel";
 
@@ -35,6 +36,10 @@ export function StepRow({ step, projectId, onSelectSession, onSelectStep, onSetA
           onSetActiveTab={onSetActiveTab}
         />
       );
+
+    case "preview":
+      // Preview steps with URL links
+      return <StepPreviewRow step={step} onSelectStep={onSelectStep} onSetActiveTab={onSetActiveTab} />;
 
     case "artifact":
     case "annotation":

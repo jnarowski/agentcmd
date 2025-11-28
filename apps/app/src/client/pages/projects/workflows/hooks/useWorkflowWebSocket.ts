@@ -4,13 +4,14 @@ import { useWebSocket } from "@/client/hooks/useWebSocket";
 import { Channels } from "@/shared/websocket";
 import {
   WorkflowWebSocketEventTypes,
-  type WorkflowWebSocketEvent,
+  ContainerWebSocketEventTypes,
   type WorkflowRunUpdatedData,
   type WorkflowStepCreatedData,
   type WorkflowStepUpdatedData,
   type WorkflowStepLogChunkData,
   type WorkflowEventCreatedData,
   type WorkflowArtifactCreatedData,
+  type ContainerUpdatedData,
 } from "@/shared/types/websocket.types";
 import { toast } from "sonner";
 import type {
@@ -255,39 +256,76 @@ export function useWorkflowWebSocket(projectId: string) {
     [eventBus]
   );
 
+  // Handler: container.updated
+  const handleContainerUpdated = useCallback(
+    (data: ContainerUpdatedData) => {
+      const { workflowRunId, changes } = data;
+
+      // Only update if container belongs to a workflow run
+      if (!workflowRunId) return;
+
+      // Update the workflow run's container in cache
+      queryClient.setQueryData<WorkflowRunDetail>(
+        workflowKeys.run(workflowRunId),
+        (old) => {
+          if (!old || !old.container) return old;
+          return {
+            ...old,
+            container: {
+              ...old.container,
+              status: changes.status ?? old.container.status,
+              urls: changes.urls ?? old.container.urls,
+            },
+          };
+        }
+      );
+    },
+    [queryClient]
+  );
+
   // Main event handler
   const handleWorkflowEvent = useCallback(
-    (event: WorkflowWebSocketEvent) => {
-      // Ignore non-workflow events (container events share project channel)
-      if (!event.type.startsWith("workflow.")) return;
+    (event: { type: string; data: unknown }) => {
+      // Handle workflow events
+      if (event.type.startsWith("workflow.")) {
+        switch (event.type) {
+          case WorkflowWebSocketEventTypes.RUN_UPDATED:
+            handleRunUpdated(event.data as WorkflowRunUpdatedData);
+            break;
+          case WorkflowWebSocketEventTypes.STEP_CREATED:
+            handleStepCreated(event.data as WorkflowStepCreatedData);
+            break;
+          case WorkflowWebSocketEventTypes.STEP_UPDATED:
+            handleStepUpdated(event.data as WorkflowStepUpdatedData);
+            break;
+          case WorkflowWebSocketEventTypes.STEP_LOG_CHUNK:
+            handleLogChunk(event.data as WorkflowStepLogChunkData);
+            break;
+          case WorkflowWebSocketEventTypes.EVENT_CREATED:
+            handleEventCreated(event.data as WorkflowEventCreatedData);
+            break;
+          case WorkflowWebSocketEventTypes.ARTIFACT_CREATED:
+            handleArtifactCreated(event.data as WorkflowArtifactCreatedData);
+            break;
+          default:
+            console.warn("Unknown workflow event type:", event.type);
+        }
+        return;
+      }
 
-      switch (event.type) {
-        case WorkflowWebSocketEventTypes.RUN_UPDATED:
-          handleRunUpdated(event.data);
-          break;
-        case WorkflowWebSocketEventTypes.STEP_CREATED:
-          handleStepCreated(event.data);
-          break;
-        case WorkflowWebSocketEventTypes.STEP_UPDATED:
-          handleStepUpdated(event.data);
-          break;
-        case WorkflowWebSocketEventTypes.STEP_LOG_CHUNK:
-          handleLogChunk(event.data);
-          break;
-        case WorkflowWebSocketEventTypes.EVENT_CREATED:
-          handleEventCreated(event.data);
-          break;
-        case WorkflowWebSocketEventTypes.ARTIFACT_CREATED:
-          handleArtifactCreated(event.data);
-          break;
-        default: {
-          // Exhaustive check: if we get here, TypeScript will error
-          const _exhaustiveCheck: never = event;
-          console.warn("Unknown workflow event type:", _exhaustiveCheck);
+      // Handle container events
+      if (event.type.startsWith("container.")) {
+        switch (event.type) {
+          case ContainerWebSocketEventTypes.UPDATED:
+            handleContainerUpdated(event.data as ContainerUpdatedData);
+            break;
+          default:
+            // Ignore other container events (e.g., container.created)
+            break;
         }
       }
     },
-    [handleRunUpdated, handleStepCreated, handleStepUpdated, handleLogChunk, handleEventCreated, handleArtifactCreated]
+    [handleRunUpdated, handleStepCreated, handleStepUpdated, handleLogChunk, handleEventCreated, handleArtifactCreated, handleContainerUpdated]
   );
 
   useEffect(() => {

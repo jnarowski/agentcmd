@@ -171,6 +171,7 @@ describe("stopContainer", () => {
         type: "container.updated",
         data: expect.objectContaining({
           containerId: container.id,
+          workflowRunId: null,
           changes: { status: "stopped" },
         }),
       })

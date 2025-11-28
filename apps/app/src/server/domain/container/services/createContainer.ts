@@ -172,7 +172,8 @@ export async function createContainer(
       type: "container.updated",
       data: {
         containerId: container.id,
-        changes: { status: "running" },
+        workflowRunId: workflowRunId ?? null,
+        changes: { status: "running", urls },
       },
     });
 
@@ -197,6 +198,7 @@ export async function createContainer(
       type: "container.updated",
       data: {
         containerId: container.id,
+        workflowRunId: workflowRunId ?? null,
         changes: { status: "failed" },
       },
     });

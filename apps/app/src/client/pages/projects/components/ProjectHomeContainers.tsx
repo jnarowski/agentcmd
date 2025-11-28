@@ -35,7 +35,15 @@ export function ProjectHomeContainers({
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
           Use <code className="rounded bg-muted px-1 py-0.5">step.preview()</code> in
-          workflows to create preview containers
+          workflows to create preview containers.{" "}
+          <a
+            href="https://agentcmd.dev/docs/reference/workflow-steps/preview"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary underline-offset-4 hover:underline"
+          >
+            Learn more →
+          </a>
         </p>
       </div>
     );

@@ -404,7 +404,11 @@ describe("createContainer", () => {
         expect.objectContaining({
           type: "container.updated",
           data: expect.objectContaining({
-            changes: { status: "running" },
+            workflowRunId: null,
+            changes: expect.objectContaining({
+              status: "running",
+              urls: { PORT: "http://localhost:5000" },
+            }),
           }),
         })
       );

@@ -1,12 +1,12 @@
 ---
 title: Workflow Steps
-description: 8 step types for building workflows
+description: 9 step types for building workflows
 ---
 
 import { Card, Cards } from 'fumadocs-ui/components/card';
 import { AgentCmd } from '@/components/AgentCmd';
 
-Steps are the building blocks of workflows. <AgentCmd /> provides 8 step types to handle different automation tasks.
+Steps are the building blocks of workflows. <AgentCmd /> provides 9 step types to handle different automation tasks.
 
 ## Step Types Overview
 
@@ -16,6 +16,7 @@ Steps are the building blocks of workflows. <AgentCmd /> provides 8 step types t
 | **ai** | Non-interactive AI text/structured generation | 5 min | [Learn more →](/docs/reference/workflow-steps/ai) |
 | **cli** | Execute shell commands | 5 min | [Learn more →](/docs/reference/workflow-steps/cli-step) |
 | **git** | Git operations (commit, branch, PR) | 2 min | [Learn more →](/docs/reference/workflow-steps/git) |
+| **preview** | Docker-based preview containers | 5 min | [Learn more →](/docs/reference/workflow-steps/preview) |
 | **artifact** | Upload files/images/directories | 5 min | [Learn more →](/docs/reference/workflow-steps/artifact) |
 | **annotation** | Progress notes for timeline | Instant | [Learn more →](/docs/reference/workflow-steps/annotation) |
 | **phase** | Group related steps | N/A | [Learn more →](/docs/reference/workflow-steps/phase) |
@@ -86,6 +87,22 @@ await step.git("create-feature-branch", {
 ```
 
 **When to use**: Commit changes, create branches, open PRs
+
+### Preview Step
+
+Start Docker preview containers:
+
+```typescript
+const preview = await step.preview("deploy", {
+  ports: { SERVER: 4100, CLIENT: 4101 },
+  env: { NODE_ENV: "preview" },
+});
+
+console.log(preview.data.urls);
+// { SERVER: "http://localhost:5000", CLIENT: "http://localhost:5001" }
+```
+
+**When to use**: Test changes in isolated Docker environments, review PRs with live previews
 
 ### Artifact Step
 
@@ -287,7 +304,7 @@ await step.cli("run-command", { ... }); // Duplicate!
     Complete API for agent steps
   </Card>
   <Card title="All Step Types" href="/docs/reference/workflow-steps">
-    Detailed docs for all 8 step types
+    Detailed docs for all 9 step types
   </Card>
   <Card title="Workflow Examples" href="/docs/examples">
     Real workflows using steps

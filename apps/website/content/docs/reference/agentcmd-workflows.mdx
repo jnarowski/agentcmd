@@ -231,6 +231,7 @@ All step methods are available on the `step` object passed to your workflow hand
 | `step.git()` | Git operations (commit, branch, PR) | [Git](/docs/reference/workflow-steps/git) |
 | `step.cli()` | Shell command execution | [CLI](/docs/reference/workflow-steps/cli-step) |
 | `step.ai()` | Text/structured generation | [AI](/docs/reference/workflow-steps/ai) |
+| `step.preview()` | Docker preview containers | [Preview](/docs/reference/workflow-steps/preview) |
 | `step.artifact()` | File and text artifacts | [Artifact](/docs/reference/workflow-steps/artifact) |
 | `step.annotation()` | Progress notes | [Annotation](/docs/reference/workflow-steps/annotation) |
 | `step.log()` | Logging | [Log](/docs/reference/workflow-steps/log) |
@@ -348,6 +349,7 @@ await step.agent<CmdImplementSpecResponse>("implement", {
 | Git | 2 minutes |
 | CLI | 5 minutes |
 | AI | 5 minutes |
+| Preview | 5 minutes |
 | Artifact | 5 minutes |
 
 Override per-step:

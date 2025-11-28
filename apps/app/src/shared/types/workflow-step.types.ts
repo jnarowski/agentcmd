@@ -5,6 +5,7 @@ import type {
   AgentStepResult,
   ArtifactStepResult,
   AnnotationStepResult,
+  PreviewStepResult,
 } from "agentcmd-workflows";
 
 /**
@@ -15,7 +16,7 @@ export interface WorkflowRunStepBase {
   workflow_run_id: string;
   inngest_step_id: string;
   name: string;
-  step_type: "git" | "cli" | "ai" | "agent" | "artifact" | "annotation" | "conditional" | "loop";
+  step_type: "git" | "cli" | "ai" | "agent" | "artifact" | "annotation" | "conditional" | "loop" | "preview";
   phase: string;
   status: "pending" | "running" | "completed" | "failed" | "skipped" | "cancelled";
   agent_session_id: string | null;
@@ -156,6 +157,21 @@ export interface WorkflowRunStepLoop {
 }
 
 /**
+ * Preview step with typed args and output
+ */
+export interface WorkflowRunStepPreview {
+  step_type: "preview";
+  args: {
+    ports?: Record<string, number>;
+    env?: Record<string, string>;
+    dockerFilePath?: string;
+    maxMemory?: string;
+    maxCpus?: string;
+  } | null;
+  output: PreviewStepResult | null;
+}
+
+/**
  * Discriminated union of all step types
  */
 export type WorkflowRunStepTyped =
@@ -166,7 +182,8 @@ export type WorkflowRunStepTyped =
   | WorkflowRunStepArtifact
   | WorkflowRunStepAnnotation
   | WorkflowRunStepConditional
-  | WorkflowRunStepLoop;
+  | WorkflowRunStepLoop
+  | WorkflowRunStepPreview;
 
 /**
  * Complete workflow run step with type-safe args and output
@@ -223,4 +240,8 @@ export function isConditionalStep(step: WorkflowRunStep): step is WorkflowRunSte
 
 export function isLoopStep(step: WorkflowRunStep): step is WorkflowRunStepBase & WorkflowRunStepLoop {
   return step.step_type === "loop";
+}
+
+export function isPreviewStep(step: WorkflowRunStep): step is WorkflowRunStepBase & WorkflowRunStepPreview {
+  return step.step_type === "preview";
 }
