@@ -98,7 +98,7 @@ export default defineWorkflow(
         });
 
         await step.annotation("review-cycle-completed", {
-          message: `Review cycle ${cycle} ${review.success ? "passed" : "failed"}. ${review.summary}`,
+          message: `Review Cycle ${cycle} - ${review.success ? "✓ Complete" : "✗ Incomplete"}\n\n${review.summary}`,
         });
 
         if (review.success) {

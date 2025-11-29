@@ -20,7 +20,6 @@ test.describe("Sessions - Create Session", () => {
     // Seed a project for testing
     const project = await db.seedProject({
       name: "E2E Test Project",
-      path: "/tmp/e2e-test-project",
     });
 
     // Create page objects
@@ -56,7 +55,6 @@ test.describe("Sessions - Create Session", () => {
     // Seed a project for testing
     const project = await db.seedProject({
       name: "E2E Test Project 2",
-      path: "/tmp/e2e-test-project-2",
     });
 
     // Create page objects
@@ -90,15 +88,14 @@ test.describe("Sessions - With Agent Responses", () => {
     authenticatedPage,
     db,
   }) => {
-    // Ensure project directory exists
-    const { mkdirSync } = await import("node:fs");
-    const projectPath = "/tmp/e2e-test-project-3";
-    mkdirSync(projectPath, { recursive: true });
-
+    // Seed project (uses standardized .agentcmd-e2e-test- prefix)
     const project = await db.seedProject({
       name: "E2E Test Project 3",
-      path: projectPath,
     });
+
+    // Create the directory for the project (needed for Claude CLI execution)
+    const { mkdirSync } = await import("node:fs");
+    mkdirSync(project.path, { recursive: true });
 
     const newSessionPage = new NewSessionPage(authenticatedPage);
     const sessionPage = new SessionPage(authenticatedPage);
@@ -120,7 +117,6 @@ test.describe("Sessions - With Agent Responses", () => {
   }) => {
     const project = await db.seedProject({
       name: "E2E Test Project 4",
-      path: "/tmp/e2e-test-project-4",
     });
 
     const newSessionPage = new NewSessionPage(authenticatedPage);

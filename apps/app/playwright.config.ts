@@ -41,10 +41,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
 
   // Reporter configuration
-  reporter: [
-    ["html", { outputFolder: "./playwright-report" }],
-    ["list"],
-  ],
+  reporter: [["html", { outputFolder: "./playwright-report" }], ["list"]],
 
   // Global setup and teardown
   globalSetup: join(__dirname, "e2e/global-setup.ts"),
@@ -54,10 +51,8 @@ export default defineConfig({
     // Base URL - tests use relative paths: page.goto("/login") instead of "http://localhost:5101/login"
     baseURL: "http://localhost:5101",
 
-    // Collect trace on first retry for debugging
-    trace: "on-first-retry",
-
-    // Screenshot and video on failure for debugging
+    // Collect trace and video on failure for debugging
+    trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
 
@@ -82,13 +77,14 @@ export default defineConfig({
       url: "http://localhost:5100/api/health",
       reuseExistingServer: false, // Always start fresh E2E server
       timeout: 30_000,
+      stdout: "pipe", // Show server logs in test output
       env: {
         ...process.env,
         PORT: "5100",
         NODE_ENV: "test",
         DATABASE_URL: E2E_DATABASE_URL,
         JWT_SECRET: "e2e-test-secret-key-12345",
-        CLAUDE_CLI_PATH: `${process.env.HOME}/.claude/local/claude`,
+        LOG_LEVEL: "debug", // Enable verbose logging for debugging
       },
     },
     {

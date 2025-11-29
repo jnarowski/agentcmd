@@ -114,7 +114,7 @@ export async function createServer() {
                     size: "5m",
                     mkdir: true,
                     limit: {
-                      count: 30,
+                      count: 3,
                     },
                   },
                   level: serverConfig.logLevel,
@@ -146,7 +146,7 @@ export async function createServer() {
                     size: "5m",
                     mkdir: true,
                     limit: {
-                      count: 7,
+                      count: 3,
                     },
                   },
                   level: serverConfig.logLevel,
