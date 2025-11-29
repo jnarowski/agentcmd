@@ -119,6 +119,10 @@ export function ProjectCombobox() {
       <CommandList>
         <CommandEmpty>No projects found</CommandEmpty>
         <CommandGroup>
+          <CommandItem onSelect={handleNewProject}>
+            <Plus className="size-4 mr-2" />
+            New Project
+          </CommandItem>
           <CommandItem
             value="__show_all__"
             onSelect={() => handleSelect("__show_all__")}
@@ -160,12 +164,6 @@ export function ProjectCombobox() {
             </CommandGroup>
           </>
         )}
-        <CommandGroup>
-          <CommandItem onSelect={handleNewProject}>
-            <Plus className="size-4 mr-2" />
-            New Project
-          </CommandItem>
-        </CommandGroup>
       </CommandList>
     </Command>
   );
@@ -174,42 +172,31 @@ export function ProjectCombobox() {
   if (!isMobile) {
     return (
       <div className="px-2 pt-3 pb-2">
-        <div className="flex items-center gap-2">
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={open}
-                className="flex-1 justify-between h-9"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <FolderOpen className="size-4 shrink-0 opacity-70" />
-                  <span className="truncate">
-                    {selectedProject?.name || "Show all"}
-                  </span>
-                </div>
-                <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              className="w-auto p-0 -ml-2"
-              align="start"
-              style={{ width: "var(--radix-popover-trigger-width)" }}
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="w-full justify-between h-9"
             >
-              {renderCommandContent()}
-            </PopoverContent>
-          </Popover>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-9 w-9 shrink-0 hidden md:flex"
-            onClick={handleNewProject}
-            aria-label="New project"
+              <div className="flex items-center gap-2 min-w-0">
+                <FolderOpen className="size-4 shrink-0 opacity-70" />
+                <span className="truncate">
+                  {selectedProject?.name || "Show all"}
+                </span>
+              </div>
+              <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            className="w-auto p-0 -ml-2"
+            align="start"
+            style={{ width: "var(--radix-popover-trigger-width)" }}
           >
-            <Plus className="size-4" />
-          </Button>
-        </div>
+            {renderCommandContent()}
+          </PopoverContent>
+        </Popover>
 
         <ProjectDialog
           open={isProjectDialogOpen}
