@@ -185,3 +185,72 @@ Always use `encodeURIComponent()` when constructing the navigation URL to handle
 - Conversation: Discussion about state management and avoiding conflicts with sessionStore
 - Exploration: NewSessionPage and ChatPromptInput architecture
 - Pattern: Similar to existing `?mode=` query parameter handling
+
+## Review Findings
+
+**Review Date:** 2025-11-29
+**Reviewed By:** Claude Code
+**Review Iteration:** 1 of 3
+**Branch:** feature/new-followup-session-action
+**Commits Reviewed:** 1
+
+### Summary
+
+Implementation is mostly complete with core functionality working as specified. However, there is 1 HIGH priority issue that violates React best practices and could cause infinite re-renders, and 2 MEDIUM priority issues related to error handling and null safety that should be addressed before merging.
+
+### Task 2: Enhance usePromptInputState hook
+
+**Status:** ⚠️ Incomplete - Has critical React best practice violation
+
+#### HIGH Priority
+
+- [ ] **useEffect has non-primitive dependency violating React rules**
+  - **File:** `apps/app/src/client/pages/projects/sessions/hooks/usePromptInputState.ts:134-138`
+  - **Spec Reference:** "Ensure initialization only happens once (dependency array: `[initialText, controller]`)" and CLAUDE.md React Best Practices: "✅ **DO** - Primitives only in useEffect deps"
+  - **Expected:** useEffect should only depend on primitive values to prevent infinite loops
+  - **Actual:** useEffect depends on `controller` object which causes potential infinite re-renders since object reference changes on every render
+  - **Fix:** Remove `controller` from dependency array and use ref or ensure it's stable, OR add `// eslint-disable-next-line react-hooks/exhaustive-deps` with justification comment explaining why it's safe. The hook should run only when `initialText` changes, and `controller` should be stable from `usePromptInputController()`.
+
+### Task 3: Read initialMessage query parameter
+
+**Status:** ⚠️ Incomplete - Missing proper null handling
+
+#### MEDIUM Priority
+
+- [ ] **Query parameter handling doesn't properly handle null case**
+  - **File:** `apps/app/src/client/pages/projects/sessions/NewSessionPage.tsx:74-76`
+  - **Spec Reference:** Task 3 requirement: "Decode query parameter: `const initialMessage = searchParams.get('initialMessage') ? decodeURIComponent(searchParams.get('initialMessage')!) : undefined`"
+  - **Expected:** Check if `searchParams.get('initialMessage')` is truthy before decoding, use non-null assertion safely
+  - **Actual:** Implementation correctly checks truthiness before decoding, but duplicates the `searchParams.get()` call
+  - **Fix:** Store result in variable first: `const param = searchParams.get('initialMessage'); const initialMessage = param ? decodeURIComponent(param) : undefined;` - More efficient and follows DRY principle
+
+### Task 4: Add "New Followup Session" dropdown menu item
+
+**Status:** ⚠️ Incomplete - Missing error handling
+
+#### MEDIUM Priority
+
+- [ ] **Navigation has no error handling**
+  - **File:** `apps/app/src/client/components/sidebar/SpecItem.tsx:88-96`
+  - **Spec Reference:** General error handling best practice - navigation can fail
+  - **Expected:** Handle potential navigation failures gracefully
+  - **Actual:** `navigate()` call has no try-catch or error handling
+  - **Fix:** Wrap navigation in try-catch and show toast on error, OR verify that react-router's navigate() doesn't throw (check if it returns a promise or is synchronous). If synchronous and doesn't throw, this can be downgraded to LOW priority or dismissed.
+
+### Positive Findings
+
+- ✅ All files modified as specified in spec
+- ✅ MessageSquarePlus icon imported and used correctly
+- ✅ Query parameter encoding/decoding implemented correctly
+- ✅ Menu item positioned correctly in dropdown (after "Edit Spec")
+- ✅ Mobile sidebar closes when navigation happens
+- ✅ No TypeScript compilation errors
+- ✅ Import conventions follow CLAUDE.md guidelines (no file extensions, @/ aliases)
+- ✅ Props interface correctly defined and typed
+- ✅ initialText flows correctly through component hierarchy
+
+### Review Completion Checklist
+
+- [x] All spec requirements reviewed
+- [x] Code quality checked
+- [ ] All findings addressed and tested
