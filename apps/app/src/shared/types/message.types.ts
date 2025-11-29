@@ -13,7 +13,8 @@ export type {
   UnifiedThinkingBlock,
   UnifiedToolUseBlock,
   UnifiedToolResultBlock,
-  UnifiedSlashCommandBlock
+  UnifiedSlashCommandBlock,
+  UnifiedImageBlock
 } from 'agent-cli-sdk';
 
 // Single UI extension for streaming state

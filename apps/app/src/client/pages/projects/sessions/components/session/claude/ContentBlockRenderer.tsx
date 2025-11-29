@@ -6,11 +6,13 @@
 import type {
   UnifiedContent,
   EnrichedToolUseBlock,
+  UnifiedImageBlock,
 } from "@/shared/types/message.types";
 import { TextBlock } from "./TextBlock";
 import { ThinkingBlock } from "./ThinkingBlock";
 import { ToolBlockRenderer } from "./ToolBlockRenderer";
 import { SlashCommandBlock } from "./blocks/SlashCommandBlock";
+import { ImageBlock } from "./ImageBlock";
 import { isDebugMode } from "@/client/utils/isDebugMode";
 
 interface ContentBlockRendererProps {
@@ -66,6 +68,15 @@ export function ContentBlockRenderer({
           command={block.command}
           message={block.message}
           args={block.args}
+        />
+      );
+
+    case "image":
+      return (
+        <ImageBlock
+          image={block as UnifiedImageBlock}
+          alt="User uploaded image"
+          className={className}
         />
       );
 
