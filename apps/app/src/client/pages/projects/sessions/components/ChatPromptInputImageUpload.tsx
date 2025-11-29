@@ -11,7 +11,6 @@ export function ChatPromptInputImageUpload() {
     <PromptInputButton
       type="button"
       size="icon-responsive"
-      className="md:hidden"
       onClick={() => attachments.openFileDialog()}
       aria-label="Upload image"
     >
