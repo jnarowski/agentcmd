@@ -166,7 +166,6 @@ export function bindCloseHandler(params: BindHandlerParams) {
     setIsReady,
     onStopHeartbeat,
     onReconnect,
-    onReconnectStop,
   } = params;
 
   return (event: CloseEvent) => {

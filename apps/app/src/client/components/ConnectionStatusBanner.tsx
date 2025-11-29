@@ -5,6 +5,7 @@ interface ConnectionStatusBannerProps {
   readyState: ReadyState;
   reconnectAttempt: number;
   onReconnect: () => void;
+  isOnline: boolean;
 }
 
 /**
@@ -18,14 +19,16 @@ export function ConnectionStatusBanner({
   readyState,
   reconnectAttempt,
   onReconnect,
+  isOnline,
 }: ConnectionStatusBannerProps) {
   const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
 
-    // Show banner for any non-OPEN state
+    // Show banner for any non-OPEN state or offline
     const shouldShow =
+      !isOnline ||
       readyState === ReadyState.CONNECTING ||
       readyState === ReadyState.CLOSED;
 
@@ -37,7 +40,7 @@ export function ConnectionStatusBanner({
     }
 
     return () => clearTimeout(timer);
-  }, [readyState]);
+  }, [readyState, isOnline]);
 
   if (!showBanner) {
     return null;
@@ -45,6 +48,14 @@ export function ConnectionStatusBanner({
 
   // Determine connection status message
   const getConnectionStatus = () => {
+    // Offline state (network is down)
+    if (!isOnline) {
+      return {
+        message: "You're offline",
+        showReconnect: false,
+      };
+    }
+
     // Connecting state
     if (readyState === ReadyState.CONNECTING) {
       if (reconnectAttempt === 0) {
