@@ -26,7 +26,15 @@ export interface SpawnInngestOptions {
  * Always uses the same mode for consistency across dev/start/cli
  */
 export function spawnInngest(options: SpawnInngestOptions): ChildProcess {
-  const { port, sdkUrl, dataDir, eventKey, signingKey, stdio = "pipe", env } = options;
+  const {
+    port,
+    sdkUrl,
+    dataDir,
+    eventKey,
+    signingKey,
+    stdio = "pipe",
+    env,
+  } = options;
 
   const args = [
     INNGEST_CLI_VERSION,

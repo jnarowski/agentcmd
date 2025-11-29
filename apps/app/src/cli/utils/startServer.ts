@@ -64,9 +64,9 @@ export interface StartServerConfig {
  * 3. Validate JWT_SECRET
  * 4. Backup database (if enabled and pending migrations)
  * 5. Prisma generate + migrate
- * 6. Start Fastify server
- * 7. Wait for health check
- * 8. Start Inngest
+ * 6. Start Inngest (polls SDK URL until server ready)
+ * 7. Start Fastify server
+ * 8. Wait for health check (Inngest syncs when server responds)
  * 9. Print startup banner
  * 10. Setup graceful shutdown
  */
@@ -97,9 +97,6 @@ export async function startServer(config: StartServerConfig): Promise<void> {
   let inngestProcess: ChildProcess | null = null;
 
   const stdioSync: StdioOptions = verbose ? "inherit" : "pipe";
-  const stdioAsync: StdioOptions = verbose
-    ? "inherit"
-    : ["ignore", "pipe", "pipe"];
 
   try {
     // 1. Check both ports are available
@@ -216,101 +213,53 @@ export async function startServer(config: StartServerConfig): Promise<void> {
       );
     }
 
-    // 6. Start Fastify server as child process
-    if (!verbose) console.log(pc.dim("Starting server..."));
-    if (verbose) console.log("Starting Fastify server...");
-
-    let serverStderr = "";
-    serverProcess = spawn("node", [serverPath], {
-      stdio: stdioAsync,
-      env: {
-        ...process.env,
-        PORT: port.toString(),
-        HOST: host,
-      },
-    });
-
-    // Pipe output to log file when not verbose
-    if (!verbose && serverProcess.stdout) {
-      mkdirSync(dirname(logPath), { recursive: true });
-      const logStream = createWriteStream(logPath, { flags: "a" });
-      serverProcess.stdout.pipe(logStream);
-      serverProcess.stderr?.pipe(logStream);
-      serverProcess.stderr?.on("data", (chunk) => {
-        serverStderr += chunk.toString();
-      });
-    }
-
-    serverProcess.on("error", (error) => {
-      console.error(pc.red("Server process error:"), error);
-      process.exit(1);
-    });
-
-    serverProcess.on("exit", (code) => {
-      if (code !== null && code !== 0) {
-        console.error(pc.red(`Server exited with code ${code}`));
-        if (!verbose && serverStderr) {
-          console.error(pc.dim("Server output:"));
-          console.error(serverStderr);
-        }
-        if (inngestProcess) inngestProcess.kill();
-        process.exit(code);
-      }
-    });
-
-    // 7. Wait for server to be ready
-    if (verbose) console.log("Waiting for server to be ready...");
-    await waitForServerReady(`http://${externalHost}:${port}/api/health`, {
-      timeout: 30000,
-    });
-    if (verbose) console.log("Server is ready");
-
-    // Wait for Inngest to sync with SDK (it retries automatically, but give it time for initial sync)
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-
-    // 8. Start Inngest
-    let inngestStderr = "";
-
-    // Ensure Inngest data directory exists
-    mkdirSync(inngestDataDir, { recursive: true });
-
+    // 6. Start Inngest FIRST (it will retry connecting to SDK URL)
     if (!verbose) console.log(pc.dim("Starting workflow engine..."));
     if (verbose) console.log("Starting Inngest Server...");
 
-    inngestProcess = spawnInngest({
+    inngestProcess = startInngestProcess({
       port: inngestPort,
       sdkUrl: `http://${host}:${port}/api/workflows/inngest`,
       dataDir: inngestDataDir,
       eventKey: inngestEventKey,
       signingKey: inngestSigningKey,
-      stdio: stdioAsync,
-      env: process.env,
-    });
-
-    if (!verbose && inngestProcess.stdout) {
-      const logStream = createWriteStream(logPath, { flags: "a" });
-      inngestProcess.stdout.pipe(logStream);
-      inngestProcess.stderr?.pipe(logStream);
-      inngestProcess.stderr?.on("data", (chunk) => {
-        inngestStderr += chunk.toString();
-      });
-    }
-
-    inngestProcess.on("error", (error) => {
-      console.error(pc.red("Inngest process error:"), error);
-    });
-
-    inngestProcess.on("exit", (code) => {
-      if (code !== null && code !== 0) {
-        console.error(pc.red(`Inngest exited with code ${code}`));
-        if (!verbose && inngestStderr) {
-          console.error(pc.dim("Inngest output:"));
-          console.error(inngestStderr);
+      logPath,
+      verbose,
+      onExit: (code) => {
+        if (code !== 0) {
+          if (serverProcess) serverProcess.kill();
+          process.exit(code ?? 1);
         }
-        if (serverProcess) serverProcess.kill();
-        process.exit(code);
-      }
+      },
     });
+
+    // Brief delay for Inngest to start
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // 7. Start Fastify server
+    if (!verbose) console.log(pc.dim("Starting server..."));
+    if (verbose) console.log("Starting Fastify server...");
+
+    serverProcess = startServerProcess({
+      port,
+      host,
+      serverPath,
+      logPath,
+      verbose,
+      onExit: (code) => {
+        if (code !== 0) {
+          if (inngestProcess) inngestProcess.kill();
+          process.exit(code ?? 1);
+        }
+      },
+    });
+
+    // 8. Wait for server to be ready (Inngest will sync once server responds)
+    if (verbose) console.log("Waiting for server to be ready...");
+    await waitForServerReady(`http://${externalHost}:${port}/api/health`, {
+      timeout: 30000,
+    });
+    if (verbose) console.log("Server is ready");
 
     // 9. Print startup banner
     printStartupBanner({
@@ -351,6 +300,119 @@ export async function startServer(config: StartServerConfig): Promise<void> {
 }
 
 // PRIVATE HELPERS
+
+interface StartInngestOptions {
+  port: number;
+  sdkUrl: string;
+  dataDir: string;
+  eventKey: string;
+  signingKey: string;
+  logPath: string;
+  verbose: boolean;
+  onExit: (code: number | null) => void;
+}
+
+function startInngestProcess(options: StartInngestOptions): ChildProcess {
+  const {
+    port,
+    sdkUrl,
+    dataDir,
+    eventKey,
+    signingKey,
+    logPath,
+    verbose,
+    onExit,
+  } = options;
+  const stdioAsync: StdioOptions = verbose
+    ? "inherit"
+    : ["ignore", "pipe", "pipe"];
+
+  mkdirSync(dataDir, { recursive: true });
+
+  const child = spawnInngest({
+    port,
+    sdkUrl,
+    dataDir,
+    eventKey,
+    signingKey,
+    stdio: stdioAsync,
+    env: process.env,
+  });
+
+  let stderr = "";
+  if (!verbose && child.stdout) {
+    const logStream = createWriteStream(logPath, { flags: "a" });
+    child.stdout.pipe(logStream);
+    child.stderr?.pipe(logStream);
+    child.stderr?.on("data", (chunk) => {
+      stderr += chunk.toString();
+    });
+  }
+
+  child.on("error", (error) =>
+    console.error(pc.red("Inngest process error:"), error)
+  );
+  child.on("exit", (code) => {
+    if (code !== null && code !== 0) {
+      console.error(pc.red(`Inngest exited with code ${code}`));
+      if (!verbose && stderr) {
+        console.error(pc.dim("Inngest output:"));
+        console.error(stderr);
+      }
+    }
+    onExit(code);
+  });
+
+  return child;
+}
+
+interface StartServerOptions {
+  port: number;
+  host: string;
+  serverPath: string;
+  logPath: string;
+  verbose: boolean;
+  onExit: (code: number | null) => void;
+}
+
+function startServerProcess(options: StartServerOptions): ChildProcess {
+  const { port, host, serverPath, logPath, verbose, onExit } = options;
+  const stdioAsync: StdioOptions = verbose
+    ? "inherit"
+    : ["ignore", "pipe", "pipe"];
+
+  const child = spawn("node", [serverPath], {
+    stdio: stdioAsync,
+    env: { ...process.env, PORT: port.toString(), HOST: host },
+  });
+
+  let stderr = "";
+  if (!verbose && child.stdout) {
+    mkdirSync(dirname(logPath), { recursive: true });
+    const logStream = createWriteStream(logPath, { flags: "a" });
+    child.stdout.pipe(logStream);
+    child.stderr?.pipe(logStream);
+    child.stderr?.on("data", (chunk) => {
+      stderr += chunk.toString();
+    });
+  }
+
+  child.on("error", (error) =>
+    console.error(pc.red("Server process error:"), error)
+  );
+  child.on("exit", (code) => {
+    if (code !== null && code !== 0) {
+      console.error(pc.red(`Server exited with code ${code}`));
+      if (!verbose && stderr) {
+        console.error(pc.dim("Server output:"));
+        console.error(stderr);
+      }
+    }
+    onExit(code);
+  });
+
+  return child;
+}
 
 interface BannerOptions {
   port: number;
