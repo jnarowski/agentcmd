@@ -1,0 +1,338 @@
+---
+title: Preview Deployment
+description: Deploy preview containers with type-safe arguments
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+
+## Overview
+
+This example demonstrates conditional preview deployment using type-safe arguments. It shows how to toggle expensive operations (like Docker container deployment) based on workflow input, making workflows more flexible and cost-effective.
+
+## Key Features
+
+- **Type-safe boolean arguments** - Use `argsSchema` to define `createPreview` flag
+- **Conditional execution** - Skip preview when not needed
+- **Graceful handling** - Workflow succeeds whether preview runs or not
+- **Real-world integration** - Complete implement → build → preview → PR flow
+
+## Example Code
+
+```typescript
+import { defineWorkflow, defineSchema } from "agentcmd-workflows";
+
+const argsSchema = defineSchema({
+  type: "object",
+  properties: {
+    createPreview: { type: "boolean" },
+  },
+  required: [],
+});
+
+export default defineWorkflow(
+  {
+    id: "preview-deployment-workflow",
+    name: "Preview Deployment Workflow",
+    description: "Implement feature with optional preview deployment",
+    argsSchema,
+    phases: [
+      { id: "implement", label: "Implement" },
+      { id: "build", label: "Build" },
+      { id: "preview", label: "Preview" },
+      { id: "complete", label: "Complete" },
+    ],
+  },
+  async ({ event, step }) => {
+    const { specFile } = event.data;
+    const { createPreview } = event.data.args;
+    //      ^boolean | undefined
+
+    await step.phase("implement", async () => {
+      await step.agent("implement-feature", {
+        agent: "claude",
+        prompt: `Implement the feature described in ${specFile}`,
+      });
+
+      await step.git("commit-implementation", {
+        operation: "commit",
+        message: `feat: implement ${event.data.name}`,
+      });
+    });
+
+    await step.phase("build", async () => {
+      await step.cli("build", {
+        command: "pnpm build",
+      });
+    });
+
+    await step.phase("preview", async () => {
+      if (!createPreview) {
+        await step.annotation("skip-preview", {
+          message: "⏭️ Preview skipped (createPreview=false)",
+        });
+        return;
+      }
+
+      const preview = await step.preview("deploy", {
+        ports: { APP: 3000 },
+        env: {
+          NODE_ENV: "preview",
+        },
+      });
+
+      // Handle case where Docker is unavailable
+      if (Object.keys(preview.data.urls).length === 0) {
+        await step.annotation("no-docker", {
+          message: "⚠️ Preview skipped - Docker not available",
+        });
+        return;
+      }
+
+      // Preview running - share URL
+      await step.annotation("preview-ready", {
+        message: `✅ Preview deployed\n\n${preview.data.urls.app}`,
+      });
+    });
+
+    await step.phase("complete", async () => {
+      await step.git("create-pr", {
+        operation: "pr",
+        title: `feat: ${event.data.name}`,
+        body: createPreview
+          ? "Implementation complete. Check preview for testing."
+          : "Implementation complete.",
+        baseBranch: event.data.baseBranch,
+      });
+    });
+  }
+);
+```
+
+## Arguments in the UI
+
+When running this workflow, the `createPreview` argument appears as a checkbox in the web interface:
+
+<img src="/images/preview-deployment-ui.png" alt="Preview deployment UI" width="200" />
+
+- **Checkbox** - Boolean fields render as checkboxes
+- **Optional** - No required fields means workflow runs with defaults
+- **Default** - Unchecked by default (`undefined` → falsy → skips preview)
+
+<Callout type="info">
+**Boolean arguments are perfect for toggling expensive operations:**
+
+- Preview container deployment
+- E2E test execution
+- Production deployments
+- Notification sending
+- Report generation
+</Callout>
+
+## How It Works
+
+### 1. Define the Schema
+
+```typescript
+const argsSchema = defineSchema({
+  type: "object",
+  properties: {
+    createPreview: { type: "boolean" },
+  },
+  required: [], // Optional - allows workflow to run without arguments
+});
+```
+
+This creates a type-safe schema that:
+- Defines `createPreview` as a boolean
+- Makes it optional (not in `required` array)
+- Provides TypeScript autocomplete for `event.data.args.createPreview`
+
+### 2. Conditional Execution
+
+```typescript
+const { createPreview } = event.data.args;
+
+if (!createPreview) {
+  await step.annotation("skip-preview", {
+    message: "⏭️ Preview skipped",
+  });
+  return;
+}
+
+const preview = await step.preview("deploy");
+```
+
+The workflow checks the argument and:
+- Skips preview when `false` or `undefined`
+- Runs preview when `true`
+- Annotates the decision for visibility
+
+### 3. Graceful Docker Handling
+
+```typescript
+const preview = await step.preview("deploy");
+
+if (Object.keys(preview.data.urls).length === 0) {
+  // Docker not available
+  await step.annotation("no-docker", {
+    message: "⚠️ Preview skipped - Docker not available",
+  });
+  return;
+}
+
+// Docker available - use preview.data.urls.app
+```
+
+When Docker is unavailable, `step.preview()` succeeds but returns empty URLs. Check the URLs object to handle this gracefully.
+
+## Common Patterns
+
+### Multiple Preview Configurations
+
+```typescript
+const argsSchema = defineSchema({
+  type: "object",
+  properties: {
+    createPreview: { type: "boolean" },
+    previewType: { enum: ["development", "staging", "production"] },
+  },
+});
+
+// In workflow
+if (createPreview) {
+  const { previewType } = event.data.args;
+
+  const preview = await step.preview("deploy", {
+    env: {
+      NODE_ENV: previewType || "development",
+    },
+  });
+}
+```
+
+### Conditional Resource Allocation
+
+```typescript
+const argsSchema = defineSchema({
+  type: "object",
+  properties: {
+    createPreview: { type: "boolean" },
+    highPerformance: { type: "boolean" },
+  },
+});
+
+// In workflow
+if (createPreview) {
+  const { highPerformance } = event.data.args;
+
+  const preview = await step.preview("deploy", {
+    maxMemory: highPerformance ? "4g" : "1g",
+    maxCpus: highPerformance ? "2.0" : "0.5",
+  });
+}
+```
+
+### Preview with Testing
+
+```typescript
+await step.phase("preview", async () => {
+  if (!createPreview) {
+    await step.annotation("skip-preview", {
+      message: "⏭️ Preview and tests skipped",
+    });
+    return;
+  }
+
+  const preview = await step.preview("deploy");
+
+  if (Object.keys(preview.data.urls).length === 0) {
+    return; // Docker unavailable
+  }
+
+  // Run E2E tests against preview
+  await step.cli("e2e-tests", {
+    command: `PREVIEW_URL=${preview.data.urls.app} pnpm test:e2e`,
+  });
+
+  await step.annotation("tests-complete", {
+    message: `✅ E2E tests passed against ${preview.data.urls.app}`,
+  });
+});
+```
+
+## Use Cases
+
+**Development Workflows**:
+- Skip preview for simple bug fixes
+- Enable preview for new features
+- Toggle based on PR size
+
+**CI/CD Integration**:
+- Preview for feature branches only
+- Skip preview on hotfix branches
+- Conditional based on labels
+
+**Cost Optimization**:
+- Disable preview for documentation changes
+- Enable only for frontend changes
+- Resource allocation based on priority
+
+**Team Workflows**:
+- Junior devs always get preview
+- Senior devs opt-in for preview
+- Preview required for specific file patterns
+
+## Best Practices
+
+**Default to the safest option**:
+```typescript
+// Preview is opt-in, not opt-out
+const { createPreview } = event.data.args;
+if (!createPreview) return;
+```
+
+**Provide clear feedback**:
+```typescript
+await step.annotation("skip-preview", {
+  message: "⏭️ Preview skipped (createPreview=false)\n\nTo enable: check 'Create Preview' when running workflow",
+});
+```
+
+**Handle all edge cases**:
+```typescript
+if (!createPreview) {
+  // Explicitly skipped
+  return;
+}
+
+const preview = await step.preview("deploy");
+
+if (Object.keys(preview.data.urls).length === 0) {
+  // Docker unavailable
+  return;
+}
+
+// Happy path - preview running
+```
+
+**Document the argument**:
+```typescript
+export default defineWorkflow(
+  {
+    id: "preview-deployment-workflow",
+    description: "Set createPreview=true to deploy Docker preview container",
+    argsSchema,
+  },
+  async ({ event, step }) => {
+    // ...
+  }
+);
+```
+
+## Next Steps
+
+- [Type-Safe Arguments](/docs/examples/type-safe-arguments) - Complete guide to workflow arguments
+- [Preview Step Reference](/docs/reference/workflow-steps/preview) - Full preview configuration options
+- [Context Sharing](/docs/examples/context-sharing) - Share data between phases
+- [Implement & Review](/docs/examples/implement-and-review) - Complete implementation workflow

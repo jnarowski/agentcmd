@@ -77,6 +77,9 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
   const heartbeatIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastMessageTimeRef = useRef<number>(Date.now());
 
+  // Error deduplication - prevents multiple toasts per disconnect cycle
+  const errorEmittedThisCycleRef = useRef(false);
+
   const isConnected = readyState === ReadyState.OPEN && isReady;
 
   /**
@@ -172,6 +175,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
         connectionTimeoutRef,
         lastMessageTimeRef,
         intentionalCloseRef,
+        errorEmittedThisCycleRef,
         setReadyState,
         setIsReady,
         onStartHeartbeat: startHeartbeat,
@@ -337,7 +341,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
   }, []); // connect() is stable within component lifecycle
 
   /**
-   * Subscribe to global errors and show toasts
+   * Subscribe to global errors and show toasts (auth failures only)
    */
   useEffect(() => {
     const eventBus = eventBusRef.current;
@@ -346,18 +350,16 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
       if (event.type === GlobalEventTypes.ERROR) {
         const { error } = event.data;
 
-        // Only show retry button if we haven't exhausted reconnection attempts
-        if (reconnectAttemptRef.current < 5) {
-          toast.error("WebSocket disconnected", {
-            description: error || "Connection lost",
+        // Only toast for auth failures - everything else uses banner
+        if (error === "Authentication failed") {
+          toast.error("Session expired", {
+            description: "Please log in again",
             action: {
-              label: "Connect",
-              onClick: () => reconnect(),
+              label: "Login",
+              onClick: () => {
+                useAuthStore.getState().logout();
+              },
             },
-          });
-        } else {
-          toast.error(error || "WebSocket disconnected", {
-            description: event.data.error || "Connection lost",
           });
         }
       }

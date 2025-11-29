@@ -10,52 +10,64 @@ interface ConnectionStatusBannerProps {
 /**
  * ConnectionStatusBanner
  *
- * Compact notch overlay shown at the top-center of the viewport when there's a connection error.
- * Only displays for disconnected or reconnecting states (not during initial connection).
- * Uses fixed positioning to stay visible above all content.
+ * Compact notch overlay shown at top-center when connection is not established.
+ * Shows for ALL non-OPEN states with 500ms delay to prevent flashing.
+ * Handles: initial connecting, reconnecting, and disconnected states.
  */
 export function ConnectionStatusBanner({
   readyState,
   reconnectAttempt,
   onReconnect,
 }: ConnectionStatusBannerProps) {
-  // Debounce showing "Disconnected" state to prevent flashing during hot reload
-  const [showDisconnected, setShowDisconnected] = useState(false);
+  const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
 
-    if (readyState === ReadyState.CLOSED) {
-      // Wait 2 seconds before showing disconnected banner
-      // This prevents flashing during hot reload or quick reconnections
-      timer = setTimeout(() => {
-        setShowDisconnected(true);
-      }, 2000);
+    // Show banner for any non-OPEN state
+    const shouldShow =
+      readyState === ReadyState.CONNECTING ||
+      readyState === ReadyState.CLOSED;
+
+    if (shouldShow) {
+      // 500ms delay prevents flash during quick reconnects
+      timer = setTimeout(() => setShowBanner(true), 500);
     } else {
-      // Connected or connecting - hide banner immediately
-      setShowDisconnected(false);
+      setShowBanner(false);
     }
 
     return () => clearTimeout(timer);
   }, [readyState]);
 
+  if (!showBanner) {
+    return null;
+  }
+
   // Determine connection status message
   const getConnectionStatus = () => {
-    // Show "Reconnecting... (X/5)" when reconnectAttempt > 0 and connecting
-    if (reconnectAttempt > 0 && readyState === ReadyState.CONNECTING) {
+    // Connecting state
+    if (readyState === ReadyState.CONNECTING) {
+      if (reconnectAttempt === 0) {
+        return {
+          message: "Connecting...",
+          showReconnect: false,
+        };
+      }
       return {
-        message: `Reconnecting... (${reconnectAttempt}/5)`,
+        message: `Reconnecting... (${reconnectAttempt})`,
         showReconnect: true,
       };
     }
-    // Show "Disconnected" when reconnectAttempt >= 5 and closed
-    if (reconnectAttempt >= 5 && readyState === ReadyState.CLOSED && showDisconnected) {
+
+    // Closed state
+    if (readyState === ReadyState.CLOSED) {
       return {
         message: "Disconnected",
         showReconnect: true,
       };
     }
-    return null; // Hide during initial connection and when fully connected
+
+    return null;
   };
 
   const status = getConnectionStatus();
