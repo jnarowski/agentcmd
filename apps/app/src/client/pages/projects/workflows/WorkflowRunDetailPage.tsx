@@ -82,7 +82,7 @@ function WorkflowRunDetailPage() {
 
   const handleViewOnInngest = () => {
     if (run?.inngest_run_id && inngestUrl) {
-      window.open(`${inngestUrl}/stream/${run.inngest_run_id}`, '_blank');
+      window.open(`${inngestUrl}/run?runID=${run.inngest_run_id}`, '_blank');
     }
   };
 
