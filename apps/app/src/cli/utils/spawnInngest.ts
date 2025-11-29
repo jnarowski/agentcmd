@@ -53,6 +53,10 @@ export function spawnInngest(options: SpawnInngestOptions): ChildProcess {
     args.push("--sqlite-dir", dataDir);
   }
 
+  // For debugging:
+  //
+  // console.log(`\nManual Inngest command:\nnpx ${args.join(" ")}\n`);
+  //
   return spawn("npx", args, {
     stdio,
     env: env ?? process.env,

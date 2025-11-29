@@ -213,29 +213,6 @@ export async function startServer(config: StartServerConfig): Promise<void> {
       );
     }
 
-    // 6. Start Inngest FIRST (it will retry connecting to SDK URL)
-    if (!verbose) console.log(pc.dim("Starting workflow engine..."));
-    if (verbose) console.log("Starting Inngest Server...");
-
-    inngestProcess = startInngestProcess({
-      port: inngestPort,
-      sdkUrl: `http://${host}:${port}/api/workflows/inngest`,
-      dataDir: inngestDataDir,
-      eventKey: inngestEventKey,
-      signingKey: inngestSigningKey,
-      logPath,
-      verbose,
-      onExit: (code) => {
-        if (code !== 0) {
-          if (serverProcess) serverProcess.kill();
-          process.exit(code ?? 1);
-        }
-      },
-    });
-
-    // Brief delay for Inngest to start
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
     // 7. Start Fastify server
     if (!verbose) console.log(pc.dim("Starting server..."));
     if (verbose) console.log("Starting Fastify server...");
@@ -260,6 +237,28 @@ export async function startServer(config: StartServerConfig): Promise<void> {
       timeout: 30000,
     });
     if (verbose) console.log("Server is ready");
+
+    // 6. Start Inngest FIRST (it will retry connecting to SDK URL)
+    if (!verbose) console.log(pc.dim("Starting workflow engine..."));
+    if (verbose) console.log("Starting Inngest Server...");
+
+    // npx inngest-cli@1.14.0 start --event-key signkey-prod-a3f7b2e9d1c8a4f6e0b5d2a7c9e3f1b8 --signing-key ef68654fa354bce5c3de18a3b430549025700ce2db412184a6622beb9ab391cd --port 8288 --sdk-url http://127.0.0.1:4100/api/workflows/inngest --sqlite-dir /Users/jnarowski/Dev/sourceborn/src/agentcmd/apps/app/inngest-data
+    //
+    // inngestProcess = startInngestProcess({
+    //   port: inngestPort,
+    //   sdkUrl: `http://${host}:${port}/api/workflows/inngest`,
+    //   dataDir: inngestDataDir,
+    //   eventKey: inngestEventKey,
+    //   signingKey: inngestSigningKey,
+    //   logPath,
+    //   verbose,
+    //   onExit: (code) => {
+    //     if (code !== 0) {
+    //       if (serverProcess) serverProcess.kill();
+    //       process.exit(code ?? 1);
+    //     }
+    //   },
+    // });
 
     // 9. Print startup banner
     printStartupBanner({
