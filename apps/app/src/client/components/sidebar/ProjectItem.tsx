@@ -25,6 +25,7 @@ import {
 } from "@/client/components/ui/dropdown-menu";
 import type { Project } from "@/shared/types/project.types";
 import { useAllWorkflowDefinitions } from "@/client/pages/projects/workflows/hooks/useAllWorkflowDefinitions";
+import { useTouchDevice } from "@/client/hooks/useTouchDevice";
 
 interface ProjectItemProps {
   project: Project;
@@ -43,6 +44,7 @@ export function ProjectItem({
 }: ProjectItemProps) {
   const navigate = useNavigate();
   const { isMobile, setOpenMobile } = useSidebar();
+  const isTouchDevice = useTouchDevice();
   const [hoveredProjectId, setHoveredProjectId] = useState<string | null>(null);
   const [menuOpenProjectId, setMenuOpenProjectId] = useState<string | null>(
     null
@@ -108,8 +110,8 @@ export function ProjectItem({
   return (
     <SidebarMenuItem
       key={project.id}
-      onMouseEnter={() => setHoveredProjectId(project.id)}
-      onMouseLeave={() => setHoveredProjectId(null)}
+      onMouseEnter={() => !isTouchDevice && setHoveredProjectId(project.id)}
+      onMouseLeave={() => !isTouchDevice && setHoveredProjectId(null)}
       className="relative"
     >
       <SidebarMenuButton
@@ -128,7 +130,7 @@ export function ProjectItem({
         )}
         <span className="flex-1" />
       </SidebarMenuButton>
-      {(hoveredProjectId === project.id ||
+      {!isTouchDevice && (hoveredProjectId === project.id ||
         menuOpenProjectId === project.id) && (
         <DropdownMenu
           onOpenChange={(open) =>

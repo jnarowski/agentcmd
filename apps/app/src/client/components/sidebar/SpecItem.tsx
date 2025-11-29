@@ -22,6 +22,7 @@ import type { Spec } from "@/shared/types/spec.types";
 import { api } from "@/client/utils/api";
 import { SpecFileViewer } from "@/client/pages/projects/workflows/components/SpecFileViewer";
 import { useNavigationStore } from "@/client/stores";
+import { useTouchDevice } from "@/client/hooks/useTouchDevice";
 
 interface SpecItemProps {
   spec: Spec;
@@ -31,6 +32,7 @@ interface SpecItemProps {
 export function SpecItem({ spec, projectName }: SpecItemProps) {
   const navigate = useNavigate();
   const { isMobile, setOpenMobile } = useSidebar();
+  const isTouchDevice = useTouchDevice();
   const queryClient = useQueryClient();
   const activeProjectId = useNavigationStore((s) => s.activeProjectId);
   const [hoveredSpecId, setHoveredSpecId] = useState<string | null>(null);
@@ -104,8 +106,8 @@ export function SpecItem({ spec, projectName }: SpecItemProps) {
 
   return (
     <SidebarMenuItem
-      onMouseEnter={() => setHoveredSpecId(spec.id)}
-      onMouseLeave={() => setHoveredSpecId(null)}
+      onMouseEnter={() => !isTouchDevice && setHoveredSpecId(spec.id)}
+      onMouseLeave={() => !isTouchDevice && setHoveredSpecId(null)}
     >
       <SidebarMenuButton
         onClick={handleClick}
@@ -140,7 +142,7 @@ export function SpecItem({ spec, projectName }: SpecItemProps) {
           )}
         </div>
       </SidebarMenuButton>
-      {(hoveredSpecId === spec.id || menuOpenSpecId === spec.id) && (
+      {!isTouchDevice && (hoveredSpecId === spec.id || menuOpenSpecId === spec.id) && (
         <DropdownMenu
           onOpenChange={(open) => setMenuOpenSpecId(open ? spec.id : null)}
         >

@@ -14,6 +14,7 @@ import type { SessionSummary } from "@/client/pages/projects/sessions/stores/ses
 import type { AgentType } from "@/shared/types/agent.types";
 import { formatDate } from "@/shared/utils/formatDate";
 import { PERMISSION_MODE_CONFIG } from "@/client/constants/permissionModes";
+import { useTouchDevice } from "@/client/hooks/useTouchDevice";
 
 interface SessionItemProps {
   id: string;
@@ -38,6 +39,7 @@ export function SessionItem({
   onViewFile,
 }: SessionItemProps) {
   const { isMobile, setOpenMobile } = useSidebar();
+  const isTouchDevice = useTouchDevice();
   const activeProjectId = useNavigationStore((s) => s.activeProjectId);
   const [hoveredActivityId, setHoveredActivityId] = useState<string | null>(
     null
@@ -51,8 +53,8 @@ export function SessionItem({
   return (
     <SidebarMenuItem
       key={id}
-      onMouseEnter={() => !isMobile && setHoveredActivityId(id)}
-      onMouseLeave={() => !isMobile && setHoveredActivityId(null)}
+      onMouseEnter={() => !isTouchDevice && setHoveredActivityId(id)}
+      onMouseLeave={() => !isTouchDevice && setHoveredActivityId(null)}
       className="relative"
     >
       <SidebarMenuButton
@@ -100,7 +102,7 @@ export function SessionItem({
           </div>
         </Link>
       </SidebarMenuButton>
-      {!isMobile && (hoveredActivityId === id || menuOpenActivityId === id) && (
+      {!isTouchDevice && (hoveredActivityId === id || menuOpenActivityId === id) && (
         <div className="absolute right-2 top-2 z-50">
           <SessionDropdownMenu
             session={session}
