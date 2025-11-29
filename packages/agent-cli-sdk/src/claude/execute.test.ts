@@ -409,6 +409,26 @@ describe('execute', () => {
       expectSpawnCalledWith(expect.any(Array), 10000);
     });
 
+    it('should pass appendSystemPrompt to CLI', async () => {
+      const mockOutput = createClaudeOutput([
+        { type: 'system', subtype: 'init', session_id: 'test-123', cwd: '/test' },
+      ]);
+
+      mockSpawnWithOutput(mockOutput);
+
+      await execute({ prompt: 'test', appendSystemPrompt: 'Be concise' });
+
+      expectSpawnCalledWith([
+        '-p',
+        '--append-system-prompt',
+        'Be concise',
+        '--output-format',
+        'stream-json',
+        '--verbose',
+        'test',
+      ]);
+    });
+
   });
 
   describe('JSON extraction', () => {

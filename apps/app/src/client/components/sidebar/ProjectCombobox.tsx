@@ -1,6 +1,13 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Star, ChevronsUpDown, Plus, FolderOpen } from "lucide-react";
+import {
+  Star,
+  ChevronsUpDown,
+  Plus,
+  Folder,
+  FolderOpen,
+  LayoutGrid,
+} from "lucide-react";
 import { cn } from "@/client/utils/cn";
 import { Button } from "@/client/components/ui/button";
 import {
@@ -10,6 +17,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSeparator,
 } from "@/client/components/ui/command";
 import {
   Popover,
@@ -96,7 +104,10 @@ export function ProjectCombobox() {
 
   const renderProjectItem = (project: Project) => (
     <div className="flex items-center justify-between w-full gap-2">
-      <span className="text-base md:text-sm">{project.name}</span>
+      <div className="flex items-center min-w-0">
+        <Folder className="size-4 shrink-0 opacity-70 mr-2.5" />
+        <div className="text-base md:text-sm truncate">{project.name}</div>
+      </div>
       <button
         type="button"
         onClick={(e) => handleToggleStar(e, project)}
@@ -114,22 +125,24 @@ export function ProjectCombobox() {
   );
 
   const renderCommandContent = () => (
-    <Command>
-      <CommandInput placeholder="Search projects..." />
+    <Command className="rounded-t-none">
+      <CommandInput placeholder="Search projects..." className="h-10" />
       <CommandList>
         <CommandEmpty>No projects found</CommandEmpty>
         <CommandGroup>
-          <CommandItem onSelect={handleNewProject}>
-            <Plus className="size-4 mr-2" />
-            New Project
-          </CommandItem>
           <CommandItem
             value="__show_all__"
             onSelect={() => handleSelect("__show_all__")}
           >
+            <LayoutGrid className="size-4 mr-0.5" />
             Show all
           </CommandItem>
+          <CommandItem onSelect={handleNewProject}>
+            <Plus className="size-4 mr-0.5" />
+            New Project
+          </CommandItem>
         </CommandGroup>
+        <CommandSeparator />
         {starredProjects.length > 0 && (
           <>
             <CommandGroup heading="Favorites">
