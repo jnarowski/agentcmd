@@ -322,8 +322,12 @@ export function mergeMessages(
     const serverMatch = serverByContent.get(contentKey);
 
     if (serverMatch) {
-      // Matched: use server version (authoritative)
-      mergedOptimistic.push(serverMatch);
+      // Matched: use server version (authoritative) but preserve images from optimistic
+      // Images are stored client-side (base64) but not in JSONL, so we need to carry them over
+      mergedOptimistic.push({
+        ...serverMatch,
+        images: optimisticMsg.images || serverMatch.images,
+      });
       matchedServerIds.add(serverMatch.id);
     } else {
       // Orphaned: keep optimistic (CLI hasn't written or failed)

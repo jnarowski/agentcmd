@@ -5,7 +5,13 @@
 
 import { ToolCollapsibleWrapper } from "@/client/pages/projects/sessions/components/session/claude/ToolCollapsibleWrapper";
 import { ToolResultRenderer } from "@/client/pages/projects/sessions/components/session/claude/tools/ToolResultRenderer";
+import { ImageBlock } from "@/client/pages/projects/sessions/components/session/claude/ImageBlock";
 import type { UnifiedImageBlock } from 'agent-cli-sdk';
+
+// Type guard for image content
+function isImageContent(content: string | UnifiedImageBlock): content is UnifiedImageBlock {
+  return typeof content === 'object' && content.type === 'image';
+}
 
 interface DefaultToolBlockProps {
   toolName: string;
@@ -55,6 +61,7 @@ export function DefaultToolBlock({
               Output
             </div>
             <div className="border border-border rounded-md p-2 bg-background/50">
+              {/* Check for permission denial first */}
               <ToolResultRenderer
                 toolUseId={toolUseId}
                 toolName={toolName}
@@ -63,6 +70,18 @@ export function DefaultToolBlock({
                 isError={result.is_error}
                 onApprove={onApprove}
               />
+
+              {/* Image result */}
+              {isImageContent(result.content) && (
+                <ImageBlock image={result.content} alt={`${toolName} output`} />
+              )}
+
+              {/* Text result */}
+              {typeof result.content === 'string' && result.content.trim() && (
+                <pre className={`text-sm md:text-xs whitespace-pre-wrap break-all ${result.is_error ? 'text-destructive' : ''}`}>
+                  {result.content}
+                </pre>
+              )}
             </div>
           </div>
         )}

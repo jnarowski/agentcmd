@@ -127,6 +127,19 @@ function processBlock(block: ContentBlock, eventType: 'user' | 'assistant'): Uni
     ];
   }
 
+  if (block.type === 'image') {
+    return [
+      {
+        type: 'image',
+        source: {
+          type: 'base64' as const,
+          data: block.source?.data || '',
+          media_type: block.source?.media_type || 'image/png',
+        },
+      },
+    ];
+  }
+
   // Fallback for unknown types - shouldn't happen but type-safe
   return [
     {

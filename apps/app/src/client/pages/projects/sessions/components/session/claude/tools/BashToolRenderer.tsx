@@ -4,6 +4,7 @@
 
 import { useState } from "react";
 import { ToolResultRenderer } from "@/client/pages/projects/sessions/components/session/claude/tools/ToolResultRenderer";
+import { ImageBlock } from "@/client/pages/projects/sessions/components/session/claude/ImageBlock";
 import type { BashToolInput } from "@/shared/types/tool.types";
 import type { UnifiedImageBlock } from 'agent-cli-sdk';
 
@@ -19,10 +20,18 @@ interface BashToolRendererProps {
 
 const MAX_LINES_PREVIEW = 3;
 
+// Type guard for image content
+function isImageContent(content: string | UnifiedImageBlock): content is UnifiedImageBlock {
+  return typeof content === 'object' && content.type === 'image';
+}
+
 export function BashToolRenderer({ input, result, toolUseId, onApprove }: BashToolRendererProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // For bash results, we only expect strings (not images)
+  // Check if result is an image
+  const isImageResult = result?.content && isImageContent(result.content);
+
+  // For text results, extract the string content
   const resultContent = typeof result?.content === 'string' ? result.content : '';
 
   // Check if output has more than 3 lines
@@ -69,22 +78,32 @@ export function BashToolRenderer({ input, result, toolUseId, onApprove }: BashTo
             OUT
           </span>
           <div className="flex-1 relative">
-            <pre
-              className={`whitespace-pre-wrap break-all ${
-                result.is_error ? "text-destructive" : ""
-              }`}
-            >
-              {displayContent}
-            </pre>
+            {/* Image result */}
+            {isImageResult && (
+              <ImageBlock image={result.content as UnifiedImageBlock} alt="Bash command output" />
+            )}
 
-            {/* Click to expand button */}
-            {shouldTruncate && !isExpanded && (
-              <button
-                className="text-xs text-muted-foreground bg-background px-2 py-0.5 rounded-md border border-border hover:bg-muted/50 cursor-pointer mt-1"
-                onClick={() => setIsExpanded(true)}
-              >
-                Click to expand ({outputLines.length} lines)
-              </button>
+            {/* Text result */}
+            {!isImageResult && (
+              <>
+                <pre
+                  className={`whitespace-pre-wrap break-all ${
+                    result.is_error ? "text-destructive" : ""
+                  }`}
+                >
+                  {displayContent}
+                </pre>
+
+                {/* Click to expand button */}
+                {shouldTruncate && !isExpanded && (
+                  <button
+                    className="text-xs text-muted-foreground bg-background px-2 py-0.5 rounded-md border border-border hover:bg-muted/50 cursor-pointer mt-1"
+                    onClick={() => setIsExpanded(true)}
+                  >
+                    Click to expand ({outputLines.length} lines)
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>

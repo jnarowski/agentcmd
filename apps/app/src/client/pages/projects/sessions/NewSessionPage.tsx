@@ -1,4 +1,5 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useCallback } from "react";
+import type { FileUIPart } from "ai";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   ChatPromptInput,
@@ -77,7 +78,36 @@ export default function NewSessionPage() {
     return () => clearTimeout(timeoutId);
   }, []);
 
-  const handleSubmit = async ({ text }: PromptInputMessage) => {
+  // Convert uploaded files to base64 data URLs
+  const handleImageUpload = useCallback(
+    async (files: FileUIPart[]): Promise<string[]> => {
+      return Promise.all(
+        files.map(async (fileUIPart) => {
+          const url = fileUIPart.url;
+          // If already a data URL, return as-is
+          if (url.startsWith("data:")) {
+            return url;
+          }
+          // If blob URL, convert to data URL
+          if (url.startsWith("blob:")) {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            return new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.onerror = reject;
+              reader.readAsDataURL(blob);
+            });
+          }
+          // Otherwise return the URL as-is
+          return url;
+        })
+      );
+    },
+    []
+  );
+
+  const handleSubmit = async ({ text, files }: PromptInputMessage) => {
     if (!projectId) {
       console.error("[NewSession] No projectId available");
       return;
@@ -102,8 +132,8 @@ export default function NewSessionPage() {
         permission_mode: permissionMode,
       });
 
-      // No image upload for now - files parameter not used
-      const imagePaths = undefined;
+      // Convert images to base64 before sending via WebSocket
+      const imagePaths = files ? await handleImageUpload(files) : undefined;
 
       // Add optimistic user message to session in store
       const optimisticMessageId = generateUUID();
@@ -112,6 +142,7 @@ export default function NewSessionPage() {
         id: optimisticMessageId,
         role: "user",
         content: [{ type: "text", text: message }],
+        images: imagePaths,
         timestamp: Date.now(),
         _original: undefined,
         _optimistic: true,

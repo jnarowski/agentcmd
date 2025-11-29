@@ -486,4 +486,78 @@ describe('parser', () => {
       }
     });
   });
+
+  // Image tests
+  describe('image content', () => {
+    // User message with image and text
+    const userImageMessage =
+      '{"parentUuid":null,"isSidechain":false,"userType":"external","cwd":"/Users/test/project","sessionId":"bb32e6fc-9893-4839-b1de-646fdb1437d1","version":"2.0.55","gitBranch":"main","type":"user","message":{"role":"user","content":[{"type":"image","source":{"type":"base64","data":"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==","media_type":"image/png"}},{"type":"text","text":"What is this an image of?"}]},"uuid":"dc5a6759-e7a3-493e-9294-b53602fe7b2c","timestamp":"2025-11-29T13:00:01.605Z"}';
+
+    // Tool result containing image
+    const toolResultWithImage =
+      '{"parentUuid":"15558e5d-f971-4fe7-99b7-136d5d4a8a59","isSidechain":false,"userType":"external","cwd":"/Users/test/project","sessionId":"bb32e6fc-9893-4839-b1de-646fdb1437d1","version":"2.0.55","gitBranch":"main","type":"user","message":{"role":"user","content":[{"tool_use_id":"toolu_01JPVq3KWLjR86hgLCGRXQv7","type":"tool_result","content":[{"type":"image","source":{"type":"base64","data":"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==","media_type":"image/png"}}]}]},"uuid":"847b23a7-5a53-4b10-a910-5debf7a9ef54","timestamp":"2025-11-29T13:01:43.989Z"}';
+
+    it('should parse user message with image content', () => {
+      const result = parse(userImageMessage);
+
+      expect(result).not.toBeNull();
+      expect(result?.role).toBe('user');
+      expect(result?.content).toHaveLength(2);
+
+      if (Array.isArray(result?.content)) {
+        // First block should be image
+        const imageBlock = result.content[0];
+        expect(imageBlock?.type).toBe('image');
+        if (imageBlock?.type !== 'image') {
+          throw new Error(`Expected image block, got ${imageBlock?.type}`);
+        }
+        expect(imageBlock.source.type).toBe('base64');
+        expect(imageBlock.source.media_type).toBe('image/png');
+        expect(imageBlock.source.data.length).toBeGreaterThan(0);
+
+        // Second block should be text
+        const textBlock = result.content[1];
+        expect(textBlock?.type).toBe('text');
+        if (textBlock?.type !== 'text') {
+          throw new Error(`Expected text block, got ${textBlock?.type}`);
+        }
+        expect(textBlock.text).toBe('What is this an image of?');
+      }
+    });
+
+    it('should parse tool result containing image', () => {
+      const result = parse(toolResultWithImage);
+
+      expect(result).not.toBeNull();
+      expect(result?.role).toBe('user');
+      expect(result?.content).toHaveLength(1);
+
+      if (Array.isArray(result?.content)) {
+        const block = result.content[0];
+        expect(block?.type).toBe('tool_result');
+        if (block?.type !== 'tool_result') {
+          throw new Error(`Expected tool_result block, got ${block?.type}`);
+        }
+        expect(block.tool_use_id).toBe('toolu_01JPVq3KWLjR86hgLCGRXQv7');
+        expect(block.content).toBeDefined();
+        // The content is an array with an image block
+        expect(Array.isArray(block.content)).toBe(true);
+      }
+    });
+
+    it('should correctly identify image block with type guard', () => {
+      const result = parse(userImageMessage);
+      expect(result).not.toBeNull();
+
+      if (Array.isArray(result?.content)) {
+        const block = result.content[0];
+        if (block?.type === 'image') {
+          expect(block.source).toBeDefined();
+          expect(block.source.type).toBe('base64');
+          expect(block.source.media_type).toBe('image/png');
+          expect(typeof block.source.data).toBe('string');
+        }
+      }
+    });
+  });
 });

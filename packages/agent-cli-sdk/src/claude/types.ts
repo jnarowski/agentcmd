@@ -28,7 +28,7 @@ export interface ClaudeMessage {
 }
 
 export interface ContentBlock {
-  type: 'text' | 'tool_use' | 'tool_result' | 'thinking';
+  type: 'text' | 'tool_use' | 'tool_result' | 'thinking' | 'image';
   text?: string;
   thinking?: string;
   tool_use_id?: string;
@@ -37,6 +37,11 @@ export interface ContentBlock {
   id?: string;
   name?: string;
   input?: Record<string, unknown>;
+  source?: {
+    type: string;
+    data: string;
+    media_type: string;
+  };
 }
 
 export interface ClaudeUsage {
