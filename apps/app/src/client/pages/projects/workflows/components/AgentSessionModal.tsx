@@ -70,7 +70,7 @@ export function AgentSessionModal({
             <span className="sr-only">Close</span>
           </DialogClose>
         </DialogHeader>
-        <div className="flex-1 min-h-0 overflow-y-auto pb-2">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           <AgentSessionViewer
             projectId={projectId}
             sessionId={sessionId}
