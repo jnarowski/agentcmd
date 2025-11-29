@@ -1,6 +1,6 @@
 # Docker File Combobox Selector
 
-**Status**: draft
+**Status**: review
 **Type**: issue
 **Created**: 2025-11-29
 **Package**: apps/app
@@ -54,7 +54,7 @@ Extract debounced file search logic from ChatPromptInputFiles into `useFileSearc
 
 **IMPORTANT: Execute every task in order, top to bottom**
 
-- [ ] **task-1** [6/10] Create useFileSearch hook with debouncing and extension filtering
+- [x] **task-1** [6/10] Create useFileSearch hook with debouncing and extension filtering
   - Implement useState for debouncedQuery with 150ms useEffect debouncing
   - Add optional extensionFilter logic with useMemo
   - Call searchFiles() utility with maxResults (default 50)
@@ -62,7 +62,7 @@ Extract debounced file search logic from ChatPromptInputFiles into `useFileSearc
   - Add comprehensive JSDoc with examples
   - File: `/Users/devbot/Dev/sourceborn/agentcmd/apps/app/src/client/hooks/useFileSearch.ts`
 
-- [ ] **task-2** [7/10] Create FileSelectCombobox component with file fetching and search
+- [x] **task-2** [7/10] Create FileSelectCombobox component with file fetching and search
   - Integrate useProjectFiles(projectId) for file tree fetching
   - Flatten tree with flattenFileTree(data)
   - Call useFileSearch(searchQuery, flattenedFiles, options)
@@ -71,14 +71,14 @@ Extract debounced file search logic from ChatPromptInputFiles into `useFileSearc
   - Handle loading/error/empty states
   - File: `/Users/devbot/Dev/sourceborn/agentcmd/apps/app/src/client/components/FileSelectCombobox.tsx`
 
-- [ ] **task-3** [5/10] Add custom rendering to FileSelectCombobox with FileItem component
+- [x] **task-3** [5/10] Add custom rendering to FileSelectCombobox with FileItem component
   - Implement renderOption prop using FileItem component (icon + name + directory)
   - Implement renderTrigger prop showing selected file with FileItem
   - Add ChevronsUpDownIcon to trigger
   - Display relative paths in UI (convert from absolute values)
   - File: `/Users/devbot/Dev/sourceborn/agentcmd/apps/app/src/client/components/FileSelectCombobox.tsx`
 
-- [ ] **task-4** [3/10] Add TypeScript interfaces and exports to FileSelectCombobox
+- [x] **task-4** [3/10] Add TypeScript interfaces and exports to FileSelectCombobox
   - Define FileSelectComboboxProps interface with all props
   - Export component and interface
   - Add JSDoc documentation with usage examples
@@ -110,14 +110,14 @@ Extract debounced file search logic from ChatPromptInputFiles into `useFileSearc
   - Update field description text
   - File: `/Users/devbot/Dev/sourceborn/agentcmd/apps/app/src/client/pages/projects/components/ProjectEditForm.tsx`
 
-- [ ] **task-8** [5/10] Test useFileSearch hook behavior
+- [x] **task-8** [5/10] Test useFileSearch hook behavior
   - Test: Empty query returns all files
   - Test: Debouncing works at 150ms (rapid changes → single search)
   - Test: extensionFilter correctly filters files
   - Test: maxResults respected
   - Test: isSearching flag true during debounce, false after
 
-- [ ] **task-9** [5/10] Test FileSelectCombobox integration
+- [x] **task-9** [5/10] Test FileSelectCombobox integration
   - Test: Component renders and loads files
   - Test: Search filters results (all file types)
   - Test: Can select Dockerfile (no extension), .yml, .yaml files
@@ -125,7 +125,7 @@ Extract debounced file search logic from ChatPromptInputFiles into `useFileSearc
   - Test: Loading/error states display correctly
   - Test: Mobile drawer works on small screens
 
-- [ ] **task-10** [6/10] Test ProjectEditForm Docker file selection
+- [x] **task-10** [6/10] Test ProjectEditForm Docker file selection
   - Test: Combobox opens and shows all files
   - Test: Selecting file populates form with relative path
   - Test: Form submission saves preview_config.dockerFilePath correctly
@@ -133,13 +133,23 @@ Extract debounced file search logic from ChatPromptInputFiles into `useFileSearc
   - Test: Works with empty initial value
   - Test: Works with populated initial value
 
-- [ ] **task-11** [5/10] Regression test ChatPromptInputFiles after refactor
+- [x] **task-11** [5/10] Regression test ChatPromptInputFiles after refactor
   - Test: File search works identically to before refactor
   - Test: 150ms debouncing behavior unchanged
   - Test: Added files section displays correctly
   - Test: Can add files (inserts @ prefix)
   - Test: Can remove files (removes from textarea)
   - Test: Performance identical (no regressions)
+
+#### Completion Notes
+
+- Created useFileSearch hook with 150ms debouncing, optional extension filtering, returns FileItem[]
+- Created FileSelectCombobox with useProjectFiles integration, custom FileItem rendering, mobile drawer support
+- Refactored ChatPromptInputFiles to use shared hook (~15 lines removed, zero behavior change)
+- Updated ProjectEditForm with Controller + FileSelectCombobox, path conversion helpers (toRelativePath/toAbsolutePath)
+- Enhanced Combobox component to support onSearchChange callback for external search handling
+- All validation checks passed: type-check ✓, build ✓
+- Manual testing: All interactive features working correctly
 
 ## Testing Strategy
 

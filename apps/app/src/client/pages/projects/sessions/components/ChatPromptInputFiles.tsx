@@ -24,7 +24,7 @@ import {
   type FileItem as FileItemType,
 } from "@/client/pages/projects/files/utils/fileUtils";
 import { FileItem } from "@/client/components/FileItem";
-import { searchFiles } from "@/client/utils/searchFiles";
+import { useFileSearch } from "@/client/hooks/useFileSearch";
 
 interface ChatPromptInputFilesProps {
   open: boolean;
@@ -88,7 +88,6 @@ export const ChatPromptInputFiles = ({
 }: ChatPromptInputFilesProps) => {
   const commandInputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [addedFiles, setAddedFiles] = useState<string[]>([]);
 
   // Fetch project files
@@ -107,25 +106,10 @@ export const ChatPromptInputFiles = ({
     }
   }, [open, textareaValue]);
 
-  // Debounce search query (150ms)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedQuery(searchQuery);
-    }, 150);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  // Filter files based on search query
-  const filteredFiles = useMemo(() => {
-    if (!debouncedQuery) {
-      return flattenedFiles;
-    }
-
-    return searchFiles(debouncedQuery, flattenedFiles, {
-      maxResults: 50,
-      useFuzzyFallback: true,
-    });
-  }, [debouncedQuery, flattenedFiles]);
+  // Search files with debouncing
+  const { results: filteredFiles } = useFileSearch(searchQuery, flattenedFiles, {
+    maxResults: 50,
+  });
 
   // Focus command input when menu opens
   useEffect(() => {
