@@ -37,7 +37,10 @@ export function ModelSelector({
 
   return (
     <div className="hidden md:flex">
-      <PromptInputModelSelect value={currentModel} onValueChange={onModelChange}>
+      <PromptInputModelSelect
+        value={currentModel}
+        onValueChange={onModelChange}
+      >
         <PromptInputModelSelectTrigger>
           <PromptInputModelSelectValue />
         </PromptInputModelSelectTrigger>

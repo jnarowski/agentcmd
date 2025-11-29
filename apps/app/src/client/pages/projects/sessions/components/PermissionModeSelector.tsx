@@ -81,7 +81,7 @@ export function PermissionModeSelector({
     <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
       <DropdownMenuTrigger
         className={cn(
-          "inline-flex items-center justify-between gap-2 rounded-md border-none bg-transparent px-3 py-1.5 text-sm font-medium text-muted-foreground shadow-xs transition-colors dark:bg-input/30",
+          "inline-flex h-9 items-center justify-between gap-2 rounded-md border-none bg-transparent px-3 text-sm font-medium text-muted-foreground shadow-xs transition-colors dark:bg-input/30",
           "hover:bg-accent hover:text-foreground dark:hover:bg-input/50",
           "data-[state=open]:bg-accent data-[state=open]:text-foreground"
         )}
