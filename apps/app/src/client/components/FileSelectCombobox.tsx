@@ -36,23 +36,6 @@ export interface FileSelectComboboxProps {
 
 // Path conversion helpers
 
-/** Convert absolute path to relative path (without @ prefix) */
-function toRelativePath(absolutePath: string, projectPath: string): string {
-  if (!projectPath || !absolutePath) return absolutePath;
-
-  // Normalize project path (remove trailing slash)
-  const normalizedProjectPath = projectPath.endsWith("/")
-    ? projectPath.slice(0, -1)
-    : projectPath;
-
-  // If the path starts with the project path, make it relative
-  if (absolutePath.startsWith(normalizedProjectPath + "/")) {
-    return absolutePath.slice(normalizedProjectPath.length + 1);
-  }
-
-  return absolutePath;
-}
-
 /** Get relative directory path for display */
 function getRelativeDirectory(fullPath: string, projectPath: string): string {
   if (!projectPath || !fullPath) return fullPath;
@@ -171,7 +154,7 @@ export function FileSelectCombobox({
       useMobileDrawer={true}
       onSearchChange={setSearchQuery}
       // Custom trigger rendering (show selected file with FileItem)
-      renderTrigger={(selectedOption, open) => {
+      renderTrigger={(selectedOption, _open) => {
         if (!selectedOption) {
           return (
             <>
@@ -182,7 +165,6 @@ export function FileSelectCombobox({
         }
 
         const fileOption = selectedOption as FileComboboxOption;
-        const relativePath = toRelativePath(fileOption.value, projectPath);
 
         return (
           <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -196,7 +178,7 @@ export function FileSelectCombobox({
         );
       }}
       // Custom option rendering (use FileItem component)
-      renderOption={(option, selected) => {
+      renderOption={(option, _selected) => {
         const fileOption = option as FileComboboxOption;
         return (
           <FileItem

@@ -85,7 +85,7 @@ Extract debounced file search logic from ChatPromptInputFiles into `useFileSearc
   - Type ComboboxOption with custom _fileItem property
   - File: `/Users/devbot/Dev/sourceborn/agentcmd/apps/app/src/client/components/FileSelectCombobox.tsx`
 
-- [ ] **task-5** [4/10] Refactor ChatPromptInputFiles to use useFileSearch hook
+- [x] **task-5** [4/10] Refactor ChatPromptInputFiles to use useFileSearch hook
   - Import useFileSearch hook
   - Replace lines 90-128 (debouncedQuery state, useEffect, filteredFiles useMemo)
   - Call: `const { results: filteredFiles } = useFileSearch(searchQuery, flattenedFiles, { maxResults: 50 })`
@@ -93,14 +93,14 @@ Extract debounced file search logic from ChatPromptInputFiles into `useFileSearc
   - Test: Search functionality works identically
   - File: `/Users/devbot/Dev/sourceborn/agentcmd/apps/app/src/client/pages/projects/sessions/components/ChatPromptInputFiles.tsx`
 
-- [ ] **task-6** [6/10] Update ProjectEditForm imports and add path conversion helper
+- [x] **task-6** [6/10] Update ProjectEditForm imports and add path conversion helper
   - Import Controller from react-hook-form
   - Import FileSelectCombobox component
   - Add toRelativePath helper function (absolute → relative path conversion)
   - Handle paths with/without trailing slashes in normalization
   - File: `/Users/devbot/Dev/sourceborn/agentcmd/apps/app/src/client/pages/projects/components/ProjectEditForm.tsx`
 
-- [ ] **task-7** [6/10] Replace dockerFilePath Input with Controller + FileSelectCombobox
+- [x] **task-7** [6/10] Replace dockerFilePath Input with Controller + FileSelectCombobox
   - Replace lines 254-266 with Controller wrapper
   - Pass field.value and field.onChange to FileSelectCombobox
   - Convert absolute paths to relative in onValueChange handler
