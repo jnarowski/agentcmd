@@ -70,6 +70,11 @@ export default function NewSessionPage() {
     isConnected: globalIsConnected,
   } = useWebSocket();
 
+  // Read initialMessage query param
+  const initialMessage = searchParams.get('initialMessage')
+    ? decodeURIComponent(searchParams.get('initialMessage')!)
+    : undefined;
+
   // Auto-focus input on mount
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -204,6 +209,7 @@ export default function NewSessionPage() {
             isStreaming={false}
             totalTokens={0}
             agent={agent}
+            initialText={initialMessage}
           />
         </div>
       </div>
