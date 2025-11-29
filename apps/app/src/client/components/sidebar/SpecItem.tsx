@@ -16,7 +16,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/client/components/ui/dropdown-menu";
-import { FileText, MoreHorizontal, FolderInput, Eye, Pencil } from "lucide-react";
+import { FileText, MoreHorizontal, FolderInput, Eye, Pencil, MessageSquarePlus } from "lucide-react";
 import { formatDate } from "@/shared/utils/formatDate";
 import type { Spec } from "@/shared/types/spec.types";
 import { api } from "@/client/utils/api";
@@ -82,6 +82,16 @@ export function SpecItem({ spec, projectName }: SpecItemProps) {
     } finally {
       setIsMoving(false);
       setMenuOpenSpecId(null);
+    }
+  };
+
+  const handleNewFollowupSession = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const message = `Read @${spec.specPath} and related context.`;
+    const encoded = encodeURIComponent(message);
+    navigate(`/projects/${spec.projectId}/sessions/new?initialMessage=${encoded}`);
+    if (isMobile) {
+      setOpenMobile(false);
     }
   };
 
@@ -154,6 +164,10 @@ export function SpecItem({ spec, projectName }: SpecItemProps) {
             }}>
               <Pencil className="size-4 mr-2" />
               Edit Spec
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleNewFollowupSession}>
+              <MessageSquarePlus className="size-4 mr-2" />
+              New Followup Session
             </DropdownMenuItem>
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>

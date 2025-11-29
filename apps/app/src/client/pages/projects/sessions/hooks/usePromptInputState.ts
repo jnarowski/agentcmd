@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import type { PermissionMode } from "agent-cli-sdk";
 import type { PromptInputMessage } from "@/client/components/ai-elements/PromptInput";
 import type { FileUIPart } from "ai";
@@ -33,6 +33,7 @@ export interface UsePromptInputStateParams {
   isStreaming?: boolean;
   onSubmit?: (message: PromptInputMessage) => void | Promise<void>;
   onKill?: () => void;
+  initialText?: string;
 }
 
 export interface UsePromptInputStateReturn {
@@ -117,6 +118,7 @@ export function usePromptInputState({
   isStreaming = false,
   onSubmit,
   onKill,
+  initialText,
 }: UsePromptInputStateParams): UsePromptInputStateReturn {
   // State
   const [status, setStatus] = useState<"submitted" | "streaming" | "ready" | "error">("ready");
@@ -127,6 +129,16 @@ export function usePromptInputState({
 
   // Get text from controller
   const text = controller.textInput.value;
+
+  // Initialize controller with initialText on mount if provided
+  // controller is from usePromptInputController() which returns stable object reference
+  // This only runs when initialText changes or on mount
+  useEffect(() => {
+    if (initialText && controller) {
+      controller.textInput.setInput(initialText);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialText]);
 
   // Permission mode cycling
   const cyclePermissionMode = useCallback(() => {

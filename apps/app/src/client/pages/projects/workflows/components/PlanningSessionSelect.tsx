@@ -17,6 +17,7 @@ interface PlanningSessionSelectProps {
   projectId: string;
   value: string;
   onValueChange: (value: string) => void;
+  onSessionChange?: (session: SessionSummary | null) => void;
   disabled?: boolean;
 }
 
@@ -24,6 +25,7 @@ export function PlanningSessionSelect({
   projectId,
   value,
   onValueChange,
+  onSessionChange,
   disabled,
 }: PlanningSessionSelectProps) {
   const { sessions } = useSessionList(projectId);
@@ -44,7 +46,17 @@ export function PlanningSessionSelect({
   return (
     <Combobox
       value={value}
-      onValueChange={onValueChange}
+      onValueChange={(newValue) => {
+        onValueChange(newValue);
+
+        // Notify parent with full session object
+        if (onSessionChange) {
+          const selectedSession = planningSessionOptions.find(
+            opt => opt.value === newValue
+          )?.session || null;
+          onSessionChange(selectedSession);
+        }
+      }}
       options={planningSessionOptions}
       placeholder="Select planning session..."
       searchPlaceholder="Search sessions..."

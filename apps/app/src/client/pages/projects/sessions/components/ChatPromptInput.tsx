@@ -50,6 +50,7 @@ interface ChatPromptInputProps {
   currentMessageTokens?: number; // Current message tokens (to be added)
   agent?: AgentType; // Override agent (for /new page before session is created)
   onKill?: () => void;
+  initialText?: string; // Pre-populate chat input on mount
 }
 
 export interface ChatPromptInputHandle {
@@ -70,6 +71,7 @@ const ChatPromptInputInner = forwardRef<
       currentMessageTokens,
       agent: agentProp,
       onKill,
+      initialText,
     },
     ref
   ) => {
@@ -156,6 +158,7 @@ const ChatPromptInputInner = forwardRef<
       isStreaming: externalIsStreaming,
       onSubmit,
       onKill,
+      initialText,
     });
 
     // Expose focus method to parent components

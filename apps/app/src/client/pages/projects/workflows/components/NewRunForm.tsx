@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Input } from "@/client/components/ui/input";
 import { Label } from "@/client/components/ui/label";
 import { Button } from "@/client/components/ui/button";
@@ -28,6 +28,8 @@ import { PlanningSessionSelect } from "./PlanningSessionSelect";
 import { SpecFileSelect } from "./SpecFileSelect";
 import { useBranchValidation } from "../hooks/useBranchValidation";
 import { sanitizeBranchForDirectory } from "@/shared/utils/sanitizeBranchForDirectory";
+import { getSessionDisplayName } from "@/client/utils/getSessionDisplayName";
+import type { SessionSummary } from "@/client/pages/projects/sessions/stores/sessionStore";
 
 interface NewRunFormProps {
   projectId: string;
@@ -134,6 +136,24 @@ export function NewRunForm({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialSpecInputType]);
+
+  // Handler for when planning session is selected
+  const handlePlanningSessionChange = useCallback(
+    (session: SessionSummary | null) => {
+      // Only pre-fill if name is currently empty (respect user edits)
+      if (name) return;
+
+      if (session) {
+        const displayName = getSessionDisplayName(session);
+
+        // Only set if not "Untitled Session"
+        if (displayName && displayName !== "Untitled Session") {
+          setName(displayName);
+        }
+      }
+    },
+    [name]
+  );
 
   // Reset dependent state when definition changes (but preserve initialSpecFile and initialName)
   useEffect(() => {
@@ -496,6 +516,7 @@ export function NewRunForm({
                   projectId={projectId}
                   value={planningSessionId}
                   onValueChange={setPlanningSessionId}
+                  onSessionChange={handlePlanningSessionChange}
                   disabled={createWorkflow.isPending}
                 />
               </TabsContent>
