@@ -131,11 +131,14 @@ export function usePromptInputState({
   const text = controller.textInput.value;
 
   // Initialize controller with initialText on mount if provided
+  // controller is from usePromptInputController() which returns stable object reference
+  // This only runs when initialText changes or on mount
   useEffect(() => {
     if (initialText && controller) {
       controller.textInput.setInput(initialText);
     }
-  }, [initialText, controller]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialText]);
 
   // Permission mode cycling
   const cyclePermissionMode = useCallback(() => {

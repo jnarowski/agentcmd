@@ -71,9 +71,8 @@ export default function NewSessionPage() {
   } = useWebSocket();
 
   // Read initialMessage query param
-  const initialMessage = searchParams.get('initialMessage')
-    ? decodeURIComponent(searchParams.get('initialMessage')!)
-    : undefined;
+  const initialMessageParam = searchParams.get('initialMessage');
+  const initialMessage = initialMessageParam ? decodeURIComponent(initialMessageParam) : undefined;
 
   // Auto-focus input on mount
   useEffect(() => {
