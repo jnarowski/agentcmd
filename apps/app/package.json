@@ -26,7 +26,7 @@
     "cli:install": "DATABASE_URL=file:$HOME/.agentcmd/database.db node dist/cli.js install",
     "cli:start": "NODE_ENV=production DATABASE_URL=file:$HOME/.agentcmd/database.db node dist/cli.js start",
     "check-types": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.server.json && tsc --noEmit -p tsconfig.shared.json && tsc --noEmit -p tsconfig.cli.json && tsc --noEmit -p tsconfig.node.json",
-    "dev": "tsx --env-file=.env src/scripts/start-dev.ts",
+    "dev": "NODE_ENV=development tsx --env-file=.env src/scripts/start-dev.ts",
     "dev:kill": "bash ./scripts/kill-ports.sh",
     "dev:setup": "tsx scripts/setup-env.ts && pnpm prisma:generate && prisma migrate deploy",
     "e2e": "playwright test",
