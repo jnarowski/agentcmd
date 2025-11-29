@@ -12,7 +12,7 @@ export function Logo({ size = "md", className = "" }: LogoProps) {
 
   const { icon, text } = sizes[size];
 
-  return (
+  const content = (
     <div className={`flex items-center gap-2 ${className}`}>
       <svg
         width={icon}
@@ -49,5 +49,13 @@ export function Logo({ size = "md", className = "" }: LogoProps) {
         <span className="font-extrabold">cmd</span>
       </span>
     </div>
+  );
+
+  const href = import.meta.env.DEV ? "http://localhost:3000" : "https://agentcmd.dev";
+
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer">
+      {content}
+    </a>
   );
 }
