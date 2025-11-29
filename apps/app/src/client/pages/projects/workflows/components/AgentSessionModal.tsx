@@ -18,9 +18,11 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from "@/client/components/ui/dialog";
 import { AgentSessionViewer } from "@/client/components/AgentSessionViewer";
 import { useSessionStore } from "@/client/pages/projects/sessions/stores/sessionStore";
+import { XIcon } from "lucide-react";
 
 export interface AgentSessionModalProps {
   open: boolean;
@@ -57,9 +59,16 @@ export function AgentSessionModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!top-0 !left-0 !translate-x-0 !translate-y-0 max-w-[100vw] max-h-[100vh] w-screen h-screen flex flex-col overflow-hidden p-0 safe-area-pt safe-area-pb">
+      <DialogContent
+        className="!top-0 !left-0 !translate-x-0 !translate-y-0 max-w-[100vw] max-h-[100vh] w-screen h-screen flex flex-col overflow-hidden p-0 safe-area-pt safe-area-pb"
+        showCloseButton={false}
+      >
         <DialogHeader className="flex flex-row items-center px-6 py-3 border-b">
           <DialogTitle className="flex-1">{sessionName || "Agent Session"}</DialogTitle>
+          <DialogClose className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden">
+            <XIcon className="size-4" />
+            <span className="sr-only">Close</span>
+          </DialogClose>
         </DialogHeader>
         <div className="flex-1 min-h-0 overflow-y-auto pb-2">
           <AgentSessionViewer
