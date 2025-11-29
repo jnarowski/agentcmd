@@ -235,3 +235,48 @@ useFileSearch hook supports optional extensionFilter, but ProjectEditForm does N
 - Plan: `/Users/devbot/.claude/plans/soft-watching-reef.md`
 - ChatPromptInputFiles: `/Users/devbot/Dev/sourceborn/agentcmd/apps/app/src/client/pages/projects/sessions/components/ChatPromptInputFiles.tsx`
 - searchFiles utility: `/Users/devbot/Dev/sourceborn/agentcmd/apps/app/src/client/utils/searchFiles.ts`
+
+## Review Findings
+
+**Review Date:** 2025-11-29
+**Reviewed By:** Claude Code
+**Review Iteration:** 1 of 3
+**Branch:** feature/docker-file-combobox-selector
+**Commits Reviewed:** 3
+
+### Summary
+
+Implementation is complete with high code quality. All 11 tasks from the spec were properly implemented. The code follows project patterns, includes proper TypeScript types, and maintains separation of concerns. However, there is one MEDIUM priority issue with extension filtering normalization logic that could cause incorrect filtering behavior.
+
+### Phase 1: Docker File Combobox Implementation
+
+**Status:** ⚠️ Incomplete - One filtering bug needs addressing
+
+#### MEDIUM Priority
+
+- [ ] **Extension filter normalization bug**
+  - **File:** `apps/app/src/client/hooks/useFileSearch.ts:86-88`
+  - **Spec Reference:** "Add optional extensionFilter logic with useMemo" (task-1)
+  - **Expected:** Extension filter should normalize extensions by removing leading dot, then compare with `file.extension` (which already has no dot)
+  - **Actual:** Code removes the leading dot (`ext.startsWith(".") ? ext.slice(1) : ext`) but the comment says "add leading dot if missing" which contradicts the logic
+  - **Issue:** The comment is misleading and the normalization logic strips dots but the comment suggests adding them. The logic appears correct (strips dots to match FileItem.extension format), but the comment creates confusion about intent.
+  - **Fix:** Update comment to accurately reflect the logic: `// Normalize extensions (remove leading dot to match FileItem.extension format)`
+
+### Positive Findings
+
+- **Excellent code organization**: Hook returns generic `FileItem[]` allowing components to handle presentation (task-1 ✓)
+- **Proper debouncing**: 150ms debouncing with `isSearching` flag correctly implemented (task-1 ✓)
+- **Clean component architecture**: FileSelectCombobox properly separates data fetching, search logic, and presentation (task-2 ✓)
+- **Comprehensive TypeScript types**: All interfaces properly defined with JSDoc (task-4 ✓)
+- **Successful refactor**: ChatPromptInputFiles reduced by ~15 lines with zero behavior change (task-5 ✓)
+- **Path handling**: toRelativePath/toAbsolutePath helpers properly handle trailing slashes (task-6 ✓)
+- **Controller integration**: ProjectEditForm correctly uses react-hook-form Controller with path conversion (task-7 ✓)
+- **Enhanced Combobox**: Added onSearchChange callback to support external search handling (bonus improvement)
+- **Loading/error states**: FileSelectCombobox properly handles all edge cases
+- **Mobile support**: useMobileDrawer enabled for responsive UX
+
+### Review Completion Checklist
+
+- [x] All spec requirements reviewed
+- [x] Code quality checked
+- [ ] All findings addressed and tested
