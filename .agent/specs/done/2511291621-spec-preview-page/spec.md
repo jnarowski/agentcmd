@@ -1,6 +1,6 @@
 # Spec Preview Page with Sidebar Layout
 
-**Status**: review
+**Status**: completed
 **Created**: 2025-11-29
 **Updated**: 2025-11-29
 **Package**: apps/app
