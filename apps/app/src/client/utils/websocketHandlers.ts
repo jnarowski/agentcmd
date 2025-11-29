@@ -16,23 +16,23 @@ import { Channels } from "@/shared/websocket";
 import { GlobalEventTypes } from "@/shared/types/websocket.types";
 
 /**
- * Exponential backoff delays for reconnection attempts
- * Pattern: 1s, 2s, 4s, 8s, 16s
+ * Exponential backoff delays for initial reconnection attempts
+ * Pattern: 1s, 2s, 4s, 8s, 16s, then cap at 30s for unlimited attempts
  */
-const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000];
-
-/**
- * Maximum reconnection attempts before giving up
- */
-const MAX_RECONNECT_ATTEMPTS = 5;
+const INITIAL_DELAYS = [1000, 2000, 4000, 8000, 16000];
+const MAX_DELAY = 30000; // 30 seconds
 
 /**
  * Get reconnection delay for a given attempt number
+ * Uses exponential backoff for first 5 attempts, then caps at 30s for unlimited attempts
  * @param attempt Attempt number (0-indexed)
  * @returns Delay in milliseconds
  */
 export function getReconnectDelay(attempt: number): number {
-  return RECONNECT_DELAYS[attempt] ?? 16000;
+  if (attempt < INITIAL_DELAYS.length) {
+    return INITIAL_DELAYS[attempt];
+  }
+  return MAX_DELAY; // Cap at 30 seconds for attempts 5+
 }
 
 /**
@@ -46,6 +46,7 @@ export interface BindHandlerParams {
   connectionTimeoutRef: { current: ReturnType<typeof setTimeout> | null };
   lastMessageTimeRef: { current: number };
   intentionalCloseRef: { current: boolean };
+  errorEmittedThisCycleRef: { current: boolean };
   setReadyState: (state: number) => void;
   setIsReady: (ready: boolean) => void;
   onStartHeartbeat: () => void;
@@ -87,6 +88,7 @@ export function bindOpenHandler(params: BindHandlerParams) {
     connectionTimeoutRef,
     setReadyState,
     reconnectAttemptRef,
+    errorEmittedThisCycleRef,
     onStopHeartbeat,
   } = params;
 
@@ -104,6 +106,9 @@ export function bindOpenHandler(params: BindHandlerParams) {
 
     // Reset reconnect attempts on successful connection
     reconnectAttemptRef.current = 0;
+
+    // Reset error emission flag for new connection cycle
+    errorEmittedThisCycleRef.current = false;
 
     // Stop any existing heartbeat (will be restarted on 'connected' message)
     onStopHeartbeat();
@@ -125,20 +130,25 @@ export function bindMessageHandler(params: BindHandlerParams) {
 
 /**
  * Bind error handler - called on WebSocket errors
- * Logs error and emits to EventBus
+ * Logs error and emits to EventBus (once per disconnect cycle)
  */
 export function bindErrorHandler(params: BindHandlerParams) {
-  const { eventBus } = params;
+  const { eventBus, errorEmittedThisCycleRef } = params;
 
   return (error: Event) => {
     console.error("[WebSocket] Error:", error);
-    eventBus.emit(Channels.global(), {
-      type: GlobalEventTypes.ERROR,
-      data: {
-        error: "WebSocket error occurred",
-        timestamp: Date.now(),
-      },
-    });
+
+    // Prevent duplicate error emissions per disconnect cycle
+    if (!errorEmittedThisCycleRef.current) {
+      errorEmittedThisCycleRef.current = true;
+      eventBus.emit(Channels.global(), {
+        type: GlobalEventTypes.ERROR,
+        data: {
+          error: "WebSocket error occurred",
+          timestamp: Date.now(),
+        },
+      });
+    }
   };
 }
 
@@ -195,44 +205,17 @@ export function bindCloseHandler(params: BindHandlerParams) {
       return;
     }
 
-    // Always attempt reconnection (except for auth failures and intentional close)
-    console.log("[WebSocket] 🔍 Reconnection check:", {
-      currentAttempts: reconnectAttemptRef.current,
-      willReconnect: reconnectAttemptRef.current < MAX_RECONNECT_ATTEMPTS,
-    });
-
-    // Check if we've exceeded max attempts
-    if (reconnectAttemptRef.current >= MAX_RECONNECT_ATTEMPTS) {
-      console.error(
-        "[WebSocket] ⛔ Max reconnection attempts reached:",
-        reconnectAttemptRef.current
-      );
-
-      eventBus.emit(Channels.global(), {
-        type: GlobalEventTypes.ERROR,
-        data: {
-          error: "Connection lost",
-          message: "Maximum reconnection attempts reached",
-          timestamp: Date.now(),
-        },
-      });
-
-      // Notify parent that reconnection has stopped
-      onReconnectStop();
-      return;
-    }
-
-    // Schedule reconnection with exponential backoff
+    // Always attempt reconnection with exponential backoff (capped at 30s)
     const delay = getReconnectDelay(reconnectAttemptRef.current);
     reconnectAttemptRef.current++; // Increment BEFORE scheduling
 
     console.log(
-      `[WebSocket] 🔄 Scheduling reconnect attempt ${reconnectAttemptRef.current}/${MAX_RECONNECT_ATTEMPTS} in ${delay}ms`
+      `[WebSocket] 🔄 Scheduling reconnect attempt ${reconnectAttemptRef.current} in ${delay}ms`
     );
 
     reconnectTimeoutRef.current = setTimeout(() => {
       console.log(
-        `[WebSocket] ▶️ Executing reconnect attempt ${reconnectAttemptRef.current}/${MAX_RECONNECT_ATTEMPTS}`
+        `[WebSocket] ▶️ Executing reconnect attempt ${reconnectAttemptRef.current}`
       );
       onReconnect();
     }, delay);
