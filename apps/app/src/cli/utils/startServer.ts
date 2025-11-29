@@ -233,7 +233,7 @@ export async function startServer(config: StartServerConfig): Promise<void> {
 
     // 8. Wait for server to be ready (Inngest will sync once server responds)
     if (verbose) console.log("Waiting for server to be ready...");
-    await waitForServerReady(`http://${externalHost}:${port}/api/health`, {
+    await waitForServerReady(`http://${host}:${port}/api/health`, {
       timeout: 30000,
     });
     if (verbose) console.log("Server is ready");
