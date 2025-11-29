@@ -17,7 +17,8 @@ export interface SeedUserOptions {
 
 export interface SeedProjectOptions {
   name: string;
-  path: string;
+  /** Optional custom path (auto-generated with .agentcmd-e2e-test- prefix if not provided) */
+  path?: string;
 }
 
 export interface SeedSessionOptions {
@@ -49,16 +50,25 @@ export async function seedUser(
 }
 
 /**
+ * E2E test project path prefix
+ * Used to filter out E2E projects from sync operations (like worktrees)
+ * Format: /tmp/.agentcmd-e2e-test-{name}-{timestamp}-{random}
+ */
+export const E2E_PROJECT_PATH_PREFIX = "/tmp/.agentcmd-e2e-test-";
+
+/**
  * Seed a project in the database
- * Appends unique suffix to path to avoid unique constraint violations
+ * Uses standardized /tmp/.agentcmd-e2e-test- prefix for easy filtering from sync
  */
 export async function seedProject(
   prisma: PrismaClient,
   options: SeedProjectOptions
 ) {
-  // Append unique suffix to path to avoid conflicts between test runs
+  // Generate unique path with standardized E2E prefix
+  // This allows sync operations to filter out E2E projects (similar to worktrees)
   const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
-  const uniquePath = `${options.path}-${uniqueSuffix}`;
+  const safeName = options.name.toLowerCase().replace(/\s+/g, "-");
+  const uniquePath = `${E2E_PROJECT_PATH_PREFIX}${safeName}-${uniqueSuffix}`;
 
   return prisma.project.create({
     data: {
@@ -66,6 +76,13 @@ export async function seedProject(
       path: uniquePath,
     },
   });
+}
+
+/**
+ * Check if a path is an E2E test project path
+ */
+export function isE2ETestProject(path: string): boolean {
+  return path.startsWith(E2E_PROJECT_PATH_PREFIX);
 }
 
 /**

@@ -89,6 +89,41 @@ export const test = base.extend<AuthenticatedPageFixtures>({
       localStorage.setItem("auth-storage", JSON.stringify(state));
     }, authState);
 
+    // Forward browser console errors for debugging
+    page.on("console", (msg) => {
+      if (msg.type() === "error") {
+        console.log(`[browser:error] ${msg.text()}`);
+      }
+    });
+
+    page.on("pageerror", (err) => {
+      console.log(`[browser:exception] ${err.message}`);
+    });
+
+    // Log WebSocket activity for debugging
+    page.on("websocket", (ws) => {
+      console.log(`[ws] connected: ${ws.url()}`);
+
+      ws.on("framesent", (data) => {
+        const payload =
+          typeof data.payload === "string"
+            ? data.payload.slice(0, 300)
+            : "[binary]";
+        console.log(`[ws:sent] ${payload}`);
+      });
+
+      ws.on("framereceived", (data) => {
+        const payload =
+          typeof data.payload === "string"
+            ? data.payload.slice(0, 300)
+            : "[binary]";
+        console.log(`[ws:recv] ${payload}`);
+      });
+
+      ws.on("close", () => console.log(`[ws] closed`));
+      ws.on("socketerror", (err) => console.log(`[ws:error] ${err}`));
+    });
+
     // Now navigate - auth will be recognized immediately
     await page.goto("/");
 
