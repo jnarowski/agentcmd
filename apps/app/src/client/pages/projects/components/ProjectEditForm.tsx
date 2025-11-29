@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useUpdateProject } from "@/client/pages/projects/hooks/useProjects";
@@ -9,6 +9,7 @@ import { ErrorAlert } from "@/client/components/ui/error-alert";
 import { Input } from "@/client/components/ui/input";
 import { Label } from "@/client/components/ui/label";
 import { Textarea } from "@/client/components/ui/textarea";
+import { FileSelectCombobox } from "@/client/components/FileSelectCombobox";
 import { Plus, X } from "lucide-react";
 import type { Project, ProjectPreviewConfig } from "@/shared/types/project.types";
 
@@ -33,6 +34,38 @@ interface PortEntry {
 }
 
 // Helper functions for parsing/conversion
+
+/** Convert absolute path to relative path */
+function toRelativePath(absolutePath: string, projectPath: string): string {
+  if (!projectPath || !absolutePath) return absolutePath;
+
+  // Normalize project path (remove trailing slash)
+  const normalizedProjectPath = projectPath.endsWith("/")
+    ? projectPath.slice(0, -1)
+    : projectPath;
+
+  // If the path starts with the project path, make it relative
+  if (absolutePath.startsWith(normalizedProjectPath + "/")) {
+    return absolutePath.slice(normalizedProjectPath.length + 1);
+  }
+
+  return absolutePath;
+}
+
+/** Convert relative path to absolute path */
+function toAbsolutePath(relativePath: string, projectPath: string): string {
+  if (!relativePath || !projectPath) return relativePath;
+
+  // If already absolute, return as is
+  if (relativePath.startsWith("/")) return relativePath;
+
+  // Normalize project path (remove trailing slash)
+  const normalizedProjectPath = projectPath.endsWith("/")
+    ? projectPath.slice(0, -1)
+    : projectPath;
+
+  return `${normalizedProjectPath}/${relativePath}`;
+}
 
 function parseEnvString(str: string): Record<string, string> {
   if (!str.trim()) return {};
@@ -131,6 +164,7 @@ export function ProjectEditForm({
     handleSubmit,
     formState: { errors },
     reset,
+    control,
   } = useForm<ProjectFormData>({
     // @ts-ignore - Zod version mismatch with @hookform/resolvers
     resolver: zodResolver(projectFormSchema),
@@ -253,15 +287,29 @@ export function ProjectEditForm({
 
             <div className="space-y-2">
               <Label htmlFor="dockerFilePath">Docker File Path</Label>
-              <Input
-                id="dockerFilePath"
-                {...register("dockerFilePath")}
-                placeholder="docker-compose.yml"
-                className="font-mono text-sm"
-                disabled={isLoading}
+              <Controller
+                name="dockerFilePath"
+                control={control}
+                render={({ field }) => (
+                  <FileSelectCombobox
+                    value={toAbsolutePath(field.value || "", project.path)}
+                    onValueChange={(absolutePath) => {
+                      const relativePath = toRelativePath(absolutePath, project.path);
+                      field.onChange(relativePath);
+                    }}
+                    projectId={project.id}
+                    projectPath={project.path}
+                    placeholder="Select Docker file..."
+                    disabled={isLoading}
+                    buttonClassName="font-mono text-sm"
+                  />
+                )}
               />
+              {errors.dockerFilePath && (
+                <p className="text-sm text-destructive">{errors.dockerFilePath.message}</p>
+              )}
               <p className="text-xs text-muted-foreground">
-                Relative path to Docker file (e.g., docker-compose.yml)
+                Select Docker Compose file, Dockerfile, or other container config
               </p>
             </div>
 

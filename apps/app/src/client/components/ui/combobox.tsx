@@ -110,6 +110,11 @@ export interface ComboboxProps<T extends string = string> {
    * @param selected - Whether this option is currently selected
    */
   renderOption?: (option: ComboboxOption<T>, selected: boolean) => ReactNode;
+  /**
+   * Callback when search query changes (for external search handling)
+   * @param query - The current search query
+   */
+  onSearchChange?: (query: string) => void;
 }
 
 export function Combobox<T extends string = string>({
@@ -125,8 +130,10 @@ export function Combobox<T extends string = string>({
   useMobileDrawer = true,
   renderTrigger,
   renderOption,
+  onSearchChange,
 }: ComboboxProps<T>) {
   const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const isMobile = useIsMobile();
 
   const selectedOption = useMemo(
@@ -148,10 +155,20 @@ export function Combobox<T extends string = string>({
     </>
   );
 
-  // Helper component for shared Command content
-  const CommandContent = () => (
-    <Command>
-      <CommandInput placeholder={searchPlaceholder} />
+  // Handle search change
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    onSearchChange?.(query);
+  };
+
+  // Shared Command content (JSX variable, not component to preserve focus)
+  const commandContent = (
+    <Command shouldFilter={!onSearchChange}>
+      <CommandInput
+        placeholder={searchPlaceholder}
+        value={searchQuery}
+        onValueChange={handleSearchChange}
+      />
       <CommandList>
         <CommandEmpty>{emptyMessage}</CommandEmpty>
         <CommandGroup>
@@ -213,7 +230,7 @@ export function Combobox<T extends string = string>({
           className={cn("w-auto p-0", popoverClassName)}
           style={{ width: 'var(--radix-popover-trigger-width)' }}
         >
-          <CommandContent />
+          {commandContent}
         </PopoverContent>
       </Popover>
     );
@@ -242,7 +259,7 @@ export function Combobox<T extends string = string>({
           {placeholder}
         </DrawerTitle>
         <div className="mt-4 border-t">
-          <CommandContent />
+          {commandContent}
         </div>
       </DrawerContent>
     </Drawer>

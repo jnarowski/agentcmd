@@ -21,6 +21,7 @@ export function useProjectFiles(projectId: string): UseQueryResult<FileTreeItem[
   return useQuery({
     queryKey: fileKeys.project(projectId),
     queryFn: () => fetchProjectFiles(projectId),
-    enabled: !!projectId, // Only run if projectId is provided
+    enabled: !!projectId,
+    staleTime: 30 * 1000, // 30 seconds
   });
 }
