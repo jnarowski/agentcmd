@@ -365,11 +365,11 @@
     },
     "2511282026": {
       "folder": "2511282026-websocket-reconnect-ux",
-      "path": "todo/2511282026-websocket-reconnect-ux/spec.md",
+      "path": "done/2511282026-websocket-reconnect-ux/spec.md",
       "spec_type": "issue",
       "status": "completed",
       "created": "2025-11-29T03:27:00Z",
-      "updated": "2025-11-29T13:37:02Z",
+      "updated": "2025-11-29T13:43:00Z",
       "totalComplexity": 42,
       "phaseCount": 1,
       "taskCount": 9
