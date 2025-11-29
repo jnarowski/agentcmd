@@ -1,10 +1,10 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Combobox } from "@/client/components/ui/combobox";
 import { Button } from "@/client/components/ui/button";
 import { useProjectSpecs } from "@/client/pages/projects/hooks/useProjectSpecs";
 import { cn } from "@/client/utils/cn";
-import { SpecFileViewer } from "./SpecFileViewer";
 
 interface SpecFileSelectProps {
   projectId: string;
@@ -21,11 +21,11 @@ export function SpecFileSelect({
   disabled,
   onSpecTypeChange,
 }: SpecFileSelectProps) {
+  const navigate = useNavigate();
   const { data: specFiles } = useProjectSpecs(projectId, {
     status: ["draft", "in-progress", "review"],
     enabled: true,
   });
-  const [viewerOpen, setViewerOpen] = useState(false);
 
   // Transform spec tasks to combobox options with spec type
   const specFileOptions = useMemo(() => {
@@ -116,7 +116,11 @@ export function SpecFileSelect({
         </div>
         <Button
           variant="outline"
-          onClick={() => setViewerOpen(true)}
+          onClick={() => {
+            if (selectedSpec) {
+              navigate(`/projects/${projectId}/specs/${selectedSpec.id}`);
+            }
+          }}
           disabled={!value || disabled}
           title="View and edit spec file"
           className="h-full"
@@ -125,15 +129,6 @@ export function SpecFileSelect({
           <span className="hidden sm:inline ml-1.5">View Spec</span>
         </Button>
       </div>
-
-      {viewerOpen && selectedSpec && (
-        <SpecFileViewer
-          projectId={projectId}
-          specPath={selectedSpec.specPath}
-          specName={selectedSpec.name}
-          onClose={() => setViewerOpen(false)}
-        />
-      )}
     </div>
   );
 }

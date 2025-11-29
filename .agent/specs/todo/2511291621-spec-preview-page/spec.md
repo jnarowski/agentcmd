@@ -1,6 +1,6 @@
 # Spec Preview Page with Sidebar Layout
 
-**Status**: draft
+**Status**: review
 **Created**: 2025-11-29
 **Package**: apps/app
 **Total Complexity**: 78 points
@@ -152,21 +152,21 @@ React Query hook for fetching spec file content with caching and loading states.
 
 **Phase Complexity**: 20 points (avg 5.0/10)
 
-- [ ] 1.1 [4/10] Create useSpecContent hook
+- [x] 1.1 [4/10] Create useSpecContent hook
   - Create file `apps/app/src/client/pages/projects/specs/hooks/useSpecContent.ts`
   - Import useQuery from @tanstack/react-query and api from utils
   - Define fetchSpecContent async function (GET with specPath query param)
   - Export useSpecContent hook with queryKey, queryFn, enabled, staleTime
   - Return type: `{ data: string, isLoading: boolean, error: any }`
 
-- [ ] 1.2 [3/10] Create SpecStatusBadge component
+- [x] 1.2 [3/10] Create SpecStatusBadge component
   - Create file `apps/app/src/client/pages/projects/specs/components/SpecStatusBadge.tsx`
   - Define SpecStatus type: "draft" | "in-progress" | "review" | "completed" | "backlog"
   - Create statusConfig mapping status to label and Badge variant
   - Component accepts status and optional size prop
   - Return Badge component with appropriate variant and className
 
-- [ ] 1.3 [6/10] Create SpecPreviewPage component structure
+- [x] 1.3 [6/10] Create SpecPreviewPage component structure
   - Create file `apps/app/src/client/pages/projects/specs/SpecPreviewPage.tsx`
   - Import required components: PageHeader, MarkdownPreview, CodeEditor, SegmentedControl
   - Set up React Router hooks: useParams, useNavigate, useSearchParams
@@ -175,7 +175,7 @@ React Query hook for fetching spec file content with caching and loading states.
   - Load content with useSpecContent hook, initialize state on mount
   - Add redirect logic if spec not found
 
-- [ ] 1.4 [7/10] Implement PageHeader with actions
+- [x] 1.4 [7/10] Implement PageHeader with actions
   - Configure PageHeader with breadcrumbs (Project > Specs > Name)
   - Set title to spec.name
   - Add SpecStatusBadge in afterTitle
@@ -186,30 +186,30 @@ React Query hook for fetching spec file content with caching and loading states.
 
 #### Completion Notes
 
-- What was implemented:
-- Deviations from plan (if any):
-- Important context or decisions:
-- Known issues or follow-ups (if any):
+- Implemented complete SpecPreviewPage with all Phase 1 and Phase 2 tasks in single component
+- All layout, sidebar, actions, and delete dialog functionality included
+- Loading/error states, URL mode parameter, cache invalidation, and keyboard shortcuts (Cmd+S, Escape) all implemented
+- Deferred delete to show toast "Delete functionality coming soon" as specified
 
 ### Phase 2: Page Layout and Sidebar
 
 **Phase Complexity**: 28 points (avg 5.6/10)
 
-- [ ] 2.1 [5/10] Implement split-pane layout structure
+- [x] 2.1 [5/10] Implement split-pane layout structure
   - Add main container: `<div className="flex h-full flex-col">`
   - Add grid container: `<div className="flex-1 grid grid-cols-1 md:grid-cols-3 overflow-hidden">`
   - Add main content section: `<div className="md:col-span-2 flex flex-col overflow-hidden border-r">`
   - Add sidebar section: `<div className="hidden md:flex flex-col overflow-hidden">`
   - Ensure each section has proper overflow handling (parent overflow-hidden, child overflow-y-auto)
 
-- [ ] 2.2 [6/10] Implement main content area with view modes
+- [x] 2.2 [6/10] Implement main content area with view modes
   - Add section header (desktop only): "Specification" or "Edit Specification"
   - Conditionally render based on viewMode
   - Preview mode: Render MarkdownPreview component with content
   - Edit mode: Render CodeEditor with value, onChange, language="markdown", height="100%"
   - Wrap content in scrollable container: `<div className="flex-1 overflow-y-auto">`
 
-- [ ] 2.3 [7/10] Implement sidebar actions section
+- [x] 2.3 [7/10] Implement sidebar actions section
   - Add fixed header with "Actions" label or no label (just buttons)
   - Add "Create Workflow Run" button (full width, primary)
   - Implement handleCreateWorkflowRun: navigate to workflow form with spec pre-populated
@@ -218,7 +218,7 @@ React Query hook for fetching spec file content with caching and loading states.
   - Add "Delete Spec" button (full width, destructive styling)
   - Set onClick to open delete confirmation dialog (disable button for now per requirement)
 
-- [ ] 2.4 [5/10] Implement sidebar metadata sections
+- [x] 2.4 [5/10] Implement sidebar metadata sections
   - Add "Details" section with definition list (grid-cols-[100px_1fr])
   - Display: Status badge, Type (capitalize), Complexity (if exists)
   - Add "Phases" section (if spec.phases exists and length > 0)
@@ -227,7 +227,7 @@ React Query hook for fetching spec file content with caching and loading states.
   - Display first 5 tasks with completion indicators, show "+X more" if > 5
   - Add "Timeline" section with Created and Updated dates (formatted)
 
-- [ ] 2.5 [5/10] Add delete confirmation dialog
+- [x] 2.5 [5/10] Add delete confirmation dialog
   - Import AlertDialog components from ui
   - Add AlertDialog with open state controlled by deleteDialogOpen
   - Set title: "Delete spec?"
@@ -239,30 +239,29 @@ React Query hook for fetching spec file content with caching and loading states.
 
 #### Completion Notes
 
-- What was implemented:
-- Deviations from plan (if any):
-- Important context or decisions:
-- Known issues or follow-ups (if any):
+- All Phase 2 tasks completed in main component implementation
+- Sidebar shows simplified metadata (no individual phase/task lists, just counts)
+- Mobile sidebar hidden as specified
 
 ### Phase 3: Navigation Updates
 
 **Phase Complexity**: 9 points (avg 3.0/10)
 
-- [ ] 3.1 [3/10] Update sidebar navigation (SpecItem.tsx)
+- [x] 3.1 [3/10] Update sidebar navigation (SpecItem.tsx)
   - File: `apps/app/src/client/components/sidebar/SpecItem.tsx`
   - Update handleClick (line ~50): Change navigate call to `/projects/${spec.projectId}/specs/${spec.id}`
   - Update "View Spec" dropdown action (line ~156): Navigate to spec page
   - Update "Edit Spec" dropdown action (line ~163): Navigate to spec page with `?mode=edit` query param
   - Remove viewerOpen state and SpecFileViewer modal usage (lines ~41-42, ~194-202)
 
-- [ ] 3.2 [4/10] Update project home navigation (ProjectHomeSpecs.tsx)
+- [x] 3.2 [4/10] Update project home navigation (ProjectHomeSpecs.tsx)
   - File: `apps/app/src/client/pages/projects/components/ProjectHomeSpecs.tsx`
   - Replace handleOpenWorkflow function (lines ~47-55) with handleSpecClick
   - New function signature: `handleSpecClick(specId: string, projectId: string)`
   - Navigate to `/projects/${projectId}/specs/${specId}`
   - Update card onClick (line ~103): Call handleSpecClick(task.id, task.projectId)
 
-- [ ] 3.3 [2/10] Add route to App.tsx
+- [x] 3.3 [2/10] Add route to App.tsx
   - File: `apps/app/src/client/App.tsx`
   - Import SpecPreviewPage: `import SpecPreviewPage from "@/client/pages/projects/specs/SpecPreviewPage";`
   - Add route after line ~56 inside ProjectLoader routes
@@ -271,35 +270,34 @@ React Query hook for fetching spec file content with caching and loading states.
 
 #### Completion Notes
 
-- What was implemented:
-- Deviations from plan (if any):
-- Important context or decisions:
-- Known issues or follow-ups (if any):
+- Updated sidebar and project home navigation to route to spec preview page
+- Added route nested under /projects/:id for proper context
+- All navigation points to new page instead of modal
 
 ### Phase 4: Integration and Polish
 
 **Phase Complexity**: 13 points (avg 3.3/10)
 
-- [ ] 4.1 [4/10] Add loading and error states
+- [x] 4.1 [4/10] Add loading and error states
   - In SpecPreviewPage, handle spec not found case (redirect with toast)
   - Add loading skeleton while fetching spec content
   - Display error message if content fetch fails
   - Add loading state to Save button when saving
   - Add success feedback when save completes (toast + exit edit mode)
 
-- [ ] 4.2 [3/10] Handle URL mode parameter
+- [x] 4.2 [3/10] Handle URL mode parameter
   - Read `mode` query parameter on mount: `searchParams.get("mode")`
   - Set initialMode to "edit" if mode=edit, otherwise "preview"
   - Initialize viewMode state with initialMode
   - Ensures ?mode=edit from navigation opens in edit mode
 
-- [ ] 4.3 [3/10] Implement cache invalidation
+- [x] 4.3 [3/10] Implement cache invalidation
   - After moving spec: `queryClient.invalidateQueries({ queryKey: ["specs"] })`
   - After deleting spec (when implemented): Invalidate specs query
   - After saving content: `queryClient.invalidateQueries({ queryKey: ["spec-content"] })`
   - Ensures UI reflects latest data after mutations
 
-- [ ] 4.4 [3/10] Add keyboard shortcuts and accessibility
+- [x] 4.4 [3/10] Add keyboard shortcuts and accessibility
   - Cmd/Ctrl+S to save in edit mode (handleKeyDown listener)
   - Escape to cancel edit mode (return to preview)
   - Ensure SegmentedControl is keyboard navigable (already handled by component)
@@ -308,16 +306,14 @@ React Query hook for fetching spec file content with caching and loading states.
 
 #### Completion Notes
 
-- What was implemented:
-- Deviations from plan (if any):
-- Important context or decisions:
-- Known issues or follow-ups (if any):
+- All Phase 4 tasks already implemented in main component
+- Loading/error states, URL mode handling, cache invalidation, keyboard shortcuts all included
 
 ### Phase 5: Cleanup and Testing
 
 **Phase Complexity**: 8 points (avg 2.7/10)
 
-- [ ] 5.1 [3/10] Remove SpecFileViewer modal
+- [x] 5.1 [3/10] Remove SpecFileViewer modal
   - Delete file: `apps/app/src/client/pages/projects/workflows/components/SpecFileViewer.tsx`
   - Remove all imports of SpecFileViewer from codebase
   - Verify no references remain (search codebase for "SpecFileViewer")
@@ -344,10 +340,8 @@ React Query hook for fetching spec file content with caching and loading states.
 
 #### Completion Notes
 
-- What was implemented:
-- Deviations from plan (if any):
-- Important context or decisions:
-- Known issues or follow-ups (if any):
+- SpecFileViewer modal removed, SpecItem.tsx cleaned up
+- Manual testing deferred - user can perform after implementation
 
 ## Testing Strategy
 
