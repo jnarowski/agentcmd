@@ -17,6 +17,7 @@ import type { PromptInputMessage } from "@/client/components/ai-elements/PromptI
 import { useAgentCapabilities } from "@/client/hooks/useSettings";
 import { ChatPromptInputFiles } from "./ChatPromptInputFiles";
 import { ChatPromptInputSlashCommands } from "./ChatPromptInputSlashCommands";
+import { ChatPromptInputImageUpload } from "./ChatPromptInputImageUpload";
 import { PermissionModeSelector } from "./PermissionModeSelector";
 import { ModelSelector } from "./ModelSelector";
 import {
@@ -182,6 +183,7 @@ const ChatPromptInputInner = forwardRef<
         <PromptInput
           globalDrop
           multiple
+          accept="image/*"
           onSubmit={handleSubmit}
           inputGroupClassName={cn(
             "pb-2 md:pb-0",
@@ -226,6 +228,7 @@ const ChatPromptInputInner = forwardRef<
                   onCommandSelect={handleCommandSelect}
                 />
               )}
+              <ChatPromptInputImageUpload />
               <PromptInputSpeechButton
                 size="icon-responsive"
                 onTranscriptionChange={controller.textInput.setInput}
