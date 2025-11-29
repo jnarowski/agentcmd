@@ -373,6 +373,17 @@
       "totalComplexity": 42,
       "phaseCount": 1,
       "taskCount": 9
+    },
+    "2511290735": {
+      "folder": "2511290735-session-followup-action",
+      "path": "todo/2511290735-session-followup-action/spec.md",
+      "spec_type": "issue",
+      "status": "draft",
+      "created": "2025-11-29T14:35:00Z",
+      "updated": "2025-11-29T14:35:00Z",
+      "totalComplexity": 24,
+      "phaseCount": 1,
+      "taskCount": 5
     }
   }
 }
