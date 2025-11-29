@@ -67,6 +67,83 @@ function isSystemMessage(text: string): boolean {
 }
 
 /**
+ * Type guard for image content
+ */
+function isImageContent(content: string | UnifiedImageBlock): content is UnifiedImageBlock {
+  return typeof content === 'object' && content !== null && content.type === 'image';
+}
+
+/**
+ * Regex to match .tmp/images paths
+ */
+const IMAGE_PATH_REGEX = /\/[^\s]+\.tmp\/images\/\d+\/image-\d+\.(png|jpg|jpeg|gif|webp)/gi;
+
+/**
+ * Extract image file paths from message content
+ */
+function extractImagePaths(content: string | { type: string; text?: string }[]): string[] {
+  const textContent = typeof content === 'string'
+    ? content
+    : content.filter(b => b.type === 'text').map(b => b.text || '').join(' ');
+
+  const matches = [...textContent.matchAll(IMAGE_PATH_REGEX)];
+  return matches.map(match => match[0]);
+}
+
+/**
+ * Extract images from text content using imagePathMap
+ * Returns both images and matched paths
+ */
+function extractImagesFromText(
+  content: string | { type: string; text?: string }[],
+  imagePathMap: Map<string, UnifiedImageBlock>
+): { images: string[]; matchedPaths: string[] } {
+  const images: string[] = [];
+  const matchedPaths: string[] = [];
+  const paths = extractImagePaths(content);
+
+  for (const filePath of paths) {
+    const imageBlock = imagePathMap.get(filePath);
+    if (imageBlock) {
+      const dataUrl = `data:${imageBlock.source.media_type};base64,${imageBlock.source.data}`;
+      images.push(dataUrl);
+      matchedPaths.push(filePath);
+    }
+  }
+
+  return { images, matchedPaths };
+}
+
+/**
+ * Escape special regex characters in a string
+ */
+function escapeRegExp(string: string): string {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Remove matched file paths from content
+ */
+function removePathsFromContent(
+  content: { type: string; text?: string }[],
+  pathsToRemove: string[]
+): { type: string; text?: string }[] {
+  if (pathsToRemove.length === 0) return content;
+
+  return content.map(block => {
+    if (block.type === 'text' && block.text) {
+      let text = block.text;
+      for (const path of pathsToRemove) {
+        text = text.replace(new RegExp(escapeRegExp(path) + '\\s*', 'g'), '');
+      }
+      text = text.replace(/\s+/g, ' ').trim();
+      return { ...block, text };
+    }
+    return block;
+  });
+}
+
+/**
  * Simplified enrichment logic for testing
  */
 function enrichMessagesWithToolResults(messages: UnifiedMessage[]): UIMessage[] {
@@ -103,7 +180,24 @@ function enrichMessagesWithToolResults(messages: UnifiedMessage[]): UIMessage[] 
     }
   }
 
-  // Step 3: Enrich tool_use blocks and filter out tool_result blocks
+  // Step 3: Build imagePathMap by matching tool_use inputs with results
+  const imagePathMap = new Map<string, UnifiedImageBlock>();
+  for (const message of filteredMessages) {
+    if (Array.isArray(message.content)) {
+      for (const block of message.content) {
+        if (block.type === 'tool_use' && block.name === 'Read') {
+          const filePath = (block.input as { file_path?: string })?.file_path;
+          const result = resultMap.get(block.id);
+          // Only add to imagePathMap if result exists, is not an error, and is an image
+          if (filePath && result && !result.is_error && isImageContent(result.content)) {
+            imagePathMap.set(filePath, result.content);
+          }
+        }
+      }
+    }
+  }
+
+  // Step 4: Enrich tool_use blocks and filter out tool_result blocks
   const enrichedMessages = filteredMessages.map(msg => {
     if (!Array.isArray(msg.content)) {
       return { ...msg, isStreaming: false };
@@ -121,14 +215,30 @@ function enrichMessagesWithToolResults(messages: UnifiedMessage[]): UIMessage[] 
       // Filter out standalone tool_result blocks (now nested in tool_use)
       .filter(block => block.type !== 'tool_result');
 
+    // For user messages, extract images from file paths in text and remove paths
+    let images: string[] | undefined;
+    let finalContent = enrichedContent;
+    if (msg.role === 'user') {
+      const existingImages = ('images' in msg && Array.isArray(msg.images)) ? msg.images : [];
+      const { images: extractedImages, matchedPaths } = extractImagesFromText(msg.content, imagePathMap);
+      if (existingImages.length > 0 || extractedImages.length > 0) {
+        images = [...existingImages, ...extractedImages];
+      }
+      // Remove matched paths from content
+      if (matchedPaths.length > 0) {
+        finalContent = removePathsFromContent(enrichedContent, matchedPaths);
+      }
+    }
+
     return {
       ...msg,
-      content: enrichedContent,
-      isStreaming: false
+      content: finalContent,
+      isStreaming: false,
+      ...(images && { images })
     } as UIMessage;
   });
 
-  // Step 4: Filter out messages with empty content arrays (tool_result-only messages after enrichment)
+  // Step 5: Filter out messages with empty content arrays (tool_result-only messages after enrichment)
   return enrichedMessages.filter(msg => {
     // Keep messages with non-array content (edge case)
     if (!Array.isArray(msg.content)) return true;
@@ -444,5 +554,290 @@ describe('enrichMessagesWithToolResults', () => {
     // Empty content message should be filtered out (likely contained only tool_result blocks)
     expect(enriched).toHaveLength(1);
     expect(enriched[0].id).toBe('msg-2');
+  });
+});
+
+describe('image extraction from tool results to user messages', () => {
+  it('should populate images array from Read tool result with image and remove path from text', () => {
+    const imageData: UnifiedImageBlock = {
+      type: 'image',
+      source: {
+        type: 'base64',
+        data: 'iVBORw0KGgo...',
+        media_type: 'image/png'
+      }
+    };
+
+    const messages: UnifiedMessage[] = [
+      {
+        id: 'msg-1',
+        role: 'user',
+        content: [
+          { type: 'text', text: 'What is this? /Users/test/.tmp/images/123/image-0.png' }
+        ],
+        timestamp: 1000
+      },
+      {
+        id: 'msg-2',
+        role: 'assistant',
+        content: [
+          {
+            type: 'tool_use',
+            id: 'tool_read',
+            name: 'Read',
+            input: { file_path: '/Users/test/.tmp/images/123/image-0.png' }
+          }
+        ],
+        timestamp: 2000
+      },
+      {
+        id: 'msg-3',
+        role: 'user',
+        content: [
+          {
+            type: 'tool_result',
+            tool_use_id: 'tool_read',
+            content: JSON.stringify([imageData])
+          }
+        ],
+        timestamp: 3000
+      }
+    ];
+
+    const enriched = enrichMessagesWithToolResults(messages);
+
+    // User message should have images populated
+    const userMsg = enriched.find(m => m.id === 'msg-1');
+    expect(userMsg?.images).toHaveLength(1);
+    expect(userMsg?.images?.[0]).toContain('data:image/png;base64,');
+
+    // File path should be removed from text
+    const textBlock = userMsg?.content.find(b => b.type === 'text');
+    expect(textBlock?.text).toBe('What is this?');
+    expect(textBlock?.text).not.toContain('.tmp/images');
+  });
+
+  it('should handle multiple images in one user message', () => {
+    const imageData1: UnifiedImageBlock = {
+      type: 'image',
+      source: { type: 'base64', data: 'img1data', media_type: 'image/png' }
+    };
+    const imageData2: UnifiedImageBlock = {
+      type: 'image',
+      source: { type: 'base64', data: 'img2data', media_type: 'image/jpeg' }
+    };
+
+    const messages: UnifiedMessage[] = [
+      {
+        id: 'msg-1',
+        role: 'user',
+        content: [
+          { type: 'text', text: 'Compare /Users/a/.tmp/images/1/image-0.png and /Users/b/.tmp/images/2/image-1.jpg' }
+        ],
+        timestamp: 1000
+      },
+      {
+        id: 'msg-2',
+        role: 'assistant',
+        content: [
+          { type: 'tool_use', id: 'read1', name: 'Read', input: { file_path: '/Users/a/.tmp/images/1/image-0.png' } },
+          { type: 'tool_use', id: 'read2', name: 'Read', input: { file_path: '/Users/b/.tmp/images/2/image-1.jpg' } }
+        ],
+        timestamp: 2000
+      },
+      {
+        id: 'msg-3',
+        role: 'user',
+        content: [
+          { type: 'tool_result', tool_use_id: 'read1', content: JSON.stringify([imageData1]) },
+          { type: 'tool_result', tool_use_id: 'read2', content: JSON.stringify([imageData2]) }
+        ],
+        timestamp: 3000
+      }
+    ];
+
+    const enriched = enrichMessagesWithToolResults(messages);
+
+    const userMsg = enriched.find(m => m.id === 'msg-1');
+    expect(userMsg?.images).toHaveLength(2);
+    expect(userMsg?.images?.[0]).toContain('data:image/png;base64,');
+    expect(userMsg?.images?.[1]).toContain('data:image/jpeg;base64,');
+  });
+
+  it('should not populate images for non-.tmp paths', () => {
+    const messages: UnifiedMessage[] = [
+      {
+        id: 'msg-1',
+        role: 'user',
+        content: [
+          { type: 'text', text: 'Read /src/index.ts please' }
+        ],
+        timestamp: 1000
+      },
+      {
+        id: 'msg-2',
+        role: 'assistant',
+        content: [
+          { type: 'tool_use', id: 'read1', name: 'Read', input: { file_path: '/src/index.ts' } }
+        ],
+        timestamp: 2000
+      },
+      {
+        id: 'msg-3',
+        role: 'user',
+        content: [
+          { type: 'tool_result', tool_use_id: 'read1', content: 'export const foo = "bar";' }
+        ],
+        timestamp: 3000
+      }
+    ];
+
+    const enriched = enrichMessagesWithToolResults(messages);
+
+    const userMsg = enriched.find(m => m.id === 'msg-1');
+    expect(userMsg?.images).toBeUndefined();
+  });
+
+  it('should handle image not yet read (no tool result)', () => {
+    const messages: UnifiedMessage[] = [
+      {
+        id: 'msg-1',
+        role: 'user',
+        content: [
+          { type: 'text', text: 'What is this? /Users/test/.tmp/images/123/image-0.png' }
+        ],
+        timestamp: 1000
+      }
+      // No Read tool_use or tool_result yet
+    ];
+
+    const enriched = enrichMessagesWithToolResults(messages);
+
+    const userMsg = enriched.find(m => m.id === 'msg-1');
+    expect(userMsg?.images).toBeUndefined();
+  });
+
+  it('should handle Read tool with error result', () => {
+    const messages: UnifiedMessage[] = [
+      {
+        id: 'msg-1',
+        role: 'user',
+        content: [
+          { type: 'text', text: 'What is this? /Users/test/.tmp/images/123/image-0.png' }
+        ],
+        timestamp: 1000
+      },
+      {
+        id: 'msg-2',
+        role: 'assistant',
+        content: [
+          { type: 'tool_use', id: 'read1', name: 'Read', input: { file_path: '/Users/test/.tmp/images/123/image-0.png' } }
+        ],
+        timestamp: 2000
+      },
+      {
+        id: 'msg-3',
+        role: 'user',
+        content: [
+          { type: 'tool_result', tool_use_id: 'read1', content: 'File not found', is_error: true }
+        ],
+        timestamp: 3000
+      }
+    ];
+
+    const enriched = enrichMessagesWithToolResults(messages);
+
+    // Should not populate images from error results
+    const userMsg = enriched.find(m => m.id === 'msg-1');
+    expect(userMsg?.images).toBeUndefined();
+  });
+
+  it('should preserve existing images array', () => {
+    const imageData: UnifiedImageBlock = {
+      type: 'image',
+      source: { type: 'base64', data: 'newimgdata', media_type: 'image/png' }
+    };
+
+    // Cast to UIMessage to include existing images
+    const messages: (UnifiedMessage | { id: string; role: string; content: { type: string; text: string }[]; timestamp: number; images?: string[] })[] = [
+      {
+        id: 'msg-1',
+        role: 'user',
+        content: [
+          { type: 'text', text: 'What is this? /Users/test/.tmp/images/123/image-0.png' }
+        ],
+        timestamp: 1000,
+        images: ['data:image/png;base64,existingimage'] // Already has an optimistic image
+      },
+      {
+        id: 'msg-2',
+        role: 'assistant',
+        content: [
+          { type: 'tool_use', id: 'read1', name: 'Read', input: { file_path: '/Users/test/.tmp/images/123/image-0.png' } }
+        ],
+        timestamp: 2000
+      },
+      {
+        id: 'msg-3',
+        role: 'user',
+        content: [
+          { type: 'tool_result', tool_use_id: 'read1', content: JSON.stringify([imageData]) }
+        ],
+        timestamp: 3000
+      }
+    ];
+
+    const enriched = enrichMessagesWithToolResults(messages as UnifiedMessage[]);
+
+    const userMsg = enriched.find(m => m.id === 'msg-1');
+    // Should preserve existing + add extracted
+    expect(userMsg?.images).toHaveLength(2);
+    expect(userMsg?.images?.[0]).toBe('data:image/png;base64,existingimage');
+    expect(userMsg?.images?.[1]).toContain('data:image/png;base64,');
+  });
+
+  it('should handle various image extensions', () => {
+    const makeImageData = (type: string): UnifiedImageBlock => ({
+      type: 'image',
+      source: { type: 'base64', data: 'imgdata', media_type: `image/${type}` }
+    });
+
+    const messages: UnifiedMessage[] = [
+      {
+        id: 'msg-1',
+        role: 'user',
+        content: [
+          { type: 'text', text: '/a/.tmp/images/1/image-0.png /b/.tmp/images/2/image-1.jpeg /c/.tmp/images/3/image-2.gif /d/.tmp/images/4/image-3.webp' }
+        ],
+        timestamp: 1000
+      },
+      {
+        id: 'msg-2',
+        role: 'assistant',
+        content: [
+          { type: 'tool_use', id: 'r1', name: 'Read', input: { file_path: '/a/.tmp/images/1/image-0.png' } },
+          { type: 'tool_use', id: 'r2', name: 'Read', input: { file_path: '/b/.tmp/images/2/image-1.jpeg' } },
+          { type: 'tool_use', id: 'r3', name: 'Read', input: { file_path: '/c/.tmp/images/3/image-2.gif' } },
+          { type: 'tool_use', id: 'r4', name: 'Read', input: { file_path: '/d/.tmp/images/4/image-3.webp' } }
+        ],
+        timestamp: 2000
+      },
+      {
+        id: 'msg-3',
+        role: 'user',
+        content: [
+          { type: 'tool_result', tool_use_id: 'r1', content: JSON.stringify([makeImageData('png')]) },
+          { type: 'tool_result', tool_use_id: 'r2', content: JSON.stringify([makeImageData('jpeg')]) },
+          { type: 'tool_result', tool_use_id: 'r3', content: JSON.stringify([makeImageData('gif')]) },
+          { type: 'tool_result', tool_use_id: 'r4', content: JSON.stringify([makeImageData('webp')]) }
+        ],
+        timestamp: 3000
+      }
+    ];
+
+    const enriched = enrichMessagesWithToolResults(messages);
+
+    const userMsg = enriched.find(m => m.id === 'msg-1');
+    expect(userMsg?.images).toHaveLength(4);
   });
 });
