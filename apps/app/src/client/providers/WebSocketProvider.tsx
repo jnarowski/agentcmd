@@ -25,6 +25,7 @@ import {
   isWebSocketMessage,
 } from "@/shared/websocket";
 import { isDebugMode } from "@/client/utils/isDebugMode";
+import { useNetworkStatus } from "@/client/hooks/useNetworkStatus";
 
 /**
  * WebSocketProvider Props
@@ -51,6 +52,9 @@ const MAX_QUEUE_SIZE = 100;
  */
 export function WebSocketProvider({ children }: WebSocketProviderProps) {
   const token = useAuthStore((state) => state.token);
+
+  // Network status detection
+  const isOnline = useNetworkStatus();
 
   // WebSocket instance (stored in ref to avoid re-creating on state changes)
   const socketRef = useRef<WebSocket | null>(null);
@@ -455,6 +459,14 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     };
   }, [readyState, reconnect]);
 
+  // Auto-reconnect when network comes back online
+  useEffect(() => {
+    if (isOnline && readyState === ReadyState.CLOSED && !intentionalCloseRef.current) {
+      console.log("[WebSocket] 🌐 Network online, attempting reconnection");
+      reconnect();
+    }
+  }, [isOnline, readyState, reconnect]);
+
   const contextValue: WebSocketContextValue = {
     sendMessage,
     readyState,
@@ -463,6 +475,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     reconnectAttempt: reconnectAttemptRef.current,
     eventBus: eventBusRef.current,
     reconnect,
+    isOnline,
   };
 
   return (
