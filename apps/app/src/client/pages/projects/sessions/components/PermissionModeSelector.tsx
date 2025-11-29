@@ -81,10 +81,9 @@ export function PermissionModeSelector({
     <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
       <DropdownMenuTrigger
         className={cn(
-          "border-none bg-transparent font-medium text-muted-foreground shadow-none transition-colors",
-          "hover:bg-accent hover:text-foreground",
-          "data-[state=open]:bg-accent data-[state=open]:text-foreground",
-          "rounded-md px-2 py-1.5 text-sm"
+          "inline-flex items-center justify-between gap-2 rounded-md border-none bg-transparent px-3 py-1.5 text-sm font-medium text-muted-foreground shadow-xs transition-colors dark:bg-input/30",
+          "hover:bg-accent hover:text-foreground dark:hover:bg-input/50",
+          "data-[state=open]:bg-accent data-[state=open]:text-foreground"
         )}
       >
         <div className="flex items-center gap-2">
@@ -101,7 +100,14 @@ export function PermissionModeSelector({
           </div>
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" onKeyDown={handleKeyDown}>
+      <DropdownMenuContent
+        align="start"
+        onKeyDown={handleKeyDown}
+        onCloseAutoFocus={(e) => {
+          e.preventDefault();
+          setTimeout(() => textareaRef?.current?.focus(), 0);
+        }}
+      >
         {PERMISSION_MODES.map((mode) => (
           <DropdownMenuItem
             key={mode.id}
