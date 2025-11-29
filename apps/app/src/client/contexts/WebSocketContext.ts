@@ -13,6 +13,7 @@ export interface WebSocketContextValue {
   reconnectAttempt: number;
   eventBus: WebSocketEventBus;
   reconnect: () => void;
+  isOnline: boolean;
 }
 
 /**

@@ -33,7 +33,7 @@ function AppLayout() {
   const initializeFromSettings = useSessionStore((s) => s.initializeFromSettings);
   const loadSessionList = useSessionStore((s) => s.loadSessionList);
   const { setTheme } = useTheme();
-  const { readyState, reconnectAttempt, reconnect, eventBus, sendMessage, isConnected } = useWebSocket();
+  const { readyState, reconnectAttempt, reconnect, eventBus, sendMessage, isConnected, isOnline } = useWebSocket();
   const isMobile = useIsMobile();
 
   // Prefetch settings and workflow definitions on mount to prevent race conditions
@@ -166,6 +166,7 @@ function AppLayout() {
           readyState={readyState}
           reconnectAttempt={reconnectAttempt}
           onReconnect={reconnect}
+          isOnline={isOnline}
         />
         <Outlet />
       </SidebarInset>
