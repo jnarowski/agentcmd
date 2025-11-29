@@ -384,6 +384,17 @@
       "totalComplexity": 24,
       "phaseCount": 1,
       "taskCount": 5
+    },
+    "2511291207": {
+      "folder": "2511291207-docker-file-combobox",
+      "path": "todo/2511291207-docker-file-combobox/spec.md",
+      "spec_type": "issue",
+      "status": "draft",
+      "created": "2025-11-29T19:07:00Z",
+      "updated": "2025-11-29T19:07:00Z",
+      "totalComplexity": 58,
+      "phaseCount": 1,
+      "taskCount": 11
     }
   }
 }
