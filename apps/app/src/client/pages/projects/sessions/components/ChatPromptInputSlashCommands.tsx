@@ -103,7 +103,7 @@ export const ChatPromptInputSlashCommands = ({
             value={searchQuery}
             onValueChange={setSearchQuery}
           />
-          <PromptInputCommandList>
+          <PromptInputCommandList className="h-[300px]">
             {isLoading && (
               <div className="p-3 text-muted-foreground text-sm">
                 Loading commands...
