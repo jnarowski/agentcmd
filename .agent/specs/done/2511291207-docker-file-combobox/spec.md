@@ -1,6 +1,6 @@
 # Docker File Combobox Selector
 
-**Status**: review
+**Status**: completed
 **Type**: issue
 **Created**: 2025-11-29
 **Package**: apps/app

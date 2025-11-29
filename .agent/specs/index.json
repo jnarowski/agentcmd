@@ -376,11 +376,11 @@
     },
     "2511291207": {
       "folder": "2511291207-docker-file-combobox",
-      "path": "todo/2511291207-docker-file-combobox/spec.md",
+      "path": "done/2511291207-docker-file-combobox/spec.md",
       "spec_type": "issue",
-      "status": "review",
+      "status": "completed",
       "created": "2025-11-29T19:07:00Z",
-      "updated": "2025-11-29T19:38:55Z",
+      "updated": "2025-11-29T23:59:00Z",
       "totalComplexity": 58,
       "phaseCount": 1,
       "taskCount": 11
