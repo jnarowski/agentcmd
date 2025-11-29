@@ -154,7 +154,7 @@ export function FileSelectCombobox({
       useMobileDrawer={true}
       onSearchChange={setSearchQuery}
       // Custom trigger rendering (show selected file with FileItem)
-      renderTrigger={(selectedOption, _open) => {
+      renderTrigger={(selectedOption) => {
         if (!selectedOption) {
           return (
             <>
@@ -178,7 +178,7 @@ export function FileSelectCombobox({
         );
       }}
       // Custom option rendering (use FileItem component)
-      renderOption={(option, _selected) => {
+      renderOption={(option) => {
         const fileOption = option as FileComboboxOption;
         return (
           <FileItem

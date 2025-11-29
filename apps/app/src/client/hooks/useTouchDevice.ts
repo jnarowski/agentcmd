@@ -25,7 +25,7 @@ export function useTouchDevice() {
     };
 
     // Track touch events to suppress hover briefly
-    let timeout: NodeJS.Timeout;
+    let timeout: ReturnType<typeof setTimeout>;
     const handleTouch = () => {
       setRecentTouch(true);
       clearTimeout(timeout);

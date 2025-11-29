@@ -377,7 +377,6 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     return () => {
       eventBus.off(Channels.global(), handleGlobalError);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /**
