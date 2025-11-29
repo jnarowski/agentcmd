@@ -161,8 +161,8 @@ export function Combobox<T extends string = string>({
     onSearchChange?.(query);
   };
 
-  // Helper component for shared Command content
-  const CommandContent = () => (
+  // Shared Command content (JSX variable, not component to preserve focus)
+  const commandContent = (
     <Command shouldFilter={!onSearchChange}>
       <CommandInput
         placeholder={searchPlaceholder}
@@ -230,7 +230,7 @@ export function Combobox<T extends string = string>({
           className={cn("w-auto p-0", popoverClassName)}
           style={{ width: 'var(--radix-popover-trigger-width)' }}
         >
-          <CommandContent />
+          {commandContent}
         </PopoverContent>
       </Popover>
     );
@@ -259,7 +259,7 @@ export function Combobox<T extends string = string>({
           {placeholder}
         </DrawerTitle>
         <div className="mt-4 border-t">
-          <CommandContent />
+          {commandContent}
         </div>
       </DrawerContent>
     </Drawer>

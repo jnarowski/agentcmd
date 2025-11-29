@@ -95,7 +95,7 @@ export function useFileSearch(
   // Search with debounced query
   const results = useMemo(() => {
     if (!debouncedQuery) {
-      return filteredByExtension;
+      return filteredByExtension.slice(0, maxResults);
     }
 
     return searchFiles(debouncedQuery, filteredByExtension, {

@@ -153,28 +153,14 @@ export function FileSelectCombobox({
       buttonClassName={buttonClassName}
       useMobileDrawer={true}
       onSearchChange={setSearchQuery}
-      // Custom trigger rendering (show selected file with FileItem)
+      // Custom trigger rendering (show just filename)
       renderTrigger={(selectedOption, _open) => {
-        if (!selectedOption) {
-          return (
-            <>
-              {placeholder}
-              <ChevronsUpDownIcon className="ml-2 size-4 shrink-0 opacity-50" />
-            </>
-          );
-        }
-
-        const fileOption = selectedOption as FileComboboxOption;
-
+        const fileOption = selectedOption as FileComboboxOption | undefined;
         return (
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <FileItem
-              filename={fileOption._fileItem.filename}
-              extension={fileOption._fileItem.extension}
-              directory={getRelativeDirectory(fileOption.value, projectPath)}
-            />
-            <ChevronsUpDownIcon className="ml-auto size-4 shrink-0 opacity-50" />
-          </div>
+          <>
+            <span className="truncate">{fileOption?._fileItem.filename || placeholder}</span>
+            <ChevronsUpDownIcon className="ml-2 size-4 shrink-0 opacity-50" />
+          </>
         );
       }}
       // Custom option rendering (use FileItem component)
