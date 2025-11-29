@@ -84,6 +84,9 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
   // Error deduplication - prevents multiple toasts per disconnect cycle
   const errorEmittedThisCycleRef = useRef(false);
 
+  // Track previous online state for transition detection
+  const wasOnlineRef = useRef(isOnline);
+
   const isConnected = readyState === ReadyState.OPEN && isReady;
 
   /**
@@ -459,10 +462,14 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     };
   }, [readyState, reconnect]);
 
-  // Auto-reconnect when network comes back online
+  // Auto-reconnect when network comes back online (offline → online transition only)
   useEffect(() => {
-    if (isOnline && readyState === ReadyState.CLOSED && !intentionalCloseRef.current) {
-      console.log("[WebSocket] 🌐 Network online, attempting reconnection");
+    const wasOffline = !wasOnlineRef.current;
+    wasOnlineRef.current = isOnline;
+
+    // Only reconnect on offline → online transition, not on every CLOSED state
+    if (wasOffline && isOnline && readyState === ReadyState.CLOSED && !intentionalCloseRef.current) {
+      console.log("[WebSocket] 🌐 Network came back online, attempting reconnection");
       reconnect();
     }
   }, [isOnline, readyState, reconnect]);

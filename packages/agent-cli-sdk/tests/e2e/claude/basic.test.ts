@@ -101,4 +101,18 @@ describe('E2E: Basic CLI Execution', () => {
     expect(result4.success).toBe(true);
     expect(result4.data).toBeTruthy();
   }, 300000); // 5 minute timeout for all 4 tests
+
+  it('should execute with appendSystemPrompt', async () => {
+    const result = await execute({
+      prompt: 'What is 1+1? Answer with just the number.',
+      appendSystemPrompt: 'Always respond in uppercase.',
+      permissionMode: 'acceptEdits',
+      timeout: 60000,
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.exitCode).toBe(0);
+    expect(result.data).toBeTruthy();
+    expect(result.data).toMatch(/2/);
+  }, 120000);
 });

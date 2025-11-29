@@ -7,6 +7,81 @@ import type { AgentType } from "@/shared/types/agent.types";
 import { isSystemMessage } from '@/shared/utils/message.utils';
 
 /**
+ * Type guard for image content
+ */
+function isImageContent(content: string | UnifiedImageBlock): content is UnifiedImageBlock {
+  return typeof content === 'object' && content !== null && content.type === 'image';
+}
+
+/**
+ * Regex to match .tmp/images paths in message text
+ * Matches: /any/path/.tmp/images/{timestamp}/image-{index}.{ext}
+ */
+const IMAGE_PATH_REGEX = /\/[^\s]+\.tmp\/images\/\d+\/image-\d+\.(png|jpg|jpeg|gif|webp)/gi;
+
+/**
+ * Extract images from text content using imagePathMap
+ * Finds .tmp/images paths in user message text and matches them to Read tool results
+ * Returns both the extracted images and the paths that were matched
+ */
+function extractImagesFromText(
+  content: string | UnifiedContent[],
+  imagePathMap: Map<string, UnifiedImageBlock>
+): { images: string[]; matchedPaths: string[] } {
+  const images: string[] = [];
+  const matchedPaths: string[] = [];
+
+  const textContent = typeof content === 'string'
+    ? content
+    : content.filter(b => b.type === 'text').map(b => (b as { text: string }).text).join(' ');
+
+  const matches = [...textContent.matchAll(IMAGE_PATH_REGEX)];
+  for (const match of matches) {
+    const filePath = match[0];
+    const imageBlock = imagePathMap.get(filePath);
+    if (imageBlock) {
+      const dataUrl = `data:${imageBlock.source.media_type};base64,${imageBlock.source.data}`;
+      images.push(dataUrl);
+      matchedPaths.push(filePath);
+    }
+  }
+
+  return { images, matchedPaths };
+}
+
+/**
+ * Remove matched file paths from content
+ * Cleans up user message text by removing .tmp/images paths that have been extracted as images
+ */
+function removePathsFromContent(
+  content: UnifiedContent[],
+  pathsToRemove: string[]
+): UnifiedContent[] {
+  if (pathsToRemove.length === 0) return content;
+
+  return content.map(block => {
+    if (block.type === 'text') {
+      let text = block.text;
+      for (const path of pathsToRemove) {
+        // Remove the path and any surrounding whitespace
+        text = text.replace(new RegExp(escapeRegExp(path) + '\\s*', 'g'), '');
+      }
+      // Clean up any resulting double spaces or trailing whitespace
+      text = text.replace(/\s+/g, ' ').trim();
+      return { ...block, text };
+    }
+    return block;
+  });
+}
+
+/**
+ * Escape special regex characters in a string
+ */
+function escapeRegExp(string: string): string {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
  * Parse tool result content and auto-convert images to UnifiedImageBlock objects.
  *
  * **Special Case for Images:** Images are stored as stringified JSON arrays in JSONL files
@@ -155,22 +230,12 @@ export function enrichMessagesWithToolResults(messages: (UnifiedMessage | UIMess
     return true;
   });
 
-  // Step 2: Build lookup map of tool results
+  // Step 2: Build lookup maps in a single pass
+  // - resultMap: tool_use_id → result (for nesting results into tool_use blocks)
+  // - imagePathMap: file_path → image (for extracting images into user messages)
   const resultMap = new Map<string, { content: string | UnifiedImageBlock; is_error?: boolean }>();
-  const allToolUseIds = new Set<string>();
+  const readToolUses: { id: string; filePath: string }[] = [];
 
-  // First pass: collect all tool_use IDs
-  for (const message of filteredMessages) {
-    if (Array.isArray(message.content)) {
-      for (const block of message.content) {
-        if (block.type === 'tool_use') {
-          allToolUseIds.add(block.id);
-        }
-      }
-    }
-  }
-
-  // Second pass: build result map
   for (const message of filteredMessages) {
     if (Array.isArray(message.content)) {
       for (const block of message.content) {
@@ -180,11 +245,27 @@ export function enrichMessagesWithToolResults(messages: (UnifiedMessage | UIMess
             is_error: block.is_error
           });
         }
+        // Collect Read tool uses for imagePathMap
+        if (block.type === 'tool_use' && block.name === 'Read') {
+          const filePath = (block.input as { file_path?: string })?.file_path;
+          if (filePath) {
+            readToolUses.push({ id: block.id, filePath });
+          }
+        }
       }
     }
   }
 
-  // Step 3: Enrich tool_use blocks and filter out tool_result blocks
+  // Build imagePathMap from collected Read tools (O(r) where r = Read tool count, typically small)
+  const imagePathMap = new Map<string, UnifiedImageBlock>();
+  for (const { id, filePath } of readToolUses) {
+    const result = resultMap.get(id);
+    if (result && !result.is_error && isImageContent(result.content)) {
+      imagePathMap.set(filePath, result.content);
+    }
+  }
+
+  // Step 3: Enrich tool_use blocks, extract images for user messages, filter out tool_result blocks
   const enrichedMessages = filteredMessages.map((msg) => {
     // Direct pass-through of _original from SDK (not nested UnifiedMessage)
     const _original = import.meta.env.DEV ? msg : undefined;
@@ -221,13 +302,29 @@ export function enrichMessagesWithToolResults(messages: (UnifiedMessage | UIMess
         return true;
       });
 
+    // For user messages, extract images from file paths in text and remove paths
+    let images: string[] | undefined;
+    let finalContent = enrichedContent;
+    if (msg.role === 'user') {
+      const existingImages = ('images' in msg && Array.isArray(msg.images)) ? msg.images as string[] : [];
+      const { images: extractedImages, matchedPaths } = extractImagesFromText(msg.content, imagePathMap);
+      if (existingImages.length > 0 || extractedImages.length > 0) {
+        images = [...existingImages, ...extractedImages];
+      }
+      // Remove matched paths from content to clean up the user message text
+      if (matchedPaths.length > 0) {
+        finalContent = removePathsFromContent(enrichedContent, matchedPaths);
+      }
+    }
+
     return {
       ...msg,
-      content: enrichedContent,
+      content: finalContent,
       isStreaming,
       _original,
       parentId,
-      sessionId
+      sessionId,
+      ...(images && { images })
     } as UIMessage;
   });
 
