@@ -319,17 +319,6 @@
       "phaseCount": 5,
       "taskCount": 15
     },
-    "2511270928": {
-      "folder": "2511270928-workflow-resume",
-      "path": "todo/2511270928-workflow-resume/spec.md",
-      "spec_type": "feature",
-      "status": "draft",
-      "created": "2025-11-27T09:28:00Z",
-      "updated": "2025-11-27T09:28:00Z",
-      "totalComplexity": 42,
-      "phaseCount": 3,
-      "taskCount": 9
-    },
     "2511281500": {
       "folder": "2511281500-preview-config-ui",
       "path": "todo/2511281500-preview-config-ui/spec.md",
@@ -391,7 +380,7 @@
       "spec_type": "issue",
       "status": "review",
       "created": "2025-11-29T19:07:00Z",
-      "updated": "2025-11-29T19:07:00Z",
+      "updated": "2025-11-29T23:59:00Z",
       "totalComplexity": 58,
       "phaseCount": 1,
       "taskCount": 11
