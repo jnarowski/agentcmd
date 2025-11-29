@@ -395,6 +395,17 @@
       "totalComplexity": 147,
       "phaseCount": 6,
       "taskCount": 31
+    },
+    "2511291621": {
+      "folder": "2511291621-spec-preview-page",
+      "path": "todo/2511291621-spec-preview-page/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-29T16:21:00Z",
+      "updated": "2025-11-29T16:21:00Z",
+      "totalComplexity": 78,
+      "phaseCount": 5,
+      "taskCount": 19
     }
   }
 }
