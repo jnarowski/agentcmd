@@ -58,7 +58,7 @@ export function ProjectHeader({ projectId, projectName, projectPath, gitCapabili
 
   return (
     <>
-      <header className="sticky top-0 z-10 flex items-center justify-between border-b bg-background px-4 md:px-6 py-3">
+      <header data-testid="project-header" className="sticky top-0 z-10 flex items-center justify-between border-b bg-background px-4 md:px-6 py-3">
         <div className="flex items-center gap-2 min-w-0">
           <SidebarTrigger className="shrink-0" />
           <Separator orientation="vertical" className="h-4 shrink-0" />

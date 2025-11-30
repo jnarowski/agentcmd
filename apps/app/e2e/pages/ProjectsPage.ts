@@ -67,4 +67,12 @@ export class ProjectsPage extends BasePage {
     await this.page.waitForURL(/\/login/);
     expect(this.page.url()).toContain("/login");
   }
+
+  /**
+   * Assert on projects listing page
+   */
+  async expectOnProjectsPage() {
+    await this.page.waitForURL(/\/projects$/);
+    expect(this.page.url()).toMatch(/\/projects$/);
+  }
 }

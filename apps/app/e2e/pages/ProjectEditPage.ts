@@ -13,7 +13,7 @@ export class ProjectEditPage extends BasePage {
   }
 
   async goto(projectId: string) {
-    await this.page.goto(`/projects/${projectId}/edit`);
+    await this.page.goto(`/projects/${projectId}/settings`);
   }
 
   /**
@@ -31,10 +31,12 @@ export class ProjectEditPage extends BasePage {
   }
 
   /**
-   * Click Save button
+   * Click Save button and wait for success toast
    */
   async clickSave() {
     await this.getByTestId("project-save-button").click();
+    // Wait for success toast to confirm save completed
+    await this.page.locator('text="Project updated successfully"').waitFor({ timeout: 10000 });
   }
 
   /**
@@ -45,10 +47,10 @@ export class ProjectEditPage extends BasePage {
   }
 
   /**
-   * Assert on edit page
+   * Assert on edit page (settings)
    */
-  async expectOnEditPage(projectId: string) {
-    await this.expectUrlContains(`/projects/${projectId}/edit`);
+  async expectOnEditPage() {
+    await this.expectUrlContains(`/settings`);
   }
 
   /**

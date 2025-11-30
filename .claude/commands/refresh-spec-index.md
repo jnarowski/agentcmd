@@ -8,7 +8,7 @@ Scans spec folders and reconciles with index.json, removing orphaned entries, ad
 
 ## Instructions
 
-- Scan all spec folders in backlog/todo/in-progress/done
+- Scan all spec folders in backlog/todo/done
 - Compare to index.json entries
 - Remove entries for deleted folders
 - Add entries for untracked folders

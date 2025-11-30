@@ -266,6 +266,7 @@ export function ProjectEditForm({
               <Label htmlFor="name">Project Name</Label>
               <Input
                 id="name"
+                data-testid="project-name-input"
                 {...register("name")}
                 placeholder="my-project"
                 disabled={isLoading}
@@ -427,6 +428,7 @@ export function ProjectEditForm({
             </Button>
             <LoadingButton
               type="submit"
+              data-testid="project-save-button"
               isLoading={isLoading}
               loadingText="Saving..."
             >

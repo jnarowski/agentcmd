@@ -50,16 +50,27 @@ test.describe("Authentication - Logout", () => {
     // No storage also means logged out
   });
 
-  test("should deny access to protected routes after logout", async ({ authenticatedPage }) => {
-    // Arrange: Start authenticated and logout
-    const dashboardPage = new DashboardPage(authenticatedPage);
-    await dashboardPage.goto();
+  test("should deny access to protected routes after logout", async ({ page }) => {
+    // Use raw page (not authenticatedPage) to avoid init script re-injecting auth
+
+    // First, manually authenticate via login page
+    await page.goto("/login");
+    await page.fill('[data-testid="login-email"]', "e2e-test@example.com");
+    await page.fill('[data-testid="login-password"]', "e2e-test-password-123");
+    await page.click('[data-testid="login-submit"]');
+
+    // Wait for redirect to dashboard
+    await page.waitForURL(/\/(dashboard|projects)/, { timeout: 10000 });
+
+    // Now logout via UI
+    const dashboardPage = new DashboardPage(page);
     await dashboardPage.logout();
+    await dashboardPage.expectRedirectedToLogin();
 
     // Act: Try to access protected route
-    await authenticatedPage.goto("/projects");
+    await page.goto("/projects");
 
-    // Assert: Redirected to login
-    await expect(authenticatedPage).toHaveURL(/\/login/);
+    // Assert: Redirected to login (since we're not authenticated)
+    await expect(page).toHaveURL(/\/login/);
   });
 });

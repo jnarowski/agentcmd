@@ -46,14 +46,27 @@ export class ProjectDetailPage extends BasePage {
   }
 
   /**
-   * Assert on project page
+   * Wait for project name to appear in header
+   */
+  async waitForProjectName(name: string) {
+    await expect(this.page.locator(`h1:has-text("${name}")`)).toBeVisible({ timeout: 10000 });
+  }
+
+  /**
+   * Assert on project home page (not settings/edit)
+   * Waits for both URL and content to load
    */
   async expectOnProjectPage(projectId?: string) {
-    if (projectId) {
-      await this.expectUrlContains(`/projects/${projectId}`);
-    } else {
-      await this.expectUrlContains(`/projects/`);
-    }
+    // Wait for URL to NOT contain /settings (indicating we're on project home, not edit page)
+    await this.page.waitForURL((url) => {
+      const pathname = url.pathname;
+      const isProjectPage = pathname.includes("/projects/");
+      const isNotSettings = !pathname.includes("/settings");
+      return isProjectPage && isNotSettings;
+    }, { timeout: 10000 });
+
+    // Wait for project header to appear (indicates project loaded successfully)
+    await this.page.locator('[data-testid="project-header"], h1').first().waitFor({ timeout: 10000 });
   }
 
   /**

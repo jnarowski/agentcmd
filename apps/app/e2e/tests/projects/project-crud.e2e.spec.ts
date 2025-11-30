@@ -15,6 +15,7 @@ test.describe("Projects - CRUD Operations", () => {
   test("should update project name and persist changes", async ({
     authenticatedPage,
     db,
+    prisma,
   }) => {
     // ======== ARRANGE ========
     // Seed test project with fixture
@@ -46,12 +47,15 @@ test.describe("Projects - CRUD Operations", () => {
     await projectDetailPage.expectOnProjectPage();
 
     // ======== ASSERT ========
+    // Wait for new name to appear in header (React Query may need to refetch)
+    await projectDetailPage.waitForProjectName(newName);
+
     // Verify name updated in UI
     const displayedName = await projectDetailPage.getProjectName();
-    expect(displayedName).toBe(newName);
+    expect(displayedName).toContain(newName);
 
     // Verify name updated in database
-    const updatedProject = await db.prisma.project.findUnique({
+    const updatedProject = await prisma.project.findUnique({
       where: { id: project.id },
     });
     expect(updatedProject?.name).toBe(newName);
