@@ -20,6 +20,7 @@ export function WorkflowRunCard({
 
   return (
     <div
+      data-testid="workflow-run-card"
       className="group relative cursor-pointer rounded-lg border bg-card p-4 shadow-sm transition-all hover:shadow-md hover:border-primary/50"
       onClick={onClick}
       role="button"

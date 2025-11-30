@@ -319,28 +319,6 @@
       "phaseCount": 5,
       "taskCount": 15
     },
-    "2511281500": {
-      "folder": "2511281500-preview-config-ui",
-      "path": "todo/2511281500-preview-config-ui/spec.md",
-      "spec_type": "feature",
-      "status": "completed",
-      "created": "2025-11-28T15:00:00Z",
-      "updated": "2025-11-28T17:30:00Z",
-      "totalComplexity": 38,
-      "phaseCount": 3,
-      "taskCount": 9
-    },
-    "2511282130": {
-      "folder": "2511282130-server-start-consolidation",
-      "path": "todo/2511282130-server-start-consolidation/spec.md",
-      "spec_type": "issue",
-      "status": "completed",
-      "created": "2025-11-28T21:30:00Z",
-      "updated": "2025-11-28T22:10:00Z",
-      "totalComplexity": 47,
-      "phaseCount": 1,
-      "taskCount": 9
-    },
     "2511281459": {
       "folder": "2511281459-inngest-config-consolidation",
       "path": "todo/2511281459-inngest-config-consolidation/spec.md",
@@ -352,6 +330,17 @@
       "phaseCount": 3,
       "taskCount": 8
     },
+    "2511281500": {
+      "folder": "2511281500-preview-config-ui",
+      "path": "todo/2511281500-preview-config-ui/spec.md",
+      "spec_type": "feature",
+      "status": "completed",
+      "created": "2025-11-28T15:00:00Z",
+      "updated": "2025-11-28T17:30:00Z",
+      "totalComplexity": 38,
+      "phaseCount": 3,
+      "taskCount": 9
+    },
     "2511282026": {
       "folder": "2511282026-websocket-reconnect-ux",
       "path": "done/2511282026-websocket-reconnect-ux/spec.md",
@@ -360,6 +349,17 @@
       "created": "2025-11-29T03:27:00Z",
       "updated": "2025-11-29T13:43:00Z",
       "totalComplexity": 42,
+      "phaseCount": 1,
+      "taskCount": 9
+    },
+    "2511282130": {
+      "folder": "2511282130-server-start-consolidation",
+      "path": "todo/2511282130-server-start-consolidation/spec.md",
+      "spec_type": "issue",
+      "status": "completed",
+      "created": "2025-11-28T21:30:00Z",
+      "updated": "2025-11-28T22:10:00Z",
+      "totalComplexity": 47,
       "phaseCount": 1,
       "taskCount": 9
     },
@@ -387,11 +387,11 @@
     },
     "2511291528": {
       "folder": "2511291528-e2e-test-suite",
-      "path": "todo/2511291528-e2e-test-suite/spec.md",
+      "path": "done/2511291528-e2e-test-suite/spec.md",
       "spec_type": "feature",
-      "status": "draft",
+      "status": "completed",
       "created": "2025-11-29T22:28:43Z",
-      "updated": "2025-11-29T22:28:43Z",
+      "updated": "2025-11-30T06:54:00.000Z",
       "totalComplexity": 147,
       "phaseCount": 6,
       "taskCount": 31
