@@ -390,6 +390,7 @@ export function NewRunForm({
         <div>
           <Label>Workflow</Label>
           <Combobox
+            data-testid="workflow-definition-select"
             value={selectedDefinitionId}
             onValueChange={setSelectedDefinitionId}
             options={definitionOptions}
@@ -551,6 +552,7 @@ export function NewRunForm({
                   <div className="relative">
                     <Input
                       id="run-name"
+                      data-testid="workflow-run-name-input"
                       placeholder="e.g., Feature Implementation - API v2"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
@@ -968,6 +970,7 @@ export function NewRunForm({
         </Button>
         <Button
           type="button"
+          data-testid="workflow-run-submit"
           onClick={handleSubmit}
           disabled={
             createWorkflow.isPending ||

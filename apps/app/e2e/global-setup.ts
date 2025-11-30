@@ -2,6 +2,9 @@ import { execSync } from "node:child_process";
 import { existsSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { PrismaClient } from "@prisma/client";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { seedTestProject } from "./utils/seed-database";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -19,9 +22,10 @@ const API_BASE = "http://localhost:5100";
  *
  * Responsibilities:
  * 1. Create e2e.db if it doesn't exist
- * 2. Verify E2E server health
- * 3. Login or register test user
- * 4. Save auth state for tests
+ * 2. Seed fixture project (before server starts - for workflow registration)
+ * 3. Verify E2E server health
+ * 4. Login or register test user
+ * 5. Save auth state for tests
  */
 
 export default async function globalSetup() {
@@ -48,9 +52,31 @@ export default async function globalSetup() {
     console.log("✓ e2e.db ready");
   }
 
+  // 2. Seed fixture project (before server starts)
+  // This ensures workflow definitions are scanned and registered during server initialization
+  const adapter = new PrismaBetterSqlite3({
+    url: `file:${e2eDbPath}`,
+  });
+  const prisma = new PrismaClient({ adapter });
+
+  try {
+    const { project, projectPath } = await seedTestProject(prisma, {
+      name: "E2E Workflow Test Project",
+      copyFixture: true,
+    });
+
+    // Store project IDs in process.env for tests to use
+    process.env.E2E_WORKFLOW_PROJECT_ID = project.id;
+    process.env.E2E_WORKFLOW_PROJECT_PATH = projectPath;
+
+    console.log(`✓ Fixture project seeded (id: ${project.id})`);
+  } finally {
+    await prisma.$disconnect();
+  }
+
   const authStatePath = join(__dirname, ".auth-state.json");
 
-  // 1. Verify E2E server health
+  // 3. Verify E2E server health
   const maxRetries = 30;
   const retryDelay = 1000;
 
@@ -75,7 +101,7 @@ export default async function globalSetup() {
     await new Promise((resolve) => setTimeout(resolve, retryDelay));
   }
 
-  // 2. Try to login first, register if needed
+  // 4. Try to login first, register if needed
 
   let authData: { user: { id: string; email: string }; token: string };
 
@@ -112,7 +138,7 @@ export default async function globalSetup() {
     console.log("✓ Auth ready (new user)");
   }
 
-  // 3. Save auth state for tests to use
+  // 5. Save auth state for tests to use
   const authState = {
     user: {
       id: authData.user.id,

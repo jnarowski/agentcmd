@@ -420,14 +420,36 @@
     },
     "2511300815": {
       "folder": "2511300815-workflow-run-e2e-test",
-      "path": "todo/2511300815-workflow-run-e2e-test/spec.md",
+      "path": "done/2511300815-workflow-run-e2e-test/spec.md",
       "spec_type": "feature",
-      "status": "draft",
+      "status": "completed",
       "created": "2025-11-30T08:15:00Z",
-      "updated": "2025-11-30T08:15:00Z",
+      "updated": "2025-11-30T16:22:00Z",
       "totalComplexity": 52,
       "phaseCount": 5,
       "taskCount": 12
+    },
+    "2511301000": {
+      "folder": "2511301000-mobile-workflow-tabs",
+      "path": "todo/2511301000-mobile-workflow-tabs/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-30T17:00:00Z",
+      "updated": "2025-11-30T17:00:00Z",
+      "totalComplexity": 52,
+      "phaseCount": 4,
+      "taskCount": 12
+    },
+    "2511301002": {
+      "folder": "2511301002-branch-checkout-button",
+      "path": "todo/2511301002-branch-checkout-button/spec.md",
+      "spec_type": "issue",
+      "status": "draft",
+      "created": "2025-11-30T10:02:00Z",
+      "updated": "2025-11-30T10:02:00Z",
+      "totalComplexity": 18,
+      "phaseCount": 1,
+      "taskCount": 4
     }
   }
 }

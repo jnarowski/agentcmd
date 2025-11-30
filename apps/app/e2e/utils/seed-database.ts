@@ -174,7 +174,8 @@ export async function seedTestProject(
   // Generate unique project path
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(2, 8);
-  const projectPath = `/tmp/e2e-test-project-${timestamp}-${random}`;
+  const safeName = name.toLowerCase().replace(/\s+/g, "-");
+  const projectPath = `${E2E_PROJECT_PATH_PREFIX}${safeName}-${timestamp}-${random}`;
 
   if (copyFixture) {
     // Copy fixture template to temp directory

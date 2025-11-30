@@ -26,7 +26,10 @@ export function WorkflowEventAnnotationItem({
         id={event.id}
       />
 
-      <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:mb-1 prose-headings:mt-2 prose-*:first:mt-0">
+      <div
+        data-testid="annotation-message"
+        className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:mb-1 prose-headings:mt-2 prose-*:first:mt-0"
+      >
         <ReactMarkdown remarkPlugins={[remarkGfm]}>
           {message}
         </ReactMarkdown>
