@@ -7,12 +7,18 @@ import { AlignJustify, XIcon } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { useEffect, useState } from "react";
+import { GitHubLogoIcon } from "@radix-ui/react-icons";
 
 const menuItem = [
   {
     id: 1,
     label: "Docs",
     href: "/docs",
+  },
+  {
+    id: 2,
+    label: "GitHub",
+    href: "https://github.com/jnarowski/agentcmd",
   },
 ];
 
@@ -92,6 +98,15 @@ export function SiteHeader() {
           <div className="ml-auto flex h-full items-center gap-6">
             <Link className="text-sm hidden md:block" href="/docs">
               Docs
+            </Link>
+            <Link
+              href="https://github.com/jnarowski/agentcmd"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="GitHub repository"
+              className="hidden md:block text-gray-500 hover:text-gray-900 dark:hover:text-gray-400 transition-colors"
+            >
+              <GitHubLogoIcon className="h-5 w-5" />
             </Link>
             <Link
               className={cn(
