@@ -285,7 +285,7 @@ export default function SpecPreviewPage() {
           <div className="flex-1 overflow-y-auto">
             {viewMode === "preview" ? (
               <div className="p-6 pt-3">
-                <MarkdownPreview content={content} />
+                <MarkdownPreview content={content} hideFirstH1 />
               </div>
             ) : (
               <CodeEditor

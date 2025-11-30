@@ -5,25 +5,33 @@
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 import { CodeBlock } from "@/client/pages/projects/sessions/components/CodeBlock";
 
 interface MarkdownPreviewProps {
   content: string;
   className?: string;
+  /** Hide the first H1 heading (useful when title is shown elsewhere) */
+  hideFirstH1?: boolean;
 }
 
 export function MarkdownPreview({
   content,
   className = "",
+  hideFirstH1 = false,
 }: MarkdownPreviewProps) {
-  const safeContent = typeof content === "string" ? content : "";
+  // Strip first H1 if requested (avoids duplicate title when shown in PageHeader)
+  let safeContent = typeof content === "string" ? content : "";
+  if (hideFirstH1) {
+    safeContent = safeContent.replace(/^#\s+[^\n]+\n?/, "");
+  }
 
   return (
     <div className={`h-full overflow-auto bg-background ${className}`}>
       <div>
         <div className="prose prose-base dark:prose-invert max-w-none prose-hr:my-4 prose-p:my-3 prose-ul:my-3 prose-ol:my-3 prose-li:my-1 prose-headings:mb-3 prose-headings:mt-4 prose-*:first:mt-0 prose-pre:my-4 prose-pre:bg-transparent prose-pre:p-0 break-words">
           <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
+            remarkPlugins={[remarkGfm, remarkBreaks]}
             components={{
               // Custom heading renderers - larger for document display
               h1({ children, ...props }) {

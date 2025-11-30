@@ -152,6 +152,7 @@
     "react-resizable-panels": "^3.0.6",
     "react-router-dom": "^7.9.4",
     "recharts": "2.15.4",
+    "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.1",
     "shiki": "^3.13.0",
     "simple-git": "^3.28.0",
