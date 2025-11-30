@@ -193,9 +193,29 @@ export async function seedTestProject(
     // Copy all files from fixture to temp directory
     cpSync(fixtureSourcePath, projectPath, { recursive: true });
 
+    // Verify .agent was copied (hidden folder check)
+    const { existsSync } = await import("node:fs");
+    const agentDir = join(projectPath, ".agent");
+    if (!existsSync(agentDir)) {
+      throw new Error(
+        `E2E fixture copy failed: .agent directory not found at ${agentDir}`
+      );
+    }
+
     // Install dependencies (fixture uses npm published agentcmd-workflows, not workspace:*)
     const { execSync } = await import("node:child_process");
-    execSync("pnpm install", { cwd: projectPath, stdio: "pipe" });
+    execSync("pnpm install", { cwd: projectPath, stdio: "inherit" });
+
+    // Verify installation succeeded
+    const workflowsPath = join(
+      projectPath,
+      "node_modules/agentcmd-workflows/dist/index.js"
+    );
+    if (!existsSync(workflowsPath)) {
+      throw new Error(
+        `E2E pnpm install failed: agentcmd-workflows not found at ${workflowsPath}`
+      );
+    }
   }
 
   // Create project in database

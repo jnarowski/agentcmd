@@ -36,9 +36,11 @@ export default async function globalTeardown() {
         });
       }
 
-      // Remove temp directory
-      if (process.env.E2E_WORKFLOW_PROJECT_PATH && existsSync(process.env.E2E_WORKFLOW_PROJECT_PATH)) {
-        rmSync(process.env.E2E_WORKFLOW_PROJECT_PATH, { recursive: true, force: true });
+      // Only remove temp directories (those in /tmp)
+      // Real project directories should NOT be deleted
+      const projectPath = process.env.E2E_WORKFLOW_PROJECT_PATH;
+      if (projectPath && projectPath.startsWith("/tmp") && existsSync(projectPath)) {
+        rmSync(projectPath, { recursive: true, force: true });
       }
 
       console.log("[E2E Teardown] ✓ Fixture project cleaned");

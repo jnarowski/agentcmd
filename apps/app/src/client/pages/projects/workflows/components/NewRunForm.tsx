@@ -471,6 +471,7 @@ export function NewRunForm({
                 </TabsTrigger>
                 <TabsTrigger
                   value="content"
+                  data-testid="spec-tab-write-custom"
                   className="flex-1 rounded-none data-[state=active]:border-b data-[state=active]:border-primary data-[state=active]:-mb-px rounded-tr-lg text-xs sm:text-sm px-2 sm:px-4"
                 >
                   <span className="hidden sm:inline">Write Custom</span>

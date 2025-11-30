@@ -70,7 +70,18 @@ export async function resolve(specifier, context, nextResolve) {
           shortCircuit: true,
         };
       } catch {
-        // Fall through to default resolution
+        // Project doesn't have the package - try server's node_modules as fallback
+        // This handles cases where workflow SDK packages are in the server but not the project
+        try {
+          const serverRequire = createRequire(import.meta.url);
+          const resolved = serverRequire.resolve(specifier);
+          return {
+            url: pathToFileURL(resolved).href,
+            shortCircuit: true,
+          };
+        } catch {
+          // Fall through to default resolution
+        }
       }
     }
   }

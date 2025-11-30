@@ -31,7 +31,27 @@ export class NewWorkflowRunPage extends BasePage {
   }
 
   /**
-   * Attach spec file
+   * Select "Write Custom" spec tab and enter spec content directly
+   */
+  async writeCustomSpecContent(specContent: string) {
+    // Click on "Write Custom" tab using test ID
+    const writeCustomTab = this.getByTestId("spec-tab-write-custom");
+    await writeCustomTab.waitFor({ state: "visible", timeout: 10000 });
+    await writeCustomTab.click();
+
+    // Wait for tab panel transition
+    await this.page.waitForTimeout(300);
+
+    // Wait for the CodeEditor textarea to be visible
+    const textarea = this.page.locator("textarea").first();
+    await textarea.waitFor({ state: "visible", timeout: 10000 });
+
+    // Fill the spec content into the CodeEditor
+    await textarea.fill(specContent);
+  }
+
+  /**
+   * Attach spec file (deprecated - use writeCustomSpecContent for reliability)
    */
   async attachSpecFile(specFile: string) {
     await this.getByTestId("spec-file-input").fill(specFile);

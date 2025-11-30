@@ -20,7 +20,7 @@ import {
   workflowRunFiltersSchema,
 } from "@/shared/schemas/workflow.schemas";
 import { NotFoundError } from "@/server/errors";
-import { scanProjectWorkflows } from "@/server/domain/workflow/services/engine";
+import { scanProjectWorkflows, createWorkflowRuntime } from "@/server/domain/workflow/services/engine";
 import { prisma } from "@/shared/prisma";
 import "@/server/plugins/auth";
 
@@ -400,11 +400,15 @@ export async function workflowRoutes(fastify: FastifyInstance) {
       }
 
       // Scan project for workflows
+      const runtime = createWorkflowRuntime(
+        fastify.workflowClient!,
+        projectId,
+        fastify.log
+      );
       const discovered = await scanProjectWorkflows(
         projectId,
         project.path,
-        // @ts-ignore - workflowOrchestrator added by plugin
-        fastify.workflowOrchestrator,
+        runtime,
         fastify.log
       );
 
