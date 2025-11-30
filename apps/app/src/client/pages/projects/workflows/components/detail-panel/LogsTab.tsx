@@ -122,7 +122,7 @@ export function LogsTab({ run, selectedStepId }: LogsTabProps) {
   return (
     <Conversation className="h-full">
       <ConversationContent>
-        <div className="bg-muted/20 p-6 space-y-2 border rounded">
+        <div className="bg-muted/20 p-3 sm:p-6 space-y-2 border rounded">
           {allLogs.map((log, index) => (
             <LogEntry key={index} log={log} selectedStepId={selectedStepId} />
           ))}
@@ -183,30 +183,30 @@ function LogEntry({ log, selectedStepId }: LogEntryProps) {
       className={`text-xs font-mono space-y-1 ${isSelected ? "bg-blue-500/10 -mx-2 px-2 py-1 rounded" : ""}`}
       data-step-id={log.stepId}
     >
-      {/* Timestamp + Step + Level + Status */}
-      <div className="flex items-baseline gap-2 text-muted-foreground">
+      {/* Timestamp + Status + Level + Step Name */}
+      <div className="flex items-center gap-2 text-muted-foreground min-w-0">
         <span className="flex-shrink-0">
           {formatDate(log.timestamp, "h:mm:ss a")}
         </span>
-        {log.stepName && (
-          <span className="text-xs bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
-            {log.stepName}
-          </span>
-        )}
         {log.stepStatus && (
           <span
-            className={`text-xs px-1.5 py-0.5 rounded font-medium ${statusColors[log.stepStatus]}`}
+            className={`text-xs px-1.5 py-0.5 rounded font-medium shrink-0 ${statusColors[log.stepStatus]}`}
           >
             {log.stepStatus}
           </span>
         )}
         {log.level && (
-          <span className={`font-semibold uppercase ${levelColor}`}>
+          <span className={`font-semibold uppercase shrink-0 ${levelColor}`}>
             [{log.level}]
           </span>
         )}
+        {log.stepName && (
+          <span className="text-xs text-muted-foreground truncate min-w-0">
+            {log.stepName}
+          </span>
+        )}
         {log.command && !log.stepName && (
-          <span className="font-semibold text-foreground">$ {log.command}</span>
+          <span className="font-semibold text-foreground truncate min-w-0">$ {log.command}</span>
         )}
       </div>
 

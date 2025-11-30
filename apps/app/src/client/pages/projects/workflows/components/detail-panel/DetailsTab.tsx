@@ -42,17 +42,17 @@ export function DetailsTab({ run }: DetailsTabProps) {
   };
 
   const hasSpec = run.spec_content || run.spec_file;
-  const hasSourceControl = run.mode || run.branch_name || run.base_branch || run.worktree_name || run.preserve !== null;
+  const hasSourceControl = run.mode || run.branch_name || run.base_branch || run.worktree_name || run.preserve !== null || run.pr_url;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 overflow-hidden">
       {/* Metadata Section */}
       <div>
         <h3 className="text-sm font-medium mb-2">Metadata</h3>
         <dl className="divide-y text-sm">
-          <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
+          <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
             <dt className="text-muted-foreground">Run ID</dt>
-            <dd className="font-mono text-sm flex items-center gap-2">
+            <dd className="font-mono text-sm flex items-center gap-2 min-w-0">
               <span className="flex-1 truncate">{run.id}</span>
               <Button
                 variant="ghost"
@@ -71,38 +71,38 @@ export function DetailsTab({ run }: DetailsTabProps) {
           </div>
 
           {run.workflow_definition && (
-            <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
+            <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
               <dt className="text-muted-foreground">Workflow</dt>
-              <dd className="font-medium">{run.workflow_definition.name}</dd>
+              <dd className="font-medium truncate">{run.workflow_definition.name}</dd>
             </div>
           )}
 
-          <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
+          <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
             <dt className="text-muted-foreground">Status</dt>
             <dd className="capitalize">{run.status}</dd>
           </div>
 
-          <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
+          <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
             <dt className="text-muted-foreground">Created</dt>
             <dd>{formatDate(run.created_at)}</dd>
           </div>
 
           {run.started_at && (
-            <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
+            <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
               <dt className="text-muted-foreground">Started</dt>
               <dd>{formatDate(run.started_at)}</dd>
             </div>
           )}
 
           {run.completed_at && (
-            <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
+            <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
               <dt className="text-muted-foreground">Completed</dt>
               <dd>{formatDate(run.completed_at)}</dd>
             </div>
           )}
 
           {run.planning_session_id && (
-            <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
+            <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
               <dt className="text-muted-foreground">Planning Session</dt>
               <dd className="font-mono text-sm truncate">{run.planning_session_id}</dd>
             </div>
@@ -116,13 +116,13 @@ export function DetailsTab({ run }: DetailsTabProps) {
           <h3 className="text-sm font-medium mb-2">Spec</h3>
           <dl className="divide-y text-sm">
             {run.spec_content && (
-              <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
+              <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
                 <dt className="text-muted-foreground">Content</dt>
-                <dd className="font-mono text-sm whitespace-pre-wrap">{run.spec_content}</dd>
+                <dd className="font-mono text-sm whitespace-pre-wrap break-words min-w-0">{run.spec_content}</dd>
               </div>
             )}
             {run.spec_file && (
-              <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
+              <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
                 <dt className="text-muted-foreground">File</dt>
                 <dd className="font-mono text-sm truncate">{run.spec_file}</dd>
               </div>
@@ -147,16 +147,16 @@ export function DetailsTab({ run }: DetailsTabProps) {
           <h3 className="text-sm font-medium mb-2">Source Control</h3>
           <dl className="divide-y text-sm">
             {run.mode && (
-              <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
+              <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
                 <dt className="text-muted-foreground">Mode</dt>
                 <dd className="capitalize">{run.mode}</dd>
               </div>
             )}
 
             {run.branch_name && (
-              <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
+              <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
                 <dt className="text-muted-foreground">Branch</dt>
-                <dd className="font-mono text-sm flex items-center gap-2">
+                <dd className="font-mono text-sm flex items-center gap-2 min-w-0">
                   <span className="flex-1 truncate">{run.branch_name}</span>
                   <Button
                     variant="ghost"
@@ -192,23 +192,40 @@ export function DetailsTab({ run }: DetailsTabProps) {
             )}
 
             {run.base_branch && (
-              <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
+              <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
                 <dt className="text-muted-foreground">Base Branch</dt>
                 <dd className="font-mono text-sm truncate">{run.base_branch}</dd>
               </div>
             )}
 
             {run.worktree_name && (
-              <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
+              <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
                 <dt className="text-muted-foreground">Worktree</dt>
                 <dd className="font-mono text-sm truncate">{run.worktree_name}</dd>
               </div>
             )}
 
             {run.preserve !== null && run.preserve !== undefined && (
-              <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
+              <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
                 <dt className="text-muted-foreground">Preserve</dt>
                 <dd>{run.preserve ? "Yes" : "No"}</dd>
+              </div>
+            )}
+
+            {run.pr_url && (
+              <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
+                <dt className="text-muted-foreground">Pull Request</dt>
+                <dd className="min-w-0">
+                  <a
+                    href={run.pr_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-primary hover:underline font-mono text-sm max-w-full"
+                  >
+                    <span className="truncate">{run.pr_url}</span>
+                    <ExternalLink className="h-3 w-3 shrink-0" />
+                  </a>
+                </dd>
               </div>
             )}
           </dl>
@@ -220,27 +237,27 @@ export function DetailsTab({ run }: DetailsTabProps) {
         <div>
           <h3 className="text-sm font-medium mb-2">Preview Container</h3>
           <dl className="divide-y text-sm">
-            <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
+            <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
               <dt className="text-muted-foreground">Status</dt>
               <dd className="capitalize">{run.container.status}</dd>
             </div>
 
             {run.container.urls && Object.keys(run.container.urls).length > 0 && (
-              <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
+              <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
                 <dt className="text-muted-foreground">URL</dt>
-                <dd className="space-y-1">
+                <dd className="space-y-1 min-w-0">
                   {Object.entries(run.container.urls).map(([name, url]) => (
-                    <div key={name} className="flex items-center gap-1 font-mono text-sm">
+                    <div key={name} className="flex items-center gap-1 font-mono text-sm min-w-0">
                       <a
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-primary hover:underline"
+                        className="inline-flex items-center gap-1 text-primary hover:underline min-w-0 max-w-full"
                       >
-                        {url}
-                        <ExternalLink className="h-3 w-3" />
+                        <span className="truncate">{url}</span>
+                        <ExternalLink className="h-3 w-3 shrink-0" />
                       </a>
-                      <span className="text-muted-foreground">- {name}</span>
+                      <span className="text-muted-foreground shrink-0">- {name}</span>
                     </div>
                   ))}
                 </dd>
@@ -248,23 +265,23 @@ export function DetailsTab({ run }: DetailsTabProps) {
             )}
 
             {run.container.started_at && (
-              <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
+              <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
                 <dt className="text-muted-foreground">Started</dt>
                 <dd>{formatDate(run.container.started_at)}</dd>
               </div>
             )}
 
             {run.container.stopped_at && (
-              <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
+              <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
                 <dt className="text-muted-foreground">Stopped</dt>
                 <dd>{formatDate(run.container.stopped_at)}</dd>
               </div>
             )}
 
             {run.container.error_message && (
-              <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
+              <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
                 <dt className="text-muted-foreground">Error</dt>
-                <dd className="text-destructive text-sm">{run.container.error_message}</dd>
+                <dd className="text-destructive text-sm break-words">{run.container.error_message}</dd>
               </div>
             )}
           </dl>

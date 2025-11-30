@@ -4,6 +4,9 @@ import { XCircle, ExternalLink, Trash2, MoreVertical, Ban } from "lucide-react";
 import { WorkflowStatusBadge } from "./components/WorkflowStatusBadge";
 import { PhaseTimeline } from "./components/timeline/PhaseTimeline";
 import { WorkflowDetailPanel } from "./components/detail-panel/WorkflowDetailPanel";
+import { DetailsTab } from "./components/detail-panel/DetailsTab";
+import { LogsTab } from "./components/detail-panel/LogsTab";
+import { ArtifactsTab } from "./components/detail-panel/ArtifactsTab";
 import { DeleteWorkflowRunDialog } from "./components/DeleteWorkflowRunDialog";
 import { useWorkflowRun } from "./hooks/useWorkflowRun";
 import { useWorkflowDefinition } from "./hooks/useWorkflowDefinition";
@@ -12,9 +15,11 @@ import { useWorkflowDetailPanel } from "./hooks/useWorkflowDetailPanel";
 import { useCancelWorkflow } from "./hooks/useWorkflowMutations";
 import { useProjectId } from "@/client/hooks/useProjectId";
 import { useInngestUrl } from "@/client/hooks/useSettings";
+import { useIsMobile } from "@/client/hooks/use-mobile";
 import { TruncatedError } from "@/client/components/TruncatedError";
 import { PageHeader } from "@/client/components/PageHeader";
 import { Button } from "@/client/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/client/components/ui/tabs";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,6 +43,10 @@ function WorkflowRunDetailPage() {
   }>();
   const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  // Mobile responsive state
+  const isMobile = useIsMobile();
+  const [mobileTab, setMobileTab] = useState<"timeline" | "details" | "logs" | "artifacts">("timeline");
 
   // Detail panel state
   const {
@@ -91,6 +100,13 @@ function WorkflowRunDetailPage() {
     clearSelection();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [runId]);
+
+  // Sync activeTab with mobileTab on mobile
+  useEffect(() => {
+    if (isMobile && (activeTab === "details" || activeTab === "logs" || activeTab === "artifacts")) {
+      setMobileTab(activeTab);
+    }
+  }, [activeTab, isMobile]);
 
   // Redirect if run or definition not found
   useEffect(() => {
@@ -167,7 +183,7 @@ function WorkflowRunDetailPage() {
           </>
         }
         actions={
-          <div className="hidden md:flex gap-2">
+          <div className="hidden md:flex items-center gap-2">
             {run.container?.status === "running" && run.container?.urls && Object.keys(run.container.urls).length > 0 && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -264,6 +280,18 @@ function WorkflowRunDetailPage() {
             </DropdownMenu>
           </div>
         }
+        belowHeader={
+          isMobile ? (
+            <Tabs value={mobileTab} onValueChange={(value) => setMobileTab(value as typeof mobileTab)}>
+              <TabsList className="grid grid-cols-4 w-full">
+                <TabsTrigger value="timeline">Timeline</TabsTrigger>
+                <TabsTrigger value="details">Details</TabsTrigger>
+                <TabsTrigger value="logs">Logs</TabsTrigger>
+                <TabsTrigger value="artifacts">Artifacts</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          ) : undefined
+        }
         alerts={
           run.status === "failed" && run.error_message ? (
             <div className="rounded-md bg-red-500/10 border border-red-500/20 px-4 py-3">
@@ -288,36 +316,66 @@ function WorkflowRunDetailPage() {
         className="px-6 py-3"
       />
 
-      {/* Content - Split Pane Layout */}
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-2 overflow-hidden">
-        {/* Left Pane - Phase Timeline */}
-        <div className="flex flex-col overflow-hidden">
-          <div className="hidden md:block border-b px-6 py-4">
-            <h2 className="text-xl font-bold">Execution Timeline</h2>
+      {/* Content Area */}
+      {!isMobile ? (
+        /* Desktop - Split Pane Layout */
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 overflow-hidden">
+          {/* Left Pane - Phase Timeline */}
+          <div className="flex flex-col overflow-hidden">
+            <div className="hidden md:block border-b px-6 py-4">
+              <h2 className="text-xl font-bold">Execution Timeline</h2>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <PhaseTimeline
+                run={run}
+                projectId={projectId!}
+                onSelectSession={setSelectedSession}
+                onSelectStep={setSelectedStep}
+                onSetActiveTab={setActiveTab}
+              />
+            </div>
           </div>
-          <div className="flex-1 overflow-y-auto">
+
+          {/* Right Pane - Detail Panel */}
+          <div className="hidden md:flex flex-col border-l overflow-hidden">
+            <WorkflowDetailPanel
+              run={run}
+              projectId={projectId!}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              selectedSessionId={selectedSessionId}
+              selectedStepId={selectedStepId}
+            />
+          </div>
+        </div>
+      ) : (
+        /* Mobile - Tabbed Layout */
+        <Tabs value={mobileTab} onValueChange={(value) => setMobileTab(value as typeof mobileTab)} className="flex-1 flex flex-col overflow-hidden">
+          <TabsContent value="timeline" className="h-full mt-0 overflow-y-auto">
             <PhaseTimeline
               run={run}
               projectId={projectId!}
               onSelectSession={setSelectedSession}
               onSelectStep={setSelectedStep}
-              onSetActiveTab={setActiveTab}
+              onSetActiveTab={(tab) => {
+                setActiveTab(tab);
+                if (tab === "details" || tab === "logs" || tab === "artifacts") {
+                  setMobileTab(tab);
+                }
+              }}
             />
-          </div>
-        </div>
-
-        {/* Right Pane - Detail Panel (hidden on mobile) */}
-        <div className="hidden md:flex flex-col border-l overflow-hidden">
-          <WorkflowDetailPanel
-            run={run}
-            projectId={projectId!}
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            selectedSessionId={selectedSessionId}
-            selectedStepId={selectedStepId}
-          />
-        </div>
-      </div>
+          </TabsContent>
+          <TabsContent value="details" className="h-full mt-0 overflow-y-auto p-6">
+            <DetailsTab run={run} />
+          </TabsContent>
+          <TabsContent value="logs" className="h-full mt-0 overflow-y-auto p-0">
+            <LogsTab run={run} selectedStepId={selectedStepId} />
+          </TabsContent>
+          <TabsContent value="artifacts" className="h-full mt-0 overflow-y-auto p-6">
+            <ArtifactsTab run={run} />
+          </TabsContent>
+        </Tabs>
+      )}
 
       {/* Delete Dialog */}
       <DeleteWorkflowRunDialog
