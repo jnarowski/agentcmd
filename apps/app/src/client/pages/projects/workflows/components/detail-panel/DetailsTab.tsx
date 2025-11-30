@@ -163,7 +163,7 @@ export function DetailsTab({ run }: DetailsTabProps) {
                     size="icon-sm"
                     onClick={() => run.branch_name && copyBranch(run.branch_name)}
                     className="shrink-0"
-                    title="Copy Branch Name"
+                    title="Copy branch name to clipboard"
                   >
                     {branchCopied ? (
                       <Check className="h-3 w-3 text-green-500" />
@@ -177,7 +177,7 @@ export function DetailsTab({ run }: DetailsTabProps) {
                     onClick={handleCheckout}
                     disabled={checkingOut || !project?.path}
                     className="shrink-0"
-                    title="Checkout Branch"
+                    title="Auto-commit changes and checkout branch"
                   >
                     {checkingOut ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
