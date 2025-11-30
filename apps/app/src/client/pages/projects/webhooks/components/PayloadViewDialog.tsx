@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Copy, Check } from "lucide-react";
 import {
   Dialog,
@@ -8,6 +7,7 @@ import {
   DialogTitle,
 } from "@/client/components/ui/dialog";
 import { CodeBlock } from "@/client/pages/projects/sessions/components/CodeBlock";
+import { useCopy } from "@/client/hooks/useCopy";
 
 interface PayloadViewDialogProps {
   payload: Record<string, unknown> | null;
@@ -20,18 +20,8 @@ export function PayloadViewDialog({
   open,
   onOpenChange,
 }: PayloadViewDialogProps) {
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopy();
   const formattedPayload = payload ? JSON.stringify(payload, null, 2) : "{}";
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(formattedPayload);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      console.error("Failed to copy:", error);
-    }
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -45,7 +35,7 @@ export function PayloadViewDialog({
         <div className="mt-4 flex-1 min-h-0 overflow-auto relative">
           <div className="absolute top-2 right-6 z-10">
             <button
-              onClick={handleCopy}
+              onClick={() => copy(formattedPayload)}
               className="p-1.5 hover:bg-muted rounded-md transition-colors"
               title="Copy to clipboard"
             >

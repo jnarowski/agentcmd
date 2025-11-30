@@ -5,6 +5,7 @@
 
 import { useState } from "react";
 import { Loader2, Copy, Check, CheckCircle } from "lucide-react";
+import { useCopy } from "@/client/hooks/useCopy";
 import {
   Dialog,
   DialogContent,
@@ -40,10 +41,10 @@ export function WorkflowPackageInstallDialog({
   onClose,
 }: WorkflowPackageInstallDialogProps) {
   const installMutation = useInstallWorkflowPackage();
-  const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState<string>("npm");
   const [installResult, setInstallResult] =
     useState<WorkflowPackageInstallResult | null>(null);
+  const { copied: copiedCommand, copy: copyCommand } = useCopy();
 
   const handleInstall = async () => {
     const result = await installMutation.mutateAsync(projectId);
@@ -53,12 +54,6 @@ export function WorkflowPackageInstallDialog({
   const handleClose = () => {
     setInstallResult(null);
     onClose();
-  };
-
-  const handleCopy = (command: string) => {
-    navigator.clipboard.writeText(command);
-    setCopiedCommand(command);
-    setTimeout(() => setCopiedCommand(null), 2000);
   };
 
   const commands = {
@@ -148,9 +143,9 @@ export function WorkflowPackageInstallDialog({
                           variant="ghost"
                           size="icon"
                           className="h-6 w-6 shrink-0"
-                          onClick={() => handleCopy(command)}
+                          onClick={() => copyCommand(command)}
                         >
-                          {copiedCommand === command ? (
+                          {copiedCommand ? (
                             <Check className="h-3 w-3" />
                           ) : (
                             <Copy className="h-3 w-3" />

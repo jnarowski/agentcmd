@@ -3,6 +3,7 @@ import { Copy, Check } from 'lucide-react';
 import { useSessionStore, selectActiveSession } from '@/client/pages/projects/sessions/stores/sessionStore';
 import type { UIMessage, UnifiedContent } from '@/shared/types/message.types';
 import { formatDate } from '@/shared/utils/formatDate';
+import { useCopy } from '@/client/hooks/useCopy';
 
 /**
  * Message structure inspector - shows current session messages with problem detection
@@ -10,7 +11,7 @@ import { formatDate } from '@/shared/utils/formatDate';
 export function MessagesTab() {
   const currentSession = useSessionStore(selectActiveSession);
   const [selectedMessageIndex, setSelectedMessageIndex] = useState<number | null>(null);
-  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  const { copied: copiedMessageId, copy: copyMessage } = useCopy();
   const [filters, setFilters] = useState({
     errorsOnly: false,
     toolUsesOnly: false,
@@ -57,15 +58,6 @@ export function MessagesTab() {
     streamingMessages: messages.filter((m: UIMessage) => m.isStreaming).length,
   };
 
-  const copyMessageJson = async (msg: UIMessage) => {
-    try {
-      await navigator.clipboard.writeText(JSON.stringify(msg, null, 2));
-      setCopiedMessageId(msg.id);
-      setTimeout(() => setCopiedMessageId(null), 2000);
-    } catch (err) {
-      console.error('Failed to copy message JSON:', err);
-    }
-  };
 
   // No active session
   if (!currentSession) {
@@ -211,12 +203,12 @@ export function MessagesTab() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    copyMessageJson(msg);
+                    copyMessage(JSON.stringify(msg, null, 2));
                   }}
                   className="absolute top-2 right-2 p-1.5 rounded bg-gray-700 hover:bg-gray-600 transition-colors"
                   title="Copy message JSON"
                 >
-                  {copiedMessageId === msg.id ? (
+                  {copiedMessageId ? (
                     <Check className="h-3 w-3 text-green-400" />
                   ) : (
                     <Copy className="h-3 w-3 text-gray-300" />

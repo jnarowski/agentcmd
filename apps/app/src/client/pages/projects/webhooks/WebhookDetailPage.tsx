@@ -16,6 +16,7 @@ import { useProjectId } from "@/client/hooks/useProjectId";
 import { useWebhook } from "./hooks/useWebhook";
 import { useWebhookMutations } from "./hooks/useWebhookMutations";
 import { useWebhookWebSocket } from "./hooks/useWebhookWebSocket";
+import { useCopy } from "@/client/hooks/useCopy";
 import { WebhookStatusBadge } from "./components/WebhookStatusBadge";
 import { EventHistory } from "./components/EventHistory";
 import { DeleteWebhookDialog } from "./components/DeleteWebhookDialog";
@@ -42,9 +43,9 @@ export default function WebhookDetailPage() {
   const { webhookId } = useParams<{ webhookId: string }>();
   const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [urlCopied, setUrlCopied] = useState(false);
-  const [secretCopied, setSecretCopied] = useState(false);
   const [secretRevealed, setSecretRevealed] = useState(false);
+  const { copied: urlCopied, copy: copyUrl } = useCopy();
+  const { copied: secretCopied, copy: copySecret } = useCopy();
 
   if (!webhookId) {
     throw new Error("Missing webhookId");
@@ -117,19 +118,6 @@ export default function WebhookDetailPage() {
     setDeleteDialogOpen(true);
   };
 
-  const handleCopyUrl = async () => {
-    if (!webhookUrl) return;
-    await navigator.clipboard.writeText(webhookUrl);
-    setUrlCopied(true);
-    setTimeout(() => setUrlCopied(false), 2000);
-  };
-
-  const handleCopySecret = async () => {
-    if (!webhook) return;
-    await navigator.clipboard.writeText(webhook.secret);
-    setSecretCopied(true);
-    setTimeout(() => setSecretCopied(false), 2000);
-  };
 
   if (isLoading) {
     return (
@@ -266,7 +254,7 @@ export default function WebhookDetailPage() {
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  onClick={handleCopyUrl}
+                  onClick={() => webhookUrl && copyUrl(webhookUrl)}
                   className="shrink-0"
                 >
                   {urlCopied ? (
@@ -302,7 +290,7 @@ export default function WebhookDetailPage() {
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  onClick={handleCopySecret}
+                  onClick={() => webhook && copySecret(webhook.secret)}
                   className="shrink-0"
                 >
                   {secretCopied ? (

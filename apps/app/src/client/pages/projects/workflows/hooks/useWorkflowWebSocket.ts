@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useWebSocket } from "@/client/hooks/useWebSocket";
 import { Channels } from "@/shared/websocket";
@@ -328,6 +328,12 @@ export function useWorkflowWebSocket(projectId: string) {
     [handleRunUpdated, handleStepCreated, handleStepUpdated, handleLogChunk, handleEventCreated, handleArtifactCreated, handleContainerUpdated]
   );
 
+  // Use ref to always access the latest handler while keeping a stable reference for cleanup
+  const handlerRef = useRef(handleWorkflowEvent);
+  useEffect(() => {
+    handlerRef.current = handleWorkflowEvent;
+  }, [handleWorkflowEvent]);
+
   useEffect(() => {
     if (!projectId || !isConnected) return;
 
@@ -336,8 +342,13 @@ export function useWorkflowWebSocket(projectId: string) {
 
     sendMessage(channel, { type: "subscribe", data: { channels: [channel] } });
 
+    // Stable wrapper that delegates to the latest handler via ref
+    const stableHandler = (event: { type: string; data: unknown }) => {
+      handlerRef.current(event);
+    };
+
     // Register event handler
-    eventBus.on(channel, handleWorkflowEvent);
+    eventBus.on(channel, stableHandler);
 
     // Refetch workflow runs after subscription to catch any events
     // fired during the race window between initial fetch and subscription
@@ -345,9 +356,9 @@ export function useWorkflowWebSocket(projectId: string) {
       queryKey: workflowKeys.runs(),
     });
 
-    // Cleanup
+    // Cleanup - stableHandler reference is stable so this always removes the correct handler
     return () => {
-      eventBus.off(channel, handleWorkflowEvent);
+      eventBus.off(channel, stableHandler);
     };
-  }, [projectId, isConnected, eventBus, sendMessage, handleWorkflowEvent, queryClient]);
+  }, [projectId, isConnected, eventBus, sendMessage, queryClient]);
 }

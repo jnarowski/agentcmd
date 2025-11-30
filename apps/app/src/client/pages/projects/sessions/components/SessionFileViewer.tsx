@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Copy, Check } from "lucide-react";
 import {
   Dialog,
@@ -8,6 +7,7 @@ import {
   DialogTitle,
 } from "@/client/components/ui/dialog";
 import { useSessionFile } from "../hooks/useSessionFile";
+import { useCopy } from "@/client/hooks/useCopy";
 
 interface SessionFileViewerProps {
   open: boolean;
@@ -24,24 +24,11 @@ export function SessionFileViewer({
   onOpenChange,
   sessionId,
 }: SessionFileViewerProps) {
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopy();
+  const { copy: copyPath } = useCopy();
 
   // Fetch session file content
   const { data, isLoading, error } = useSessionFile(sessionId, open);
-
-  const handleCopy = async () => {
-    if (!data?.content) return;
-
-    await navigator.clipboard.writeText(data.content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleCopyPath = async () => {
-    if (!data?.path) return;
-
-    await navigator.clipboard.writeText(data.path);
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -61,7 +48,7 @@ export function SessionFileViewer({
                 {data.path}
               </span>
               <button
-                onClick={handleCopyPath}
+                onClick={() => data?.path && copyPath(data.path)}
                 className="shrink-0 p-1 hover:bg-background rounded transition-colors"
                 title="Copy path"
               >
@@ -75,7 +62,7 @@ export function SessionFileViewer({
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Content</span>
               <button
-                onClick={handleCopy}
+                onClick={() => data?.content && copy(data.content)}
                 disabled={!data?.content || isLoading}
                 className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >

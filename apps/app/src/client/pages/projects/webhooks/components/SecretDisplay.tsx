@@ -4,6 +4,7 @@ import { Button } from "@/client/components/ui/button";
 import { Input } from "@/client/components/ui/input";
 import { Field, FieldContent, FieldLabel } from "@/client/components/ui/field";
 import { cn } from "@/client/utils/cn";
+import { useCopy } from "@/client/hooks/useCopy";
 
 interface SecretDisplayProps {
   secret: string;
@@ -13,13 +14,7 @@ interface SecretDisplayProps {
 
 export function SecretDisplay({ secret, label = "Webhook Secret", className }: SecretDisplayProps) {
   const [revealed, setRevealed] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(secret);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  const { copied, copy } = useCopy();
 
   const toggleReveal = () => setRevealed(!revealed);
 
@@ -56,7 +51,7 @@ export function SecretDisplay({ secret, label = "Webhook Secret", className }: S
             type="button"
             variant="outline"
             size="icon"
-            onClick={handleCopy}
+            onClick={() => copy(secret)}
             aria-label="Copy secret"
           >
             {copied ? (

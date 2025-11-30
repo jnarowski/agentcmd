@@ -9,6 +9,7 @@ import { UserMessage } from './UserMessage';
 import { AssistantMessage } from './AssistantMessage';
 import { ChevronDown, ChevronRight, Copy, Check } from "lucide-react";
 import { useDebugMode } from "@/client/hooks/useDebugMode";
+import { useCopy } from "@/client/hooks/useCopy";
 
 interface MessageRendererProps {
   message: UIMessage;
@@ -22,17 +23,7 @@ export const MessageRenderer = memo(function MessageRenderer({ message, onApprov
     console.log('[RENDER] MessageRenderer', message.id.substring(0, 8), message.role);
   }
   const [isJsonExpanded, setIsJsonExpanded] = useState(false);
-  const [isCopied, setIsCopied] = useState(false);
-
-  const copyMessageJson = async () => {
-    try {
-      await navigator.clipboard.writeText(JSON.stringify(message, null, 2));
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy message JSON:', err);
-    }
-  };
+  const { copied: isCopied, copy } = useCopy();
 
   const messageContent = (() => {
     switch (message.role) {
@@ -85,7 +76,7 @@ export const MessageRenderer = memo(function MessageRenderer({ message, onApprov
             )}
           </button>
           <button
-            onClick={copyMessageJson}
+            onClick={() => copy(JSON.stringify(message, null, 2))}
             className="p-1.5 rounded bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
             title="Copy message JSON"
           >

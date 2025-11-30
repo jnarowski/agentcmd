@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import type {
   WorkflowRun,
   WorkflowRunStep,
@@ -13,6 +13,7 @@ import { SyntaxHighlighter } from "@/client/utils/syntaxHighlighter";
 import { Copy, Check } from "lucide-react";
 import { formatDate } from "@/shared/utils/formatDate";
 import { TruncatedError } from "@/client/components/TruncatedError";
+import { useCopy } from "@/client/hooks/useCopy";
 
 interface LogsTabProps {
   run: WorkflowRun;
@@ -138,17 +139,11 @@ interface LogEntryProps {
 }
 
 function CopyButton({ content }: { content: string }) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  const { copied, copy } = useCopy();
 
   return (
     <button
-      onClick={handleCopy}
+      onClick={() => copy(content)}
       className="p-1.5 hover:bg-muted rounded-md transition-colors"
       title="Copy to clipboard"
     >

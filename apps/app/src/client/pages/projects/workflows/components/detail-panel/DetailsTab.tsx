@@ -1,8 +1,8 @@
 import { ExternalLink, Copy, Check } from "lucide-react";
-import { useState } from "react";
 import type { WorkflowRun } from "@/client/pages/projects/workflows/types";
 import { useInngestRunStatus } from "@/client/pages/projects/workflows/hooks/useInngestRunStatus";
 import { useInngestUrl } from "@/client/hooks/useSettings";
+import { useCopy } from "@/client/hooks/useCopy";
 import { Button } from "@/client/components/ui/button";
 import { formatDate } from "@/shared/utils/formatDate";
 
@@ -14,13 +14,8 @@ export function DetailsTab({ run }: DetailsTabProps) {
   const hasArgs = run.args && Object.keys(run.args).length > 0;
   const { data: inngestStatus, isLoading: inngestLoading } = useInngestRunStatus(run.id);
   const inngestUrl = useInngestUrl();
-  const [copied, setCopied] = useState(false);
-
-  const handleCopyRunId = async () => {
-    await navigator.clipboard.writeText(run.id);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  const { copied: runIdCopied, copy: copyRunId } = useCopy();
+  const { copied: branchCopied, copy: copyBranch } = useCopy();
 
   const hasSpec = run.spec_content || run.spec_file;
   const hasSourceControl = run.mode || run.branch_name || run.base_branch || run.worktree_name || run.preserve !== null;
@@ -33,16 +28,16 @@ export function DetailsTab({ run }: DetailsTabProps) {
         <dl className="divide-y text-sm">
           <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
             <dt className="text-muted-foreground">Run ID</dt>
-            <dd className="font-mono text-xs flex items-center gap-2">
+            <dd className="font-mono text-sm flex items-center gap-2">
               <span className="flex-1 truncate">{run.id}</span>
               <Button
                 variant="ghost"
                 size="icon-sm"
-                onClick={handleCopyRunId}
+                onClick={() => copyRunId(run.id)}
                 className="shrink-0"
                 title="Copy Run ID"
               >
-                {copied ? (
+                {runIdCopied ? (
                   <Check className="h-3 w-3 text-green-500" />
                 ) : (
                   <Copy className="h-3 w-3" />
@@ -85,7 +80,7 @@ export function DetailsTab({ run }: DetailsTabProps) {
           {run.planning_session_id && (
             <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
               <dt className="text-muted-foreground">Planning Session</dt>
-              <dd className="font-mono text-xs truncate">{run.planning_session_id}</dd>
+              <dd className="font-mono text-sm truncate">{run.planning_session_id}</dd>
             </div>
           )}
         </dl>
@@ -99,13 +94,13 @@ export function DetailsTab({ run }: DetailsTabProps) {
             {run.spec_content && (
               <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
                 <dt className="text-muted-foreground">Content</dt>
-                <dd className="font-mono text-xs whitespace-pre-wrap">{run.spec_content}</dd>
+                <dd className="font-mono text-sm whitespace-pre-wrap">{run.spec_content}</dd>
               </div>
             )}
             {run.spec_file && (
               <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
                 <dt className="text-muted-foreground">File</dt>
-                <dd className="font-mono text-xs truncate">{run.spec_file}</dd>
+                <dd className="font-mono text-sm truncate">{run.spec_file}</dd>
               </div>
             )}
           </dl>
@@ -116,7 +111,7 @@ export function DetailsTab({ run }: DetailsTabProps) {
       {hasArgs && (
         <div>
           <h3 className="text-sm font-medium mb-2">Arguments</h3>
-          <pre className="bg-muted p-4 rounded text-xs overflow-x-auto">
+          <pre className="bg-muted p-4 rounded text-sm overflow-x-auto">
             {JSON.stringify(run.args, null, 2)}
           </pre>
         </div>
@@ -137,21 +132,36 @@ export function DetailsTab({ run }: DetailsTabProps) {
             {run.branch_name && (
               <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
                 <dt className="text-muted-foreground">Branch</dt>
-                <dd className="font-mono text-xs truncate">{run.branch_name}</dd>
+                <dd className="font-mono text-sm flex items-center gap-2">
+                  <span className="flex-1 truncate">{run.branch_name}</span>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => run.branch_name && copyBranch(run.branch_name)}
+                    className="shrink-0"
+                    title="Copy Branch Name"
+                  >
+                    {branchCopied ? (
+                      <Check className="h-3 w-3 text-green-500" />
+                    ) : (
+                      <Copy className="h-3 w-3" />
+                    )}
+                  </Button>
+                </dd>
               </div>
             )}
 
             {run.base_branch && (
               <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
                 <dt className="text-muted-foreground">Base Branch</dt>
-                <dd className="font-mono text-xs truncate">{run.base_branch}</dd>
+                <dd className="font-mono text-sm truncate">{run.base_branch}</dd>
               </div>
             )}
 
             {run.worktree_name && (
               <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
                 <dt className="text-muted-foreground">Worktree</dt>
-                <dd className="font-mono text-xs truncate">{run.worktree_name}</dd>
+                <dd className="font-mono text-sm truncate">{run.worktree_name}</dd>
               </div>
             )}
 
@@ -180,7 +190,7 @@ export function DetailsTab({ run }: DetailsTabProps) {
                 <dt className="text-muted-foreground">URL</dt>
                 <dd className="space-y-1">
                   {Object.entries(run.container.urls).map(([name, url]) => (
-                    <div key={name} className="flex items-center gap-1 font-mono text-xs">
+                    <div key={name} className="flex items-center gap-1 font-mono text-sm">
                       <a
                         href={url}
                         target="_blank"
@@ -214,7 +224,7 @@ export function DetailsTab({ run }: DetailsTabProps) {
             {run.container.error_message && (
               <div className="grid grid-cols-[120px_1fr] gap-2 py-2">
                 <dt className="text-muted-foreground">Error</dt>
-                <dd className="text-destructive text-xs">{run.container.error_message}</dd>
+                <dd className="text-destructive text-sm">{run.container.error_message}</dd>
               </div>
             )}
           </dl>
@@ -226,7 +236,7 @@ export function DetailsTab({ run }: DetailsTabProps) {
           <h3 className="text-sm font-medium mb-2">Inngest Run</h3>
           <div className="bg-muted p-4 rounded space-y-3">
             {inngestLoading ? (
-              <div className="text-xs text-muted-foreground">Loading status...</div>
+              <div className="text-sm text-muted-foreground">Loading status...</div>
             ) : inngestStatus?.success && inngestStatus.data ? (
               <>
                 <div className="text-sm">
@@ -245,7 +255,7 @@ export function DetailsTab({ run }: DetailsTabProps) {
               </>
             ) : (
               <>
-                <div className="text-xs text-destructive">
+                <div className="text-sm text-destructive">
                   {inngestStatus?.error || "Failed to fetch Inngest run status"}
                 </div>
                 <a

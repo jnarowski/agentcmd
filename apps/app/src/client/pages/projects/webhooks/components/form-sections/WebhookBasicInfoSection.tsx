@@ -2,6 +2,7 @@ import { Controller, type Control } from "react-hook-form";
 import { CopyIcon, CheckIcon } from "lucide-react";
 import { useState } from "react";
 import { Field, FieldContent, FieldLabel, FieldDescription } from "@/client/components/ui/field";
+import { useCopy } from "@/client/hooks/useCopy";
 import { Input } from "@/client/components/ui/input";
 import { Textarea } from "@/client/components/ui/textarea";
 import { InputGroup, InputGroupInput, InputGroupAddon, InputGroupButton } from "@/client/components/ui/input-group";
@@ -31,15 +32,8 @@ export function WebhookBasicInfoSection({
   currentSource,
   isEditMode = true,
 }: WebhookBasicInfoSectionProps) {
-  const [urlCopied, setUrlCopied] = useState(false);
   const [isEditingSecret, setIsEditingSecret] = useState(false);
-
-  const handleCopyUrl = async () => {
-    if (!webhookUrl) return;
-    await navigator.clipboard.writeText(webhookUrl);
-    setUrlCopied(true);
-    setTimeout(() => setUrlCopied(false), 2000);
-  };
+  const { copied: urlCopied, copy: copyUrl } = useCopy();
 
   return (
     <div className="space-y-4">
@@ -149,7 +143,7 @@ export function WebhookBasicInfoSection({
               <InputGroupAddon align="inline-end">
                 <InputGroupButton
                   size="icon-sm"
-                  onClick={handleCopyUrl}
+                  onClick={() => webhookUrl && copyUrl(webhookUrl)}
                   aria-label="Copy webhook URL"
                 >
                   {urlCopied ? (

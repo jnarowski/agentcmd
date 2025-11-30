@@ -4,6 +4,7 @@ import { useSessionStore } from '@/client/pages/projects/sessions/stores/session
 import { useFilesStore } from '@/client/pages/projects/files/stores/filesStore';
 import { useAuthStore } from '@/client/stores/authStore';
 import { useNavigationStore } from '@/client/stores/navigationStore';
+import { useCopy } from '@/client/hooks/useCopy';
 
 interface StoreSection {
   name: string;
@@ -15,7 +16,7 @@ interface StoreSection {
  */
 export function StoreTab() {
   const [expandedStores, setExpandedStores] = useState<Set<string>>(new Set(['session']));
-  const [copiedStore, setCopiedStore] = useState<string | null>(null);
+  const { copied: copiedStore, copy: copyStore } = useCopy();
 
   // Subscribe to all stores (auto-updates on state changes)
   const sessionState = useSessionStore();
@@ -40,16 +41,6 @@ export function StoreTab() {
       }
       return next;
     });
-  };
-
-  const copyStoreState = async (storeName: string, data: unknown) => {
-    try {
-      await navigator.clipboard.writeText(JSON.stringify(data, null, 2));
-      setCopiedStore(storeName);
-      setTimeout(() => setCopiedStore(null), 2000);
-    } catch (err) {
-      console.error('Failed to copy store state:', err);
-    }
   };
 
   // Calculate field count for each store
@@ -94,12 +85,12 @@ export function StoreTab() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        copyStoreState(store.name, store.data);
+                        copyStore(JSON.stringify(store.data, null, 2));
                       }}
                       className="p-1.5 rounded bg-gray-700 hover:bg-gray-600 transition-colors"
                       title="Copy store state"
                     >
-                      {copiedStore === store.name ? (
+                      {copiedStore ? (
                         <Check className="h-3 w-3 text-green-400" />
                       ) : (
                         <Copy className="h-3 w-3 text-gray-300" />

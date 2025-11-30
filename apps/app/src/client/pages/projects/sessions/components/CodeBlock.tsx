@@ -10,6 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/client/co
 import { SyntaxHighlighter } from "@/client/utils/syntaxHighlighter";
 import { getLanguageDisplayName } from "@/client/utils/getLanguageFromPath";
 import { useCodeBlockTheme } from "@/client/utils/codeBlockTheme";
+import { useCopy } from "@/client/hooks/useCopy";
 
 interface CodeBlockProps {
   code: string;
@@ -30,21 +31,11 @@ export function CodeBlock({
   showHeader = true,
   className = ''
 }: CodeBlockProps) {
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopy();
   const { isDark } = useCodeBlockTheme();
   const lineCount = code.split('\n').length;
   const shouldCollapse = collapsedByDefault && lineCount > MAX_LINES_BEFORE_COLLAPSE;
   const [isOpen, setIsOpen] = useState(!shouldCollapse);
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      console.error('Failed to copy code:', error);
-    }
-  };
 
   const content = (
     <div className={`rounded-lg border overflow-hidden ${className}`}>
@@ -72,7 +63,7 @@ export function CodeBlock({
             variant="ghost"
             size="sm"
             className="h-7 px-2 text-xs"
-            onClick={handleCopy}
+            onClick={() => copy(code)}
           >
             {copied ? (
               <>

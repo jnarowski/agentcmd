@@ -29,12 +29,12 @@ Scans spec folders and reconciles with index.json, removing orphaned entries, ad
 3. **Identify differences:**
    - **Orphaned entries**: Spec ID in index.json but folder doesn't exist at `path`
    - **Missing entries**: Folder exists but spec ID not in index.json
-   - **Status mismatches**: Read `**Status**: <value>` from spec.md and compare to index.json
+   - **Path mismatches**: Spec moved to different folder (status derived from folder location)
 
 4. **Update index.json:**
    - Remove orphaned entries (folder deleted)
    - Add missing entries with default values
-   - Update status/timestamps for mismatches
+   - Update path and status when spec moved to different folder (folder location is source of truth for status)
    - Extract and sync complexity fields from spec.md for each spec:
      - `totalComplexity`: Parse from `**Total Complexity**: X points`
      - `phaseCount`: Parse from `**Phases**: N`
@@ -49,24 +49,20 @@ Scans spec folders and reconciles with index.json, removing orphaned entries, ad
    - Show updated entries (count + ID + old status → new status)
    - Show total specs after refresh
 
-## Default Values for New Entries
+## Status from Folder Location
 
-When adding a spec folder that's not in index.json:
+The folder location is the **source of truth** for status. Do NOT use the `**Status**` field from spec.md for index.json status.
 
-- **status**: Infer from folder location:
-  - `backlog/` or `todo/` → `"draft"`
-  - `in-progress/` → `"in-progress"`
+- **status**: Derive from folder location:
+  - `backlog/` → `"backlog"`
+  - `todo/` → `"draft"`
+  - `in-progress/` → `"todo"`
   - `done/` → `"completed"`
 - **created**: Parse from spec.md `**Created**: YYYY-MM-DD` field, or use current timestamp
 - **updated**: Current timestamp
 - **path**: Relative path from `.agent/specs/` to the spec file (e.g., `"todo/251112054939-workflow-resync/spec.md"`)
 
 ## Parsing spec.md
-
-To extract status from spec.md:
-```bash
-grep -m 1 '^\*\*Status\*\*:' spec.md | sed 's/\*\*Status\*\*: //'
-```
 
 To extract created date:
 ```bash

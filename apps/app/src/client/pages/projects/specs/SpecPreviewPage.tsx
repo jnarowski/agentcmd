@@ -318,13 +318,6 @@ export default function SpecPreviewPage() {
                     <dd>{formatDate(spec.created_at)}</dd>
                   </>
                 )}
-
-                {spec.updated_at && (
-                  <>
-                    <dt className="text-muted-foreground">Updated</dt>
-                    <dd>{formatDate(spec.updated_at)}</dd>
-                  </>
-                )}
               </dl>
             </div>
 
