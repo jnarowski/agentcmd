@@ -78,16 +78,14 @@ export function PageHeader({
 
       {/* Header */}
       <div className={cn("border-b bg-background px-4 py-4", className)}>
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4">
-          {/* Title and description */}
-          <div className="flex items-center gap-3 flex-wrap min-w-0">
-            <h1 className="text-xl md:text-2xl font-bold truncate">{title}</h1>
-            {afterTitle}
-          </div>
-
-          {/* Actions */}
-          {actions && <div className="flex items-center gap-2">{actions}</div>}
+        {/* Title and badges */}
+        <div className="flex items-center justify-between gap-3 min-w-0">
+          <h1 className="text-xl md:text-2xl font-bold truncate min-w-0">{title}</h1>
+          {afterTitle && <div className="flex-shrink-0">{afterTitle}</div>}
         </div>
+
+        {/* Actions */}
+        {actions && <div className="hidden md:flex items-center gap-2 mt-3">{actions}</div>}
 
         {/* Description */}
         {description && (

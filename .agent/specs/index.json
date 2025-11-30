@@ -433,9 +433,9 @@
       "folder": "2511301000-mobile-workflow-tabs",
       "path": "todo/2511301000-mobile-workflow-tabs/spec.md",
       "spec_type": "feature",
-      "status": "draft",
+      "status": "review",
       "created": "2025-11-30T17:00:00Z",
-      "updated": "2025-11-30T17:00:00Z",
+      "updated": "2025-11-30T21:00:00Z",
       "totalComplexity": 52,
       "phaseCount": 4,
       "taskCount": 12
