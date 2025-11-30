@@ -16,7 +16,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/client/components/ui/dropdown-menu";
-import { FileText, MoreHorizontal, FolderInput, MessageSquarePlus } from "lucide-react";
+import { FileText, MoreHorizontal, FolderInput, MessageSquarePlus, Play } from "lucide-react";
 import { formatDate } from "@/shared/utils/formatDate";
 import type { Spec } from "@/shared/types/spec.types";
 import { api } from "@/client/utils/api";
@@ -92,6 +92,14 @@ export function SpecItem({ spec, projectName }: SpecItemProps) {
     }
   };
 
+  const handleImplement = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/projects/${spec.projectId}/workflows/new?specFile=${encodeURIComponent(spec.specPath)}`);
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
   // Folder options excluding current folder
   const folderOptions = [
     { label: "Backlog", value: "backlog" as const },
@@ -148,6 +156,10 @@ export function SpecItem({ spec, projectName }: SpecItemProps) {
             <MoreHorizontal className="size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleImplement}>
+              <Play className="size-4 mr-2" />
+              Implement
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleNewFollowupSession}>
               <MessageSquarePlus className="size-4 mr-2" />
               New Followup Session

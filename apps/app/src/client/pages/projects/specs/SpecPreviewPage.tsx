@@ -1,6 +1,6 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
-import { Save, Play, ChevronDown, FolderOpen, Trash2 } from "lucide-react";
+import { Save, Play, ChevronDown, FolderOpen, MessageSquarePlus } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "@/client/components/PageHeader";
@@ -13,23 +13,13 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/client/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/client/components/ui/alert-dialog";
 import { SpecStatusBadge } from "./components/SpecStatusBadge";
+import { SpecPreviewSkeleton } from "./components/SpecPreviewSkeleton";
 import type { SpecStatus } from "./components/SpecStatusBadge";
 import { useSpecContent } from "./hooks/useSpecContent";
 import { useSpecs } from "@/client/hooks/useSpecs";
@@ -53,7 +43,6 @@ export default function SpecPreviewPage() {
   const [viewMode, setViewMode] = useState<ViewMode>(initialMode);
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // Fetch data
   const { data: project } = useProject(projectId);
@@ -116,6 +105,13 @@ export default function SpecPreviewPage() {
     navigate(`/projects/${projectId}/workflows/new?specFile=${encodeURIComponent(spec.specPath)}`);
   }, [spec, projectId, navigate]);
 
+  // New followup session handler
+  const handleNewFollowupSession = useCallback(() => {
+    if (!spec) return;
+    const message = `Read @${spec.specPath} and related context.`;
+    navigate(`/projects/${projectId}/sessions/new?initialMessage=${encodeURIComponent(message)}`);
+  }, [spec, projectId, navigate]);
+
   // Move spec handler
   const handleMove = useCallback(
     async (targetFolder: "todo" | "done" | "backlog") => {
@@ -140,12 +136,6 @@ export default function SpecPreviewPage() {
     [spec, projectId, queryClient]
   );
 
-  // Delete handler (placeholder)
-  const handleDelete = useCallback(() => {
-    setDeleteDialogOpen(false);
-    toast.info("Delete functionality coming soon");
-  }, []);
-
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -162,26 +152,28 @@ export default function SpecPreviewPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [viewMode, handleSave]);
 
+  // Show skeleton while loading specs list or content
+  if (!specsData || contentLoading) {
+    return <SpecPreviewSkeleton />;
+  }
+
   if (!spec) {
     return null; // Will redirect
   }
 
-  // Loading state
-  if (contentLoading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-sm text-muted-foreground">Loading spec...</div>
-      </div>
-    );
-  }
-
-  // Error state
+  // Error state - spec file might be missing
   if (contentError) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-sm text-destructive">
-          Failed to load spec content
+      <div className="flex h-full flex-col items-center justify-center gap-4 p-8">
+        <div className="text-center space-y-2">
+          <h2 className="text-lg font-semibold">Failed to load spec content</h2>
+          <p className="text-sm text-muted-foreground max-w-md">
+            The spec file may have been deleted or moved. Try rescanning specs from the project page.
+          </p>
         </div>
+        <Button variant="outline" onClick={() => navigate(`/projects/${projectId}`)}>
+          Back to Project
+        </Button>
       </div>
     );
   }
@@ -200,6 +192,7 @@ export default function SpecPreviewPage() {
       {/* Page Header */}
       <PageHeader
         title={spec.name}
+        description={`Created ${formatDate(spec.created_at)}`}
         breadcrumbs={[
           { label: project?.name || "Project", href: `/projects/${projectId}` },
           { label: "Specs", href: `/projects/${projectId}` },
@@ -225,6 +218,10 @@ export default function SpecPreviewPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleNewFollowupSession}>
+                  <MessageSquarePlus className="mr-2 h-4 w-4" />
+                  New Followup Session
+                </DropdownMenuItem>
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>
                     <FolderOpen className="mr-2 h-4 w-4" />
@@ -242,14 +239,6 @@ export default function SpecPreviewPage() {
                     </DropdownMenuItem>
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => setDeleteDialogOpen(true)}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete Spec
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </ButtonGroup>
@@ -322,6 +311,20 @@ export default function SpecPreviewPage() {
                     <dd>{spec.totalComplexity} points</dd>
                   </>
                 )}
+
+                {spec.created_at && (
+                  <>
+                    <dt className="text-muted-foreground">Created</dt>
+                    <dd>{formatDate(spec.created_at)}</dd>
+                  </>
+                )}
+
+                {spec.updated_at && (
+                  <>
+                    <dt className="text-muted-foreground">Updated</dt>
+                    <dd>{formatDate(spec.updated_at)}</dd>
+                  </>
+                )}
               </dl>
             </div>
 
@@ -344,40 +347,9 @@ export default function SpecPreviewPage() {
                 </div>
               </div>
             )}
-
-            {/* Timeline Section */}
-            <div>
-              <h3 className="text-sm font-semibold mb-3">Timeline</h3>
-              <dl className="grid grid-cols-[100px_1fr] gap-x-3 gap-y-2 text-sm">
-                <dt className="text-muted-foreground">Created</dt>
-                <dd>{formatDate(spec.created_at)}</dd>
-              </dl>
-            </div>
           </div>
         </div>
       </div>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete spec?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the spec and all its content. This
-              action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
