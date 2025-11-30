@@ -16,11 +16,10 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/client/components/ui/dropdown-menu";
-import { FileText, MoreHorizontal, FolderInput, Eye, Pencil, MessageSquarePlus } from "lucide-react";
+import { FileText, MoreHorizontal, FolderInput, MessageSquarePlus, Play } from "lucide-react";
 import { formatDate } from "@/shared/utils/formatDate";
 import type { Spec } from "@/shared/types/spec.types";
 import { api } from "@/client/utils/api";
-import { SpecFileViewer } from "@/client/pages/projects/workflows/components/SpecFileViewer";
 import { useNavigationStore } from "@/client/stores";
 import { useTouchDevice } from "@/client/hooks/useTouchDevice";
 
@@ -38,8 +37,6 @@ export function SpecItem({ spec, projectName }: SpecItemProps) {
   const [hoveredSpecId, setHoveredSpecId] = useState<string | null>(null);
   const [menuOpenSpecId, setMenuOpenSpecId] = useState<string | null>(null);
   const [isMoving, setIsMoving] = useState(false);
-  const [viewerOpen, setViewerOpen] = useState(false);
-  const [initialViewMode, setInitialViewMode] = useState<"edit" | "preview">("preview");
 
   // Extract current folder from specPath (e.g., "done/2511..." → "done")
   const currentFolder = spec.specPath.split("/")[0] as
@@ -48,13 +45,11 @@ export function SpecItem({ spec, projectName }: SpecItemProps) {
     | "done";
 
   const handleClick = () => {
-    // Navigate to workflow creation page with spec and name pre-populated
+    // Navigate to spec preview page
     if (isMobile) {
       setOpenMobile(false);
     }
-    navigate(
-      `/projects/${spec.projectId}/workflows/new?specFile=${encodeURIComponent(spec.specPath)}&name=${encodeURIComponent(spec.name)}`
-    );
+    navigate(`/projects/${spec.projectId}/specs/${spec.id}`);
   };
 
   const handleMoveSpec = async (
@@ -92,6 +87,14 @@ export function SpecItem({ spec, projectName }: SpecItemProps) {
     const message = `Read @${spec.specPath} and related context.`;
     const encoded = encodeURIComponent(message);
     navigate(`/projects/${spec.projectId}/sessions/new?initialMessage=${encoded}`);
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
+  const handleImplement = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/projects/${spec.projectId}/workflows/new?specFile=${encodeURIComponent(spec.specPath)}`);
     if (isMobile) {
       setOpenMobile(false);
     }
@@ -153,19 +156,9 @@ export function SpecItem({ spec, projectName }: SpecItemProps) {
             <MoreHorizontal className="size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => {
-              setInitialViewMode("preview");
-              setViewerOpen(true);
-            }}>
-              <Eye className="size-4 mr-2" />
-              View Spec
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => {
-              setInitialViewMode("edit");
-              setViewerOpen(true);
-            }}>
-              <Pencil className="size-4 mr-2" />
-              Edit Spec
+            <DropdownMenuItem onClick={handleImplement}>
+              <Play className="size-4 mr-2" />
+              Implement
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleNewFollowupSession}>
               <MessageSquarePlus className="size-4 mr-2" />
@@ -190,15 +183,6 @@ export function SpecItem({ spec, projectName }: SpecItemProps) {
             </DropdownMenuSub>
           </DropdownMenuContent>
         </DropdownMenu>
-      )}
-      {viewerOpen && (
-        <SpecFileViewer
-          projectId={spec.projectId}
-          specPath={spec.specPath}
-          specName={spec.name}
-          onClose={() => setViewerOpen(false)}
-          initialViewMode={initialViewMode}
-        />
       )}
     </SidebarMenuItem>
   );

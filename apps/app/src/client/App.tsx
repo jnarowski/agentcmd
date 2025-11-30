@@ -22,6 +22,7 @@ import ProjectEditPage from "@/client/pages/projects/ProjectEditPage";
 import ProjectWebhooksPage from "@/client/pages/projects/webhooks/ProjectWebhooksPage";
 import WebhookFormPage from "@/client/pages/projects/webhooks/WebhookFormPage";
 import WebhookDetailPage from "@/client/pages/projects/webhooks/WebhookDetailPage";
+import SpecPreviewPage from "@/client/pages/projects/specs/SpecPreviewPage";
 import LoginPage from "@/client/pages/auth/LoginPage";
 import SignupPage from "@/client/pages/auth/SignupPage";
 import ComponentsPage from "@/client/pages/ComponentsPage";
@@ -60,6 +61,7 @@ function AppContent() {
               />
               <Route path="sessions/new" element={<NewSessionPage />} />
               <Route path="sessions/:sessionId" element={<ProjectSessionPage />} />
+              <Route path="specs/:specId" element={<SpecPreviewPage />} />
               <Route path="shell" element={<ProjectShellPage />} />
               <Route path="source" element={<Navigate to="source/files" replace />} />
               <Route path="source/files" element={<ProjectSourcePage />} />

@@ -3,8 +3,8 @@ import { Eye } from "lucide-react";
 import { Combobox } from "@/client/components/ui/combobox";
 import { Button } from "@/client/components/ui/button";
 import { useProjectSpecs } from "@/client/pages/projects/hooks/useProjectSpecs";
+import { SpecPreviewModal } from "@/client/pages/projects/specs/components/SpecPreviewModal";
 import { cn } from "@/client/utils/cn";
-import { SpecFileViewer } from "./SpecFileViewer";
 
 interface SpecFileSelectProps {
   projectId: string;
@@ -21,11 +21,11 @@ export function SpecFileSelect({
   disabled,
   onSpecTypeChange,
 }: SpecFileSelectProps) {
+  const [modalOpen, setModalOpen] = useState(false);
   const { data: specFiles } = useProjectSpecs(projectId, {
     status: ["draft", "in-progress", "review"],
     enabled: true,
   });
-  const [viewerOpen, setViewerOpen] = useState(false);
 
   // Transform spec tasks to combobox options with spec type
   const specFileOptions = useMemo(() => {
@@ -116,7 +116,7 @@ export function SpecFileSelect({
         </div>
         <Button
           variant="outline"
-          onClick={() => setViewerOpen(true)}
+          onClick={() => setModalOpen(true)}
           disabled={!value || disabled}
           title="View and edit spec file"
           className="h-full"
@@ -126,12 +126,14 @@ export function SpecFileSelect({
         </Button>
       </div>
 
-      {viewerOpen && selectedSpec && (
-        <SpecFileViewer
+      {/* Spec Preview Modal */}
+      {selectedSpec && (
+        <SpecPreviewModal
+          open={modalOpen}
+          onOpenChange={setModalOpen}
           projectId={projectId}
           specPath={selectedSpec.specPath}
           specName={selectedSpec.name}
-          onClose={() => setViewerOpen(false)}
         />
       )}
     </div>

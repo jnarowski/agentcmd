@@ -44,14 +44,8 @@ export function ProjectHomeSpecs({ projectId }: ProjectHomeSpecsProps) {
     rescanMutation.mutate();
   };
 
-  const handleOpenWorkflow = (
-    specPath: string,
-    taskProjectId: string,
-    taskName: string
-  ) => {
-    navigate(
-      `/projects/${taskProjectId}/workflows/new?specFile=${encodeURIComponent(specPath)}&name=${encodeURIComponent(taskName)}`
-    );
+  const handleSpecClick = (specId: string, taskProjectId: string) => {
+    navigate(`/projects/${taskProjectId}/specs/${specId}`);
   };
 
   const { todoSpecs, doneSpecs, backlogSpecs } = useMemo(() => {
@@ -100,9 +94,7 @@ export function ProjectHomeSpecs({ projectId }: ProjectHomeSpecsProps) {
           <div
             key={task.id}
             className="p-3 cursor-pointer hover:bg-accent/50 transition-colors rounded-lg border bg-card min-w-0"
-            onClick={() =>
-              handleOpenWorkflow(task.specPath, task.projectId, task.name)
-            }
+            onClick={() => handleSpecClick(task.id, task.projectId)}
           >
             <div className="flex items-center min-w-0">
               <FileText className="size-4 shrink-0 mr-2.5" />
