@@ -412,3 +412,60 @@ Using "stay" mode avoids:
 4. Update POMs with missing methods
 5. Create and run the test
 6. Verify stability with 3 consecutive runs
+
+## Review Findings
+
+**Review Date:** 2025-11-30
+**Reviewed By:** Claude Code
+**Review Iteration:** 1 of 3
+**Branch:** feature/add-workflow-run-e2e-test
+**Commits Reviewed:** 1
+
+### Summary
+
+Implementation is mostly complete with good quality. Found 2 HIGH priority issues that would prevent test from passing: missing spec file selection in test and incomplete fixture path handling in seedTestProject. Additionally, 1 MEDIUM priority issue related to test robustness (brittle hardcoded timeout).
+
+### Phase 5: Test Implementation
+
+**Status:** ⚠️ Incomplete - test missing spec file selection step
+
+#### HIGH Priority
+
+- [ ] **Test missing spec file selection step**
+  - **File:** `apps/app/e2e/tests/workflows/workflow-run-execution.e2e.spec.ts:36-61`
+  - **Spec Reference:** "Phase 5.1 - Create run via UI form"
+  - **Expected:** Test should select or attach the spec file created by `seedSpecFile` before submitting the form
+  - **Actual:** Test creates spec file but never passes it to the NewWorkflowRunPage form. The workflow run form requires a spec file selection (NewWorkflowRunPage.attachSpecFile exists for this purpose).
+  - **Fix:** After creating spec file on line 43, add `await newRunPage.attachSpecFile(specFile.path)` or use the createWorkflowRun helper method before submitForm()
+
+- [ ] **seedTestProject fixture path prefix mismatch**
+  - **File:** `apps/app/e2e/utils/seed-database.ts:177`
+  - **Spec Reference:** "Phase 2.1 - Store project.id and projectPath in process.env"
+  - **Expected:** Test projects should use E2E_PROJECT_PATH_PREFIX (`/tmp/.agentcmd-e2e-test-`) to be filterable from sync operations
+  - **Actual:** seedTestProject uses `/tmp/e2e-test-project-` prefix instead of the standardized E2E_PROJECT_PATH_PREFIX constant
+  - **Fix:** Change line 177 from `const projectPath = \`/tmp/e2e-test-project-${timestamp}-${random}\`;` to `const projectPath = \`${E2E_PROJECT_PATH_PREFIX}${name.toLowerCase().replace(/\s+/g, "-")}-${timestamp}-${random}\`;`
+
+#### MEDIUM Priority
+
+- [ ] **Brittle hardcoded timeout instead of waitForTimeout method**
+  - **File:** `apps/app/e2e/tests/workflows/workflow-run-execution.e2e.spec.ts:58`
+  - **Spec Reference:** Testing best practices - avoid arbitrary waits
+  - **Expected:** Wait for specific UI state or element instead of arbitrary timeout
+  - **Actual:** Uses `await authenticatedPage.waitForTimeout(1000)` with comment "wait and see if the form is ready"
+  - **Fix:** Either remove this wait if not needed after adding spec file selection, or replace with specific waitFor condition like `await newRunPage.expectFormReady()` or wait for spec file selector to be visible
+
+### Positive Findings
+
+- Excellent fixture workflow implementation - clean, well-documented, fast execution design
+- Global setup/teardown properly handles fixture project lifecycle with cleanup
+- Test IDs added consistently across all required UI components
+- POM methods (getRunId, expectOnRunDetailPage) implemented correctly
+- Database verification comprehensive - checks all step types and counts
+- Good timeout strategy (120s test, 90s completion) for AI execution
+- Proper use of process.env for sharing fixture project between global setup and tests
+
+### Review Completion Checklist
+
+- [x] All spec requirements reviewed
+- [x] Code quality checked
+- [ ] All findings addressed and tested
