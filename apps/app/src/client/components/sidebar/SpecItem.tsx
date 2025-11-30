@@ -16,7 +16,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/client/components/ui/dropdown-menu";
-import { FileText, MoreHorizontal, FolderInput, Eye, Pencil, MessageSquarePlus } from "lucide-react";
+import { FileText, MoreHorizontal, FolderInput, MessageSquarePlus } from "lucide-react";
 import { formatDate } from "@/shared/utils/formatDate";
 import type { Spec } from "@/shared/types/spec.types";
 import { api } from "@/client/utils/api";
@@ -148,20 +148,6 @@ export function SpecItem({ spec, projectName }: SpecItemProps) {
             <MoreHorizontal className="size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => {
-              navigate(`/projects/${spec.projectId}/specs/${spec.id}`);
-              if (isMobile) setOpenMobile(false);
-            }}>
-              <Eye className="size-4 mr-2" />
-              View Spec
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => {
-              navigate(`/projects/${spec.projectId}/specs/${spec.id}?mode=edit`);
-              if (isMobile) setOpenMobile(false);
-            }}>
-              <Pencil className="size-4 mr-2" />
-              Edit Spec
-            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleNewFollowupSession}>
               <MessageSquarePlus className="size-4 mr-2" />
               New Followup Session

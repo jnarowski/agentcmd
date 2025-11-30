@@ -1,17 +1,22 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
-import { Save, Play, FolderOpen, Trash2 } from "lucide-react";
+import { Save, Play, ChevronDown, FolderOpen, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "@/client/components/PageHeader";
 import { MarkdownPreview } from "@/client/pages/projects/workflows/components/MarkdownPreview";
 import { CodeEditor } from "@/client/components/CodeEditor";
-import { SegmentedControl } from "@/client/components/ui/segmented-control";
+import { Tabs, TabsList, TabsTrigger } from "@/client/components/ui/tabs";
 import { Button } from "@/client/components/ui/button";
+import { ButtonGroup } from "@/client/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/client/components/ui/dropdown-menu";
 import {
@@ -108,7 +113,7 @@ export default function SpecPreviewPage() {
   // Create workflow handler
   const handleCreateWorkflowRun = useCallback(() => {
     if (!spec) return;
-    navigate(`/projects/${projectId}/workflows/new?specId=${spec.id}`);
+    navigate(`/projects/${projectId}/workflows/new?specFile=${encodeURIComponent(spec.specPath)}`);
   }, [spec, projectId, navigate]);
 
   // Move spec handler
@@ -204,15 +209,65 @@ export default function SpecPreviewPage() {
           <SpecStatusBadge status={spec.status as SpecStatus} size="sm" />
         }
         actions={
-          <>
-            <SegmentedControl
-              value={viewMode}
-              onChange={(value) => setViewMode(value as ViewMode)}
-              options={[
-                { value: "preview", label: "Preview" },
-                { value: "edit", label: "Edit" },
-              ]}
-            />
+          <ButtonGroup>
+            <Button
+              variant="outline"
+              onClick={handleCreateWorkflowRun}
+              aria-label="Implement this spec"
+            >
+              <Play className="h-4 w-4" />
+              Implement
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" aria-label="More actions">
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <FolderOpen className="mr-2 h-4 w-4" />
+                    Move to...
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuItem onClick={() => handleMove("todo")}>
+                      Todo
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleMove("done")}>
+                      Done
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleMove("backlog")}>
+                      Backlog
+                    </DropdownMenuItem>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setDeleteDialogOpen(true)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Spec
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </ButtonGroup>
+        }
+      />
+
+      {/* Split-pane Layout */}
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 overflow-hidden">
+        {/* Main Content Area */}
+        <div className="md:col-span-2 flex flex-col overflow-hidden border-r">
+          {/* Tab Group Header */}
+          <div className="border-b px-6 py-3 flex items-center justify-between">
+            <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as ViewMode)}>
+              <TabsList>
+                <TabsTrigger value="preview">Preview</TabsTrigger>
+                <TabsTrigger value="edit">Edit</TabsTrigger>
+              </TabsList>
+            </Tabs>
             {viewMode === "edit" && (
               <Button
                 onClick={handleSave}
@@ -224,25 +279,12 @@ export default function SpecPreviewPage() {
                 {saving ? "Saving..." : "Save"}
               </Button>
             )}
-          </>
-        }
-      />
-
-      {/* Split-pane Layout */}
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 overflow-hidden">
-        {/* Main Content Area */}
-        <div className="md:col-span-2 flex flex-col overflow-hidden border-r">
-          {/* Section Header */}
-          <div className="hidden md:block border-b px-6 py-3 bg-muted/30">
-            <h2 className="text-sm font-medium">
-              {viewMode === "preview" ? "Specification" : "Edit Specification"}
-            </h2>
           </div>
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto">
             {viewMode === "preview" ? (
-              <div className="p-6">
+              <div className="p-6 pt-3">
                 <MarkdownPreview content={content} />
               </div>
             ) : (
@@ -259,48 +301,6 @@ export default function SpecPreviewPage() {
         {/* Sidebar */}
         <div className="hidden md:flex flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {/* Actions Section */}
-            <div className="space-y-2">
-              <Button
-                onClick={handleCreateWorkflowRun}
-                className="w-full"
-                aria-label="Create workflow run from spec"
-              >
-                <Play className="mr-2 h-4 w-4" />
-                Create Workflow Run
-              </Button>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="w-full">
-                    <FolderOpen className="mr-2 h-4 w-4" />
-                    Move to...
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => handleMove("todo")}>
-                    Move to Todo
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleMove("done")}>
-                    Move to Done
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleMove("backlog")}>
-                    Move to Backlog
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <Button
-                variant="destructive"
-                className="w-full"
-                onClick={() => setDeleteDialogOpen(true)}
-                aria-label="Delete spec"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Spec
-              </Button>
-            </div>
-
             {/* Details Section */}
             <div>
               <h3 className="text-sm font-semibold mb-3">Details</h3>

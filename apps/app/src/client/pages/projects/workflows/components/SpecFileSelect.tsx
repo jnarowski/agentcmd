@@ -1,9 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Eye } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { Combobox } from "@/client/components/ui/combobox";
 import { Button } from "@/client/components/ui/button";
 import { useProjectSpecs } from "@/client/pages/projects/hooks/useProjectSpecs";
+import { SpecPreviewModal } from "@/client/pages/projects/specs/components/SpecPreviewModal";
 import { cn } from "@/client/utils/cn";
 
 interface SpecFileSelectProps {
@@ -21,7 +21,7 @@ export function SpecFileSelect({
   disabled,
   onSpecTypeChange,
 }: SpecFileSelectProps) {
-  const navigate = useNavigate();
+  const [modalOpen, setModalOpen] = useState(false);
   const { data: specFiles } = useProjectSpecs(projectId, {
     status: ["draft", "in-progress", "review"],
     enabled: true,
@@ -116,11 +116,7 @@ export function SpecFileSelect({
         </div>
         <Button
           variant="outline"
-          onClick={() => {
-            if (selectedSpec) {
-              navigate(`/projects/${projectId}/specs/${selectedSpec.id}`);
-            }
-          }}
+          onClick={() => setModalOpen(true)}
           disabled={!value || disabled}
           title="View and edit spec file"
           className="h-full"
@@ -129,6 +125,17 @@ export function SpecFileSelect({
           <span className="hidden sm:inline ml-1.5">View Spec</span>
         </Button>
       </div>
+
+      {/* Spec Preview Modal */}
+      {selectedSpec && (
+        <SpecPreviewModal
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          projectId={projectId}
+          specPath={selectedSpec.specPath}
+          specName={selectedSpec.name}
+        />
+      )}
     </div>
   );
 }

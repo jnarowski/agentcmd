@@ -6,7 +6,7 @@ async function fetchSpecContent(
   specPath: string
 ): Promise<string> {
   const response = await api.get<{ content: string }>(
-    `/projects/${projectId}/specs/content?specPath=${encodeURIComponent(specPath)}`
+    `/api/projects/${projectId}/specs/content?specPath=${encodeURIComponent(specPath)}`
   );
   return response.content;
 }

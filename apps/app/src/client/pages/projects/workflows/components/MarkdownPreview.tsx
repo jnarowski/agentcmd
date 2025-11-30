@@ -20,7 +20,7 @@ export function MarkdownPreview({
 
   return (
     <div className={`h-full overflow-auto bg-background ${className}`}>
-      <div className="max-w-4xl mx-auto pl-4 pr-8 py-6">
+      <div>
         <div className="prose prose-base dark:prose-invert max-w-none prose-hr:my-4 prose-p:my-3 prose-ul:my-3 prose-ol:my-3 prose-li:my-1 prose-headings:mb-3 prose-headings:mt-4 prose-*:first:mt-0 prose-pre:my-4 prose-pre:bg-transparent prose-pre:p-0 break-words">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
@@ -28,48 +28,54 @@ export function MarkdownPreview({
               // Custom heading renderers - larger for document display
               h1({ children, ...props }) {
                 return (
-                  <h1
-                    className="text-2xl! font-bold! mb-3! mt-4!"
-                    {...props}
-                  >
+                  <h1 className="text-2xl! font-bold! mb-3! mt-4!" {...props}>
                     {children}
                   </h1>
                 );
               },
               h2({ children, ...props }) {
                 return (
-                  <h2
-                    className="text-xl! font-bold! mb-3! mt-4!"
-                    {...props}
-                  >
+                  <h2 className="text-xl! font-bold! mb-3! mt-4!" {...props}>
                     {children}
                   </h2>
                 );
               },
               h3({ children, ...props }) {
                 return (
-                  <h3 className="text-lg! font-semibold! mb-2! mt-3!" {...props}>
+                  <h3
+                    className="text-lg! font-semibold! mb-2! mt-3!"
+                    {...props}
+                  >
                     {children}
                   </h3>
                 );
               },
               h4({ children, ...props }) {
                 return (
-                  <h4 className="text-base! font-semibold! mb-2! mt-3!" {...props}>
+                  <h4
+                    className="text-base! font-semibold! mb-2! mt-3!"
+                    {...props}
+                  >
                     {children}
                   </h4>
                 );
               },
               h5({ children, ...props }) {
                 return (
-                  <h5 className="text-base! font-medium! mb-2! mt-3!" {...props}>
+                  <h5
+                    className="text-base! font-medium! mb-2! mt-3!"
+                    {...props}
+                  >
                     {children}
                   </h5>
                 );
               },
               h6({ children, ...props }) {
                 return (
-                  <h6 className="text-base! font-medium! mb-2! mt-3!" {...props}>
+                  <h6
+                    className="text-base! font-medium! mb-2! mt-3!"
+                    {...props}
+                  >
                     {children}
                   </h6>
                 );
@@ -95,7 +101,11 @@ export function MarkdownPreview({
                 const code = String(children).replace(/\n$/, "");
 
                 return (
-                  <CodeBlock code={code} language={language} showHeader={true} />
+                  <CodeBlock
+                    code={code}
+                    language={language}
+                    showHeader={true}
+                  />
                 );
               },
               // Custom link rendering
