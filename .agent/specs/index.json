@@ -444,9 +444,9 @@
       "folder": "2511301002-branch-checkout-button",
       "path": "todo/2511301002-branch-checkout-button/spec.md",
       "spec_type": "issue",
-      "status": "review",
+      "status": "completed",
       "created": "2025-11-30T10:02:00Z",
-      "updated": "2025-11-30T17:37:26.930Z",
+      "updated": "2025-11-30T17:45:00.000Z",
       "totalComplexity": 18,
       "phaseCount": 1,
       "taskCount": 4
