@@ -153,11 +153,11 @@
     },
     "2511220157": {
       "folder": "2511220157-active-spec-watcher",
-      "path": "todo/2511220157-active-spec-watcher/spec.md",
+      "path": "backlog/2511220157-active-spec-watcher/spec.md",
       "spec_type": "feature",
-      "status": "draft",
+      "status": "backlog",
       "created": "2025-11-22T01:57:00Z",
-      "updated": "2025-11-22T01:57:00Z"
+      "updated": "2025-11-30T15:55:54.857Z"
     },
     "2511220927": {
       "folder": "2511220927-image-upload-fix",
@@ -266,22 +266,22 @@
     },
     "2511260743": {
       "folder": "2511260743-workflow-cancelon",
-      "path": "done/2511260743-workflow-cancelon/spec.md",
+      "path": "todo/2511260743-workflow-cancelon/spec.md",
       "spec_type": "issue",
-      "status": "completed",
+      "status": "draft",
       "created": "2025-11-26T07:43:00Z",
-      "updated": "2025-11-26T20:26:00.000Z",
+      "updated": "2025-11-30T15:55:54.857Z",
       "totalComplexity": 43,
       "phaseCount": 1,
       "taskCount": 9
     },
     "2511270928": {
       "folder": "2511270928-workflow-resume",
-      "path": "todo/2511270928-workflow-resume/spec.md",
+      "path": "backlog/2511270928-workflow-resume/spec.md",
       "spec_type": "feature",
-      "status": "draft",
+      "status": "backlog",
       "created": "2025-11-27T09:28:00Z",
-      "updated": "2025-11-27T09:28:00Z",
+      "updated": "2025-11-30T15:55:54.857Z",
       "totalComplexity": 42,
       "phaseCount": 3,
       "taskCount": 9
@@ -318,6 +318,17 @@
       "totalComplexity": 47,
       "phaseCount": 5,
       "taskCount": 15
+    },
+    "2511281011": {
+      "folder": "2511281011-session-message-queue",
+      "path": "todo/2511281011-session-message-queue/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-28T00:00:00.000Z",
+      "updated": "2025-11-30T15:55:54.857Z",
+      "totalComplexity": 68,
+      "phaseCount": 6,
+      "taskCount": 18
     },
     "2511281459": {
       "folder": "2511281459-inngest-config-consolidation",
@@ -387,11 +398,11 @@
     },
     "2511291528": {
       "folder": "2511291528-e2e-test-suite",
-      "path": "todo/2511291528-e2e-test-suite/spec.md",
+      "path": "done/2511291528-e2e-test-suite/spec.md",
       "spec_type": "feature",
-      "status": "draft",
+      "status": "completed",
       "created": "2025-11-29T22:28:43Z",
-      "updated": "2025-11-29T22:28:43Z",
+      "updated": "2025-11-30T15:55:54.857Z",
       "totalComplexity": 147,
       "phaseCount": 6,
       "taskCount": 31
@@ -406,6 +417,17 @@
       "totalComplexity": 78,
       "phaseCount": 5,
       "taskCount": 19
+    },
+    "2511300815": {
+      "folder": "2511300815-workflow-run-e2e-test",
+      "path": "todo/2511300815-workflow-run-e2e-test/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-30T08:15:00Z",
+      "updated": "2025-11-30T08:15:00Z",
+      "totalComplexity": 52,
+      "phaseCount": 5,
+      "taskCount": 12
     }
   }
 }
