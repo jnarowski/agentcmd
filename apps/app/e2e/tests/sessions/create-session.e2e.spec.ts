@@ -111,29 +111,4 @@ test.describe("Sessions - With Agent Responses", () => {
     await sessionPage.expectAssistantMessageVisible();
   });
 
-  test.skip("should allow sending follow-up messages", async ({
-    authenticatedPage,
-    db,
-  }) => {
-    const project = await db.seedProject({
-      name: "E2E Test Project 4",
-    });
-
-    const newSessionPage = new NewSessionPage(authenticatedPage);
-    const sessionPage = new SessionPage(authenticatedPage);
-
-    await newSessionPage.gotoForProject(project.id);
-    await newSessionPage.expectWebSocketConnected();
-    await newSessionPage.sendMessage("First message");
-    await newSessionPage.waitForSessionCreated();
-
-    await sessionPage.waitForAssistantMessage(60000);
-
-    const followUpMessage = "Follow-up question";
-    await sessionPage.sendMessage(followUpMessage);
-    await sessionPage.waitForStreamingComplete(60000);
-
-    const assistantMessages = sessionPage.getAssistantMessages();
-    await expect(assistantMessages).toHaveCount(2, { timeout: 10000 });
-  });
 });

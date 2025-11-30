@@ -123,3 +123,184 @@ export async function cleanupUserData(prisma: PrismaClient, userId: string) {
     where: { id: userId },
   });
 }
+
+// ========================================
+// NEW: Enhanced Test Fixtures
+// ========================================
+
+export interface SeedTestProjectOptions {
+  name?: string;
+  /** Whether to copy the fixture template (default: true) */
+  copyFixture?: boolean;
+}
+
+export interface SeedTestProjectResult {
+  project: Awaited<ReturnType<typeof seedProject>>;
+  projectPath: string;
+}
+
+export interface SeedWorkflowDefinitionOptions {
+  projectId: string;
+  identifier: string;
+  name: string;
+  description?: string;
+  phases?: Array<{ id: string; label: string }>;
+  path?: string;
+}
+
+export interface SeedSpecFileOptions {
+  projectPath: string;
+  title?: string;
+  description?: string;
+}
+
+export interface SeedSpecFileResult {
+  specFile: string;
+  specContent: string;
+}
+
+/**
+ * Seed a test project with optional fixture template copy
+ *
+ * Copies fixture template from apps/app/e2e/fixtures/test-project/ to /tmp/e2e-test-project-{timestamp}
+ * Creates project in database with generated path
+ */
+export async function seedTestProject(
+  prisma: PrismaClient,
+  options: SeedTestProjectOptions = {}
+): Promise<SeedTestProjectResult> {
+  const { name = "E2E Test Project", copyFixture = true } = options;
+
+  // Generate unique project path
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substring(2, 8);
+  const projectPath = `/tmp/e2e-test-project-${timestamp}-${random}`;
+
+  if (copyFixture) {
+    // Copy fixture template to temp directory
+    const { cpSync, mkdirSync } = await import("node:fs");
+    const { join } = await import("node:path");
+
+    const fixtureSourcePath = join(
+      process.cwd(),
+      "e2e/fixtures/test-project"
+    );
+
+    // Create parent directory if needed
+    mkdirSync(projectPath, { recursive: true });
+
+    // Copy all files from fixture to temp directory
+    cpSync(fixtureSourcePath, projectPath, { recursive: true });
+  }
+
+  // Create project in database
+  const project = await prisma.project.create({
+    data: {
+      name,
+      path: projectPath,
+    },
+  });
+
+  return { project, projectPath };
+}
+
+/**
+ * Seed a workflow definition in the database
+ * Note: The workflow file must exist in the project directory
+ */
+export async function seedWorkflowDefinition(
+  prisma: PrismaClient,
+  options: SeedWorkflowDefinitionOptions
+) {
+  const {
+    projectId,
+    identifier,
+    name,
+    description = null,
+    phases = [
+      { id: "setup", label: "Setup" },
+      { id: "execute", label: "Execute" },
+      { id: "complete", label: "Complete" },
+    ],
+    path = `.agent/workflows/definitions/${identifier}.ts`,
+  } = options;
+
+  return prisma.workflowDefinition.create({
+    data: {
+      project_id: projectId,
+      identifier,
+      name,
+      description,
+      type: "code",
+      path,
+      phases,
+      file_exists: true,
+      status: "active",
+    },
+  });
+}
+
+/**
+ * Create a minimal spec file in project directory
+ * Returns spec file path relative to project root and content
+ */
+export async function seedSpecFile(
+  projectPath: string,
+  options: SeedSpecFileOptions = {}
+): Promise<SeedSpecFileResult> {
+  const {
+    title = "E2E Test Spec",
+    description = "Test spec for E2E workflow execution",
+  } = options;
+
+  const { mkdirSync, writeFileSync } = await import("node:fs");
+  const { join } = await import("node:path");
+
+  // Generate timestamp-based spec folder
+  const timestamp = Date.now().toString().substring(4); // Remove first 4 digits to match spec format
+  const specFolder = `${timestamp}-e2e-test`;
+  const specDir = join(projectPath, ".agent/specs/todo", specFolder);
+
+  // Create spec directory
+  mkdirSync(specDir, { recursive: true });
+
+  // Create minimal spec.md
+  const specContent = `# ${title}
+
+${description}
+
+**Status**: draft
+**Created**: ${new Date().toISOString().split("T")[0]}
+`;
+
+  const specFilePath = join(specDir, "spec.md");
+  writeFileSync(specFilePath, specContent, "utf-8");
+
+  // Return relative path from project root
+  const specFile = `todo/${specFolder}/spec.md`;
+
+  return {
+    specFile,
+    specContent,
+  };
+}
+
+/**
+ * Create a file change in project for git testing
+ */
+export async function seedFileChange(
+  projectPath: string,
+  filename: string,
+  content: string
+): Promise<void> {
+  const { writeFileSync, mkdirSync } = await import("node:fs");
+  const { join, dirname } = await import("node:path");
+
+  const filePath = join(projectPath, filename);
+
+  // Create parent directory if needed
+  mkdirSync(dirname(filePath), { recursive: true });
+
+  // Write file content
+  writeFileSync(filePath, content, "utf-8");
+}

@@ -48,6 +48,7 @@ export function WorkflowStatusBadge({
 
   return (
     <span
+      data-testid={isWorkflowStatus ? "run-status-badge" : "step-status-badge"}
       className={`inline-flex items-center rounded-full font-medium ${sizeClasses[size]} ${config.bgColor} ${config.textColor} ${className}`}
       role="status"
       aria-label={`Status: ${config.label}`}

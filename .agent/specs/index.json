@@ -453,6 +453,7 @@
       "created": "2025-11-28T21:30:00Z",
       "updated": "2025-11-30T00:00:00.000Z",
       "totalComplexity": 47,
+      "phaseCount": 1,
       "taskCount": 9
     },
     "2511290735": {
@@ -477,9 +478,9 @@
     },
     "2511291528": {
       "folder": "2511291528-e2e-test-suite",
-      "path": "todo/2511291528-e2e-test-suite/spec.md",
+      "path": "done/2511291528-e2e-test-suite/spec.md",
       "spec_type": "feature",
-      "status": "draft",
+      "status": "completed",
       "created": "2025-11-29T22:28:43Z",
       "updated": "2025-11-30T00:00:00.000Z",
       "totalComplexity": 147,

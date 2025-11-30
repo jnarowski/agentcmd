@@ -63,11 +63,13 @@ export class DashboardPage extends BasePage {
 
   /**
    * Complete logout flow via UI
-   * Opens user menu and clicks logout
+   * Opens user menu, clicks logout, and waits for confirmation
    */
   async logout() {
     await this.openUserMenu();
     await this.clickLogout();
+    // Wait for logout success toast to confirm action completed
+    await this.page.locator('text="Logged out successfully"').waitFor({ timeout: 5000 });
   }
 
   /**
@@ -84,10 +86,11 @@ export class DashboardPage extends BasePage {
   }
 
   /**
-   * Assert redirected to login page
+   * Assert redirected to login page and wait for load
    */
   async expectRedirectedToLogin() {
     await this.page.waitForURL(/\/login/, { timeout: 10000 });
+    await this.page.waitForLoadState("networkidle");
     expect(this.page.url()).toContain("/login");
   }
 

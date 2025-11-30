@@ -6,8 +6,15 @@ import { fileURLToPath } from "node:url";
 import {
   seedProject,
   seedSession,
+  seedTestProject,
+  seedWorkflowDefinition,
+  seedSpecFile,
+  seedFileChange,
   type SeedProjectOptions,
   type SeedSessionOptions,
+  type SeedTestProjectOptions,
+  type SeedWorkflowDefinitionOptions,
+  type SeedSpecFileOptions,
 } from "../utils/seed-database";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -40,6 +47,10 @@ export interface DatabaseFixtures {
     seedProjects: (options: SeedProjectOptions[]) => Promise<Awaited<ReturnType<typeof seedProject>>[]>;
     seedSession: (options: SeedSessionOptions) => ReturnType<typeof seedSession>;
     seedSessions: (options: SeedSessionOptions[]) => Promise<Awaited<ReturnType<typeof seedSession>>[]>;
+    seedTestProject: (options?: SeedTestProjectOptions) => ReturnType<typeof seedTestProject>;
+    seedWorkflowDefinition: (options: SeedWorkflowDefinitionOptions) => ReturnType<typeof seedWorkflowDefinition>;
+    seedSpecFile: (projectPath: string, options?: SeedSpecFileOptions) => ReturnType<typeof seedSpecFile>;
+    seedFileChange: (projectPath: string, filename: string, content: string) => ReturnType<typeof seedFileChange>;
   };
 }
 
@@ -73,6 +84,18 @@ export const test = base.extend<DatabaseFixtures>({
       },
       seedSessions: async (options: SeedSessionOptions[]) => {
         return Promise.all(options.map((opt) => seedSession(prisma, opt)));
+      },
+      seedTestProject: (options?: SeedTestProjectOptions) => {
+        return seedTestProject(prisma, options);
+      },
+      seedWorkflowDefinition: (options: SeedWorkflowDefinitionOptions) => {
+        return seedWorkflowDefinition(prisma, options);
+      },
+      seedSpecFile: (projectPath: string, options?: SeedSpecFileOptions) => {
+        return seedSpecFile(projectPath, options);
+      },
+      seedFileChange: (projectPath: string, filename: string, content: string) => {
+        return seedFileChange(projectPath, filename, content);
       },
     };
 
