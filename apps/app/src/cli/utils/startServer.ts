@@ -272,16 +272,67 @@ export async function startServer(config: StartServerConfig): Promise<void> {
     // 10. Setup graceful shutdown
     const cleanup = async () => {
       console.log("\nShutting down gracefully...");
+
+      // 1. Mark all running workflows as "interrupted"
+      // This must happen BEFORE killing processes
+      try {
+        const { PrismaClient } = await import("@prisma/client");
+        const prisma = new PrismaClient();
+
+        const result = await prisma.workflowRun.updateMany({
+          where: { status: "running" },
+          data: {
+            status: "interrupted",
+            error_message: "Server shutdown - workflow interrupted",
+          },
+        });
+
+        if (result.count > 0) {
+          console.log(
+            `Marked ${result.count} running workflow(s) as interrupted`
+          );
+        }
+
+        await prisma.$disconnect();
+      } catch (err) {
+        console.error("Failed to mark workflows:", err);
+      }
+
+      // 2. Stop Inngest (give it time to save SQLite state)
       if (inngestProcess) {
         console.log("Stopping Inngest...");
         inngestProcess.kill("SIGTERM");
+
+        // Wait up to 10s for graceful exit
+        await new Promise<void>((resolve) => {
+          const timeout = setTimeout(() => {
+            inngestProcess?.kill("SIGKILL");
+            resolve();
+          }, 10000);
+
+          inngestProcess?.once("exit", () => {
+            clearTimeout(timeout);
+            resolve();
+          });
+        });
         inngestProcess = null;
       }
+
+      // 3. Stop Fastify server
       if (serverProcess) {
-        console.log("Stopping Fastify server...");
+        console.log("Stopping server...");
         serverProcess.kill("SIGTERM");
+        await new Promise<void>((resolve) => {
+          const timeout = setTimeout(() => resolve(), 5000);
+          serverProcess?.once("exit", () => {
+            clearTimeout(timeout);
+            resolve();
+          });
+        });
         serverProcess = null;
       }
+
+      console.log("Shutdown complete");
       process.exit(0);
     };
 

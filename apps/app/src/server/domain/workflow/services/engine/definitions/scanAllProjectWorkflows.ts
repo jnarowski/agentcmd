@@ -40,7 +40,7 @@ export async function scanAllProjectWorkflows(
   logger.info("Scanning all projects for workflows...");
 
   // Load all projects from database
-  let projects;
+  let projects: ProjectInfo[] = [];
   try {
     projects = await prisma.project.findMany({
       select: {
@@ -49,7 +49,7 @@ export async function scanAllProjectWorkflows(
         name: true,
       },
     });
-  } catch (error) {
+  } catch {
     // Handle case where database doesn't exist yet (e.g., during E2E test setup)
     logger.warn("Failed to load projects from database (table may not exist yet)");
     projects = [];

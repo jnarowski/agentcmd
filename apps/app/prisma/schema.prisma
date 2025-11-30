@@ -266,6 +266,7 @@ enum WorkflowStatus {
   completed
   failed
   cancelled
+  interrupted // Server shutdown during execution
 }
 
 enum WorkflowEventType {

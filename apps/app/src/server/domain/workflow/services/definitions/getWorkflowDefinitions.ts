@@ -40,7 +40,7 @@ export async function getWorkflowDefinitions(
       skip,
       take,
     });
-  } catch (error) {
+  } catch {
     // Handle case where database doesn't exist yet (e.g., during E2E test setup)
     return [];
   }

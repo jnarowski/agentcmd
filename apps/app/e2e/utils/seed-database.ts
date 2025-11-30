@@ -192,6 +192,10 @@ export async function seedTestProject(
 
     // Copy all files from fixture to temp directory
     cpSync(fixtureSourcePath, projectPath, { recursive: true });
+
+    // Install dependencies (fixture uses npm published agentcmd-workflows, not workspace:*)
+    const { execSync } = await import("node:child_process");
+    execSync("pnpm install", { cwd: projectPath, stdio: "pipe" });
   }
 
   // Create project in database

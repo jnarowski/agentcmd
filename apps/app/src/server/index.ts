@@ -31,6 +31,7 @@ import { config } from "@/server/config";
 import { AppError, ConflictError, buildErrorResponse } from "@/server/errors";
 import { ServiceUnavailableError } from "@/server/errors/ServiceUnavailableError";
 import { initializeWorkflowEngine } from "@/server/domain/workflow/services/engine";
+import { detectInterruptedRuns } from "@/server/domain/workflow/services/runs/detectInterruptedRuns";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -436,6 +437,14 @@ export async function createServer() {
 
   // Initialize workflow engine (includes project scanning)
   await initializeWorkflowEngine(fastify);
+
+  // Detect workflows interrupted by previous shutdown
+  const interrupted = await detectInterruptedRuns(fastify.log);
+  if (interrupted.length > 0) {
+    fastify.log.info(
+      `${interrupted.length} workflow(s) need recovery - use retry functionality`
+    );
+  }
 
   // Static file serving configuration
   const distDir = join(__dirname, "../../dist/client");

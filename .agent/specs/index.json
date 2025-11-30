@@ -266,11 +266,11 @@
     },
     "2511260743": {
       "folder": "2511260743-workflow-cancelon",
-      "path": "todo/2511260743-workflow-cancelon/spec.md",
+      "path": "done/2511260743-workflow-cancelon/spec.md",
       "spec_type": "issue",
-      "status": "draft",
+      "status": "completed",
       "created": "2025-11-26T07:43:00Z",
-      "updated": "2025-11-30T15:55:54.857Z",
+      "updated": "2025-11-30T22:33:00Z",
       "totalComplexity": 43,
       "phaseCount": 1,
       "taskCount": 9
@@ -343,11 +343,11 @@
     },
     "2511281500": {
       "folder": "2511281500-preview-config-ui",
-      "path": "todo/2511281500-preview-config-ui/spec.md",
+      "path": "done/2511281500-preview-config-ui/spec.md",
       "spec_type": "feature",
       "status": "completed",
       "created": "2025-11-28T15:00:00Z",
-      "updated": "2025-11-28T17:30:00Z",
+      "updated": "2025-11-30T22:32:00Z",
       "totalComplexity": 38,
       "phaseCount": 3,
       "taskCount": 9
@@ -365,22 +365,22 @@
     },
     "2511282130": {
       "folder": "2511282130-server-start-consolidation",
-      "path": "todo/2511282130-server-start-consolidation/spec.md",
+      "path": "done/2511282130-server-start-consolidation/spec.md",
       "spec_type": "issue",
       "status": "completed",
       "created": "2025-11-28T21:30:00Z",
-      "updated": "2025-11-28T22:10:00Z",
+      "updated": "2025-11-30T22:31:00Z",
       "totalComplexity": 47,
       "phaseCount": 1,
       "taskCount": 9
     },
     "2511290735": {
       "folder": "2511290735-session-followup-action",
-      "path": "todo/2511290735-session-followup-action/spec.md",
+      "path": "done/2511290735-session-followup-action/spec.md",
       "spec_type": "issue",
       "status": "completed",
       "created": "2025-11-29T14:35:00Z",
-      "updated": "2025-11-29T23:30:00Z",
+      "updated": "2025-11-30T22:30:00Z",
       "totalComplexity": 24,
       "phaseCount": 1,
       "taskCount": 5

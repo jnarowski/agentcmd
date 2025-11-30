@@ -5,6 +5,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "agentcmd-workflows": "workspace:*"
+    "agentcmd-workflows": "^1.2.2",
+    "tsx": "^4.21.0"
   }
 }

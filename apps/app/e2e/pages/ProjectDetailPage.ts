@@ -1,4 +1,4 @@
-import type { Page, Locator } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { BasePage } from "./BasePage";
 
@@ -56,7 +56,7 @@ export class ProjectDetailPage extends BasePage {
    * Assert on project home page (not settings/edit)
    * Waits for both URL and content to load
    */
-  async expectOnProjectPage(projectId?: string) {
+  async expectOnProjectPage() {
     // Wait for URL to NOT contain /settings (indicating we're on project home, not edit page)
     await this.page.waitForURL((url) => {
       const pathname = url.pathname;
