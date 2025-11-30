@@ -1,6 +1,6 @@
 # E2E Test Suite: Mission-Critical Coverage
 
-**Status**: completed
+**Status**: review
 **Created**: 2025-11-29
 **Package**: apps/app
 **Total Complexity**: 147 points
@@ -661,3 +661,116 @@ Agent-cli-sdk already has comprehensive e2e tests for tool execution. We test:
 5. Add Phase 4: UI test IDs (coordinate with UI components)
 6. Implement Phase 5: E2E tests (one at a time, verify each passes)
 7. Complete Phase 6: Validation and stability checks
+
+## Review Findings
+
+**Review Date:** 2025-11-29
+**Reviewed By:** Claude Code
+**Review Iteration:** 1 of 3
+**Branch:** feature/e2e-test-suite-mission-critical-coverage-v2
+**Commits Reviewed:** 1
+
+### Summary
+
+Infrastructure is well-implemented with fixture template, seed utilities, 6 POMs, and 5 test files following gold standard patterns. However, 2 HIGH priority issues block test execution: missing fixture project template files and incorrect seed function API signatures. Additionally, 4 tests are intentionally skipped pending UI test IDs.
+
+### Phase 1: Fixture Project Setup
+
+**Status:** ⚠️ Incomplete - Critical files missing from git
+
+#### HIGH Priority
+
+- [ ] **Fixture project template not committed to git**
+  - **File:** `apps/app/e2e/fixtures/test-project/` (directory exists but content missing from git)
+  - **Spec Reference:** "Phase 1.2: Create e2e-test-workflow.ts with AI and annotation steps"
+  - **Expected:** Fixture template with e2e-test-workflow.ts, package.json, README.md, .git directory committed
+  - **Actual:** Git diff shows `apps/app/e2e/fixtures/test-project` as a modified file (not directory), suggesting symlink or missing content
+  - **Fix:** Verify fixture directory contents are committed: `e2e-test-workflow.ts`, `package.json`, `README.md`, `.gitkeep` files, and initialized .git repo
+
+### Phase 2: Enhanced Test Fixtures
+
+**Status:** ⚠️ Incomplete - API signature mismatch
+
+#### HIGH Priority
+
+- [ ] **seedSpecFile signature mismatch with test usage**
+  - **File:** `apps/app/e2e/utils/seed-database.ts:247-286`
+  - **Spec Reference:** "Phase 2.3: Implement seedSpecFile() function - Return `{ specFile, specContent }`"
+  - **Expected:** `seedSpecFile(projectPath: string, options?: SeedSpecFileOptions): Promise<SeedSpecFileResult>`
+  - **Actual:** Workflow test calls `db.seedSpecFile({ projectPath, specContent })` at `workflow-run-execution.e2e.spec.ts:34-37`
+  - **Fix:** Either (1) update seedSpecFile to accept single options object, or (2) update test to pass projectPath as first arg: `db.seedSpecFile(projectPath, { title, description })`
+
+#### MEDIUM Priority
+
+- [ ] **database.ts fixture wrapper doesn't match seedSpecFile signature**
+  - **File:** `apps/app/e2e/fixtures/database.ts:94-96`
+  - **Spec Reference:** Phase 2 completion - "Export all 4 new functions from db fixture"
+  - **Expected:** Wrapper signature should match implementation
+  - **Actual:** Wrapper defined as `seedSpecFile: (projectPath: string, options?: SeedSpecFileOptions)` but test passes object
+  - **Fix:** Update wrapper in database.ts to match either chosen fix above
+
+### Phase 3: Page Object Models
+
+**Status:** ✅ Complete - All POMs implemented correctly
+
+### Phase 4: UI Test IDs
+
+**Status:** ⚠️ Incomplete - Partial implementation
+
+#### MEDIUM Priority
+
+- [ ] **Minimal UI test IDs added - most still missing**
+  - **Files:** Various in `apps/app/src/client/pages/projects/`
+  - **Spec Reference:** "Phase 4: UI Test IDs - Add test IDs to workflow, git, and project components"
+  - **Expected:** 20+ test IDs across workflow (10), git (7), and project (6) components
+  - **Actual:** Only 2 test IDs added: `workflow-run-card` and status badges
+  - **Fix:** Add remaining test IDs iteratively as tests are enabled: workflow-definition-select, workflow-run-name-input, spec-file-input, workflow-run-submit, current-phase-indicator, workflow-step-card, step-status-badge, annotation-message, artifact-card, unstaged-file, commit-message-input, commit-button, commit-card, branch-name-input, branch-submit-button, current-branch-badge, project-name-input, project-path-input, project-save-button, breadcrumb, session-card
+
+### Phase 5: E2E Test Implementation
+
+**Status:** ⚠️ Incomplete - 1 ready, 4 skipped pending fixes
+
+#### MEDIUM Priority
+
+- [ ] **Workflow execution test has incomplete POM method calls**
+  - **File:** `apps/app/e2e/tests/workflows/workflow-run-execution.e2e.spec.ts:93`
+  - **Spec Reference:** Phase 5.5 - "Extract run ID from URL"
+  - **Expected:** Run ID extraction method on WorkflowRunDetailPage
+  - **Actual:** Test calls `runDetailPage.getRunId()` which doesn't exist on WorkflowRunDetailPage POM
+  - **Fix:** Add `getRunId(): string` method to WorkflowRunDetailPage that extracts ID from current URL
+
+- [ ] **Workflow execution test has expect() wrapping method instead of assert method**
+  - **File:** `apps/app/e2e/tests/workflows/workflow-run-execution.e2e.spec.ts:69`
+  - **Spec Reference:** Phase 3.4 - "WorkflowRunDetailPage: expectOnRunDetailPage() assertion"
+  - **Expected:** `await runDetailPage.expectOnRunDetailPage()` assertion method
+  - **Actual:** Test calls `await runDetailPage.expectOnRunDetailPage()` but WorkflowRunDetailPage doesn't have this method
+  - **Fix:** Add `async expectOnRunDetailPage()` method to WorkflowRunDetailPage following BasePage pattern
+
+### Phase 6: Validation and Cleanup
+
+**Status:** ❌ Not implemented - Blocked by previous issues
+
+#### HIGH Priority
+
+- [ ] **Tests not executed - validation incomplete**
+  - **File:** All test files
+  - **Spec Reference:** "Phase 6.1: Run all e2e tests and fix failures"
+  - **Expected:** All tests passing with < 5 minute execution time
+  - **Actual:** 4/5 tests marked as `.skip()`, unable to verify execution
+  - **Fix:** Resolve HIGH priority issues above, remove `.skip()`, run tests, fix any failures
+
+### Positive Findings
+
+- Well-structured e2e-test-workflow.ts with AI steps (text + structured), annotations, and artifacts
+- Comprehensive seed utilities with proper TypeScript types
+- All 6 POMs follow BasePage pattern with data-testid selectors
+- Tests use AAA structure with clear section comments
+- Good separation of concerns between POMs and test files
+- seedTestProject correctly uses `/tmp/e2e-test-project-{timestamp}` path
+- ProjectDetailPage properly accepts optional projectId parameter
+
+### Review Completion Checklist
+
+- [x] All spec requirements reviewed
+- [x] Code quality checked
+- [ ] All findings addressed and tested
