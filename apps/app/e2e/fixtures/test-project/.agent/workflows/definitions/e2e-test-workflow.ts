@@ -31,7 +31,8 @@ export default defineWorkflow(
   {
     id: "e2e-test-workflow",
     name: "E2E Test Workflow",
-    description: "Minimal workflow for E2E testing - fast execution with verifiable outputs",
+    description:
+      "Minimal workflow for E2E testing - fast execution with verifiable outputs",
     phases: [
       { id: "setup", label: "Setup" },
       { id: "execute", label: "Execute" },
@@ -86,7 +87,7 @@ export default defineWorkflow(
       });
 
       await step.annotation("test-complete", {
-        message: `✓ E2E test workflow completed successfully`,
+        message: "E2E test workflow completed successfully",
       });
     });
 

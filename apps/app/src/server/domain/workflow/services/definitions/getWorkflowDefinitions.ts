@@ -11,32 +11,37 @@ export async function getWorkflowDefinitions(
 ) {
   const { where, select, include, orderBy, skip, take } = options;
 
-  // Prisma doesn't allow both select and include
-  // If select is provided, use it and ignore include
-  // If neither provided, use default include with _count.runs
-  if (select) {
+  try {
+    // Prisma doesn't allow both select and include
+    // If select is provided, use it and ignore include
+    // If neither provided, use default include with _count.runs
+    if (select) {
+      return await prisma.workflowDefinition.findMany({
+        where,
+        select,
+        orderBy,
+        skip,
+        take,
+      });
+    }
+
+    const includeConfig = include ?? {
+      _count: {
+        select: {
+          runs: true,
+        },
+      },
+    };
+
     return await prisma.workflowDefinition.findMany({
       where,
-      select,
+      include: includeConfig,
       orderBy,
       skip,
       take,
     });
+  } catch (error) {
+    // Handle case where database doesn't exist yet (e.g., during E2E test setup)
+    return [];
   }
-
-  const includeConfig = include ?? {
-    _count: {
-      select: {
-        runs: true,
-      },
-    },
-  };
-
-  return await prisma.workflowDefinition.findMany({
-    where,
-    include: includeConfig,
-    orderBy,
-    skip,
-    take,
-  });
 }

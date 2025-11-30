@@ -21,6 +21,7 @@ test.describe("Workflows - Run Execution", () => {
     authenticatedPage,
     db,
     prisma,
+    testUser,
   }) => {
     // Use pre-seeded project from global setup
     const projectId = process.env.E2E_WORKFLOW_PROJECT_ID!;
@@ -29,8 +30,17 @@ test.describe("Workflows - Run Execution", () => {
 
     // Trigger workflow refresh to ensure definition is loaded
     const response = await authenticatedPage.request.post(
-      `/api/projects/${projectId}/workflows/refresh`
+      `/api/projects/${projectId}/workflows/refresh`,
+      {
+        headers: {
+          Authorization: `Bearer ${testUser.token}`,
+        },
+      }
     );
+    if (!response.ok()) {
+      const body = await response.text();
+      console.log("Refresh failed:", response.status(), body);
+    }
     expect(response.ok()).toBeTruthy();
 
     // Create spec file for workflow run
@@ -52,10 +62,8 @@ test.describe("Workflows - Run Execution", () => {
     // Select workflow definition
     await newRunPage.selectWorkflowDefinition("e2e-test-workflow");
 
-    // Fill spec file (workflow name will be auto-generated)
-    // Note: The spec file select may require a different approach
-    // For now, we'll just wait and see if the form is ready
-    await authenticatedPage.waitForTimeout(1000);
+    // Attach spec file to form
+    await newRunPage.attachSpecFile(specFile.path);
 
     // Submit the form to create the run
     await newRunPage.submitForm();

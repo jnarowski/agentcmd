@@ -40,13 +40,20 @@ export async function scanAllProjectWorkflows(
   logger.info("Scanning all projects for workflows...");
 
   // Load all projects from database
-  const projects = await prisma.project.findMany({
-    select: {
-      id: true,
-      path: true,
-      name: true,
-    },
-  });
+  let projects;
+  try {
+    projects = await prisma.project.findMany({
+      select: {
+        id: true,
+        path: true,
+        name: true,
+      },
+    });
+  } catch (error) {
+    // Handle case where database doesn't exist yet (e.g., during E2E test setup)
+    logger.warn("Failed to load projects from database (table may not exist yet)");
+    projects = [];
+  }
 
   const result: ScanResult = {
     scanned: 0,

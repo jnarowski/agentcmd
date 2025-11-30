@@ -1,9 +1,10 @@
 {
   "name": "e2e-test-project",
   "version": "1.0.0",
-  "description": "Fixture project for E2E workflow testing",
+  "description": "E2E test fixture project with minimal workflow definition",
   "private": true,
+  "type": "module",
   "dependencies": {
-    "agentcmd-workflows": "*"
+    "agentcmd-workflows": "workspace:*"
   }
 }
