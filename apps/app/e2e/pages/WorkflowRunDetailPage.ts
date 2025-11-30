@@ -17,6 +17,26 @@ export class WorkflowRunDetailPage extends BasePage {
   }
 
   /**
+   * Extract run ID from current URL
+   */
+  async getRunId(): Promise<string> {
+    const url = this.page.url();
+    const match = url.match(/\/runs\/([^/]+)/);
+    if (!match) {
+      throw new Error(`Could not extract run ID from URL: ${url}`);
+    }
+    return match[1];
+  }
+
+  /**
+   * Wait for page to be loaded and verify on run detail page
+   */
+  async expectOnRunDetailPage() {
+    await this.page.waitForURL(/\/workflows\/runs\/[^/]+/, { timeout: 10000 });
+    await expect(this.getStatusBadge()).toBeVisible({ timeout: 10000 });
+  }
+
+  /**
    * Get status badge
    */
   getStatusBadge(): Locator {

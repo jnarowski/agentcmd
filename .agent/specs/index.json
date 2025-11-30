@@ -422,9 +422,9 @@
       "folder": "2511300815-workflow-run-e2e-test",
       "path": "todo/2511300815-workflow-run-e2e-test/spec.md",
       "spec_type": "feature",
-      "status": "draft",
+      "status": "review",
       "created": "2025-11-30T08:15:00Z",
-      "updated": "2025-11-30T08:15:00Z",
+      "updated": "2025-11-30T18:00:00Z",
       "totalComplexity": 52,
       "phaseCount": 5,
       "taskCount": 12

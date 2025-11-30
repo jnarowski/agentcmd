@@ -1,0 +1,9 @@
+{
+  "name": "e2e-test-project",
+  "version": "1.0.0",
+  "description": "Fixture project for E2E workflow testing",
+  "private": true,
+  "dependencies": {
+    "agentcmd-workflows": "*"
+  }
+}
