@@ -321,22 +321,22 @@
     },
     "2511281011": {
       "folder": "2511281011-session-message-queue",
-      "path": "todo/2511281011-session-message-queue/spec.md",
+      "path": "backlog/2511281011-session-message-queue/spec.md",
       "spec_type": "feature",
-      "status": "draft",
+      "status": "backlog",
       "created": "2025-11-28T00:00:00.000Z",
-      "updated": "2025-11-30T15:55:54.857Z",
+      "updated": "2025-11-30T17:41:12.255Z",
       "totalComplexity": 68,
       "phaseCount": 6,
       "taskCount": 18
     },
     "2511281459": {
       "folder": "2511281459-inngest-config-consolidation",
-      "path": "todo/2511281459-inngest-config-consolidation/spec.md",
+      "path": "done/2511281459-inngest-config-consolidation/spec.md",
       "spec_type": "feature",
-      "status": "review",
+      "status": "completed",
       "created": "2025-11-28T14:59:00Z",
-      "updated": "2025-11-28T23:08:00Z",
+      "updated": "2025-11-30T17:41:19.205Z",
       "totalComplexity": 42,
       "phaseCount": 3,
       "taskCount": 8
