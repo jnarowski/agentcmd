@@ -1,6 +1,6 @@
 # Workflow Run E2E Test
 
-**Status**: review
+**Status**: completed
 **Created**: 2025-11-30
 **Package**: apps/app
 **Total Complexity**: 52 points
