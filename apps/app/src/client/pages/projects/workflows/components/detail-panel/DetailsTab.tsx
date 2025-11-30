@@ -1,10 +1,13 @@
-import { ExternalLink, Copy, Check } from "lucide-react";
+import { useState } from "react";
+import { ExternalLink, Copy, Check, GitBranch, Loader2 } from "lucide-react";
 import type { WorkflowRun } from "@/client/pages/projects/workflows/types";
 import { useInngestRunStatus } from "@/client/pages/projects/workflows/hooks/useInngestRunStatus";
 import { useInngestUrl } from "@/client/hooks/useSettings";
 import { useCopy } from "@/client/hooks/useCopy";
 import { Button } from "@/client/components/ui/button";
 import { formatDate } from "@/shared/utils/formatDate";
+import { useProject } from "@/client/pages/projects/hooks/useProjects";
+import { useSwitchBranch } from "@/client/pages/projects/git/hooks/useGitOperations";
 
 interface DetailsTabProps {
   run: WorkflowRun;
@@ -16,6 +19,27 @@ export function DetailsTab({ run }: DetailsTabProps) {
   const inngestUrl = useInngestUrl();
   const { copied: runIdCopied, copy: copyRunId } = useCopy();
   const { copied: branchCopied, copy: copyBranch } = useCopy();
+
+  const { data: project } = useProject(run.project_id);
+  const switchBranch = useSwitchBranch();
+  const [checkingOut, setCheckingOut] = useState(false);
+  const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+
+  const handleCheckout = async () => {
+    if (!project?.path || !run.branch_name) return;
+
+    setCheckingOut(true);
+    try {
+      await switchBranch.mutateAsync({
+        path: project.path,
+        name: run.branch_name,
+      });
+      setCheckoutSuccess(true);
+      setTimeout(() => setCheckoutSuccess(false), 2000);
+    } finally {
+      setCheckingOut(false);
+    }
+  };
 
   const hasSpec = run.spec_content || run.spec_file;
   const hasSourceControl = run.mode || run.branch_name || run.base_branch || run.worktree_name || run.preserve !== null;
@@ -145,6 +169,22 @@ export function DetailsTab({ run }: DetailsTabProps) {
                       <Check className="h-3 w-3 text-green-500" />
                     ) : (
                       <Copy className="h-3 w-3" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={handleCheckout}
+                    disabled={checkingOut || !project?.path}
+                    className="shrink-0"
+                    title="Checkout Branch"
+                  >
+                    {checkingOut ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : checkoutSuccess ? (
+                      <Check className="h-3 w-3 text-green-500" />
+                    ) : (
+                      <GitBranch className="h-3 w-3" />
                     )}
                   </Button>
                 </dd>

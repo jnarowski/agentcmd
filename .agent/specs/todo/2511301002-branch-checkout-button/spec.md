@@ -1,6 +1,6 @@
 # Branch Checkout Button in Workflow Run Details
 
-**Status**: draft
+**Status**: review
 **Type**: issue
 **Created**: 2025-11-30
 **Package**: apps/app
@@ -59,20 +59,20 @@ None - all required infrastructure exists
 
 **IMPORTANT: Execute every task in order, top to bottom**
 
-- [ ] **task-1** [2/10] Import required dependencies
+- [x] **task-1** [2/10] Import required dependencies
   - Add `GitBranch`, `Loader2` icons from lucide-react
   - Add `useProject` hook from `@/client/pages/projects/hooks/useProjects`
   - Add `useSwitchBranch` hook from `@/client/pages/projects/git/hooks/useGitOperations`
   - File: `apps/app/src/client/pages/projects/workflows/components/detail-panel/DetailsTab.tsx`
 
-- [ ] **task-2** [4/10] Add state and hooks for checkout functionality
+- [x] **task-2** [4/10] Add state and hooks for checkout functionality
   - Fetch project data: `const { data: project } = useProject(run.project_id)`
   - Get switch mutation: `const switchBranch = useSwitchBranch()`
   - Add state: `const [checkingOut, setCheckingOut] = useState(false)`
   - Add state: `const [checkoutSuccess, setCheckoutSuccess] = useState(false)`
   - File: `apps/app/src/client/pages/projects/workflows/components/detail-panel/DetailsTab.tsx`
 
-- [ ] **task-3** [6/10] Implement checkout handler
+- [x] **task-3** [6/10] Implement checkout handler
   - Create async handler function `handleCheckout`
   - Guard: Return early if no `project?.path` or `run.branch_name`
   - Set loading state: `setCheckingOut(true)`
@@ -82,7 +82,7 @@ None - all required infrastructure exists
   - File: `apps/app/src/client/pages/projects/workflows/components/detail-panel/DetailsTab.tsx`
   - Location: After existing `useCopy` hooks (around line 18)
 
-- [ ] **task-4** [6/10] Add checkout button UI
+- [x] **task-4** [6/10] Add checkout button UI
   - Find branch display section (lines 132-152)
   - Add button after copy button in the `<dd>` flex container
   - Button props: `variant="ghost"`, `size="icon-sm"`, `className="shrink-0"`, `title="Checkout Branch"`
@@ -91,6 +91,17 @@ None - all required infrastructure exists
   - Call `handleCheckout` on click
   - File: `apps/app/src/client/pages/projects/workflows/components/detail-panel/DetailsTab.tsx`
   - Location: Lines 132-152 (branch display section)
+
+#### Completion Notes
+
+- Implemented branch checkout button in DetailsTab component
+- Added GitBranch and Loader2 icons, imported useProject and useSwitchBranch hooks
+- Created handleCheckout async function with proper error handling and success feedback
+- Button displays loading spinner during checkout, success checkmark for 2s after completion
+- Button disabled when no project path available (guards against errors)
+- Reused existing backend infrastructure (POST /api/git/branch/switch endpoint)
+- UI matches existing copy button pattern (ghost variant, icon-sm size, shrink-0 class)
+- Build completed successfully with no type errors in modified file
 
 ## Testing Strategy
 
