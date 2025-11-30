@@ -387,11 +387,11 @@
     },
     "2511291528": {
       "folder": "2511291528-e2e-test-suite",
-      "path": "todo/2511291528-e2e-test-suite/spec.md",
+      "path": "done/2511291528-e2e-test-suite/spec.md",
       "spec_type": "feature",
-      "status": "review",
+      "status": "completed",
       "created": "2025-11-29T22:28:43Z",
-      "updated": "2025-11-30T00:31:00.000Z",
+      "updated": "2025-11-30T06:54:00.000Z",
       "totalComplexity": 147,
       "phaseCount": 6,
       "taskCount": 31
