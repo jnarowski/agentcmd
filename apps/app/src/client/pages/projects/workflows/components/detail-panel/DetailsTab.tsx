@@ -5,6 +5,11 @@ import { useInngestRunStatus } from "@/client/pages/projects/workflows/hooks/use
 import { useInngestUrl } from "@/client/hooks/useSettings";
 import { useCopy } from "@/client/hooks/useCopy";
 import { Button } from "@/client/components/ui/button";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/client/components/ui/tooltip";
 import { formatDate } from "@/shared/utils/formatDate";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
 import { useSwitchBranch } from "@/client/pages/projects/git/hooks/useGitOperations";
@@ -15,7 +20,8 @@ interface DetailsTabProps {
 
 export function DetailsTab({ run }: DetailsTabProps) {
   const hasArgs = run.args && Object.keys(run.args).length > 0;
-  const { data: inngestStatus, isLoading: inngestLoading } = useInngestRunStatus(run.id);
+  const { data: inngestStatus, isLoading: inngestLoading } =
+    useInngestRunStatus(run.id);
   const inngestUrl = useInngestUrl();
   const { copied: runIdCopied, copy: copyRunId } = useCopy();
   const { copied: branchCopied, copy: copyBranch } = useCopy();
@@ -42,7 +48,13 @@ export function DetailsTab({ run }: DetailsTabProps) {
   };
 
   const hasSpec = run.spec_content || run.spec_file;
-  const hasSourceControl = run.mode || run.branch_name || run.base_branch || run.worktree_name || run.preserve !== null || run.pr_url;
+  const hasSourceControl =
+    run.mode ||
+    run.branch_name ||
+    run.base_branch ||
+    run.worktree_name ||
+    run.preserve !== null ||
+    run.pr_url;
 
   return (
     <div className="space-y-4 overflow-hidden">
@@ -73,7 +85,9 @@ export function DetailsTab({ run }: DetailsTabProps) {
           {run.workflow_definition && (
             <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
               <dt className="text-muted-foreground">Workflow</dt>
-              <dd className="font-medium truncate">{run.workflow_definition.name}</dd>
+              <dd className="font-medium truncate">
+                {run.workflow_definition.name}
+              </dd>
             </div>
           )}
 
@@ -104,7 +118,9 @@ export function DetailsTab({ run }: DetailsTabProps) {
           {run.planning_session_id && (
             <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
               <dt className="text-muted-foreground">Planning Session</dt>
-              <dd className="font-mono text-sm truncate">{run.planning_session_id}</dd>
+              <dd className="font-mono text-sm truncate">
+                {run.planning_session_id}
+              </dd>
             </div>
           )}
         </dl>
@@ -118,7 +134,9 @@ export function DetailsTab({ run }: DetailsTabProps) {
             {run.spec_content && (
               <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
                 <dt className="text-muted-foreground">Content</dt>
-                <dd className="font-mono text-sm whitespace-pre-wrap break-words min-w-0">{run.spec_content}</dd>
+                <dd className="font-mono text-sm whitespace-pre-wrap break-words min-w-0">
+                  {run.spec_content}
+                </dd>
               </div>
             )}
             {run.spec_file && (
@@ -158,35 +176,49 @@ export function DetailsTab({ run }: DetailsTabProps) {
                 <dt className="text-muted-foreground">Branch</dt>
                 <dd className="font-mono text-sm flex items-center gap-2 min-w-0">
                   <span className="flex-1 truncate">{run.branch_name}</span>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={() => run.branch_name && copyBranch(run.branch_name)}
-                    className="shrink-0"
-                    title="Copy branch name to clipboard"
-                  >
-                    {branchCopied ? (
-                      <Check className="h-3 w-3 text-green-500" />
-                    ) : (
-                      <Copy className="h-3 w-3" />
-                    )}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={handleCheckout}
-                    disabled={checkingOut || !project?.path}
-                    className="shrink-0"
-                    title="Auto-commit changes and checkout branch"
-                  >
-                    {checkingOut ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : checkoutSuccess ? (
-                      <Check className="h-3 w-3 text-green-500" />
-                    ) : (
-                      <GitBranch className="h-3 w-3" />
-                    )}
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() =>
+                          run.branch_name && copyBranch(run.branch_name)
+                        }
+                        className="shrink-0"
+                      >
+                        {branchCopied ? (
+                          <Check className="h-3 w-3 text-green-500" />
+                        ) : (
+                          <Copy className="h-3 w-3" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Copy branch name to clipboard
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={handleCheckout}
+                        disabled={checkingOut || !project?.path}
+                        className="shrink-0"
+                      >
+                        {checkingOut ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : checkoutSuccess ? (
+                          <Check className="h-3 w-3 text-green-500" />
+                        ) : (
+                          <GitBranch className="h-3 w-3" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Auto-commit changes and checkout this branch
+                    </TooltipContent>
+                  </Tooltip>
                 </dd>
               </div>
             )}
@@ -194,14 +226,18 @@ export function DetailsTab({ run }: DetailsTabProps) {
             {run.base_branch && (
               <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
                 <dt className="text-muted-foreground">Base Branch</dt>
-                <dd className="font-mono text-sm truncate">{run.base_branch}</dd>
+                <dd className="font-mono text-sm truncate">
+                  {run.base_branch}
+                </dd>
               </div>
             )}
 
             {run.worktree_name && (
               <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
                 <dt className="text-muted-foreground">Worktree</dt>
-                <dd className="font-mono text-sm truncate">{run.worktree_name}</dd>
+                <dd className="font-mono text-sm truncate">
+                  {run.worktree_name}
+                </dd>
               </div>
             )}
 
@@ -242,27 +278,33 @@ export function DetailsTab({ run }: DetailsTabProps) {
               <dd className="capitalize">{run.container.status}</dd>
             </div>
 
-            {run.container.urls && Object.keys(run.container.urls).length > 0 && (
-              <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
-                <dt className="text-muted-foreground">URL</dt>
-                <dd className="space-y-1 min-w-0">
-                  {Object.entries(run.container.urls).map(([name, url]) => (
-                    <div key={name} className="flex items-center gap-1 font-mono text-sm min-w-0">
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-primary hover:underline min-w-0 max-w-full"
+            {run.container.urls &&
+              Object.keys(run.container.urls).length > 0 && (
+                <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
+                  <dt className="text-muted-foreground">URL</dt>
+                  <dd className="space-y-1 min-w-0">
+                    {Object.entries(run.container.urls).map(([name, url]) => (
+                      <div
+                        key={name}
+                        className="flex items-center gap-1 font-mono text-sm min-w-0"
                       >
-                        <span className="truncate">{url}</span>
-                        <ExternalLink className="h-3 w-3 shrink-0" />
-                      </a>
-                      <span className="text-muted-foreground shrink-0">- {name}</span>
-                    </div>
-                  ))}
-                </dd>
-              </div>
-            )}
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-primary hover:underline min-w-0 max-w-full"
+                        >
+                          <span className="truncate">{url}</span>
+                          <ExternalLink className="h-3 w-3 shrink-0" />
+                        </a>
+                        <span className="text-muted-foreground shrink-0">
+                          - {name}
+                        </span>
+                      </div>
+                    ))}
+                  </dd>
+                </div>
+              )}
 
             {run.container.started_at && (
               <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
@@ -281,7 +323,9 @@ export function DetailsTab({ run }: DetailsTabProps) {
             {run.container.error_message && (
               <div className="grid grid-cols-[100px_1fr] sm:grid-cols-[120px_1fr] gap-2 py-2">
                 <dt className="text-muted-foreground">Error</dt>
-                <dd className="text-destructive text-sm break-words">{run.container.error_message}</dd>
+                <dd className="text-destructive text-sm break-words">
+                  {run.container.error_message}
+                </dd>
               </div>
             )}
           </dl>
@@ -293,12 +337,16 @@ export function DetailsTab({ run }: DetailsTabProps) {
           <h3 className="text-sm font-medium mb-2">Inngest Run</h3>
           <div className="bg-muted p-4 rounded space-y-3">
             {inngestLoading ? (
-              <div className="text-sm text-muted-foreground">Loading status...</div>
+              <div className="text-sm text-muted-foreground">
+                Loading status...
+              </div>
             ) : inngestStatus?.success && inngestStatus.data ? (
               <>
                 <div className="text-sm">
                   <span className="text-muted-foreground">Status: </span>
-                  <span className="font-medium">{inngestStatus.data.status}</span>
+                  <span className="font-medium">
+                    {inngestStatus.data.status}
+                  </span>
                 </div>
                 <a
                   href={`${inngestUrl}/run?runID=${run.inngest_run_id}`}
