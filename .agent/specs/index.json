@@ -497,6 +497,17 @@
       "totalComplexity": 78,
       "phaseCount": 5,
       "taskCount": 19
+    },
+    "2511300815": {
+      "folder": "2511300815-workflow-run-e2e-test",
+      "path": "todo/2511300815-workflow-run-e2e-test/spec.md",
+      "spec_type": "feature",
+      "status": "draft",
+      "created": "2025-11-30T08:15:00Z",
+      "updated": "2025-11-30T08:15:00Z",
+      "totalComplexity": 52,
+      "phaseCount": 5,
+      "taskCount": 12
     }
   }
 }
