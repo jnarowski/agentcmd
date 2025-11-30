@@ -442,11 +442,11 @@
     },
     "2511301002": {
       "folder": "2511301002-branch-checkout-button",
-      "path": "todo/2511301002-branch-checkout-button/spec.md",
+      "path": "done/2511301002-branch-checkout-button/spec.md",
       "spec_type": "issue",
       "status": "completed",
       "created": "2025-11-30T10:02:00Z",
-      "updated": "2025-11-30T17:45:00.000Z",
+      "updated": "2025-11-30T18:00:00.000Z",
       "totalComplexity": 18,
       "phaseCount": 1,
       "taskCount": 4
