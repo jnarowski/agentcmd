@@ -1,6 +1,7 @@
 import {
   existsSync,
   unlinkSync,
+  writeFileSync,
 } from "fs";
 import { spawnSync } from "child_process";
 import { randomBytes } from "crypto"; // Used for JWT secret generation
@@ -61,60 +62,83 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     // 4. Initialize database with Prisma
     process.env.DATABASE_URL = `file:${dbPath}`;
 
-    // Calculate absolute path to schema (relative to bundled CLI location)
+    // Calculate absolute path to schema and migrations (relative to bundled CLI location)
     const schemaPath = join(__dirname, 'prisma/schema.prisma');
+    const migrationsPath = join(__dirname, 'prisma/migrations');
 
-    // Generate Prisma client first
-    const generateResult = spawnSync(
-      "npx",
-      [PRISMA_VERSION, "generate", "--no-hints", `--schema=${schemaPath}`],
-      {
-        stdio: "pipe",
-        env: {
-          ...process.env,
-          PRISMA_HIDE_UPDATE_MESSAGE: "true",
-          PRISMA_SKIP_DOTENV_LOAD: "1", // Prisma 7: prevent auto .env loading
-        },
+    // Prisma 7 requires a config file for datasource URL (no longer supports url in schema)
+    // Create a temporary config file in the CLI's prisma directory
+    const configPath = join(__dirname, 'prisma/prisma.config.js');
+    const configContent = `
+// Auto-generated Prisma config for CLI installation
+export default {
+  schema: ${JSON.stringify(schemaPath)},
+  migrations: { path: ${JSON.stringify(migrationsPath)} },
+  datasource: { url: ${JSON.stringify(`file:${dbPath}`)} },
+};
+`;
+    writeFileSync(configPath, configContent);
+
+    try {
+      // Generate Prisma client first
+      const generateResult = spawnSync(
+        "npx",
+        [PRISMA_VERSION, "generate", "--no-hints", `--config=${configPath}`],
+        {
+          stdio: "pipe",
+          env: {
+            ...process.env,
+            PRISMA_HIDE_UPDATE_MESSAGE: "true",
+            PRISMA_SKIP_DOTENV_LOAD: "1", // Prisma 7: prevent auto .env loading
+          },
+        }
+      );
+
+      if (generateResult.status !== 0) {
+        const errorOutput = generateResult.stderr?.toString() || generateResult.stdout?.toString() || "Unknown error";
+        showBoxedOutput("Generating Prisma Client - Failed", errorOutput);
+        throw new Error(`Prisma client generation failed with exit code ${generateResult.status}`);
       }
-    );
 
-    if (generateResult.status !== 0) {
-      const errorOutput = generateResult.stderr?.toString() || generateResult.stdout?.toString() || "Unknown error";
-      showBoxedOutput("Generating Prisma Client - Failed", errorOutput);
-      throw new Error(`Prisma client generation failed with exit code ${generateResult.status}`);
-    }
-
-    const generateOutput = (generateResult.stdout?.toString() || "") + (generateResult.stderr?.toString() || "");
-    if (generateOutput.trim()) {
-      showBoxedOutput("Generating Prisma Client", generateOutput);
-    }
-
-    // Apply migrations for initial setup
-    const result = spawnSync(
-      "npx",
-      [PRISMA_VERSION, "migrate", "deploy", `--schema=${schemaPath}`],
-      {
-        stdio: "pipe",
-        env: {
-          ...process.env,
-          PRISMA_SKIP_DOTENV_LOAD: "1", // Prisma 7: prevent auto .env loading
-        },
+      const generateOutput = (generateResult.stdout?.toString() || "") + (generateResult.stderr?.toString() || "");
+      if (generateOutput.trim()) {
+        showBoxedOutput("Generating Prisma Client", generateOutput);
       }
-    );
 
-    if (result.error) {
-      throw new Error(`Failed to initialize database: ${result.error.message}`);
-    }
+      // Apply migrations for initial setup
+      const result = spawnSync(
+        "npx",
+        [PRISMA_VERSION, "migrate", "deploy", `--config=${configPath}`],
+        {
+          stdio: "pipe",
+          env: {
+            ...process.env,
+            PRISMA_SKIP_DOTENV_LOAD: "1", // Prisma 7: prevent auto .env loading
+          },
+        }
+      );
 
-    if (result.status !== 0) {
-      const errorOutput = result.stderr?.toString() || result.stdout?.toString() || "Unknown error";
-      showBoxedOutput("Applying Database Migrations - Failed", errorOutput);
-      throw new Error(`Database initialization failed with exit code ${result.status}`);
-    }
+      if (result.error) {
+        throw new Error(`Failed to initialize database: ${result.error.message}`);
+      }
 
-    const migrateOutput = (result.stdout?.toString() || "") + (result.stderr?.toString() || "");
-    if (migrateOutput.trim()) {
-      showBoxedOutput("Applying Database Migrations", migrateOutput);
+      if (result.status !== 0) {
+        const errorOutput = result.stderr?.toString() || result.stdout?.toString() || "Unknown error";
+        showBoxedOutput("Applying Database Migrations - Failed", errorOutput);
+        throw new Error(`Database initialization failed with exit code ${result.status}`);
+      }
+
+      const migrateOutput = (result.stdout?.toString() || "") + (result.stderr?.toString() || "");
+      if (migrateOutput.trim()) {
+        showBoxedOutput("Applying Database Migrations", migrateOutput);
+      }
+    } finally {
+      // Clean up temporary config file
+      try {
+        unlinkSync(configPath);
+      } catch {
+        // Ignore cleanup errors
+      }
     }
 
     // 5. Prompt for API keys (optional)
