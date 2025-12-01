@@ -24,7 +24,7 @@ async function buildCLI() {
       entryPoints: [join(rootDir, "src/cli/index.ts")],
       bundle: true,
       platform: "node",
-      target: "node22",
+      target: "node20",
       format: "esm",
       outfile: join(rootDir, "dist/cli.js"),
       // Inline version at build time
@@ -58,7 +58,7 @@ async function buildCLI() {
       entryPoints: [join(rootDir, "src/server/index.ts")],
       bundle: true,
       platform: "node",
-      target: "node22",
+      target: "node20",
       format: "esm",
       outfile: join(rootDir, "package/dist/server/index.js"),
       // External dependencies that must stay external (native modules, binaries)
@@ -142,7 +142,7 @@ async function buildCLI() {
       entryPoints: [join(rootDir, "src/scripts/start.ts")],
       bundle: true,
       platform: "node",
-      target: "node22",
+      target: "node20",
       format: "esm",
       outfile: join(scriptsDistDir, "start.js"),
       external: [

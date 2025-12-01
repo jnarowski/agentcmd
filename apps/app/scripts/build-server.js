@@ -15,7 +15,7 @@ try {
     entryPoints: [join(rootDir, "src/server/index.ts")],
     bundle: true,
     platform: "node",
-    target: "node22",
+    target: "node20",
     format: "esm",
     outfile: join(rootDir, "dist/server/index.js"),
     // External dependencies that must stay external (native modules, binaries)

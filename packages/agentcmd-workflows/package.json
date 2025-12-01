@@ -61,7 +61,7 @@
     "url": "https://github.com/jnarowski/agentcmd/issues"
   },
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=20.6.0"
   },
   "peerDependencies": {
     "inngest": "^3.0.0"
