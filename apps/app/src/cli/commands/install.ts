@@ -61,13 +61,14 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     // 4. Initialize database with Prisma
     process.env.DATABASE_URL = `file:${dbPath}`;
 
-    // Calculate absolute path to schema (relative to bundled CLI location)
+    // Calculate absolute paths to Prisma assets (relative to bundled CLI location)
     const schemaPath = join(__dirname, 'prisma/schema.prisma');
+    const configPath = join(__dirname, 'prisma.config.ts');
 
     // Generate Prisma client first
     const generateResult = spawnSync(
       "npx",
-      [PRISMA_VERSION, "generate", "--no-hints", `--schema=${schemaPath}`],
+      [PRISMA_VERSION, "generate", "--no-hints", `--schema=${schemaPath}`, `--config=${configPath}`],
       {
         stdio: "pipe",
         env: {
@@ -92,7 +93,7 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     // Apply migrations for initial setup
     const result = spawnSync(
       "npx",
-      [PRISMA_VERSION, "migrate", "deploy", `--schema=${schemaPath}`],
+      [PRISMA_VERSION, "migrate", "deploy", `--schema=${schemaPath}`, `--config=${configPath}`],
       {
         stdio: "pipe",
         env: {
