@@ -6,12 +6,13 @@ import { PRISMA_VERSION } from "./constants";
 /**
  * Check if there are pending Prisma migrations
  * @param schemaPath Path to the Prisma schema file
+ * @param configPath Path to the Prisma config file (prisma.config.ts)
  * @returns Array of pending migration names
  */
-export function checkPendingMigrations(schemaPath: string): string[] {
+export function checkPendingMigrations(schemaPath: string, configPath: string): string[] {
   const result = spawnSync(
     "npx",
-    [PRISMA_VERSION, "migrate", "status", "--schema", schemaPath],
+    [PRISMA_VERSION, "migrate", "status", "--schema", schemaPath, "--config", configPath],
     {
       encoding: "utf-8",
       cwd: dirname(schemaPath),

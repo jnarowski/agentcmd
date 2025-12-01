@@ -101,6 +101,22 @@ async function buildCLI() {
 
     console.log("✓ Copied Prisma schema and migrations (excluded .db files)\n");
 
+    // 3b. Copy CLI-specific prisma.config to dist root (Prisma 7 requires config for datasource URL)
+    // Uses prisma.config.cli.ts which has no dotenv import (CLI sets env vars programmatically)
+    // Config must be at dist root so relative paths resolve correctly:
+    // - "prisma/schema.prisma" -> dist/prisma/schema.prisma
+    // - "prisma/migrations" -> dist/prisma/migrations/
+    console.log("Copying prisma.config.cli.ts...");
+    copyFileSync(
+      join(rootDir, "prisma.config.cli.ts"),
+      join(rootDir, "dist/prisma.config.ts")
+    );
+    copyFileSync(
+      join(rootDir, "prisma.config.cli.ts"),
+      join(rootDir, "package/dist/prisma.config.ts")
+    );
+    console.log("✓ Copied prisma.config.ts\n");
+
     // 4. Copy workflow loader to package/dist (next to bundled index.js)
     console.log("Copying workflow loader...");
     const loaderDistDir = join(rootDir, "package/dist/server");

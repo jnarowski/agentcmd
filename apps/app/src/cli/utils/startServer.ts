@@ -35,6 +35,8 @@ export interface StartServerConfig {
   dbPath: string;
   /** Path to Prisma schema */
   schemaPath: string;
+  /** Path to Prisma config file (prisma.config.ts) */
+  prismaConfigPath: string;
   /** Path to server entry point */
   serverPath: string;
   /** Path to log file */
@@ -81,6 +83,7 @@ export async function startServer(config: StartServerConfig): Promise<void> {
     inngestSigningKey,
     dbPath,
     schemaPath,
+    prismaConfigPath,
     serverPath,
     logPath,
     jwtSecret,
@@ -137,7 +140,7 @@ export async function startServer(config: StartServerConfig): Promise<void> {
     // 4. Backup database (if enabled and pending migrations)
     if (createBackups && existsSync(dbPath)) {
       if (verbose) console.log("Checking for pending migrations...");
-      const pendingMigrations = checkPendingMigrations(schemaPath);
+      const pendingMigrations = checkPendingMigrations(schemaPath, prismaConfigPath);
 
       if (pendingMigrations.length > 0) {
         if (verbose)
@@ -165,7 +168,7 @@ export async function startServer(config: StartServerConfig): Promise<void> {
     if (verbose) console.log("Generating Prisma client...");
     const generateResult = spawnSync(
       "npx",
-      [PRISMA_VERSION, "generate", "--no-hints", `--schema=${schemaPath}`],
+      [PRISMA_VERSION, "generate", "--no-hints", `--schema=${schemaPath}`, `--config=${prismaConfigPath}`],
       {
         stdio: stdioSync,
         env: {
@@ -188,7 +191,7 @@ export async function startServer(config: StartServerConfig): Promise<void> {
     if (verbose) console.log("Applying database migrations...");
     const migrateResult = spawnSync(
       "npx",
-      [PRISMA_VERSION, "migrate", "deploy", `--schema=${schemaPath}`],
+      [PRISMA_VERSION, "migrate", "deploy", `--schema=${schemaPath}`, `--config=${prismaConfigPath}`],
       {
         stdio: stdioSync,
         env: {

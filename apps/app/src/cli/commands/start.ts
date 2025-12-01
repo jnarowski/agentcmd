@@ -34,6 +34,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
   const logPath = getLogFilePath();
   const inngestDataDir = getInngestDataDir();
   const schemaPath = join(__dirname, "prisma/schema.prisma");
+  const prismaConfigPath = join(__dirname, "prisma.config.ts");
   const serverPath = join(__dirname, "server/index.js");
 
   // 3. CLI always runs in production mode (serves static files, persistent Inngest)
@@ -66,6 +67,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
     inngestSigningKey: mergedConfig.inngestSigningKey,
     dbPath,
     schemaPath,
+    prismaConfigPath,
     serverPath,
     logPath,
     jwtSecret: mergedConfig.jwtSecret,
