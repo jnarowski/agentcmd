@@ -167,7 +167,9 @@
     "vaul": "^1.1.2",
     "ws": "^8.14.2",
     "zod": "^4.1.12",
-    "zustand": "^5.0.8"
+    "zustand": "^5.0.8",
+    "agent-cli-sdk": "workspace:*",
+    "agentcmd-workflows": "workspace:*"
   },
   "engines": {
     "node": ">=22.0.0"
@@ -188,8 +190,6 @@
     "@types/uuid": "^11.0.0",
     "@vitejs/plugin-react": "^5.0.4",
     "@vitest/ui": "^4.0.3",
-    "agent-cli-sdk": "workspace:*",
-    "agentcmd-workflows": "workspace:*",
     "concurrently": "^8.2.2",
     "cross-env": "^10.1.0",
     "esbuild": "^0.25.11",
