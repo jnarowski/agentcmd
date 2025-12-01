@@ -56,7 +56,7 @@ export default defineWorkflow(
     ],
   },
   async ({ event, step }) => {
-    const { workingDir, specFile } = event.data;
+    const { specFile } = event.data;
 
     // Context object shared across phases via closure
     // Helper functions mutate this to pass data between steps
@@ -72,12 +72,11 @@ export default defineWorkflow(
           cycle,
           step,
           specFile,
-          workingDir,
           ctx,
         });
 
         // Commit implementation changes
-        await step.git(`commit-implementation-cycle-${cycle}`, {
+        await step.git(`commit-implementation--cycle-${cycle}`, {
           operation: "commit",
           message: `feat: implement ${event.data.name} (cycle ${cycle})`,
         });
@@ -87,12 +86,11 @@ export default defineWorkflow(
           cycle,
           step,
           specFile,
-          workingDir,
           ctx,
         });
 
         // Commit review changes
-        await step.git(`commit-review-cycle-${cycle}`, {
+        await step.git(`commit-review--cycle-${cycle}`, {
           operation: "commit",
           message: `chore: address review feedback (cycle ${cycle})`,
         });
@@ -159,7 +157,6 @@ export default defineWorkflow(
  * @param cycle - Current implement/review cycle number
  * @param step - Workflow step interface
  * @param specFile - Spec file path or identifier
- * @param workingDir - Project working directory
  * @param ctx - Shared context object (mutated)
  * @returns Implementation response data
  *
@@ -169,31 +166,28 @@ async function implementUntilComplete({
   cycle,
   step,
   specFile,
-  workingDir,
   ctx,
 }: {
   cycle: number;
   step: WorkflowStep;
   specFile: string;
-  workingDir: string;
   ctx: WorkflowContext;
 }) {
   const MAX_ATTEMPTS = 10;
   let lastResponse: CmdImplementSpecResponse | undefined;
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const stepName = `implement-cycle-${cycle}-attempt-${attempt}`;
+    const stepName = `implement-cycle-${cycle}--attempt-${attempt}`;
     const result = await step.agent<CmdImplementSpecResponse>(stepName, {
       agent: "claude",
       json: true,
       prompt: buildSlashCommand("/cmd:implement-spec", {
         specIdOrNameOrPath: specFile,
       }),
-      workingDir,
     });
 
     step.annotation(`${stepName}-summary`, {
-      message: `Implement cycle ${cycle} attempt ${attempt} ${result.data.success ? "passed" : "failed"}. ${result.data.summary}`,
+      message: `Cycle ${cycle} Attempt ${attempt}\n**${result.data.success ? "✓ Passed" : "✗ Incomplete"}\n\n${result.data.summary}`,
     });
 
     lastResponse = result.data;
@@ -215,7 +209,6 @@ async function implementUntilComplete({
  * @param cycle - Current implement/review cycle number
  * @param step - Workflow step interface
  * @param specFile - Spec file path or identifier
- * @param workingDir - Project working directory
  * @param ctx - Shared context object (mutated)
  * @returns Review response with success status and issues found
  *
@@ -225,13 +218,11 @@ async function reviewImplementation({
   cycle,
   step,
   specFile,
-  workingDir,
   ctx,
 }: {
   cycle: number;
   step: WorkflowStep;
   specFile: string;
-  workingDir: string;
   ctx: WorkflowContext;
 }) {
   const result = await step.agent<CmdReviewSpecImplementationResponse>(
@@ -243,7 +234,6 @@ async function reviewImplementation({
         specIdOrNameOrPath: specFile,
         format: "json",
       }),
-      workingDir,
     }
   );
 

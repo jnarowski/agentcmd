@@ -173,10 +173,10 @@ async function implementUntilComplete({
   workingDir: string;
   ctx: WorkflowContext;
 }) {
-  const MAX_ITERATIONS = 10; // Adjustable based on complexity
+  const MAX_ATTEMPTS = 10;
 
-  for (let i = 1; i <= MAX_ITERATIONS; i++) {
-    const stepName = `implement-spec-${i}`;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const stepName = `implement-attempt--${attempt}`;
     const result = await step.agent<CmdImplementSpecResponse>(stepName, {
       agent: "claude",
       json: true,
@@ -189,7 +189,7 @@ async function implementUntilComplete({
     ctx.implement = result.data;
 
     step.annotation(`${stepName}-summary`, {
-      message: `Implement attempt ${i} ${result.data.success ? "passed" : "failed"}. ${result.data.summary}`,
+      message: `Attempt ${attempt}\n**${result.data.success ? "✓ Passed" : "✗ Incomplete"}\n\n${result.data.summary}`,
     });
 
     if (result.data.success) {

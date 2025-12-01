@@ -190,7 +190,7 @@ async function implementUntilComplete({
     });
 
     step.annotation(`${stepName}-summary`, {
-      message: `Cycle ${cycle} Attempt ${attempt}\n**Status:** ${result.data.success ? "✓ Passed" : "✗ Failed"}\n\n${result.data.summary}`,
+      message: `Cycle ${cycle} Attempt ${attempt}\n**${result.data.success ? "✓ Passed" : "✗ Incomplete"}\n\n${result.data.summary}`,
     });
 
     lastResponse = result.data;
