@@ -426,7 +426,7 @@ export interface CmdReviewSpecImplementationResponse {
     incomplete_implementations: number;
     code_quality: number;
   };
-  /** Human-readable summary explaining why the review passed/failed, including highlights of key issues and what was fixed from previous reviews */
+  /** String - 2-4 markdown bullet points describing review results, key issues found, and previous issues resolved (use `\n- ` for bullets) */
   summary: string;
 }
 
