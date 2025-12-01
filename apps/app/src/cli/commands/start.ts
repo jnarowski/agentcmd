@@ -30,7 +30,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
 
   // 2. Resolve paths
   const dbPath = getDbPath();
-  const appConfigPath = getConfigPath();
+  const configPath = getConfigPath();
   const logPath = getLogFilePath();
   const inngestDataDir = getInngestDataDir();
   const schemaPath = join(__dirname, "prisma/schema.prisma");
@@ -44,14 +44,14 @@ export async function startCommand(options: StartOptions): Promise<void> {
   // Validate required secrets with helpful error
   if (!mergedConfig.jwtSecret) {
     console.error("ERROR: JWT_SECRET is empty or missing!");
-    console.error(`Config loaded from: ${appConfigPath}`);
+    console.error(`Config loaded from: ${configPath}`);
     console.error("Run 'agentcmd install' to initialize configuration");
     process.exit(1);
   }
 
   if (!mergedConfig.inngestEventKey || !mergedConfig.inngestSigningKey) {
     console.error("ERROR: Inngest keys are missing!");
-    console.error(`Config loaded from: ${appConfigPath}`);
+    console.error(`Config loaded from: ${configPath}`);
     console.error("Run 'agentcmd install --force' to regenerate configuration");
     process.exit(1);
   }
