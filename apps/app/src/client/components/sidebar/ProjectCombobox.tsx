@@ -103,18 +103,8 @@ export function ProjectCombobox() {
   };
 
   const handleToggleFilter = () => {
-    if (activeProjectId) {
-      // Currently on project detail page → go to "Show all"
-      setActiveProject(null);
-      navigate("/projects");
-    } else {
-      // Currently on "Show all" → return to last selected project
-      if (selectedProject) {
-        setActiveProject(selectedProject.id);
-        navigate(`/projects/${selectedProject.id}`);
-      }
-      // If no selectedProject exists, button is disabled so this won't be called
-    }
+    setActiveProject(null);
+    navigate("/projects");
   };
 
   const renderProjectItem = (project: Project) => (
@@ -229,14 +219,11 @@ export function ProjectCombobox() {
 
           <Button
             size="sm"
-            variant="ghost"
+            variant="outline"
             onClick={handleToggleFilter}
-            disabled={!activeProjectId && !selectedProject}
-            className={cn(
-              "h-9 w-9 p-0 shrink-0",
-              !activeProjectId && "opacity-40"
-            )}
-            aria-label={activeProjectId ? "Show all projects" : "Show current project"}
+            disabled={!activeProjectId}
+            className="h-9 w-9 p-0 shrink-0"
+            aria-label="Show all projects"
           >
             <LayoutGrid className="size-4" />
           </Button>
