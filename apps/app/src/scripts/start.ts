@@ -29,6 +29,7 @@ const dbPath = join(process.cwd(), "prisma/dev.db");
 const logPath = join(process.cwd(), "logs/app.log");
 const inngestDataDir = join(process.cwd(), "inngest-data");
 const schemaPath = join(process.cwd(), "prisma/schema.prisma");
+const prismaConfigPath = join(process.cwd(), "prisma.config.ts");
 const serverPath = join(__dirname, "../server/index.js");
 
 // Secrets from environment
@@ -58,6 +59,7 @@ startServer({
   inngestSigningKey,
   dbPath,
   schemaPath,
+  prismaConfigPath,
   serverPath,
   logPath,
   jwtSecret,
