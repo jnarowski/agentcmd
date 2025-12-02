@@ -102,6 +102,21 @@ export function ProjectCombobox() {
     setIsProjectDialogOpen(true);
   };
 
+  const handleToggleFilter = () => {
+    if (activeProjectId) {
+      // Currently on project detail page → go to "Show all"
+      setActiveProject(null);
+      navigate("/projects");
+    } else {
+      // Currently on "Show all" → return to last selected project
+      if (selectedProject) {
+        setActiveProject(selectedProject.id);
+        navigate(`/projects/${selectedProject.id}`);
+      }
+      // If no selectedProject exists, button is disabled so this won't be called
+    }
+  };
+
   const renderProjectItem = (project: Project) => (
     <div className="flex items-center justify-between w-full gap-2">
       <div className="flex items-center min-w-0">
@@ -185,31 +200,47 @@ export function ProjectCombobox() {
   if (!isMobile) {
     return (
       <div className="px-2 pt-3 pb-2">
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={open}
-              className="w-full justify-between h-9"
+        <div className="flex items-center gap-2">
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={open}
+                className="flex-1 justify-between h-9"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <FolderOpen className="size-4 shrink-0 opacity-70" />
+                  <span className="truncate">
+                    {selectedProject?.name || "Show all"}
+                  </span>
+                </div>
+                <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-auto p-0 -ml-2"
+              align="start"
+              style={{ width: "var(--radix-popover-trigger-width)" }}
             >
-              <div className="flex items-center gap-2 min-w-0">
-                <FolderOpen className="size-4 shrink-0 opacity-70" />
-                <span className="truncate">
-                  {selectedProject?.name || "Show all"}
-                </span>
-              </div>
-              <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent
-            className="w-auto p-0 -ml-2"
-            align="start"
-            style={{ width: "var(--radix-popover-trigger-width)" }}
+              {renderCommandContent()}
+            </PopoverContent>
+          </Popover>
+
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleToggleFilter}
+            disabled={!activeProjectId && !selectedProject}
+            className={cn(
+              "h-9 w-9 p-0 shrink-0",
+              !activeProjectId && "opacity-40"
+            )}
+            aria-label={activeProjectId ? "Show all projects" : "Show current project"}
           >
-            {renderCommandContent()}
-          </PopoverContent>
-        </Popover>
+            <LayoutGrid className="size-4" />
+          </Button>
+        </div>
 
         <ProjectDialog
           open={isProjectDialogOpen}
