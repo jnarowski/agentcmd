@@ -255,14 +255,18 @@ export function NewRunForm({
     setShowValidation(true);
 
     // Validate workflow definition (only when definitions prop is provided)
-    if (
-      !definitionId &&
-      definitions &&
-      definitions.length > 0 &&
-      !selectedDefinitionId
-    ) {
-      setError("Workflow definition is required");
-      return;
+    if (!definitionId) {
+      // Case 1: Definitions loaded but empty
+      if (definitions && definitions.length === 0) {
+        setError("No workflow definitions available. Please create a workflow definition first.");
+        return;
+      }
+
+      // Case 2: Definitions loaded but none selected
+      if (definitions && definitions.length > 0 && !selectedDefinitionId) {
+        setError("Workflow definition is required");
+        return;
+      }
     }
 
     // Check if selected workflow has a load error
@@ -386,6 +390,26 @@ export function NewRunForm({
           </div>
         )}
 
+        {/* No workflow definitions warning */}
+        {definitions && definitions.length === 0 && (
+          <div className="rounded-lg border border-amber-500 bg-amber-500/10 p-3">
+            <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+              No Workflow Definitions Found
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              You need to create a workflow definition before creating a run.{" "}
+              <a
+                href={`${websiteUrl}/docs/concepts/workflows/workflow-definitions`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                Learn how to create workflow definitions
+              </a>
+            </p>
+          </div>
+        )}
+
         {/* Workflow definition selection - always show */}
         <div>
           <Label>Workflow</Label>
@@ -400,7 +424,11 @@ export function NewRunForm({
                 : "Loading definitions..."
             }
             searchPlaceholder="Search definitions..."
-            emptyMessage="No workflow definitions found"
+            emptyMessage={
+              definitions && definitions.length === 0
+                ? "No workflow definitions found. Create one first."
+                : "No workflow definitions found"
+            }
             disabled={createWorkflow.isPending || !definitions}
             renderTrigger={(selectedOption) =>
               selectedOption ? (
@@ -976,8 +1004,7 @@ export function NewRunForm({
             createWorkflow.isPending ||
             (!definitionId &&
               definitions &&
-              definitions.length > 0 &&
-              !selectedDefinitionId) ||
+              (definitions.length === 0 || !selectedDefinitionId)) ||
             branchValidation.isValidating ||
             branchValidation.branchExists
           }
