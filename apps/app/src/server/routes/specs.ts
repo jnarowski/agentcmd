@@ -4,6 +4,8 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { getSpecs, clearSpecsCache } from "@/server/domain/spec/services/getSpecs";
 import { moveSpec } from "@/server/domain/spec/services/moveSpec";
+import { getSpecTemplates } from "@/server/domain/spec/services/getSpecTemplates";
+import { searchProjectFiles } from "@/server/domain/file/services/searchProjectFiles";
 import { buildErrorResponse } from "@/server/errors";
 
 const SpecsQuerySchema = z.object({
@@ -17,6 +19,11 @@ const MoveSpecParamsSchema = z.object({
 
 const MoveSpecBodySchema = z.object({
   targetFolder: z.enum(["backlog", "todo", "done"]),
+});
+
+const FileSearchQuerySchema = z.object({
+  q: z.string().min(1),
+  limit: z.coerce.number().min(1).max(50).optional(),
 });
 
 export async function specRoutes(fastify: FastifyInstance) {
@@ -133,6 +140,79 @@ export async function specRoutes(fastify: FastifyInstance) {
       } catch (error) {
         fastify.log.error({ error }, "Error moving spec");
         const errorMessage = error instanceof Error ? error.message : "Failed to move spec";
+        return reply
+          .code(500)
+          .send(buildErrorResponse(500, errorMessage));
+      }
+    }
+  );
+
+  /**
+   * GET /api/specs/templates
+   * Get available spec templates for generation
+   */
+  fastify.get(
+    "/api/specs/templates",
+    {
+      preHandler: fastify.authenticate,
+    },
+    async (request, reply) => {
+      const userId = request.user?.id;
+
+      if (!userId) {
+        return reply.code(401).send(buildErrorResponse(401, "Unauthorized"));
+      }
+
+      request.log.info({ userId }, "Getting spec templates");
+
+      const templates = await getSpecTemplates();
+
+      return reply.send({ data: templates });
+    }
+  );
+
+  /**
+   * GET /api/projects/:projectId/files/search
+   * Search for files in a project for @ mention autocomplete
+   */
+  fastify.get<{
+    Params: { projectId: string };
+    Querystring: z.infer<typeof FileSearchQuerySchema>;
+  }>(
+    "/api/projects/:projectId/files/search",
+    {
+      preHandler: fastify.authenticate,
+      schema: {
+        params: z.object({ projectId: z.string().cuid() }),
+        querystring: FileSearchQuerySchema,
+      },
+    },
+    async (request, reply) => {
+      const userId = request.user?.id;
+
+      if (!userId) {
+        return reply.code(401).send(buildErrorResponse(401, "Unauthorized"));
+      }
+
+      const { projectId } = request.params;
+      const { q, limit } = request.query;
+
+      request.log.info(
+        { userId, projectId, query: q, limit },
+        "Searching project files"
+      );
+
+      try {
+        const files = await searchProjectFiles({
+          projectId,
+          query: q,
+          limit,
+        });
+
+        return reply.send({ data: files });
+      } catch (error) {
+        fastify.log.error({ error }, "Error searching files");
+        const errorMessage = error instanceof Error ? error.message : "Failed to search files";
         return reply
           .code(500)
           .send(buildErrorResponse(500, errorMessage));

@@ -21,10 +21,12 @@ import {
   FileText,
   ExternalLink,
   Sparkles,
+  Plus,
 } from "lucide-react";
 import { formatDate } from "@/shared/utils/formatDate";
 import { getWebsiteUrl } from "@/client/utils/envConfig";
 import type { Spec } from "@/shared/types/spec.types";
+import { GenerateSpecModal } from "@/client/pages/projects/specs/components/GenerateSpecModal";
 
 interface ProjectHomeSpecsProps {
   projectId: string;
@@ -39,6 +41,7 @@ export function ProjectHomeSpecs({ projectId }: ProjectHomeSpecsProps) {
   const { data, isLoading, error } = useSpecs(projectId);
   const rescanMutation = useRescanSpecs();
   const [activeTab, setActiveTab] = useState<"todo" | "done" | "backlog">("todo");
+  const [generateModalOpen, setGenerateModalOpen] = useState(false);
 
   const handleRescan = () => {
     rescanMutation.mutate();
@@ -143,20 +146,31 @@ export function ProjectHomeSpecs({ projectId }: ProjectHomeSpecsProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
           <span className="truncate">Specs</span>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="ml-auto h-8 w-8 p-0"
-            onClick={handleRescan}
-            disabled={rescanMutation.isPending || isLoading}
-            aria-label="Refresh specs"
-          >
-            {rescanMutation.isPending ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <RefreshCw className="size-4" />
-            )}
-          </Button>
+          <div className="ml-auto flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={() => setGenerateModalOpen(true)}
+              aria-label="Generate new spec"
+            >
+              <Plus className="size-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={handleRescan}
+              disabled={rescanMutation.isPending || isLoading}
+              aria-label="Refresh specs"
+            >
+              {rescanMutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <RefreshCw className="size-4" />
+              )}
+            </Button>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="min-w-0">
@@ -222,6 +236,13 @@ export function ProjectHomeSpecs({ projectId }: ProjectHomeSpecsProps) {
           </Tabs>
         )}
       </CardContent>
+
+      {/* Generate Spec Modal */}
+      <GenerateSpecModal
+        open={generateModalOpen}
+        onOpenChange={setGenerateModalOpen}
+        projectId={projectId}
+      />
     </Card>
   );
 }

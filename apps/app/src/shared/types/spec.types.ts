@@ -48,3 +48,22 @@ export interface SpecsResponse {
   specs: Spec[];
   planningSessions: PlanningSessionSummary[];
 }
+
+/**
+ * Spec template metadata
+ */
+export interface SpecTemplate {
+  id: string;
+  name: string;
+  description: string;
+  type: "simple" | "multiphase-planning" | "multiphase-execution";
+}
+
+/**
+ * File search result for @ mention autocomplete
+ */
+export interface FileSearchResult {
+  relativePath: string;
+  name: string;
+  type: "file" | "directory";
+}
