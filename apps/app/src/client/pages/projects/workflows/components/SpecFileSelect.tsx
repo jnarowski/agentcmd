@@ -134,16 +134,18 @@ export function SpecFileSelect({
             }}
           />
         </div>
-        <Button
-          variant="outline"
-          onClick={() => setModalOpen(true)}
-          disabled={!value || disabled}
-          title="View and edit spec file"
-          className="h-full"
-        >
-          <Eye className="h-4 w-4" />
-          <span className="hidden sm:inline ml-1.5">View Spec</span>
-        </Button>
+{value && (
+          <Button
+            variant="outline"
+            onClick={() => setModalOpen(true)}
+            disabled={disabled}
+            title="View and edit spec file"
+            className="h-full"
+          >
+            <Eye className="h-4 w-4" />
+            <span className="hidden sm:inline ml-1.5">View Spec</span>
+          </Button>
+        )}
       </div>
 
       {/* Spec Preview Modal */}
