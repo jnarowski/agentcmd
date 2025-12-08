@@ -11,6 +11,11 @@ import {
   TabsContent,
 } from "@/client/components/ui/tabs";
 import { Combobox } from "@/client/components/ui/combobox";
+import {
+  Alert,
+  AlertTitle,
+  AlertDescription,
+} from "@/client/components/ui/alert";
 import { CodeEditor } from "@/client/components/CodeEditor";
 import { useCreateWorkflow } from "@/client/pages/projects/workflows/hooks/useWorkflowMutations";
 import { useProjectBranches } from "@/client/pages/projects/hooks/useProjectBranches";
@@ -258,7 +263,9 @@ export function NewRunForm({
     if (!definitionId) {
       // Case 1: Definitions loaded but empty
       if (definitions && definitions.length === 0) {
-        setError("No workflow definitions available. Please create a workflow definition first.");
+        setError(
+          "No workflow definitions available. Please create a workflow definition first."
+        );
         return;
       }
 
@@ -462,15 +469,6 @@ export function NewRunForm({
             >
               Learn More
             </a>
-            {" · "}
-            <a
-              href={`${websiteUrl}/docs/concepts/spec-driven-development`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              Spec-Driven Development
-            </a>
           </p>
           <div className="sm:rounded-lg sm:border bg-card">
             <Tabs
@@ -507,13 +505,7 @@ export function NewRunForm({
               </TabsList>
 
               <TabsContent value="file" className="space-y-3 p-3 m-0">
-                <p className="text-sm text-muted-foreground">
-                  Generate spec files by running cmd slash commands like{" "}
-                  <code className="px-1.5 py-0.5 rounded bg-muted text-foreground font-mono text-xs">
-                    /cmd:generate-feature-spec
-                  </code>
-                  .{" "}
-                </p>
+                <p className="text-sm text-muted-foreground"></p>
                 <SpecFileSelect
                   projectId={projectId}
                   value={specFile}
@@ -521,7 +513,28 @@ export function NewRunForm({
                   disabled={createWorkflow.isPending}
                   onSpecTypeChange={setSpecType}
                 />
-
+                <Alert className="border-blue-500/50 bg-blue-500/10">
+                  <AlertTitle className="text-blue-400 font-medium">
+                    The effectiveness of this tool depends on spec quality
+                  </AlertTitle>
+                  <AlertDescription>
+                    <span>
+                      To populate this dropdown, generate a spec using a{" "}
+                      <code className="inline text-xs bg-muted px-1 py-0.5 rounded">
+                        /cmd:generate-*-spec
+                      </code>{" "}
+                      command.
+                    </span>
+                    <a
+                      href={`${getWebsiteUrl()}/docs/getting-started/creating-specs`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block mt-2 text-primary hover:underline"
+                    >
+                      Learn how to generate a spec file →
+                    </a>
+                  </AlertDescription>
+                </Alert>
                 {/* Show spec type when file is selected */}
                 {specFile && (
                   <div className="space-y-2">

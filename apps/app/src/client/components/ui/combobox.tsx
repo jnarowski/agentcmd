@@ -50,7 +50,8 @@
  * ```
  */
 
-import { useState, useMemo, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { useState, useMemo } from "react";
 import { ChevronsUpDownIcon } from "lucide-react";
 import { cn } from "@/client/utils/cn";
 import { Button } from "@/client/components/ui/button";
@@ -89,7 +90,7 @@ export interface ComboboxProps<T extends string = string> {
   options: readonly ComboboxOption<T>[];
   placeholder?: string;
   searchPlaceholder?: string;
-  emptyMessage?: string;
+  emptyMessage?: ReactNode;
   disabled?: boolean;
   buttonClassName?: string;
   popoverClassName?: string;

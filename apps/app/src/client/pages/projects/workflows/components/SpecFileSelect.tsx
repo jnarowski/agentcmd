@@ -5,6 +5,7 @@ import { Button } from "@/client/components/ui/button";
 import { useProjectSpecs } from "@/client/pages/projects/hooks/useProjectSpecs";
 import { SpecPreviewModal } from "@/client/pages/projects/specs/components/SpecPreviewModal";
 import { cn } from "@/client/utils/cn";
+import { getWebsiteUrl } from "@/client/utils/envConfig";
 
 interface SpecFileSelectProps {
   projectId: string;
@@ -68,7 +69,26 @@ export function SpecFileSelect({
             options={specFileOptions}
             placeholder="Select spec file..."
             searchPlaceholder="Search spec files..."
-            emptyMessage="No spec files found"
+            emptyMessage={
+              <div className="text-center py-2 text-muted-foreground text-sm">
+                <p>No spec files found.</p>
+                <p className="mt-1">
+                  Use a{" "}
+                  <code className="text-xs bg-muted px-1 rounded">
+                    /cmd:generate-*-spec
+                  </code>{" "}
+                  command to create one.{" "}
+                  <a
+                    href={`${getWebsiteUrl()}/docs/getting-started/creating-specs`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Learn more
+                  </a>
+                </p>
+              </div>
+            }
             disabled={disabled}
             renderTrigger={(selectedOption) =>
               selectedOption ? (

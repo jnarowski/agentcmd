@@ -68,113 +68,19 @@ Move specs between folders:
 | **Bug**     | Bug fixes         | Error corrections, defect fixes, issue resolutions |
 | **Issue**   | General issues    | Refactoring, tech debt, performance, documentation |
 
-### Creating Custom Spec Types
-
-You can extend the system with custom spec types for your project's unique needs (e.g., "Refactor", "Documentation", "Performance", "Security").
-
-**How to Create:**
-
-1. Create a file in `.claude/commands/cmd/` with pattern: `generate-{type}-spec.md`
-2. Add front matter with description
-3. Add a header and description paragraph
-4. Write the spec generation instructions
-
-**File Format:**
-
-```markdown
----
-description: Brief description shown in command list
-argument-hint: [context?]
----
-
-# Display Name
-
-Short description shown in UI dropdown (first paragraph after header).
-
-## Instructions
-
-Your detailed instructions for generating this spec type...
-```
-
-**Example - Custom "Refactor" Spec Type:**
-
-Create `.claude/commands/cmd/generate-refactor-spec.md`:
-
-```markdown
----
-description: Generate refactoring spec with code analysis and migration plan
-argument-hint: [context?]
----
-
-# Code Refactoring
-
-Generate a detailed refactoring spec with impact analysis, migration steps, and rollback plan.
-
-## Instructions
-
-Generate a comprehensive refactoring specification including:
-- Current state analysis
-- Proposed changes and architecture
-- Step-by-step migration tasks with complexity
-- Rollback strategy
-- Testing requirements
-...
-```
-
-**Naming Convention:**
-
-- **Filename**: `generate-{type}-spec.md`
-- **Type ID**: Extracted from filename (e.g., `refactor` from `generate-refactor-spec.md`)
-- **Display Name**: First `# ` header in file
-- **Command**: Auto-generated as `/cmd:generate-{type}-spec`
-
-**Where They Appear:**
-
-Custom spec types automatically show up in:
-
-1. **Workflow Run Form** - "Type" dropdown when using "From Planning Session" or "Write Custom" tabs
-2. **Spec File Selector** - When selecting existing spec files
-3. **Command Palette** - Available as `/cmd:generate-{type}-spec`
-
-The dropdown displays:
-- **Name** (from `# ` header)
-- **Command** (e.g., `/cmd:generate-refactor-spec`)
-- **Description** (first paragraph after header)
-
-<Callout type="info">
-  The system auto-discovers all `generate-*-spec.md` files on startup. No configuration needed.
-</Callout>
+You can also create custom spec types (e.g., "Refactor", "Security", "Performance") by adding files to `.claude/commands/cmd/`. See [Creating Specs](/docs/getting-started/creating-specs) for a complete tutorial.
 
 ## Generating Specs
 
-There are **two ways** to generate specs:
-
-### 1. Via Slash Commands
-
-Generate specs directly from CLI:
+Generate specs via slash commands:
 
 ```bash
-# Feature Spec
 /cmd:generate-feature-spec "User authentication system"
-
-# Bug Spec
 /cmd:generate-bug-spec "Login page crashes on mobile"
-
-# Issue Spec
-/cmd:generate-issue-spec "Refactor auth service for better testability"
+/cmd:generate-issue-spec "Refactor auth service for testability"
 ```
 
-### 2. Write Custom (UI)
-
-Create spec inline with markdown editor:
-
-1. In UI, click "New Workflow Run"
-2. Select "Write Custom" tab
-3. Select spec type (feature, bug, issue)
-4. Write spec content in markdown
-5. Click "Run"
-
-The agent generates full spec from your content.
+For the complete workflow—from planning conversations to custom spec types—see the [Creating Specs](/docs/getting-started/creating-specs) tutorial.
 
 ## Implementing Specs
 
@@ -205,6 +111,9 @@ See [Spec System Reference](/docs/reference/spec-system) for technical details o
 ## Next Steps
 
 <Cards>
+  <Card title="Creating Specs" href="/docs/getting-started/creating-specs">
+    Step-by-step guide to generating specs and custom types
+  </Card>
   <Card title="Slash Commands" href="/docs/reference/slash-commands">
     All spec management commands
   </Card>

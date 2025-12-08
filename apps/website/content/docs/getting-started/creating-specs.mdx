@@ -1,0 +1,288 @@
+---
+title: Creating Specs
+description: Step-by-step guide to generating specs and creating custom spec types
+---
+
+import { Card, Cards } from "fumadocs-ui/components/card";
+import { Callout } from "fumadocs-ui/components/callout";
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+import { AgentCmd } from "@/components/AgentCmd";
+
+Specs are structured documents that define what to build before you build it. This tutorial covers the complete workflow—from planning conversations to custom spec types.
+
+## Why Specs?
+
+Specs serve as contracts between planning and implementation. They prevent scope creep, provide traceability, and give AI agents clear requirements to follow. For the full philosophy, see [Spec-Driven Development](/docs/concepts/spec-driven-development).
+
+## The Workflow
+
+<Steps>
+<Step>
+### Have a Planning Conversation
+
+Start by discussing what you want to build with Claude. Describe the feature, bug, or task. Claude will explore your codebase, understand existing patterns, and ask clarifying questions.
+
+```
+You: I want to add dark mode support to the app
+
+Claude: I'll help with that. Let me explore your current styling setup...
+[Claude examines your codebase]
+I see you're using Tailwind. A few questions:
+1. Should dark mode be system-preference based or user-toggled?
+2. Where should the preference be persisted?
+```
+
+This conversation builds context that Claude uses when generating the spec.
+
+</Step>
+<Step>
+### Generate the Spec
+
+Once you've discussed the requirements, generate a spec with one command:
+
+```bash
+# Generate from the conversation context
+/cmd:generate-feature-spec
+
+# Or provide context directly
+/cmd:generate-feature-spec "Add dark mode with system preference detection"
+```
+
+Claude creates a structured spec at `.agent/specs/todo/{timestamp}-{name}/spec.md` with:
+- Overview and user story
+- Technical approach
+- Task breakdown with complexity scores
+- Testing strategy
+- Validation steps
+
+</Step>
+<Step>
+### Implement the Spec
+
+With the spec generated, implement it from the UI or command line:
+
+**From the UI** (recommended): Create a new workflow run and select your spec from the "Spec file" dropdown. This auto-populates the implementation context.
+
+**From the command line**:
+```bash
+/cmd:implement-spec 2512081430
+```
+
+Claude follows the spec's task list, implementing each step in order. The spec serves as the requirements document throughout implementation.
+
+</Step>
+</Steps>
+
+## Built-in Spec Types
+
+<AgentCmd /> includes three spec types for different scenarios:
+
+<Callout type="info">
+These built-in types are starting points. You can customize them or create your own to match your team's workflow.
+</Callout>
+
+<Tabs items={["Feature", "Bug", "Issue"]}>
+<Tab value="Feature">
+
+**Use for:** New functionality, enhancements, major changes
+
+**Command:** `/cmd:generate-feature-spec [context?]`
+
+**Includes:**
+- Multi-phase task breakdown
+- Complexity scoring per phase
+- Architecture and integration points
+- Comprehensive testing strategy
+
+```bash
+/cmd:generate-feature-spec "User authentication with OAuth"
+```
+
+</Tab>
+<Tab value="Bug">
+
+**Use for:** Fixing broken behavior, errors, defects
+
+**Command:** `/cmd:generate-bug-spec [context?]`
+
+**Includes:**
+- Reproduction steps
+- Root cause analysis (hypothesis → investigation → confirmation)
+- Regression test requirements
+- Rollback considerations
+
+```bash
+/cmd:generate-bug-spec "Login crashes on mobile Safari"
+```
+
+</Tab>
+<Tab value="Issue">
+
+**Use for:** Small tasks, refactoring, tech debt, documentation
+
+**Command:** `/cmd:generate-issue-spec [context?]`
+
+**Includes:**
+- Focused task list (no phases)
+- Simpler structure for quick wins
+- Scope guard (suggests feature spec if too complex)
+
+```bash
+/cmd:generate-issue-spec "Refactor auth service for testability"
+```
+
+</Tab>
+</Tabs>
+
+## How the Dropdown is Populated
+
+<Callout type="info">
+The system auto-discovers all `generate-*-spec.md` files in `.claude/commands/cmd/` on startup. No configuration required.
+</Callout>
+
+When you use the UI to create a workflow run, the "Type" dropdown shows all available spec types:
+
+```
+.claude/commands/cmd/
+├── generate-feature-spec.md  → "Feature" in dropdown
+├── generate-bug-spec.md      → "Bug" in dropdown
+├── generate-issue-spec.md    → "Issue" in dropdown
+└── generate-{custom}-spec.md → "{Custom}" in dropdown
+```
+
+Each file contributes:
+- **Display name**: From the first `# ` header in the file
+- **Description**: From the first paragraph after the header
+- **Command**: Auto-generated as `/cmd:generate-{type}-spec`
+
+## Creating Custom Spec Types
+
+You can create custom spec types for your project's needs—like "Refactor", "Security", "Performance", or "Documentation".
+
+<Steps>
+<Step>
+### Create the Command File
+
+Create a new file in `.claude/commands/cmd/`:
+
+```bash
+.claude/commands/cmd/generate-refactor-spec.md
+```
+
+The filename pattern `generate-{type}-spec.md` is required for auto-discovery.
+
+</Step>
+<Step>
+### Add Required Sections
+
+Your spec command needs these sections:
+
+**1. Frontmatter** (required):
+
+```yaml
+---
+description: Generate refactoring spec with migration plan
+argument-hint: [context?]
+---
+```
+
+**2. Header and description** (first paragraph after `#` header):
+
+```markdown
+# Code Refactoring
+
+Generate a refactoring spec with impact analysis and migration steps.
+```
+
+**3. Variables section**:
+
+```markdown
+## Variables
+
+- $param1: $1 (optional) - Refactoring context
+```
+
+**4. Workflow section** (the 8 steps Claude follows):
+
+```markdown
+## Workflow
+
+1. Determine Context - From $param1 or conversation
+2. Generate Spec ID - Timestamp format YYMMDDHHmm
+3. Generate Name - Kebab-case, max 4 words
+4. Research Phase - Find affected files and patterns
+5. Clarification - Ask questions if needed
+6. Generate Spec - Follow template
+7. Write Spec - Create folder and spec.md
+8. Update Index - Add entry to index.json
+```
+
+**5. Template section** (the spec markdown structure):
+
+```markdown
+## Template
+
+# [Refactoring Name]
+
+**Status**: draft
+**Type**: refactor
+...
+```
+
+**6. Report section** (JSON output schema):
+
+```markdown
+## Report
+
+[json_output tags with your response schema]
+```
+
+See `.claude/commands/cmd/generate-issue-spec.md` for a complete working example.
+
+</Step>
+<Step>
+### Verify It Works
+
+Your new spec type should now appear:
+
+1. **In the UI** - Check the "Type" dropdown when creating a workflow run
+2. **Via command** - Run `/cmd:generate-refactor-spec "Migrate to new API"`
+3. **In help** - The command shows in `/help` or command palette
+
+</Step>
+</Steps>
+
+## Starter Template
+
+Copy an existing spec command as your starting point:
+
+```bash
+cp .claude/commands/cmd/generate-issue-spec.md \
+   .claude/commands/cmd/generate-mytype-spec.md
+```
+
+Then customize:
+
+1. Update the **frontmatter** `description`
+2. Change the **header** and first paragraph
+3. Modify the **Template** section for your spec structure
+4. Update `spec_type` in the **Report** JSON to match your type name
+
+<Callout type="info">
+The `generate-issue-spec.md` file is the simplest built-in template. Use it as a reference for the minimum required structure.
+</Callout>
+
+## Next Steps
+
+<Cards>
+  <Card title="Spec Task System" href="/docs/concepts/spec-task-system">
+    Technical details on spec lifecycle and index.json
+  </Card>
+  <Card title="Implement & Review" href="/docs/examples/implement-and-review">
+    Automate spec implementation with workflows
+  </Card>
+  <Card title="Slash Commands" href="/docs/concepts/slash-commands">
+    Build more custom commands
+  </Card>
+</Cards>
