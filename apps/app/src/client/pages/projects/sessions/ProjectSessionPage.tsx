@@ -14,6 +14,7 @@ import { useNavigationStore } from "@/client/stores/index";
 import { generateUUID } from "@/client/utils/cn";
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
+import { useProjectId } from "@/client/hooks/useProjectId";
 import { ProjectHeader } from "@/client/pages/projects/components/ProjectHeader";
 import { SessionHeader } from "@/client/components/SessionHeader";
 import { SessionEventTypes } from "@/shared/types/websocket.types";
@@ -21,10 +22,10 @@ import { Channels } from "@/shared/websocket";
 
 export default function ProjectSessionPage() {
   const navigate = useNavigate();
-  const { id: projectId, sessionId } = useParams<{ id: string; sessionId: string }>();
+  const projectId = useProjectId();
+  const { sessionId } = useParams<{ sessionId: string }>();
 
-  // Redirect if params are missing (shouldn't happen with proper routing)
-  if (!projectId || !sessionId) {
+  if (!sessionId) {
     return null;
   }
 
