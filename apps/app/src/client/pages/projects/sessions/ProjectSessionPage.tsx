@@ -10,11 +10,11 @@ import {
   useSessionStore,
   selectTotalTokens,
 } from "@/client/pages/projects/sessions/stores/sessionStore";
-import { useActiveProject } from "@/client/hooks/navigation";
 import { useNavigationStore } from "@/client/stores/index";
 import { generateUUID } from "@/client/utils/cn";
 import { useDocumentTitle } from "@/client/hooks/useDocumentTitle";
 import { useProject } from "@/client/pages/projects/hooks/useProjects";
+import { useProjectId } from "@/client/hooks/useProjectId";
 import { ProjectHeader } from "@/client/pages/projects/components/ProjectHeader";
 import { SessionHeader } from "@/client/components/SessionHeader";
 import { SessionEventTypes } from "@/shared/types/websocket.types";
@@ -22,12 +22,15 @@ import { Channels } from "@/shared/websocket";
 
 export default function ProjectSessionPage() {
   const navigate = useNavigate();
-  const params = useParams<{ sessionId: string }>();
-  const { projectId } = useActiveProject();
-  const sessionId = params.sessionId;
+  const projectId = useProjectId();
+  const { sessionId } = useParams<{ sessionId: string }>();
+
+  if (!sessionId) {
+    return null;
+  }
 
   // Get project and session names for title
-  const { data: project } = useProject(projectId!);
+  const { data: project } = useProject(projectId);
   const currentSession = useSessionStore((s) => s.currentSession);
 
   // Get session for header - convert metadata to SessionResponse-like object
@@ -277,7 +280,7 @@ export default function ProjectSessionPage() {
       style={{ gridTemplateRows: "auto auto 1fr auto" }}
     >
       <ProjectHeader
-        projectId={projectId!}
+        projectId={projectId}
         projectName={project?.name || ""}
         projectPath={project?.path || ""}
         gitCapabilities={
@@ -291,7 +294,7 @@ export default function ProjectSessionPage() {
       {sessionForHeader && <SessionHeader session={sessionForHeader} />}
       <div className="overflow-hidden">
         <AgentSessionViewer
-          projectId={projectId!}
+          projectId={projectId}
           sessionId={sessionId!}
           onApprove={handlePermissionApproval}
         />
