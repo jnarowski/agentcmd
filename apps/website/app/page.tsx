@@ -1,5 +1,4 @@
 import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
 import Particles from "@/components/magicui/particles";
 import HeroSectionV2 from "@/components/landing/hero-section-v2";
 import FeaturesSection from "@/components/landing/features-section";
@@ -27,7 +26,6 @@ export default function Home() {
         <CtaSectionV2 />
         <NewsletterSection />
       </main>
-      <SiteFooter />
     </div>
   );
 }
