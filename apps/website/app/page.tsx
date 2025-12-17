@@ -17,9 +17,7 @@ export default function Home() {
         color="#ffffff"
         refresh={false}
       />
-      <div className="relative z-10 w-full">
-        <SiteHeader />
-      </div>
+      <SiteHeader />
       <main className="relative z-10 flex-1 w-full">
         <HeroSectionV2 />
         <FeaturesSection />
