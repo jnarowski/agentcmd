@@ -11,14 +11,16 @@ export default function Home() {
   return (
     <div className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-background">
       <Particles
-        className="absolute inset-0"
+        className="absolute inset-0 z-0 pointer-events-none"
         quantity={100}
         ease={80}
         color="#ffffff"
         refresh={false}
       />
-      <SiteHeader />
-      <main className="flex-1 w-full">
+      <div className="relative z-10 w-full">
+        <SiteHeader />
+      </div>
+      <main className="relative z-10 flex-1 w-full">
         <HeroSectionV2 />
         <FeaturesSection />
         <UseCaseSection />
