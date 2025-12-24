@@ -276,7 +276,7 @@ export default function ProjectSessionPage() {
 
   return (
     <div
-      className="grid h-dvh"
+      className="grid h-full"
       style={{ gridTemplateRows: "auto auto 1fr auto" }}
     >
       <ProjectHeader
@@ -299,7 +299,7 @@ export default function ProjectSessionPage() {
           onApprove={handlePermissionApproval}
         />
       </div>
-      <div className="sticky bottom-0 z-10 md:pb-4">
+      <div className="sticky bottom-0 z-10 bg-background md:pb-4">
         <div className="mx-auto max-w-4xl space-y-4">
           <ChatPromptInput
             onSubmit={handleSubmit}
