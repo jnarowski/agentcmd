@@ -276,7 +276,7 @@ export default function ProjectSessionPage() {
 
   return (
     <div
-      className="grid h-full"
+      className="grid h-dvh"
       style={{ gridTemplateRows: "auto auto 1fr auto" }}
     >
       <ProjectHeader
