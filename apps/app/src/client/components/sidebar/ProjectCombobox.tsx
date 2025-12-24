@@ -270,6 +270,17 @@ export function ProjectCombobox() {
             </div>
           </DrawerContent>
         </Drawer>
+
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleToggleFilter}
+          disabled={!activeProjectId}
+          className="h-9 w-9 p-0 shrink-0"
+          aria-label="Show all projects"
+        >
+          <LayoutGrid className="size-4" />
+        </Button>
       </div>
 
       <ProjectDialog
